@@ -534,10 +534,24 @@ document.addEventListener('DOMContentLoaded', function() {
             dot.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
             dot.setAttribute('aria-label', `Slide ${i + 1}`);
 
-            // Add click event listener
-            dot.addEventListener('click', () => {
+            // Add click event listener for desktop
+            dot.addEventListener('click', (e) => {
+                console.log('🖱️ Pagination dot clicked (desktop):', i);
                 updateCarousel(i);
             });
+
+            // Add touch event listeners for mobile (redundant safety)
+            dot.addEventListener('touchstart', (e) => {
+                console.log('📱 Pagination dot touch start:', i);
+                e.stopPropagation(); // Prevent carousel swipe handling
+            }, { passive: false });
+
+            dot.addEventListener('touchend', (e) => {
+                console.log('📱 Pagination dot touch end:', i);
+                e.preventDefault(); // Prevent double-tap zoom
+                e.stopPropagation(); // Prevent carousel swipe handling
+                updateCarousel(i);
+            }, { passive: false });
 
             indicatorsContainer.appendChild(dot);
         }
@@ -1178,27 +1192,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Modern touch event handling with proper iOS Safari support
         document.addEventListener('touchstart', function(e) {
-            // Check if touch is within carousel area
+            // Check if touch is on pagination dot first (higher priority)
+            if (e.target.classList.contains('carousel-dot')) {
+                console.log('📍 Touch detected on pagination dot, allowing click event');
+                // Don't handle as swipe gesture, let the click event handle it
+                return;
+            }
+
+            // Check if touch is within carousel area for swipe gestures
             if (carouselTrack.contains(e.target) || e.target.closest('.carousel-container')) {
                 handleTouchStart(e);
             }
         }, { passive: false }); // Non-passive for preventDefault capability
-        console.log('✅ document touchstart listener added with modern targeting');
+        console.log('✅ document touchstart listener added with pagination dot support');
 
         document.addEventListener('touchmove', function(e) {
+            // Skip touch move handling if touch started on pagination dot
+            if (e.target.classList.contains('carousel-dot')) {
+                return;
+            }
+
             // Continue handling if we're dragging or if touch is in carousel area
             if (touchState.isDragging || (carouselTrack.contains(e.target) || e.target.closest('.carousel-container'))) {
                 handleTouchMove(e);
             }
         }, { passive: false }); // Non-passive for preventDefault capability
-        console.log('✅ document touchmove listener added with modern targeting');
+        console.log('✅ document touchmove listener added with pagination dot support');
 
         document.addEventListener('touchend', function(e) {
+            // Handle pagination dot touches specifically
+            if (e.target.classList.contains('carousel-dot')) {
+                console.log('📍 Touch end on pagination dot, triggering click');
+                // Simulate click event for pagination dots on mobile
+                const slideIndex = parseInt(e.target.getAttribute('data-slide'));
+                if (!isNaN(slideIndex)) {
+                    console.log('🎯 Navigating to slide:', slideIndex);
+                    updateCarousel(slideIndex);
+                }
+                return;
+            }
+
             if (touchState.isDragging) {
                 handleTouchEnd(e);
             }
         }, { passive: false });
-        console.log('✅ document touchend listener added');
+        console.log('✅ document touchend listener added with pagination dot support');
 
         // Handle touch cancellation with proper cleanup
         document.addEventListener('touchcancel', function(e) {
@@ -1427,16 +1465,16 @@ document.addEventListener('DOMContentLoaded', function() {
                             <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
-                    <button class="figma-tickets-btn" data-tickets-url="${drop.posh_embed_url}">Tickets</button>
+                    <button class="figma-tickets-btn" data-tickets-url="${drop.posh_embed_url}">${drop.button_text || 'Tickets'}</button>
                 ` : `
-                    <button class="figma-share-btn" onclick="navigator.share ? navigator.share({title: '${drop.title}', url: window.location.href + 'drop/${drop.slug}'}) : navigator.clipboard.writeText(window.location.href + 'drop/${drop.slug}')">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M8 12L8 21L16 21L16 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M12 16L12 3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <button class="figma-btn figma-btn-primary" onclick="window.open('/drop/${drop.slug}', '_blank')">
+                        <span>${drop.button_text || 'Get Notified'}</span>
+                    </button>
+                    <button class="figma-btn figma-btn-secondary drop-share-btn" data-drop-title="${drop.title}" data-drop-slug="${drop.slug}">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
-                    <button class="figma-tickets-btn" onclick="window.open('/drop/${drop.slug}', '_blank')">${drop.button_text || 'Get Notified'}</button>
                 `}
             </div>
         `;

@@ -74,8 +74,10 @@ body {
 /* Carousel Container - Moved to Enhanced Mobile Touch Support section below */
 
 .carousel-slide {
-    flex: 0 0 100%;
-    width: 100%;
+    /* Flex properties will be set dynamically by JavaScript based on slide count */
+    flex: 0 0 auto;
+    /* Width will be set dynamically by JavaScript */
+    min-width: 0;
     /* Prevent text selection during swipe */
     -webkit-user-select: none;
     -moz-user-select: none;
