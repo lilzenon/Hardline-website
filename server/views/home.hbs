@@ -396,11 +396,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 buttonElement: ticketsBtn
             });
 
+            // Always prevent event bubbling for tickets buttons to avoid carousel navigation
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+
             if (ticketsUrl && ticketsUrl.trim() !== '' && ticketsUrl !== 'null') {
                 console.log('✅ Opening tickets modal with URL:', ticketsUrl);
-                // Prevent default and stop propagation to prevent onclick from executing
-                e.preventDefault();
-                e.stopPropagation();
 
                 // Update modal iframe source and open modal
                 const poshIframe = document.getElementById('poshIframe');
@@ -416,16 +418,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else if (dropUrl) {
                 console.log('🔗 Navigating to drop page:', dropUrl);
-                // Prevent default and navigate to drop page
-                e.preventDefault();
-                e.stopPropagation();
                 window.location.href = dropUrl;
             } else {
                 // Check if button has onclick handler (for non-tickets buttons)
                 if (ticketsBtn.hasAttribute('onclick')) {
-                    console.log('🎯 Button has onclick handler, letting it execute');
-                    // Don't prevent default, let onclick handler execute
-                    return;
+                    console.log('🎯 Button has onclick handler, executing it');
+                    // Manually trigger the onclick handler
+                    try {
+                        eval(ticketsBtn.getAttribute('onclick'));
+                    } catch (error) {
+                        console.error('❌ Error executing onclick handler:', error);
+                    }
                 } else {
                     console.log('❌ No valid tickets URL or onclick handler available');
                 }
@@ -1274,6 +1277,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Add simple click handlers as fallback for testing
         carouselTrack.addEventListener('click', (e) => {
+            // Prevent carousel navigation if clicking on buttons or interactive elements
+            if (e.target.closest('button') ||
+                e.target.closest('.figma-action-buttons') ||
+                e.target.closest('.figma-tickets-btn') ||
+                e.target.closest('.figma-share-btn') ||
+                e.target.closest('.figma-btn') ||
+                e.target.closest('.drop-share-btn')) {
+                console.log('🚫 Click on interactive element - preventing carousel navigation');
+                return;
+            }
+
             console.log('🖱️ Click detected on carousel track');
             const rect = carouselTrack.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
