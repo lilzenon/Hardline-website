@@ -185,7 +185,7 @@
                                         </select>
                                     </div>
 
-                                    <div class="form-group">
+                                    <div class="form-group" id="background-color-group">
                                         <label for="edit-background-color">Background Color</label>
                                         <input type="color" id="edit-background-color" name="background_color" value="{{drop.background_color}}" class="form-input file-input">
                                     </div>
@@ -555,13 +555,13 @@
                     </div>
                 </form>
 
-                <!-- Form Actions - Always Visible Across All Tabs -->
-                <div class="form-actions">
+                <!-- Form Actions - Hidden (replaced by floating buttons) -->
+                <div class="form-actions" style="display: none;">
                     <div class="flex items-center space-x-3">
-                        <button type="button" id="undo-changes-btn" class="btn btn-secondary" style="display: none;">
+                        <button type="button" id="undo-changes-btn-hidden" class="btn btn-secondary" style="display: none;">
                             <span class="btn-text">Undo Changes</span>
                         </button>
-                        <button type="submit" form="drop-edit-form" class="btn btn-primary">
+                        <button type="submit" form="drop-edit-form" id="save-changes-btn-hidden" class="btn btn-primary">
                             <span class="btn-text">Save Changes</span>
                             <span class="btn-loader" style="display: none;">
                                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
@@ -619,6 +619,23 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Floating Action Buttons -->
+<div class="floating-action-buttons" id="floating-action-buttons">
+    <button type="button" id="undo-changes-btn" class="btn btn-secondary hidden">
+        <span class="btn-text">Undo Changes</span>
+    </button>
+    <button type="submit" form="drop-edit-form" id="save-changes-btn" class="btn btn-primary">
+        <span class="btn-text">Save Changes</span>
+        <span class="btn-loader" style="display: none;">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Saving...
+        </span>
+    </button>
 </div>
 
 <!-- Modern Drop Edit JavaScript - Enhanced Real-Time Preview System -->
@@ -1075,13 +1092,7 @@ function initializeTabSystem() {
                 targetContent.classList.add('active');
             }
 
-            // Scroll active tab into view on mobile
-            if (window.innerWidth <= 768) {
-                const nav = document.querySelector('nav[aria-label="Tabs"]');
-                if (nav) {
-                    scrollTabIntoView(this, nav);
-                }
-            }
+            // Note: Auto-scroll behavior removed to prevent unwanted page scrolling
 
             // Load analytics if analytics tab is clicked
             if (targetTab === 'analytics') {
@@ -1162,36 +1173,7 @@ function initializeMobileTabEnhancements() {
     console.log('✅ Mobile tab enhancements initialized');
 }
 
-function scrollTabIntoView(activeTab, container) {
-    if (!activeTab || !container) {
-        console.log('⚠️ scrollTabIntoView: Missing parameters');
-        return;
-    }
-
-    console.log('📍 Scrolling tab into view:', activeTab.textContent?.trim());
-
-    const containerRect = container.getBoundingClientRect();
-    const tabRect = activeTab.getBoundingClientRect();
-
-    // Calculate if tab is outside visible area with buffer
-    const buffer = 20;
-    const isTabOutsideLeft = tabRect.left < containerRect.left + buffer;
-    const isTabOutsideRight = tabRect.right > containerRect.right - buffer;
-
-    if (isTabOutsideLeft || isTabOutsideRight) {
-        // Calculate scroll position to center the tab
-        const tabCenter = activeTab.offsetLeft + (activeTab.offsetWidth / 2);
-        const containerCenter = container.offsetWidth / 2;
-        const scrollPosition = Math.max(0, tabCenter - containerCenter);
-
-        console.log('🎯 Scrolling to position:', scrollPosition);
-
-        container.scrollTo({
-            left: scrollPosition,
-            behavior: 'smooth'
-        });
-    }
-}
+// scrollTabIntoView function removed to prevent auto-scroll behavior
 
 function updateScrollIndicators(container) {
     if (!container) return;
@@ -1640,6 +1622,61 @@ function refreshPreview() {
     }, 300);
 }
 
+// Background Controls Visibility Management
+function updateBackgroundControlsVisibility(backgroundType) {
+    console.log('🎨 Updating background controls visibility for type:', backgroundType);
+
+    const backgroundColorGroup = document.getElementById('background-color-group');
+    const gradientEditor = document.getElementById('gradient-editor');
+
+    if (backgroundType === 'solid') {
+        // Show background color picker for solid backgrounds
+        if (backgroundColorGroup) {
+            backgroundColorGroup.style.display = 'block';
+            console.log('🎨 ✅ Showing background color picker for solid background');
+        }
+
+        // Hide gradient editor
+        if (gradientEditor) {
+            gradientEditor.style.display = 'none';
+            console.log('🎨 ✅ Hiding gradient editor for solid background');
+        }
+
+        // Update live preview to show solid color
+        const backgroundColorInput = document.getElementById('edit-background-color');
+        if (backgroundColorInput && backgroundColorInput.value) {
+            updateLivePreviewGradient(backgroundColorInput.value);
+        }
+
+    } else if (backgroundType === 'gradient') {
+        // Hide background color picker for gradient backgrounds
+        if (backgroundColorGroup) {
+            backgroundColorGroup.style.display = 'none';
+            console.log('🎨 ✅ Hiding background color picker for gradient background');
+        }
+
+        // Show gradient editor
+        if (gradientEditor) {
+            gradientEditor.style.display = 'block';
+            console.log('🎨 ✅ Showing gradient editor for gradient background');
+        }
+
+        // Ensure we have gradient data
+        if (!gradientData) {
+            gradientData = { ...defaultGradientData };
+        }
+
+        // Update UI and preview
+        setGradientUIFromData(0);
+        updateGradientPreview();
+
+        setTimeout(() => {
+            const currentGradientCSS = generateGradientCSS();
+            updateLivePreviewGradient(currentGradientCSS);
+        }, 100);
+    }
+}
+
 // Advanced Gradient Editor System
 let gradientData = null; // Start as null to detect if data was loaded
 
@@ -1967,36 +2004,11 @@ function initializeGradientEditor() {
         // Handle background type changes
         backgroundTypeSelect.addEventListener('change', function() {
             console.log('🎨 Background type changed to:', this.value);
-            if (this.value === 'gradient') {
-                if (gradientEditor) {
-                    gradientEditor.style.display = 'block';
-                }
-
-                // Ensure we have gradient data
-                if (!gradientData) {
-                    gradientData = { ...defaultGradientData };
-                }
-
-                // Update UI and preview
-                setGradientUIFromData(0);
-                updateGradientPreview();
-
-                setTimeout(() => {
-                    const currentGradientCSS = generateGradientCSS();
-                    updateLivePreviewGradient(currentGradientCSS);
-                }, 100);
-            } else {
-                if (gradientEditor) {
-                    gradientEditor.style.display = 'none';
-                }
-
-                // Update live preview to show solid color instead
-                const backgroundColorInput = document.getElementById('edit-background-color');
-                if (backgroundColorInput && backgroundColorInput.value) {
-                    updateLivePreviewGradient(backgroundColorInput.value);
-                }
-            }
+            updateBackgroundControlsVisibility(this.value);
         });
+
+        // Initial setup of background controls visibility
+        updateBackgroundControlsVisibility(backgroundTypeSelect.value);
     }
 
     // Initialize gradient type buttons
@@ -2344,7 +2356,8 @@ function initializeFormSubmission() {
         return;
     }
 
-    const saveBtn = form.querySelector('button[type="submit"]');
+    // Look for the floating save button first, then fallback to form button
+    const saveBtn = document.getElementById('save-changes-btn') || form.querySelector('button[type="submit"]');
     if (!saveBtn) {
         console.error('❌ Save button not found! Cannot initialize form submission.');
         return;
@@ -2642,9 +2655,9 @@ function initializeUndoChanges() {
     // Update undo button visibility
     function updateUndoButtonVisibility() {
         if (hasFormChanged()) {
-            undoBtn.style.display = 'inline-flex';
+            undoBtn.classList.remove('hidden');
         } else {
-            undoBtn.style.display = 'none';
+            undoBtn.classList.add('hidden');
         }
     }
 
