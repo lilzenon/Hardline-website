@@ -35,7 +35,17 @@
                         <h1 class="figma-event-title">{{homeSettings.event_title}}</h1>
                         <div class="figma-event-artist">{{homeSettings.artist_name}}</div>
                         <div class="figma-event-date">📅 {{formattedDate}}</div>
-                        <div class="figma-event-address">📍 {{homeSettings.event_address}}</div>
+                        {{#if homeSettings.event_address}}
+                        <a href="#" class="address-component figma-event-address"
+                           {{#if homeSettings.address_latitude}}data-latitude="{{homeSettings.address_latitude}}"{{/if}}
+                           {{#if homeSettings.address_longitude}}data-longitude="{{homeSettings.address_longitude}}"{{/if}}>
+                            <svg class="address-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span class="address-text">{{homeSettings.event_address}}</span>
+                        </a>
+                        {{/if}}
                     </div>
 
                     <!-- Action Buttons -->
@@ -96,7 +106,15 @@
                         <p class="figma-event-date">{{formatDate this.event_date "MMMM do, h:mm a"}}</p>
                         {{/if}}
                         {{#if this.event_address}}
-                        <p class="figma-event-address">{{this.event_address}}</p>
+                        <a href="#" class="address-component figma-event-address"
+                           {{#if this.address_latitude}}data-latitude="{{this.address_latitude}}"{{/if}}
+                           {{#if this.address_longitude}}data-longitude="{{this.address_longitude}}"{{/if}}>
+                            <svg class="address-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span class="address-text">{{this.event_address}}</span>
+                        </a>
                         {{/if}}
                         {{#if this.description}}
                         <p class="figma-event-description">{{this.description}}</p>
@@ -1424,7 +1442,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h1 class="figma-event-title">${homeSettings.event_title}</h1>
                 <h2 class="figma-event-artist">${homeSettings.artist_name}</h2>
                 <p class="figma-event-date">${formattedDate}</p>
-                <p class="figma-event-address">${homeSettings.event_address}</p>
+                ${homeSettings.event_address ? `
+                <a href="#" class="address-component figma-event-address"
+                   ${homeSettings.address_latitude ? `data-latitude="${homeSettings.address_latitude}"` : ''}
+                   ${homeSettings.address_longitude ? `data-longitude="${homeSettings.address_longitude}"` : ''}>
+                    <svg class="address-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span class="address-text">${homeSettings.event_address}</span>
+                </a>` : ''}
             </div>
 
             <!-- Action Buttons -->
@@ -1493,7 +1520,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h1 class="figma-event-title">${drop.title}</h1>
                 <h2 class="figma-event-artist">${drop.artist_name || 'Artist Name'}</h2>
                 <p class="figma-event-date">${dropFormattedDate}</p>
-                <p class="figma-event-address">${drop.event_address || 'Event Address'}</p>
+                ${drop.event_address ? `
+                <a href="#" class="address-component figma-event-address"
+                   ${drop.address_latitude ? `data-latitude="${drop.address_latitude}"` : ''}
+                   ${drop.address_longitude ? `data-longitude="${drop.address_longitude}"` : ''}>
+                    <svg class="address-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <span class="address-text">${drop.event_address}</span>
+                </a>` : ''}
                 ${drop.description ? `<p class="figma-event-description">${drop.description}</p>` : ''}
             </div>
 

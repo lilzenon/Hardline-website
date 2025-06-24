@@ -1,0 +1,260 @@
+/**
+ * Standardized Address Component
+ * Universal address display with interactive maps integration
+ * Consistent styling across all home page cards
+ */
+
+/* Base address component styling */
+.address-component {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    
+    /* Ensure minimum touch target size for mobile */
+    min-height: 44px;
+    padding: 8px 0;
+    
+    /* Interactive styling */
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: -8px -12px;
+    
+    /* Subtle background for better touch feedback */
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+/* Interactive states */
+.address-component:hover {
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.5);
+    text-underline-offset: 2px;
+    transform: translateY(-1px);
+}
+
+.address-component:focus {
+    outline: none;
+    color: rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.7);
+}
+
+.address-component:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Modern SVG location icon */
+.address-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: 0.7;
+    transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.address-component:hover .address-icon,
+.address-component:focus .address-icon {
+    opacity: 1;
+}
+
+/* Address text styling */
+.address-text {
+    line-height: 1.4;
+    text-align: left;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Responsive typography scaling */
+@media (min-width: 768px) {
+    .address-component {
+        font-size: 16px;
+        gap: 10px;
+    }
+    
+    .address-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .address-component {
+        font-size: 16px;
+        gap: 10px;
+    }
+    
+    .address-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (min-width: 1440px) {
+    .address-component {
+        font-size: 18px;
+        gap: 12px;
+    }
+    
+    .address-icon {
+        width: 20px;
+        height: 20px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .address-component {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .address-component:hover {
+        color: rgba(255, 255, 255, 1);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .address-component:focus {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.25);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Light mode support (for future use) */
+@media (prefers-color-scheme: light) {
+    .address-component {
+        color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .address-component:hover {
+        color: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.05);
+        border-color: rgba(0, 0, 0, 0.1);
+        text-decoration-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .address-component:focus {
+        color: rgba(0, 0, 0, 1);
+        background: rgba(0, 0, 0, 0.08);
+        border-color: rgba(0, 0, 0, 0.2);
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        text-decoration-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .address-component:active {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .address-component {
+        border: 2px solid transparent;
+        font-weight: 500;
+    }
+    
+    .address-component:hover,
+    .address-component:focus {
+        border-color: currentColor;
+        background: transparent;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+    }
+    
+    .address-icon {
+        opacity: 1;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .address-component,
+    .address-icon {
+        transition: none;
+    }
+    
+    .address-component:hover {
+        transform: none;
+    }
+    
+    .address-component:active {
+        transform: none;
+    }
+}
+
+/* Loading state for dynamic content */
+.address-component.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.address-component.loading .address-text::after {
+    content: '...';
+    animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+}
+
+/* Error state */
+.address-component.error {
+    color: rgba(239, 68, 68, 0.8);
+    cursor: not-allowed;
+}
+
+.address-component.error:hover {
+    color: rgba(239, 68, 68, 1);
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+    transform: none;
+    text-decoration: none;
+}
+
+/* Accessibility improvements */
+.address-component[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Focus visible for keyboard navigation */
+.address-component:focus-visible {
+    outline: 2px solid rgba(59, 130, 246, 0.8);
+    outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+    .address-component {
+        color: black !important;
+        background: transparent !important;
+        border: none !important;
+        text-decoration: none !important;
+        transform: none !important;
+    }
+    
+    .address-component::after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+        color: #666;
+    }
+}

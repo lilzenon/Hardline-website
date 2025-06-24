@@ -171,6 +171,22 @@ body {
     gap: 8px;
 }
 
+
+/* Address component integration */
+
+.figma-event-address.address-component {
+    /* Reset margins for proper component spacing */
+    margin-bottom: 8px;
+    /* Ensure proper display */
+    display: inline-flex;
+    /* Override any conflicting styles */
+    text-decoration: none;
+    /* Maintain existing color scheme */
+    color: rgba(255, 255, 255, 0.7);
+    /* Ensure proper gap */
+    gap: 8px;
+}
+
 .figma-event-description {
     font-family: 'Inter', sans-serif;
     font-size: 13px;
@@ -1150,6 +1166,11 @@ body {
         font-size: 16px;
         margin-bottom: 10px;
     }
+    .figma-event-address.address-component {
+        font-size: 16px;
+        margin-bottom: 10px;
+        gap: 10px;
+    }
     .figma-event-description {
         font-size: 15px;
         margin-top: 14px;
@@ -1326,6 +1347,11 @@ body {
         font-size: 16px;
         /* Reduced from 18px */
         margin-bottom: 10px;
+    }
+    .figma-event-address.address-component {
+        font-size: 16px;
+        margin-bottom: 10px;
+        gap: 10px;
     }
     .figma-event-description {
         font-size: 15px;
@@ -1516,6 +1542,11 @@ body {
         font-size: 18px;
         /* Reduced from 20px */
         margin-bottom: 12px;
+    }
+    .figma-event-address.address-component {
+        font-size: 18px;
+        margin-bottom: 12px;
+        gap: 12px;
     }
     .figma-event-description {
         font-size: 16px;
