@@ -199,7 +199,8 @@ body {
 .figma-share-btn {
     width: 48px;
     height: 48px;
-    border-radius: 16px;
+    border-radius: 24px;
+    /* Increased from 16px to make more circular */
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: rgba(255, 255, 255, 0.9);
@@ -1162,7 +1163,8 @@ body {
     .figma-share-btn {
         width: 60px;
         height: 60px;
-        border-radius: 18px;
+        border-radius: 30px;
+        /* Increased from 18px to make more circular */
     }
     .figma-share-btn svg {
         width: 30px;
@@ -1296,9 +1298,9 @@ body {
     }
     /* FIXED: Proportional image sizing for desktop viewing */
     .figma-event-image {
-        width: 360px;
-        /* Reduced from 480px for better proportions */
-        height: 360px;
+        width: 420px;
+        /* Increased from 360px to maintain proper scaling progression */
+        height: 420px;
         /* Maintains 1:1 aspect ratio */
         margin: 24px auto 0 auto;
         border-radius: 24px;
@@ -1342,7 +1344,8 @@ body {
         width: 64px;
         /* Reduced from 72px */
         height: 64px;
-        border-radius: 20px;
+        border-radius: 32px;
+        /* Increased from 20px to make more circular */
     }
     .figma-share-btn svg {
         width: 32px;
@@ -1531,7 +1534,8 @@ body {
         width: 72px;
         /* Reduced from 80px */
         height: 72px;
-        border-radius: 22px;
+        border-radius: 36px;
+        /* Increased from 22px to make more circular */
     }
     .figma-share-btn svg {
         width: 36px;
