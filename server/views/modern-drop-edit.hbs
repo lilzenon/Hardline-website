@@ -1,34 +1,101 @@
 <!-- Modern Drop Edit Page -->
 <div class="space-y-6">
-    <!-- Header with Back Button -->
-    <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-            <button type="button" onclick="navigateBack()" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Back
-            </button>
+    <!-- Responsive Header with Back Button -->
+    <div class="responsive-header bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+        <!-- Mobile Layout (320px-767px) -->
+        <div class="flex flex-col space-y-4 sm:hidden">
+            <!-- Top Row: Back Button and Status -->
+            <div class="flex items-center justify-between">
+                <button type="button" onclick="navigateBack()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px] min-w-[44px]">
+                    <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </button>
+
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{#if drop.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
+                    <div class="w-2 h-2 rounded-full {{#if drop.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
+                    <span class="text-sm font-medium">
+                        {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Title Row -->
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Edit Drop</h1>
-                <p class="text-sm text-gray-500">{{drop.title}}</p>
+                <h1 class="text-xl font-bold text-gray-900 leading-tight">Edit {{drop.title}}</h1>
+            </div>
+
+            <!-- Action Button -->
+            <div>
+                <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center justify-center w-full px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
+                    <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View Live
+                </a>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="flex items-center space-x-3">
-            <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
-                <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                View Live
-            </a>
+        <!-- Tablet Layout (768px-1023px) -->
+        <div class="hidden sm:flex lg:hidden items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button type="button" onclick="navigateBack()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
+                    <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </button>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Edit {{drop.title}}</h1>
+                </div>
+            </div>
 
-            <div class="flex items-center">
-                <span class="text-sm text-gray-500 mr-2">Status:</span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{#if drop.is_active}}bg-green-100 text-green-800{{else}}bg-gray-100 text-gray-800{{/if}}">
-                    {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
-                </span>
+            <div class="flex items-center space-x-3">
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{#if drop.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
+                    <div class="w-2 h-2 rounded-full {{#if drop.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
+                    <span class="text-sm font-medium">
+                        {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
+                    </span>
+                </div>
+
+                <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
+                    <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View Live
+                </a>
+            </div>
+        </div>
+
+        <!-- Desktop Layout (1024px+) -->
+        <div class="hidden lg:flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <button type="button" onclick="navigateBack()" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                    <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </button>
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Edit {{drop.title}}</h1>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border {{#if drop.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
+                    <div class="w-2.5 h-2.5 rounded-full {{#if drop.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
+                    <span class="text-sm font-semibold">
+                        {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
+                    </span>
+                </div>
+
+                <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                    <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View Live
+                </a>
             </div>
         </div>
     </div>
@@ -651,33 +718,11 @@ let titleInput, subtitleInput, descriptionInput, rsvpTitleInput, subHeaderInput,
 let backgroundColorInput, overscrollBackgroundColorInput, cardColorInput, titleColorInput, descriptionColorInput, buttonColorInput, formFieldColorInput;
 let collectEmailToggle, collectPhoneToggle;
 
-// Intelligent navigation function for back button
+// Reliable navigation function for back button
 function navigateBack() {
-    console.log('🔙 Navigating back...');
+    console.log('🔙 Navigating back to drops listing...');
 
-    // Check if we have a referrer and it's from the same domain
-    const referrer = document.referrer;
-    const currentDomain = window.location.origin;
-
-    console.log('🔍 Referrer:', referrer);
-    console.log('🔍 Current domain:', currentDomain);
-
-    // If referrer exists and is from same domain, use history.back()
-    if (referrer && referrer.startsWith(currentDomain)) {
-        console.log('✅ Using history.back() - valid referrer from same domain');
-        window.history.back();
-        return;
-    }
-
-    // Check if we have history entries to go back to
-    if (window.history.length > 1) {
-        console.log('✅ Using history.back() - history entries available');
-        window.history.back();
-        return;
-    }
-
-    // Fallback: navigate to drops list
-    console.log('🔄 Fallback: navigating to drops list');
+    // Always navigate to the drops listing page for consistent behavior
     window.location.href = '/drops';
 }
 
@@ -2683,6 +2728,34 @@ async function loadAnalytics() {
 </script>
 
 <style>
+/* Enhanced Drop Edit Header Styling */
+
+/* Smooth status indicator animation */
+@keyframes pulse-gentle {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse {
+    animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Enhanced focus states for accessibility */
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Smooth transitions for responsive layout changes */
+.responsive-header {
+    transition: all 0.3s ease-in-out;
+}
+
 /* Home Editor Styling Patterns for Drop Edit Page */
 
 /* Override admin form styles for modern dashboard integration */
