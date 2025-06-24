@@ -82,136 +82,133 @@
         </div>
     </div>
 
-    <!-- Modern Drops List -->
+    <!-- Modern Drops List - Improved Alignment -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="p-6">
             {{#if drops.length}}
-            <div class="space-y-6">
+            <div class="space-y-4">
                 {{#each drops}}
-                <!-- Optimized Compact Drop Card -->
-                <div class="group relative bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-lg hover:shadow-md hover:border-gray-300 transition-all duration-200 ease-in-out overflow-hidden">
+                <!-- Modern Drop Card - Properly Aligned -->
+                <div class="drop-card group relative bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:border-gray-300 transition-all duration-300 ease-out w-full">
 
-                    <!-- Compact Card Content -->
-                    <div class="p-3 sm:p-4">
-                        <!-- Header Section -->
-                        <div class="flex items-start gap-3 mb-3">
-                            <!-- Smaller Drop Image/Icon -->
+                    <!-- Card Content - 8px Grid System -->
+                    <div class="p-6">
+                        <!-- Header Section - Proper Hierarchy -->
+                        <div class="flex items-start gap-4 mb-4">
+                            <!-- Drop Image/Icon - Consistent Sizing -->
                             <div class="flex-shrink-0">
                                 {{#if this.cover_image}}
-                                    <img class="h-10 w-10 sm:h-12 sm:w-12 rounded-lg object-cover shadow-sm" src="{{this.cover_image}}" alt="{{this.title}}">
+                                    <img class="h-12 w-12 rounded-lg object-cover ring-1 ring-gray-200" src="{{this.cover_image}}" alt="{{this.title}}">
                                 {{else}}
-                                    <div class="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center shadow-sm">
-                                        <svg class="h-5 w-5 sm:h-6 sm:w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center ring-1 ring-gray-200">
+                                        <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                                         </svg>
                                     </div>
                                 {{/if}}
                             </div>
 
-                            <!-- Title and Status -->
+                            <!-- Content Area -->
                             <div class="flex-1 min-w-0">
-                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
-                                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 truncate leading-tight">{{this.title}}</h3>
+                                <!-- Title and Status Row -->
+                                <div class="flex items-start justify-between gap-3 mb-2">
+                                    <h3 class="text-lg font-semibold text-gray-900 leading-6 truncate">{{this.title}}</h3>
                                     <div class="flex-shrink-0">
-                                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border {{#if this.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
-                                            <div class="w-1.5 h-1.5 rounded-full {{#if this.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
-                                            <span class="text-xs font-medium whitespace-nowrap">
-                                                {{#if this.is_active}}Active{{else}}Inactive{{/if}}
-                                            </span>
-                                        </div>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium {{#if this.is_active}}bg-green-100 text-green-800{{else}}bg-gray-100 text-gray-600{{/if}}">
+                                            <span class="w-1.5 h-1.5 rounded-full {{#if this.is_active}}bg-green-500{{else}}bg-gray-400{{/if}}"></span>
+                                            {{#if this.is_active}}Active{{else}}Inactive{{/if}}
+                                        </span>
                                     </div>
                                 </div>
 
                                 <!-- Description -->
                                 {{#if this.description}}
-                                <p class="text-sm text-gray-600 mt-1 line-clamp-1 leading-snug">{{this.description}}</p>
+                                <p class="text-sm text-gray-600 leading-5 mb-3 line-clamp-2">{{this.description}}</p>
                                 {{/if}}
 
-                                <!-- Compact Stats -->
-                                <div class="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                                    <div class="flex items-center gap-1">
-                                        <svg class="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                <!-- Stats Row -->
+                                <div class="flex items-center gap-6 text-sm text-gray-500">
+                                    <div class="flex items-center gap-1.5">
+                                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                                         </svg>
-                                        <span class="font-medium">{{this.signup_count}}</span>
+                                        <span class="font-medium">{{this.signup_count}} signups</span>
                                     </div>
-                                    <div class="flex items-center gap-1">
-                                        <svg class="h-3.5 w-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    <div class="flex items-center gap-1.5">
+                                        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 012.25 2.25v7.5" />
                                         </svg>
-                                        <span>{{formatDate this.created_at "MMM dd"}}</span>
+                                        <span>{{formatDate this.created_at "MMM dd, yyyy"}}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Compact Action Buttons Section -->
-                    <div class="border-t border-gray-100 bg-gray-50/30 px-3 py-2.5 sm:px-4 sm:py-3">
-                        <!-- Mobile & Small Tablet: 2x2 Grid (up to 767px) -->
-                        <div class="grid grid-cols-2 gap-1.5 sm:hidden">
-                            <a href="/drop/{{this.slug}}" target="_blank" class="btn-compact btn-primary">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    <!-- Improved Action Bar with Better Button Layout -->
+                    <div class="border-t border-gray-100 bg-gray-50/50 px-6 py-4">
+                        <!-- Mobile Layout (up to 640px) - 2x2 Grid -->
+                        <div class="grid grid-cols-2 gap-3 sm:hidden">
+                            <a href="/drop/{{this.slug}}" target="_blank" class="btn-improved btn-primary">
+                                <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                 </svg>
-                                <span>View</span>
+                                <span class="truncate">View</span>
                             </a>
 
-                            <button onclick="copyDropLink('{{../domain}}/drop/{{this.slug}}', this)" class="btn-compact btn-secondary">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            <button onclick="copyDropLink('{{../domain}}/drop/{{this.slug}}', this)" class="btn-improved btn-secondary">
+                                <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
                                 </svg>
-                                <span class="copy-text">Copy</span>
+                                <span class="copy-text truncate">Copy</span>
                             </button>
 
-                            <a href="/drops/{{this.id}}/edit" class="btn-compact btn-secondary">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <a href="/drops/{{this.id}}/edit" class="btn-improved btn-secondary">
+                                <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                                 </svg>
-                                <span>Edit</span>
+                                <span class="truncate">Edit</span>
                             </a>
 
-                            <button data-action="delete-drop" data-drop-id="{{this.id}}" data-drop-title="{{this.title}}" class="delete-drop-btn btn-compact btn-danger">
-                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <button data-action="delete-drop" data-drop-id="{{this.id}}" data-drop-title="{{this.title}}" class="delete-drop-btn btn-improved btn-danger">
+                                <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                                 </svg>
-                                <span>Delete</span>
+                                <span class="truncate">Delete</span>
                             </button>
                         </div>
 
-                        <!-- Large Tablet & Desktop: Compact Flex Layout (768px+) -->
-                        <div class="hidden sm:flex items-center justify-between gap-2">
-                            <!-- Primary Actions -->
-                            <div class="flex items-center gap-1.5">
-                                <a href="/drop/{{this.slug}}" target="_blank" class="btn-compact btn-primary">
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        <!-- Desktop Layout (640px+) - Horizontal with Proper Spacing -->
+                        <div class="hidden sm:flex items-center justify-between">
+                            <!-- Primary Actions Group -->
+                            <div class="flex items-center gap-4">
+                                <a href="/drop/{{this.slug}}" target="_blank" class="btn-improved btn-primary">
+                                    <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                                     </svg>
-                                    <span class="hidden lg:inline">View Live</span>
-                                    <span class="lg:hidden">View</span>
+                                    <span>View Live</span>
                                 </a>
 
-                                <button onclick="copyDropLink('{{../domain}}/drop/{{this.slug}}', this)" class="btn-compact btn-secondary">
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                <button onclick="copyDropLink('{{../domain}}/drop/{{this.slug}}', this)" class="btn-improved btn-secondary">
+                                    <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
                                     </svg>
-                                    <span class="copy-text hidden lg:inline">Copy Link</span>
-                                    <span class="copy-text lg:hidden">Copy</span>
+                                    <span class="copy-text">Copy Link</span>
                                 </button>
                             </div>
 
-                            <!-- Secondary Actions -->
-                            <div class="flex items-center gap-1.5">
-                                <a href="/drops/{{this.id}}/edit" class="btn-compact btn-secondary">
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            <!-- Secondary Actions Group -->
+                            <div class="flex items-center gap-4">
+                                <a href="/drops/{{this.id}}/edit" class="btn-improved btn-secondary">
+                                    <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
                                     </svg>
                                     <span>Edit</span>
                                 </a>
 
-                                <button data-action="delete-drop" data-drop-id="{{this.id}}" data-drop-title="{{this.title}}" class="delete-drop-btn btn-compact btn-danger">
-                                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                <button data-action="delete-drop" data-drop-id="{{this.id}}" data-drop-title="{{this.title}}" class="delete-drop-btn btn-improved btn-danger">
+                                    <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                                     </svg>
                                     <span>Delete</span>
                                 </button>
@@ -681,81 +678,100 @@ button,
     cursor: pointer !important;
 }
 
-/* Compact Modern Button System for Drop Cards */
-.btn-compact {
-    @apply inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-150 ease-in-out min-h-[36px] cursor-pointer;
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-1;
+/* Improved Button System - Better Padding and Alignment */
+.btn-improved {
+    @apply inline-flex items-center justify-center gap-2.5 px-4 py-2.5 text-sm font-medium rounded-lg;
+    @apply transition-all duration-200 ease-out cursor-pointer;
+    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
     @apply disabled:opacity-50 disabled:cursor-not-allowed;
-    @apply transform hover:scale-[1.01] active:scale-[0.99];
-    @apply shadow-sm hover:shadow-md;
+    @apply min-h-[44px] min-w-[80px]; /* Consistent sizing */
+    @apply whitespace-nowrap; /* Prevent text wrapping */
 }
 
 .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-700 text-white border border-primary-600;
-    @apply hover:from-primary-700 hover:to-primary-800 hover:border-primary-700;
-    @apply focus:ring-primary-500;
-    @apply shadow-primary-200/50 hover:shadow-primary-300/60;
+    @apply bg-blue-600 text-white border border-blue-600;
+    @apply hover:bg-blue-700 hover:border-blue-700;
+    @apply focus:ring-blue-500;
+    @apply shadow-sm hover:shadow-md;
 }
 
 .btn-secondary {
-    @apply bg-gradient-to-r from-white to-gray-50 text-gray-700 border border-gray-300;
-    @apply hover:from-gray-50 hover:to-gray-100 hover:border-gray-400 hover:text-gray-800;
-    @apply focus:ring-primary-500;
-    @apply shadow-gray-200/50 hover:shadow-gray-300/60;
+    @apply bg-white text-gray-700 border border-gray-300;
+    @apply hover:bg-gray-50 hover:border-gray-400 hover:text-gray-800;
+    @apply focus:ring-blue-500;
+    @apply shadow-sm hover:shadow-md;
 }
 
 .btn-danger {
-    @apply bg-gradient-to-r from-white to-red-50 text-red-700 border border-red-300;
-    @apply hover:from-red-50 hover:to-red-100 hover:border-red-400 hover:text-red-800;
+    @apply bg-white text-red-700 border border-red-300;
+    @apply hover:bg-red-50 hover:border-red-400 hover:text-red-800;
     @apply focus:ring-red-500;
-    @apply shadow-red-200/50 hover:shadow-red-300/60;
+    @apply shadow-sm hover:shadow-md;
 }
 
-/* Enhanced mobile touch targets while keeping compact design */
+/* Mobile optimizations - Better spacing */
 @media (max-width: 640px) {
-    .btn-compact {
-        @apply min-h-[40px] px-3 py-2 text-xs;
-        @apply gap-1;
+    .btn-improved {
+        @apply px-3 py-2.5 text-sm gap-2;
+        @apply min-h-[44px] min-w-[70px]; /* Maintain accessibility and consistency */
     }
 }
 
 /* Desktop refinements */
 @media (min-width: 1024px) {
-    .btn-compact {
-        @apply px-3 py-2 text-sm;
-        @apply gap-2;
+    .btn-improved {
+        @apply px-5 py-3 gap-3; /* More generous spacing on large screens */
     }
 }
 
-/* Enhanced compact card hover effects */
-.group:hover .btn-compact {
+/* Modern Card System - Improved Alignment and Spacing */
+.drop-card {
+    @apply transition-all duration-300 ease-out;
+    @apply hover:shadow-lg hover:shadow-gray-200/50;
+    @apply hover:-translate-y-1;
+    @apply w-full; /* Ensure full width */
+    @apply flex flex-col; /* Consistent flex layout */
+}
+
+.drop-card:hover .btn-improved {
     @apply shadow-md;
 }
 
-/* Subtle card enhancement effects */
-.group {
-    @apply relative;
+/* Consistent Card Spacing */
+.drop-card + .drop-card {
+    @apply mt-4; /* Consistent spacing between cards */
 }
 
-.group::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
-    border-radius: 0.5rem;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    pointer-events: none;
+/* Typography Hierarchy - Research-Based */
+.drop-card h3 {
+    @apply text-lg font-semibold leading-6; /* 24px line height = 3 * 8px */
+    @apply text-left; /* Ensure left alignment */
 }
 
-.group:hover::before {
-    opacity: 1;
+.drop-card p {
+    @apply text-sm leading-5; /* 20px line height = 2.5 * 8px */
+    @apply text-left; /* Ensure left alignment */
 }
 
-/* Line clamp utility for description */
+/* Card Content Alignment */
+.drop-card > div {
+    @apply w-full; /* Ensure content takes full width */
+}
+
+/* Status Badge - Modern Design */
+.drop-card .status-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+    @apply transition-colors duration-200;
+}
+
+/* Line Clamp Utilities - Proper Implementation */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -763,37 +779,29 @@ button,
     overflow: hidden;
 }
 
-/* Smooth animations for status indicators */
-@keyframes pulse-gentle {
-    0%, 100% {
-        opacity: 1;
+/* Enhanced Focus States - Accessibility */
+.btn-modern:focus-visible {
+    @apply ring-2 ring-offset-2 outline-none;
+}
+
+/* Responsive Improvements */
+@media (max-width: 640px) {
+    .drop-card {
+        @apply mb-4; /* Tighter spacing on mobile */
     }
-    50% {
-        opacity: 0.7;
+
+    .drop-card h3 {
+        @apply text-base leading-5; /* Smaller on mobile */
     }
 }
 
-.animate-pulse {
-    animation: pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Hover Animations - Subtle and Professional */
+.drop-card {
+    @apply transform-gpu; /* Hardware acceleration */
 }
 
-/* Enhanced focus states for accessibility */
-.btn-compact:focus-visible {
-    @apply ring-2 ring-offset-1 outline-none;
-}
-
-/* Optimized spacing for compact cards */
-.group {
-    @apply mb-3;
-}
-
-/* Improved line height for compact text */
-.line-clamp-1 {
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.4;
+.drop-card:hover {
+    @apply scale-[1.01]; /* Very subtle scale */
 }
 
 /* Prevent zoom on double tap for buttons */
