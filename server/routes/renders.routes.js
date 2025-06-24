@@ -564,6 +564,7 @@ router.get(
                 currentPage: "drops",
                 user: req.user,
                 drops: userDrops || [],
+                domain: process.env.DEFAULT_DOMAIN || 'localhost:3000',
                 stats: {
                     totalDrops: totalDrops || 0,
                     activeDrops: activeDrops || 0,
@@ -580,6 +581,7 @@ router.get(
                 currentPage: "drops",
                 user: req.user,
                 drops: [],
+                domain: process.env.DEFAULT_DOMAIN || 'localhost:3000',
                 stats: {
                     totalDrops: 0,
                     activeDrops: 0,

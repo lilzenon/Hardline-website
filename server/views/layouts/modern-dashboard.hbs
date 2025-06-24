@@ -437,37 +437,61 @@
         });
     </script>
 
-    <!-- Create Drop Dialog -->
-    <div id="create-drop-dialog" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Drop</h3>
-                <form id="create-drop-form" class="space-y-4">
+    <!-- Modern Create Drop Dialog with Glassmorphism -->
+    <div id="create-drop-dialog" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+        <div class="relative w-full max-w-md mx-auto">
+            <!-- Glassmorphism Modal -->
+            <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white border-opacity-20 p-6 sm:p-8">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900">Create New Drop</h3>
+                    <button type="button" onclick="closeCreateDropDialog()" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Form -->
+                <form id="create-drop-form" class="space-y-5">
+                    <!-- Title Field -->
                     <div>
-                        <label for="drop-title" class="block text-sm font-medium text-gray-700">Title *</label>
-                        <input type="text" name="title" id="drop-title" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="Enter drop title">
+                        <label for="drop-title" class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                        <input type="text" name="title" id="drop-title" required
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 text-sm"
+                               placeholder="Enter drop title">
                     </div>
 
+                    <!-- Description Field -->
                     <div>
-                        <label for="drop-description" class="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea name="description" id="drop-description" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="Describe your drop"></textarea>
+                        <label for="drop-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea name="description" id="drop-description" rows="3"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 text-sm resize-none"
+                                  placeholder="Describe your drop (optional)"></textarea>
                     </div>
 
+                    <!-- URL Slug Field -->
                     <div>
-                        <label for="drop-slug" class="block text-sm font-medium text-gray-700">URL Slug</label>
-                        <div class="mt-1 flex rounded-md shadow-sm">
-                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+                        <label for="drop-slug" class="block text-sm font-medium text-gray-700 mb-2">URL Slug</label>
+                        <div class="flex rounded-lg shadow-sm">
+                            <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm font-medium">
                                 {{domain}}/drop/
                             </span>
-                            <input type="text" name="slug" id="drop-slug" class="flex-1 block w-full rounded-none rounded-r-md border-gray-300 focus:ring-primary-500 focus:border-primary-500 sm:text-sm" placeholder="my-drop">
+                            <input type="text" name="slug" id="drop-slug"
+                                   class="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 text-sm"
+                                   placeholder="my-drop">
                         </div>
+                        <p class="mt-1 text-xs text-gray-500">Auto-generated from title, but you can customize it</p>
                     </div>
 
-                    <div class="flex justify-end space-x-3 pt-4">
-                        <button type="button" onclick="closeCreateDropDialog()" class="px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-3 pt-6">
+                        <button type="button" onclick="closeCreateDropDialog()"
+                                class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors duration-200">
                             Cancel
                         </button>
-                        <button type="submit" class="px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-300">
+                        <button type="submit"
+                                class="flex-1 px-6 py-3 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200 shadow-sm">
                             Create Drop
                         </button>
                     </div>
