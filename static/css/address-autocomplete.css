@@ -1,0 +1,315 @@
+/**
+ * Address Autocomplete Styles
+ * Glassmorphism design consistent with existing UI
+ */
+
+/* Input field enhancements */
+.address-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.address-input-container input {
+    padding-right: 40px; /* Space for validation icon */
+}
+
+/* Validation states for input */
+.address-valid {
+    border-color: #10B981 !important;
+    box-shadow: 0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    background-color: rgba(16, 185, 129, 0.02) !important;
+}
+
+.address-invalid {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    background-color: rgba(239, 68, 68, 0.02) !important;
+}
+
+.address-loading {
+    border-color: #3B82F6 !important;
+    box-shadow: 0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Validation indicator */
+.address-validation-indicator {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.validation-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.validation-icon.loading {
+    color: #3B82F6;
+    animation: spin 1s linear infinite;
+}
+
+.validation-icon.success {
+    color: #10B981;
+}
+
+.validation-icon.error {
+    color: #EF4444;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Autocomplete dropdown */
+.address-autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    margin-top: 4px;
+    
+    /* Glassmorphism design */
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    
+    max-height: 300px;
+    overflow-y: auto;
+    
+    /* Smooth animations */
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.address-autocomplete-dropdown[style*="display: block"] {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .address-autocomplete-dropdown {
+        background: rgba(26, 26, 26, 0.95);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 
+            0 20px 25px -5px rgba(0, 0, 0, 0.3),
+            0 10px 10px -5px rgba(0, 0, 0, 0.2),
+            0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+}
+
+/* Address result items */
+.address-result {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.address-result:last-child {
+    border-bottom: none;
+}
+
+.address-result:hover,
+.address-result.selected {
+    background: rgba(59, 130, 246, 0.08);
+    transform: translateX(2px);
+}
+
+.address-result:active {
+    transform: translateX(0);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+/* Dark mode for results */
+@media (prefers-color-scheme: dark) {
+    .address-result {
+        border-bottom-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .address-result:hover,
+    .address-result.selected {
+        background: rgba(59, 130, 246, 0.15);
+    }
+    
+    .address-result:active {
+        background: rgba(59, 130, 246, 0.2);
+    }
+}
+
+/* Address text styling */
+.address-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 2px;
+    line-height: 1.4;
+}
+
+.address-formatted {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: #6b7280;
+    line-height: 1.3;
+}
+
+/* Dark mode text */
+@media (prefers-color-scheme: dark) {
+    .address-name {
+        color: #f9fafb;
+    }
+    
+    .address-formatted {
+        color: #9ca3af;
+    }
+}
+
+/* Scrollbar styling for dropdown */
+.address-autocomplete-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.address-autocomplete-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.address-autocomplete-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.address-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+    .address-autocomplete-dropdown::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .address-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+}
+
+/* Loading state for dropdown */
+.address-autocomplete-dropdown.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 60px;
+}
+
+.address-autocomplete-dropdown.loading::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(59, 130, 246, 0.2);
+    border-top-color: #3B82F6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Empty state */
+.address-autocomplete-dropdown.empty {
+    padding: 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .address-autocomplete-dropdown {
+        border-radius: 12px;
+        margin-top: 2px;
+        max-height: 250px;
+    }
+    
+    .address-result {
+        padding: 14px 16px;
+    }
+    
+    .address-name {
+        font-size: 15px;
+    }
+    
+    .address-formatted {
+        font-size: 13px;
+    }
+    
+    /* Larger touch targets */
+    .address-result {
+        min-height: 44px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .address-autocomplete-dropdown {
+        border: 2px solid #000;
+        background: #fff;
+        backdrop-filter: none;
+    }
+    
+    .address-result {
+        border-bottom: 1px solid #000;
+    }
+    
+    .address-result:hover,
+    .address-result.selected {
+        background: #000;
+        color: #fff;
+    }
+    
+    .address-name {
+        color: #000;
+    }
+    
+    .address-formatted {
+        color: #333;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .address-autocomplete-dropdown,
+    .address-result,
+    .validation-icon {
+        transition: none;
+        animation: none;
+    }
+    
+    .validation-icon.loading {
+        animation: none;
+    }
+    
+    .address-autocomplete-dropdown.loading::before {
+        animation: none;
+    }
+}

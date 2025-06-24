@@ -150,9 +150,19 @@
 
                                     <div class="form-group">
                                         <label for="edit-event-address">Event Address</label>
-                                        <input type="text" id="edit-event-address" name="event_address" maxlength="200" value="{{drop.event_address}}" placeholder="Venue address or location" class="form-input">
-                                        <small class="form-help">Physical location or venue address for the event</small>
+                                        <div class="address-input-container">
+                                            <input type="text" id="edit-event-address" name="event_address" maxlength="500" value="{{drop.event_address}}" placeholder="Start typing venue address or location..." class="form-input address-autocomplete-input">
+                                        </div>
+                                        <small class="form-help">Physical location or venue address for the event. Start typing for intelligent suggestions.</small>
                                         {{#if errors.event_address}}<p class="error">{{errors.event_address}}</p>{{/if}}
+
+                                        <!-- Hidden fields for enhanced address data -->
+                                        <input type="hidden" id="address-latitude" name="address_latitude" value="{{drop.address_latitude}}">
+                                        <input type="hidden" id="address-longitude" name="address_longitude" value="{{drop.address_longitude}}">
+                                        <input type="hidden" id="address-formatted" name="address_formatted" value="{{drop.address_formatted}}">
+                                        <input type="hidden" id="address-components" name="address_components" value="{{json drop.address_components}}">
+                                        <input type="hidden" id="address-data" name="address_data" value="{{json drop.address_data}}">
+                                        <input type="hidden" id="address-validated" name="address_validated" value="{{drop.address_validated}}">
                                     </div>
                                 </div>
 
@@ -783,6 +793,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('✅ Modern drop edit system initialized successfully');
     console.log('💡 Use window.debugGradientData() to debug gradient issues');
+
+    // Initialize Address Autocomplete
+    initializeAddressAutocomplete();
 
     // Enhanced form field debugging and validation
     setTimeout(() => {
@@ -3512,5 +3525,76 @@ async function loadAnalytics() {
         transform: translateX(0);
         opacity: 1;
     }
+}
+
+// Address Autocomplete Initialization
+function initializeAddressAutocomplete() {
+    console.log('🏠 Initializing address autocomplete system...');
+
+    const addressInput = document.getElementById('edit-event-address');
+    if (!addressInput) {
+        console.warn('⚠️ Address input field not found');
+        return;
+    }
+
+    // Initialize the autocomplete
+    const autocomplete = new AddressAutocomplete(addressInput, {
+        placeholder: 'Start typing venue address or location...',
+        enableValidation: true,
+        enableCoordinates: true,
+        minLength: 3,
+        debounceMs: 300,
+        maxResults: 5
+    });
+
+    // Handle address selection
+    addressInput.addEventListener('addressSelected', function(event) {
+        const { formatted, coordinates, data, components } = event.detail;
+
+        console.log('🏠 Address selected:', {
+            formatted,
+            coordinates,
+            components
+        });
+
+        // Update hidden fields with enhanced address data
+        const latitudeField = document.getElementById('address-latitude');
+        const longitudeField = document.getElementById('address-longitude');
+        const formattedField = document.getElementById('address-formatted');
+        const componentsField = document.getElementById('address-components');
+        const dataField = document.getElementById('address-data');
+        const validatedField = document.getElementById('address-validated');
+
+        if (latitudeField && coordinates) {
+            latitudeField.value = coordinates.latitude;
+        }
+        if (longitudeField && coordinates) {
+            longitudeField.value = coordinates.longitude;
+        }
+        if (formattedField) {
+            formattedField.value = formatted;
+        }
+        if (componentsField && components) {
+            componentsField.value = JSON.stringify(components);
+        }
+        if (dataField && data) {
+            dataField.value = JSON.stringify(data);
+        }
+        if (validatedField) {
+            validatedField.value = 'true';
+        }
+
+        console.log('✅ Address data updated in hidden fields');
+
+        // Trigger preview update if available
+        if (typeof updatePreviewContent === 'function') {
+            updatePreviewContent();
+        }
+    });
+
+    // Store autocomplete instance for potential cleanup
+    window.addressAutocomplete = autocomplete;
+
+    console.log('✅ Address autocomplete system initialized successfully');
 }
 </style>

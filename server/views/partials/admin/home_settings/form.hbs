@@ -55,18 +55,29 @@
       </div>
 
       <div class="form-group">
-        <label for="event_address">Event Address (max 100 characters)</label>
-        <input
-          id="event_address"
-          name="event_address"
-          type="text"
-          maxlength="100"
-          value="{{settings.event_address}}"
-          placeholder="101 Address Drive, Asbury Park, NJ"
-          class="form-input"
-          required
-        />
+        <label for="event_address">Event Address</label>
+        <div class="address-input-container">
+          <input
+            id="event_address"
+            name="event_address"
+            type="text"
+            maxlength="500"
+            value="{{settings.event_address}}"
+            placeholder="Start typing venue address or location..."
+            class="form-input address-autocomplete-input"
+            required
+          />
+        </div>
+        <small class="form-help">Physical location or venue address for the event. Start typing for intelligent suggestions.</small>
         {{#if errors.event_address}}<p class="error">{{errors.event_address}}</p>{{/if}}
+
+        <!-- Hidden fields for enhanced address data -->
+        <input type="hidden" id="home-address-latitude" name="address_latitude" value="{{settings.address_latitude}}">
+        <input type="hidden" id="home-address-longitude" name="address_longitude" value="{{settings.address_longitude}}">
+        <input type="hidden" id="home-address-formatted" name="address_formatted" value="{{settings.address_formatted}}">
+        <input type="hidden" id="home-address-components" name="address_components" value="{{json settings.address_components}}">
+        <input type="hidden" id="home-address-data" name="address_data" value="{{json settings.address_data}}">
+        <input type="hidden" id="home-address-validated" name="address_validated" value="{{settings.address_validated}}">
       </div>
     </div>
 
@@ -299,5 +310,79 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', updateCount);
         updateCount(); // Initial count
     });
+
+    // Initialize Address Autocomplete for Home Settings
+    initializeHomeAddressAutocomplete();
 });
+
+// Address Autocomplete for Home Settings
+function initializeHomeAddressAutocomplete() {
+    console.log('🏠 Initializing home address autocomplete system...');
+
+    const addressInput = document.getElementById('event_address');
+    if (!addressInput) {
+        console.warn('⚠️ Home address input field not found');
+        return;
+    }
+
+    // Initialize the autocomplete
+    const autocomplete = new AddressAutocomplete(addressInput, {
+        placeholder: 'Start typing venue address or location...',
+        enableValidation: true,
+        enableCoordinates: true,
+        minLength: 3,
+        debounceMs: 300,
+        maxResults: 5
+    });
+
+    // Handle address selection
+    addressInput.addEventListener('addressSelected', function(event) {
+        const { formatted, coordinates, data, components } = event.detail;
+
+        console.log('🏠 Home address selected:', {
+            formatted,
+            coordinates,
+            components
+        });
+
+        // Update hidden fields with enhanced address data
+        const latitudeField = document.getElementById('home-address-latitude');
+        const longitudeField = document.getElementById('home-address-longitude');
+        const formattedField = document.getElementById('home-address-formatted');
+        const componentsField = document.getElementById('home-address-components');
+        const dataField = document.getElementById('home-address-data');
+        const validatedField = document.getElementById('home-address-validated');
+
+        if (latitudeField && coordinates) {
+            latitudeField.value = coordinates.latitude;
+        }
+        if (longitudeField && coordinates) {
+            longitudeField.value = coordinates.longitude;
+        }
+        if (formattedField) {
+            formattedField.value = formatted;
+        }
+        if (componentsField && components) {
+            componentsField.value = JSON.stringify(components);
+        }
+        if (dataField && data) {
+            dataField.value = JSON.stringify(data);
+        }
+        if (validatedField) {
+            validatedField.value = 'true';
+        }
+
+        console.log('✅ Home address data updated in hidden fields');
+
+        // Trigger preview update if available
+        if (typeof updatePreviewContent === 'function') {
+            updatePreviewContent();
+        }
+    });
+
+    // Store autocomplete instance for potential cleanup
+    window.homeAddressAutocomplete = autocomplete;
+
+    console.log('✅ Home address autocomplete system initialized successfully');
+}
 </script>
