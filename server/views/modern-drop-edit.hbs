@@ -681,8 +681,30 @@ function navigateBack() {
     window.location.href = '/drops';
 }
 
+// Logging utility with levels
+const LOG_LEVELS = {
+    ERROR: 0,
+    WARN: 1,
+    INFO: 2,
+    DEBUG: 3
+};
+
+const CURRENT_LOG_LEVEL = LOG_LEVELS.INFO; // Change to DEBUG for verbose logging
+
+function log(level, prefix, message, ...args) {
+    if (level <= CURRENT_LOG_LEVEL) {
+        const prefixes = {
+            [LOG_LEVELS.ERROR]: '❌',
+            [LOG_LEVELS.WARN]: '⚠️',
+            [LOG_LEVELS.INFO]: '✅',
+            [LOG_LEVELS.DEBUG]: '🔍'
+        };
+        console.log(`${prefixes[level]} ${prefix}`, message, ...args);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing modern drop edit system...');
+    log(LOG_LEVELS.INFO, '🚀', 'Drop edit system initialized');
 
     // Initialize form elements
     initializeFormElements();
@@ -705,111 +727,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize real-time updates
     initializeRealTimeUpdates();
 
-    // Initialize debug test button
-    initializeDebugTest();
+    // Debug test button removed for cleaner console output
 
-    // Initialize gradient editor with multiple attempts to ensure proper loading
+    // Initialize gradient editor with retry logic
     setTimeout(() => {
-        console.log('🎨 CRITICAL: Initializing gradient editor (attempt 1)...');
+        log(LOG_LEVELS.DEBUG, '🎨', 'Initializing gradient editor');
         initializeGradientEditor();
     }, 100);
 
-    // Additional initialization attempts to ensure data is loaded
+    // Retry gradient data loading if needed
     setTimeout(() => {
-        console.log('🎨 CRITICAL: Gradient editor initialization check (attempt 2)...');
-
-        // Check if gradient data was loaded properly
         if (!gradientData || !window.gradientDataLoaded) {
-            console.log('🎨 Re-attempting gradient data loading...');
+            log(LOG_LEVELS.DEBUG, '🎨', 'Retrying gradient data loading');
             loadExistingGradientData();
-
-            // Force UI update
-            setTimeout(() => {
-                setGradientUIFromData(0);
-            }, 100);
-        } else {
-            console.log('🎨 ✅ Gradient data already loaded properly');
+            setTimeout(() => setGradientUIFromData(0), 100);
         }
     }, 1000);
 
-    // Final check and force update
+    // Final gradient UI sync
     setTimeout(() => {
-        console.log('🎨 FINAL: Gradient editor final check (attempt 3)...');
-
         const backgroundTypeSelect = document.getElementById('edit-background-type');
-        if (backgroundTypeSelect && backgroundTypeSelect.value === 'gradient') {
-            console.log('🎨 Background is gradient, ensuring UI is synced...');
-
+        if (backgroundTypeSelect?.value === 'gradient') {
             if (gradientData) {
                 setGradientUIFromData(0);
                 updateGradientPreview();
-                console.log('🎨 ✅ Final UI sync completed');
+                log(LOG_LEVELS.DEBUG, '🎨', 'Gradient UI synced');
             } else {
-                console.log('🎨 ⚠️ No gradient data available, loading defaults');
                 gradientData = { ...defaultGradientData };
                 setGradientUIFromData(0);
                 updateGradientPreview();
+                log(LOG_LEVELS.WARN, '🎨', 'Using default gradient data');
             }
         }
     }, 2000);
 
     // Add gradient debug function to window for manual testing
-    window.debugGradientData = function() {
-        console.log('🔍 GRADIENT DEBUG INFORMATION');
-        console.log('='.repeat(50));
+    // Debug function removed for cleaner console output
 
-        // Check data sources
-        const hiddenInput = document.getElementById('gradient-data');
-        const scriptTag = document.getElementById('gradient-data-json');
-
-        console.log('📋 Data Sources:');
-        console.log('   Hidden Input:', hiddenInput ? `"${hiddenInput.value}"` : 'NOT FOUND');
-        console.log('   Script Tag:', scriptTag ? `"${scriptTag.textContent}"` : 'NOT FOUND');
-
-        // Check current gradient data
-        console.log('\n🎨 Current Gradient Data:');
-        console.log('   Type:', gradientData.type);
-        console.log('   Angle:', gradientData.angle);
-        console.log('   Stops:', gradientData.stops);
-        console.log('   Data Loaded Flag:', window.gradientDataLoaded);
-
-        // Check UI elements
-        console.log('\n🖼️ UI Elements:');
-        const gradientEditor = document.getElementById('gradient-editor');
-        const typeButtons = document.querySelectorAll('.gradient-type-btn');
-        const directionButtons = document.querySelectorAll('.gradient-direction-btn');
-        const preview = document.getElementById('gradient-preview');
-
-        console.log('   Gradient Editor:', gradientEditor ? 'FOUND' : 'NOT FOUND', gradientEditor?.style.display);
-        console.log('   Type Buttons:', typeButtons.length);
-        console.log('   Direction Buttons:', directionButtons.length);
-        console.log('   Preview Element:', preview ? 'FOUND' : 'NOT FOUND');
-
-        // Check background type
-        const backgroundTypeSelect = document.getElementById('edit-background-type');
-        console.log('   Background Type:', backgroundTypeSelect ? backgroundTypeSelect.value : 'NOT FOUND');
-
-        // Force reload gradient data
-        console.log('\n🔄 Force Reloading Gradient Data...');
-        const success = loadExistingGradientData();
-        console.log('   Reload Success:', success);
-
-        return {
-            hiddenInput: hiddenInput?.value,
-            scriptTag: scriptTag?.textContent,
-            gradientData,
-            dataLoaded: window.gradientDataLoaded,
-            uiElements: {
-                editor: !!gradientEditor,
-                typeButtons: typeButtons.length,
-                directionButtons: directionButtons.length,
-                preview: !!preview
-            }
-        };
-    };
-
-    console.log('✅ Modern drop edit system initialized successfully');
-    console.log('💡 Use window.debugGradientData() to debug gradient issues');
+    log(LOG_LEVELS.INFO, '✅', 'Drop edit system initialized');
 });
 
 // Address Autocomplete Initialization Function
@@ -915,95 +870,23 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeAddressAutocomplete();
     }
 
-    // Enhanced form field debugging and validation
+    // Form validation check (reduced logging)
     setTimeout(() => {
-        console.log('🔍 ENHANCED FORM FIELDS DEBUG');
-        console.log('='.repeat(50));
-
         const form = document.getElementById('drop-edit-form');
         if (!form) {
-            console.error('❌ Form element not found!');
+            log(LOG_LEVELS.ERROR, '📋', 'Form element not found');
             return;
         }
 
-        // Check all form elements
         const allInputs = form.querySelectorAll('input, select, textarea');
-        console.log(`📊 Total form elements found: ${allInputs.length}`);
+        const stylingFields = ['background_type', 'card_background_type', 'background_color', 'overscroll_background_color'];
+        const missingFields = stylingFields.filter(name => !form.querySelector(`[name="${name}"]`));
 
-        // Verify styling fields specifically
-        const stylingFields = [
-            { name: 'background_type', type: 'select', expected: '{{drop.background_type}}' },
-            { name: 'card_background_type', type: 'select', expected: '{{drop.card_background_type}}' },
-            { name: 'background_color', type: 'color', expected: '{{drop.background_color}}' },
-            { name: 'overscroll_background_color', type: 'color', expected: '{{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#ffffff{{/if}}' },
-            { name: 'button_color', type: 'color', expected: '{{drop.button_color}}' },
-            { name: 'button_text_color', type: 'color', expected: '{{drop.button_text_color}}' },
-            { name: 'title_color', type: 'color', expected: '{{drop.title_color}}' },
-            { name: 'description_color', type: 'color', expected: '{{drop.description_color}}' }
-        ];
-
-        console.log('\n🎨 STYLING FIELDS VERIFICATION');
-        console.log('-'.repeat(40));
-
-        let allStylingFieldsFound = true;
-
-        stylingFields.forEach(field => {
-            const element = document.querySelector(`[name="${field.name}"]`);
-            if (element) {
-                const value = element.value;
-                const isPopulated = value && value !== '';
-                console.log(`   ✅ ${field.name} (${field.type}): "${value}" ${isPopulated ? '✅' : '⚠️ EMPTY'}`);
-
-                // Check if element is visible
-                const isVisible = element.offsetParent !== null;
-                if (!isVisible) {
-                    console.warn(`   ⚠️ ${field.name} element is hidden!`);
-                }
-
-                // For select elements, check options
-                if (field.type === 'select' && element.tagName === 'SELECT') {
-                    console.log(`     📋 Options: ${Array.from(element.options).map(opt => `"${opt.value}"`).join(', ')}`);
-                    console.log(`     🎯 Selected: "${element.selectedOptions[0]?.value || 'none'}"`);
-                }
-            } else {
-                console.error(`   ❌ ${field.name}: ELEMENT NOT FOUND!`);
-                allStylingFieldsFound = false;
-            }
-        });
-
-        // Test form data collection
-        console.log('\n📦 FORM DATA COLLECTION TEST');
-        console.log('-'.repeat(40));
-
-        try {
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-
-            console.log('📊 Collected form data:');
-            stylingFields.forEach(field => {
-                const value = data[field.name];
-                console.log(`   ${field.name}: "${value || 'MISSING'}"`);
-            });
-
-            // Check for any missing styling data
-            const missingStylingData = stylingFields.filter(field => !data[field.name]);
-            if (missingStylingData.length > 0) {
-                console.warn('⚠️ Missing styling data:', missingStylingData.map(f => f.name));
-            } else {
-                console.log('✅ All styling fields have data');
-            }
-
-        } catch (error) {
-            console.error('❌ Error collecting form data:', error);
+        if (missingFields.length > 0) {
+            log(LOG_LEVELS.WARN, '📋', 'Missing form fields:', missingFields);
+        } else {
+            log(LOG_LEVELS.DEBUG, '📋', `Form validation passed (${allInputs.length} elements)`);
         }
-
-        // Summary
-        console.log('\n📋 SUMMARY');
-        console.log('-'.repeat(40));
-        console.log(`Form found: ${form ? '✅' : '❌'}`);
-        console.log(`Total elements: ${allInputs.length}`);
-        console.log(`Styling fields found: ${allStylingFieldsFound ? '✅' : '❌'}`);
-
     }, 1500);
 });
 
@@ -1033,7 +916,7 @@ function initializeFormElements() {
     collectEmailToggle = document.getElementById('edit-collect-email');
     collectPhoneToggle = document.getElementById('edit-collect-phone');
 
-    console.log('📝 Form elements initialized');
+    log(LOG_LEVELS.DEBUG, '📝', 'Form elements initialized');
 
     // Initialize RSVP title character counter
     if (rsvpTitleInput) {
@@ -1624,7 +1507,7 @@ function refreshPreview() {
 
 // Background Controls Visibility Management
 function updateBackgroundControlsVisibility(backgroundType) {
-    console.log('🎨 Updating background controls visibility for type:', backgroundType);
+    log(LOG_LEVELS.DEBUG, '🎨', `Background controls: ${backgroundType}`);
 
     const backgroundColorGroup = document.getElementById('background-color-group');
     const gradientEditor = document.getElementById('gradient-editor');
@@ -1633,13 +1516,13 @@ function updateBackgroundControlsVisibility(backgroundType) {
         // Show background color picker for solid backgrounds
         if (backgroundColorGroup) {
             backgroundColorGroup.style.display = 'block';
-            console.log('🎨 ✅ Showing background color picker for solid background');
+            log(LOG_LEVELS.DEBUG, '🎨', 'Showing background color picker');
         }
 
         // Hide gradient editor
         if (gradientEditor) {
             gradientEditor.style.display = 'none';
-            console.log('🎨 ✅ Hiding gradient editor for solid background');
+            log(LOG_LEVELS.DEBUG, '🎨', 'Hiding gradient editor');
         }
 
         // Update live preview to show solid color
@@ -1652,13 +1535,13 @@ function updateBackgroundControlsVisibility(backgroundType) {
         // Hide background color picker for gradient backgrounds
         if (backgroundColorGroup) {
             backgroundColorGroup.style.display = 'none';
-            console.log('🎨 ✅ Hiding background color picker for gradient background');
+            log(LOG_LEVELS.DEBUG, '🎨', 'Hiding background color picker');
         }
 
         // Show gradient editor
         if (gradientEditor) {
             gradientEditor.style.display = 'block';
-            console.log('🎨 ✅ Showing gradient editor for gradient background');
+            log(LOG_LEVELS.DEBUG, '🎨', 'Showing gradient editor');
         }
 
         // Ensure we have gradient data
@@ -2376,8 +2259,7 @@ function initializeFormSubmission() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        console.log('🚀 FORM SUBMISSION TRIGGERED');
-        console.log('='.repeat(50));
+        log(LOG_LEVELS.INFO, '🚀', 'Form submission started');
 
         // Show loading state
         saveBtn.disabled = true;
@@ -2410,49 +2292,22 @@ function initializeFormSubmission() {
                 console.log('🎨 Using current gradientData for submission:', data.gradient_data);
             }
 
-            // Enhanced debugging: Log comprehensive form data
-            console.log('🔍 FORM SUBMISSION DEBUG');
-            console.log('='.repeat(50));
-            console.log('📋 Complete form data:', data);
-            console.log('📊 Form data count:', Object.keys(data).length, 'fields');
+            // Form data validation
+            const requiredFields = ['title', 'slug'];
+            const missingRequired = requiredFields.filter(field => !data[field]);
 
-            // Verify styling fields specifically
-            const stylingFields = {
-                background_type: data.background_type,
-                card_background_type: data.card_background_type,
-                background_color: data.background_color,
-                overscroll_background_color: data.overscroll_background_color,
-                button_color: data.button_color,
-                button_text_color: data.button_text_color,
-                title_color: data.title_color,
-                description_color: data.description_color,
-                rsvp_title: data.rsvp_title,
-                gradient_data: data.gradient_data
-            };
-
-            console.log('🎨 Styling fields verification:');
-            Object.entries(stylingFields).forEach(([key, value]) => {
-                const status = value ? '✅' : '❌';
-                console.log(`   ${status} ${key}: ${value || 'MISSING'}`);
-            });
-
-            // Check for missing required styling fields
-            const missingStylingFields = Object.entries(stylingFields)
-                .filter(([key, value]) => !value)
-                .map(([key]) => key);
-
-            if (missingStylingFields.length > 0) {
-                console.warn('⚠️ Missing styling fields:', missingStylingFields);
+            if (missingRequired.length > 0) {
+                log(LOG_LEVELS.WARN, '📋', 'Missing required fields:', missingRequired);
             }
+
+            log(LOG_LEVELS.DEBUG, '📋', `Submitting ${Object.keys(data).length} form fields`);
 
             // Validate data before sending
             if (!data.title || !data.slug) {
                 throw new Error('Title and slug are required');
             }
 
-            console.log('📡 Sending API request...');
-            console.log('🌐 URL:', `/api/drops/{{drop.id}}`);
-            console.log('📦 Payload size:', JSON.stringify(data).length, 'bytes');
+            log(LOG_LEVELS.DEBUG, '📡', `Sending API request (${JSON.stringify(data).length} bytes)`);
 
             const response = await fetch(`/api/drops/{{drop.id}}`, {
                 method: 'PUT',
@@ -2474,9 +2329,7 @@ function initializeFormSubmission() {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('✅ DROP UPDATE SUCCESS');
-                console.log('='.repeat(30));
-                console.log('📊 Server response:', result);
+                log(LOG_LEVELS.INFO, '✅', 'Drop updated successfully');
 
                 if (result.data) {
                     console.log('🎨 Updated styling data:', {
@@ -2523,9 +2376,7 @@ function initializeFormSubmission() {
                 }, 1500);
 
             } else {
-                console.error('❌ DROP UPDATE FAILED');
-                console.error('='.repeat(30));
-                console.error('📊 Response status:', response.status, response.statusText);
+                log(LOG_LEVELS.ERROR, '❌', `Drop update failed: ${response.status} ${response.statusText}`);
 
                 const errorText = await response.text();
                 console.error('📄 Error response body:', errorText);
@@ -2732,61 +2583,7 @@ function initializeUndoChanges() {
     console.log('✅ Undo changes functionality initialized');
 }
 
-// Test function to verify all functionality is working
-function testFormFunctionality() {
-    console.log('🧪 TESTING FORM FUNCTIONALITY');
-    console.log('='.repeat(50));
-
-    const form = document.getElementById('drop-edit-form');
-    const saveBtn = form?.querySelector('button[type="submit"]');
-    const undoBtn = document.getElementById('undo-changes-btn');
-
-    // Test 1: Form elements
-    console.log('1️⃣ Form Elements Test:');
-    console.log(`   Form found: ${form ? '✅' : '❌'}`);
-    console.log(`   Save button found: ${saveBtn ? '✅' : '❌'}`);
-    console.log(`   Undo button found: ${undoBtn ? '✅' : '❌'}`);
-
-    // Test 2: New event fields
-    console.log('\n2️⃣ New Event Fields Test:');
-    const eventFields = [
-        'artist_name',
-        'event_date',
-        'event_address',
-        'show_on_homepage'
-    ];
-
-    eventFields.forEach(fieldName => {
-        const field = document.querySelector(`[name="${fieldName}"]`);
-        console.log(`   ${fieldName}: ${field ? '✅' : '❌'}`);
-    });
-
-    // Test 3: Form submission handler
-    console.log('\n3️⃣ Event Handlers Test:');
-    const hasSubmitHandler = form?._events?.submit || form?.onsubmit;
-    console.log(`   Form submit handler: ${hasSubmitHandler ? '✅' : '❌'}`);
-
-    // Test 4: Responsive design
-    console.log('\n4️⃣ Responsive Design Test:');
-    const formActions = document.querySelector('.form-actions');
-    const computedStyle = window.getComputedStyle(formActions);
-    console.log(`   Form actions styling: ${formActions ? '✅' : '❌'}`);
-    console.log(`   Text align: ${computedStyle.textAlign}`);
-
-    console.log('\n✅ Form functionality test completed');
-    return {
-        form: !!form,
-        saveBtn: !!saveBtn,
-        undoBtn: !!undoBtn,
-        eventFields: eventFields.map(name => ({
-            name,
-            found: !!document.querySelector(`[name="${name}"]`)
-        }))
-    };
-}
-
-// Add test function to window for manual testing
-window.testFormFunctionality = testFormFunctionality;
+// Test function removed for cleaner console output
 
 function showToast(message, type = 'info', duration = 5000) {
     console.log(`🍞 Toast: ${type.toUpperCase()} - ${message}`);
@@ -2852,100 +2649,7 @@ function showToast(message, type = 'info', duration = 5000) {
     }, duration);
 }
 
-function initializeDebugTest() {
-    const debugBtn = document.getElementById('debug-test-btn');
-    if (!debugBtn) return;
-
-    debugBtn.addEventListener('click', async function() {
-        console.log('🔧 MANUAL DEBUG TEST STARTED');
-        console.log('='.repeat(50));
-
-        try {
-            // Test 1: Check current form data
-            console.log('1️⃣ Checking current form data...');
-
-            const form = document.getElementById('drop-edit-form');
-            if (form) {
-                const formData = new FormData(form);
-                const currentData = Object.fromEntries(formData);
-                console.log('📋 Current form data:', currentData);
-
-                // Check specific styling fields
-                const stylingFields = ['background_type', 'card_background_type', 'background_color', 'overscroll_background_color', 'button_text_color', 'rsvp_title', 'gradient_data'];
-                stylingFields.forEach(field => {
-                    const element = form.querySelector(`[name="${field}"]`);
-                    if (element) {
-                        console.log(`✅ ${field}: "${element.value}" (element found)`);
-                    } else {
-                        console.error(`❌ ${field}: element not found!`);
-                    }
-                });
-            }
-
-            // Test 1.5: Gradient data debug
-            console.log('1️⃣.5️⃣ Checking gradient data specifically...');
-            const gradientDebugResult = window.debugGradientData();
-            console.log('🎨 Gradient debug result:', gradientDebugResult);
-
-            // Force reload gradient data
-            console.log('🔄 Force reloading gradient data...');
-            const reloadSuccess = loadExistingGradientData();
-            console.log('🔄 Reload success:', reloadSuccess);
-
-            // Force UI update if data was loaded
-            if (window.gradientDataLoaded) {
-                console.log('🖼️ Force updating gradient UI...');
-                setGradientUIFromData(0);
-            }
-
-            // Test 2: Simple API connectivity test
-            console.log('2️⃣ Testing API connectivity...');
-
-            const testData = {
-                background_color: '#00FF00', // Bright green to make it obvious
-                background_type: 'solid',
-                card_background_type: 'solid_white',
-                button_color: '#FF0000',
-                button_text_color: '#FFFFFF'
-            };
-
-            console.log('📤 Sending test data:', testData);
-
-            const response = await fetch(`/api/drops/{{drop.id}}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify(testData)
-            });
-
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log('✅ SUCCESS! API response:', result);
-                showToast('🔧 Debug test successful! Check if background changed to green.', 'success');
-
-                // Force refresh the preview
-                setTimeout(() => {
-                    refreshPreview();
-                }, 1000);
-
-            } else {
-                const errorText = await response.text();
-                console.error('❌ API Error:', errorText);
-                showToast(`🔧 Debug test failed: ${response.status} ${response.statusText}`, 'error');
-            }
-
-        } catch (error) {
-            console.error('🚨 Debug test error:', error);
-            showToast(`🔧 Debug test error: ${error.message}`, 'error');
-        }
-    });
-}
+// Debug test function removed for cleaner console output
 
 async function loadAnalytics() {
     try {
