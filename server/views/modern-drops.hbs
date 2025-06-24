@@ -296,101 +296,28 @@
     </div>
 </div>
 
-<!-- Mobile Debug Indicator -->
-<div id="mobile-debug-indicator" class="mobile-debug-indicator">
-    📱 Mobile Mode
-</div>
 
-<!-- Mobile-Compatible Drops JavaScript -->
+
+<!-- Drops JavaScript -->
 <script>
 let dropToDelete = null;
 
-// Mobile debugging infrastructure
-const MobileDebug = {
-    log: function(message, data = null) {
-        const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-        const logMessage = `[${timestamp}] ${message}`;
-        console.log(logMessage, data || '');
-
-        // For mobile debugging - create visible log on screen if needed
-        if (window.location.search.includes('debug=mobile')) {
-            this.showMobileLog(logMessage, data);
-        }
-    },
-
-    showMobileLog: function(message, data) {
-        let debugDiv = document.getElementById('mobile-debug-log');
-        if (!debugDiv) {
-            debugDiv = document.createElement('div');
-            debugDiv.id = 'mobile-debug-log';
-            debugDiv.style.cssText = `
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                width: 300px;
-                max-height: 200px;
-                overflow-y: auto;
-                background: rgba(0,0,0,0.8);
-                color: white;
-                font-size: 10px;
-                padding: 10px;
-                border-radius: 5px;
-                z-index: 9999;
-                font-family: monospace;
-            `;
-            document.body.appendChild(debugDiv);
-        }
-
-        const logEntry = document.createElement('div');
-        logEntry.textContent = message + (data ? ' | ' + JSON.stringify(data) : '');
-        debugDiv.appendChild(logEntry);
-        debugDiv.scrollTop = debugDiv.scrollHeight;
-
-        // Keep only last 20 entries
-        while (debugDiv.children.length > 20) {
-            debugDiv.removeChild(debugDiv.firstChild);
-        }
-    }
-};
-
-// Detect mobile browser
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-MobileDebug.log('🔍 Browser detection', {
-    isMobile,
-    isIOS,
-    userAgent: navigator.userAgent.substring(0, 50) + '...'
-});
-
-// Create drop function - mobile compatible
+// Create drop function
 function createDrop() {
-    MobileDebug.log('🎯 Create drop function called');
+    console.log('Create drop button clicked');
 
     const modal = document.getElementById('create-drop-dialog');
-    MobileDebug.log('🔍 Modal element found', { found: !!modal });
-
     if (modal) {
         modal.classList.remove('hidden');
-        MobileDebug.log('✅ Modal shown', { classes: modal.className });
 
-        // Focus on the title input with mobile-friendly delay
+        // Focus on the title input
         setTimeout(() => {
             const titleInput = document.getElementById('drop-title');
             if (titleInput) {
-                // iOS Safari requires user interaction for focus
-                if (isIOS) {
-                    titleInput.setAttribute('autofocus', 'true');
-                } else {
-                    titleInput.focus();
-                }
-                MobileDebug.log('✅ Title input focused');
-            } else {
-                MobileDebug.log('❌ Title input not found');
+                titleInput.focus();
             }
-        }, isIOS ? 300 : 100); // Longer delay for iOS
+        }, 100);
     } else {
-        MobileDebug.log('❌ Modal not found, using fallback');
         window.location.href = '/#create-drop';
     }
 }
@@ -436,199 +363,82 @@ async function copyDropLink(url, buttonElement) {
     }
 }
 
-// Delete drop function - mobile compatible
+// Delete drop function
 function deleteDrop(dropId, dropTitle) {
-    MobileDebug.log('🗑️ Delete drop function called', { dropId, dropTitle });
+    console.log('Delete drop clicked:', dropId, dropTitle);
     dropToDelete = dropId;
 
     const titleElement = document.getElementById('dropTitle');
     const modalElement = document.getElementById('deleteModal');
 
-    MobileDebug.log('🔍 Elements found', {
-        titleElement: !!titleElement,
-        modalElement: !!modalElement
-    });
-
     if (titleElement) {
         titleElement.textContent = dropTitle;
-        MobileDebug.log('✅ Title set', { title: dropTitle });
     }
 
     if (modalElement) {
         modalElement.classList.remove('hidden');
-        MobileDebug.log('✅ Delete modal shown');
-    } else {
-        MobileDebug.log('❌ Delete modal not found');
     }
 }
 
-// Mobile-compatible event handlers
-function setupMobileEventHandlers() {
-    MobileDebug.log('🔧 Setting up mobile event handlers');
+// Simple event handlers setup
+function setupEventHandlers() {
+    console.log('Setting up event handlers');
 
     // Create Drop button handlers
     const createDropButtons = document.querySelectorAll('.create-drop-btn, [data-action="create-drop"]');
-    MobileDebug.log('🔍 Found create drop buttons', { count: createDropButtons.length });
+    console.log('Found create drop buttons:', createDropButtons.length);
 
-    createDropButtons.forEach((button, index) => {
-        MobileDebug.log(`🔧 Setting up create button ${index + 1}`);
-
-        // Remove any existing event listeners
-        button.removeEventListener('click', createDrop);
-        button.removeEventListener('touchstart', handleCreateDropTouch);
-        button.removeEventListener('touchend', handleCreateDropTouch);
-
-        // Add click event (works on desktop and most mobile)
+    createDropButtons.forEach((button) => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            MobileDebug.log('📱 Create drop click event', { button: index + 1 });
+            console.log('Create drop button clicked');
             createDrop();
         });
-
-        // Add touch events for better mobile support
-        if (isMobile) {
-            let touchStartTime = 0;
-
-            button.addEventListener('touchstart', function(e) {
-                touchStartTime = Date.now();
-                MobileDebug.log('👆 Create drop touchstart', { button: index + 1 });
-            }, { passive: true });
-
-            button.addEventListener('touchend', function(e) {
-                const touchDuration = Date.now() - touchStartTime;
-                if (touchDuration < 500) { // Prevent long press
-                    e.preventDefault();
-                    e.stopPropagation();
-                    MobileDebug.log('👆 Create drop touchend', {
-                        button: index + 1,
-                        duration: touchDuration
-                    });
-                    createDrop();
-                }
-            });
-        }
     });
 
     // Delete Drop button handlers
     const deleteDropButtons = document.querySelectorAll('.delete-drop-btn, [data-action="delete-drop"]');
-    MobileDebug.log('🔍 Found delete drop buttons', { count: deleteDropButtons.length });
+    console.log('Found delete drop buttons:', deleteDropButtons.length);
 
-    deleteDropButtons.forEach((button, index) => {
-        MobileDebug.log(`🔧 Setting up delete button ${index + 1}`);
-
+    deleteDropButtons.forEach((button) => {
         const dropId = button.getAttribute('data-drop-id');
         const dropTitle = button.getAttribute('data-drop-title');
 
-        // Remove any existing event listeners
-        button.removeEventListener('click', button._deleteHandler);
-        button.removeEventListener('touchend', button._deleteTouchHandler);
-
-        // Create handler functions
-        const clickHandler = function(e) {
+        button.addEventListener('click', function(e) {
             e.preventDefault();
-            e.stopPropagation();
-            MobileDebug.log('📱 Delete drop click event', {
-                button: index + 1,
-                dropId,
-                dropTitle
-            });
+            console.log('Delete drop button clicked:', dropId, dropTitle);
             deleteDrop(dropId, dropTitle);
-        };
-
-        const touchHandler = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            MobileDebug.log('👆 Delete drop touch event', {
-                button: index + 1,
-                dropId,
-                dropTitle
-            });
-            deleteDrop(dropId, dropTitle);
-        };
-
-        // Store handlers for cleanup
-        button._deleteHandler = clickHandler;
-        button._deleteTouchHandler = touchHandler;
-
-        // Add click event
-        button.addEventListener('click', clickHandler);
-
-        // Add touch events for mobile
-        if (isMobile) {
-            let touchStartTime = 0;
-
-            button.addEventListener('touchstart', function(e) {
-                touchStartTime = Date.now();
-                MobileDebug.log('👆 Delete drop touchstart', { button: index + 1 });
-            }, { passive: true });
-
-            button.addEventListener('touchend', function(e) {
-                const touchDuration = Date.now() - touchStartTime;
-                if (touchDuration < 500) { // Prevent long press
-                    touchHandler(e);
-                }
-            });
-        }
+        });
     });
 
-    MobileDebug.log('✅ Mobile event handlers setup complete');
+    console.log('Event handlers setup complete');
 }
 
-// Initialize mobile-compatible event handlers when DOM is ready
+// Initialize event handlers when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    MobileDebug.log('📄 DOM Content Loaded');
-    initializeMobileFeatures();
+    console.log('DOM Content Loaded');
+    setupEventHandlers();
 });
 
 // Also setup handlers if DOM is already loaded
 if (document.readyState === 'loading') {
-    MobileDebug.log('📄 DOM still loading, waiting for DOMContentLoaded');
+    console.log('DOM still loading, waiting for DOMContentLoaded');
 } else {
-    MobileDebug.log('📄 DOM already loaded, setting up handlers immediately');
-    initializeMobileFeatures();
+    console.log('DOM already loaded, setting up handlers immediately');
+    setupEventHandlers();
 }
 
-// Initialize all mobile features
-function initializeMobileFeatures() {
-    MobileDebug.log('🚀 Initializing mobile features');
-
-    // Show mobile debug indicator if on mobile
-    const debugIndicator = document.getElementById('mobile-debug-indicator');
-    if (debugIndicator && isMobile) {
-        debugIndicator.classList.add('show');
-        debugIndicator.textContent = `📱 ${isIOS ? 'iOS' : 'Mobile'} Mode`;
-    }
-
-    // Setup event handlers
-    setupMobileEventHandlers();
-
-    // Add viewport meta tag if missing (helps with mobile rendering)
-    if (!document.querySelector('meta[name="viewport"]')) {
-        const viewport = document.createElement('meta');
-        viewport.name = 'viewport';
-        viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-        document.head.appendChild(viewport);
-        MobileDebug.log('📱 Added viewport meta tag');
-    }
-
-    MobileDebug.log('✅ Mobile features initialized');
-}
-
-// Confirm delete handler with mobile debugging
+// Confirm delete handler
 document.getElementById('confirmDelete').addEventListener('click', async function() {
-    MobileDebug.log('🔥 Confirm delete clicked', { dropToDelete });
+    console.log('Confirm delete clicked:', dropToDelete);
 
     if (!dropToDelete) {
-        MobileDebug.log('❌ No drop to delete');
+        console.log('No drop to delete');
         return;
     }
 
     try {
-        MobileDebug.log('🚀 Sending DELETE request', {
-            url: `/api/drops/${dropToDelete}`,
-            method: 'DELETE'
-        });
+        console.log('Sending DELETE request to:', `/api/drops/${dropToDelete}`);
 
         const response = await fetch(`/api/drops/${dropToDelete}`, {
             method: 'DELETE',
@@ -637,14 +447,11 @@ document.getElementById('confirmDelete').addEventListener('click', async functio
             }
         });
 
-        MobileDebug.log('📡 Response received', {
-            status: response.status,
-            ok: response.ok
-        });
+        console.log('Response status:', response.status);
 
         if (response.ok) {
             const result = await response.json();
-            MobileDebug.log('✅ Delete successful', result);
+            console.log('Delete successful:', result);
             showToast('Drop deleted successfully!', 'success');
             // Reload the page to update the list
             setTimeout(() => {
@@ -652,14 +459,11 @@ document.getElementById('confirmDelete').addEventListener('click', async functio
             }, 1000);
         } else {
             const error = await response.json();
-            MobileDebug.log('❌ Delete failed', error);
+            console.log('Delete failed:', error);
             showToast(error.message || 'Failed to delete drop', 'error');
         }
     } catch (error) {
-        MobileDebug.log('🚨 Delete error', {
-            message: error.message,
-            stack: error.stack
-        });
+        console.log('Delete error:', error);
         showToast('Failed to delete drop', 'error');
     }
 
@@ -667,17 +471,17 @@ document.getElementById('confirmDelete').addEventListener('click', async functio
     dropToDelete = null;
 });
 
-// Cancel delete handler with mobile debugging
+// Cancel delete handler
 document.getElementById('cancelDelete').addEventListener('click', function() {
-    MobileDebug.log('❌ Delete cancelled');
+    console.log('Delete cancelled');
     document.getElementById('deleteModal').classList.add('hidden');
     dropToDelete = null;
 });
 
-// Close modal when clicking outside - mobile compatible
+// Close modal when clicking outside
 document.getElementById('deleteModal').addEventListener('click', function(e) {
     if (e.target === this) {
-        MobileDebug.log('🚪 Modal closed by clicking outside');
+        console.log('Modal closed by clicking outside');
         this.classList.add('hidden');
         dropToDelete = null;
     }
@@ -688,26 +492,12 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         const modal = document.getElementById('deleteModal');
         if (modal && !modal.classList.contains('hidden')) {
-            MobileDebug.log('⌨️ Modal closed with Escape key');
+            console.log('Modal closed with Escape key');
             modal.classList.add('hidden');
             dropToDelete = null;
         }
     }
 });
-
-// Add mobile-specific touch handlers for modal close
-if (isMobile) {
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-        deleteModal.addEventListener('touchend', function(e) {
-            if (e.target === this) {
-                MobileDebug.log('👆 Modal closed by touch outside');
-                this.classList.add('hidden');
-                dropToDelete = null;
-            }
-        });
-    }
-}
 
 // Toast notification function
 function showToast(message, type) {
@@ -879,11 +669,20 @@ a:focus-visible {
     }
 }
 
-/* iOS Safari specific fixes */
+/* iOS Safari specific fixes - CRITICAL: cursor pointer fixes click events */
 button {
     -webkit-appearance: none;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    cursor: pointer; /* This fixes iOS Safari click event bug */
+}
+
+/* Ensure all clickable elements have cursor pointer for iOS Safari */
+.create-drop-btn,
+.delete-drop-btn,
+button,
+[data-action] {
+    cursor: pointer !important;
 }
 
 /* Prevent zoom on double tap for buttons */
@@ -893,24 +692,5 @@ button {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
-}
-
-/* Mobile debug indicator */
-.mobile-debug-indicator {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0, 255, 0, 0.8);
-    color: black;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 12px;
-    font-weight: bold;
-    z-index: 9998;
-    display: none;
-}
-
-.mobile-debug-indicator.show {
-    display: block;
 }
 </style>
