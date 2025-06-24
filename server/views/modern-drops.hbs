@@ -82,14 +82,13 @@
         </div>
     </div>
 
-    <!-- Professional Drops List - Premium Design System -->
+    <!-- Professional Drops List - Fixed Alignment -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-200/60">
-        <div class="p-6">
-            {{#if drops.length}}
-            <div class="space-y-8">
-                {{#each drops}}
-                <!-- Professional Drop Card - Modern Design System -->
-                <div class="drop-card-modern group relative bg-white border border-gray-200/60 rounded-xl shadow-sm hover:shadow-lg hover:shadow-gray-900/10 hover:border-gray-300/80 transition-all duration-300 ease-out overflow-hidden">
+        {{#if drops.length}}
+        <div class="p-6 space-y-6">
+            {{#each drops}}
+            <!-- Professional Drop Card - Perfect Alignment -->
+            <div class="drop-card-modern group relative bg-white border border-gray-200/60 rounded-xl shadow-sm hover:shadow-lg hover:shadow-gray-900/10 hover:border-gray-300/80 transition-all duration-300 ease-out overflow-hidden w-full">
 
                     <!-- Card Header - Perfect Visual Hierarchy -->
                     <div class="px-6 pt-6 pb-4">
@@ -224,12 +223,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-
-                </div>
-                {{/each}}
             </div>
+            {{/each}}
             {{else}}
             <!-- Empty State -->
             <div class="text-center py-12">
@@ -771,9 +766,16 @@ button,
     @apply w-full;
 }
 
-/* Container Spacing - Perfect 8px Grid System */
-.space-y-8 > * + * {
-    @apply mt-8; /* 32px = 4 * 8px for optimal visual breathing room */
+/* Container Spacing - Perfect Alignment System */
+.space-y-6 > * + * {
+    @apply mt-6; /* 24px = 3 * 8px for consistent card spacing */
+}
+
+/* Card Container Alignment Fix */
+.drop-card-modern {
+    @apply w-full; /* Ensure full width */
+    @apply mx-0; /* Remove any horizontal margins */
+    @apply block; /* Block display for consistent alignment */
 }
 
 /* Modern Button System - Professional Design */
@@ -811,27 +813,37 @@ button,
     @apply active:bg-red-100 active:scale-95;
 }
 
-/* Perfect Alignment System - 8px Grid Compliance */
+/* Perfect Alignment System - Consistent Padding */
 .drop-card-modern .px-6 {
-    padding-left: 1.5rem; /* 24px = 3 * 8px */
-    padding-right: 1.5rem; /* 24px = 3 * 8px */
+    padding-left: 1.5rem !important; /* 24px = 3 * 8px */
+    padding-right: 1.5rem !important; /* 24px = 3 * 8px */
 }
 
 .drop-card-modern .pt-6 {
-    padding-top: 1.5rem; /* 24px = 3 * 8px */
+    padding-top: 1.5rem !important; /* 24px = 3 * 8px */
 }
 
 .drop-card-modern .pb-4 {
-    padding-bottom: 1rem; /* 16px = 2 * 8px */
+    padding-bottom: 1rem !important; /* 16px = 2 * 8px */
 }
 
 .drop-card-modern .pb-6 {
-    padding-bottom: 1.5rem; /* 24px = 3 * 8px */
+    padding-bottom: 1.5rem !important; /* 24px = 3 * 8px */
 }
 
 .drop-card-modern .py-5 {
-    padding-top: 1.25rem; /* 20px = 2.5 * 8px */
-    padding-bottom: 1.25rem; /* 20px = 2.5 * 8px */
+    padding-top: 1.25rem !important; /* 20px = 2.5 * 8px */
+    padding-bottom: 1.25rem !important; /* 20px = 2.5 * 8px */
+}
+
+/* Button Container Alignment */
+.drop-card-modern .border-t {
+    @apply w-full; /* Ensure action bar spans full width */
+}
+
+.drop-card-modern .grid,
+.drop-card-modern .flex {
+    @apply w-full; /* Ensure button containers span full width */
 }
 
 /* Line Clamp Utilities - Enhanced Implementation */
