@@ -325,6 +325,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendBtn = document.getElementById('sendBtn');
     const modalOverlay = document.getElementById('modalOverlay');
     const modalClose = document.getElementById('modalClose');
+
+    // Debug modal element initialization
+    console.log('🔍 Modal elements found:', {
+        modalOverlay: !!modalOverlay,
+        modalClose: !!modalClose,
+        poshIframe: !!document.getElementById('poshIframe')
+    });
     const phoneInput = document.getElementById('phoneInput');
     const countrySelect = document.getElementById('country-select');
     const countryFlagDisplay = document.getElementById('country-flag-display');
@@ -407,14 +414,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Update modal iframe source and open modal
                 const poshIframe = document.getElementById('poshIframe');
                 if (poshIframe) {
+                    console.log('🎯 Setting iframe src to:', ticketsUrl);
+
+                    // Add error handling for iframe loading
+                    poshIframe.onerror = function() {
+                        console.error('❌ Error loading iframe:', ticketsUrl);
+                    };
+
+                    poshIframe.onload = function() {
+                        console.log('✅ Iframe loaded successfully');
+                    };
+
                     poshIframe.src = ticketsUrl;
-                    console.log('🎯 Updated iframe src to:', ticketsUrl);
+                } else {
+                    console.error('❌ poshIframe element not found in DOM');
                 }
 
                 if (modalOverlay) {
+                    console.log('🎪 Opening modal overlay...');
                     modalOverlay.style.display = 'flex';
+                    modalOverlay.classList.add('active');
                     document.body.style.overflow = 'hidden';
-                    console.log('🎪 Modal opened successfully');
+                    console.log('✅ Modal opened successfully with active class');
+                    console.log('📊 Modal state:', {
+                        display: modalOverlay.style.display,
+                        hasActiveClass: modalOverlay.classList.contains('active'),
+                        bodyOverflow: document.body.style.overflow
+                    });
+                } else {
+                    console.error('❌ modalOverlay element not found in DOM');
                 }
             } else if (dropUrl) {
                 console.log('🔗 Navigating to drop page:', dropUrl);
@@ -1527,7 +1555,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalClose) {
         modalClose.addEventListener('click', function() {
             modalOverlay.style.display = 'none';
+            modalOverlay.classList.remove('active');
             document.body.style.overflow = '';
+            console.log('🚪 Modal closed via close button');
         });
     }
 
@@ -1536,16 +1566,20 @@ document.addEventListener('DOMContentLoaded', function() {
         modalOverlay.addEventListener('click', function(e) {
             if (e.target === modalOverlay) {
                 modalOverlay.style.display = 'none';
+                modalOverlay.classList.remove('active');
                 document.body.style.overflow = '';
+                console.log('🚪 Modal closed via outside click');
             }
         });
     }
 
     // Close modal with Escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modalOverlay && modalOverlay.style.display === 'flex') {
+        if (e.key === 'Escape' && modalOverlay && modalOverlay.classList.contains('active')) {
             modalOverlay.style.display = 'none';
+            modalOverlay.classList.remove('active');
             document.body.style.overflow = '';
+            console.log('🚪 Modal closed via Escape key');
         }
     });
 
