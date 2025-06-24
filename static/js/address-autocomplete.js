@@ -3,6 +3,8 @@
  * Provides intelligent address autocomplete with validation and coordinate capture
  */
 
+console.log('🏠 Address Autocomplete script loaded successfully');
+
 class AddressAutocomplete {
     constructor(inputElement, options = {}) {
         this.input = inputElement;
@@ -16,7 +18,7 @@ class AddressAutocomplete {
             enableCoordinates: true,
             ...options
         };
-        
+
         this.dropdown = null;
         this.debounceTimer = null;
         this.currentRequest = null;
@@ -25,33 +27,33 @@ class AddressAutocomplete {
         this.isValidated = false;
         this.coordinates = null;
         this.addressData = null;
-        
+
         this.init();
     }
-    
+
     init() {
         this.createDropdown();
         this.attachEventListeners();
         this.addValidationIndicator();
-        
+
         // Set placeholder if provided
         if (this.options.placeholder) {
             this.input.placeholder = this.options.placeholder;
         }
     }
-    
+
     createDropdown() {
         this.dropdown = document.createElement('div');
         this.dropdown.className = 'address-autocomplete-dropdown';
         this.dropdown.style.display = 'none';
-        
+
         // Insert dropdown after input
         this.input.parentNode.insertBefore(this.dropdown, this.input.nextSibling);
     }
-    
+
     addValidationIndicator() {
         if (!this.options.enableValidation) return;
-        
+
         const indicator = document.createElement('div');
         indicator.className = 'address-validation-indicator';
         indicator.innerHTML = `
@@ -73,18 +75,18 @@ class AddressAutocomplete {
                 </svg>
             </span>
         `;
-        
+
         this.input.parentNode.appendChild(indicator);
         this.validationIndicator = indicator;
     }
-    
+
     attachEventListeners() {
         // Input events
         this.input.addEventListener('input', (e) => this.handleInput(e));
         this.input.addEventListener('keydown', (e) => this.handleKeydown(e));
         this.input.addEventListener('blur', (e) => this.handleBlur(e));
         this.input.addEventListener('focus', (e) => this.handleFocus(e));
-        
+
         // Document click to close dropdown
         document.addEventListener('click', (e) => {
             if (!this.input.contains(e.target) && !this.dropdown.contains(e.target)) {
@@ -92,31 +94,31 @@ class AddressAutocomplete {
             }
         });
     }
-    
+
     handleInput(e) {
         const query = e.target.value.trim();
-        
+
         // Clear validation state when user types
         this.setValidationState('none');
         this.isValidated = false;
         this.coordinates = null;
         this.addressData = null;
-        
+
         if (query.length < this.options.minLength) {
             this.hideDropdown();
             return;
         }
-        
+
         // Debounce API calls
         clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(() => {
             this.searchAddresses(query);
         }, this.options.debounceMs);
     }
-    
+
     handleKeydown(e) {
         if (!this.dropdown || this.dropdown.style.display === 'none') return;
-        
+
         switch (e.key) {
             case 'ArrowDown':
                 e.preventDefault();
@@ -139,7 +141,7 @@ class AddressAutocomplete {
                 break;
         }
     }
-    
+
     handleBlur(e) {
         // Delay hiding to allow for dropdown clicks
         setTimeout(() => {
@@ -148,42 +150,42 @@ class AddressAutocomplete {
             }
         }, 150);
     }
-    
+
     handleFocus(e) {
         if (this.results.length > 0) {
             this.showDropdown();
         }
     }
-    
+
     async searchAddresses(query) {
         // Cancel previous request
         if (this.currentRequest) {
             this.currentRequest.abort();
         }
-        
+
         this.setValidationState('loading');
-        
+
         try {
             const controller = new AbortController();
             this.currentRequest = controller;
-            
+
             const params = new URLSearchParams({
                 q: query,
                 limit: this.options.maxResults,
                 lang: 'en'
             });
-            
+
             const response = await fetch(`${this.options.apiUrl}?${params}`, {
                 signal: controller.signal
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             const data = await response.json();
             this.handleSearchResults(data.features || []);
-            
+
         } catch (error) {
             if (error.name !== 'AbortError') {
                 console.error('Address search error:', error);
@@ -194,7 +196,7 @@ class AddressAutocomplete {
             this.currentRequest = null;
         }
     }
-    
+
     handleSearchResults(features) {
         this.results = features.map(feature => ({
             display_name: feature.properties.name || 'Unknown Location',
@@ -203,7 +205,7 @@ class AddressAutocomplete {
             properties: feature.properties,
             raw: feature
         }));
-        
+
         if (this.results.length > 0) {
             this.renderDropdown();
             this.showDropdown();
@@ -213,20 +215,20 @@ class AddressAutocomplete {
             this.setValidationState('error');
         }
     }
-    
+
     formatAddress(properties) {
         const parts = [];
-        
+
         if (properties.housenumber) parts.push(properties.housenumber);
         if (properties.street) parts.push(properties.street);
         if (properties.city) parts.push(properties.city);
         if (properties.state) parts.push(properties.state);
         if (properties.postcode) parts.push(properties.postcode);
         if (properties.country) parts.push(properties.country);
-        
+
         return parts.join(', ') || properties.name || 'Unknown Location';
     }
-    
+
     renderDropdown() {
         this.dropdown.innerHTML = this.results.map((result, index) => `
             <div class="address-result" data-index="${index}">
@@ -234,19 +236,19 @@ class AddressAutocomplete {
                 <div class="address-formatted">${this.escapeHtml(result.formatted)}</div>
             </div>
         `).join('');
-        
+
         // Add click listeners
         this.dropdown.querySelectorAll('.address-result').forEach((item, index) => {
             item.addEventListener('click', () => this.selectResult(this.results[index]));
         });
     }
-    
+
     updateSelection() {
         this.dropdown.querySelectorAll('.address-result').forEach((item, index) => {
             item.classList.toggle('selected', index === this.selectedIndex);
         });
     }
-    
+
     selectResult(result) {
         this.input.value = result.formatted;
         this.isValidated = true;
@@ -255,10 +257,10 @@ class AddressAutocomplete {
             longitude: result.coordinates[0]
         };
         this.addressData = result.raw;
-        
+
         this.hideDropdown();
         this.setValidationState('success');
-        
+
         // Trigger custom event
         this.input.dispatchEvent(new CustomEvent('addressSelected', {
             detail: {
@@ -269,7 +271,7 @@ class AddressAutocomplete {
             }
         }));
     }
-    
+
     extractComponents(properties) {
         return {
             street: properties.street || null,
@@ -281,46 +283,46 @@ class AddressAutocomplete {
             countrycode: properties.countrycode || null
         };
     }
-    
+
     showDropdown() {
         this.dropdown.style.display = 'block';
         this.selectedIndex = -1;
     }
-    
+
     hideDropdown() {
         this.dropdown.style.display = 'none';
         this.selectedIndex = -1;
     }
-    
+
     setValidationState(state) {
         if (!this.validationIndicator) return;
-        
+
         const icons = this.validationIndicator.querySelectorAll('.validation-icon');
         icons.forEach(icon => icon.style.display = 'none');
-        
+
         if (state !== 'none') {
             const targetIcon = this.validationIndicator.querySelector(`.validation-icon.${state}`);
             if (targetIcon) targetIcon.style.display = 'inline-block';
         }
-        
+
         // Update input styling
         this.input.classList.remove('address-valid', 'address-invalid', 'address-loading');
         if (state !== 'none') {
             this.input.classList.add(`address-${state === 'success' ? 'valid' : state}`);
         }
     }
-    
+
     showError(message) {
         // You can customize this to show errors in your preferred way
         console.warn('Address Autocomplete:', message);
     }
-    
+
     escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
-    
+
     // Public methods
     getValidationState() {
         return {
@@ -329,7 +331,7 @@ class AddressAutocomplete {
             addressData: this.addressData
         };
     }
-    
+
     destroy() {
         if (this.dropdown) {
             this.dropdown.remove();
