@@ -82,16 +82,16 @@
         </div>
     </div>
 
-    <!-- Modern Drops List - Improved Alignment -->
+    <!-- Modern Drops List - Fixed Padding and Alignment -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
         <div class="p-6">
             {{#if drops.length}}
-            <div class="space-y-4">
+            <div class="space-y-6">
                 {{#each drops}}
-                <!-- Modern Drop Card - Properly Aligned -->
-                <div class="drop-card group relative bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:border-gray-300 transition-all duration-300 ease-out w-full">
+                <!-- Modern Drop Card - Consistent Padding -->
+                <div class="drop-card group relative bg-white border border-gray-200 rounded-lg hover:shadow-lg hover:border-gray-300 transition-all duration-300 ease-out">
 
-                    <!-- Card Content - 8px Grid System -->
+                    <!-- Card Content - Consistent Internal Padding -->
                     <div class="p-6">
                         <!-- Header Section - Proper Hierarchy -->
                         <div class="flex items-start gap-4 mb-4">
@@ -145,7 +145,7 @@
                         </div>
                     </div>
 
-                    <!-- Improved Action Bar with Better Button Layout -->
+                    <!-- Action Bar - Consistent Padding -->
                     <div class="border-t border-gray-100 bg-gray-50/50 px-6 py-4">
                         <!-- Mobile Layout (up to 640px) - 2x2 Grid -->
                         <div class="grid grid-cols-2 gap-3 sm:hidden">
@@ -724,38 +724,43 @@ button,
     }
 }
 
-/* Modern Card System - Improved Alignment and Spacing */
+/* Modern Card System - Perfect Alignment and Spacing */
 .drop-card {
     @apply transition-all duration-300 ease-out;
     @apply hover:shadow-lg hover:shadow-gray-200/50;
     @apply hover:-translate-y-1;
     @apply w-full; /* Ensure full width */
-    @apply flex flex-col; /* Consistent flex layout */
+    @apply block; /* Simple block layout for consistency */
 }
 
 .drop-card:hover .btn-improved {
     @apply shadow-md;
 }
 
-/* Consistent Card Spacing */
-.drop-card + .drop-card {
-    @apply mt-4; /* Consistent spacing between cards */
+/* Perfect Card Spacing - No Conflicting Margins */
+.drop-card {
+    @apply mb-0; /* Remove any default margins */
 }
 
-/* Typography Hierarchy - Research-Based */
+/* Typography Hierarchy - Consistent Alignment */
 .drop-card h3 {
     @apply text-lg font-semibold leading-6; /* 24px line height = 3 * 8px */
-    @apply text-left; /* Ensure left alignment */
+    @apply text-left m-0; /* Ensure left alignment with no margins */
 }
 
 .drop-card p {
     @apply text-sm leading-5; /* 20px line height = 2.5 * 8px */
-    @apply text-left; /* Ensure left alignment */
+    @apply text-left m-0; /* Ensure left alignment with no margins */
 }
 
-/* Card Content Alignment */
+/* Card Content Perfect Alignment */
 .drop-card > div {
     @apply w-full; /* Ensure content takes full width */
+}
+
+/* Container Spacing Override */
+.space-y-6 > * + * {
+    @apply mt-6; /* Consistent 24px spacing between cards */
 }
 
 /* Status Badge - Modern Design */
