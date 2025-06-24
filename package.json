@@ -6,9 +6,11 @@
     "scripts": {
         "dev": "node --watch-path=./server --watch-path=./custom server/server.js",
         "start": "node server/server.js --production",
-        "build": "node scripts/generate-build-info.js",
-        "prebuild": "node scripts/generate-build-info.js",
-        "prestart": "node scripts/generate-build-info.js",
+        "build": "npm run build:css && node scripts/generate-build-info.js",
+        "build:css": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --minify",
+        "build:css:dev": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --watch",
+        "prebuild": "npm run build:css && node scripts/generate-build-info.js",
+        "prestart": "npm run build:css && node scripts/generate-build-info.js",
         "migrate": "knex migrate:latest",
         "migrate:make": "knex migrate:make",
         "migrate:crm": "knex migrate:latest --knexfile knexfile.crm.js",
@@ -77,6 +79,7 @@
         "@types/node": "18.11.9",
         "@types/nodemailer": "6.4.6",
         "@types/pg": "8.11.10",
-        "redoc": "2.2.0"
+        "redoc": "2.2.0",
+        "tailwindcss": "^3.4.0"
     }
 }
