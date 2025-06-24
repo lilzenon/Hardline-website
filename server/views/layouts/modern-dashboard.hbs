@@ -17,6 +17,59 @@
     <!-- TailwindCSS -->
     <link rel="stylesheet" href="/css/tailwind.css">
 
+    <!-- Custom Toggle Switch Styles -->
+    <style>
+        /* Modern Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            min-width: 48px;
+            min-height: 24px;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .toggle-dot {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        /* Ensure 44px minimum touch target for mobile */
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        /* Focus states for accessibility */
+        .toggle-switch:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+            border-radius: 9999px;
+        }
+
+        /* Hover effects for desktop */
+        @media (hover: hover) {
+            .toggle-switch:hover {
+                transform: scale(1.05);
+                transition: transform 0.1s ease-in-out;
+            }
+        }
+
+        /* Active state feedback */
+        .toggle-switch:active {
+            transform: scale(0.98);
+        }
+    </style>
+
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 
@@ -484,6 +537,31 @@
                         <p class="mt-1 text-xs text-gray-500">Auto-generated from title, but you can customize it</p>
                     </div>
 
+                    <!-- Active/Inactive Toggle Switch -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label for="drop-active-toggle" class="block text-sm font-medium text-gray-700 mb-1">Drop Status</label>
+                            <p class="text-xs text-gray-500">Active drops are visible to visitors and can collect signups</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-500" id="toggle-status-text">Active</span>
+                            <div class="relative">
+                                <!-- Hidden checkbox for form submission -->
+                                <input type="checkbox" name="is_active" id="drop-active-toggle" value="true" checked class="sr-only">
+
+                                <!-- Custom toggle switch -->
+                                <div class="toggle-switch w-12 h-6 bg-primary-600 rounded-full shadow-inner cursor-pointer transition-colors duration-200 ease-in-out"
+                                     onclick="toggleDropStatus()"
+                                     role="button"
+                                     tabindex="0"
+                                     aria-label="Toggle drop active status"
+                                     onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleDropStatus(); }">
+                                    <div class="toggle-dot w-5 h-5 bg-white rounded-full shadow-md transform translate-x-6 transition-transform duration-200 ease-in-out"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-3 pt-6">
                         <button type="button" onclick="closeCreateDropDialog()"
@@ -510,6 +588,58 @@
         function closeCreateDropDialog() {
             document.getElementById('create-drop-dialog').classList.add('hidden');
             document.getElementById('create-drop-form').reset();
+            // Reset toggle to active state
+            resetToggleToActive();
+        }
+
+        // Toggle drop active status
+        function toggleDropStatus() {
+            const checkbox = document.getElementById('drop-active-toggle');
+            const toggleSwitch = document.querySelector('.toggle-switch');
+            const toggleDot = document.querySelector('.toggle-dot');
+            const statusText = document.getElementById('toggle-status-text');
+
+            // Toggle the checkbox state
+            checkbox.checked = !checkbox.checked;
+
+            if (checkbox.checked) {
+                // Active state
+                toggleSwitch.classList.remove('bg-gray-400');
+                toggleSwitch.classList.add('bg-primary-600');
+                toggleDot.classList.remove('translate-x-0');
+                toggleDot.classList.add('translate-x-6');
+                statusText.textContent = 'Active';
+                statusText.classList.remove('text-gray-600');
+                statusText.classList.add('text-primary-600');
+            } else {
+                // Inactive state
+                toggleSwitch.classList.remove('bg-primary-600');
+                toggleSwitch.classList.add('bg-gray-400');
+                toggleDot.classList.remove('translate-x-6');
+                toggleDot.classList.add('translate-x-0');
+                statusText.textContent = 'Inactive';
+                statusText.classList.remove('text-primary-600');
+                statusText.classList.add('text-gray-600');
+            }
+
+            console.log('Toggle status changed to:', checkbox.checked ? 'Active' : 'Inactive');
+        }
+
+        // Reset toggle to active state
+        function resetToggleToActive() {
+            const checkbox = document.getElementById('drop-active-toggle');
+            const toggleSwitch = document.querySelector('.toggle-switch');
+            const toggleDot = document.querySelector('.toggle-dot');
+            const statusText = document.getElementById('toggle-status-text');
+
+            checkbox.checked = true;
+            toggleSwitch.classList.remove('bg-gray-400');
+            toggleSwitch.classList.add('bg-primary-600');
+            toggleDot.classList.remove('translate-x-0');
+            toggleDot.classList.add('translate-x-6');
+            statusText.textContent = 'Active';
+            statusText.classList.remove('text-gray-600');
+            statusText.classList.add('text-primary-600');
         }
 
         // Auto-generate slug from title
@@ -538,7 +668,18 @@
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
 
+            // Handle toggle switch - convert checkbox to boolean
+            const isActiveCheckbox = document.getElementById('drop-active-toggle');
+            data.is_active = isActiveCheckbox.checked;
+
+            // Remove the checkbox value from form data since we're setting it manually
+            delete data['is_active'];
+            data.is_active = isActiveCheckbox.checked;
+
+            console.log('📝 Form data being submitted:', data);
+
             try {
+                console.log('🚀 Sending POST request to /api/drops');
                 const response = await fetch('/api/drops', {
                     method: 'POST',
                     headers: {
@@ -547,17 +688,32 @@
                     body: JSON.stringify(data)
                 });
 
+                console.log('📡 Response status:', response.status);
+                console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
                 if (response.ok) {
                     const result = await response.json();
+                    console.log('✅ Drop created successfully:', result);
                     closeCreateDropDialog();
                     // Redirect to edit page
                     window.location.href = `/drops/${result.data.id}/edit`;
                 } else {
-                    const error = await response.json();
+                    const errorText = await response.text();
+                    console.log('❌ Error response text:', errorText);
+
+                    let error;
+                    try {
+                        error = JSON.parse(errorText);
+                    } catch (parseError) {
+                        error = { message: errorText };
+                    }
+
+                    console.log('❌ Parsed error:', error);
                     alert(error.message || 'Failed to create drop');
                 }
             } catch (error) {
-                alert('Failed to create drop');
+                console.log('🚨 Network/JS error:', error);
+                alert('Failed to create drop: ' + error.message);
             }
         });
 
