@@ -285,25 +285,44 @@ document.addEventListener('DOMContentLoaded', function() {
         const maxLength = input.getAttribute('maxlength');
         const label = input.previousElementSibling;
 
+        // Skip if no label found or maxLength is invalid
+        if (!label || !maxLength || isNaN(maxLength)) {
+            console.warn('⚠️ Skipping character count for input without proper label or maxlength:', input.id || input.name);
+            return;
+        }
+
         function updateCount() {
-            const remaining = maxLength - input.value.length;
-            const countText = ` (${remaining} characters remaining)`;
+            try {
+                const remaining = maxLength - input.value.length;
+                const countText = ` (${remaining} characters remaining)`;
 
-            // Remove existing count
-            label.textContent = label.textContent.replace(/ \(\d+ characters remaining\)/, '');
+                // Ensure label has textContent property
+                if (!label.textContent) {
+                    label.textContent = '';
+                }
 
-            // Add new count
-            if (remaining < maxLength) {
-                label.textContent += countText;
-            }
+                // Remove existing count
+                label.textContent = label.textContent.replace(/ \(\d+ characters remaining\)/, '');
 
-            // Color coding
-            if (remaining < 10) {
-                label.style.color = '#dc3545';
-            } else if (remaining < 20) {
-                label.style.color = '#fd7e14';
-            } else {
-                label.style.color = '';
+                // Add new count
+                if (remaining < maxLength) {
+                    label.textContent += countText;
+                }
+
+                // Color coding
+                if (remaining < 10) {
+                    label.style.color = '#dc3545';
+                } else if (remaining < 20) {
+                    label.style.color = '#fd7e14';
+                } else {
+                    label.style.color = '';
+                }
+            } catch (error) {
+                console.error('❌ Error updating character count:', error, {
+                    inputId: input.id || input.name,
+                    labelExists: !!label,
+                    maxLength: maxLength
+                });
             }
         }
 

@@ -23,6 +23,68 @@
     <!-- Address Autocomplete -->
     <link rel="stylesheet" href="/css/address-autocomplete.css">
     <script src="/js/address-autocomplete.js"></script>
+
+    <!-- Global Error Handler -->
+    <script>
+        // Global error handler to catch external script errors and prevent them from affecting the application
+        window.addEventListener('error', function(event) {
+            // Check if error is from external sources (browser extensions, CDN issues, etc.)
+            const isExternalError = event.filename && (
+                event.filename.includes('extension://') ||
+                event.filename.includes('chrome-extension://') ||
+                event.filename.includes('moz-extension://') ||
+                event.filename.includes('build.js') ||
+                event.filename.includes('geolocation-db.com') ||
+                event.filename === '' // Some external errors have empty filename
+            );
+
+            if (isExternalError) {
+                console.warn('🔧 External script error detected (likely browser extension or CDN):', {
+                    message: event.message,
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno
+                });
+                // Prevent the error from propagating and affecting the application
+                event.preventDefault();
+                return true;
+            }
+
+            // Log internal application errors for debugging
+            console.error('❌ Application error:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                stack: event.error?.stack
+            });
+        });
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            // Check if rejection is from external sources
+            const reason = event.reason;
+            const isExternalRejection = reason && (
+                reason.message?.includes('build.js') ||
+                reason.message?.includes('geolocation-db.com') ||
+                reason.message?.includes('extension') ||
+                reason.stack?.includes('extension://') ||
+                reason.stack?.includes('chrome-extension://') ||
+                reason.stack?.includes('moz-extension://')
+            );
+
+            if (isExternalRejection) {
+                console.warn('🔧 External promise rejection detected (likely browser extension or CDN):', reason);
+                // Prevent the rejection from causing console errors
+                event.preventDefault();
+                return;
+            }
+
+            // Log internal application promise rejections
+            console.error('❌ Unhandled promise rejection:', reason);
+        });
+    </script>
+
     <script>
         tailwind.config = {
             theme: {

@@ -190,7 +190,20 @@ class AddressAutocomplete {
             if (error.name !== 'AbortError') {
                 console.error('Address search error:', error);
                 this.setValidationState('error');
-                this.showError('Failed to search addresses. Please try again.');
+
+                // Provide more specific error messages
+                let errorMessage = 'Failed to search addresses. Please try again.';
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    errorMessage = 'Network connection issue. Please check your internet connection and try again.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Search request timed out. Please try again.';
+                } else if (error.message.includes('HTTP 429')) {
+                    errorMessage = 'Too many requests. Please wait a moment and try again.';
+                } else if (error.message.includes('HTTP 5')) {
+                    errorMessage = 'Address service temporarily unavailable. Please try again later.';
+                }
+
+                this.showError(errorMessage);
             }
         } finally {
             this.currentRequest = null;
