@@ -477,7 +477,15 @@ function validateAndSanitizeDropData(data) {
         'event_date',
         'event_address',
         'show_on_homepage',
-        'posh_embed_url'
+        'posh_embed_url',
+        // Enhanced address fields from autocomplete system
+        'address_latitude',
+        'address_longitude',
+        'address_formatted',
+        'address_components',
+        'address_data',
+        'address_validated',
+        'address_validated_at'
     ];
 
     const sanitizedData = {};
@@ -517,6 +525,45 @@ function validateAndSanitizeDropData(data) {
                     } catch (error) {
                         console.warn(`⚠️ Invalid gradient data JSON: ${value}`, error.message);
                     }
+                }
+            } else if (key === 'address_latitude' || key === 'address_longitude') {
+                // Handle coordinate fields - convert to float
+                if (value && !isNaN(parseFloat(value))) {
+                    sanitizedData[key] = parseFloat(value);
+                } else if (value === '' || value === null) {
+                    sanitizedData[key] = null;
+                }
+            } else if (key === 'address_components' || key === 'address_data') {
+                // Handle JSON address fields
+                if (value && typeof value === 'string') {
+                    try {
+                        const parsed = JSON.parse(value);
+                        if (parsed && typeof parsed === 'object') {
+                            sanitizedData[key] = parsed; // Store as JSON object
+                        } else {
+                            console.warn(`⚠️ Invalid ${key} format: ${value}`);
+                        }
+                    } catch (error) {
+                        console.warn(`⚠️ Invalid ${key} JSON: ${value}`, error.message);
+                    }
+                } else if (value && typeof value === 'object') {
+                    sanitizedData[key] = value; // Already an object
+                } else if (value === '' || value === null) {
+                    sanitizedData[key] = null;
+                }
+            } else if (key === 'address_validated') {
+                // Handle boolean validation field
+                sanitizedData[key] = Boolean(value === 'true' || value === true);
+                // Set validation timestamp if validated
+                if (sanitizedData[key]) {
+                    sanitizedData['address_validated_at'] = new Date();
+                }
+            } else if (key === 'address_validated_at') {
+                // Handle timestamp field
+                if (value) {
+                    sanitizedData[key] = new Date(value);
+                } else {
+                    sanitizedData[key] = null;
                 }
             } else {
                 // Include other valid fields

@@ -94,6 +94,46 @@ async function update(req, res) {
             updateData.event_date = new Date(updateData.event_date);
         }
 
+        // Process enhanced address data from autocomplete system
+        if (updateData.address_latitude && updateData.address_longitude) {
+            updateData.address_latitude = parseFloat(updateData.address_latitude);
+            updateData.address_longitude = parseFloat(updateData.address_longitude);
+        }
+
+        // Parse JSON fields if they exist
+        if (updateData.address_components && typeof updateData.address_components === 'string') {
+            try {
+                updateData.address_components = JSON.parse(updateData.address_components);
+            } catch (e) {
+                console.warn('⚠️ Failed to parse address_components JSON:', e.message);
+                updateData.address_components = null;
+            }
+        }
+
+        if (updateData.address_data && typeof updateData.address_data === 'string') {
+            try {
+                updateData.address_data = JSON.parse(updateData.address_data);
+            } catch (e) {
+                console.warn('⚠️ Failed to parse address_data JSON:', e.message);
+                updateData.address_data = null;
+            }
+        }
+
+        // Set address validation timestamp if address was validated
+        if (updateData.address_validated === 'true' || updateData.address_validated === true) {
+            updateData.address_validated = true;
+            updateData.address_validated_at = new Date();
+        } else {
+            updateData.address_validated = false;
+        }
+
+        console.log('🏠 Updating home settings with enhanced address data:', {
+            hasCoordinates: !!(updateData.address_latitude && updateData.address_longitude),
+            hasComponents: !!updateData.address_components,
+            hasFormattedAddress: !!updateData.address_formatted,
+            isValidated: updateData.address_validated
+        });
+
         const settings = await query.homeSettings.update(updateData, req.user.id);
 
         if (req.isHTML) {
