@@ -1082,6 +1082,20 @@ function initializeSearch() {
     const sortSelect = document.getElementById('sortBy');
     const suggestionsContainer = document.getElementById('contactSearchSuggestions');
 
+    // Check if required elements exist
+    if (!searchInput) {
+        console.error('❌ Contact search input not found');
+        return;
+    }
+    if (!sortSelect) {
+        console.error('❌ Sort select element not found');
+        return;
+    }
+    if (!suggestionsContainer) {
+        console.error('❌ Suggestions container not found');
+        return;
+    }
+
     // Debounced search
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim();

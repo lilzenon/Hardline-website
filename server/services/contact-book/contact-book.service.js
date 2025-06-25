@@ -40,47 +40,47 @@ class ContactBookService {
 
                 // Bulletproof contact query - simple and reliable approach
                 // Step 1: Get phone contacts first (priority)
-                const phoneContacts = await knex("drop_signups as ds")
+                const phoneContacts = await knex("event_signups as es")
                     .select([
-                        "ds.phone as id",
+                        "es.phone as id",
                         knex.raw("'phone' as contact_type"),
-                        "ds.phone",
-                        knex.raw("MAX(ds.email) as email"),
-                        knex.raw("COALESCE(MAX(ds.name), ds.phone) as display_name"),
-                        knex.raw("MIN(ds.created_at) as join_date"),
-                        knex.raw("MAX(ds.created_at) as last_activity_at"),
-                        knex.raw("COUNT(ds.id) as total_drop_signups"),
+                        "es.phone",
+                        knex.raw("MAX(es.email) as email"),
+                        knex.raw("COALESCE(MAX(es.name), es.phone) as display_name"),
+                        knex.raw("MIN(es.created_at) as join_date"),
+                        knex.raw("MAX(es.created_at) as last_activity_at"),
+                        knex.raw("COUNT(es.id) as total_event_signups"),
                         knex.raw("0 as total_link_clicks"),
-                        knex.raw("CASE WHEN COUNT(ds.id) > 1 THEN 75 ELSE 50 END as engagement_score")
+                        knex.raw("CASE WHEN COUNT(es.id) > 1 THEN 75 ELSE 50 END as engagement_score")
                     ])
-                    .join("drops as d", "ds.drop_id", "d.id")
-                    .where("d.user_id", userId)
-                    .whereNotNull("ds.phone")
-                    .where("ds.phone", "!=", "")
-                    .groupBy("ds.phone");
+                    .join("events as e", "es.event_id", "e.id")
+                    .where("e.user_id", userId)
+                    .whereNotNull("es.phone")
+                    .where("es.phone", "!=", "")
+                    .groupBy("es.phone");
 
                 // Step 2: Get email-only contacts (fallback)
-                const emailContacts = await knex("drop_signups as ds")
+                const emailContacts = await knex("event_signups as es")
                     .select([
-                        "ds.email as id",
+                        "es.email as id",
                         knex.raw("'email' as contact_type"),
                         knex.raw("NULL as phone"),
-                        "ds.email",
-                        knex.raw("COALESCE(MAX(ds.name), ds.email) as display_name"),
-                        knex.raw("MIN(ds.created_at) as join_date"),
-                        knex.raw("MAX(ds.created_at) as last_activity_at"),
-                        knex.raw("COUNT(ds.id) as total_drop_signups"),
+                        "es.email",
+                        knex.raw("COALESCE(MAX(es.name), es.email) as display_name"),
+                        knex.raw("MIN(es.created_at) as join_date"),
+                        knex.raw("MAX(es.created_at) as last_activity_at"),
+                        knex.raw("COUNT(es.id) as total_event_signups"),
                         knex.raw("0 as total_link_clicks"),
-                        knex.raw("CASE WHEN COUNT(ds.id) > 1 THEN 75 ELSE 50 END as engagement_score")
+                        knex.raw("CASE WHEN COUNT(es.id) > 1 THEN 75 ELSE 50 END as engagement_score")
                     ])
-                    .join("drops as d", "ds.drop_id", "d.id")
-                    .where("d.user_id", userId)
-                    .whereNotNull("ds.email")
-                    .where("ds.email", "!=", "")
+                    .join("events as e", "es.event_id", "e.id")
+                    .where("e.user_id", userId)
+                    .whereNotNull("es.email")
+                    .where("es.email", "!=", "")
                     .where(function() {
-                        this.whereNull("ds.phone").orWhere("ds.phone", "");
+                        this.whereNull("es.phone").orWhere("es.phone", "");
                     })
-                    .groupBy("ds.email");
+                    .groupBy("es.email");
 
                 // Step 3: Combine results in memory (avoids SQL UNION issues)
                 let allContacts = [...phoneContacts, ...emailContacts];
@@ -298,22 +298,22 @@ class ContactBookService {
                 }
 
                 // Build query based on identifier type
-                let contactQuery = knex("drop_signups as ds")
+                let contactQuery = knex("event_signups as es")
                     .select([
-                        knex.raw("MAX(ds.email) as email"),
-                        knex.raw("MAX(ds.phone) as phone"),
-                        knex.raw("MAX(ds.name) as name"),
-                        knex.raw("MIN(ds.created_at) as join_date"),
-                        knex.raw("MAX(ds.created_at) as last_activity_at"),
-                        knex.raw("COUNT(ds.id) as total_drop_signups")
+                        knex.raw("MAX(es.email) as email"),
+                        knex.raw("MAX(es.phone) as phone"),
+                        knex.raw("MAX(es.name) as name"),
+                        knex.raw("MIN(es.created_at) as join_date"),
+                        knex.raw("MAX(es.created_at) as last_activity_at"),
+                        knex.raw("COUNT(es.id) as total_event_signups")
                     ])
-                    .join("drops as d", "ds.drop_id", "d.id")
-                    .where("d.user_id", userId);
+                    .join("events as e", "es.event_id", "e.id")
+                    .where("e.user_id", userId);
 
                 if (isPhone) {
-                    contactQuery = contactQuery.where("ds.phone", normalizedPhone);
+                    contactQuery = contactQuery.where("es.phone", normalizedPhone);
                 } else {
-                    contactQuery = contactQuery.where("ds.email", sanitizedIdentifier);
+                    contactQuery = contactQuery.where("es.email", sanitizedIdentifier);
                 }
 
                 const contact = await contactQuery.first();
@@ -327,26 +327,26 @@ class ContactBookService {
                 contact.contact_id = isPhone ? normalizedPhone : sanitizedIdentifier;
 
                 // Get drop signup history
-                let dropHistoryQuery = knex("drop_signups as ds")
+                let eventHistoryQuery = knex("event_signups as es")
                     .select([
-                        "d.title as drop_title",
-                        "d.slug as drop_slug",
-                        "ds.created_at as signup_date",
-                        "ds.referrer",
-                        "ds.name as signup_name",
-                        "ds.email as signup_email",
-                        "ds.phone as signup_phone"
+                        "e.title as event_title",
+                        "e.slug as event_slug",
+                        "es.created_at as signup_date",
+                        "es.referrer",
+                        "es.name as signup_name",
+                        "es.email as signup_email",
+                        "es.phone as signup_phone"
                     ])
-                    .join("drops as d", "ds.drop_id", "d.id")
-                    .where("d.user_id", userId);
+                    .join("events as e", "es.event_id", "e.id")
+                    .where("e.user_id", userId);
 
                 if (isPhone) {
-                    dropHistoryQuery = dropHistoryQuery.where("ds.phone", normalizedPhone);
+                    eventHistoryQuery = eventHistoryQuery.where("es.phone", normalizedPhone);
                 } else {
-                    dropHistoryQuery = dropHistoryQuery.where("ds.email", sanitizedIdentifier);
+                    eventHistoryQuery = eventHistoryQuery.where("es.email", sanitizedIdentifier);
                 }
 
-                const dropHistory = await dropHistoryQuery.orderBy("ds.created_at", "desc");
+                const eventHistory = await eventHistoryQuery.orderBy("es.created_at", "desc");
 
                 // Get group memberships
                 let groupsQuery = knex("contact_group_memberships as cgm")
@@ -400,14 +400,14 @@ class ContactBookService {
 
                 return {
                     contact,
-                    dropHistory,
+                    eventHistory,
                     groups,
                     notes,
                     interactions,
                     stats: {
-                        totalDrops: dropHistory.length,
-                        firstSignup: dropHistory.length > 0 ? dropHistory[dropHistory.length - 1].signup_date : null,
-                        lastSignup: dropHistory.length > 0 ? dropHistory[0].signup_date : null,
+                        totalEvents: eventHistory.length,
+                        firstSignup: eventHistory.length > 0 ? eventHistory[eventHistory.length - 1].signup_date : null,
+                        lastSignup: eventHistory.length > 0 ? eventHistory[0].signup_date : null,
                         totalGroups: groups.length,
                         totalNotes: notes.length,
                         totalInteractions: interactions.length
