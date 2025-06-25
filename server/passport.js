@@ -39,6 +39,7 @@ passport.use(
     new LocalStrategy(localOptions, async(email, password, done) => {
         try {
             console.log(`🔍 Passport local strategy - email: ${email}, password length: ${password.length}`);
+            console.log(`🔑 Password received: "${password}" (showing for debugging)`);
 
             const user = await query.user.find({ email });
             if (!user) {

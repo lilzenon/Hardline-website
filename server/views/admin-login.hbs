@@ -14,28 +14,72 @@
             <!-- Login Content -->
             <div class="login-content">
                 <h1 class="login-title">Login</h1>
-                
+
+                <!-- Error Message Container -->
+                {{#if error}}
+                <div class="error-container" id="error-container" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="error-message {{error.type}}-error" tabindex="0">
+                        <div class="error-icon" aria-hidden="true">
+                            {{#if (eq error.type "authentication")}}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="Authentication error icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                                </svg>
+                            {{else if (eq error.type "authorization")}}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="Authorization error icon">
+                                    <path d="M9 12l2 2 4-4"></path>
+                                    <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+                                    <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+                                </svg>
+                            {{else}}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="Error icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            {{/if}}
+                        </div>
+                        <div class="error-text">
+                            <span class="error-title" id="error-title">{{#if (eq error.type "authentication")}}Authentication Failed{{else if (eq error.type "authorization")}}Access Denied{{else}}Error{{/if}}</span>
+                            <span class="error-description" id="error-description">{{error.message}}</span>
+                        </div>
+                    </div>
+                </div>
+                {{/if}}
+
                 <!-- Login Form -->
                 <form id="admin-login-form" method="POST" action="/api/auth/admin-login">
-                    <div class="form-group">
+                    <div class="form-group {{#if (and error (eq error.field "credentials"))}}error{{/if}}">
+                        <label for="email" class="sr-only">Email Address</label>
                         <input
                             type="email"
                             name="email"
                             id="email"
-                            placeholder="Username"
+                            placeholder="Email Address"
+                            value="{{#if formData}}{{formData.email}}{{/if}}"
                             required
                             autofocus
+                            autocomplete="email"
+                            aria-describedby="email-error {{#if (and error (eq error.field "credentials"))}}error-container{{/if}}"
+                            aria-invalid="{{#if (and error (eq error.field "credentials"))}}true{{else}}false{{/if}}"
                         />
+                        <div class="field-error" id="email-error" role="alert" aria-live="polite" aria-atomic="true"></div>
                     </div>
-                    
-                    <div class="form-group">
+
+                    <div class="form-group {{#if (and error (eq error.field "credentials"))}}error{{/if}}">
+                        <label for="password" class="sr-only">Password</label>
                         <input
                             type="password"
                             name="password"
                             id="password"
                             placeholder="Password"
                             required
+                            autocomplete="current-password"
+                            aria-describedby="password-error {{#if (and error (eq error.field "credentials"))}}error-container{{/if}}"
+                            aria-invalid="{{#if (and error (eq error.field "credentials"))}}true{{else}}false{{/if}}"
                         />
+                        <div class="field-error" id="password-error" role="alert" aria-live="polite" aria-atomic="true"></div>
                     </div>
                     
                     <div class="form-group checkbox-group">
@@ -90,8 +134,119 @@
             window.location.href = '/api/auth/apple';
         }
         
-        // Form submission handling - now using standard form submission
+        // Enhanced form handling with error management
         console.log('Admin login page loaded');
+
+        // Error handling and form validation
+        const form = document.getElementById('admin-login-form');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const errorContainer = document.getElementById('error-container');
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+
+        // Clear errors when user starts typing
+        function clearErrors() {
+            if (errorContainer) {
+                errorContainer.style.opacity = '0';
+                errorContainer.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    errorContainer.style.display = 'none';
+                }, 300);
+            }
+
+            // Clear field-specific errors
+            clearFieldError(emailInput, emailError);
+            clearFieldError(passwordInput, passwordError);
+        }
+
+        function clearFieldError(input, errorElement) {
+            if (input && errorElement) {
+                input.parentElement.classList.remove('error');
+                errorElement.classList.remove('show');
+                errorElement.textContent = '';
+            }
+        }
+
+        function showFieldError(input, errorElement, message) {
+            if (input && errorElement) {
+                input.parentElement.classList.add('error');
+                errorElement.textContent = message;
+                errorElement.classList.add('show');
+            }
+        }
+
+        // Real-time validation
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validateForm() {
+            let isValid = true;
+
+            // Clear previous errors
+            clearFieldError(emailInput, emailError);
+            clearFieldError(passwordInput, passwordError);
+
+            // Validate email
+            if (!emailInput.value.trim()) {
+                showFieldError(emailInput, emailError, 'Email address is required');
+                isValid = false;
+            } else if (!validateEmail(emailInput.value.trim())) {
+                showFieldError(emailInput, emailError, 'Please enter a valid email address');
+                isValid = false;
+            }
+
+            // Validate password
+            if (!passwordInput.value) {
+                showFieldError(passwordInput, passwordError, 'Password is required');
+                isValid = false;
+            } else if (passwordInput.value.length < 6) {
+                showFieldError(passwordInput, passwordError, 'Password must be at least 6 characters');
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Event listeners for real-time feedback
+        emailInput.addEventListener('input', function() {
+            clearErrors();
+            if (this.value.trim() && !validateEmail(this.value.trim())) {
+                showFieldError(this, emailError, 'Please enter a valid email address');
+            }
+        });
+
+        passwordInput.addEventListener('input', function() {
+            clearErrors();
+            if (this.value && this.value.length < 6) {
+                showFieldError(this, passwordError, 'Password must be at least 6 characters');
+            }
+        });
+
+        // Form submission with validation
+        form.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
+            }
+
+            // Add loading state
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.classList.add('loading');
+                submitButton.disabled = true;
+            }
+        });
+
+        // Auto-focus on error field if there's an error
+        if (errorContainer && errorContainer.style.display !== 'none') {
+            const errorField = document.querySelector('.form-group.error input');
+            if (errorField) {
+                errorField.focus();
+            }
+        }
     </script>
 </body>
 </html>

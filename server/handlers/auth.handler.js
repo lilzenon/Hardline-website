@@ -74,20 +74,68 @@ function authenticate(type, error, isStrict, redirect) {
     }
 }
 
-// Enhanced local authentication with debugging
+// Enhanced local authentication with comprehensive error handling
 function localWithDebug(req, res, next) {
     console.log(`🔐 Local authentication attempt for email: ${req.body?.email}`);
 
-    authenticate("local", "Login credentials are wrong.", true, null)(req, res, (err) => {
+    authenticate("local", "Invalid email or password. Please check your credentials and try again.", true, null)(req, res, (err) => {
         if (err) {
             console.log(`❌ Local authentication failed: ${err.message}`);
-            return next(err);
+
+            // Enhanced error handling for different scenarios
+            if (req.isHTML) {
+                // For HTML requests, render error page with user-friendly message
+                return res.status(401).render("admin-login", {
+                    title: "Admin Login - BOUNCE2BOUNCE",
+                    layout: false,
+                    error: {
+                        type: "authentication",
+                        message: "Invalid email or password. Please check your credentials and try again.",
+                        field: "credentials"
+                    },
+                    formData: {
+                        email: req.body ? req.body.email || "" : ""
+                    }
+                });
+            } else {
+                // For API requests, return JSON error
+                return res.status(401).json({
+                    error: {
+                        type: "authentication",
+                        message: "Invalid email or password. Please check your credentials and try again.",
+                        field: "credentials"
+                    }
+                });
+            }
         }
 
         if (req.user) {
             console.log(`✅ Local authentication successful for: ${req.user.email}`);
         } else {
             console.log(`❌ Local authentication failed: No user returned`);
+
+            if (req.isHTML) {
+                return res.status(401).render("admin-login", {
+                    title: "Admin Login - BOUNCE2BOUNCE",
+                    layout: false,
+                    error: {
+                        type: "authentication",
+                        message: "Invalid email or password. Please check your credentials and try again.",
+                        field: "credentials"
+                    },
+                    formData: {
+                        email: req.body ? req.body.email || "" : ""
+                    }
+                });
+            } else {
+                return res.status(401).json({
+                    error: {
+                        type: "authentication",
+                        message: "Invalid email or password. Please check your credentials and try again.",
+                        field: "credentials"
+                    }
+                });
+            }
         }
 
         return next();
@@ -290,7 +338,29 @@ function adminLogin(req, res) {
         // Check if user is admin using the proper utility function
         if (!utils.isAdmin(req.user)) {
             console.log(`🚫 Non-admin user ${req.user.email} attempted admin login. Role: ${req.user.role}`);
-            throw new CustomError("Unauthorized. Admin access required.", 403);
+
+            if (req.isHTML) {
+                return res.status(403).render("admin-login", {
+                    title: "Admin Login - BOUNCE2BOUNCE",
+                    layout: false,
+                    error: {
+                        type: "authorization",
+                        message: "Access denied. This account does not have admin privileges.",
+                        field: "account"
+                    },
+                    formData: {
+                        email: req.user.email || ""
+                    }
+                });
+            } else {
+                return res.status(403).json({
+                    error: {
+                        type: "authorization",
+                        message: "Access denied. This account does not have admin privileges.",
+                        field: "account"
+                    }
+                });
+            }
         }
 
         console.log(`🔑 Generating token for admin user ${req.user.email}`);
@@ -308,18 +378,39 @@ function adminLogin(req, res) {
             delete req.session.returnTo; // Clean up session
 
             console.log(`✅ Admin ${req.user.email} logged in successfully, redirecting to: ${returnTo}`);
-            console.log(`📤 Setting HX-Redirect header to: ${returnTo}`);
+            console.log(`🔄 Performing HTTP redirect to: ${returnTo}`);
 
-            res.setHeader("HX-Redirect", returnTo);
-            res.send("ADMIN_LOGIN_SUCCESS");
-            return;
+            // Use proper HTTP redirect for standard form submission
+            return res.redirect(returnTo);
         } else {
             console.log(`📡 Non-HTML request, sending JSON response`);
             return res.status(200).send({ token, redirect: "/dashboard" });
         }
     } catch (error) {
         console.error(`❌ Error in adminLogin:`, error);
-        throw error;
+
+        if (req.isHTML) {
+            return res.status(500).render("admin-login", {
+                title: "Admin Login - BOUNCE2BOUNCE",
+                layout: false,
+                error: {
+                    type: "server",
+                    message: "An unexpected error occurred. Please try again in a moment.",
+                    field: "general"
+                },
+                formData: {
+                    email: req.body ? req.body.email || "" : ""
+                }
+            });
+        } else {
+            return res.status(500).json({
+                error: {
+                    type: "server",
+                    message: "An unexpected error occurred. Please try again in a moment.",
+                    field: "general"
+                }
+            });
+        }
     }
 }
 
