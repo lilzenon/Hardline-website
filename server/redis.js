@@ -61,19 +61,19 @@ const key = {
 
 const remove = {
     domain: (domain) => {
-        if (!domain) return;
+        if (!domain || !client) return Promise.resolve();
         return client.del(key.domain(domain.address));
     },
     host: (host) => {
-        if (!host) return;
+        if (!host || !client) return Promise.resolve();
         return client.del(key.host(host.address));
     },
     link: (link) => {
-        if (!link) return;
+        if (!link || !client) return Promise.resolve();
         return client.del(key.link(link.address, link.domain_id));
     },
     user: (user) => {
-        if (!user) return;
+        if (!user || !client) return Promise.resolve();
         return Promise.all([
             client.del(key.user(user.id)),
             client.del(key.user(user.apikey)),

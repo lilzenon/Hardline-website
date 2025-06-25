@@ -240,14 +240,19 @@ async function create(params) {
 
 // check if there exists a user
 async function findAny() {
-    if (env.REDIS_ENABLED) {
-        const anyuser = await redis.client.get("any-user");
-        if (anyuser) return true;
+    if (env.REDIS_ENABLED && redis.client) {
+        try {
+            const anyuser = await redis.client.get("any-user");
+            if (anyuser) return true;
+        } catch (error) {
+            // Redis not available, fall back to database
+            console.warn('⚠️ Redis not available for user cache, using database');
+        }
     }
 
     const anyuser = await knex("users").select("id").first();
 
-    if (env.REDIS_ENABLED && anyuser) {
+    if (env.REDIS_ENABLED && redis.client && anyuser) {
         redis.client.set("any-user", JSON.stringify(anyuser), "EX", 60 * 5);
     }
 

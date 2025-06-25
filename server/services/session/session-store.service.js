@@ -2,14 +2,39 @@ const session = require('express-session');
 const env = require('../../env');
 
 // Session store implementations
-let RedisStore, FileStore;
+let RedisStore, FileStore, redisClient;
 
 // Try to load Redis store if available
 try {
-    const ConnectRedis = require('connect-redis');
-    RedisStore = ConnectRedis(session);
+    // Import connect-redis with correct v7.x syntax
+    const ConnectRedis = require('connect-redis').default;
+
+    // Import Redis client (using ioredis)
+    const Redis = require('ioredis');
+
+    // Create Redis client if Redis is enabled
+    if (env.REDIS_ENABLED) {
+        redisClient = new Redis({
+            host: env.REDIS_HOST || 'localhost',
+            port: env.REDIS_PORT || 6379,
+            password: env.REDIS_PASSWORD || undefined,
+            db: env.REDIS_DB || 0,
+            retryDelayOnFailover: 100,
+            maxRetriesPerRequest: 3,
+            lazyConnect: true, // Don't connect immediately
+            connectTimeout: 5000,
+            commandTimeout: 5000
+        });
+
+        // Initialize RedisStore with the client
+        RedisStore = ConnectRedis;
+
+        console.log('✅ Redis session store initialized');
+    } else {
+        console.log('ℹ️ Redis disabled via REDIS_ENABLED=false');
+    }
 } catch (error) {
-    console.warn('⚠️ connect-redis not available, Redis session store disabled');
+    console.warn('⚠️ connect-redis not available, Redis session store disabled:', error.message);
 }
 
 // Try to load File store as fallback
@@ -29,7 +54,8 @@ class SessionStoreService {
             errors: 0,
             cleanupRuns: 0
         };
-        
+
+        // Initialize store (async for Redis, sync for fallbacks)
         this.initializeStore();
         this.startCleanupScheduler();
     }
@@ -38,29 +64,58 @@ class SessionStoreService {
      * Initialize the appropriate session store
      */
     initializeStore() {
-        const redis = require('../../redis');
-        
         // Try Redis store first (preferred for production)
-        if (env.REDIS_ENABLED && redis.client && RedisStore) {
-            try {
-                this.store = new RedisStore({
-                    client: redis.client,
-                    prefix: 'sess:',
-                    ttl: this.getSessionTTL(),
-                    disableTouch: false,
-                    disableTTL: false,
-                    logErrors: (error) => {
-                        console.error('🚨 Redis session store error:', error);
-                        this.metrics.errors++;
-                    }
-                });
-                this.storeType = 'redis';
-                console.log('✅ Redis session store initialized');
-                return;
-            } catch (error) {
-                console.error('🚨 Failed to initialize Redis session store:', error);
-            }
+        if (env.REDIS_ENABLED && redisClient && RedisStore) {
+            // Initialize Redis asynchronously
+            this.initializeRedisStore();
+            return; // Don't initialize fallback immediately
         }
+
+        // Initialize fallback store synchronously
+        this.initializeFallbackStore();
+    }
+
+    async initializeRedisStore() {
+        try {
+            console.log('🔄 Attempting Redis connection...');
+
+            // Test Redis connection
+            await redisClient.connect();
+            await redisClient.ping();
+
+            this.store = new RedisStore({
+                client: redisClient,
+                prefix: 'sess:',
+                ttl: this.getSessionTTL(),
+                disableTouch: false,
+                disableTTL: false,
+                logErrors: (error) => {
+                    console.error('🚨 Redis session store error:', error);
+                    this.metrics.errors++;
+                }
+            });
+            this.storeType = 'redis';
+            console.log('✅ Redis session store initialized and connected');
+        } catch (error) {
+            console.error('🚨 Failed to initialize Redis session store:', error.message);
+            console.log('🔄 Falling back to file store...');
+            this.metrics.errors++;
+
+            // Disconnect failed Redis client
+            if (redisClient) {
+                try {
+                    await redisClient.disconnect();
+                } catch (disconnectError) {
+                    // Ignore disconnect errors
+                }
+            }
+
+            // Initialize fallback store
+            this.initializeFallbackStore();
+        }
+    }
+
+    initializeFallbackStore() {
 
         // Fallback to file store for production without Redis
         if (FileStore && env.NODE_ENV === 'production') {
@@ -136,15 +191,15 @@ class SessionStoreService {
      */
     getSessionSecrets() {
         const secrets = [];
-        
+
         // Current secret
         if (env.SESSION_SECRET) {
             secrets.push(env.SESSION_SECRET);
         }
-        
+
         // Fallback to JWT secret
         secrets.push(env.JWT_SECRET);
-        
+
         // Old secrets for rotation (if provided)
         if (env.SESSION_SECRET_OLD) {
             secrets.push(env.SESSION_SECRET_OLD);
@@ -157,7 +212,7 @@ class SessionStoreService {
      * Get session store metrics
      */
     async getMetrics() {
-        const metrics = { ...this.metrics, storeType: this.storeType };
+        const metrics = {...this.metrics, storeType: this.storeType };
 
         try {
             if (this.storeType === 'redis' && this.store) {
@@ -189,7 +244,7 @@ class SessionStoreService {
     async cleanupSessions() {
         try {
             this.metrics.cleanupRuns++;
-            
+
             if (this.storeType === 'redis' && this.store) {
                 // Redis handles TTL automatically, but we can clean up orphaned keys
                 const redis = require('../../redis');
@@ -308,15 +363,14 @@ class SessionStoreService {
     async healthCheck() {
         try {
             const metrics = await this.getMetrics();
-            
+
             return {
                 status: this.storeType === 'memory' && env.NODE_ENV === 'production' ? 'warning' : 'healthy',
                 storeType: this.storeType,
                 activeSessions: metrics.activeSessions,
                 errors: metrics.errors,
-                message: this.storeType === 'memory' && env.NODE_ENV === 'production' 
-                    ? 'Using memory store in production - not recommended'
-                    : 'Session store operating normally'
+                message: this.storeType === 'memory' && env.NODE_ENV === 'production' ?
+                    'Using memory store in production - not recommended' : 'Session store operating normally'
             };
         } catch (error) {
             return {

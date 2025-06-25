@@ -3,16 +3,16 @@ const path = require("node:path");
 
 const env = require("../env");
 
-const redis = {
-    port: env.REDIS_PORT,
-    host: env.REDIS_HOST,
-    db: env.REDIS_DB,
-    ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD })
-};
-
 let visit;
 
 if (env.REDIS_ENABLED) {
+    const redis = {
+        port: env.REDIS_PORT,
+        host: env.REDIS_HOST,
+        db: env.REDIS_DB,
+        ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD })
+    };
+
     visit = new Queue("visit", {
         redis,
         defaultJobOptions: {
