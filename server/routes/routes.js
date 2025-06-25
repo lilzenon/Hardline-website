@@ -14,6 +14,7 @@ const sms = require("./sms.routes");
 const analytics = require("./api/analytics.routes");
 const contactBook = require("./api/contact-book.routes");
 const homeSettings = require("./home_settings.routes");
+const monitoring = require("./monitoring.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -31,6 +32,7 @@ apiRouter.use("/sms", sms);
 apiRouter.use("/analytics", analytics);
 apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/home-settings", homeSettings);
+apiRouter.use("/monitoring", monitoring);
 
 module.exports = {
     api: apiRouter,

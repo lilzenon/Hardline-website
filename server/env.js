@@ -46,6 +46,9 @@ const spec = {
     DB_SSL: bool({ default: false }),
     DB_POOL_MIN: num({ default: 0 }),
     DB_POOL_MAX: num({ default: 10 }),
+    DB_DEBUG: bool({ default: false }),
+    DB_STATEMENT_TIMEOUT: num({ default: 30000 }),
+    DB_QUERY_TIMEOUT: num({ default: 25000 }),
 
     // 🚀 CRM DATABASE CONFIGURATION (OPTIONAL)
     CRM_DB_CLIENT: str({ choices: supportedDBClients, default: "pg" }),

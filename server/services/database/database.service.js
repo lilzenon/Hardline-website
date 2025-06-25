@@ -14,6 +14,7 @@
 const mainDb = require('../../knex');
 const { crmDb } = require('../../config/crm-database');
 const EventEmitter = require('events');
+const circuitBreaker = require('../monitoring/circuit-breaker.service');
 
 class DatabaseService extends EventEmitter {
     constructor() {
@@ -31,7 +32,7 @@ class DatabaseService extends EventEmitter {
             errors: 0,
             avgResponseTime: 0
         };
-        
+
         this.initializeMonitoring();
         this.startHealthChecks();
     }
@@ -75,7 +76,7 @@ class DatabaseService extends EventEmitter {
      * Start periodic health checks
      */
     startHealthChecks() {
-        setInterval(async () => {
+        setInterval(async() => {
             await this.performHealthChecks();
         }, 30000); // Check every 30 seconds
 
@@ -129,25 +130,43 @@ class DatabaseService extends EventEmitter {
     }
 
     /**
-     * Execute query on specific database
+     * Execute query on specific database with circuit breaker protection
      */
-    async query(database, queryBuilder) {
-        const connection = this.getConnection(database);
-        const startTime = Date.now();
-        
-        try {
-            const result = await queryBuilder(connection);
-            const responseTime = Date.now() - startTime;
-            
-            // Update metrics
-            this.updateResponseTimeMetrics(responseTime);
-            
-            return result;
-        } catch (error) {
-            this.metrics.errors++;
-            console.error(`🚨 Database query failed on ${database}:`, error);
-            throw error;
-        }
+    async query(database, queryBuilder, options = {}) {
+        const { timeout = 30000, fallback = null } = options;
+
+        return await circuitBreaker.executeDatabase(async() => {
+            const connection = this.getConnection(database);
+            const startTime = Date.now();
+
+            // Add query timeout
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error(`Query timeout after ${timeout}ms`)), timeout);
+            });
+
+            try {
+                const result = await Promise.race([
+                    queryBuilder(connection),
+                    timeoutPromise
+                ]);
+
+                const responseTime = Date.now() - startTime;
+
+                // Update metrics
+                this.updateResponseTimeMetrics(responseTime);
+
+                // Log slow queries
+                if (responseTime > 5000) {
+                    console.warn(`🐌 Slow query detected on ${database}: ${responseTime}ms`);
+                }
+
+                return result;
+            } catch (error) {
+                this.metrics.errors++;
+                console.error(`🚨 Database query failed on ${database}:`, error.message);
+                throw error;
+            }
+        }, fallback);
     }
 
     /**
@@ -201,7 +220,7 @@ class DatabaseService extends EventEmitter {
         const { includeInCrm = true, crmData = {} } = options;
 
         return await this.multiDatabaseTransaction({
-            main: async (trx) => {
+            main: async(trx) => {
                 // Store core user data in main database
                 const user = await trx('users').insert({
                     email: userData.email,
@@ -219,7 +238,7 @@ class DatabaseService extends EventEmitter {
             },
 
             ...(includeInCrm && this.connections.crm ? {
-                crm: async (trx) => {
+                crm: async(trx) => {
                     // Store CRM-specific data in CRM database
                     const crmContact = await trx('contacts').insert({
                         user_id: userData.id || null, // Will be updated after main DB insert
@@ -296,7 +315,7 @@ class DatabaseService extends EventEmitter {
      */
     async storeNotificationWithCrmTracking(notificationData, crmInteractionData = {}) {
         return await this.multiDatabaseTransaction({
-            main: async (trx) => {
+            main: async(trx) => {
                 // Store notification in main database
                 const notification = await trx('notifications').insert({
                     user_id: notificationData.userId,
@@ -313,7 +332,7 @@ class DatabaseService extends EventEmitter {
             },
 
             ...(this.connections.crm ? {
-                crm: async (trx) => {
+                crm: async(trx) => {
                     // Store CRM interaction tracking
                     const interaction = await trx('interactions').insert({
                         contact_id: crmInteractionData.contactId,
@@ -340,7 +359,7 @@ class DatabaseService extends EventEmitter {
      */
     updateResponseTimeMetrics(responseTime) {
         // Simple moving average
-        this.metrics.avgResponseTime = 
+        this.metrics.avgResponseTime =
             (this.metrics.avgResponseTime * 0.9) + (responseTime * 0.1);
     }
 
@@ -421,7 +440,7 @@ class DatabaseService extends EventEmitter {
     getHealthStatus() {
         return {
             ...this.healthStatus,
-            overall: Object.values(this.healthStatus).every(status => 
+            overall: Object.values(this.healthStatus).every(status =>
                 status === 'healthy' || status === 'unavailable'
             ) ? 'healthy' : 'degraded'
         };
