@@ -5,15 +5,17 @@ const redis = require('../redis');
 const circuitBreaker = require('../services/monitoring/circuit-breaker.service');
 const intelligentCache = require('../services/cache/intelligent-cache.service');
 const performanceMonitor = require('../services/analytics/performance.service');
+const sessionStore = require('../services/session/session-store.service');
+const sessionSecurity = require('../services/session/session-security.service');
 
 /**
  * Database Performance Monitoring Endpoint
  * GET /api/monitoring/database
  */
-router.get('/database', async (req, res) => {
+router.get('/database', async(req, res) => {
     try {
         const startTime = Date.now();
-        
+
         // Test database connection and get pool stats
         const poolStats = await knex.client.pool ? {
             used: knex.client.pool.numUsed(),
@@ -76,7 +78,7 @@ router.get('/database', async (req, res) => {
  * Redis Performance Monitoring Endpoint
  * GET /api/monitoring/redis
  */
-router.get('/redis', async (req, res) => {
+router.get('/redis', async(req, res) => {
     try {
         if (!redis.client) {
             return res.json({
@@ -87,7 +89,7 @@ router.get('/redis', async (req, res) => {
         }
 
         const startTime = Date.now();
-        
+
         // Test Redis connection
         await redis.client.ping();
         const pingTime = Date.now() - startTime;
@@ -109,17 +111,54 @@ router.get('/redis', async (req, res) => {
                     status: pingTime < 10 ? 'excellent' : pingTime < 50 ? 'good' : 'slow'
                 },
                 memory: {
-                    used: memory.match(/used_memory_human:(.+)/)?.[1]?.trim(),
-                    peak: memory.match(/used_memory_peak_human:(.+)/)?.[1]?.trim(),
-                    fragmentation: memory.match(/mem_fragmentation_ratio:(.+)/)?.[1]?.trim()
+                    used: memory.match(/used_memory_human:(.+)/) && memory.match(/used_memory_human:(.+)/)[1] ? memory.match(/used_memory_human:(.+)/)[1].trim() : 'N/A',
+                    peak: memory.match(/used_memory_peak_human:(.+)/) && memory.match(/used_memory_peak_human:(.+)/)[1] ? memory.match(/used_memory_peak_human:(.+)/)[1].trim() : 'N/A',
+                    fragmentation: memory.match(/mem_fragmentation_ratio:(.+)/) && memory.match(/mem_fragmentation_ratio:(.+)/)[1] ? memory.match(/mem_fragmentation_ratio:(.+)/)[1].trim() : 'N/A'
                 },
                 stats: {
-                    totalConnections: stats.match(/total_connections_received:(.+)/)?.[1]?.trim(),
-                    totalCommands: stats.match(/total_commands_processed:(.+)/)?.[1]?.trim(),
-                    keyspaceHits: stats.match(/keyspace_hits:(.+)/)?.[1]?.trim(),
-                    keyspaceMisses: stats.match(/keyspace_misses:(.+)/)?.[1]?.trim()
+                    totalConnections: stats.match(/total_connections_received:(.+)/) && stats.match(/total_connections_received:(.+)/)[1] ? stats.match(/total_connections_received:(.+)/)[1].trim() : 'N/A',
+                    totalCommands: stats.match(/total_commands_processed:(.+)/) && stats.match(/total_commands_processed:(.+)/)[1] ? stats.match(/total_commands_processed:(.+)/)[1].trim() : 'N/A',
+                    keyspaceHits: stats.match(/keyspace_hits:(.+)/) && stats.match(/keyspace_hits:(.+)/)[1] ? stats.match(/keyspace_hits:(.+)/)[1].trim() : 'N/A',
+                    keyspaceMisses: stats.match(/keyspace_misses:(.+)/) && stats.match(/keyspace_misses:(.+)/)[1] ? stats.match(/keyspace_misses:(.+)/)[1].trim() : 'N/A'
                 },
                 cacheMetrics
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+/**
+ * Session Store Monitoring Endpoint
+ * GET /api/monitoring/sessions
+ */
+router.get('/sessions', async(req, res) => {
+    try {
+        const sessionMetrics = await sessionStore.getMetrics();
+        const securityMetrics = sessionSecurity.getSecurityMetrics();
+        const sessionHealth = await sessionStore.healthCheck();
+        const blockedIPs = sessionSecurity.getBlockedIPs();
+
+        res.json({
+            status: sessionHealth.status,
+            timestamp: new Date().toISOString(),
+            sessions: {
+                store: {
+                    type: sessionHealth.storeType,
+                    health: sessionHealth,
+                    metrics: sessionMetrics
+                },
+                security: {
+                    metrics: securityMetrics,
+                    blockedIPs: blockedIPs.length,
+                    blockedIPsList: blockedIPs.slice(0, 10) // Limit to first 10 for API response
+                },
+                recommendations: generateSessionRecommendations(sessionHealth, sessionMetrics, securityMetrics)
             }
         });
     } catch (error) {
@@ -188,7 +227,7 @@ router.get('/performance', (req, res) => {
  * Comprehensive Health Check Endpoint
  * GET /api/monitoring/health
  */
-router.get('/health', async (req, res) => {
+router.get('/health', async(req, res) => {
     try {
         const startTime = Date.now();
         const health = {
@@ -228,6 +267,15 @@ router.get('/health', async (req, res) => {
             health.status = 'critical';
         } else if (circuitHealth.status === 'degraded' && health.status === 'healthy') {
             health.status = 'degraded';
+        }
+
+        // Session store health
+        const sessionHealth = await sessionStore.healthCheck();
+        health.services.sessions = sessionHealth;
+        if (sessionHealth.status === 'warning' && health.status === 'healthy') {
+            health.status = 'degraded';
+        } else if (sessionHealth.status === 'unhealthy') {
+            health.status = 'critical';
         }
 
         // Performance metrics
@@ -288,7 +336,7 @@ function generateRecommendations(metrics) {
 function generateHealthRecommendations(health) {
     const recommendations = [];
 
-    if (health.services.database?.status === 'unhealthy') {
+    if (health.services.database && health.services.database.status === 'unhealthy') {
         recommendations.push({
             type: 'critical',
             service: 'database',
@@ -296,7 +344,7 @@ function generateHealthRecommendations(health) {
         });
     }
 
-    if (health.services.circuitBreakers?.openCircuits?.length > 0) {
+    if (health.services.circuitBreakers && health.services.circuitBreakers.openCircuits && health.services.circuitBreakers.openCircuits.length > 0) {
         recommendations.push({
             type: 'warning',
             service: 'circuit-breakers',
@@ -304,11 +352,79 @@ function generateHealthRecommendations(health) {
         });
     }
 
-    if (health.performance?.status === 'slow') {
+    if (health.performance && health.performance.status === 'slow') {
         recommendations.push({
             type: 'performance',
             service: 'general',
             message: 'System response time is slow. Check database performance and connection pool utilization.'
+        });
+    }
+
+    return recommendations;
+}
+
+/**
+ * Generate session-specific recommendations
+ */
+function generateSessionRecommendations(sessionHealth, sessionMetrics, securityMetrics) {
+    const recommendations = [];
+
+    // Session store recommendations
+    if (sessionHealth.storeType === 'memory' && process.env.NODE_ENV === 'production') {
+        recommendations.push({
+            type: 'critical',
+            category: 'session-store',
+            message: 'Using memory store in production. Enable Redis for scalable session storage.'
+        });
+    }
+
+    if (sessionHealth.storeType === 'file') {
+        recommendations.push({
+            type: 'warning',
+            category: 'session-store',
+            message: 'Using file store. Consider Redis for better performance and scalability.'
+        });
+    }
+
+    // Security recommendations
+    if (securityMetrics.suspiciousActivities > 10) {
+        recommendations.push({
+            type: 'warning',
+            category: 'security',
+            message: `High number of suspicious activities (${securityMetrics.suspiciousActivities}). Monitor for potential attacks.`
+        });
+    }
+
+    if (securityMetrics.sessionHijackingAttempts > 0) {
+        recommendations.push({
+            type: 'high',
+            category: 'security',
+            message: `Session hijacking attempts detected (${securityMetrics.sessionHijackingAttempts}). Review security logs.`
+        });
+    }
+
+    if (securityMetrics.blockedIPs > 5) {
+        recommendations.push({
+            type: 'medium',
+            category: 'security',
+            message: `Multiple IPs blocked (${securityMetrics.blockedIPs}). Consider reviewing block duration and criteria.`
+        });
+    }
+
+    // Performance recommendations
+    if (sessionMetrics.activeSessions > 1000) {
+        recommendations.push({
+            type: 'medium',
+            category: 'performance',
+            message: `High number of active sessions (${sessionMetrics.activeSessions}). Monitor memory usage and consider session cleanup.`
+        });
+    }
+
+    if (sessionMetrics.errors > 5) {
+        recommendations.push({
+            type: 'high',
+            category: 'reliability',
+            message: `Session store errors detected (${sessionMetrics.errors}). Check session store connectivity and configuration.`
         });
     }
 

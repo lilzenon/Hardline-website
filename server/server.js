@@ -8,6 +8,10 @@ const helmet = require("helmet");
 const path = require("node:path");
 const hbs = require("hbs");
 
+// Session store service
+const sessionStore = require("./services/session/session-store.service");
+const sessionSecurity = require("./services/session/session-security.service");
+
 const helpers = require("./handlers/helpers.handler");
 const renders = require("./handlers/renders.handler");
 const asyncHandler = require("./utils/asyncHandler");
@@ -39,16 +43,8 @@ if (env.TRUST_PROXY) {
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cookieParser());
 
-// Session configuration for OAuth flows
-app.use(session({
-    secret: env.JWT_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    }
-}));
+// Production-ready session configuration with Redis store
+app.use(session(sessionStore.getSessionConfig()));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -57,6 +53,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/images", express.static("custom/images"));
 app.use("/css", express.static("custom/css", { extensions: ["css"] }));
 app.use(express.static("static"));
+
+// Session security middleware
+app.use(sessionSecurity.securityMiddleware());
 
 app.use(passport.initialize());
 app.use(locals.isHTML);

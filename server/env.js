@@ -101,6 +101,12 @@ const spec = {
     SERVER_CNAME_ADDRESS: str({ default: "" }),
     CUSTOM_DOMAIN_USE_HTTPS: bool({ default: false }),
     JWT_SECRET: str({ devDefault: "securekey" }),
+
+    // 🔐 SESSION CONFIGURATION
+    SESSION_SECRET: str({ default: "", desc: "Primary session secret for encryption" }),
+    SESSION_SECRET_OLD: str({ default: "", desc: "Previous session secret for rotation" }),
+    SESSION_NAME: str({ default: "kutt.sid", desc: "Session cookie name" }),
+    SESSION_TTL: num({ default: 86400, desc: "Session TTL in seconds (24 hours default)" }),
     MAIL_ENABLED: bool({ default: false }),
     MAIL_HOST: str({ default: "" }),
     MAIL_PORT: num({ default: 587 }),

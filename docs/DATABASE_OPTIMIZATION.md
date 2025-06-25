@@ -4,12 +4,13 @@ This document outlines the comprehensive database optimizations implemented to i
 
 ## 🎯 Optimization Overview
 
-The optimizations focus on five key areas:
+The optimizations focus on six key areas:
 1. **Connection Pool Management** - Optimized for resource-constrained environments
 2. **Query Performance** - Enhanced indexing and query optimization
 3. **Intelligent Caching** - Redis-based caching with cache warming
 4. **Background Task Optimization** - Improved queue processing and cron jobs
 5. **Monitoring & Circuit Breakers** - Comprehensive monitoring and failure prevention
+6. **Production Session Store** - Scalable session management with Redis/File store
 
 ## 📊 Expected Performance Improvements
 
@@ -20,6 +21,7 @@ The optimizations focus on five key areas:
 | Cache Hit Rate | N/A | 70-90% | New Feature |
 | Connection Pool Efficiency | 60% | 85%+ | 40%+ |
 | Background Task Throughput | 6 concurrent | 3 optimized | Better resource usage |
+| Session Store | Memory (not scalable) | Redis/File (scalable) | Production ready |
 
 ## 🔧 Implementation Details
 
@@ -102,6 +104,26 @@ The optimizations focus on five key areas:
 - Better system resilience
 - Real-time performance insights
 
+### 6. Production Session Store
+
+**Files**:
+- `server/services/session/session-store.service.js`
+- `server/services/session/session-security.service.js`
+- `server/services/session/session-management.service.js`
+- `server/routes/admin/session-admin.routes.js`
+
+**Features**:
+- Redis session store with file store fallback
+- Session security with fingerprinting and CSRF protection
+- Comprehensive session monitoring and admin tools
+- Automatic session cleanup and management
+
+**Benefits**:
+- Scalable across multiple instances
+- Persistent sessions across server restarts
+- Enhanced security features
+- Production-ready session management
+
 ## 🚀 Getting Started
 
 ### 1. Apply Database Migrations
@@ -128,6 +150,12 @@ DB_QUERY_TIMEOUT=25000
 REDIS_ENABLED=true
 REDIS_HOST=your-redis-host
 REDIS_PORT=6379
+
+# Session Configuration
+SESSION_SECRET=your-secure-session-secret-here
+SESSION_SECRET_OLD=previous-secret-for-rotation
+SESSION_NAME=kutt.sid
+SESSION_TTL=86400
 ```
 
 ### 3. Run Performance Tests
@@ -149,6 +177,19 @@ curl http://localhost:3000/api/monitoring/health
 - **Redis Performance**: `GET /api/monitoring/redis`
 - **Circuit Breaker Status**: `GET /api/monitoring/circuit-breakers`
 - **Performance Metrics**: `GET /api/monitoring/performance`
+- **Session Store Status**: `GET /api/monitoring/sessions`
+
+### Admin Session Management
+
+- **All Active Sessions**: `GET /api/admin/sessions`
+- **Session Statistics**: `GET /api/admin/sessions/statistics`
+- **Specific Session**: `GET /api/admin/sessions/:sessionId`
+- **Force Destroy Session**: `DELETE /api/admin/sessions/:sessionId`
+- **Destroy User Sessions**: `DELETE /api/admin/sessions/user/:userId`
+- **Blocked IPs**: `GET /api/admin/sessions/security/blocked-ips`
+- **Unblock IP**: `DELETE /api/admin/sessions/security/blocked-ips/:ip`
+- **Manual Cleanup**: `POST /api/admin/sessions/cleanup`
+- **Export Session Data**: `GET /api/admin/sessions/export`
 
 ### Key Metrics to Monitor
 
@@ -166,6 +207,12 @@ curl http://localhost:3000/api/monitoring/health
    - All circuits should be in CLOSED state
    - Failure rates should be below 5%
    - Recovery should happen within 30 seconds
+
+4. **Session Store**:
+   - Store type should be Redis or File (not Memory in production)
+   - Active sessions should be reasonable for your user base
+   - Security metrics should show low suspicious activity
+   - Session cleanup should run regularly
 
 ## 🔍 Troubleshooting
 
@@ -190,6 +237,23 @@ curl http://localhost:3000/api/monitoring/health
 3. Verify connection pool health
 4. Consider manual circuit reset if needed
 
+### Session Store Issues
+
+1. **Memory Store in Production**:
+   - Enable Redis for scalable sessions
+   - Check `SESSION_SECRET` environment variable
+   - Verify Redis connection if enabled
+
+2. **Session Persistence Problems**:
+   - Check session store type in monitoring
+   - Verify file store permissions (if using file store)
+   - Test Redis connectivity (if using Redis)
+
+3. **High Security Alerts**:
+   - Review blocked IPs in admin panel
+   - Check for unusual session patterns
+   - Verify CSRF token implementation
+
 ## 📋 Performance Testing
 
 Run the performance test script to validate optimizations:
@@ -204,6 +268,21 @@ The script tests:
 - Cache efficiency
 - Redis performance
 - Overall system health
+
+### Session Persistence Testing
+
+Run the session persistence test script:
+
+```bash
+node scripts/test-session-persistence.js
+```
+
+This tests:
+- Session creation and validation
+- Session persistence across server restarts
+- Session security features
+- Session performance under load
+- Session scaling across instances
 
 ## 🎛️ Configuration Tuning
 
@@ -222,6 +301,9 @@ DB_QUERY_TIMEOUT=40000
 
 # Optimize cache
 REDIS_CACHE_TTL=600  # 10 minutes
+
+# Session optimization
+SESSION_TTL=43200  # 12 hours for higher traffic
 ```
 
 ### For Lower Resources
@@ -239,6 +321,9 @@ DB_QUERY_TIMEOUT=15000
 
 # Aggressive cache cleanup
 REDIS_CACHE_TTL=180  # 3 minutes
+
+# Shorter session duration
+SESSION_TTL=21600  # 6 hours to reduce memory usage
 ```
 
 ## 📚 Additional Resources

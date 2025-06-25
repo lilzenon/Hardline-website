@@ -15,6 +15,7 @@ const analytics = require("./api/analytics.routes");
 const contactBook = require("./api/contact-book.routes");
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
+const sessionAdmin = require("./admin/session-admin.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -33,6 +34,7 @@ apiRouter.use("/analytics", analytics);
 apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
+apiRouter.use("/admin/sessions", sessionAdmin);
 
 module.exports = {
     api: apiRouter,
