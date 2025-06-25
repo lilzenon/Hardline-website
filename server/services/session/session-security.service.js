@@ -9,7 +9,7 @@ class SessionSecurityService {
             sessionHijackingAttempts: 0,
             csrfAttempts: 0
         };
-        
+
         this.blockedIPs = new Map();
         this.sessionFingerprints = new Map();
         this.rateLimiters = new Map();
@@ -33,7 +33,7 @@ class SessionSecurityService {
             req.ip || '',
             // Don't include headers that change frequently
         ];
-        
+
         return crypto
             .createHash('sha256')
             .update(components.join('|'))
@@ -76,7 +76,7 @@ class SessionSecurityService {
         const ip = req.ip;
         const now = Date.now();
         const ipActivity = this.rateLimiters.get(ip) || { count: 0, firstSeen: now };
-        
+
         if (now - ipActivity.firstSeen < 60000) { // 1 minute window
             ipActivity.count++;
             if (ipActivity.count > 10) { // More than 10 sessions per minute
@@ -87,7 +87,7 @@ class SessionSecurityService {
             ipActivity.count = 1;
             ipActivity.firstSeen = now;
         }
-        
+
         this.rateLimiters.set(ip, ipActivity);
 
         // Check for unusual user agent patterns
@@ -125,8 +125,8 @@ class SessionSecurityService {
                     const blockInfo = this.blockedIPs.get(req.ip);
                     if (Date.now() < blockInfo.until) {
                         console.warn(`🚫 Blocked IP ${req.ip} attempted access`);
-                        return res.status(429).json({ 
-                            error: 'Too many suspicious activities. Please try again later.' 
+                        return res.status(429).json({
+                            error: 'Too many suspicious activities. Please try again later.'
                         });
                     } else {
                         // Block expired, remove it
@@ -142,8 +142,8 @@ class SessionSecurityService {
                             if (err) console.error('Error destroying suspicious session:', err);
                         });
                     }
-                    return res.status(401).json({ 
-                        error: 'Session security validation failed' 
+                    return res.status(401).json({
+                        error: 'Session security validation failed'
                     });
                 }
 
@@ -156,19 +156,32 @@ class SessionSecurityService {
                         reason: suspiciousIndicators.join(', ')
                     });
                     this.securityMetrics.blockedSessions++;
-                    
-                    return res.status(429).json({ 
-                        error: 'Suspicious activity detected. Access temporarily blocked.' 
+
+                    return res.status(429).json({
+                        error: 'Suspicious activity detected. Access temporarily blocked.'
                     });
                 }
 
                 // Add security headers
-                res.set({
+                const securityHeaders = {
                     'X-Content-Type-Options': 'nosniff',
-                    'X-Frame-Options': 'DENY',
                     'X-XSS-Protection': '1; mode=block',
                     'Referrer-Policy': 'strict-origin-when-cross-origin'
-                });
+                };
+
+                // Allow same-origin iframe embedding for preview functionality
+                // Check if this is a preview request or event page that needs iframe embedding
+                const isPreviewRequest = req.query.preview === 'true' ||
+                    req.query.edit_mode === 'true' ||
+                    req.path.startsWith('/event/');
+
+                if (isPreviewRequest) {
+                    securityHeaders['X-Frame-Options'] = 'SAMEORIGIN';
+                } else {
+                    securityHeaders['X-Frame-Options'] = 'DENY';
+                }
+
+                res.set(securityHeaders);
 
                 // Store session fingerprint for new sessions
                 if (req.session && req.session.id && !this.sessionFingerprints.has(req.session.id)) {
@@ -194,15 +207,15 @@ class SessionSecurityService {
             }
 
             // Check for CSRF token in headers or body
-            const token = req.headers['x-csrf-token'] || 
-                         req.headers['x-xsrf-token'] || 
-                         req.body._csrf;
+            const token = req.headers['x-csrf-token'] ||
+                req.headers['x-xsrf-token'] ||
+                req.body._csrf;
 
             if (!token) {
                 console.warn(`🚨 Missing CSRF token for ${req.method} ${req.path} from ${req.ip}`);
                 this.securityMetrics.csrfAttempts++;
-                return res.status(403).json({ 
-                    error: 'CSRF token required' 
+                return res.status(403).json({
+                    error: 'CSRF token required'
                 });
             }
 
@@ -210,8 +223,8 @@ class SessionSecurityService {
             if (!this.validateCSRFToken(req, token)) {
                 console.warn(`🚨 Invalid CSRF token for ${req.method} ${req.path} from ${req.ip}`);
                 this.securityMetrics.csrfAttempts++;
-                return res.status(403).json({ 
-                    error: 'Invalid CSRF token' 
+                return res.status(403).json({
+                    error: 'Invalid CSRF token'
                 });
             }
 
@@ -264,7 +277,7 @@ class SessionSecurityService {
         if (req.session && req.session.id) {
             // Remove session fingerprint
             this.sessionFingerprints.delete(req.session.id);
-            
+
             // Clear session data
             req.session.destroy((err) => {
                 if (err) {
@@ -302,7 +315,7 @@ class SessionSecurityService {
     getBlockedIPs() {
         const blocked = [];
         const now = Date.now();
-        
+
         for (const [ip, blockInfo] of this.blockedIPs.entries()) {
             if (now < blockInfo.until) {
                 blocked.push({
@@ -316,7 +329,7 @@ class SessionSecurityService {
                 this.blockedIPs.delete(ip);
             }
         }
-        
+
         return blocked;
     }
 

@@ -40,7 +40,10 @@ if (env.TRUST_PROXY) {
     app.set("trust proxy", true);
 }
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+    contentSecurityPolicy: false,
+    frameguard: false // Disable frameguard to allow custom X-Frame-Options handling
+}));
 app.use(cookieParser());
 
 // Production-ready session configuration with Redis store

@@ -157,7 +157,7 @@
                 </div>
 
                 <!-- Form Content -->
-                <form id="event-edit-form" class="event-form">
+                <form id="drop-edit-form" class="event-form">
                     <!-- PAGE TAB CONTENT -->
                     <div class="tab-content active" data-tab-content="page">
                         <div class="home-settings-form">
@@ -265,13 +265,13 @@
                                         <div class="gradient-controls-section">
                                             <h4 class="gradient-section-title">Gradient Type</h4>
                                             <div class="gradient-type-controls">
-                                                <button type="button" class="gradient-type-btn active" data-type="linear">
+                                                <button type="button" id="gradient-linear" class="gradient-type-btn active" data-type="linear">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                                                     </svg>
                                                     Linear
                                                 </button>
-                                                <button type="button" class="gradient-type-btn" data-type="radial">
+                                                <button type="button" id="gradient-radial" class="gradient-type-btn" data-type="radial">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                                                     </svg>
@@ -930,19 +930,53 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize preview system
     initializePreviewSystem();
 
-    // Initialize form submission
-    initializeFormSubmission();
+    // Initialize form submission with retry logic
+    let formInitAttempts = 0;
+    const maxFormInitAttempts = 3;
+
+    function tryInitializeFormSubmission() {
+        formInitAttempts++;
+        console.log(`🔧 Form initialization attempt ${formInitAttempts}/${maxFormInitAttempts}`);
+
+        const form = document.getElementById('drop-edit-form');
+        if (form) {
+            initializeFormSubmission();
+        } else if (formInitAttempts < maxFormInitAttempts) {
+            console.log(`⏳ Form not ready, retrying in ${formInitAttempts * 100}ms...`);
+            setTimeout(tryInitializeFormSubmission, formInitAttempts * 100);
+        } else {
+            console.error('❌ Failed to initialize form after maximum attempts');
+        }
+    }
+
+    tryInitializeFormSubmission();
 
     // Initialize real-time updates
     initializeRealTimeUpdates();
 
-    // Debug test button removed for cleaner console output
+    // Initialize gradient editor with enhanced retry logic
+    let gradientInitAttempts = 0;
+    const maxGradientInitAttempts = 5;
 
-    // Initialize gradient editor with retry logic
-    setTimeout(() => {
-        log(LOG_LEVELS.DEBUG, '🎨', 'Initializing gradient editor');
-        initializeGradientEditor();
-    }, 100);
+    function tryInitializeGradientEditor() {
+        gradientInitAttempts++;
+        console.log(`🎨 Gradient editor initialization attempt ${gradientInitAttempts}/${maxGradientInitAttempts}`);
+
+        const gradientEditor = document.getElementById('gradient-editor');
+        const gradientButtons = document.querySelectorAll('.gradient-type-btn');
+
+        if (gradientEditor && gradientButtons.length > 0) {
+            log(LOG_LEVELS.DEBUG, '🎨', 'Initializing gradient editor');
+            initializeGradientEditor();
+        } else if (gradientInitAttempts < maxGradientInitAttempts) {
+            console.log(`⏳ Gradient editor not ready, retrying in ${gradientInitAttempts * 100}ms...`);
+            setTimeout(tryInitializeGradientEditor, gradientInitAttempts * 100);
+        } else {
+            console.error('❌ Failed to initialize gradient editor after maximum attempts');
+        }
+    }
+
+    setTimeout(tryInitializeGradientEditor, 100);
 
     // Retry gradient data loading if needed
     setTimeout(() => {
@@ -1081,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form validation check (reduced logging)
     setTimeout(() => {
-        const form = document.getElementById('event-edit-form');
+        const form = document.getElementById('drop-edit-form');
         if (!form) {
             log(LOG_LEVELS.ERROR, '📋', 'Form element not found');
             return;
@@ -1337,6 +1371,12 @@ function initializePreviewSystem() {
 
         } catch (error) {
             console.warn(`⚠️ Preview iframe access restricted (attempt ${iframeLoadAttempts}):`, error.message);
+
+            // Check if this is a cross-origin or X-Frame-Options issue
+            if (error.message.includes('cross-origin') || error.message.includes('X-Frame-Options')) {
+                console.log('🔄 Detected iframe security restriction, using refresh-based preview');
+                showToast('ℹ️ Preview using refresh mode due to security settings', 'info', 3000);
+            }
 
             // Use refresh-based preview updates instead
             console.log('🔄 Switching to refresh-based preview updates');
@@ -2106,13 +2146,33 @@ function initializeGradientEditor() {
     // Initialize gradient type buttons
     const gradientTypeButtons = document.querySelectorAll('.gradient-type-btn');
     console.log('🎨 Found gradient type buttons:', gradientTypeButtons.length);
+
+    if (gradientTypeButtons.length === 0) {
+        console.error('❌ No gradient type buttons found! Check HTML structure.');
+        console.log('🔍 Available elements with gradient classes:',
+            Array.from(document.querySelectorAll('[class*="gradient"]')).map(el => ({
+                tag: el.tagName,
+                id: el.id,
+                classes: el.className
+            }))
+        );
+    } else {
+        gradientTypeButtons.forEach((btn, index) => {
+            console.log(`🎨 Button ${index}:`, {
+                id: btn.id,
+                dataType: btn.dataset.type,
+                classes: btn.className
+            });
+        });
+    }
     gradientTypeButtons.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🎨 Gradient type clicked:', this.id);
+            const gradientType = this.dataset.type || this.id.replace('gradient-', '');
+            console.log('🎨 Gradient type clicked:', gradientType);
             gradientTypeButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            gradientData.type = this.id.replace('gradient-', '');
+            gradientData.type = gradientType;
 
             const directionSection = document.getElementById('gradient-direction-section');
             if (gradientData.type === 'linear') {
@@ -2442,9 +2502,12 @@ function updateLivePreviewGradient(gradientCSS) {
 }
 
 function initializeFormSubmission() {
+    console.log('🔧 Initializing form submission...');
+
     const form = document.getElementById('drop-edit-form');
     if (!form) {
         console.error('❌ Form element not found! Cannot initialize form submission.');
+        console.log('🔍 Available forms:', Array.from(document.querySelectorAll('form')).map(f => f.id || f.className));
         return;
     }
 
@@ -2452,6 +2515,7 @@ function initializeFormSubmission() {
     const saveBtn = document.getElementById('save-changes-btn') || form.querySelector('button[type="submit"]');
     if (!saveBtn) {
         console.error('❌ Save button not found! Cannot initialize form submission.');
+        console.log('🔍 Available buttons:', Array.from(document.querySelectorAll('button')).map(b => b.id || b.className));
         return;
     }
 
@@ -2460,10 +2524,13 @@ function initializeFormSubmission() {
 
     if (!saveBtnText || !saveBtnSpinner) {
         console.error('❌ Save button elements not found! Button text or spinner missing.');
+        console.log('🔍 Save button structure:', saveBtn.innerHTML);
         return;
     }
 
     console.log('✅ Form submission elements found successfully');
+    console.log('📋 Form ID:', form.id);
+    console.log('🔘 Save button ID:', saveBtn.id);
 
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
