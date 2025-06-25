@@ -1021,28 +1021,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(tryInitializeGradientEditor, 100);
 
-    // Retry gradient data loading if needed
+    // Retry gradient data loading if needed - but don't override user changes
     setTimeout(() => {
-        if (!gradientData || !window.gradientDataLoaded) {
-            log(LOG_LEVELS.DEBUG, '🎨', 'Retrying gradient data loading');
+        if ((!gradientData || !window.gradientDataLoaded) && !window.userHasModifiedGradient) {
+            log(LOG_LEVELS.DEBUG, '🎨', 'Retrying gradient data loading (no user modifications)');
             loadExistingGradientData();
             setTimeout(() => setGradientUIFromData(0), 100);
+        } else if (window.userHasModifiedGradient) {
+            log(LOG_LEVELS.DEBUG, '🎨', 'Skipping data reload - user has modified gradient');
         }
     }, 1000);
 
-    // Final gradient UI sync
+    // Final gradient UI sync - but don't override user changes
     setTimeout(() => {
         const backgroundTypeSelect = document.getElementById('edit-background-type');
         if (backgroundTypeSelect?.value === 'gradient') {
-            if (gradientData) {
+            if (gradientData && !window.userHasModifiedGradient) {
+                // Only sync UI if user hasn't made changes
                 setGradientUIFromData(0);
                 updateGradientPreview();
-                log(LOG_LEVELS.DEBUG, '🎨', 'Gradient UI synced');
-            } else {
+                log(LOG_LEVELS.DEBUG, '🎨', 'Gradient UI synced (no user modifications)');
+            } else if (!gradientData) {
                 gradientData = { ...defaultGradientData };
                 setGradientUIFromData(0);
                 updateGradientPreview();
                 log(LOG_LEVELS.WARN, '🎨', 'Using default gradient data');
+            } else {
+                log(LOG_LEVELS.DEBUG, '🎨', 'Skipping final sync - user has modified gradient');
             }
         }
     }, 2000);
@@ -1855,6 +1860,9 @@ function updateBackgroundControlsVisibility(backgroundType) {
 // Advanced Gradient Editor System
 let gradientData = null; // Start as null to detect if data was loaded
 
+// Track user modifications to prevent overriding user changes
+window.userHasModifiedGradient = false;
+
 // Default gradient data - only used if no database data exists
 const defaultGradientData = {
     type: 'linear',
@@ -1871,6 +1879,10 @@ function loadExistingGradientData() {
     // Reset gradient data to null to detect if we successfully load data
     gradientData = null;
     window.gradientDataLoaded = false;
+
+    // Reset user modification flag when loading data from database
+    window.userHasModifiedGradient = false;
+    console.log('🎨 Reset user modification flag for fresh data load');
 
     // Get data sources
     const gradientDataScript = document.getElementById('gradient-data-json');
@@ -2213,6 +2225,11 @@ function initializeGradientEditor() {
             e.preventDefault();
             const gradientType = this.dataset.type || this.id.replace('gradient-', '');
             console.log('🎨 Gradient type clicked:', gradientType);
+
+            // Mark that user has modified the gradient
+            window.userHasModifiedGradient = true;
+            console.log('🎨 User modification flag set to true (type change)');
+
             gradientTypeButtons.forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             gradientData.type = gradientType;
@@ -2246,6 +2263,10 @@ function initializeGradientEditor() {
                 e.preventDefault();
                 const angle = parseInt(this.dataset.angle);
                 console.log('🎨 Direction clicked:', angle, `(${this.title})`);
+
+                // Mark that user has modified the gradient
+                window.userHasModifiedGradient = true;
+                console.log('🎨 User modification flag set to true');
 
                 // Update active state
                 directionButtons.forEach(b => b.classList.remove('active'));
@@ -2394,6 +2415,10 @@ function createColorStopElement(stop, index) {
 function addColorStop() {
     if (gradientData.stops.length >= 4) return;
 
+    // Mark that user has modified the gradient
+    window.userHasModifiedGradient = true;
+    console.log('🎨 User modification flag set to true (add color stop)');
+
     const newPosition = gradientData.stops.length > 0 ?
         Math.min(100, Math.max(...gradientData.stops.map(s => s.position)) + 25) : 50;
 
@@ -2408,6 +2433,10 @@ function addColorStop() {
 
 function removeColorStop() {
     if (gradientData.stops.length <= 2) return;
+
+    // Mark that user has modified the gradient
+    window.userHasModifiedGradient = true;
+    console.log('🎨 User modification flag set to true (remove color stop)');
 
     gradientData.stops.pop();
     initializeColorStops();
@@ -2488,7 +2517,9 @@ function generateGradientCSS() {
     const stopsCSS = sortedStops.map(stop => `${stop.color} ${stop.position}%`).join(', ');
 
     if (gradientData.type === 'linear') {
-        return `linear-gradient(${gradientData.angle}deg, ${stopsCSS})`;
+        const css = `linear-gradient(${gradientData.angle}deg, ${stopsCSS})`;
+        console.log('🎨 Generated CSS with angle:', gradientData.angle, 'CSS:', css);
+        return css;
     } else {
         return `radial-gradient(circle, ${stopsCSS})`;
     }
