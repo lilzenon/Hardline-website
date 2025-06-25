@@ -67,7 +67,7 @@ class TwilioService {
                 console.log('📋 Creating sms_messages table...');
                 await db.schema.createTable('sms_messages', table => {
                     table.increments('id').primary();
-                    table.integer('drop_signup_id').references('id').inTable('drop_signups').onDelete('CASCADE');
+                    table.integer('event_signup_id').references('id').inTable('event_signups').onDelete('CASCADE');
                     table.string('phone', 20).notNullable();
                     table.text('message_body');
                     table.string('message_type', 50).defaultTo('confirmation');
@@ -81,7 +81,7 @@ class TwilioService {
                     table.timestamp('created_at').defaultTo(db.fn.now());
                     table.timestamp('updated_at').defaultTo(db.fn.now());
 
-                    table.index('drop_signup_id');
+                    table.index('event_signup_id');
                     table.index('phone');
                     table.index('status');
                     table.index('message_sid');
@@ -108,16 +108,16 @@ class TwilioService {
                 console.log('✅ Created sms_opt_outs table');
             }
 
-            // Add SMS columns to drop_signups if they don't exist
-            const hasColumns = await db.schema.hasColumn('drop_signups', 'sms_opt_in');
+            // Add SMS columns to event_signups if they don't exist
+            const hasColumns = await db.schema.hasColumn('event_signups', 'sms_opt_in');
             if (!hasColumns) {
-                console.log('📋 Adding SMS columns to drop_signups table...');
-                await db.schema.alterTable('drop_signups', table => {
+                console.log('📋 Adding SMS columns to event_signups table...');
+                await db.schema.alterTable('event_signups', table => {
                     table.boolean('sms_opt_in').defaultTo(true);
                     table.boolean('sms_sent').defaultTo(false);
                     table.timestamp('sms_sent_at');
                 });
-                console.log('✅ Added SMS columns to drop_signups table');
+                console.log('✅ Added SMS columns to event_signups table');
             }
 
             this.tablesReady = true;
@@ -218,7 +218,7 @@ class TwilioService {
         if (result.success && signupId) {
             try {
                 await this.trackSMSMessage({
-                    dropSignupId: signupId,
+                    eventSignupId: signupId,
                     phone: userInfo.phone,
                     messageBody: message,
                     messageType: 'confirmation',
@@ -227,7 +227,7 @@ class TwilioService {
                 });
 
                 // Update signup record
-                await db('drop_signups')
+                await db('event_signups')
                     .where('id', signupId)
                     .update({
                         sms_sent: true,
@@ -332,7 +332,7 @@ class TwilioService {
 
         try {
             const smsRecord = {
-                drop_signup_id: messageData.dropSignupId,
+                event_signup_id: messageData.eventSignupId,
                 phone: messageData.phone,
                 message_body: messageData.messageBody,
                 message_type: messageData.messageType || 'confirmation',
