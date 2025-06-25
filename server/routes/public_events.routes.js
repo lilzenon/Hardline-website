@@ -1,10 +1,10 @@
 const { Router } = require("express");
 const { validationResult } = require("express-validator");
 
-const drops = require("../handlers/drops.handler");
+const events = require("../handlers/events.handler");
 const asyncHandler = require("../utils/asyncHandler");
 const { CustomError } = require("../utils");
-const { drop } = require("../queries");
+const query = require("../queries");
 
 const router = Router();
 
@@ -42,44 +42,44 @@ function validateRequest(req, res, next) {
     next();
 }
 
-// GET /drop/:slug - Public drop landing page
+// GET /event/:slug - Public event landing page
 router.get(
     "/:slug",
     asyncHandler(async(req, res) => {
         const { slug } = req.params;
 
         // DEBUG: Add cache busting and detailed logging
-        console.log(`🔍 Looking up drop with slug: ${slug}`);
+        console.log(`🔍 Looking up event with slug: ${slug}`);
 
-        const foundDrop = await drop.findBySlug(slug);
+        const foundEvent = await query.event.findBySlug(slug);
 
-        console.log('🔍 Found drop data:', foundDrop ? {
-            id: foundDrop.id,
-            title: foundDrop.title,
-            background_color: foundDrop.background_color,
-            background_type: foundDrop.background_type,
-            card_background_type: foundDrop.card_background_type,
-            button_color: foundDrop.button_color,
-            button_text_color: foundDrop.button_text_color
+        console.log('🔍 Found event data:', foundEvent ? {
+            id: foundEvent.id,
+            title: foundEvent.title,
+            background_color: foundEvent.background_color,
+            background_type: foundEvent.background_type,
+            card_background_type: foundEvent.card_background_type,
+            button_color: foundEvent.button_color,
+            button_text_color: foundEvent.button_text_color
         } : null);
 
-        if (!foundDrop) {
+        if (!foundEvent) {
             return res.status(404).render("404", {
-                message: "Drop not found"
+                message: "Event not found"
             });
         }
 
-        // Check if drop is active (enterprise access control)
-        if (!foundDrop.is_active) {
-            return res.status(404).render("drop_inactive", {
-                message: "This drop is currently inactive",
-                dropTitle: foundDrop.title,
-                pageTitle: "Drop Inactive"
+        // Check if event is active (enterprise access control)
+        if (!foundEvent.is_active) {
+            return res.status(404).render("event_inactive", {
+                message: "This event is currently inactive",
+                eventTitle: foundEvent.title,
+                pageTitle: "Event Inactive"
             });
         }
 
         // Get signup count for display
-        const signupCount = await drop.getSignupCount(foundDrop.id);
+        const signupCount = await query.event.getSignupCount(foundEvent.id);
 
         // Detect mobile vs desktop for optimized experience
         const userAgent = req.headers['user-agent'] || '';
@@ -95,17 +95,17 @@ router.get(
         const isPreview = req.query.preview === 'true';
 
         if (isPreview) {
-            console.log('🖼️ Rendering preview mode for drop:', foundDrop.slug);
+            console.log('🖼️ Rendering preview mode for event:', foundEvent.slug);
         }
 
-        res.render("drop_landing", {
-            drop: {
-                ...foundDrop,
+        res.render("event_landing", {
+            event: {
+                ...foundEvent,
                 signup_count: signupCount
             },
-            pageTitle: foundDrop.title,
-            metaDescription: foundDrop.description || `Join ${foundDrop.title} - Get notified when this drop goes live!`,
-            metaImage: foundDrop.cover_image,
+            pageTitle: foundEvent.title,
+            metaDescription: foundEvent.description || `Join ${foundEvent.title} - Get notified when this event goes live!`,
+            metaImage: foundEvent.cover_image,
             deviceType: deviceType,
             isMobile: deviceType === 'mobile',
             isDesktop: deviceType === 'desktop',
@@ -117,9 +117,9 @@ router.get(
 // POST /signup/:slug - Public signup endpoint with dynamic validation
 router.post(
     "/signup/:slug",
-    asyncHandler(drops.createSignupValidation),
+    asyncHandler(events.createSignupValidation),
     validateRequest,
-    asyncHandler(drops.createSignup)
+    asyncHandler(events.createSignup)
 );
 
 module.exports = router;

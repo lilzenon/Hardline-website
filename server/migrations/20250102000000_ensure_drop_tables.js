@@ -11,30 +11,30 @@ const models = require("../models");
  */
 exports.up = async function(knex) {
     console.log('🔧 Ensuring drop tables exist...');
-    
+
     try {
-        // Check if drops table exists
-        const hasDropsTable = await knex.schema.hasTable("drops");
-        if (!hasDropsTable) {
-            console.log('📝 Creating drops table...');
-            await models.createDropTable(knex);
-            console.log('✅ drops table created');
+        // Check if events table exists
+        const hasEventsTable = await knex.schema.hasTable("events");
+        if (!hasEventsTable) {
+            console.log('📝 Creating events table...');
+            await models.createEventTable(knex);
+            console.log('✅ events table created');
         } else {
-            console.log('✅ drops table already exists');
+            console.log('✅ events table already exists');
         }
-        
-        // Check if drop_signups table exists
-        const hasDropSignupsTable = await knex.schema.hasTable("drop_signups");
-        if (!hasDropSignupsTable) {
-            console.log('📝 Creating drop_signups table...');
-            await models.createDropSignupTable(knex);
-            console.log('✅ drop_signups table created');
+
+        // Check if event_signups table exists
+        const hasEventSignupsTable = await knex.schema.hasTable("event_signups");
+        if (!hasEventSignupsTable) {
+            console.log('📝 Creating event_signups table...');
+            await models.createEventSignupTable(knex);
+            console.log('✅ event_signups table created');
         } else {
-            console.log('✅ drop_signups table already exists');
+            console.log('✅ event_signups table already exists');
         }
-        
-        console.log('🎉 Drop tables verification complete');
-        
+
+        console.log('🎉 Event tables verification complete');
+
     } catch (error) {
         console.error('🚨 Error ensuring drop tables:', error);
         throw error;

@@ -1,14 +1,14 @@
-async function createDropSignupTable(knex) {
-    const hasTable = await knex.schema.hasTable("drop_signups");
+async function createEventSignupTable(knex) {
+    const hasTable = await knex.schema.hasTable("event_signups");
     if (!hasTable) {
-        await knex.schema.createTable("drop_signups", table => {
+        await knex.schema.createTable("event_signups", table => {
             table.increments("id").primary();
             table
-                .integer("drop_id")
+                .integer("event_id")
                 .unsigned()
                 .notNullable()
                 .references("id")
-                .inTable("drops")
+                .inTable("events")
                 .onDelete("CASCADE");
             table.string("email", 255);
             table.string("phone", 20);
@@ -23,10 +23,10 @@ async function createDropSignupTable(knex) {
             table.timestamps(false, true);
 
             // Unique constraint to prevent duplicate signups
-            table.unique(["drop_id", "email"]);
+            table.unique(["event_id", "email"]);
 
             // Indexes for performance
-            table.index(["drop_id"]);
+            table.index(["event_id"]);
             table.index(["email"]);
             table.index(["created_at"]);
         });
@@ -34,5 +34,5 @@ async function createDropSignupTable(knex) {
 }
 
 module.exports = {
-    createDropSignupTable
+    createEventSignupTable
 };

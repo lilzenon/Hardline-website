@@ -5,8 +5,8 @@ const models = require("../models");
  * @returns { Promise<void> }
  */
 exports.up = async function(knex) {
-    await models.createDropTable(knex);
-    await models.createDropSignupTable(knex);
+    await models.createEventTable(knex);
+    await models.createEventSignupTable(knex);
 };
 
 /**
@@ -14,6 +14,6 @@ exports.up = async function(knex) {
  * @returns { Promise<void> }
  */
 exports.down = function(knex) {
-    return knex.schema.dropTableIfExists('drop_signups')
-        .then(() => knex.schema.dropTableIfExists('drops'));
+    return knex.schema.dropTableIfExists('event_signups')
+        .then(() => knex.schema.dropTableIfExists('events'));
 };

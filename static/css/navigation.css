@@ -78,13 +78,13 @@
 }
 
 
-/* ===== CREATE DROP BUTTON ===== */
+/* ===== CREATE EVENT BUTTON ===== */
 
-.create-drop-section {
+.create-event-section {
     padding: var(--space-lg);
 }
 
-.create-drop-btn {
+.create-event-btn {
     width: 100%;
     background: #3498db;
     color: white;
@@ -102,15 +102,15 @@
     text-decoration: none;
 }
 
-.create-drop-btn:hover {
+.create-event-btn:hover {
     background: #2980b9;
 }
 
-.create-drop-btn:active {
+.create-event-btn:active {
     transform: scale(0.98);
 }
 
-.create-drop-icon {
+.create-event-icon {
     width: 20px;
     height: 20px;
     display: flex;
@@ -432,8 +432,8 @@
         font-weight: 600;
         flex: 1;
     }
-    /* Create Drop Button */
-    .mobile-create-drop {
+    /* CREATE EVENT Button */
+    .mobile-create-event {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         padding: 18px 24px;
@@ -451,12 +451,12 @@
         overflow: hidden;
         min-height: 56px;
     }
-    .create-drop-icon {
+    .create-event-icon {
         width: 20px;
         height: 20px;
         stroke-width: 3;
     }
-    .mobile-create-drop::before {
+    .mobile-create-event::before {
         content: '';
         position: absolute;
         top: 0;
@@ -466,10 +466,10 @@
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
         transition: left 0.5s ease;
     }
-    .mobile-create-drop:hover::before {
+    .mobile-create-event:hover::before {
         left: 100%;
     }
-    .mobile-create-drop:active {
+    .mobile-create-event:active {
         transform: scale(0.98);
     }
     /* Theme Toggle in Mobile */

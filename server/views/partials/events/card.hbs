@@ -1,5 +1,5 @@
-<!-- 🎯 STRATEGIC DROP CARD - CLEAN & PURPOSEFUL DESIGN -->
-<div class="strategic-drop-card" data-drop-id="{{id}}">
+<!-- 🎯 STRATEGIC EVENT CARD - CLEAN & PURPOSEFUL DESIGN -->
+<div class="strategic-event-card" data-event-id="{{id}}">
   <!-- 🎨 Clean Header with Purposeful Animation -->
   <div class="card-header-clean">
     {{#if cover_image}}
@@ -78,10 +78,10 @@
     <!-- 🔗 Clean URL Display -->
     <div class="url-display-clean">
       <div class="url-container">
-        <span class="url-domain">{{../domain}}/drop/</span>
+        <span class="url-domain">{{../domain}}/event/</span>
         <span class="url-slug">{{slug}}</span>
       </div>
-      <button type="button" class="copy-url-btn" title="Copy URL" onclick="copyDropUrl('{{../domain}}/drop/{{slug}}')">
+      <button type="button" class="copy-url-btn" title="Copy URL" onclick="copyEventUrl('{{../domain}}/event/{{slug}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <rect width="13" height="13" x="9" y="9" rx="2" ry="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -107,7 +107,7 @@
       </button>
     </div>
     <div class="secondary-actions">
-      <button type="button" class="icon-btn qr-btn" title="QR Code" onclick="showDropQR('{{id}}', '{{../domain}}/drop/{{slug}}')">
+      <button type="button" class="icon-btn qr-btn" title="QR Code" onclick="showEventQR('{{id}}', '{{../domain}}/event/{{slug}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <rect width="5" height="5" x="3" y="3" rx="1"/>
           <rect width="5" height="5" x="16" y="3" rx="1"/>

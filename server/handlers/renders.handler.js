@@ -14,45 +14,45 @@ async function homepage(req, res) {
         return;
     }
 
-    let drops = [];
+    let events = [];
     if (req.user) {
-        // Load user's drops for the homepage
-        drops = await query.drop.findByUserWithStats(req.user.id, { limit: 6 });
+        // Load user's events for the homepage
+        events = await query.event.findByUserWithStats(req.user.id, { limit: 6 });
     }
 
     res.render("homepage", {
         title: "Free modern URL shortener",
-        drops: drops,
+        events: events,
         domain: env.DEFAULT_DOMAIN
     });
 }
 
 async function modernHomepage(req, res) {
     try {
-        let drops = [];
+        let events = [];
         let stats = {
-            totalDrops: 0,
-            activeDrops: 0,
+            totalEvents: 0,
+            activeEvents: 0,
             totalSignups: 0,
             totalViews: 0
         };
 
         if (req.user) {
-            // Load user's drops with stats for the modern homepage
-            drops = await query.drop.findByUserWithStats(req.user.id, { limit: 8 });
+            // Load user's events with stats for the modern homepage
+            events = await query.event.findByUserWithStats(req.user.id, { limit: 8 });
 
             // Calculate basic stats
-            stats.totalDrops = drops.length;
-            stats.activeDrops = drops.filter(drop => drop.is_active).length;
-            stats.totalSignups = drops.reduce((sum, drop) => sum + (drop.signup_count || 0), 0);
-            stats.totalViews = drops.reduce((sum, drop) => sum + (drop.view_count || 0), 0);
+            stats.totalEvents = events.length;
+            stats.activeEvents = events.filter(event => event.is_active).length;
+            stats.totalSignups = events.reduce((sum, event) => sum + (event.signup_count || 0), 0);
+            stats.totalViews = events.reduce((sum, event) => sum + (event.view_count || 0), 0);
         }
 
         res.render("home", {
             title: "BOUNCE2BOUNCE - Modern B2B Platform",
             pageTitle: "Home",
             layout: "layouts/home",
-            drops: drops,
+            events: events,
             stats: stats,
             user: req.user,
             domain: env.DEFAULT_DOMAIN,
@@ -141,7 +141,7 @@ async function home(req, res) {
         const homeSettings = await query.homeSettings.get();
 
         // Fetch featured drops for homepage display
-        const featuredDrops = await query.drop.getFeaturedDrops({ limit: 6 });
+        const featuredEvents = await query.event.getFeaturedEvents({ limit: 6 });
 
         // 🚀 DEBUG: Log detailed information about featured drops
         console.log(`🏠 Homepage loading...`);
@@ -150,26 +150,26 @@ async function home(req, res) {
             artist_name: homeSettings.artist_name,
             event_date: homeSettings.event_date
         });
-        console.log(`🎯 Featured drops query result:`, {
-            count: featuredDrops.length,
-            drops: featuredDrops.map(drop => ({
-                id: drop.id,
-                title: drop.title,
-                show_on_homepage: drop.show_on_homepage,
-                is_active: drop.is_active
+        console.log(`🎯 Featured events query result:`, {
+            count: featuredEvents.length,
+            events: featuredEvents.map(event => ({
+                id: event.id,
+                title: event.title,
+                show_on_homepage: event.show_on_homepage,
+                is_active: event.is_active
             }))
         });
 
-        // If no featured drops, let's check if there are any drops at all
-        if (featuredDrops.length === 0) {
-            console.log(`⚠️ No featured drops found. Checking all drops...`);
+        // If no featured events, let's check if there are any events at all
+        if (featuredEvents.length === 0) {
+            console.log(`⚠️ No featured events found. Checking all events...`);
             try {
-                const allDrops = await query.drop.find({});
-                console.log(`📋 Total drops in database: ${allDrops.length}`);
-                const dropsWithHomepage = allDrops.filter(drop => drop.show_on_homepage);
-                console.log(`🏠 Drops with show_on_homepage=true: ${dropsWithHomepage.length}`);
-                const activeDrops = allDrops.filter(drop => drop.is_active);
-                console.log(`✅ Active drops: ${activeDrops.length}`);
+                const allEvents = await query.event.find({});
+                console.log(`📋 Total events in database: ${allEvents.length}`);
+                const eventsWithHomepage = allEvents.filter(event => event.show_on_homepage);
+                console.log(`🏠 Events with show_on_homepage=true: ${eventsWithHomepage.length}`);
+                const activeEvents = allEvents.filter(event => event.is_active);
+                console.log(`✅ Active events: ${activeEvents.length}`);
             } catch (debugError) {
                 console.error(`❌ Debug query failed:`, debugError);
             }
@@ -190,13 +190,13 @@ async function home(req, res) {
                 .replace(',', 'th,'); // Add 'th' suffix
         }
 
-        console.log(`🏠 Homepage loaded with ${featuredDrops.length} featured drops`);
+        console.log(`🏠 Homepage loaded with ${featuredEvents.length} featured events`);
 
         res.render("home", {
             layout: "layouts/home",
             title: "BOUNCE2BOUNCE - Home",
             homeSettings: homeSettings,
-            featuredDrops: featuredDrops,
+            featuredEvents: featuredEvents,
             formattedDate: formattedDate,
             isPreview: req.query.preview === 'true'
         });
@@ -220,7 +220,7 @@ async function home(req, res) {
             layout: "layouts/home",
             title: "BOUNCE2BOUNCE - Home",
             homeSettings: defaultSettings,
-            featuredDrops: [], // Empty array for fallback
+            featuredEvents: [], // Empty array for fallback
             formattedDate: "March 29th, 9:00 P.M.",
             isPreview: req.query.preview === 'true'
         });
@@ -453,32 +453,32 @@ async function linkEditAdmin(req, res) {
     });
 }
 
-async function dropEdit(req, res) {
+async function eventEdit(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
     try {
-        const drop = await query.drop.findOne({ id, user_id: userId });
+        const event = await query.event.findOne({ id, user_id: userId });
 
-        if (!drop) {
+        if (!event) {
             return res.status(404).render("404", {
-                message: "Drop not found"
+                message: "Event not found"
             });
         }
 
-        res.render("modern-drop-edit", {
-            title: `Edit ${drop.title}`,
-            pageTitle: `Edit ${drop.title}`,
+        res.render("modern-event-edit", {
+            title: `Edit ${event.title}`,
+            pageTitle: `Edit ${event.title}`,
             layout: "layouts/modern-dashboard",
-            currentPage: "drops",
+            currentPage: "events",
             user: req.user,
-            drop: drop,
+            event: event,
             domain: env.DEFAULT_DOMAIN
         });
     } catch (error) {
-        console.error("Error loading drop edit page:", error);
+        console.error("Error loading event edit page:", error);
         res.status(500).render("404", {
-            message: "Error loading drop"
+            message: "Error loading event"
         });
     }
 }
@@ -497,7 +497,7 @@ module.exports = {
     confirmUserDelete,
     createAdmin,
     createUser,
-    dropEdit,
+    eventEdit,
     getSupportEmail,
     home,
     homeEditor,

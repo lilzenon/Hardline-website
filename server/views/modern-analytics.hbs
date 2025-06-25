@@ -252,7 +252,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{this.signup_count}}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{formatDate this.created_at "MMM dd, yyyy"}}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="/drops/{{this.id}}/edit" class="text-primary-600 hover:text-primary-900">Edit</a>
+                                    <a href="/events/{{this.id}}/edit" class="text-primary-600 hover:text-primary-900">Edit</a>
                                 </td>
                             </tr>
                             {{/each}}
@@ -261,7 +261,7 @@
                 </div>
                 {{else}}
                 <div class="text-center py-8">
-                    <p class="text-sm text-gray-500">No drops data available</p>
+                    <p class="text-sm text-gray-500">No events data available</p>
                 </div>
                 {{/if}}
             </div>

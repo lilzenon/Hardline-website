@@ -221,11 +221,11 @@
                 Dashboard
             </a>
 
-            <a href="/drops" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{#if (eq currentPage 'drops')}}text-gray-900 bg-gray-100{{else}}text-gray-600 hover:bg-gray-50 hover:text-gray-900{{/if}} touch-target">
-                <svg class="mr-4 h-6 w-6 {{#if (eq currentPage 'drops')}}text-gray-500{{else}}text-gray-400 group-hover:text-gray-500{{/if}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="/events" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{#if (eq currentPage 'events')}}text-gray-900 bg-gray-100{{else}}text-gray-600 hover:bg-gray-50 hover:text-gray-900{{/if}} touch-target">
+                <svg class="mr-4 h-6 w-6 {{#if (eq currentPage 'events')}}text-gray-500{{else}}text-gray-400 group-hover:text-gray-500{{/if}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
-                Drops
+                Events
             </a>
 
             <a href="/links" class="group flex items-center px-2 py-2 text-base font-medium rounded-md {{#if (eq currentPage 'links')}}text-gray-900 bg-gray-100{{else}}text-gray-600 hover:bg-gray-50 hover:text-gray-900{{/if}} touch-target">
@@ -292,11 +292,11 @@
                         Dashboard
                     </a>
 
-                    <a href="/drops" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{#if (eq currentPage 'drops')}}text-gray-900 bg-gray-100{{else}}text-gray-600 hover:bg-gray-50 hover:text-gray-900{{/if}}">
-                        <svg class="mr-3 h-6 w-6 {{#if (eq currentPage 'drops')}}text-gray-500{{else}}text-gray-400 group-hover:text-gray-500{{/if}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <a href="/events" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{#if (eq currentPage 'events')}}text-gray-900 bg-gray-100{{else}}text-gray-600 hover:bg-gray-50 hover:text-gray-900{{/if}}">
+                        <svg class="mr-3 h-6 w-6 {{#if (eq currentPage 'events')}}text-gray-500{{else}}text-gray-400 group-hover:text-gray-500{{/if}}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        Drops
+                        Events
                     </a>
 
                     <a href="/links" class="group flex items-center px-2 py-2 text-sm font-medium rounded-md {{#if (eq currentPage 'links')}}text-gray-900 bg-gray-100{{else}}text-gray-600 hover:bg-gray-50 hover:text-gray-900{{/if}}">
@@ -391,8 +391,8 @@
                         <!-- Desktop User Menu -->
                         <div class="ml-4 flex items-center md:ml-6">
                             <!-- Create Button -->
-                            <a href="/drops/create" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium mr-4 transition-colors duration-200">
-                                + Create Drop
+                            <a href="/events/create" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium mr-4 transition-colors duration-200">
+                                + Create Event
                             </a>
 
                             <!-- User Profile -->
@@ -507,15 +507,15 @@
         });
     </script>
 
-    <!-- Modern Create Drop Dialog with Glassmorphism -->
-    <div id="create-drop-dialog" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
+    <!-- Modern Create Event Dialog with Glassmorphism -->
+    <div id="create-event-dialog" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
         <div class="relative w-full max-w-md mx-auto">
             <!-- Glassmorphism Modal -->
             <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white border-opacity-20 p-6 sm:p-8">
                 <!-- Header -->
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-xl font-semibold text-gray-900">Create New Drop</h3>
-                    <button type="button" onclick="closeCreateDropDialog()" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200">
+                    <h3 class="text-xl font-semibold text-gray-900">Create New Event</h3>
+                    <button type="button" onclick="closeCreateEventDialog()" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors duration-200">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -523,33 +523,33 @@
                 </div>
 
                 <!-- Form -->
-                <form id="create-drop-form" class="space-y-5">
+                <form id="create-event-form" class="space-y-5">
                     <!-- Title Field -->
                     <div>
-                        <label for="drop-title" class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
-                        <input type="text" name="title" id="drop-title" required
+                        <label for="event-title" class="block text-sm font-medium text-gray-700 mb-2">Title *</label>
+                        <input type="text" name="title" id="event-title" required
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 text-sm"
-                               placeholder="Enter drop title">
+                               placeholder="Enter event title">
                     </div>
 
                     <!-- Description Field -->
                     <div>
-                        <label for="drop-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea name="description" id="drop-description" rows="3"
+                        <label for="event-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea name="description" id="event-description" rows="3"
                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 text-sm resize-none"
-                                  placeholder="Describe your drop (optional)"></textarea>
+                                  placeholder="Describe your event (optional)"></textarea>
                     </div>
 
                     <!-- URL Slug Field -->
                     <div>
-                        <label for="drop-slug" class="block text-sm font-medium text-gray-700 mb-2">URL Slug</label>
+                        <label for="event-slug" class="block text-sm font-medium text-gray-700 mb-2">URL Slug</label>
                         <div class="flex rounded-lg shadow-sm">
                             <span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm font-medium">
-                                {{domain}}/drop/
+                                {{domain}}/event/
                             </span>
-                            <input type="text" name="slug" id="drop-slug"
+                            <input type="text" name="slug" id="event-slug"
                                    class="flex-1 px-4 py-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 text-sm"
-                                   placeholder="my-drop">
+                                   placeholder="my-event">
                         </div>
                         <p class="mt-1 text-xs text-gray-500">Auto-generated from title, but you can customize it</p>
                     </div>
@@ -557,22 +557,22 @@
                     <!-- Active/Inactive Toggle Switch -->
                     <div class="flex items-center justify-between">
                         <div>
-                            <label for="drop-active-toggle" class="block text-sm font-medium text-gray-700 mb-1">Drop Status</label>
-                            <p class="text-xs text-gray-500">Active drops are visible to visitors and can collect signups</p>
+                            <label for="event-active-toggle" class="block text-sm font-medium text-gray-700 mb-1">Event Status</label>
+                            <p class="text-xs text-gray-500">Active events are visible to visitors and can collect signups</p>
                         </div>
                         <div class="flex items-center space-x-3">
                             <span class="text-sm text-gray-500" id="toggle-status-text">Active</span>
                             <div class="relative">
                                 <!-- Hidden checkbox for form submission -->
-                                <input type="checkbox" name="is_active" id="drop-active-toggle" value="true" checked class="sr-only">
+                                <input type="checkbox" name="is_active" id="event-active-toggle" value="true" checked class="sr-only">
 
                                 <!-- Custom toggle switch -->
                                 <div class="toggle-switch w-12 h-6 bg-primary-600 rounded-full shadow-inner cursor-pointer transition-colors duration-200 ease-in-out"
-                                     onclick="toggleDropStatus()"
+                                     onclick="toggleEventStatus()"
                                      role="button"
                                      tabindex="0"
-                                     aria-label="Toggle drop active status"
-                                     onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleDropStatus(); }">
+                                     aria-label="Toggle event active status"
+                                     onkeydown="if(event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleEventStatus(); }">
                                     <div class="toggle-dot w-5 h-5 bg-white rounded-full shadow-md transform translate-x-6 transition-transform duration-200 ease-in-out"></div>
                                 </div>
                             </div>
@@ -595,23 +595,23 @@
         </div>
     </div>
 
-    <!-- Create Drop JavaScript -->
+    <!-- Create Event JavaScript -->
     <script>
-        function createDrop() {
-            document.getElementById('create-drop-dialog').classList.remove('hidden');
-            document.getElementById('drop-title').focus();
+        function createEvent() {
+            document.getElementById('create-event-dialog').classList.remove('hidden');
+            document.getElementById('event-title').focus();
         }
 
-        function closeCreateDropDialog() {
-            document.getElementById('create-drop-dialog').classList.add('hidden');
-            document.getElementById('create-drop-form').reset();
+        function closeCreateEventDialog() {
+            document.getElementById('create-event-dialog').classList.add('hidden');
+            document.getElementById('create-event-form').reset();
             // Reset toggle to active state
             resetToggleToActive();
         }
 
-        // Toggle drop active status
-        function toggleDropStatus() {
-            const checkbox = document.getElementById('drop-active-toggle');
+        // Toggle event active status
+        function toggleEventStatus() {
+            const checkbox = document.getElementById('event-active-toggle');
             const toggleSwitch = document.querySelector('.toggle-switch');
             const toggleDot = document.querySelector('.toggle-dot');
             const statusText = document.getElementById('toggle-status-text');
@@ -644,7 +644,7 @@
 
         // Reset toggle to active state
         function resetToggleToActive() {
-            const checkbox = document.getElementById('drop-active-toggle');
+            const checkbox = document.getElementById('event-active-toggle');
             const toggleSwitch = document.querySelector('.toggle-switch');
             const toggleDot = document.querySelector('.toggle-dot');
             const statusText = document.getElementById('toggle-status-text');
@@ -678,8 +678,8 @@
             this.dataset.autoGenerated = 'false';
         });
 
-        // Create drop form submission
-        document.getElementById('create-drop-form').addEventListener('submit', async function(e) {
+        // Create event form submission
+        document.getElementById('create-event-form').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const formData = new FormData(this);
@@ -697,7 +697,7 @@
 
             try {
                 console.log('🚀 Sending POST request to /api/drops');
-                const response = await fetch('/api/drops', {
+                const response = await fetch('/api/events', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -710,10 +710,10 @@
 
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('✅ Drop created successfully:', result);
-                    closeCreateDropDialog();
+                    console.log('✅ Event created successfully:', result);
+                    closeCreateEventDialog();
                     // Redirect to edit page
-                    window.location.href = `/drops/${result.data.id}/edit`;
+                    window.location.href = `/events/${result.data.id}/edit`;
                 } else {
                     const errorText = await response.text();
                     console.log('❌ Error response text:', errorText);
@@ -726,7 +726,7 @@
                     }
 
                     console.log('❌ Parsed error:', error);
-                    alert(error.message || 'Failed to create drop');
+                    alert(error.message || 'Failed to create event');
                 }
             } catch (error) {
                 console.log('🚨 Network/JS error:', error);
@@ -735,9 +735,9 @@
         });
 
         // Close dialog when clicking outside
-        document.getElementById('create-drop-dialog').addEventListener('click', function(e) {
+        document.getElementById('create-event-dialog').addEventListener('click', function(e) {
             if (e.target === this) {
-                closeCreateDropDialog();
+                closeCreateEventDialog();
             }
         });
     </script>

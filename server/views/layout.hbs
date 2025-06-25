@@ -59,29 +59,29 @@
     </div>
   </div>
 
-  <!-- Create Drop Modal (only for logged in users) -->
+  <!-- Create Event Modal (only for logged in users) -->
   {{#if user}}
-  <div id="create-drop-dialog" class="dialog">
+  <div id="create-event-dialog" class="dialog">
     <div class="box">
       <div class="content-wrapper">
         <div class="content">
-          <h2>Create New Drop</h2>
-          <form id="create-drop-form">
+          <h2>Create New Event</h2>
+          <form id="create-event-form">
             <div class="form-group">
-              <label for="drop-title">Title *</label>
-              <input type="text" id="drop-title" name="title" required maxlength="255" placeholder="Enter drop title">
+              <label for="event-title">Title *</label>
+              <input type="text" id="event-title" name="title" required maxlength="255" placeholder="Enter event title">
             </div>
 
             <div class="form-group">
-              <label for="drop-description">Description</label>
-              <textarea id="drop-description" name="description" rows="3" placeholder="Describe what this drop is about"></textarea>
+              <label for="event-description">Description</label>
+              <textarea id="event-description" name="description" rows="3" placeholder="Describe what this event is about"></textarea>
             </div>
 
             <div class="form-group">
-              <label for="drop-slug">URL Slug</label>
+              <label for="event-slug">URL Slug</label>
               <div class="slug-input-wrapper">
-                <span class="slug-prefix">{{default_domain}}/drop/</span>
-                <input type="text" id="drop-slug" name="slug" maxlength="100" placeholder="my-drop">
+                <span class="slug-prefix">{{default_domain}}/event/</span>
+                <input type="text" id="event-slug" name="slug" maxlength="100" placeholder="my-event">
               </div>
               <small class="form-help">Leave empty to auto-generate from title</small>
             </div>
@@ -90,12 +90,12 @@
               <button type="button" onclick="closeDialog()">Cancel</button>
               <button type="submit" class="primary">
                 <span>{{> icons/plus}}</span>
-                Create Drop
+                Create Event
               </button>
             </div>
           </form>
 
-          <div id="create-drop-error" class="error" style="display: none;"></div>
+          <div id="create-event-error" class="error" style="display: none;"></div>
 
           {{> icons/spinner}}
         </div>

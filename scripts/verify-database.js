@@ -79,8 +79,8 @@ async function verifyDatabase() {
             'links',
             'visits',
             'ips',
-            'drops',
-            'drop_signups'
+            'events',
+            'event_signups'
         ];
 
         const existingTables = [];
@@ -107,15 +107,15 @@ async function verifyDatabase() {
             for (const tableName of missingTables) {
                 try {
                     switch (tableName) {
-                        case 'drops':
-                            console.log('   📝 Creating drops table...');
+                        case 'events':
+                            console.log('   📝 Creating events table...');
                             await models.createDropTable(db);
-                            console.log('   ✅ drops table created');
+                            console.log('   ✅ events table created');
                             break;
-                        case 'drop_signups':
-                            console.log('   📝 Creating drop_signups table...');
-                            await models.createDropSignupTable(db);
-                            console.log('   ✅ drop_signups table created');
+                        case 'event_signups':
+                            console.log('   📝 Creating event_signups table...');
+                            await models.createeventsignupTable(db);
+                            console.log('   ✅ event_signups table created');
                             break;
                         default:
                             console.log(`   ⚠️ Don't know how to create table: ${tableName}`);
@@ -126,32 +126,32 @@ async function verifyDatabase() {
             }
         }
 
-        // Verify drop_signups table structure
-        console.log('🔍 Verifying drop_signups table structure...');
-        const hasDropSignups = await db.schema.hasTable('drop_signups');
+        // Verify event_signups table structure
+        console.log('🔍 Verifying event_signups table structure...');
+        const haseventsignups = await db.schema.hasTable('event_signups');
 
-        if (hasDropSignups) {
-            const columns = await db('drop_signups').columnInfo();
-            console.log('   📋 drop_signups columns:');
+        if (haseventsignups) {
+            const columns = await db('event_signups').columnInfo();
+            console.log('   📋 event_signups columns:');
             Object.keys(columns).forEach(col => {
                 console.log(`      - ${col}: ${columns[col].type}`);
             });
 
             // Test insert/select
-            console.log('🧪 Testing drop_signups operations...');
+            console.log('🧪 Testing event_signups operations...');
 
-            // Check if we have any drops to test with
-            const dropCount = await db('drops').count('id as count').first();
-            console.log(`   📊 Found ${dropCount.count} drops in database`);
+            // Check if we have any events to test with
+            const dropCount = await db('events').count('id as count').first();
+            console.log(`   📊 Found ${dropCount.count} events in database`);
 
             if (parseInt(dropCount.count) > 0) {
-                const testDrop = await db('drops').first();
+                const testDrop = await db('events').first();
                 console.log(`   🎯 Testing with drop: ${testDrop.title} (${testDrop.slug})`);
 
                 // Test signup creation (and cleanup)
                 try {
                     const testSignup = {
-                        drop_id: testDrop.id,
+                        event_id: testDrop.id,
                         email: 'test@example.com',
                         name: 'Test User',
                         ip_address: '127.0.0.1',
@@ -161,25 +161,25 @@ async function verifyDatabase() {
                     };
 
                     // Insert test signup
-                    const [signupId] = await db('drop_signups').insert(testSignup);
+                    const [signupId] = await db('event_signups').insert(testSignup);
                     console.log(`   ✅ Test signup created with ID: ${signupId}`);
 
                     // Verify it exists
-                    const createdSignup = await db('drop_signups').where('id', signupId).first();
+                    const createdSignup = await db('event_signups').where('id', signupId).first();
                     console.log(`   ✅ Test signup verified: ${createdSignup.email}`);
 
                     // Clean up
-                    await db('drop_signups').where('id', signupId).del();
+                    await db('event_signups').where('id', signupId).del();
                     console.log(`   🧹 Test signup cleaned up`);
 
                 } catch (testError) {
                     console.error(`   🚨 Signup test failed:`, testError.message);
                 }
             } else {
-                console.log('   ⚠️ No drops found - cannot test signup operations');
+                console.log('   ⚠️ No events found - cannot test signup operations');
             }
         } else {
-            console.error('   🚨 drop_signups table still missing after creation attempt');
+            console.error('   🚨 event_signups table still missing after creation attempt');
         }
 
         // Final status

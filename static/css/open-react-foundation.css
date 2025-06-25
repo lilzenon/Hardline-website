@@ -464,12 +464,12 @@
 
 /* Cover image integration */
 
-.drop-cover-image img {
+.event-cover-image img {
     /* Enhanced cover image styling */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.drop-cover-image:hover img {
+.event-cover-image:hover img {
     /* Subtle hover effect for cover image */
     transform: scale(1.02);
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;

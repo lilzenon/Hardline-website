@@ -1,9 +1,9 @@
 /**
- * MODULAR DROP COLOR SYSTEM
- * Future-proof color management for drops
+ * MODULAR Event COLOR SYSTEM
+ * Future-proof color management for Events
  */
 
-class DropColorSystem {
+class EventColorSystem {
     constructor(container) {
         this.container = container;
         this.colors = {
@@ -44,12 +44,12 @@ class DropColorSystem {
         const buttonTextColor = this.getContrastColor(this.colors.button);
 
         // Apply CSS custom properties
-        this.container.style.setProperty('--drop-background-color', this.colors.background);
-        this.container.style.setProperty('--drop-card-color', this.colors.card);
-        this.container.style.setProperty('--drop-title-color', this.colors.title);
-        this.container.style.setProperty('--drop-description-color', this.colors.description);
-        this.container.style.setProperty('--drop-button-color', this.colors.button);
-        this.container.style.setProperty('--drop-button-text-color', buttonTextColor);
+        this.container.style.setProperty('--event-background-color', this.colors.background);
+        this.container.style.setProperty('--event-card-color', this.colors.card);
+        this.container.style.setProperty('--event-title-color', this.colors.title);
+        this.container.style.setProperty('--event-description-color', this.colors.description);
+        this.container.style.setProperty('--event-button-color', this.colors.button);
+        this.container.style.setProperty('--event-button-text-color', buttonTextColor);
 
         console.log('Applied colors:', this.colors);
     }
@@ -127,8 +127,8 @@ class DropColorSystem {
     applyDeviceSpecificStyling(deviceType) {
         if (!this.container) return;
 
-        const wrapper = this.container.querySelector('.drop-page-wrapper') || this.container;
-        const container = this.container.querySelector('.drop-container') || this.container;
+        const wrapper = this.container.querySelector('.event-page-wrapper') || this.container;
+        const container = this.container.querySelector('.event-container') || this.container;
 
         // Remove existing device classes
         wrapper.classList.remove('mobile-device', 'desktop-device');
@@ -142,14 +142,14 @@ class DropColorSystem {
     }
 
     /**
-     * Create a complete drop structure with proper classes
+     * Create a complete Event structure with proper classes
      */
-    static createDropStructure() {
+    static createEventStructure() {
         return `
-            <div class="drop-page-wrapper">
-                <div class="drop-container">
-                    <header class="drop-header">
-                        <div class="drop-brand">
+            <div class="event-page-wrapper">
+                <div class="event-container">
+                    <header class="event-header">
+                        <div class="event-brand">
                             <a href="/" class="brand-link">
                                 <img src="/images/logo.png" alt="BOUNCE2BOUNCE" class="brand-logo">
                                 <span class="brand-text">BOUNCE2BOUNCE</span>
@@ -157,23 +157,23 @@ class DropColorSystem {
                         </div>
                     </header>
                     
-                    <main class="drop-main">
-                        <div class="drop-content">
-                            <div class="drop-cover-image" style="display: none;">
+                    <main class="event-main">
+                        <div class="event-content">
+                            <div class="event-cover-image" style="display: none;">
                                 <img src="" alt="" loading="lazy">
                             </div>
                             
-                            <div class="drop-info">
-                                <h1 class="drop-title">Drop Title</h1>
-                                <div class="drop-description">
-                                    <p>Drop description</p>
+                            <div class="event-info">
+                                <h1 class="event-title">Event Title</h1>
+                                <div class="event-description">
+                                    <p>Event description</p>
                                 </div>
-                                <div class="drop-stats">
+                                <div class="event-stats">
                                     <span class="signup-count">42 people signed up</span>
                                 </div>
                             </div>
                             
-                            <div class="drop-signup-section">
+                            <div class="event-signup-section">
                                 <form class="signup-form">
                                     <div class="form-group">
                                         <input type="email" placeholder="Enter your email" readonly class="form-input">
@@ -189,7 +189,7 @@ class DropColorSystem {
                         </div>
                     </main>
                     
-                    <footer class="drop-footer">
+                    <footer class="event-footer">
                         <p>Powered by <a href="/" class="footer-link">BOUNCE2BOUNCE</a></p>
                     </footer>
                 </div>
@@ -200,7 +200,7 @@ class DropColorSystem {
 
 // Export for use in other modules
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DropColorSystem;
+    module.exports = EventColorSystem;
 } else {
-    window.DropColorSystem = DropColorSystem;
+    window.EventColorSystem = EventColorSystem;
 }

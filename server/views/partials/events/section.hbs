@@ -1,0 +1,46 @@
+<section id="events-section" class="events-section">
+  <div class="section-header">
+    <div class="section-title">
+      <h2>Events</h2>
+      <p class="section-description">Create landing pages to capture leads and build your audience</p>
+    </div>
+    <div class="section-actions">
+      <button type="button" class="button primary" id="create-event-btn">
+        <span>{{> icons/plus}}</span>
+        Create Event
+      </button>
+    </div>
+  </div>
+
+  <div id="events-container" class="events-container">
+    {{#if events}}
+      <div class="events-grid">
+        {{#each events}}
+          {{> events/card this}}
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="empty-state">
+        <div class="empty-icon">
+          {{> icons/event}}
+        </div>
+        <h3>No events yet</h3>
+        <p>Create your first event to start capturing leads and building your audience</p>
+        <button type="button" class="button primary" id="create-first-event-btn">
+          <span>{{> icons/plus}}</span>
+          Create Your First Event
+        </button>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- Loading state -->
+  <div id="events-loading" class="events-loading" style="display: none;">
+    <div class="loading-spinner">
+      {{> icons/spinner}}
+    </div>
+    <p>Loading events...</p>
+  </div>
+</section>
+
+

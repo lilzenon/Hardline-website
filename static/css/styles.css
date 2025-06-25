@@ -1095,12 +1095,12 @@ table .tab a:not(.active):hover {
 
 /* DROPS SECTION STYLING */
 
-.drops-section {
+.events-section {
     margin: 2rem 0;
     padding: 0;
 }
 
-.drops-section .section-header {
+.events-section .section-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -1108,27 +1108,27 @@ table .tab a:not(.active):hover {
     gap: 1rem;
 }
 
-.drops-section .section-title h2 {
+.events-section .section-title h2 {
     margin: 0 0 0.5rem 0;
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-color);
 }
 
-.drops-section .section-description {
+.events-section .section-description {
     margin: 0;
     color: var(--secondary-text-color);
     font-size: 0.9rem;
 }
 
-.drops-section .section-actions {
+.events-section .section-actions {
     flex-shrink: 0;
 }
 
 
 /* ===== MODERN DROPS GRID LAYOUT ===== */
 
-.drops-grid {
+.events-grid {
     /* RESEARCH-BASED: Responsive grid with optimal card sizing */
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
@@ -1141,7 +1141,7 @@ table .tab a:not(.active):hover {
 /* RESPONSIVE: Adjust grid for different screen sizes */
 
 @media (max-width: 768px) {
-    .drops-grid {
+    .events-grid {
         grid-template-columns: 1fr;
         gap: 16px;
         padding: 0 8px;
@@ -1149,14 +1149,14 @@ table .tab a:not(.active):hover {
 }
 
 @media (min-width: 1200px) {
-    .drops-grid {
+    .events-grid {
         grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
         gap: 32px;
     }
 }
 
 @media (min-width: 1600px) {
-    .drops-grid {
+    .events-grid {
         grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
         gap: 40px;
     }
@@ -1861,7 +1861,7 @@ table .tab a:not(.active):hover {
     box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
 }
 
-.stunning-drop-card .card-cover-image {
+.stunning-event-card .card-cover-image {
     width: 100%;
     height: 100%;
     background-size: cover;
@@ -1873,11 +1873,11 @@ table .tab a:not(.active):hover {
     transition: transform 0.6s ease;
 }
 
-.stunning-drop-card:hover .card-cover-image {
+.stunning-event-card:hover .card-cover-image {
     transform: translateZ(20px) scale(1.1);
 }
 
-.stunning-drop-card .card-cover-gradient {
+.stunning-event-card .card-cover-gradient {
     width: 100%;
     height: 100%;
     position: relative;
@@ -1897,7 +1897,7 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .animated-mesh-bg {
+.stunning-event-card .animated-mesh-bg {
     position: absolute;
     top: 0;
     left: 0;
@@ -1917,7 +1917,7 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .floating-orbs {
+.stunning-event-card .floating-orbs {
     position: absolute;
     top: 0;
     left: 0;
@@ -1926,14 +1926,14 @@ table .tab a:not(.active):hover {
     pointer-events: none;
 }
 
-.stunning-drop-card .orb {
+.stunning-event-card .orb {
     position: absolute;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
     animation: orbFloat 4s ease-in-out infinite;
 }
 
-.stunning-drop-card .orb-1 {
+.stunning-event-card .orb-1 {
     width: 20px;
     height: 20px;
     top: 20%;
@@ -1941,7 +1941,7 @@ table .tab a:not(.active):hover {
     animation-delay: 0s;
 }
 
-.stunning-drop-card .orb-2 {
+.stunning-event-card .orb-2 {
     width: 15px;
     height: 15px;
     top: 60%;
@@ -1949,7 +1949,7 @@ table .tab a:not(.active):hover {
     animation-delay: 1.5s;
 }
 
-.stunning-drop-card .orb-3 {
+.stunning-event-card .orb-3 {
     width: 25px;
     height: 25px;
     bottom: 30%;
@@ -1969,7 +1969,7 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .cover-icon-glow {
+.stunning-event-card .cover-icon-glow {
     width: 64px;
     height: 64px;
     color: rgba(255, 255, 255, 0.95);
@@ -1994,7 +1994,7 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .image-overlay-gradient {
+.stunning-event-card .image-overlay-gradient {
     position: absolute;
     top: 0;
     left: 0;
@@ -2003,7 +2003,7 @@ table .tab a:not(.active):hover {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(16, 185, 129, 0.2) 100%);
 }
 
-.stunning-drop-card .floating-particles {
+.stunning-event-card .floating-particles {
     position: absolute;
     top: 0;
     left: 0;
@@ -2027,14 +2027,14 @@ table .tab a:not(.active):hover {
 
 /* 🔥 GLOWING STATUS INDICATORS */
 
-.stunning-drop-card .status-glow {
+.stunning-event-card .status-glow {
     position: absolute;
     top: 20px;
     right: 20px;
     z-index: 20;
 }
 
-.stunning-drop-card .status-badge-glow {
+.stunning-event-card .status-badge-glow {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -2053,7 +2053,7 @@ table .tab a:not(.active):hover {
     overflow: hidden;
 }
 
-.stunning-drop-card .status-badge-glow::before {
+.stunning-event-card .status-badge-glow::before {
     content: '';
     position: absolute;
     top: 0;
@@ -2064,23 +2064,23 @@ table .tab a:not(.active):hover {
     transition: left 0.5s;
 }
 
-.stunning-drop-card:hover .status-badge-glow::before {
+.stunning-event-card:hover .status-badge-glow::before {
     left: 100%;
 }
 
-.stunning-drop-card .status-badge-glow.status-live-glow {
+.stunning-event-card .status-badge-glow.status-live-glow {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.9) 0%, rgba(34, 197, 94, 0.9) 100%);
     color: white;
     box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.stunning-drop-card .status-badge-glow.status-draft-glow {
+.stunning-event-card .status-badge-glow.status-draft-glow {
     background: linear-gradient(135deg, rgba(100, 116, 139, 0.9) 0%, rgba(148, 163, 184, 0.9) 100%);
     color: white;
     box-shadow: 0 8px 24px rgba(100, 116, 139, 0.4), 0 0 20px rgba(100, 116, 139, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.stunning-drop-card .pulse-ring {
+.stunning-event-card .pulse-ring {
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -2089,7 +2089,7 @@ table .tab a:not(.active):hover {
     animation: pulseRing 2s infinite;
 }
 
-.stunning-drop-card .pulse-ring::before {
+.stunning-event-card .pulse-ring::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -2124,7 +2124,7 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .pulse-dot {
+.stunning-event-card .pulse-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -2132,7 +2132,7 @@ table .tab a:not(.active):hover {
     animation: pulseDot 2s infinite;
 }
 
-.stunning-drop-card .draft-dot {
+.stunning-event-card .draft-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -2140,14 +2140,14 @@ table .tab a:not(.active):hover {
     opacity: 0.9;
 }
 
-.stunning-drop-card .status-text-glow {
+.stunning-event-card .status-text-glow {
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
 
 /* ⚡ LIGHTNING QUICK ACTIONS */
 
-.stunning-drop-card .lightning-actions {
+.stunning-event-card .lightning-actions {
     position: absolute;
     top: 20px;
     left: 20px;
@@ -2159,12 +2159,12 @@ table .tab a:not(.active):hover {
     z-index: 15;
 }
 
-.stunning-drop-card:hover .lightning-actions {
+.stunning-event-card:hover .lightning-actions {
     opacity: 1;
     transform: translateY(0) scale(1);
 }
 
-.stunning-drop-card .lightning-btn {
+.stunning-event-card .lightning-btn {
     width: 44px;
     height: 44px;
     border-radius: 16px;
@@ -2182,7 +2182,7 @@ table .tab a:not(.active):hover {
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.stunning-drop-card .lightning-btn .btn-glow {
+.stunning-event-card .lightning-btn .btn-glow {
     position: absolute;
     top: 0;
     left: 0;
@@ -2193,28 +2193,28 @@ table .tab a:not(.active):hover {
     transition: opacity 0.3s ease;
 }
 
-.stunning-drop-card .lightning-btn:hover .btn-glow {
+.stunning-event-card .lightning-btn:hover .btn-glow {
     opacity: 1;
 }
 
-.stunning-drop-card .lightning-btn.edit-lightning {
+.stunning-event-card .lightning-btn.edit-lightning {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(99, 102, 241, 0.9) 100%);
     color: white;
     box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4), 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
-.stunning-drop-card .lightning-btn.stats-lightning {
+.stunning-event-card .lightning-btn.stats-lightning {
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.9) 0%, rgba(251, 191, 36, 0.9) 100%);
     color: white;
     box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4), 0 0 20px rgba(245, 158, 11, 0.3);
 }
 
-.stunning-drop-card .lightning-btn:hover {
+.stunning-event-card .lightning-btn:hover {
     transform: scale(1.15) rotate(5deg);
     filter: brightness(1.2);
 }
 
-.stunning-drop-card .lightning-btn svg {
+.stunning-event-card .lightning-btn svg {
     width: 20px;
     height: 20px;
     z-index: 2;
@@ -2225,7 +2225,7 @@ table .tab a:not(.active):hover {
 
 /* 💎 HOLOGRAPHIC CONTENT */
 
-.stunning-drop-card .holographic-content {
+.stunning-event-card .holographic-content {
     padding: 28px;
     flex: 1;
     display: flex;
@@ -2234,11 +2234,11 @@ table .tab a:not(.active):hover {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
 }
 
-.stunning-drop-card .title-section-wow {
+.stunning-event-card .title-section-wow {
     flex-shrink: 0;
 }
 
-.stunning-drop-card .title-holographic {
+.stunning-event-card .title-holographic {
     margin: 0 0 12px 0;
     font-size: 22px;
     font-weight: 800;
@@ -2262,7 +2262,7 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .description-shimmer {
+.stunning-event-card .description-shimmer {
     margin: 0;
     color: #64748b;
     font-size: 15px;
@@ -2278,13 +2278,13 @@ table .tab a:not(.active):hover {
 
 /* 📊 NEON STATS DASHBOARD */
 
-.stunning-drop-card .neon-stats-grid {
+.stunning-event-card .neon-stats-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
 
-.stunning-drop-card .neon-stat-card {
+.stunning-event-card .neon-stat-card {
     position: relative;
     padding: 16px 12px;
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
@@ -2295,13 +2295,13 @@ table .tab a:not(.active):hover {
     transition: all 0.3s ease;
 }
 
-.stunning-drop-card .neon-stat-card:hover {
+.stunning-event-card .neon-stat-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(59, 130, 246, 0.2);
     border-color: rgba(59, 130, 246, 0.4);
 }
 
-.stunning-drop-card .stat-glow-ring {
+.stunning-event-card .stat-glow-ring {
     position: absolute;
     top: -1px;
     left: -1px;
@@ -2313,11 +2313,11 @@ table .tab a:not(.active):hover {
     transition: opacity 0.3s ease;
 }
 
-.stunning-drop-card .neon-stat-card:hover .stat-glow-ring {
+.stunning-event-card .neon-stat-card:hover .stat-glow-ring {
     opacity: 1;
 }
 
-.stunning-drop-card .stat-value-neon {
+.stunning-event-card .stat-value-neon {
     font-size: 20px;
     font-weight: 800;
     background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
@@ -2330,7 +2330,7 @@ table .tab a:not(.active):hover {
     z-index: 2;
 }
 
-.stunning-drop-card .stat-label-glow {
+.stunning-event-card .stat-label-glow {
     font-size: 10px;
     font-weight: 600;
     color: #64748b;
@@ -2343,7 +2343,7 @@ table .tab a:not(.active):hover {
 
 /* 🔗 FUTURISTIC URL DISPLAY */
 
-.stunning-drop-card .futuristic-url {
+.stunning-event-card .futuristic-url {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2355,13 +2355,13 @@ table .tab a:not(.active):hover {
     overflow: hidden;
 }
 
-.stunning-drop-card .url-hologram {
+.stunning-event-card .url-hologram {
     flex: 1;
     position: relative;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
 }
 
-.stunning-drop-card .url-scan-line {
+.stunning-event-card .url-scan-line {
     position: absolute;
     top: 0;
     left: -100%;
@@ -2381,25 +2381,25 @@ table .tab a:not(.active):hover {
     }
 }
 
-.stunning-drop-card .url-text-container {
+.stunning-event-card .url-text-container {
     font-size: 14px;
     line-height: 1.4;
     position: relative;
     z-index: 2;
 }
 
-.stunning-drop-card .url-domain-cyber {
+.stunning-event-card .url-domain-cyber {
     color: #64748b;
     font-weight: 400;
 }
 
-.stunning-drop-card .url-slug-neon {
+.stunning-event-card .url-slug-neon {
     color: #1e293b;
     font-weight: 700;
     word-break: break-all;
 }
 
-.stunning-drop-card .copy-btn-cyber {
+.stunning-event-card .copy-btn-cyber {
     width: 40px;
     height: 40px;
     border: none;
@@ -2416,13 +2416,13 @@ table .tab a:not(.active):hover {
     border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-.stunning-drop-card .copy-btn-cyber:hover {
+.stunning-event-card .copy-btn-cyber:hover {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
     transform: scale(1.1);
     border-color: rgba(59, 130, 246, 0.4);
 }
 
-.stunning-drop-card .copy-btn-glow {
+.stunning-event-card .copy-btn-glow {
     position: absolute;
     top: 0;
     left: 0;
@@ -2433,11 +2433,11 @@ table .tab a:not(.active):hover {
     transition: opacity 0.3s ease;
 }
 
-.stunning-drop-card .copy-btn-cyber:hover .copy-btn-glow {
+.stunning-event-card .copy-btn-cyber:hover .copy-btn-glow {
     opacity: 1;
 }
 
-.stunning-drop-card .copy-btn-cyber svg {
+.stunning-event-card .copy-btn-cyber svg {
     width: 16px;
     height: 16px;
     z-index: 2;
@@ -2447,7 +2447,7 @@ table .tab a:not(.active):hover {
 
 /* 🎮 EPIC ACTION COMMAND CENTER */
 
-.stunning-drop-card .action-command-center {
+.stunning-event-card .action-command-center {
     padding: 20px 28px 28px;
     border-top: 1px solid rgba(59, 130, 246, 0.1);
     display: flex;
@@ -2457,12 +2457,12 @@ table .tab a:not(.active):hover {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(240, 248, 255, 0.05) 100%);
 }
 
-.stunning-drop-card .primary-command-group {
+.stunning-event-card .primary-command-group {
     display: flex;
     gap: 12px;
 }
 
-.stunning-drop-card .epic-action-btn {
+.stunning-event-card .epic-action-btn {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -2479,24 +2479,24 @@ table .tab a:not(.active):hover {
     letter-spacing: 0.5px;
 }
 
-.stunning-drop-card .epic-action-btn.edit-command {
+.stunning-event-card .epic-action-btn.edit-command {
     background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
     color: white;
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
 }
 
-.stunning-drop-card .epic-action-btn.stats-command {
+.stunning-event-card .epic-action-btn.stats-command {
     background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
     color: white;
     box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
 }
 
-.stunning-drop-card .epic-action-btn:hover {
+.stunning-event-card .epic-action-btn:hover {
     transform: translateY(-2px) scale(1.05);
     filter: brightness(1.1);
 }
 
-.stunning-drop-card .btn-particle-field {
+.stunning-event-card .btn-particle-field {
     position: absolute;
     top: 0;
     left: 0;
@@ -2507,11 +2507,11 @@ table .tab a:not(.active):hover {
     transition: opacity 0.3s ease;
 }
 
-.stunning-drop-card .epic-action-btn:hover .btn-particle-field {
+.stunning-event-card .epic-action-btn:hover .btn-particle-field {
     opacity: 1;
 }
 
-.stunning-drop-card .btn-energy-core {
+.stunning-event-card .btn-energy-core {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -2524,30 +2524,30 @@ table .tab a:not(.active):hover {
     transition: all 0.3s ease;
 }
 
-.stunning-drop-card .epic-action-btn:hover .btn-energy-core {
+.stunning-event-card .epic-action-btn:hover .btn-energy-core {
     opacity: 1;
     transform: translate(-50%, -50%) scale(3);
 }
 
-.stunning-drop-card .btn-text-glow {
+.stunning-event-card .btn-text-glow {
     position: relative;
     z-index: 2;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
-.stunning-drop-card .epic-action-btn svg {
+.stunning-event-card .epic-action-btn svg {
     width: 16px;
     height: 16px;
     z-index: 2;
     position: relative;
 }
 
-.stunning-drop-card .secondary-command-group {
+.stunning-event-card .secondary-command-group {
     display: flex;
     gap: 8px;
 }
 
-.stunning-drop-card .mini-action-btn {
+.stunning-event-card .mini-action-btn {
     width: 36px;
     height: 36px;
     border-radius: 10px;
@@ -2563,12 +2563,12 @@ table .tab a:not(.active):hover {
     border: 1px solid rgba(100, 116, 139, 0.2);
 }
 
-.stunning-drop-card .mini-action-btn:hover {
+.stunning-event-card .mini-action-btn:hover {
     transform: scale(1.1);
     background: rgba(100, 116, 139, 0.2);
 }
 
-.stunning-drop-card .mini-btn-glow {
+.stunning-event-card .mini-btn-glow {
     position: absolute;
     top: 0;
     left: 0;
@@ -2579,15 +2579,15 @@ table .tab a:not(.active):hover {
     transition: opacity 0.3s ease;
 }
 
-.stunning-drop-card .mini-btn-glow.danger-glow {
+.stunning-event-card .mini-btn-glow.danger-glow {
     background: radial-gradient(circle, rgba(239, 68, 68, 0.2) 0%, transparent 70%);
 }
 
-.stunning-drop-card .mini-action-btn:hover .mini-btn-glow {
+.stunning-event-card .mini-action-btn:hover .mini-btn-glow {
     opacity: 1;
 }
 
-.stunning-drop-card .mini-action-btn svg {
+.stunning-event-card .mini-action-btn svg {
     width: 16px;
     height: 16px;
     color: #64748b;
@@ -2823,13 +2823,13 @@ table .tab a:not(.active):hover {
     display: none;
 }
 
-.drop-stats {
+.event-stats {
     display: flex;
     gap: 1.5rem;
     margin-bottom: 1rem;
 }
 
-.drop-stats .stat {
+.event-stats .stat {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -2850,7 +2850,7 @@ table .tab a:not(.active):hover {
     margin-top: 0.25rem;
 }
 
-.drop-url {
+.event-url {
     font-size: 0.85rem;
     color: var(--secondary-text-color);
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -2860,12 +2860,12 @@ table .tab a:not(.active):hover {
     word-break: break-all;
 }
 
-.drop-url .url-slug {
+.event-url .url-slug {
     color: var(--primary-color);
     font-weight: 500;
 }
 
-.drop-card-actions {
+.event-card-actions {
     padding: 0.75rem 1rem;
     background: #f8f9fa;
     border-top: 1px solid #e9ecef;
@@ -2906,7 +2906,7 @@ table .tab a:not(.active):hover {
 
 /* Loading State */
 
-.drops-loading {
+.events-loading {
     text-align: center;
     padding: 2rem;
     color: var(--secondary-text-color);
@@ -2953,26 +2953,26 @@ table .tab a:not(.active):hover {
 
 /* DROP LANDING PAGE STYLING */
 
-.drop-landing-page {
+.event-landing-page {
     margin: 0;
     padding: 0;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.drop-container {
+.event-container {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     background: linear-gradient(135deg, var(--bg-color) 0%, #f8f9fa 100%);
 }
 
-.drop-header {
+.event-header {
     padding: 1rem 2rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.drop-brand {
+.event-brand {
     display: flex;
     align-items: center;
 }
@@ -3001,7 +3001,7 @@ table .tab a:not(.active):hover {
     letter-spacing: -0.025em;
 }
 
-.drop-main {
+.event-main {
     flex: 1;
     display: flex;
     align-items: center;
@@ -3009,28 +3009,28 @@ table .tab a:not(.active):hover {
     padding: 2rem;
 }
 
-.drop-content {
+.event-content {
     max-width: 500px;
     width: 100%;
     text-align: center;
 }
 
-.drop-cover-image {
+.event-cover-image {
     margin-bottom: 2rem;
 }
 
-.drop-cover-image img {
+.event-cover-image img {
     max-width: 100%;
     height: auto;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.drop-info {
+.event-info {
     margin-bottom: 2rem;
 }
 
-.drop-title {
+.event-title {
     font-size: 2.5rem;
     font-weight: 700;
     margin: 0 0 1rem 0;
@@ -3038,18 +3038,18 @@ table .tab a:not(.active):hover {
     letter-spacing: -0.025em;
 }
 
-.drop-description {
+.event-description {
     margin-bottom: 1.5rem;
 }
 
-.drop-description p {
+.event-description p {
     font-size: 1.125rem;
     line-height: 1.6;
     margin: 0;
     opacity: 0.9;
 }
 
-.drop-stats {
+.event-stats {
     margin-bottom: 1rem;
 }
 
@@ -3064,7 +3064,7 @@ table .tab a:not(.active):hover {
     backdrop-filter: blur(10px);
 }
 
-.drop-signup-section {
+.event-signup-section {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 16px;
     padding: 2rem;
@@ -3150,7 +3150,7 @@ table .tab a:not(.active):hover {
     text-align: center;
 }
 
-.drop-footer {
+.event-footer {
     padding: 1rem 2rem;
     text-align: center;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -5506,21 +5506,21 @@ svg.map path.active {
         font-size: 28px;
     }
     /* Mobile Drops Section - Enhanced */
-    .drops-section {
+    .events-section {
         margin: 1.5rem 0;
         padding: 1.5rem 1rem;
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         border-radius: 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
-    .drops-section .section-header {
+    .events-section .section-header {
         flex-direction: column;
         align-items: center;
         gap: 1rem;
         text-align: center;
         margin-bottom: 1.5rem;
     }
-    .drops-section .section-title h2 {
+    .events-section .section-title h2 {
         font-size: 1.75rem;
         font-weight: 700;
         color: #1e293b;
@@ -5530,17 +5530,17 @@ svg.map path.active {
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    .drops-section .section-description {
+    .events-section .section-description {
         font-size: 1rem;
         color: #64748b;
         line-height: 1.5;
         max-width: 300px;
         margin: 0 auto;
     }
-    .drops-section .section-actions {
+    .events-section .section-actions {
         align-self: stretch;
     }
-    .drops-section .section-actions .button {
+    .events-section .section-actions .button {
         width: 100%;
         padding: 1rem 1.5rem;
         font-size: 1.1rem;
@@ -5556,19 +5556,19 @@ svg.map path.active {
         justify-content: center;
         gap: 0.75rem;
     }
-    .drops-section .section-actions .button:hover {
+    .events-section .section-actions .button:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     }
-    .drops-section .section-actions .button svg {
+    .events-section .section-actions .button svg {
         width: 20px;
         height: 20px;
     }
-    .drops-grid {
+    .events-grid {
         grid-template-columns: 1fr;
         gap: 1.25rem;
     }
-    .drop-card {
+    .event-card {
         background: white;
         border-radius: 20px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -5577,11 +5577,11 @@ svg.map path.active {
         transition: all 0.3s ease;
         backdrop-filter: blur(10px);
     }
-    .drop-card:hover {
+    .event-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
     }
-    .drop-card-header {
+    .event-card-header {
         height: 100px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         position: relative;
@@ -5589,12 +5589,12 @@ svg.map path.active {
         align-items: center;
         justify-content: center;
     }
-    .drop-cover-default .drop-icon {
+    .event-cover-default .event-icon {
         width: 32px;
         height: 32px;
         color: rgba(255, 255, 255, 0.9);
     }
-    .drop-status {
+    .event-status {
         position: absolute;
         top: 0.75rem;
         right: 0.75rem;
@@ -5616,17 +5616,17 @@ svg.map path.active {
         background: rgba(148, 163, 184, 0.9);
         color: white;
     }
-    .drop-card-content {
+    .event-card-content {
         padding: 1.25rem;
     }
-    .drop-title {
+    .event-title {
         font-size: 1.25rem;
         font-weight: 700;
         color: #1e293b;
         margin-bottom: 0.75rem;
         line-height: 1.3;
     }
-    .drop-description {
+    .event-description {
         font-size: 0.95rem;
         color: #64748b;
         line-height: 1.5;
@@ -5636,12 +5636,12 @@ svg.map path.active {
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    .drop-stats {
+    .event-stats {
         display: flex;
         gap: 1rem;
         margin-bottom: 1.25rem;
     }
-    .drop-stats .stat {
+    .event-stats .stat {
         flex: 1;
         text-align: center;
         padding: 1rem;
@@ -5667,7 +5667,7 @@ svg.map path.active {
         letter-spacing: 0.75px;
         font-weight: 600;
     }
-    .drop-url {
+    .event-url {
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         padding: 1rem;
         border-radius: 12px;
@@ -5677,15 +5677,15 @@ svg.map path.active {
         font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
         margin-bottom: 1rem;
     }
-    .drop-url .url-prefix {
+    .event-url .url-prefix {
         color: #64748b;
         font-weight: 500;
     }
-    .drop-url .url-slug {
+    .event-url .url-slug {
         color: #3b82f6;
         font-weight: 700;
     }
-    .drop-card-actions {
+    .event-card-actions {
         padding: 1rem 1.25rem;
         background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
         border-top: 1px solid #e2e8f0;
@@ -5693,7 +5693,7 @@ svg.map path.active {
         gap: 0.75rem;
         justify-content: space-between;
     }
-    .drop-card-actions .button {
+    .event-card-actions .button {
         flex: 1;
         padding: 0.875rem;
         border-radius: 12px;
@@ -5708,31 +5708,31 @@ svg.map path.active {
         color: #64748b;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     }
-    .drop-card-actions .button:hover {
+    .event-card-actions .button:hover {
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    .drop-card-actions .button.edit:hover {
+    .event-card-actions .button.edit:hover {
         background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
         border-color: #3b82f6;
         color: #3b82f6;
     }
-    .drop-card-actions .button.qrcode:hover {
+    .event-card-actions .button.qrcode:hover {
         background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         border-color: #22c55e;
         color: #22c55e;
     }
-    .drop-card-actions .button.stats:hover {
+    .event-card-actions .button.stats:hover {
         background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
         border-color: #f59e0b;
         color: #f59e0b;
     }
-    .drop-card-actions .button.delete:hover {
+    .event-card-actions .button.delete:hover {
         background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
         border-color: #ef4444;
         color: #ef4444;
     }
-    .drop-card-actions .button svg {
+    .event-card-actions .button svg {
         width: 18px;
         height: 18px;
     }
@@ -5803,19 +5803,19 @@ svg.map path.active {
         padding: 0.4rem 0.6rem;
     }
     /* Mobile Drop Landing Page */
-    .drop-header {
+    .event-header {
         padding: 1rem;
     }
-    .drop-main {
+    .event-main {
         padding: 1rem;
     }
-    .drop-title {
+    .event-title {
         font-size: 2rem;
     }
-    .drop-description p {
+    .event-description p {
         font-size: 1rem;
     }
-    .drop-signup-section {
+    .event-signup-section {
         padding: 1.5rem;
     }
     .form-input {

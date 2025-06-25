@@ -16,13 +16,13 @@
                 <span class="shortcut-icon">📸</span>
                 Run an Instagram Campaign
             </a>
-            <a href="/drops/create" class="shortcut-btn">
+            <a href="/events/create" class="shortcut-btn">
                 <span class="shortcut-icon">🎵</span>
-                Create a multidrop
+                Create a multievent
             </a>
             <a href="/merch" class="shortcut-btn">
                 <span class="shortcut-icon">👕</span>
-                Set up a merch Drop
+                Set up a merch Event
             </a>
         </div>
     </div>
@@ -39,40 +39,40 @@
         </div>
     </div>
 
-    <!-- Dropping Soon Section -->
-    <div class="dropping-soon">
-        <h2>Dropping soon</h2>
-        <p class="section-subtitle">Announce something new, or see what you have scheduled to drop</p>
+    <!-- Events Coming Soon Section -->
+    <div class="events-soon">
+        <h2>Events coming soon</h2>
+        <p class="section-subtitle">Announce something new, or see what you have scheduled to launch</p>
 
-        {{#if upcomingDrops.length}}
-            <div class="drops-grid">
-                {{#each upcomingDrops}}
-                    <div class="drop-card">
+        {{#if upcomingEvents.length}}
+            <div class="events-grid">
+                {{#each upcomingEvents}}
+                    <div class="event-card">
                         {{#if image}}
-                            <div class="drop-image" style="background-image: url('{{image}}')"></div>
+                            <div class="event-image" style="background-image: url('{{image}}')"></div>
                         {{else}}
-                            <div class="drop-image placeholder"></div>
+                            <div class="event-image placeholder"></div>
                         {{/if}}
-                        <div class="drop-info">
+                        <div class="event-info">
                             <h4>{{title}}</h4>
-                            <p class="drop-date">{{formatDate scheduledDate "MMM d, yyyy"}}</p>
+                            <p class="event-date">{{formatDate scheduledDate "MMM d, yyyy"}}</p>
                         </div>
                     </div>
                 {{/each}}
             </div>
         {{else}}
-            <div class="empty-drops">
-                <a href="/drops/create" class="create-drop-btn">
+            <div class="empty-events">
+                <a href="/events/create" class="create-event-btn">
                     <span class="plus-icon">+</span>
-                    Create a Drop
+                    Create an Event
                 </a>
             </div>
         {{/if}}
     </div>
 
-    <!-- Your Drops -->
-    <div class="drops-section">
-        <h2>Your Drops</h2>
-        {{> drops/section}}
+    <!-- Your Events -->
+    <div class="events-section">
+        <h2>Your Events</h2>
+        {{> events/section}}
     </div>
 </div>

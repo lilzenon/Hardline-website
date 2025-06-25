@@ -80,8 +80,8 @@
                     console.log('🎯 Template Debug - Featured Drops Length:', {{featuredDrops.length}});
                 </script>
 
-                <!-- Featured Drops Cards -->
-                {{#each featuredDrops}}
+                <!-- Featured Events Cards -->
+                {{#each featuredEvents}}
                 <div class="figma-event-card carousel-slide" data-slide="{{#if ../homeSettings.event_title}}{{math @index '+' 1}}{{else}}{{@index}}{{/if}}">
                     <!-- Event Image with Gradient Background -->
                     <div class="figma-event-image">
@@ -133,24 +133,24 @@
                         </button>
                         <button class="figma-tickets-btn" data-tickets-url="{{this.posh_embed_url}}">Tickets</button>
                         {{else}}
-                        <button class="figma-share-btn" onclick="navigator.share ? navigator.share({title: '{{this.title}}', url: window.location.href + 'drop/{{this.slug}}'}) : navigator.clipboard.writeText(window.location.href + 'drop/{{this.slug}}')">
+                        <button class="figma-share-btn" onclick="navigator.share ? navigator.share({title: '{{this.title}}', url: window.location.href + 'event/{{this.slug}}'}) : navigator.clipboard.writeText(window.location.href + 'event/{{this.slug}}')">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 12L8 21L16 21L16 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M12 16L12 3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
-                        <button class="figma-tickets-btn" onclick="window.open('/drop/{{this.slug}}', '_blank')">{{#if this.button_text}}{{this.button_text}}{{else}}Get Notified{{/if}}</button>
+                        <button class="figma-tickets-btn" onclick="window.open('/event/{{this.slug}}', '_blank')">{{#if this.button_text}}{{this.button_text}}{{else}}Get Notified{{/if}}</button>
                         {{/if}}
                     </div>
                 </div>
                 {{else}}
-                <!-- 🚀 DEBUG: No Featured Drops Found -->
+                <!-- 🚀 DEBUG: No Featured Events Found -->
                 <div class="figma-event-card carousel-slide" data-slide="{{#if homeSettings.event_title}}1{{else}}0{{/if}}" style="background: #ff6b6b; color: white; padding: 20px; text-align: center;">
-                    <h2>🔍 DEBUG: No Featured Drops</h2>
-                    <p>No drops found with show_on_homepage=true</p>
-                    <p>Total drops in template: {{featuredDrops.length}}</p>
-                    <p>Check /api/home-settings/debug-drops for details</p>
+                    <h2>🔍 DEBUG: No Featured Events</h2>
+                    <p>No events found with show_on_homepage=true</p>
+                    <p>Total events in template: {{featuredEvents.length}}</p>
+                    <p>Check /api/home-settings/debug-events for details</p>
                 </div>
                 {{/each}}
             </div>
@@ -408,11 +408,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Handle tickets/drop buttons
+        // Handle tickets/event buttons
         if (e.target.closest('.figma-tickets-btn')) {
             const ticketsBtn = e.target.closest('.figma-tickets-btn');
             const ticketsUrl = ticketsBtn.getAttribute('data-tickets-url');
-            const dropUrl = ticketsBtn.getAttribute('data-drop-url');
+            const eventUrl = ticketsBtn.getAttribute('data-event-url');
 
             console.log('🎫 Tickets button clicked:', {
                 ticketsUrl: ticketsUrl,
@@ -462,9 +462,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     console.error('❌ modalOverlay element not found in DOM');
                 }
-            } else if (dropUrl) {
-                console.log('🔗 Navigating to drop page:', dropUrl);
-                window.location.href = dropUrl;
+            } else if (eventUrl) {
+                console.log('🔗 Navigating to event page:', eventUrl);
+                window.location.href = eventUrl;
             } else {
                 // Check if button has onclick handler (for non-tickets buttons)
                 if (ticketsBtn.hasAttribute('onclick')) {
@@ -481,17 +481,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Handle drop share buttons
-        if (e.target.closest('.drop-share-btn')) {
-            const shareBtn = e.target.closest('.drop-share-btn');
-            const dropTitle = shareBtn.getAttribute('data-drop-title');
-            const dropSlug = shareBtn.getAttribute('data-drop-slug');
+        // Handle event share buttons
+        if (e.target.closest('.event-share-btn')) {
+            const shareBtn = e.target.closest('.event-share-btn');
+            const eventTitle = shareBtn.getAttribute('data-event-title');
+            const eventSlug = shareBtn.getAttribute('data-event-slug');
 
-            if (dropTitle && dropSlug) {
+            if (eventTitle && eventSlug) {
                 const shareData = {
-                    title: dropTitle,
-                    text: `Check out this event: ${dropTitle}`,
-                    url: `${window.location.origin}/drop/${dropSlug}`
+                    title: eventTitle,
+                    text: `Check out this event: ${eventTitle}`,
+                    url: `${window.location.origin}/event/${eventSlug}`
                 };
 
                 if (navigator.share) {
@@ -677,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 🚀 UPDATE CAROUSEL WITH NEW DATA
     async function updateCarouselWithNewData(data) {
-        const { homeSettings, featuredDrops, formattedDate, totalCards } = data;
+        const { homeSettings, featuredEvents, formattedDate, totalCards } = data;
 
         console.log(`🎯 Updating carousel with ${totalCards} total cards`);
 
@@ -696,13 +696,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (homeSettings.event_title) {
             const homeCard = createHomeSettingsCard(homeSettings, formattedDate);
             track.appendChild(homeCard);
-            slideOffset = 1; // Featured drops start at index 1
+            slideOffset = 1; // Featured events start at index 1
         }
 
-        // Add featured drops cards
-        featuredDrops.forEach((drop, index) => {
-            const dropCard = createDropCard(drop, index + slideOffset);
-            track.appendChild(dropCard);
+        // Add featured events cards
+        featuredEvents.forEach((event, index) => {
+            const eventCard = createEventCard(event, index + slideOffset);
+            track.appendChild(eventCard);
         });
 
         // Reinitialize carousel
@@ -1329,7 +1329,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.target.closest('.figma-tickets-btn') ||
                 e.target.closest('.figma-share-btn') ||
                 e.target.closest('.figma-btn') ||
-                e.target.closest('.drop-share-btn')) {
+                e.target.closest('.event-share-btn')) {
                 console.log('🚫 Click on interactive element - preventing carousel navigation');
                 return;
             }
@@ -1482,15 +1482,15 @@ document.addEventListener('DOMContentLoaded', function() {
         return card;
     }
 
-    function createDropCard(drop, slideIndex) {
+    function createEventCard(event, slideIndex) {
         const card = document.createElement('div');
         card.className = 'figma-event-card carousel-slide';
         card.setAttribute('data-slide', slideIndex.toString());
 
-        // Format drop date
-        let dropFormattedDate = "Event Date TBD";
-        if (drop.event_date) {
-            const eventDate = new Date(drop.event_date);
+        // Format event date
+        let eventFormattedDate = "Event Date TBD";
+        if (event.event_date) {
+            const eventDate = new Date(event.event_date);
             const options = {
                 month: 'long',
                 day: 'numeric',
@@ -1498,16 +1498,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 minute: '2-digit',
                 hour12: true
             };
-            dropFormattedDate = eventDate.toLocaleDateString('en-US', options)
+            eventFormattedDate = eventDate.toLocaleDateString('en-US', options)
                 .replace(',', 'th,');
         }
 
         card.innerHTML = `
             <!-- Event Image with Gradient Background -->
             <div class="figma-event-image">
-                ${drop.cover_image ?
-                    `<img src="${drop.cover_image}" alt="${drop.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;" />` :
-                    `<div class="figma-image-placeholder" style="${drop.background_color ? `background: ${drop.background_color};` : ''}${drop.gradient_data ? `background: ${drop.gradient_data};` : ''}">
+                ${event.cover_image ?
+                    `<img src="${event.cover_image}" alt="${event.title}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;" />` :
+                    `<div class="figma-image-placeholder" style="${event.background_color ? `background: ${event.background_color};` : ''}${event.gradient_data ? `background: ${event.gradient_data};` : ''}">
                         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -1517,38 +1517,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <!-- Event Information -->
             <div class="figma-event-info">
-                <h1 class="figma-event-title">${drop.title}</h1>
-                <h2 class="figma-event-artist">${drop.artist_name || 'Artist Name'}</h2>
-                <p class="figma-event-date">${dropFormattedDate}</p>
-                ${drop.event_address ? `
+                <h1 class="figma-event-title">${event.title}</h1>
+                <h2 class="figma-event-artist">${event.artist_name || 'Artist Name'}</h2>
+                <p class="figma-event-date">${eventFormattedDate}</p>
+                ${event.event_address ? `
                 <a href="#" class="address-component figma-event-address"
-                   ${drop.address_latitude ? `data-latitude="${drop.address_latitude}"` : ''}
-                   ${drop.address_longitude ? `data-longitude="${drop.address_longitude}"` : ''}>
+                   ${event.address_latitude ? `data-latitude="${event.address_latitude}"` : ''}
+                   ${event.address_longitude ? `data-longitude="${event.address_longitude}"` : ''}>
                     <svg class="address-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                         <circle cx="12" cy="10" r="3"></circle>
                     </svg>
-                    <span class="address-text">${drop.event_address}</span>
+                    <span class="address-text">${event.event_address}</span>
                 </a>` : ''}
-                ${drop.description ? `<p class="figma-event-description">${drop.description}</p>` : ''}
+                ${event.description ? `<p class="figma-event-description">${event.description}</p>` : ''}
             </div>
 
             <!-- Action Buttons -->
             <div class="figma-action-buttons">
-                ${drop.posh_embed_url ? `
-                    <button class="figma-share-btn" data-share-url="${drop.posh_embed_url}">
+                ${event.posh_embed_url ? `
+                    <button class="figma-share-btn" data-share-url="${event.posh_embed_url}">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8 12L8 21L16 21L16 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M12 16L12 3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
-                    <button class="figma-tickets-btn" data-tickets-url="${drop.posh_embed_url}">${drop.button_text || 'Tickets'}</button>
+                    <button class="figma-tickets-btn" data-tickets-url="${event.posh_embed_url}">${event.button_text || 'Tickets'}</button>
                 ` : `
-                    <button class="figma-btn figma-btn-primary" onclick="window.open('/drop/${drop.slug}', '_blank')">
-                        <span>${drop.button_text || 'Get Notified'}</span>
+                    <button class="figma-btn figma-btn-primary" onclick="window.open('/event/${event.slug}', '_blank')">
+                        <span>${event.button_text || 'Get Notified'}</span>
                     </button>
-                    <button class="figma-btn figma-btn-secondary drop-share-btn" data-drop-title="${drop.title}" data-drop-slug="${drop.slug}">
+                    <button class="figma-btn figma-btn-secondary event-share-btn" data-event-title="${event.title}" data-event-slug="${event.slug}">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -1572,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('📡 Received homepage update message:', event.data);
 
                 if (event.data.type === 'refresh-cards') {
-                    console.log('🔄 Refreshing homepage cards due to drop update...');
+                    console.log('🔄 Refreshing homepage cards due to event update...');
                     refreshHomepageCards();
                 }
             });

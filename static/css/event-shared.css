@@ -40,7 +40,7 @@ body {
 
 /* ===== MODERN MOBILE-FIRST CORE SYSTEM ===== */
 
-.drop-page-wrapper {
+.event-page-wrapper {
     /* RESEARCH-BASED: Avoid 100vh on mobile, use 100% instead */
     min-height: 100%;
     /* BEAUTIFUL: Modern gradient background with CSS variables */
@@ -57,7 +57,7 @@ body {
     box-sizing: border-box;
 }
 
-.drop-container {
+.event-container {
     /* BEAUTIFUL: Modern card design with subtle shadows */
     background: var(--preview-drop-card-color, var(--drop-card-color, #ffffff));
     /* RESEARCH-BASED: Avoid calc() and viewport units on mobile */
@@ -85,13 +85,13 @@ body {
 /* MOBILE-FIRST: Base styles are mobile (default above) */
 
 
-/* Mobile styles are already defined in base .drop-container */
+/* Mobile styles are already defined in base .event-container */
 
 
 /* TABLET: Medium screens (768px and up) */
 
 @media (min-width: 768px) {
-    .drop-page-wrapper {
+    .event-page-wrapper {
         /* RESEARCH-BASED: Better tablet spacing */
         padding: 40px;
         display: flex;
@@ -99,7 +99,7 @@ body {
         justify-content: center;
         min-height: 100vh;
     }
-    .drop-container {
+    .event-container {
         /* RESEARCH-BASED: Better tablet sizing */
         max-width: 600px;
         width: 100%;
@@ -114,7 +114,7 @@ body {
 /* DESKTOP: Large screens (1024px and up) */
 
 @media (min-width: 1024px) {
-    .drop-page-wrapper {
+    .event-page-wrapper {
         /* RESEARCH-BASED: Proper desktop spacing and centering */
         padding: 40px 20px;
         min-height: 100vh;
@@ -125,7 +125,7 @@ body {
         max-width: 1400px;
         margin: 0 auto;
     }
-    .drop-container {
+    .event-container {
         /* RESEARCH-BASED: Optimal desktop width */
         max-width: 700px;
         width: 100%;
@@ -143,12 +143,12 @@ body {
 /* LARGE DESKTOP: Extra large screens (1440px and up) */
 
 @media (min-width: 1440px) {
-    .drop-page-wrapper {
+    .event-page-wrapper {
         /* RESEARCH-BASED: Better spacing for large screens */
         padding: 80px 60px;
         max-width: 1600px;
     }
-    .drop-container {
+    .event-container {
         /* RESEARCH-BASED: Optimal width for large screens */
         max-width: 800px;
         border-radius: 28px;
@@ -159,12 +159,12 @@ body {
 /* ULTRA-WIDE: Extra large screens (1920px and up) */
 
 @media (min-width: 1920px) {
-    .drop-page-wrapper {
+    .event-page-wrapper {
         /* RESEARCH-BASED: Maximum container width for ultra-wide */
         max-width: 1920px;
         padding: 100px 80px;
     }
-    .drop-container {
+    .event-container {
         /* RESEARCH-BASED: Maximum content width */
         max-width: 900px;
     }
@@ -173,7 +173,7 @@ body {
 
 /* ===== MOBILE-FIRST HEADER SYSTEM ===== */
 
-.drop-header {
+.event-header {
     background: transparent;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     /* MOBILE-FIRST: Proper mobile padding to prevent width issues */
@@ -184,7 +184,7 @@ body {
     overflow: hidden;
 }
 
-.drop-brand {
+.event-brand {
     display: flex;
     align-items: center;
     /* MOBILE: Prevent overflow */
@@ -229,7 +229,7 @@ body {
 
 /* ===== MODERN MOBILE-FIRST MAIN CONTENT SYSTEM ===== */
 
-.drop-main {
+.event-main {
     flex: 1;
     /* MODERN: 8px grid system padding */
     padding: 32px 24px;
@@ -240,7 +240,7 @@ body {
     overflow-x: hidden;
 }
 
-.drop-content {
+.event-content {
     /* RESEARCH-BASED: Optimal content width for readability */
     max-width: 500px;
     margin: 0 auto;
@@ -252,7 +252,7 @@ body {
 
 /* ===== MODERN COVER IMAGE SYSTEM ===== */
 
-.drop-cover-image {
+.event-cover-image {
     /* MODERN: 8px grid system spacing */
     margin-bottom: 40px;
     /* STUNNING: Modern border radius with subtle shadow */
@@ -273,13 +273,13 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.drop-cover-image:hover {
+.event-cover-image:hover {
     /* INTERACTIVE: Subtle hover effect */
     transform: translateY(-4px) scale(1.02);
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
-.drop-cover-image img {
+.event-cover-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -292,7 +292,7 @@ body {
 
 /* ===== MODERN TYPOGRAPHY SYSTEM ===== */
 
-.drop-title {
+.event-title {
     /* MODERN: 8px grid system spacing */
     margin: 0 0 24px 0;
     /* MOBILE-FIRST: Larger, more impactful typography */
@@ -318,7 +318,7 @@ body {
     word-spacing: 0.1em;
 }
 
-.drop-description p {
+.event-description p {
     /* MODERN: 8px grid system spacing */
     margin: 0 0 32px 0;
     /* RESEARCH-BASED: Larger, more readable typography */
@@ -344,7 +344,7 @@ body {
     margin-right: auto;
 }
 
-.drop-stats {
+.event-stats {
     /* MODERN: 8px grid system spacing */
     margin-bottom: 24px;
 }
@@ -381,7 +381,7 @@ body {
 
 /* ===== FORM SYSTEM ===== */
 
-.drop-signup-section {
+.event-signup-section {
     max-width: 400px;
     margin: 0 auto;
 }
@@ -534,14 +534,14 @@ input[type="text"].form-input {
 
 /* ===== FOOTER SYSTEM ===== */
 
-.drop-footer {
+.event-footer {
     padding: 24px;
     text-align: center;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     background: transparent;
 }
 
-.drop-footer p {
+.event-footer p {
     margin: 0;
     font-size: 14px;
     color: inherit;
@@ -565,13 +565,13 @@ input[type="text"].form-input {
 /* TABLET: Enhanced typography (768px and up) */
 
 @media (min-width: 768px) {
-    .drop-title {
+    .event-title {
         /* RESEARCH-BASED: Larger, more impactful tablet typography */
         font-size: 40px;
         margin-bottom: 32px;
         letter-spacing: -0.025em;
     }
-    .drop-description p {
+    .event-description p {
         /* OPTIMAL: Better tablet readability */
         font-size: 20px;
         margin-bottom: 40px;
@@ -582,12 +582,12 @@ input[type="text"].form-input {
         font-size: 17px;
         border-radius: 14px;
     }
-    .drop-cover-image {
+    .event-cover-image {
         /* LARGER: More impactful tablet sizing */
         width: 320px;
         height: 320px;
     }
-    .drop-main {
+    .event-main {
         /* MODERN: Enhanced tablet spacing */
         padding: 48px 32px;
     }
@@ -597,14 +597,14 @@ input[type="text"].form-input {
 /* DESKTOP: Premium typography (1024px and up) */
 
 @media (min-width: 1024px) {
-    .drop-title {
+    .event-title {
         /* STUNNING: Large, impactful desktop typography */
         font-size: 48px;
         margin-bottom: 40px;
         letter-spacing: -0.03em;
         line-height: 1.05;
     }
-    .drop-description p {
+    .event-description p {
         /* OPTIMAL: Premium desktop readability */
         font-size: 22px;
         margin-bottom: 48px;
@@ -619,12 +619,12 @@ input[type="text"].form-input {
         border-radius: 16px;
         font-weight: 700;
     }
-    .drop-cover-image {
+    .event-cover-image {
         /* LARGE: Impressive desktop sizing */
         width: 360px;
         height: 360px;
     }
-    .drop-main {
+    .event-main {
         /* PREMIUM: Luxurious desktop spacing */
         padding: 64px 40px;
     }
@@ -634,23 +634,23 @@ input[type="text"].form-input {
 /* LARGE DESKTOP: Luxurious typography (1440px and up) */
 
 @media (min-width: 1440px) {
-    .drop-title {
+    .event-title {
         /* LUXURIOUS: Maximum impact typography */
         font-size: 56px;
         margin-bottom: 48px;
     }
-    .drop-description p {
+    .event-description p {
         /* PREMIUM: Ultimate readability */
         font-size: 24px;
         margin-bottom: 56px;
         max-width: 700px;
     }
-    .drop-cover-image {
+    .event-cover-image {
         /* MASSIVE: Show-stopping image size */
         width: 400px;
         height: 400px;
     }
-    .drop-main {
+    .event-main {
         /* LUXURIOUS: Maximum spacing */
         padding: 80px 48px;
     }
@@ -670,13 +670,13 @@ input[type="text"].form-input {
         -webkit-appearance: none;
     }
     /* MOBILE: Tighter spacing for mobile */
-    .drop-header {
+    .event-header {
         padding: 12px 16px;
     }
-    .drop-main {
+    .event-main {
         padding: 20px 16px;
     }
-    .drop-footer {
+    .event-footer {
         padding: 16px;
     }
     /* MOBILE: Smaller brand text */
@@ -690,14 +690,14 @@ input[type="text"].form-input {
         width: 100%;
         max-width: 100%;
     }
-    .drop-page-wrapper {
+    .event-page-wrapper {
         overflow-x: hidden;
         width: 100%;
         max-width: 100%;
         /* MOBILE FIX: Reduce padding to minimize white space at bottom */
         padding: 10px !important;
     }
-    .drop-container {
+    .event-container {
         overflow-x: hidden;
         width: 100%;
         max-width: 100%;
@@ -710,13 +710,13 @@ input[type="text"].form-input {
 /* TABLET AND UP: Enhanced spacing */
 
 @media screen and (min-width: 768px) {
-    .drop-header {
+    .event-header {
         padding: 16px 24px;
     }
-    .drop-main {
+    .event-main {
         padding: 40px 24px;
     }
-    .drop-footer {
+    .event-footer {
         padding: 24px;
     }
     .brand-text {

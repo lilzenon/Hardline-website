@@ -280,11 +280,11 @@ router.get(
 );
 
 /**
- * GET /api/analytics/search/drops
- * Search drops
+ * GET /api/analytics/search/events
+ * Search events
  */
 router.get(
-    "/search/drops",
+    "/search/events",
     asyncHandler(auth.jwt),
     asyncHandler(async(req, res) => {
         try {
@@ -295,7 +295,7 @@ router.get(
                 includeInactive = false
             } = req.query;
 
-            const searchResults = await searchService.searchDrops(req.user.id, searchQuery, {
+            const searchResults = await searchService.searchEvents(req.user.id, searchQuery, {
                 limit: parseInt(limit),
                 offset: parseInt(offset),
                 includeInactive: includeInactive === 'true'
@@ -306,7 +306,7 @@ router.get(
                 data: searchResults
             });
         } catch (error) {
-            console.error('❌ Drop search API error:', error);
+            console.error('❌ Event search API error:', error);
             res.status(500).json({
                 success: false,
                 error: error.message

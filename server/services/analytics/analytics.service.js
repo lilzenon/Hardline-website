@@ -16,18 +16,18 @@ class AnalyticsService {
                 // Use optimized single query for all stats
                 const statsResult = await knex.raw(`
                     SELECT
-                        (SELECT COUNT(*) FROM drops WHERE user_id = ?) as total_drops,
-                        (SELECT COUNT(*) FROM drops WHERE user_id = ? AND is_active = true) as active_drops,
+                        (SELECT COUNT(*) FROM events WHERE user_id = ?) as total_events,
+                        (SELECT COUNT(*) FROM events WHERE user_id = ? AND is_active = true) as active_events,
                         (SELECT COUNT(*) FROM links WHERE user_id = ?) as total_links,
                         (SELECT COALESCE(SUM(visit_count), 0) FROM links WHERE user_id = ?) as total_clicks,
-                        (SELECT COUNT(DISTINCT ds.email)
-                         FROM drop_signups ds
-                         JOIN drops d ON ds.drop_id = d.id
-                         WHERE d.user_id = ?) as total_unique_fans,
+                        (SELECT COUNT(DISTINCT es.email)
+                         FROM event_signups es
+                         JOIN events e ON es.event_id = e.id
+                         WHERE e.user_id = ?) as total_unique_fans,
                         (SELECT COUNT(*)
-                         FROM drop_signups ds
-                         JOIN drops d ON ds.drop_id = d.id
-                         WHERE d.user_id = ?) as total_signups
+                         FROM event_signups es
+                         JOIN events e ON es.event_id = e.id
+                         WHERE e.user_id = ?) as total_signups
                 `, [userId, userId, userId, userId, userId, userId]);
 
                 // Handle different database result formats
@@ -42,8 +42,8 @@ class AnalyticsService {
                     // Fallback to empty stats
                     console.warn('⚠️ No stats result found, using fallback');
                     stats = {
-                        total_drops: 0,
-                        active_drops: 0,
+                        total_events: 0,
+                        active_events: 0,
                         total_links: 0,
                         total_clicks: 0,
                         total_unique_fans: 0,
@@ -51,22 +51,22 @@ class AnalyticsService {
                     };
                 }
 
-                // Get recent drops and links in parallel
-                const [recentDrops, recentLinks] = await Promise.all([
-                    query.drop.findByUserWithStats(userId, { limit: 5 }),
+                // Get recent events and links in parallel
+                const [recentEvents, recentLinks] = await Promise.all([
+                    query.event.findByUserWithStats(userId, { limit: 5 }),
                     query.link.get({ "links.user_id": userId }, { skip: 0, limit: 5 })
                 ]);
 
                 return {
                     stats: {
-                        totalDrops: parseInt(stats.total_drops) || 0,
-                        activeDrops: parseInt(stats.active_drops) || 0,
+                        totalEvents: parseInt(stats.total_events) || 0,
+                        activeEvents: parseInt(stats.active_events) || 0,
                         totalLinks: parseInt(stats.total_links) || 0,
                         totalClicks: parseInt(stats.total_clicks) || 0,
                         totalFans: parseInt(stats.total_unique_fans) || 0,
                         totalSignups: parseInt(stats.total_signups) || 0
                     },
-                    recentDrops: recentDrops || [],
+                    recentEvents: recentEvents || [],
                     recentLinks: recentLinks || [],
                     lastUpdated: new Date().toISOString()
                 };
@@ -76,14 +76,14 @@ class AnalyticsService {
                 // Return fallback data on error
                 return {
                     stats: {
-                        totalDrops: 0,
-                        activeDrops: 0,
+                        totalEvents: 0,
+                        activeEvents: 0,
                         totalLinks: 0,
                         totalClicks: 0,
                         totalFans: 0,
                         totalSignups: 0
                     },
-                    recentDrops: [],
+                    recentEvents: [],
                     recentLinks: [],
                     lastUpdated: new Date().toISOString(),
                     error: error.message
@@ -107,7 +107,7 @@ class AnalyticsService {
 
                 // Get additional analytics data
                 const [fanAnalytics, performanceMetrics] = await Promise.all([
-                    query.drop.getFanAnalytics(userId, { limit: 50 }).catch(err => {
+                    query.event.getFanAnalytics(userId, { limit: 50 }).catch(err => {
                         console.error('❌ Error getting fan analytics:', err);
                         return { fans: [], totalCount: 0 };
                     }),
@@ -153,16 +153,16 @@ class AnalyticsService {
     async getPerformanceMetrics(userId) {
         try {
             const metricsResult = await knex.raw(`
-                WITH user_drops AS (
-                    SELECT id FROM drops WHERE user_id = ?
+                WITH user_events AS (
+                    SELECT id FROM events WHERE user_id = ?
                 ),
                 signup_metrics AS (
                     SELECT
                         COUNT(*) as total_signups,
                         COUNT(DISTINCT email) as unique_signups,
                         AVG(CASE WHEN created_at >= NOW() - INTERVAL '7 days' THEN 1 ELSE 0 END) as weekly_growth_rate
-                    FROM drop_signups ds
-                    JOIN user_drops ud ON ds.drop_id = ud.id
+                    FROM event_signups es
+                    JOIN user_events ue ON es.event_id = ue.id
                 ),
                 link_metrics AS (
                     SELECT
@@ -276,8 +276,8 @@ class AnalyticsService {
             // This bypasses cache for real-time data
             const statsResult = await knex.raw(`
                 SELECT
-                    (SELECT COUNT(*) FROM drops WHERE user_id = ? AND created_at >= NOW() - INTERVAL '24 hours') as drops_today,
-                    (SELECT COUNT(*) FROM drop_signups ds JOIN drops d ON ds.drop_id = d.id WHERE d.user_id = ? AND ds.created_at >= NOW() - INTERVAL '24 hours') as signups_today,
+                    (SELECT COUNT(*) FROM events WHERE user_id = ? AND created_at >= NOW() - INTERVAL '24 hours') as events_today,
+                    (SELECT COUNT(*) FROM event_signups es JOIN events e ON es.event_id = e.id WHERE e.user_id = ? AND es.created_at >= NOW() - INTERVAL '24 hours') as signups_today,
                     (SELECT COUNT(*) FROM visits v JOIN links l ON v.link_id = l.id WHERE l.user_id = ? AND v.created_at >= NOW() - INTERVAL '24 hours') as clicks_today
             `, [userId, userId, userId]);
 

@@ -1,21 +1,21 @@
 const knex = require("../knex");
-const { generateSlug } = require("../models/drop.model");
+const { generateSlug } = require("../models/event.model");
 
-// Simple normalizeMatch function for drops
+// Simple normalizeMatch function for events
 function normalizeMatch(match) {
-    return match; // For drops, we don't need complex normalization
+    return match; // For events, we don't need complex normalization
 }
 
-// Create a new drop
+// Create a new event
 async function create(data) {
     // Generate unique slug if not provided
     if (!data.slug && data.title) {
-        const existingSlugs = await knex("drops").select("slug").then(rows => rows.map(r => r.slug));
+        const existingSlugs = await knex("events").select("slug").then(rows => rows.map(r => r.slug));
         data.slug = generateSlug(data.title, existingSlugs);
     }
 
     // Ensure default colors are set if not provided
-    const dropData = {
+    const eventData = {
         background_color: '#ffffff',
         text_color: '#000000',
         button_color: '#007bff',
@@ -26,13 +26,13 @@ async function create(data) {
         ...data // Override with provided data
     };
 
-    const [id] = await knex("drops").insert(dropData);
-    return await knex("drops").where("id", id).first();
+    const [id] = await knex("events").insert(eventData);
+    return await knex("events").where("id", id).first();
 }
 
-// Find drops with optional filters
+// Find events with optional filters
 async function find(match = {}) {
-    const query = knex("drops");
+    const query = knex("events");
 
     if (match && Object.keys(match).length > 0) {
         query.where(normalizeMatch(match));
@@ -41,19 +41,19 @@ async function find(match = {}) {
     return await query.orderBy("created_at", "desc");
 }
 
-// Find a single drop
+// Find a single event
 async function findOne(match) {
-    return await knex("drops").where(normalizeMatch(match)).first();
+    return await knex("events").where(normalizeMatch(match)).first();
 }
 
-// Find drop by slug
+// Find event by slug
 async function findBySlug(slug) {
-    return await knex("drops").where("slug", slug).first();
+    return await knex("events").where("slug", slug).first();
 }
 
-// Find drops by user
+// Find events by user
 async function findByUser(userId, options = {}) {
-    const query = knex("drops")
+    const query = knex("events")
         .where("user_id", userId)
         .orderBy("created_at", "desc");
 
@@ -68,28 +68,28 @@ async function findByUser(userId, options = {}) {
     return await query;
 }
 
-// Update a drop with enhanced error handling and logging
+// Update an event with enhanced error handling and logging
 async function update(id, data) {
     try {
-        console.log(`🔄 Updating drop ${id} in database with fields:`, Object.keys(data));
+        console.log(`🔄 Updating event ${id} in database with fields:`, Object.keys(data));
 
         // Perform the update
-        const updateResult = await knex("drops").where("id", id).update(data);
+        const updateResult = await knex("events").where("id", id).update(data);
 
-        console.log(`✅ Drop ${id} update result:`, updateResult);
+        console.log(`✅ Event ${id} update result:`, updateResult);
 
-        // Fetch and return the updated drop
-        const updatedDrop = await knex("drops").where("id", id).first();
+        // Fetch and return the updated event
+        const updatedEvent = await knex("events").where("id", id).first();
 
-        if (!updatedDrop) {
-            throw new Error(`Drop ${id} not found after update`);
+        if (!updatedEvent) {
+            throw new Error(`Event ${id} not found after update`);
         }
 
-        console.log(`✅ Drop ${id} updated successfully`);
-        return updatedDrop;
+        console.log(`✅ Event ${id} updated successfully`);
+        return updatedEvent;
 
     } catch (error) {
-        console.error(`❌ Error updating drop ${id}:`, {
+        console.error(`❌ Error updating event ${id}:`, {
             error: error.message,
             code: error.code,
             detail: error.detail,
@@ -97,7 +97,7 @@ async function update(id, data) {
         });
 
         // Re-throw with additional context
-        const enhancedError = new Error(`Failed to update drop ${id}: ${error.message}`);
+        const enhancedError = new Error(`Failed to update event ${id}: ${error.message}`);
         enhancedError.originalError = error;
         enhancedError.code = error.code;
         enhancedError.detail = error.detail;
@@ -105,45 +105,45 @@ async function update(id, data) {
     }
 }
 
-// Delete a drop
+// Delete an event
 async function remove(id) {
-    return await knex("drops").where("id", id).del();
+    return await knex("events").where("id", id).del();
 }
 
-// Get drop with signup count
+// Get event with signup count
 async function findWithStats(match) {
-    const drop = await knex("drops")
+    const event = await knex("events")
         .where(normalizeMatch(match))
         .first();
 
-    if (!drop) return null;
+    if (!event) return null;
 
-    const signupCount = await getSignupCount(drop.id);
+    const signupCount = await getSignupCount(event.id);
 
     return {
-        ...drop,
+        ...event,
         signup_count: signupCount
     };
 }
 
-// Get drops with stats for user - OPTIMIZED VERSION
+// Get events with stats for user - OPTIMIZED VERSION
 async function findByUserWithStats(userId, options = {}) {
-    const query = knex("drops as d")
+    const query = knex("events as e")
         .select([
-            "d.*",
+            "e.*",
             knex.raw("COALESCE(signup_counts.count, 0) as signup_count")
         ])
         .leftJoin(
-            knex("drop_signups")
-            .select("drop_id")
+            knex("event_signups")
+            .select("event_id")
             .count("* as count")
-            .groupBy("drop_id")
+            .groupBy("event_id")
             .as("signup_counts"),
-            "d.id",
-            "signup_counts.drop_id"
+            "e.id",
+            "signup_counts.event_id"
         )
-        .where("d.user_id", userId)
-        .orderBy("d.created_at", "desc");
+        .where("e.user_id", userId)
+        .orderBy("e.created_at", "desc");
 
     if (options.limit) {
         query.limit(options.limit);
@@ -156,10 +156,10 @@ async function findByUserWithStats(userId, options = {}) {
     return await query;
 }
 
-// Create a signup for a drop
-async function createSignup(dropId, signupData) {
+// Create a signup for an event
+async function createSignup(eventId, signupData) {
     const data = {
-        drop_id: dropId,
+        event_id: eventId,
         ...signupData
     };
 
@@ -167,7 +167,7 @@ async function createSignup(dropId, signupData) {
         console.log('🔧 Attempting to insert signup data:', data);
 
         // PostgreSQL-compatible insert with returning clause
-        const result = await knex("drop_signups").insert(data).returning("*");
+        const result = await knex("event_signups").insert(data).returning("*");
 
         console.log('✅ Insert result:', result);
 
@@ -179,11 +179,11 @@ async function createSignup(dropId, signupData) {
         // Invalidate analytics cache when new signup is created
         try {
             const analyticsService = require("../services/analytics/analytics.service");
-            const drop = await knex("drops").where("id", dropId).first();
-            if (drop) {
-                await analyticsService.invalidateDropCache(dropId, drop.user_id);
-                await analyticsService.invalidateUserCache(drop.user_id);
-                console.log(`📊 Invalidated analytics cache for drop ${dropId} and user ${drop.user_id}`);
+            const event = await knex("events").where("id", eventId).first();
+            if (event) {
+                await analyticsService.invalidateEventCache(eventId, event.user_id);
+                await analyticsService.invalidateUserCache(event.user_id);
+                console.log(`📊 Invalidated analytics cache for event ${eventId} and user ${event.user_id}`);
             }
         } catch (cacheError) {
             console.error("❌ Error invalidating cache after signup:", cacheError);
@@ -206,9 +206,9 @@ async function createSignup(dropId, signupData) {
 }
 
 // Find signups for a drop
-async function findSignups(dropId, options = {}) {
-    const query = knex("drop_signups")
-        .where("drop_id", dropId)
+async function findSignups(eventId, options = {}) {
+    const query = knex("event_signups")
+        .where("event_id", eventId)
         .orderBy("created_at", "desc");
 
     if (options.limit) {
@@ -223,39 +223,39 @@ async function findSignups(dropId, options = {}) {
 }
 
 // Get signup count for a drop
-async function getSignupCount(dropId) {
-    const result = await knex("drop_signups")
-        .where("drop_id", dropId)
+async function getSignupCount(eventId) {
+    const result = await knex("event_signups")
+        .where("event_id", eventId)
         .count("id as count")
         .first();
     return parseInt(result.count) || 0;
 }
 
 // Check if email is already signed up
-async function isEmailSignedUp(dropId, email) {
+async function isEmailSignedUp(eventId, email) {
     // Return false if no email provided (can't be a duplicate)
     if (!email) {
         console.log('🔍 No email provided for duplicate check');
         return false;
     }
 
-    const signup = await knex("drop_signups")
-        .where("drop_id", dropId)
+    const signup = await knex("event_signups")
+        .where("event_id", eventId)
         .where("email", email)
         .first();
     return !!signup;
 }
 
 // Check if phone number is already signed up
-async function isPhoneSignedUp(dropId, phone) {
+async function isPhoneSignedUp(eventId, phone) {
     // Return false if no phone provided (can't be a duplicate)
     if (!phone) {
         console.log('🔍 No phone provided for duplicate check');
         return false;
     }
 
-    const signup = await knex("drop_signups")
-        .where("drop_id", dropId)
+    const signup = await knex("event_signups")
+        .where("event_id", eventId)
         .where("phone", phone)
         .first();
     return !!signup;
@@ -272,8 +272,8 @@ async function countByUser(userId) {
 
 // Get total fans by user (across all drops)
 async function getTotalFansByUser(userId) {
-    const result = await knex("drop_signups as ds")
-        .join("drops as d", "ds.drop_id", "d.id")
+    const result = await knex("event_signups as ds")
+        .join("events as e", "ds.event_id", "d.id")
         .where("d.user_id", userId)
         .countDistinct("ds.email as count")
         .first();
@@ -284,30 +284,30 @@ async function getTotalFansByUser(userId) {
 
 // Get comprehensive fan analytics for a user's drops
 async function getFanAnalytics(userId, options = {}) {
-    const { limit = 100, offset = 0, search = '', sortBy = 'latest', dropId = null } = options;
+    const { limit = 100, offset = 0, search = '', sortBy = 'latest', eventId = null } = options;
 
-    let query = knex("drop_signups as ds")
+    let query = knex("event_signups as es")
         .select([
-            "ds.email",
-            "ds.name",
-            "ds.phone",
-            "ds.ip_address",
-            "ds.created_at as join_date",
-            "ds.referrer",
-            "d.title as drop_title",
-            "d.slug as drop_slug",
-            "d.id as drop_id"
+            "es.email",
+            "es.name",
+            "es.phone",
+            "es.ip_address",
+            "es.created_at as join_date",
+            "es.referrer",
+            "e.title as event_title",
+            "e.slug as event_slug",
+            "e.id as event_id"
         ])
         .select(knex.raw(`
-            COUNT(*) OVER (PARTITION BY ds.email) as total_rsvps,
-            ROW_NUMBER() OVER (PARTITION BY ds.email ORDER BY ds.created_at ASC) as rsvp_rank
+            COUNT(*) OVER (PARTITION BY es.email) as total_rsvps,
+            ROW_NUMBER() OVER (PARTITION BY es.email ORDER BY es.created_at ASC) as rsvp_rank
         `))
-        .join("drops as d", "ds.drop_id", "d.id")
-        .where("d.user_id", userId);
+        .join("events as e", "es.event_id", "e.id")
+        .where("e.user_id", userId);
 
-    // Filter by specific drop if provided
-    if (dropId) {
-        query = query.where("d.id", dropId);
+    // Filter by specific event if provided
+    if (eventId) {
+        query = query.where("e.id", eventId);
     }
 
     // Search functionality
@@ -344,12 +344,12 @@ async function getFanAnalytics(userId, options = {}) {
     const fans = await query.limit(limit).offset(offset);
 
     // Get total count for pagination
-    const totalQuery = knex("drop_signups as ds")
-        .join("drops as d", "ds.drop_id", "d.id")
+    const totalQuery = knex("event_signups as ds")
+        .join("events as e", "ds.event_id", "d.id")
         .where("d.user_id", userId);
 
-    if (dropId) {
-        totalQuery.where("d.id", dropId);
+    if (eventId) {
+        totalQuery.where("d.id", eventId);
     }
 
     if (search) {
@@ -371,19 +371,19 @@ async function getFanAnalytics(userId, options = {}) {
         // Determine acquisition channel
         const acquisitionChannel = getAcquisitionChannel(fan.referrer);
 
-        // Get all drops this fan has signed up for
-        const fanDrops = await knex("drop_signups as ds")
-            .select("d.title", "d.slug", "ds.created_at")
-            .join("drops as d", "ds.drop_id", "d.id")
-            .where("ds.email", fan.email)
-            .where("d.user_id", userId)
-            .orderBy("ds.created_at", "desc");
+        // Get all events this fan has signed up for
+        const fanEvents = await knex("event_signups as es")
+            .select("e.title", "e.slug", "es.created_at")
+            .join("events as e", "es.event_id", "e.id")
+            .where("es.email", fan.email)
+            .where("e.user_id", userId)
+            .orderBy("es.created_at", "desc");
 
         return {
             ...fan,
             location: location,
             acquisition_channel: acquisitionChannel,
-            fan_drops: fanDrops,
+            fan_events: fanEvents,
             is_repeat_fan: fan.total_rsvps > 1
         };
     }));
@@ -403,16 +403,16 @@ async function getFanAnalytics(userId, options = {}) {
 }
 
 // Get fan summary statistics for dashboard
-async function getFanSummaryStats(userId, dropId = null) {
+async function getFanSummaryStats(userId, eventId = null) {
     try {
-        console.log(`🚀 Getting fan summary stats for user ${userId}, drop ${dropId}`);
+        console.log(`🚀 Getting fan summary stats for user ${userId}, drop ${eventId}`);
 
-        let baseQuery = knex("drop_signups as ds")
-            .join("drops as d", "ds.drop_id", "d.id")
+        let baseQuery = knex("event_signups as ds")
+            .join("events as e", "ds.event_id", "d.id")
             .where("d.user_id", userId);
 
-        if (dropId) {
-            baseQuery = baseQuery.where("d.id", dropId);
+        if (eventId) {
+            baseQuery = baseQuery.where("d.id", eventId);
         }
 
         // Total unique fans
@@ -424,8 +424,8 @@ async function getFanSummaryStats(userId, dropId = null) {
         const totalRSVPs = parseInt(totalRSVPsResult.count) || 0;
 
         // Repeat fans (fans who have RSVP'd to multiple drops)
-        const repeatFansResult = await knex("drop_signups as ds")
-            .join("drops as d", "ds.drop_id", "d.id")
+        const repeatFansResult = await knex("event_signups as ds")
+            .join("events as e", "ds.event_id", "d.id")
             .where("d.user_id", userId)
             .select("ds.email")
             .groupBy("ds.email")
@@ -548,89 +548,89 @@ function getAcquisitionChannel(referrer) {
     return 'Other';
 }
 
-// Get featured drops for homepage display
-async function getFeaturedDrops(options = {}) {
+// Get featured events for homepage display
+async function getFeaturedEvents(options = {}) {
     const { limit = 6 } = options;
 
     try {
-        console.log('🔍 getFeaturedDrops: Starting query with options:', options);
+        console.log('🔍 getFeaturedEvents: Starting query with options:', options);
 
         // Enhanced query with explicit field selection for homepage display
-        const query = knex("drops")
+        const query = knex("events")
             .select([
-                "drops.id",
-                "drops.title",
-                "drops.description",
-                "drops.slug",
-                "drops.cover_image",
-                "drops.background_color",
-                "drops.gradient_data",
-                "drops.text_color",
-                "drops.button_color",
-                "drops.button_text",
-                "drops.button_text_color",
-                "drops.background_type",
-                "drops.card_background_type",
-                "drops.is_active",
-                "drops.show_on_homepage",
-                "drops.created_at",
-                "drops.updated_at",
+                "events.id",
+                "events.title",
+                "events.description",
+                "events.slug",
+                "events.cover_image",
+                "events.background_color",
+                "events.gradient_data",
+                "events.text_color",
+                "events.button_color",
+                "events.button_text",
+                "events.button_text_color",
+                "events.background_type",
+                "events.card_background_type",
+                "events.is_active",
+                "events.show_on_homepage",
+                "events.created_at",
+                "events.updated_at",
                 // 🎪 Event-specific fields for homepage display
-                "drops.artist_name",
-                "drops.event_date",
-                "drops.event_address",
-                "drops.posh_embed_url",
-                knex.raw("COALESCE(COUNT(drop_signups.id), 0) as signup_count")
+                "events.artist_name",
+                "events.event_date",
+                "events.event_address",
+                "events.posh_embed_url",
+                knex.raw("COALESCE(COUNT(event_signups.id), 0) as signup_count")
             ])
-            .leftJoin("drop_signups", "drops.id", "drop_signups.drop_id")
-            .where("drops.show_on_homepage", true)
-            .where("drops.is_active", true)
+            .leftJoin("event_signups", "events.id", "event_signups.event_id")
+            .where("events.show_on_homepage", true)
+            .where("events.is_active", true)
             .groupBy([
-                "drops.id",
-                "drops.title",
-                "drops.description",
-                "drops.slug",
-                "drops.cover_image",
-                "drops.background_color",
-                "drops.gradient_data",
-                "drops.text_color",
-                "drops.button_color",
-                "drops.button_text",
-                "drops.button_text_color",
-                "drops.background_type",
-                "drops.card_background_type",
-                "drops.is_active",
-                "drops.show_on_homepage",
-                "drops.created_at",
-                "drops.updated_at",
-                "drops.artist_name",
-                "drops.event_date",
-                "drops.event_address",
-                "drops.posh_embed_url"
+                "events.id",
+                "events.title",
+                "events.description",
+                "events.slug",
+                "events.cover_image",
+                "events.background_color",
+                "events.gradient_data",
+                "events.text_color",
+                "events.button_color",
+                "events.button_text",
+                "events.button_text_color",
+                "events.background_type",
+                "events.card_background_type",
+                "events.is_active",
+                "events.show_on_homepage",
+                "events.created_at",
+                "events.updated_at",
+                "events.artist_name",
+                "events.event_date",
+                "events.event_address",
+                "events.posh_embed_url"
             ])
-            .orderBy("drops.created_at", "desc")
+            .orderBy("events.created_at", "desc")
             .limit(limit);
 
-        console.log('🔍 getFeaturedDrops: Executing query...');
+        console.log('🔍 getFeaturedEvents: Executing query...');
         const result = await query;
 
-        console.log('🎯 getFeaturedDrops: Query completed', {
+        console.log('🎯 getFeaturedEvents: Query completed', {
             resultCount: result.length,
-            drops: result.map(drop => ({
-                id: drop.id,
-                title: drop.title,
-                artist_name: drop.artist_name,
-                event_date: drop.event_date,
-                event_address: drop.event_address,
-                cover_image: drop.cover_image,
-                show_on_homepage: drop.show_on_homepage,
-                is_active: drop.is_active
+            events: result.map(event => ({
+                id: event.id,
+                title: event.title,
+                artist_name: event.artist_name,
+                event_date: event.event_date,
+                event_address: event.event_address,
+                cover_image: event.cover_image,
+                show_on_homepage: event.show_on_homepage,
+                is_active: event.is_active
             }))
         });
 
         return result;
     } catch (error) {
-        console.error('❌ Error in getFeaturedDrops:', error);
+        console.error('❌ Error in getFeaturedEvents:', error);
         console.error('❌ Error details:', {
             message: error.message,
             stack: error.stack
@@ -663,5 +663,5 @@ module.exports = {
     getLocationFromIP,
     getAcquisitionChannel,
     // 🏠 Homepage Features
-    getFeaturedDrops
+    getFeaturedEvents
 };

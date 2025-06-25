@@ -44,33 +44,33 @@ router.get(
     asyncHandler(homeSettings.getHomepageData)
 );
 
-// 🚀 DEBUG ENDPOINT - Check drops status
+// 🚀 DEBUG ENDPOINT - Check events status
 router.get(
-    "/debug-drops",
+    "/debug-events",
     asyncHandler(async(req, res) => {
         try {
-            const allDrops = await query.drop.find({});
-            const featuredDrops = await query.drop.getFeaturedDrops({ limit: 10 });
+            const allEvents = await query.event.find({});
+            const featuredEvents = await query.event.getFeaturedEvents({ limit: 10 });
 
             res.json({
-                totalDrops: allDrops.length,
-                featuredDrops: featuredDrops.length,
-                allDropsData: allDrops.map(drop => ({
-                    id: drop.id,
-                    title: drop.title,
-                    show_on_homepage: drop.show_on_homepage,
-                    is_active: drop.is_active,
-                    created_at: drop.created_at
+                totalEvents: allEvents.length,
+                featuredEvents: featuredEvents.length,
+                allEventsData: allEvents.map(event => ({
+                    id: event.id,
+                    title: event.title,
+                    show_on_homepage: event.show_on_homepage,
+                    is_active: event.is_active,
+                    created_at: event.created_at
                 })),
-                featuredDropsData: featuredDrops.map(drop => ({
-                    id: drop.id,
-                    title: drop.title,
-                    show_on_homepage: drop.show_on_homepage,
-                    is_active: drop.is_active
+                featuredEventsData: featuredEvents.map(event => ({
+                    id: event.id,
+                    title: event.title,
+                    show_on_homepage: event.show_on_homepage,
+                    is_active: event.is_active
                 }))
             });
         } catch (error) {
-            console.error('Debug drops error:', error);
+            console.error('Debug events error:', error);
             res.status(500).json({ error: error.message });
         }
     })
@@ -254,12 +254,12 @@ router.get(
         try {
             // Simulate the exact same data fetching as the homepage render
             const homeSettings = await query.homeSettings.get();
-            const featuredDrops = await query.drop.getFeaturedDrops({ limit: 6 });
+            const featuredEvents = await query.event.getFeaturedEvents({ limit: 6 });
 
             console.log(`🏠 Homepage data test:`, {
                 homeSettingsExists: !!homeSettings,
-                featuredDropsCount: featuredDrops.length,
-                featuredDropsData: featuredDrops
+                featuredEventsCount: featuredEvents.length,
+                featuredEventsData: featuredEvents
             });
 
             res.json({

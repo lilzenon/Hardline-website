@@ -14,37 +14,37 @@ class SearchService {
     async searchFanSignups(userId, searchQuery, options = {}) {
         const {
             limit = 50,
-            offset = 0,
-            sortBy = 'latest',
-            dropId = null,
-            includeHighlights = true
+                offset = 0,
+                sortBy = 'latest',
+                dropId = null,
+                includeHighlights = true
         } = options;
 
         // Create cache key for search results
         const cacheKey = `search:fans:${userId}:${Buffer.from(searchQuery).toString('base64')}:${JSON.stringify(options)}`;
 
-        return await cache.getOrCompute(cacheKey, async () => {
+        return await cache.getOrCompute(cacheKey, async() => {
             console.log(`🔍 Searching fan signups for user ${userId} with query: "${searchQuery}"`);
 
-            let query = knex("drop_signups as ds")
+            let query = knex("event_signups as es")
                 .select([
-                    "ds.id",
-                    "ds.email",
-                    "ds.name",
-                    "ds.phone",
-                    "ds.created_at",
-                    "ds.referrer",
-                    "d.id as drop_id",
-                    "d.title as drop_title",
-                    "d.slug as drop_slug"
+                    "es.id",
+                    "es.email",
+                    "es.name",
+                    "es.phone",
+                    "es.created_at",
+                    "es.referrer",
+                    "e.id as event_id",
+                    "e.title as event_title",
+                    "e.slug as event_slug"
                 ])
-                .join("drops as d", "ds.drop_id", "d.id")
-                .where("d.user_id", userId);
+                .join("events as e", "es.event_id", "e.id")
+                .where("e.user_id", userId);
 
             // Apply search filters
             if (searchQuery && searchQuery.trim()) {
                 const trimmedQuery = searchQuery.trim();
-                
+
                 if (this.isPostgreSQL) {
                     // Use PostgreSQL full-text search for better performance
                     query = query.whereRaw(`
@@ -114,17 +114,17 @@ class SearchService {
     }
 
     /**
-     * Search across drops
+     * Search across events
      */
-    async searchDrops(userId, searchQuery, options = {}) {
+    async searchEvents(userId, searchQuery, options = {}) {
         const { limit = 20, offset = 0, includeInactive = false } = options;
 
-        const cacheKey = `search:drops:${userId}:${Buffer.from(searchQuery).toString('base64')}:${JSON.stringify(options)}`;
+        const cacheKey = `search:events:${userId}:${Buffer.from(searchQuery).toString('base64')}:${JSON.stringify(options)}`;
 
-        return await cache.getOrCompute(cacheKey, async () => {
-            console.log(`🔍 Searching drops for user ${userId} with query: "${searchQuery}"`);
+        return await cache.getOrCompute(cacheKey, async() => {
+            console.log(`🔍 Searching events for user ${userId} with query: "${searchQuery}"`);
 
-            let query = knex("drops")
+            let query = knex("events")
                 .select([
                     "id",
                     "title",
@@ -143,7 +143,7 @@ class SearchService {
             // Apply search
             if (searchQuery && searchQuery.trim()) {
                 const trimmedQuery = searchQuery.trim();
-                
+
                 if (this.isPostgreSQL) {
                     query = query.whereRaw(`
                         to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, '')) 
@@ -186,27 +186,27 @@ class SearchService {
 
         const cacheKey = `suggestions:${type}:${userId}:${Buffer.from(partialQuery).toString('base64')}`;
 
-        return await cache.getOrCompute(cacheKey, async () => {
+        return await cache.getOrCompute(cacheKey, async() => {
             const suggestions = [];
 
             if (type === 'fans') {
                 // Get email suggestions
-                const emailSuggestions = await knex("drop_signups as ds")
-                    .select("ds.email")
-                    .join("drops as d", "ds.drop_id", "d.id")
-                    .where("d.user_id", userId)
-                    .where("ds.email", "like", `${partialQuery}%`)
-                    .whereNotNull("ds.email")
+                const emailSuggestions = await knex("event_signups as es")
+                    .select("es.email")
+                    .join("events as e", "es.event_id", "e.id")
+                    .where("e.user_id", userId)
+                    .where("es.email", "like", `${partialQuery}%`)
+                    .whereNotNull("es.email")
                     .distinct()
                     .limit(5);
 
                 // Get name suggestions
-                const nameSuggestions = await knex("drop_signups as ds")
-                    .select("ds.name")
-                    .join("drops as d", "ds.drop_id", "d.id")
-                    .where("d.user_id", userId)
-                    .where("ds.name", "like", `${partialQuery}%`)
-                    .whereNotNull("ds.name")
+                const nameSuggestions = await knex("event_signups as es")
+                    .select("es.name")
+                    .join("events as e", "es.event_id", "e.id")
+                    .where("e.user_id", userId)
+                    .where("es.name", "like", `${partialQuery}%`)
+                    .whereNotNull("es.name")
                     .distinct()
                     .limit(5);
 
@@ -255,8 +255,8 @@ class SearchService {
         if (result.phone && result.phone.toLowerCase().includes(query)) {
             highlights.phone = highlightText(result.phone, query);
         }
-        if (result.drop_title && result.drop_title.toLowerCase().includes(query)) {
-            highlights.drop_title = highlightText(result.drop_title, query);
+        if (result.event_title && result.event_title.toLowerCase().includes(query)) {
+            highlights.event_title = highlightText(result.event_title, query);
         }
 
         return highlights;
@@ -269,7 +269,7 @@ class SearchService {
         try {
             const patterns = [
                 `search:fans:${userId}:*`,
-                `search:drops:${userId}:*`,
+                `search:events:${userId}:*`,
                 `suggestions:*:${userId}:*`
             ];
 

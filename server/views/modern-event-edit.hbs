@@ -13,22 +13,22 @@
                     Back
                 </button>
 
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{#if drop.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
-                    <div class="w-2 h-2 rounded-full {{#if drop.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{#if event.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
+                    <div class="w-2 h-2 rounded-full {{#if event.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
                     <span class="text-sm font-medium">
-                        {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
+                        {{#if event.is_active}}Active{{else}}Inactive{{/if}}
                     </span>
                 </div>
             </div>
 
             <!-- Title Row -->
             <div>
-                <h1 class="text-xl font-bold text-gray-900 leading-tight">Edit {{drop.title}}</h1>
+                <h1 class="text-xl font-bold text-gray-900 leading-tight">Edit {{event.title}}</h1>
             </div>
 
             <!-- Action Button -->
             <div>
-                <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center justify-center w-full px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
+                <a href="/event/{{event.slug}}" target="_blank" class="inline-flex items-center justify-center w-full px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
                     <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -47,19 +47,19 @@
                     Back
                 </button>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Edit {{drop.title}}</h1>
+                    <h1 class="text-2xl font-bold text-gray-900">Edit {{event.title}}</h1>
                 </div>
             </div>
 
             <div class="flex items-center space-x-3">
-                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{#if drop.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
-                    <div class="w-2 h-2 rounded-full {{#if drop.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border {{#if event.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
+                    <div class="w-2 h-2 rounded-full {{#if event.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
                     <span class="text-sm font-medium">
-                        {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
+                        {{#if event.is_active}}Active{{else}}Inactive{{/if}}
                     </span>
                 </div>
 
-                <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
+                <a href="/event/{{event.slug}}" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200 min-h-[44px]">
                     <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -78,19 +78,19 @@
                     Back
                 </button>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Edit {{drop.title}}</h1>
+                    <h1 class="text-3xl font-bold text-gray-900">Edit {{event.title}}</h1>
                 </div>
             </div>
 
             <div class="flex items-center space-x-4">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border {{#if drop.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
-                    <div class="w-2.5 h-2.5 rounded-full {{#if drop.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border {{#if event.is_active}}bg-emerald-50 border-emerald-200 text-emerald-700{{else}}bg-slate-50 border-slate-200 text-slate-600{{/if}} transition-colors duration-200">
+                    <div class="w-2.5 h-2.5 rounded-full {{#if event.is_active}}bg-emerald-500{{else}}bg-slate-400{{/if}} animate-pulse"></div>
                     <span class="text-sm font-semibold">
-                        {{#if drop.is_active}}Active{{else}}Inactive{{/if}}
+                        {{#if event.is_active}}Active{{else}}Inactive{{/if}}
                     </span>
                 </div>
 
-                <a href="/drop/{{drop.slug}}" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+                <a href="/event/{{event.slug}}" target="_blank" class="inline-flex items-center px-4 py-2.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
                     <svg class="-ml-0.5 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
@@ -157,7 +157,7 @@
                 </div>
 
                 <!-- Form Content -->
-                <form id="drop-edit-form" class="drop-form">
+                <form id="event-edit-form" class="event-form">
                     <!-- PAGE TAB CONTENT -->
                     <div class="tab-content active" data-tab-content="page">
                         <div class="home-settings-form">
@@ -168,49 +168,49 @@
 
                                     <div class="form-group">
                                         <label for="edit-title">Title *</label>
-                                        <input type="text" id="edit-title" name="title" required maxlength="255" value="{{drop.title}}" placeholder="Enter drop title" class="form-input">
+                                        <input type="text" id="edit-title" name="title" required maxlength="255" value="{{event.title}}" placeholder="Enter event title" class="form-input">
                                         {{#if errors.title}}<p class="error">{{errors.title}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-subtitle">Subtitle</label>
-                                        <input type="text" id="edit-subtitle" name="subtitle" maxlength="500" value="{{drop.subtitle}}" placeholder="Optional subtitle text (appears below main title)" class="form-input">
+                                        <input type="text" id="edit-subtitle" name="subtitle" maxlength="500" value="{{event.subtitle}}" placeholder="Optional subtitle text (appears below main title)" class="form-input">
                                         <small class="form-help">Appears directly underneath the main title with smaller, lighter styling</small>
                                         {{#if errors.subtitle}}<p class="error">{{errors.subtitle}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-description">Description</label>
-                                        <textarea id="edit-description" name="description" rows="4" placeholder="Describe what this drop is about" class="form-input">{{drop.description}}</textarea>
+                                        <textarea id="edit-description" name="description" rows="4" placeholder="Describe what this event is about" class="form-input">{{event.description}}</textarea>
                                         {{#if errors.description}}<p class="error">{{errors.description}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-slug">URL Slug</label>
                                         <div class="slug-input-wrapper">
-                                            <span class="slug-prefix">{{domain}}/drop/</span>
-                                            <input type="text" id="edit-slug" name="slug" value="{{drop.slug}}" placeholder="my-drop" class="form-input">
+                                            <span class="slug-prefix">{{domain}}/event/</span>
+                                            <input type="text" id="edit-slug" name="slug" value="{{event.slug}}" placeholder="my-drop" class="form-input">
                                         </div>
-                                        <small class="form-help">This will be your drop's public URL</small>
+                                        <small class="form-help">This will be your event's public URL</small>
                                         {{#if errors.slug}}<p class="error">{{errors.slug}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-button-text">Button Text</label>
-                                        <input type="text" id="edit-button-text" name="button_text" maxlength="50" value="{{drop.button_text}}" placeholder="Get Notified" class="form-input">
+                                        <input type="text" id="edit-button-text" name="button_text" maxlength="50" value="{{event.button_text}}" placeholder="Get Notified" class="form-input">
                                         {{#if errors.button_text}}<p class="error">{{errors.button_text}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-artist-name">Artist Name</label>
-                                        <input type="text" id="edit-artist-name" name="artist_name" maxlength="100" value="{{drop.artist_name}}" placeholder="Performing artist or creator name" class="form-input">
+                                        <input type="text" id="edit-artist-name" name="artist_name" maxlength="100" value="{{event.artist_name}}" placeholder="Performing artist or creator name" class="form-input">
                                         <small class="form-help">The name of the performing artist or event creator</small>
                                         {{#if errors.artist_name}}<p class="error">{{errors.artist_name}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-event-date">Event Date & Time</label>
-                                        <input type="datetime-local" id="edit-event-date" name="event_date" value="{{#if drop.event_date}}{{formatDateForInput drop.event_date}}{{/if}}" class="form-input">
+                                        <input type="datetime-local" id="edit-event-date" name="event_date" value="{{#if event.event_date}}{{formatDateForInput event.event_date}}{{/if}}" class="form-input">
                                         <small class="form-help">When the event or drop will occur</small>
                                         {{#if errors.event_date}}<p class="error">{{errors.event_date}}</p>{{/if}}
                                     </div>
@@ -218,18 +218,18 @@
                                     <div class="form-group">
                                         <label for="edit-event-address">Event Address</label>
                                         <div class="address-input-container">
-                                            <input type="text" id="edit-event-address" name="event_address" maxlength="500" value="{{drop.event_address}}" placeholder="Start typing venue address or location..." class="form-input address-autocomplete-input">
+                                            <input type="text" id="edit-event-address" name="event_address" maxlength="500" value="{{event.event_address}}" placeholder="Start typing venue address or location..." class="form-input address-autocomplete-input">
                                         </div>
                                         <small class="form-help">Physical location or venue address for the event. Start typing for intelligent suggestions.</small>
                                         {{#if errors.event_address}}<p class="error">{{errors.event_address}}</p>{{/if}}
 
                                         <!-- Hidden fields for enhanced address data -->
-                                        <input type="hidden" id="address-latitude" name="address_latitude" value="{{drop.address_latitude}}">
-                                        <input type="hidden" id="address-longitude" name="address_longitude" value="{{drop.address_longitude}}">
-                                        <input type="hidden" id="address-formatted" name="address_formatted" value="{{drop.address_formatted}}">
-                                        <input type="hidden" id="address-components" name="address_components" value="{{json drop.address_components}}">
-                                        <input type="hidden" id="address-data" name="address_data" value="{{json drop.address_data}}">
-                                        <input type="hidden" id="address-validated" name="address_validated" value="{{drop.address_validated}}">
+                                        <input type="hidden" id="address-latitude" name="address_latitude" value="{{event.address_latitude}}">
+                                        <input type="hidden" id="address-longitude" name="address_longitude" value="{{event.address_longitude}}">
+                                        <input type="hidden" id="address-formatted" name="address_formatted" value="{{event.address_formatted}}">
+                                        <input type="hidden" id="address-components" name="address_components" value="{{json event.address_components}}">
+                                        <input type="hidden" id="address-data" name="address_data" value="{{json event.address_data}}">
+                                        <input type="hidden" id="address-validated" name="address_validated" value="{{event.address_validated}}">
                                     </div>
                                 </div>
 
@@ -239,22 +239,22 @@
 
                                     <div class="form-group">
                                         <label for="edit-cover-image">Cover Image URL</label>
-                                        <input type="url" id="edit-cover-image" name="cover_image" value="{{drop.cover_image}}" placeholder="https://example.com/image.jpg" class="form-input">
-                                        <small class="form-help">Optional: Add a cover image for your drop</small>
+                                        <input type="url" id="edit-cover-image" name="cover_image" value="{{event.cover_image}}" placeholder="https://example.com/image.jpg" class="form-input">
+                                        <small class="form-help">Optional: Add a cover image for your event</small>
                                         {{#if errors.cover_image}}<p class="error">{{errors.cover_image}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-background-type">Background Type</label>
                                         <select id="edit-background-type" name="background_type" class="form-input">
-                                            <option value="gradient" {{#if (eq drop.background_type "gradient")}}selected{{/if}}>Gradient</option>
-                                            <option value="solid" {{#if (eq drop.background_type "solid")}}selected{{/if}}>Solid Color</option>
+                                            <option value="gradient" {{#if (eq event.background_type "gradient")}}selected{{/if}}>Gradient</option>
+                                            <option value="solid" {{#if (eq event.background_type "solid")}}selected{{/if}}>Solid Color</option>
                                         </select>
                                     </div>
 
                                     <div class="form-group" id="background-color-group">
                                         <label for="edit-background-color">Background Color</label>
-                                        <input type="color" id="edit-background-color" name="background_color" value="{{drop.background_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-background-color" name="background_color" value="{{event.background_color}}" class="form-input file-input">
                                     </div>
 
                                     <!-- Advanced Gradient Designer -->
@@ -325,25 +325,25 @@
                                         </div>
 
                                         <!-- Hidden input to store gradient data -->
-                                        <input type="hidden" id="gradient-data" name="gradient_data" value="{{{drop.gradient_data}}}">
+                                        <input type="hidden" id="gradient-data" name="gradient_data" value="{{{event.gradient_data}}}">
 
                                         <!-- Script tag for gradient data loading -->
-                                        <script type="application/json" id="gradient-data-json">{{{drop.gradient_data}}}</script>
+                                        <script type="application/json" id="gradient-data-json">{{{event.gradient_data}}}</script>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-overscroll-background-color">Pull-to-Refresh Color</label>
-                                        <input type="color" id="edit-overscroll-background-color" name="overscroll_background_color" value="{{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#ffffff{{/if}}" class="form-input file-input">
+                                        <input type="color" id="edit-overscroll-background-color" name="overscroll_background_color" value="{{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#ffffff{{/if}}" class="form-input file-input">
                                         <small class="form-help">Color shown when pulling down to refresh on mobile</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-card-background-type">Card Style</label>
                                         <select id="edit-card-background-type" name="card_background_type" class="form-input">
-                                            <option value="solid_white" {{#if (eq drop.card_background_type "solid_white")}}selected{{/if}}>Solid White</option>
-                                            <option value="solid_dark" {{#if (eq drop.card_background_type "solid_dark")}}selected{{/if}}>Solid Dark</option>
-                                            <option value="translucent_light" {{#if (eq drop.card_background_type "translucent_light")}}selected{{/if}}>Translucent Light</option>
-                                            <option value="translucent_dark" {{#if (eq drop.card_background_type "translucent_dark")}}selected{{/if}}>Translucent Dark</option>
+                                            <option value="solid_white" {{#if (eq event.card_background_type "solid_white")}}selected{{/if}}>Solid White</option>
+                                            <option value="solid_dark" {{#if (eq event.card_background_type "solid_dark")}}selected{{/if}}>Solid Dark</option>
+                                            <option value="translucent_light" {{#if (eq event.card_background_type "translucent_light")}}selected{{/if}}>Translucent Light</option>
+                                            <option value="translucent_dark" {{#if (eq event.card_background_type "translucent_dark")}}selected{{/if}}>Translucent Dark</option>
                                         </select>
                                     </div>
                                 </div>
@@ -354,22 +354,22 @@
 
                                     <div class="form-group">
                                         <label for="edit-title-color">Title Color</label>
-                                        <input type="color" id="edit-title-color" name="title_color" value="{{drop.title_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-title-color" name="title_color" value="{{event.title_color}}" class="form-input file-input">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-description-color">Subtitle Color</label>
-                                        <input type="color" id="edit-description-color" name="description_color" value="{{drop.description_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-description-color" name="description_color" value="{{event.description_color}}" class="form-input file-input">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-button-color">Button Background</label>
-                                        <input type="color" id="edit-button-color" name="button_color" value="{{drop.button_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-button-color" name="button_color" value="{{event.button_color}}" class="form-input file-input">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-button-text-color">Button Text Color</label>
-                                        <input type="color" id="edit-button-text-color" name="button_text_color" value="{{drop.button_text_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-button-text-color" name="button_text_color" value="{{event.button_text_color}}" class="form-input file-input">
                                     </div>
                                 </div>
 
@@ -379,49 +379,49 @@
 
                                     <div class="form-group">
                                         <label for="edit-website-link">Website</label>
-                                        <input type="url" id="edit-website-link" name="website_link" value="{{drop.website_link}}" placeholder="https://yourwebsite.com" class="form-input">
+                                        <input type="url" id="edit-website-link" name="website_link" value="{{event.website_link}}" placeholder="https://yourwebsite.com" class="form-input">
                                         {{#if errors.website_link}}<p class="error">{{errors.website_link}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-instagram-link">Instagram</label>
-                                        <input type="url" id="edit-instagram-link" name="instagram_link" value="{{drop.instagram_link}}" placeholder="https://instagram.com/yourusername" class="form-input">
+                                        <input type="url" id="edit-instagram-link" name="instagram_link" value="{{event.instagram_link}}" placeholder="https://instagram.com/yourusername" class="form-input">
                                         {{#if errors.instagram_link}}<p class="error">{{errors.instagram_link}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-twitter-link">Twitter/X</label>
-                                        <input type="url" id="edit-twitter-link" name="twitter_link" value="{{drop.twitter_link}}" placeholder="https://twitter.com/yourusername" class="form-input">
+                                        <input type="url" id="edit-twitter-link" name="twitter_link" value="{{event.twitter_link}}" placeholder="https://twitter.com/yourusername" class="form-input">
                                         {{#if errors.twitter_link}}<p class="error">{{errors.twitter_link}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-youtube-link">YouTube</label>
-                                        <input type="url" id="edit-youtube-link" name="youtube_link" value="{{drop.youtube_link}}" placeholder="https://youtube.com/@yourusername" class="form-input">
+                                        <input type="url" id="edit-youtube-link" name="youtube_link" value="{{event.youtube_link}}" placeholder="https://youtube.com/@yourusername" class="form-input">
                                         {{#if errors.youtube_link}}<p class="error">{{errors.youtube_link}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-spotify-link">Spotify</label>
-                                        <input type="url" id="edit-spotify-link" name="spotify_link" value="{{drop.spotify_link}}" placeholder="https://open.spotify.com/artist/..." class="form-input">
+                                        <input type="url" id="edit-spotify-link" name="spotify_link" value="{{event.spotify_link}}" placeholder="https://open.spotify.com/artist/..." class="form-input">
                                         {{#if errors.spotify_link}}<p class="error">{{errors.spotify_link}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-tiktok-link">TikTok</label>
-                                        <input type="url" id="edit-tiktok-link" name="tiktok_link" value="{{drop.tiktok_link}}" placeholder="https://tiktok.com/@yourusername" class="form-input">
+                                        <input type="url" id="edit-tiktok-link" name="tiktok_link" value="{{event.tiktok_link}}" placeholder="https://tiktok.com/@yourusername" class="form-input">
                                         {{#if errors.tiktok_link}}<p class="error">{{errors.tiktok_link}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-apple-music-url">Apple Music</label>
-                                        <input type="url" id="edit-apple-music-url" name="apple_music_url" value="{{drop.apple_music_url}}" placeholder="https://music.apple.com/..." class="form-input">
+                                        <input type="url" id="edit-apple-music-url" name="apple_music_url" value="{{event.apple_music_url}}" placeholder="https://music.apple.com/..." class="form-input">
                                         {{#if errors.apple_music_url}}<p class="error">{{errors.apple_music_url}}</p>{{/if}}
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-soundcloud-url">SoundCloud</label>
-                                        <input type="url" id="edit-soundcloud-url" name="soundcloud_url" value="{{drop.soundcloud_url}}" placeholder="https://soundcloud.com/..." class="form-input">
+                                        <input type="url" id="edit-soundcloud-url" name="soundcloud_url" value="{{event.soundcloud_url}}" placeholder="https://soundcloud.com/..." class="form-input">
                                         {{#if errors.soundcloud_url}}<p class="error">{{errors.soundcloud_url}}</p>{{/if}}
                                     </div>
                                 </div>
@@ -432,7 +432,7 @@
 
                                     <div class="form-group">
                                         <label class="checkbox-label">
-                                            <input type="checkbox" id="edit-collect-email" name="collect_email" {{#if drop.collect_email}}checked{{/if}} class="checkbox-input">
+                                            <input type="checkbox" id="edit-collect-email" name="collect_email" {{#if event.collect_email}}checked{{/if}} class="checkbox-input">
                                             <span class="checkbox-text">Collect Email Addresses</span>
                                         </label>
                                         <small class="form-help">Required for sending notifications when the drop goes live</small>
@@ -440,7 +440,7 @@
 
                                     <div class="form-group">
                                         <label class="checkbox-label">
-                                            <input type="checkbox" id="edit-collect-phone" name="collect_phone" {{#if drop.collect_phone}}checked{{/if}} class="checkbox-input">
+                                            <input type="checkbox" id="edit-collect-phone" name="collect_phone" {{#if event.collect_phone}}checked{{/if}} class="checkbox-input">
                                             <span class="checkbox-text">Collect Phone Numbers</span>
                                         </label>
                                         <small class="form-help">Optional: Collect phone numbers for SMS notifications</small>
@@ -448,7 +448,7 @@
 
                                     <div class="form-group">
                                         <label for="edit-thank-you-message">Thank You Message</label>
-                                        <textarea id="edit-thank-you-message" name="thank_you_message" rows="3" placeholder="Thank you for signing up! You'll be notified when this drop goes live." class="form-input">{{drop.thank_you_message}}</textarea>
+                                        <textarea id="edit-thank-you-message" name="thank_you_message" rows="3" placeholder="Thank you for signing up! You'll be notified when this event goes live." class="form-input">{{event.thank_you_message}}</textarea>
                                         <small class="form-help">Message shown after successful signup</small>
                                         {{#if errors.thank_you_message}}<p class="error">{{errors.thank_you_message}}</p>{{/if}}
                                     </div>
@@ -460,18 +460,18 @@
 
                                     <div class="form-group">
                                         <label class="checkbox-label">
-                                            <input type="checkbox" id="edit-is-active" name="is_active" {{#if drop.is_active}}checked{{/if}} class="checkbox-input">
-                                            <span class="checkbox-text">Active Drop</span>
+                                            <input type="checkbox" id="edit-is-active" name="is_active" {{#if event.is_active}}checked{{/if}} class="checkbox-input">
+                                            <span class="checkbox-text">Active Event</span>
                                         </label>
-                                        <small class="form-help">When active, your drop is publicly accessible and accepts signups. When inactive, the drop URL will show a "Drop Inactive" page and block all signups.</small>
+                                        <small class="form-help">When active, your event is publicly accessible and accepts signups. When inactive, the drop URL will show a "Drop Inactive" page and block all signups.</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label class="checkbox-label">
-                                            <input type="checkbox" id="edit-show-on-homepage" name="show_on_homepage" {{#if drop.show_on_homepage}}checked{{/if}} class="checkbox-input">
+                                            <input type="checkbox" id="edit-show-on-homepage" name="show_on_homepage" {{#if event.show_on_homepage}}checked{{/if}} class="checkbox-input">
                                             <span class="checkbox-text">Show on Homepage</span>
                                         </label>
-                                        <small class="form-help">When enabled, this drop will appear as a featured card on the homepage for all visitors to see.</small>
+                                        <small class="form-help">When enabled, this event will appear as a featured card on the homepage for all visitors to see.</small>
                                     </div>
                                 </div>
                             </div>
@@ -513,7 +513,7 @@
                                     <div class="form-group">
                                         <label for="edit-posh-embed-url">Posh Embed URL</label>
                                         <input type="url" id="edit-posh-embed-url" name="posh_embed_url" maxlength="2040"
-                                               value="{{drop.posh_embed_url}}" placeholder="https://posh.vip/e/your-event-id" class="form-input">
+                                               value="{{event.posh_embed_url}}" placeholder="https://posh.vip/e/your-event-id" class="form-input">
                                         <small class="form-help">Enter the Posh embed URL for ticket sales integration. When set, the carousel button will open a ticket modal instead of linking to the drop page.</small>
                                         {{#if errors.posh_embed_url}}<p class="error">{{errors.posh_embed_url}}</p>{{/if}}
                                     </div>
@@ -542,7 +542,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                             </svg>
                             <h3 class="mt-2 text-sm font-medium text-gray-900">Sharing & QR Codes</h3>
-                            <p class="mt-1 text-sm text-gray-500">Share your drop and generate QR codes for easy access.</p>
+                            <p class="mt-1 text-sm text-gray-500">Share your event and generate QR codes for easy access.</p>
                             <div class="mt-4">
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                     Coming Soon
@@ -556,7 +556,7 @@
                         <div class="space-y-6">
                             <div>
                                 <h3 class="text-lg font-medium text-gray-900 mb-2">Drop Analytics</h3>
-                                <p class="text-sm text-gray-500 mb-4">Track your drop's performance and fan engagement</p>
+                                <p class="text-sm text-gray-500 mb-4">Track your event's performance and fan engagement</p>
                             </div>
 
                             <!-- Stats Cards -->
@@ -573,7 +573,7 @@
                                         </div>
                                         <div class="ml-4">
                                             <p class="text-sm font-medium text-gray-500">Page Views</p>
-                                            <p class="text-lg font-semibold text-gray-900" id="analytics-views">{{drop.view_count}}</p>
+                                            <p class="text-lg font-semibold text-gray-900" id="analytics-views">{{event.view_count}}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -589,7 +589,7 @@
                                         </div>
                                         <div class="ml-4">
                                             <p class="text-sm font-medium text-gray-500">Total Fans</p>
-                                            <p class="text-lg font-semibold text-gray-900" id="analytics-fans">{{drop.signup_count}}</p>
+                                            <p class="text-lg font-semibold text-gray-900" id="analytics-fans">{{event.signup_count}}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -672,7 +672,7 @@
                 <!-- Preview Content -->
                 <div class="p-4">
                     <div id="preview-container" class="border border-gray-200 rounded-lg overflow-hidden">
-                        <iframe id="preview-iframe" src="/drop/{{drop.slug}}?preview=true" class="w-full h-96 border-0"></iframe>
+                        <iframe id="preview-iframe" src="/event/{{event.slug}}?preview=true" class="w-full h-96 border-0"></iframe>
                     </div>
 
                     <!-- Preview Actions -->
@@ -720,10 +720,10 @@ let collectEmailToggle, collectPhoneToggle;
 
 // Reliable navigation function for back button
 function navigateBack() {
-    console.log('🔙 Navigating back to drops listing...');
+    console.log('🔙 Navigating back to events listing...');
 
-    // Always navigate to the drops listing page for consistent behavior
-    window.location.href = '/drops';
+    // Always navigate to the events listing page for consistent behavior
+    window.location.href = '/events';
 }
 
 // Logging utility with levels
@@ -917,7 +917,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form validation check (reduced logging)
     setTimeout(() => {
-        const form = document.getElementById('drop-edit-form');
+        const form = document.getElementById('event-edit-form');
         if (!form) {
             log(LOG_LEVELS.ERROR, '📋', 'Form element not found');
             return;
@@ -1263,7 +1263,7 @@ function showPreviewError() {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                     <h3 class="mt-2 text-sm font-medium text-gray-900">Preview Unavailable</h3>
-                    <p class="mt-1 text-sm text-gray-500">Unable to load live preview. Use "View Live" to see your drop.</p>
+                    <p class="mt-1 text-sm text-gray-500">Unable to load live preview. Use "View Live" to see your event.</p>
                     <div class="mt-4">
                         <button type="button" onclick="refreshPreview()" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
                             Try Again
@@ -1449,7 +1449,7 @@ function refreshPreview() {
     }
 
     // Get the drop slug from the current page URL or data
-    const dropSlug = '{{drop.slug}}';
+    const dropSlug = '{{event.slug}}';
     if (!dropSlug) {
         console.error('❌ Drop slug not found');
         return;
@@ -1457,7 +1457,7 @@ function refreshPreview() {
 
     // Construct the preview URL with proper parameters
     const baseUrl = window.location.origin;
-    const previewUrl = new URL(`${baseUrl}/drop/${dropSlug}`);
+    const previewUrl = new URL(`${baseUrl}/event/${eventSlug}`);
 
     // Add preview parameter to ensure we get the actual landing page
     previewUrl.searchParams.set('preview', 'true');
@@ -1619,7 +1619,7 @@ const defaultGradientData = {
 };
 
 function loadExistingGradientData() {
-    console.log('🎨 CRITICAL: Loading existing gradient data from drop...');
+    console.log('🎨 CRITICAL: Loading existing gradient data from event...');
 
     // Reset gradient data to null to detect if we successfully load data
     gradientData = null;
@@ -2354,7 +2354,7 @@ function initializeFormSubmission() {
 
             log(LOG_LEVELS.DEBUG, '📡', `Sending API request (${JSON.stringify(data).length} bytes)`);
 
-            const response = await fetch(`/api/drops/{{drop.id}}`, {
+            const response = await fetch(`/api/events/{{event.id}}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -2399,7 +2399,7 @@ function initializeFormSubmission() {
                             const channel = new BroadcastChannel('homepage-updates');
                             channel.postMessage({
                                 type: 'refresh-cards',
-                                dropId: parseInt('{{drop.id}}'),
+                                dropId: parseInt('{{event.id}}'),
                                 timestamp: Date.now()
                             });
                             console.log('📡 Sent homepage refresh message via BroadcastChannel');
@@ -2441,9 +2441,9 @@ function initializeFormSubmission() {
                 if (response.status === 401) {
                     errorMessage = 'Authentication failed. Please refresh the page and try again.';
                 } else if (response.status === 403) {
-                    errorMessage = 'You do not have permission to edit this drop.';
+                    errorMessage = 'You do not have permission to edit this event.';
                 } else if (response.status === 404) {
-                    errorMessage = 'Drop not found. It may have been deleted.';
+                    errorMessage = 'Event not found. It may have been deleted.';
                 } else if (response.status >= 500) {
                     errorMessage = 'Server error. Please try again later.';
                 }
@@ -2698,7 +2698,7 @@ function showToast(message, type = 'info', duration = 5000) {
 
 async function loadAnalytics() {
     try {
-        const response = await fetch(`/api/drops/{{drop.id}}/analytics`);
+        const response = await fetch(`/api/events/{{event.id}}/analytics`);
         if (response.ok) {
             const result = await response.json();
             const data = result.data;

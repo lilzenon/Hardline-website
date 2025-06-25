@@ -5,7 +5,7 @@ module.exports = {
     ...require("./link.model"),
     ...require("./user.model"),
     ...require("./visit.model"),
-    ...require("./drop.model"),
-    ...require("./drop_signup.model"),
+    ...require("./event.model"),
+    ...require("./event_signup.model"),
     ...require("./home_settings.model"),
 }

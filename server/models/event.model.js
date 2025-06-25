@@ -1,7 +1,7 @@
-async function createDropTable(knex) {
-    const hasTable = await knex.schema.hasTable("drops");
+async function createEventTable(knex) {
+    const hasTable = await knex.schema.hasTable("events");
     if (!hasTable) {
-        await knex.schema.createTable("drops", table => {
+        await knex.schema.createTable("events", table => {
             table.increments("id").primary();
             table.string("title", 255).notNullable();
             table.text("description");
@@ -62,6 +62,6 @@ function generateSlug(title, existingSlugs = []) {
 }
 
 module.exports = {
-    createDropTable,
+    createEventTable,
     generateSlug
 };

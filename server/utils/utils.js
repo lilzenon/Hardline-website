@@ -183,7 +183,9 @@ const preservedURLs = [
     "libs",
     "pricing",
     "home",
-    "home-editor"
+    "home-editor",
+    "event",
+    "events"
 ];
 
 function parseBooleanQuery(query) {

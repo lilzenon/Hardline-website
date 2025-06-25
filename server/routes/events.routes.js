@@ -2,7 +2,7 @@ const { Router } = require("express");
 const { validationResult } = require("express-validator");
 
 const auth = require("../handlers/auth.handler");
-const drops = require("../handlers/drops.handler");
+const events = require("../handlers/events.handler");
 const asyncHandler = require("../utils/asyncHandler");
 const { CustomError } = require("../utils");
 
@@ -21,50 +21,50 @@ function validateRequest(req, res, next) {
 // Protected routes (require authentication)
 router.use(auth.jwt);
 
-// GET /api/drops - Get user's drops
+// GET /api/events - Get user's events
 router.get(
     "/",
-    asyncHandler(drops.getUserDrops)
+    asyncHandler(events.getUserEvents)
 );
 
-// POST /api/drops - Create new drop
+// POST /api/events - Create new event
 router.post(
     "/",
-    drops.createDropValidation,
+    events.createEventValidation,
     validateRequest,
-    asyncHandler(drops.createDrop)
+    asyncHandler(events.createEvent)
 );
 
-// GET /api/drops/:id - Get single drop
+// GET /api/events/:id - Get single event
 router.get(
     "/:id",
-    asyncHandler(drops.getDrop)
+    asyncHandler(events.getEvent)
 );
 
-// PUT /api/drops/:id - Update drop
+// PUT /api/events/:id - Update event
 router.put(
     "/:id",
-    drops.updateDropValidation,
+    events.updateEventValidation,
     validateRequest,
-    asyncHandler(drops.updateDrop)
+    asyncHandler(events.updateEvent)
 );
 
-// DELETE /api/drops/:id - Delete drop
+// DELETE /api/events/:id - Delete event
 router.delete(
     "/:id",
-    asyncHandler(drops.deleteDrop)
+    asyncHandler(events.deleteEvent)
 );
 
-// GET /api/drops/:id/signups - Get drop signups
+// GET /api/events/:id/signups - Get event signups
 router.get(
     "/:id/signups",
-    asyncHandler(drops.getDropSignups)
+    asyncHandler(events.getEventSignups)
 );
 
-// GET /api/drops/:id/analytics - Get drop analytics for edit page
+// GET /api/events/:id/analytics - Get event analytics for edit page
 router.get(
     "/:id/analytics",
-    asyncHandler(drops.getDropAnalytics)
+    asyncHandler(events.getEventAnalytics)
 );
 
 // 🚀 ANALYTICS ROUTES - LAYLO-STYLE FANS SYSTEM
@@ -72,13 +72,13 @@ router.get(
 // GET /api/drops/analytics/fans - Get comprehensive fan analytics
 router.get(
     "/analytics/fans",
-    asyncHandler(drops.getFanAnalytics)
+    asyncHandler(events.getFanAnalytics)
 );
 
 // GET /api/drops/analytics/summary - Get fan summary statistics
 router.get(
     "/analytics/summary",
-    asyncHandler(drops.getFanSummaryStats)
+    asyncHandler(events.getFanSummaryStats)
 );
 
 module.exports = router;

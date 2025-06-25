@@ -1,9 +1,9 @@
 const { body, param, query } = require("express-validator");
-const { drop } = require("../queries");
+const { event } = require("../queries");
 const { CustomError } = require("../utils");
 
 // Validation rules
-const createDropValidation = [
+const createEventValidation = [
     body("title")
     .isLength({ min: 1, max: 255 })
     .withMessage("Title must be between 1 and 255 characters"),
@@ -99,9 +99,9 @@ const createDropValidation = [
     .withMessage("Posh embed URL must be less than 2040 characters"),
 ];
 
-const updateDropValidation = [
-    param("id").isInt().withMessage("Drop ID must be an integer"),
-    ...createDropValidation
+const updateEventValidation = [
+    param("id").isInt().withMessage("Event ID must be an integer"),
+    ...createEventValidation
 ];
 
 // Dynamic validation based on drop settings
@@ -110,15 +110,15 @@ async function createSignupValidation(req, res, next) {
 
     try {
         // Get the drop to check its collection settings
-        const foundDrop = await drop.findBySlug(slug);
+        const foundDrop = await event.findBySlug(slug);
 
         if (!foundDrop) {
             throw new CustomError("Drop not found", 404);
         }
 
         console.log('📋 Drop collection settings:', {
-            collect_email: foundDrop.collect_email,
-            collect_phone: foundDrop.collect_phone
+            collect_email: foundevent.collect_email,
+            collect_phone: foundevent.collect_phone
         });
 
         // Create dynamic validation rules based on drop settings
@@ -129,7 +129,7 @@ async function createSignupValidation(req, res, next) {
         ];
 
         // Add email validation only if email collection is enabled
-        if (foundDrop.collect_email) {
+        if (foundevent.collect_email) {
             validationRules.push(
                 body("email")
                 .isEmail()
@@ -142,7 +142,7 @@ async function createSignupValidation(req, res, next) {
         }
 
         // PRIORITY 3: Enhanced international phone validation
-        if (foundDrop.collect_phone) {
+        if (foundevent.collect_phone) {
             validationRules.push(
                 body("phone")
                 .custom((value) => {
@@ -299,7 +299,7 @@ async function createSignupValidation(req, res, next) {
 }
 
 // Create a new drop
-async function createDrop(req, res) {
+async function createEvent(req, res) {
     const userId = req.user.id;
     const dropData = {
         ...req.body,
@@ -307,8 +307,8 @@ async function createDrop(req, res) {
     };
 
     try {
-        const newDrop = await drop.create(dropData);
-        const dropWithStats = await drop.findWithStats({ id: newDrop.id });
+        const newDrop = await event.create(dropData);
+        const dropWithStats = await event.findWithStats({ id: newevent.id });
 
         res.status(201).json({
             success: true,
@@ -323,11 +323,11 @@ async function createDrop(req, res) {
 }
 
 // Get user's drops
-async function getUserDrops(req, res) {
+async function getUserEvents(req, res) {
     const userId = req.user.id;
     const { limit = 20, offset = 0 } = req.query;
 
-    const drops = await drop.findByUserWithStats(userId, {
+    const drops = await event.findByUserWithStats(userId, {
         limit: parseInt(limit),
         offset: parseInt(offset)
     });
@@ -339,11 +339,11 @@ async function getUserDrops(req, res) {
 }
 
 // Get single drop
-async function getDrop(req, res) {
+async function getEvent(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const foundDrop = await drop.findWithStats({ id, user_id: userId });
+    const foundDrop = await event.findWithStats({ id, user_id: userId });
 
     if (!foundDrop) {
         throw new CustomError("Drop not found", 404);
@@ -356,40 +356,40 @@ async function getDrop(req, res) {
 }
 
 // Update drop with enhanced error handling and column validation
-async function updateDrop(req, res) {
+async function updateEvent(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
     // Check if drop exists and belongs to user
-    const existingDrop = await drop.findOne({ id, user_id: userId });
+    const existingDrop = await event.findOne({ id, user_id: userId });
     if (!existingDrop) {
         throw new CustomError("Drop not found", 404);
     }
 
     try {
-        // If slug is being updated, check if it conflicts with other drops (not this one)
-        if (req.body.slug && req.body.slug !== existingDrop.slug) {
-            const conflictingDrop = await drop.findBySlug(req.body.slug);
-            if (conflictingDrop && conflictingDrop.id !== parseInt(id)) {
-                throw new CustomError("A drop with this slug already exists", 400);
+        // If slug is being updated, check if it conflicts with other events (not this one)
+        if (req.body.slug && req.body.slug !== existingevent.slug) {
+            const conflictingEvent = await event.findBySlug(req.body.slug);
+            if (conflictingEvent && conflictingEvent.id !== parseInt(id)) {
+                throw new CustomError("An event with this slug already exists", 400);
             }
         }
 
         // Validate and sanitize update data to prevent column errors
-        const sanitizedData = validateAndSanitizeDropData(req.body);
+        const sanitizedData = validateAndSanitizeEventData(req.body);
 
-        console.log(`🔄 Updating drop ${id} with data:`, Object.keys(sanitizedData));
+        console.log(`🔄 Updating event ${id} with data:`, Object.keys(sanitizedData));
 
         // 🚀 DETECT HOMEPAGE TOGGLE CHANGES FOR REAL-TIME UPDATES
         const homepageToggleChanged = 'show_on_homepage' in sanitizedData &&
-            sanitizedData.show_on_homepage !== existingDrop.show_on_homepage;
+            sanitizedData.show_on_homepage !== existingevent.show_on_homepage;
 
         if (homepageToggleChanged) {
-            console.log(`🏠 Homepage toggle changed for drop ${id}: ${existingDrop.show_on_homepage} → ${sanitizedData.show_on_homepage}`);
+            console.log(`🏠 Homepage toggle changed for drop ${id}: ${existingevent.show_on_homepage} → ${sanitizedData.show_on_homepage}`);
         }
 
-        const updatedDrop = await drop.update(id, sanitizedData);
-        const dropWithStats = await drop.findWithStats({ id: updatedDrop.id });
+        const updatedDrop = await event.update(id, sanitizedData);
+        const dropWithStats = await event.findWithStats({ id: updatedevent.id });
 
         console.log(`✅ Drop ${id} updated successfully`);
 
@@ -436,8 +436,8 @@ async function updateDrop(req, res) {
     }
 }
 
-// Validate and sanitize drop data to prevent database column errors
-function validateAndSanitizeDropData(data) {
+// Validate and sanitize event data to prevent database column errors
+function validateAndSanitizeEventData(data) {
     // Define allowed columns based on actual database schema
     const allowedColumns = [
         'title',
@@ -590,17 +590,17 @@ function isValidUrl(string) {
 }
 
 // Delete drop
-async function deleteDrop(req, res) {
+async function deleteEvent(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
     // Check if drop exists and belongs to user
-    const existingDrop = await drop.findOne({ id, user_id: userId });
+    const existingDrop = await event.findOne({ id, user_id: userId });
     if (!existingDrop) {
         throw new CustomError("Drop not found", 404);
     }
 
-    await drop.remove(id);
+    await event.remove(id);
 
     res.json({
         success: true,
@@ -627,27 +627,27 @@ async function createSignup(req, res) {
             throw new CustomError("Drop not found", 404);
         }
 
-        if (!foundDrop.is_active) {
+        if (!foundevent.is_active) {
             console.error(`❌ Drop is inactive: ${slug}`);
             throw new CustomError("Drop is currently inactive", 404);
         }
 
-        console.log(`✅ Using pre-fetched drop: ${foundDrop.title} (ID: ${foundDrop.id})`);
-        console.log(`📋 Drop settings: collect_email=${foundDrop.collect_email}, collect_phone=${foundDrop.collect_phone}`);
+        console.log(`✅ Using pre-fetched drop: ${foundevent.title} (ID: ${foundevent.id})`);
+        console.log(`📋 Drop settings: collect_email=${foundevent.collect_email}, collect_phone=${foundevent.collect_phone}`);
 
         // Additional validation based on drop settings
-        if (foundDrop.collect_email && !email) {
+        if (foundevent.collect_email && !email) {
             throw new CustomError("Email is required for this drop", 400);
         }
 
-        if (foundDrop.collect_phone && !phone) {
+        if (foundevent.collect_phone && !phone) {
             throw new CustomError("Phone number is required for this drop", 400);
         }
 
         // Check for duplicates based on what fields are collected
         if (email) {
             console.log(`🔍 Checking if email already signed up: ${email}`);
-            const emailAlreadySignedUp = await drop.isEmailSignedUp(foundDrop.id, email);
+            const emailAlreadySignedUp = await event.isEmailSignedUp(foundevent.id, email);
             if (emailAlreadySignedUp) {
                 console.error(`❌ Email already signed up: ${email}`);
                 throw new CustomError("Email already signed up for this drop", 400);
@@ -659,7 +659,7 @@ async function createSignup(req, res) {
         // Check phone duplicates if phone is provided and email is not (phone-only signup)
         if (phone && !email) {
             console.log(`🔍 Checking if phone already signed up: ${phone}`);
-            const phoneAlreadySignedUp = await drop.isPhoneSignedUp(foundDrop.id, phone);
+            const phoneAlreadySignedUp = await event.isPhoneSignedUp(foundevent.id, phone);
             if (phoneAlreadySignedUp) {
                 console.error(`❌ Phone already signed up: ${phone}`);
                 throw new CustomError("Phone number already signed up for this drop", 400);
@@ -684,13 +684,13 @@ async function createSignup(req, res) {
         try {
             // Create signup in main database
             console.log(`💾 Inserting signup into database...`);
-            const newSignup = await drop.createSignup(foundDrop.id, signupData);
+            const newSignup = await event.createSignup(foundevent.id, signupData);
             console.log(`✅ Signup created successfully:`, newSignup);
 
             // 🚀 OPTIONAL CRM INTEGRATION (graceful fallback if CRM not available)
             try {
                 const contactService = require('../services/crm/contact.service');
-                await contactService.createFromDropSignup(signupData, foundDrop.id);
+                await contactService.createFromDropSignup(signupData, foundevent.id);
                 console.log('✅ Contact created in CRM for drop signup');
             } catch (crmError) {
                 console.warn('⚠️ CRM integration failed (continuing without CRM):', crmError.message);
@@ -710,7 +710,7 @@ async function createSignup(req, res) {
                     if (isOptedOut) {
                         console.log(`📱 Phone ${phone} is opted out - skipping SMS`);
                     } else {
-                        const smsResult = await twilioService.sendDropSignupConfirmation({ name, email, phone }, { id: foundDrop.id, title: foundDrop.title, slug: foundDrop.slug },
+                        const smsResult = await twilioService.sendDropSignupConfirmation({ name, email, phone }, { id: foundevent.id, title: foundevent.title, slug: foundevent.slug },
                             newSignup.id // Pass signup ID for tracking
                         );
 
@@ -732,7 +732,7 @@ async function createSignup(req, res) {
 
             res.status(201).json({
                 success: true,
-                message: foundDrop.thank_you_message || "Thank you for signing up! You'll be notified when this drop goes live."
+                message: foundevent.thank_you_message || "Thank you for signing up! You'll be notified when this drop goes live."
             });
         } catch (dbError) {
             console.error(`🚨 Database error during signup creation:`, dbError);
@@ -767,18 +767,18 @@ async function createSignup(req, res) {
 }
 
 // Get drop signups (for drop owner)
-async function getDropSignups(req, res) {
+async function getEventSignups(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
     const { limit = 50, offset = 0 } = req.query;
 
     // Check if drop belongs to user
-    const foundDrop = await drop.findOne({ id, user_id: userId });
+    const foundDrop = await event.findOne({ id, user_id: userId });
     if (!foundDrop) {
         throw new CustomError("Drop not found", 404);
     }
 
-    const signups = await drop.findSignups(id, {
+    const signups = await event.findSignups(id, {
         limit: parseInt(limit),
         offset: parseInt(offset)
     });
@@ -810,7 +810,7 @@ async function getFanAnalytics(req, res) {
         dropId: dropId ? parseInt(dropId) : null
     };
 
-    const analytics = await drop.getFanAnalytics(userId, options);
+    const analytics = await event.getFanAnalytics(userId, options);
 
     res.json({
         success: true,
@@ -826,7 +826,7 @@ async function getFanSummaryStats(req, res) {
 
         console.log(`🚀 Getting fan summary stats for user ${userId}, drop ${dropId}`);
 
-        const stats = await drop.getFanSummaryStats(userId, dropId ? parseInt(dropId) : null);
+        const stats = await event.getFanSummaryStats(userId, dropId ? parseInt(dropId) : null);
 
         console.log(`✅ Fan summary stats:`, stats);
 
@@ -844,22 +844,22 @@ async function getFanSummaryStats(req, res) {
 }
 
 // Get analytics for specific drop (for edit page)
-async function getDropAnalytics(req, res) {
+async function getEventAnalytics(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
     // Check if drop belongs to user
-    const foundDrop = await drop.findWithStats({ id, user_id: userId });
+    const foundDrop = await event.findWithStats({ id, user_id: userId });
     if (!foundDrop) {
         throw new CustomError("Drop not found", 404);
     }
 
     // Get recent signups for this drop
-    const recentSignups = await drop.findSignups(parseInt(id), { limit: 5 });
+    const recentSignups = await event.findSignups(parseInt(id), { limit: 5 });
 
     // Calculate basic analytics
-    const views = foundDrop.view_count || 0;
-    const fans = foundDrop.signup_count || 0;
+    const views = foundevent.view_count || 0;
+    const fans = foundevent.signup_count || 0;
     const conversionRate = views > 0 ? ((fans / views) * 100).toFixed(1) : 0;
 
     res.json({
@@ -878,18 +878,18 @@ async function getDropAnalytics(req, res) {
 }
 
 module.exports = {
-    createDropValidation,
-    updateDropValidation,
+    createEventValidation,
+    updateEventValidation,
     createSignupValidation,
-    createDrop,
-    getUserDrops,
-    getDrop,
-    updateDrop,
-    deleteDrop,
+    createEvent,
+    getUserEvents,
+    getEvent,
+    updateEvent,
+    deleteEvent,
     createSignup,
-    getDropSignups,
+    getEventSignups,
     // 🚀 Analytics
     getFanAnalytics,
     getFanSummaryStats,
-    getDropAnalytics
+    getEventAnalytics
 };

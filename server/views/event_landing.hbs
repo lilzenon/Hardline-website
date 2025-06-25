@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>{{drop.title}} - BOUNCE2BOUNCE</title>
+    <title>{{event.title}} - BOUNCE2BOUNCE</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 
     <!-- Theme Color for Mobile Browser UI (UIKit-inspired approach) -->
-    <meta name="theme-color" content="{{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#f2f2f7{{/if}}"/>
+    <meta name="theme-color" content="{{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#f2f2f7{{/if}}"/>
 
     <!-- iOS Safari Viewport Configuration (following UIKit principles) -->
     <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -16,25 +16,25 @@
     <meta name="color-scheme" content="light dark"/>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="{{drop.description}}">
-    <meta name="keywords" content="music, artist, drop, signup, {{drop.title}}">
+    <meta name="description" content="{{event.description}}">
+    <meta name="keywords" content="music, artist, drop, signup, {{event.title}}">
     <meta name="author" content="BOUNCE2BOUNCE">
     
     <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="{{drop.title}} - BOUNCE2BOUNCE">
-    <meta property="og:description" content="{{drop.description}}">
+    <meta property="og:title" content="{{event.title}} - BOUNCE2BOUNCE">
+    <meta property="og:description" content="{{event.description}}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://{{default_domain}}/drop/{{drop.slug}}">
-    {{#if drop.cover_image}}
-    <meta property="og:image" content="{{drop.cover_image}}">
+    <meta property="og:url" content="https://{{default_domain}}/drop/{{event.slug}}">
+    {{#if event.cover_image}}
+    <meta property="og:image" content="{{event.cover_image}}">
     {{/if}}
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{drop.title}} - BOUNCE2BOUNCE">
-    <meta name="twitter:description" content="{{drop.description}}">
-    {{#if drop.cover_image}}
-    <meta name="twitter:image" content="{{drop.cover_image}}">
+    <meta name="twitter:title" content="{{event.title}} - BOUNCE2BOUNCE">
+    <meta name="twitter:description" content="{{event.description}}">
+    {{#if event.cover_image}}
+    <meta name="twitter:image" content="{{event.cover_image}}">
     {{/if}}
 
     <!-- HTML GlobalBank Template Fonts -->
@@ -57,15 +57,15 @@
     <style>
         /* CACHE BUSTER: Typography fixes applied - v2.1.0 */
         :root {
-            --drop-title-color: {{drop.title_color}};
-            --drop-description-color: {{drop.description_color}};
-            --drop-button-color: {{drop.button_color}};
-            --drop-button-text-color: {{drop.button_text_color}};
-            --drop-background-color: {{drop.background_color}};
-            --drop-overscroll-background-color: {{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#ffffff{{/if}};
+            --event-title-color: {{event.title_color}};
+            --event-description-color: {{event.description_color}};
+            --event-button-color: {{event.button_color}};
+            --event-button-text-color: {{event.button_text_color}};
+            --event-background-color: {{event.background_color}};
+            --event-overscroll-background-color: {{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#ffffff{{/if}};
 
             /* Dynamic button shadow color - extract RGB values for shadow effects */
-            --drop-button-shadow: {{#if drop.button_color}}{{drop.button_color}}{{else}}#000000{{/if}};
+            --event-button-shadow: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}};
 
             /* Laylo Design System - Exact Colors */
             --laylo-red: #ff0003;
@@ -90,7 +90,7 @@
             -webkit-text-size-adjust: 100%; /* Prevent text scaling on iOS */
             overflow-x: hidden; /* Prevent horizontal scroll */
             /* Set background color for consistency */
-            background-color: {{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#ffffff{{/if}};
+            background-color: {{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#ffffff{{/if}};
         }
 
         body, html {
@@ -104,7 +104,7 @@
             overscroll-behavior-x: none; /* Prevent horizontal overscroll */
             overscroll-behavior-y: auto; /* Allow vertical overscroll for pull-to-refresh */
             /* Set overscroll background for pull-to-refresh */
-            background: {{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#ffffff{{/if}} !important;
+            background: {{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#ffffff{{/if}} !important;
             overflow-x: hidden;
             /* Enhanced mobile scrolling optimization */
             -webkit-overflow-scrolling: touch;
@@ -116,7 +116,7 @@
         }
 
         /* Enhanced Background System - Mobile-Optimized */
-        .drop-page-container {
+        .event-page-container {
             position: relative;
             display: flex;
             flex-direction: column;
@@ -132,19 +132,19 @@
             -webkit-overflow-scrolling: touch;
             will-change: scroll-position;
             transform: translateZ(0); /* Force hardware acceleration */
-            {{#if (eq drop.background_type "solid")}}
-            background: {{#if drop.background_color}}{{drop.background_color}}{{else}}var(--laylo-red){{/if}};
+            {{#if (eq event.background_type "solid")}}
+            background: {{#if event.background_color}}{{event.background_color}}{{else}}var(--laylo-red){{/if}};
             {{else}}
-                {{#if drop.gradient_data}}
+                {{#if event.gradient_data}}
                     {{! Use gradient data if available }}
-                    background: {{{parseGradientData drop.gradient_data}}};
+                    background: {{{parseGradientData event.gradient_data}}};
                 {{else}}
                     {{! Fallback gradient }}
                     background: linear-gradient(
                         179deg,
-                        {{#if drop.background_color}}{{drop.background_color}}{{else}}var(--laylo-red){{/if}} 0%,
-                        {{#if drop.background_color}}{{drop.background_color}}CC{{else}}#DC2626CC{{/if}} 30%,
-                        {{#if drop.background_color}}{{drop.background_color}}80{{else}}#DC262680{{/if}} 60%,
+                        {{#if event.background_color}}{{event.background_color}}{{else}}var(--laylo-red){{/if}} 0%,
+                        {{#if event.background_color}}{{event.background_color}}CC{{else}}#DC2626CC{{/if}} 30%,
+                        {{#if event.background_color}}{{event.background_color}}80{{else}}#DC262680{{/if}} 60%,
                         rgba(0, 0, 0, 0.9) 100%
                     );
                 {{/if}}
@@ -156,7 +156,7 @@
         }
 
         /* MAIN CONTAINER - Mobile First Approach */
-        .drop-container {
+        .event-container {
             display: grid;
             grid-template-columns: 1fr;
             grid-template-rows: auto auto auto;
@@ -177,7 +177,7 @@
 
         /* Mobile container adjustments */
         @media (max-width: 767px) {
-            .drop-container {
+            .event-container {
                 padding: 0 8px; /* Reduced padding for more space */
                 gap: 2px; /* Tighter gap on mobile */
                 max-width: 100vw; /* Ensure it doesn't exceed viewport */
@@ -187,7 +187,7 @@
             /* UIKit-inspired pull-to-refresh implementation */
             :root {
                 /* Define custom property for overscroll color (UIKit semantic color approach) */
-                --overscroll-background: {{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#f2f2f7{{/if}};
+                --overscroll-background: {{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#f2f2f7{{/if}};
 
                 /* Support for dark mode (UIKit dynamic colors) */
                 color-scheme: light dark;
@@ -196,7 +196,7 @@
             @media (prefers-color-scheme: dark) {
                 :root {
                     /* Adjust overscroll color for dark mode if needed */
-                    --overscroll-background: {{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#1c1c1e{{/if}};
+                    --overscroll-background: {{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#1c1c1e{{/if}};
                 }
             }
 
@@ -217,7 +217,7 @@
 
         /* Tablet Layout: Stacked layout with better spacing */
         @media (min-width: 768px) and (max-width: 1023px) {
-            .drop-container {
+            .event-container {
                 gap: 8px; /* Reduced from 16px (50% reduction) */
                 padding: 0 24px;
                 max-width: 800px; /* Increased from 600px to better utilize tablet screen space */
@@ -226,7 +226,7 @@
 
         /* Desktop Layout: Proper CSS Grid side-by-side layout */
         @media (min-width: 1024px) {
-            .drop-container {
+            .event-container {
                 grid-template-columns: 1fr 420px; /* Slightly wider content area for better balance */
                 grid-template-rows: auto 1fr; /* Title takes needed space, form takes remaining space */
                 grid-template-areas:
@@ -242,7 +242,7 @@
         }
 
         /* Image Container - Responsive Design */
-        .drop-image-container {
+        .event-image-container {
             grid-area: image;
             position: relative;
             width: 100%;
@@ -258,7 +258,7 @@
 
         /* Tablet image container - Better space utilization */
         @media (min-width: 768px) and (max-width: 1023px) {
-            .drop-image-container {
+            .event-image-container {
                 max-width: 700px; /* Allow larger images on tablet */
                 margin: 0 auto 24px auto; /* Center with better bottom spacing */
             }
@@ -266,7 +266,7 @@
 
         /* Desktop image container */
         @media (min-width: 1024px) {
-            .drop-image-container {
+            .event-image-container {
                 max-width: min(690px, 58.3333vw);
                 margin-bottom: 0;
                 align-self: start; /* Align to top instead of center */
@@ -276,7 +276,7 @@
             }
         }
 
-        .drop-image-container img {
+        .event-image-container img {
             width: 100%;
             height: auto;
             max-width: 100%;
@@ -293,7 +293,7 @@
 
         /* Desktop image sizing - Ensure full image visibility */
         @media (min-width: 1024px) {
-            .drop-image-container img {
+            .event-image-container img {
                 object-fit: contain; /* Ensure full image is visible without cropping */
                 object-position: center center; /* Center the image properly */
             }
@@ -315,7 +315,7 @@
         }
 
         /* Title Section - Responsive alignment */
-        .drop-title-section {
+        .event-title-section {
             grid-area: title;
             width: 100%;
             max-width: 100%;
@@ -328,7 +328,7 @@
 
         /* Mobile title section */
         @media (max-width: 767px) {
-            .drop-title-section {
+            .event-title-section {
                 padding: 8px 20px 12px 20px; /* Increased horizontal padding for better spacing */
                 text-align: left; /* Left-aligned to match RSVP card */
                 width: 100% !important;
@@ -337,7 +337,7 @@
                 overflow: hidden !important; /* Prevent overflow */
             }
 
-            .drop-title {
+            .event-title {
                 font-size: clamp(28px, 7vw, 42px) !important; /* Reduced max size to prevent overflow */
                 font-weight: 800 !important; /* Bolder weight for mobile */
                 margin: 0 0 8px 0 !important; /* Reduced bottom margin from 16px to 8px */
@@ -352,7 +352,7 @@
                 hyphens: auto !important;
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: clamp(18px, 4.5vw, 24px) !important; /* Reduced max size to prevent overflow */
                 font-weight: 500 !important; /* Medium weight for hierarchy */
                 text-align: left !important; /* Left-aligned to match title and form */
@@ -369,7 +369,7 @@
             }
 
             /* Force left alignment for subtitle on mobile - override base styles */
-            .drop-title-section .drop-subtitle {
+            .event-title-section .event-subtitle {
                 text-align: left !important;
                 display: block !important;
                 width: 100% !important;
@@ -378,7 +378,7 @@
 
         /* Tablet title section */
         @media (min-width: 768px) and (max-width: 1023px) {
-            .drop-title-section {
+            .event-title-section {
                 margin: 0 auto;
                 padding: 0 16px;
             }
@@ -386,7 +386,7 @@
 
         /* Desktop title section - proper grid positioning */
         @media (min-width: 1024px) {
-            .drop-title-section {
+            .event-title-section {
                 grid-area: title; /* Use proper grid area */
                 max-width: 420px;
                 margin: 0; /* Clean margins */
@@ -457,7 +457,7 @@
         }
 
         /* Title - Responsive alignment and sizing */
-        .drop-title {
+        .event-title {
             /* TYPOGRAPHY: Responsive font sizes */
             font-size: clamp(32px, 8vw, 52px) !important; /* Responsive sizing */
             line-height: 1.1 !important;
@@ -473,10 +473,10 @@
             max-width: none !important;
             box-sizing: border-box !important;
             overflow: visible !important;
-            /* Inherit text-align from parent (.drop-title-section) */
+            /* Inherit text-align from parent (.event-title-section) */
 
             /* VISUAL: Enhanced rendering */
-            color: {{#if drop.title_color}}{{drop.title_color}}{{else}}var(--laylo-text-primary){{/if}};
+            color: {{#if event.title_color}}{{event.title_color}}{{else}}var(--laylo-text-primary){{/if}};
             text-rendering: optimizeLegibility;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -485,10 +485,10 @@
         }
 
         /* Subtitle Base Styling */
-        .drop-subtitle {
+        .event-subtitle {
             font-family: "Inter", sans-serif;
             font-weight: 400; /* Lighter than title */
-            color: {{#if drop.title_color}}{{drop.title_color}}{{else}}var(--laylo-text-primary){{/if}};
+            color: {{#if event.title_color}}{{event.title_color}}{{else}}var(--laylo-text-primary){{/if}};
             opacity: 0.85; /* Slightly muted */
             margin: 8px 0 0 0; /* Minimal spacing from title */
             padding: 0;
@@ -507,7 +507,7 @@
 
         /* Mobile subtitle - force left alignment */
         @media (max-width: 767px) {
-            .drop-subtitle {
+            .event-subtitle {
                 text-align: left !important;
             }
         }
@@ -516,14 +516,14 @@
 
         /* Tablet subtitle spacing */
         @media (min-width: 768px) and (max-width: 1023px) {
-            .drop-subtitle {
+            .event-subtitle {
                 margin: 8px 0 6px 0; /* Reduced spacing for optimal balance */
             }
         }
 
         /* Desktop title sizing - Clean grid-based layout */
         @media (min-width: 1024px) {
-            .drop-title {
+            .event-title {
                 font-size: 56px !important; /* Larger on desktop */
                 margin: 0 0 16px 0 !important; /* Restored proper title-subtitle spacing */
                 line-height: 1.0 !important; /* Tight but readable line-height */
@@ -531,7 +531,7 @@
                 text-align: left !important; /* Left-aligned to match form */
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: 34px; /* 60% of title size (56px * 0.6 ≈ 34px) */
                 text-align: left !important; /* Left-aligned to match title */
                 margin: 10px 0 8px 0; /* Reduced spacing for optimal balance */
@@ -574,20 +574,20 @@
 
         /* Enhanced RSVP Card System - Laylo-inspired design */
         .laylo-rsvp-card {
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             background-color: #ffffff;
             color: #000000;
-            {{else if (eq drop.card_background_type "solid_dark")}}
+            {{else if (eq event.card_background_type "solid_dark")}}
             background-color: #000000; /* Pure black like Laylo reference */
             color: #ffffff;
-            {{else if (eq drop.card_background_type "translucent_light")}}
+            {{else if (eq event.card_background_type "translucent_light")}}
             background-color: rgba(255, 255, 255, 0.1);
             color: #ffffff;
-            backdrop-filter: blur(10px);
-            {{else if (eq drop.card_background_type "translucent_dark")}}
+            backevent-filter: blur(10px);
+            {{else if (eq event.card_background_type "translucent_dark")}}
             background-color: rgba(0, 0, 0, 0.9); /* Darker for better contrast */
             color: #ffffff;
-            backdrop-filter: blur(15px);
+            backevent-filter: blur(15px);
             {{else}}
             background-color: #000000; /* Default to pure black like Laylo */
             color: #ffffff;
@@ -618,7 +618,7 @@
             font-size: 1.125rem; /* Larger size for better hierarchy */
             line-height: 1.3; /* Tighter line-height for modern look */
             letter-spacing: 0.005em; /* Subtle letter-spacing */
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             color: #1a1a1a; /* Stronger contrast */
             {{else}}
             color: #ffffff; /* Pure white like Laylo */
@@ -860,7 +860,7 @@
         }
 
         /* Solid White Card Text Visibility Fixes */
-        {{#if (eq drop.card_background_type "solid_white")}}
+        {{#if (eq event.card_background_type "solid_white")}}
         .email-input-field,
         .phone-input-field {
             color: #1F2937 !important;
@@ -1010,7 +1010,7 @@
         }
 
         /* Sub-header Section - Compact spacing (50% reduction) */
-        .drop-sub-header {
+        .event-sub-header {
             margin-top: 20px; /* Reduced from 40px (50% reduction) */
             max-width: 400px;
             text-align: left; /* Left-aligned like Laylo reference */
@@ -1019,13 +1019,13 @@
             padding: 0 10px; /* Reduced from 20px (50% reduction) */
         }
 
-        .drop-sub-header-title {
+        .event-sub-header-title {
             font-family: "Inter", sans-serif;
             font-weight: 800; /* Bolder weight following Laylo's strong typography */
             font-size: 2rem; /* Larger size inspired by Laylo's prominent headers */
             line-height: 1.2; /* Tighter line-height for impact */
             letter-spacing: -0.02em; /* Enhanced letter-spacing for modern look */
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             color: #1a1a1a; /* Stronger contrast for white backgrounds */
             {{else}}
             color: #ffffff; /* Pure white for maximum contrast like Laylo */
@@ -1037,13 +1037,13 @@
             text-transform: uppercase; /* Following Laylo's uppercase pattern */
         }
 
-        .drop-sub-header-content {
+        .event-sub-header-content {
             font-family: "Inter", sans-serif;
             font-weight: 500; /* Slightly bolder for better hierarchy */
             font-size: 1.125rem; /* Increased size following Laylo pattern */
             line-height: 1.4; /* Tighter line-height for modern look */
             letter-spacing: 0.005em; /* Subtle letter-spacing */
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             color: #4a5568; /* Stronger contrast for readability */
             {{else}}
             color: rgba(255, 255, 255, 0.9); /* Higher opacity like Laylo */
@@ -1058,20 +1058,20 @@
 
         /* Responsive sub-header - Compact mobile design (50% spacing reduction) */
         @media screen and (max-width: 767px) {
-            .drop-sub-header {
+            .event-sub-header {
                 margin-top: 16px; /* Reduced from 32px (50% reduction) */
                 max-width: 100%;
                 padding: 0 12px; /* Reduced from 24px (50% reduction) */
             }
 
-            .drop-sub-header-title {
+            .event-sub-header-title {
                 font-size: 1.75rem; /* Larger on mobile following Laylo pattern */
                 padding: 0; /* Clean alignment */
                 margin-bottom: 8px; /* Reduced from 16px (50% reduction) */
                 text-align: center; /* Center on mobile for better hierarchy */
             }
 
-            .drop-sub-header-content {
+            .event-sub-header-content {
                 font-size: 1.125rem; /* Improved readability following Laylo */
                 padding: 0; /* Clean alignment */
                 text-align: center; /* Center on mobile for consistency */
@@ -1080,17 +1080,17 @@
         }
 
         @media screen and (max-width: 480px) {
-            .drop-sub-header {
+            .event-sub-header {
                 margin-top: 8px; /* Reduced from 16px (50% reduction) */
             }
 
-            .drop-sub-header-title {
+            .event-sub-header-title {
                 font-size: 1.375rem; /* Still prominent on small screens */
                 padding: 0 6px; /* Reduced from 12px (50% reduction) */
                 margin-bottom: 4px; /* Reduced from 8px (50% reduction) */
             }
 
-            .drop-sub-header-content {
+            .event-sub-header-content {
                 font-size: 0.9rem;
                 padding: 0 6px; /* Reduced from 12px (50% reduction) */
                 text-align: left;
@@ -1099,24 +1099,24 @@
 
         /* Tablet responsive improvements - Compact spacing (50% reduction) */
         @media screen and (min-width: 768px) and (max-width: 1023px) {
-            .drop-sub-header-title {
+            .event-sub-header-title {
                 font-size: 2rem; /* Larger on tablet */
                 margin-bottom: 10px; /* Reduced from 20px (50% reduction) */
             }
 
-            .drop-sub-header-content {
+            .event-sub-header-content {
                 font-size: 1.125rem; /* Better tablet readability */
             }
         }
 
         /* Desktop responsive improvements - Compact spacing (50% reduction) */
         @media screen and (min-width: 1024px) {
-            .drop-sub-header-title {
+            .event-sub-header-title {
                 font-size: 2.25rem; /* Maximum impact on desktop */
                 margin-bottom: 12px; /* Reduced from 24px (50% reduction) */
             }
 
-            .drop-sub-header-content {
+            .event-sub-header-content {
                 font-size: 1.25rem; /* Premium desktop readability */
             }
         }
@@ -1189,9 +1189,9 @@
             justify-content: center;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            background-color: {{#if drop.button_color}}{{drop.button_color}}{{else}}#000000{{/if}} !important;
-            background: {{#if drop.button_color}}{{drop.button_color}}{{else}}#000000{{/if}} !important;
-            /* Debug: Button color value = {{drop.button_color}} */
+            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}} !important;
+            background: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}} !important;
+            /* Debug: Button color value = {{event.button_color}} */
             outline: 0;
             border: 0;
             margin: 0;
@@ -1211,7 +1211,7 @@
             height: 44px;
             border-radius: 22px; /* Rounded like Laylo button */
             transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-            color: {{#if drop.button_text_color}}{{drop.button_text_color}}{{else}}#ffffff{{/if}};
+            color: {{#if event.button_text_color}}{{event.button_text_color}}{{else}}#ffffff{{/if}};
             /* Dynamic shadow that works with any button color */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
             z-index: 10;
@@ -1219,8 +1219,8 @@
 
         .laylo-rsvp-button:hover {
             text-decoration: none;
-            background-color: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
             transform: translateY(-50%) scale(1.02);
             /* Enhanced shadow on hover */
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -1229,8 +1229,8 @@
 
         .laylo-rsvp-button:active {
             transform: translateY(-50%) scale(0.98);
-            background-color: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
             /* Reduced shadow on active */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
             opacity: 0.8; /* Stronger active effect using opacity */
@@ -1260,9 +1260,9 @@
             font-weight: 600;
             min-width: auto;
             padding: 16px 24px;
-            background-color: {{#if drop.button_color}}{{drop.button_color}}{{else}}#000000{{/if}} !important;
-            background: {{#if drop.button_color}}{{drop.button_color}}{{else}}#000000{{/if}} !important;
-            color: {{#if drop.button_text_color}}{{drop.button_text_color}}{{else}}#ffffff{{/if}} !important;
+            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}} !important;
+            background: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}} !important;
+            color: {{#if event.button_text_color}}{{event.button_text_color}}{{else}}#ffffff{{/if}} !important;
             /* Dynamic shadow that works with any button color */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
             letter-spacing: 0.01em; /* Subtle letter-spacing */
@@ -1270,8 +1270,8 @@
 
         .laylo-rsvp-button.standalone:hover {
             transform: scale(1.02);
-            background-color: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
             /* Enhanced shadow on hover */
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
             opacity: 0.9; /* Subtle hover effect using opacity */
@@ -1279,8 +1279,8 @@
 
         .laylo-rsvp-button.standalone:active {
             transform: scale(0.98);
-            background-color: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if drop.button_color}}{{drop.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
             /* Reduced shadow on active */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
             opacity: 0.8; /* Stronger active effect using opacity */
@@ -1297,7 +1297,7 @@
             font-size: 0.75rem; /* Base size for mobile */
             line-height: 1.57;
             letter-spacing: 0.00714em;
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             color: #666666;
             {{else}}
             color: var(--laylo-text-secondary);
@@ -1389,7 +1389,7 @@
             max-width: 100%;
             transition: opacity 0.2s ease, color 0.2s ease;
             /* DYNAMIC COLOR: Exactly match disclaimer text color for perfect visual consistency */
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             color: #666666 !important; /* Dark logo on white/light backgrounds */
             opacity: 1;
             {{else}}
@@ -1401,7 +1401,7 @@
         }
 
         .b2b-branding-link:hover .b2b-logo {
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             opacity: 0.8; /* Subtle fade on white backgrounds */
             color: #666666 !important; /* Maintain dark color */
             {{else}}
@@ -1413,7 +1413,7 @@
 
         /* Logo path styling for better readability */
         .b2b-logo path {
-            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+            filter: event-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
         }
 
         /* Dark theme adjustments - enhanced logo color adaptation */
@@ -1428,7 +1428,7 @@
 
             /* Override dynamic colors for dark theme preference */
             .b2b-logo {
-                {{#if (eq drop.card_background_type "solid_white")}}
+                {{#if (eq event.card_background_type "solid_white")}}
                 color: #333333 !important; /* Darker on white cards in dark theme */
                 {{else}}
                 color: rgba(255, 255, 255, 0.8) !important; /* Light on dark cards */
@@ -1436,7 +1436,7 @@
             }
 
             .b2b-branding-link:hover .b2b-logo {
-                {{#if (eq drop.card_background_type "solid_white")}}
+                {{#if (eq event.card_background_type "solid_white")}}
                 color: #333333 !important; /* Maintain dark color on hover */
                 opacity: 0.7;
                 {{else}}
@@ -1459,7 +1459,7 @@
             }
 
             /* Mobile background optimization */
-            .drop-page-container {
+            .event-page-container {
                 background-attachment: scroll !important;
                 min-height: 100dvh;
             }
@@ -1545,11 +1545,11 @@
             background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
             color: #DC2626;
             border-color: #FECACA;
-            {{#if (eq drop.card_background_type "solid_white")}}
+            {{#if (eq event.card_background_type "solid_white")}}
             background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
             {{else}}
             background: linear-gradient(135deg, rgba(254, 242, 242, 0.95) 0%, rgba(254, 226, 226, 0.95) 100%);
-            backdrop-filter: blur(8px);
+            backevent-filter: blur(8px);
             {{/if}}
         }
 
@@ -1613,34 +1613,34 @@
 
         /* Large Desktop: 1920px+ */
         @media only screen and (min-width: 1920px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: clamp(60px, 12vh, 120px) clamp(200px, 15vw, 300px) 24px;
             }
 
-            .drop-container {
+            .event-container {
                 max-width: 1600px;
             }
         }
 
         /* Desktop: 1440px - 1919px */
         @media only screen and (max-width: 1919px) and (min-width: 1440px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: clamp(40px, 10vh, 100px) clamp(120px, 12vw, 200px) 24px;
             }
         }
 
         /* Medium Desktop: 1024px - 1439px - Refined spacing for tight connection */
         @media only screen and (max-width: 1439px) and (min-width: 1024px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: clamp(32px, 8vh, 80px) clamp(80px, 10vw, 150px) 24px;
             }
 
-            .drop-container {
+            .event-container {
                 grid-template-columns: 1fr 380px; /* Slightly smaller right column */
                 gap: 0px 32px; /* Eliminated row gap completely for tighter spacing */
             }
 
-            .drop-title-section {
+            .event-title-section {
                 max-width: 380px !important;
             }
 
@@ -1656,14 +1656,14 @@
                 max-width: 380px !important;
             }
 
-            .drop-title {
+            .event-title {
                 font-size: 50px !important;
                 line-height: 1.0 !important; /* Tight but readable line-height */
                 letter-spacing: -0.4px !important;
                 margin: 0 0 10px 0 !important; /* Reduced bottom spacing when subtitle present */
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: 30px !important; /* 60% of title size (50px * 0.6 = 30px) */
                 text-align: left !important; /* Left-aligned to match title */
                 margin: 8px 0 7px 0 !important; /* Reduced spacing for optimal balance */
@@ -1682,11 +1682,11 @@
 
         /* Large Tablet: 900px - 1023px - Side-by-side layout */
         @media only screen and (max-width: 1023px) and (min-width: 900px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: clamp(24px, 6vh, 60px) clamp(32px, 6vw, 64px) 24px;
             }
 
-            .drop-container {
+            .event-container {
                 grid-template-columns: 1fr 350px; /* Side-by-side with smaller right column */
                 grid-template-rows: auto 1fr; /* Title takes needed space, form takes remaining space */
                 grid-template-areas:
@@ -1697,11 +1697,11 @@
                 padding: 0 16px;
             }
 
-            .drop-image-container {
+            .event-image-container {
                 max-width: min(450px, 55vw);
             }
 
-            .drop-title-section {
+            .event-title-section {
                 max-width: 350px;
                 text-align: left;
             }
@@ -1719,14 +1719,14 @@
                 min-width: 350px !important;
             }
 
-            .drop-title {
+            .event-title {
                 font-size: clamp(36px, 5vw, 44px) !important;
                 line-height: 1.0 !important; /* Tight but readable line-height */
                 letter-spacing: -0.3px !important;
                 margin: 0 0 8px 0 !important; /* Reduced bottom spacing when subtitle present */
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: clamp(22px, 3vw, 28px) !important; /* 60-65% of title size */
                 text-align: left !important; /* Left-aligned to match title */
                 margin: 6px 0 6px 0 !important; /* Reduced spacing for optimal balance */
@@ -1741,23 +1741,23 @@
 
         /* Small Tablet: 768px - 899px - Reduced spacing for smoother transition */
         @media only screen and (max-width: 899px) and (min-width: 768px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: clamp(20px, 4vh, 40px) clamp(24px, 5vw, 48px) 20px; /* Reduced from excessive padding */
             }
 
-            .drop-container {
+            .event-container {
                 grid-template-columns: 1fr;
                 gap: clamp(4px, 1vw, 8px); /* Reduced from 8px-16px to 4px-8px (50% reduction) */
                 text-align: center;
             }
 
-            .drop-image-container {
+            .event-image-container {
                 grid-column: 1;
                 max-width: min(500px, 80vw);
                 margin: 0 auto;
             }
 
-            .drop-title-section {
+            .event-title-section {
                 grid-column: 1;
                 margin: 0 auto 8px auto; /* Reduced from 16px to 8px */
                 padding: 4px 16px 6px 16px; /* Reduced section padding */
@@ -1773,14 +1773,14 @@
                 padding-bottom: 16px; /* Reduced from 24px */
             }
 
-            .drop-title {
+            .event-title {
                 font-size: clamp(40px, 6vw, 48px) !important; /* Increased from 32px-40px to 40px-48px */
                 line-height: 1.1 !important;
                 letter-spacing: -0.4px !important;
                 margin: 6px 0 4px 0 !important; /* Reduced bottom spacing when subtitle present */
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: clamp(24px, 4vw, 30px) !important; /* 60-65% of title size */
                 text-align: center !important; /* Center-aligned on tablet */
                 margin: 4px 0 4px 0 !important; /* Reduced spacing for optimal balance */
@@ -1805,34 +1805,34 @@
 
         /* Mobile Large: 375px - 767px - Updated for new layout */
         @media only screen and (max-width: 767px) and (min-width: 375px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: clamp(16px, 4vh, 40px) clamp(12px, 3vw, 20px) 24px; /* Reduced bottom padding from 60px to 24px */
             }
 
-            .drop-container {
+            .event-container {
                 gap: 2px; /* Reduced from 4px to 2px (50% reduction) */
             }
 
-            .drop-image-container {
+            .event-image-container {
                 margin: 0 auto !important;
                 max-width: 100% !important;
                 justify-content: center !important;
             }
 
-            .drop-title-section {
+            .event-title-section {
                 margin: 0 auto 4px auto !important; /* Reduced from 8px to 4px (50% reduction) */
                 padding: 6px 16px 10px 16px !important; /* Enhanced section padding */
                 overflow: visible !important; /* Prevent overflow issues */
             }
 
-            .drop-title {
+            .event-title {
                 font-size: clamp(32px, 7vw, 42px) !important; /* Increased from 28px-36px to 32px-42px */
                 line-height: 1.15 !important;
                 letter-spacing: -0.3px !important;
                 margin: 10px 0 6px 0 !important; /* Reduced bottom spacing when subtitle present */
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: clamp(20px, 4.5vw, 26px) !important; /* 60-65% of title size */
                 text-align: center !important; /* Center-aligned on mobile */
                 margin: 4px 0 3px 0 !important; /* Reduced spacing for optimal balance */
@@ -1884,34 +1884,34 @@
 
         /* Mobile Small: 320px - 374px - Updated for new layout */
         @media only screen and (max-width: 374px) {
-            .drop-page-container {
+            .event-page-container {
                 padding: 16px 8px 20px; /* Reduced bottom padding from 50px to 20px */
             }
 
-            .drop-container {
+            .event-container {
                 gap: 1px; /* Reduced from 2px to 1px (50% reduction) */
             }
 
-            .drop-image-container {
+            .event-image-container {
                 margin: 0 auto !important;
                 max-width: 100% !important;
                 justify-content: center !important;
             }
 
-            .drop-title-section {
+            .event-title-section {
                 margin: 0 auto 3px auto !important; /* Reduced from 6px to 3px (50% reduction) */
                 padding: 4px 8px 8px 8px !important; /* Enhanced section padding */
                 overflow: visible !important; /* Prevent overflow issues */
             }
 
-            .drop-title {
+            .event-title {
                 font-size: clamp(28px, 6.5vw, 36px) !important; /* Increased from 24px-30px to 28px-36px */
                 line-height: 1.2 !important;
                 letter-spacing: -0.2px !important;
                 margin: 8px 0 4px 0 !important; /* Reduced bottom spacing when subtitle present */
             }
 
-            .drop-subtitle {
+            .event-subtitle {
                 font-size: clamp(18px, 4vw, 22px) !important; /* 60-65% of title size */
                 text-align: center !important; /* Center-aligned on small mobile */
                 margin: 3px 0 2px 0 !important; /* Reduced spacing for optimal balance */
@@ -2024,14 +2024,14 @@
         /* Removed duplicate background system to prevent layering issues */
 
         /* Ensure proper stacking and eliminate white background artifacts */
-        .drop-container {
+        .event-container {
             position: relative;
             z-index: 1;
             background: transparent !important;
         }
 
         /* Force transparent backgrounds on all elements to prevent white artifacts */
-        .drop-image-container,
+        .event-image-container,
         .rsvp-container,
         .rsvp-card-container,
         .user-container,
@@ -2052,22 +2052,22 @@
 
 </head>
 <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div class="drop-page-container">
-        <div class="drop-container">
+    <div class="event-page-container">
+        <div class="event-container">
             <!-- Image Container - Laylo Style Large Image -->
-            <div class="drop-image-container">
-                {{#if drop.cover_image}}
-                <img src="{{drop.cover_image}}" alt="{{drop.title}}" />
+            <div class="event-image-container">
+                {{#if event.cover_image}}
+                <img src="{{event.cover_image}}" alt="{{event.title}}" />
                 {{/if}}
             </div>
 
             <!-- Title Section - With Optional Subtitle -->
-            <div class="drop-title-section">
+            <div class="event-title-section">
                 <!-- Main Title -->
-                <h1 class="drop-title">{{drop.title}}</h1>
+                <h1 class="event-title">{{event.title}}</h1>
                 <!-- Optional Subtitle -->
-                {{#if drop.subtitle}}
-                <h2 class="drop-subtitle">{{drop.subtitle}}</h2>
+                {{#if event.subtitle}}
+                <h2 class="event-subtitle">{{event.subtitle}}</h2>
                 {{/if}}
             </div>
 
@@ -2102,11 +2102,11 @@
                         </div>
 
                         <!-- Card Title -->
-                        <h3 class="laylo-card-title">{{#if drop.rsvp_title}}{{drop.rsvp_title}}{{else}}Get notified{{/if}}</h3>
+                        <h3 class="laylo-card-title">{{#if event.rsvp_title}}{{event.rsvp_title}}{{else}}Get notified{{/if}}</h3>
 
                         <!-- Dynamic Form Based on Collection Settings -->
-                        <form id="drop-signup-form">
-                            {{#if drop.collect_email}}
+                        <form id="event-signup-form">
+                            {{#if event.collect_email}}
                             <!-- Email Input Field -->
                             <div class="email-input-container">
                                 <input
@@ -2116,12 +2116,12 @@
                                     class="email-input-field"
                                     value=""
                                     autocomplete="email"
-                                    {{#if drop.collect_email}}required{{/if}}
+                                    {{#if event.collect_email}}required{{/if}}
                                 />
                             </div>
                             {{/if}}
 
-                            {{#if drop.collect_phone}}
+                            {{#if event.collect_phone}}
                             <!-- Phone Input Container with Conditional Inlaid Button -->
                             <div class="phone-input-container">
                                 <!-- Native Country Select -->
@@ -2162,7 +2162,7 @@
                                     aria-label="Phone number"
                                     aria-describedby="phone-validation-message"
                                     aria-invalid="false"
-                                    {{#if drop.collect_phone}}required{{/if}}
+                                    {{#if event.collect_phone}}required{{/if}}
                                 />
 
                                 <!-- Validation Icons -->
@@ -2184,29 +2184,29 @@
                                     </svg>
                                 </div>
 
-                                {{#if (and drop.collect_phone (not drop.collect_email))}}
+                                {{#if (and event.collect_phone (not event.collect_email))}}
                                 <!-- Inlaid Button for Phone-Only Mode -->
                                 <button type="submit" class="laylo-rsvp-button inlaid" name="rsvp" alt="Confirm RSVP" title="Confirm RSVP">
-                                    {{#if drop.button_text}}{{drop.button_text}}{{else}}RSVP{{/if}}
+                                    {{#if event.button_text}}{{event.button_text}}{{else}}RSVP{{/if}}
                                 </button>
-                                {{else if (and drop.collect_phone drop.collect_email)}}
+                                {{else if (and event.collect_phone event.collect_email)}}
                                 <!-- Inlaid Button for Both Fields Mode -->
                                 <button type="submit" class="laylo-rsvp-button inlaid" name="rsvp" alt="Confirm RSVP" title="Confirm RSVP">
-                                    {{#if drop.button_text}}{{drop.button_text}}{{else}}RSVP{{/if}}
+                                    {{#if event.button_text}}{{event.button_text}}{{else}}RSVP{{/if}}
                                 </button>
                                 {{/if}}
                             </div>
 
                             <!-- Phone Validation Message -->
-                            {{#if drop.collect_phone}}
+                            {{#if event.collect_phone}}
                             <div id="phone-validation-message" class="validation-message" role="alert" aria-live="polite" aria-atomic="true"></div>
                             {{/if}}
                             {{/if}}
 
-                            {{#if (and drop.collect_email (not drop.collect_phone))}}
+                            {{#if (and event.collect_email (not event.collect_phone))}}
                             <!-- Standalone Button for Email-Only Mode -->
                             <button type="submit" class="laylo-rsvp-button standalone" name="rsvp" alt="Confirm RSVP" title="Confirm RSVP">
-                                {{#if drop.button_text}}{{drop.button_text}}{{else}}RSVP{{/if}}
+                                {{#if event.button_text}}{{event.button_text}}{{else}}RSVP{{/if}}
                             </button>
                             {{/if}}
                         </form>
@@ -2228,15 +2228,15 @@
                 </div>
 
                 <!-- Sub-header Section -->
-                {{#if drop.sub_header}}
-                <div class="drop-sub-header">
-                    {{#if drop.sub_header_title}}
-                    <div class="drop-sub-header-title">
-                        {{drop.sub_header_title}}
+                {{#if event.sub_header}}
+                <div class="event-sub-header">
+                    {{#if event.sub_header_title}}
+                    <div class="event-sub-header-title">
+                        {{event.sub_header_title}}
                     </div>
                     {{/if}}
-                    <div class="drop-sub-header-content">
-                        {{drop.sub_header}}
+                    <div class="event-sub-header-content">
+                        {{event.sub_header}}
                     </div>
                 </div>
                 {{/if}}
@@ -2251,13 +2251,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Debug: Log drop configuration
             console.log('🔍 Drop Configuration:', {
-                collect_phone: {{#if drop.collect_phone}}true{{else}}false{{/if}},
-                collect_email: {{#if drop.collect_email}}true{{else}}false{{/if}},
-                button_color: '{{drop.button_color}}',
-                button_text: '{{drop.button_text}}'
+                collect_phone: {{#if event.collect_phone}}true{{else}}false{{/if}},
+                collect_email: {{#if event.collect_email}}true{{else}}false{{/if}},
+                button_color: '{{event.button_color}}',
+                button_text: '{{event.button_text}}'
             });
 
-            const form = document.getElementById('drop-signup-form');
+            const form = document.getElementById('event-signup-form');
             const phoneInput = document.querySelector('input[name="phone"]');
             const emailInput = document.querySelector('input[name="email"]');
             const submitButton = form.querySelector('button[type="submit"]');
@@ -2407,10 +2407,10 @@
                 if (email && email.trim()) dataToSend.email = email;
 
                 console.log('📤 Submitting form data:', dataToSend);
-                console.log('📍 Endpoint:', '/drop/signup/{{drop.slug}}');
+                console.log('📍 Endpoint:', '/drop/signup/{{event.slug}}');
 
                 try {
-                    const response = await fetch('/drop/signup/{{drop.slug}}', {
+                    const response = await fetch('/drop/signup/{{event.slug}}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -3348,7 +3348,7 @@
                 if (event.data && event.data.type === 'UPDATE_GRADIENT') {
                     console.log('🎨 Received gradient update from edit page:', event.data);
 
-                    const dropPageContainer = document.querySelector('.drop-page-container');
+                    const dropPageContainer = document.querySelector('.event-page-container');
                     if (dropPageContainer && event.data.gradientCSS) {
                         dropPageContainer.style.background = event.data.gradientCSS;
                         console.log('🎨 Applied gradient to landing page:', event.data.gradientCSS);
@@ -3394,7 +3394,7 @@
 
             console.log('🍎 Applying UIKit-inspired pull-to-refresh enhancements');
 
-            const customColor = '{{#if drop.overscroll_background_color}}{{drop.overscroll_background_color}}{{else}}#f2f2f7{{/if}}';
+            const customColor = '{{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#f2f2f7{{/if}}';
             const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 
             // UIKit-inspired color validation (semantic color approach)

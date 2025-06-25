@@ -198,15 +198,15 @@ class SMSCampaignService {
     }
 
     /**
-     * Generate drop announcement message
+     * Generate event announcement message
      */
-    generateDropAnnouncementMessage(userInfo, dropInfo) {
+    generateEventAnnouncementMessage(userInfo, eventInfo) {
         const userName = userInfo.name ? userInfo.name.split(' ')[0] : 'there';
-        const dropTitle = dropInfo.title || 'our drop';
-        const dropUrl = `${env.SITE_URL}/drop/${dropInfo.slug}`;
+        const eventTitle = eventInfo.title || 'our event';
+        const eventUrl = `${env.SITE_URL}/event/${eventInfo.slug}`;
 
-        return `🚀 ${userName}, ${dropTitle} is LIVE! ` +
-            `Check it out now: ${dropUrl}\n\n` +
+        return `🚀 ${userName}, ${eventTitle} is LIVE! ` +
+            `Check it out now: ${eventUrl}\n\n` +
             `Reply STOP to opt out.`;
     }
 

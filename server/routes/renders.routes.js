@@ -299,10 +299,10 @@ router.get(
 );
 
 router.get(
-    "/drops/:id/edit",
+    "/events/:id/edit",
     asyncHandler(auth.jwt),
     asyncHandler(locals.user),
-    asyncHandler(renders.dropEdit)
+    asyncHandler(renders.eventEdit)
 );
 
 router.get(
@@ -316,8 +316,8 @@ router.get(
             const dashboardData = await analyticsService.getDashboardAnalytics(req.user.id);
 
             console.log(`📊 Dashboard loaded for user ${req.user.id}:`, {
-                totalDrops: dashboardData.stats.totalDrops,
-                activeDrops: dashboardData.stats.activeDrops,
+                totalEvents: dashboardData.stats.totalEvents,
+                activeEvents: dashboardData.stats.activeEvents,
                 totalLinks: dashboardData.stats.totalLinks,
                 totalFans: dashboardData.stats.totalFans,
                 cached: dashboardData.lastUpdated
@@ -331,7 +331,7 @@ router.get(
                 user: req.user,
                 domain: env.DEFAULT_DOMAIN,
                 stats: dashboardData.stats,
-                recentDrops: dashboardData.recentDrops,
+                recentEvents: dashboardData.recentEvents,
                 recentLinks: dashboardData.recentLinks,
                 lastUpdated: dashboardData.lastUpdated
             });
@@ -342,21 +342,21 @@ router.get(
                 // Fallback to direct database queries
                 const query = require("../queries");
 
-                // Get user's drops with stats
-                const userDrops = await query.drop.findByUserWithStats(req.user.id, { limit: 5 });
+                // Get user's events with stats
+                const userEvents = await query.event.findByUserWithStats(req.user.id, { limit: 5 });
 
                 // Get user's links using existing function
                 const userLinks = await query.link.get({ "links.user_id": req.user.id }, { skip: 0, limit: 5 });
 
                 // Calculate stats from actual data
-                const totalDrops = userDrops.length;
-                const activeDrops = userDrops.filter(drop => drop.is_active).length;
+                const totalEvents = userEvents.length;
+                const activeEvents = userEvents.filter(event => event.is_active).length;
                 const totalLinks = userLinks.length;
-                const totalFans = userDrops.reduce((sum, drop) => sum + (drop.signup_count || 0), 0);
+                const totalFans = userEvents.reduce((sum, event) => sum + (event.signup_count || 0), 0);
 
                 console.log(`📊 Dashboard fallback loaded for user ${req.user.id}:`, {
-                    totalDrops,
-                    activeDrops,
+                    totalEvents,
+                    activeEvents,
                     totalLinks,
                     totalFans
                 });
@@ -369,13 +369,13 @@ router.get(
                     user: req.user,
                     domain: env.DEFAULT_DOMAIN,
                     stats: {
-                        totalDrops: totalDrops || 0,
-                        activeDrops: activeDrops || 0,
+                        totalEvents: totalEvents || 0,
+                        activeEvents: activeEvents || 0,
                         totalLinks: totalLinks || 0,
                         totalFans: totalFans || 0,
                         totalClicks: 0
                     },
-                    recentDrops: userDrops || [],
+                    recentEvents: userEvents || [],
                     recentLinks: userLinks || []
                 });
             } catch (fallbackError) {
@@ -390,13 +390,13 @@ router.get(
                     user: req.user,
                     domain: env.DEFAULT_DOMAIN,
                     stats: {
-                        totalDrops: 0,
-                        activeDrops: 0,
+                        totalEvents: 0,
+                        activeEvents: 0,
                         totalLinks: 0,
                         totalFans: 0,
                         totalClicks: 0
                     },
-                    recentDrops: [],
+                    recentEvents: [],
                     recentLinks: [],
                     error: "Failed to load dashboard data"
                 });
@@ -431,23 +431,23 @@ router.get(
             layout: "layouts/dashboard",
             currentPage: "dashboard",
             stats: {
-                totalDrops: 2,
+                totalEvents: 2,
                 totalFans: 1247,
                 totalSMS: 3891,
-                activeDrops: 1
+                activeEvents: 1
             },
             recentActivity: [{
                     title: "New fan signup",
-                    description: "Someone joined your JERSEY LOVES BASS drop",
+                    description: "Someone joined your JERSEY LOVES BASS event",
                     timeAgo: "2 hours ago"
                 },
                 {
-                    title: "Drop published",
+                    title: "Event published",
                     description: "JULY 4TH PRESALE is now live",
                     timeAgo: "1 day ago"
                 }
             ],
-            upcomingDrops: upcomingDrops
+            upcomingEvents: upcomingEvents
         });
     }
 );
@@ -533,61 +533,61 @@ router.get(
     }
 );
 
-// Drops page - Integrated with existing drop system
+// Events page - Integrated with existing event system
 router.get(
-    "/drops",
+    "/events",
     asyncHandler(auth.jwt),
     asyncHandler(locals.user),
     async(req, res) => {
         try {
             const query = require("../queries");
 
-            // Get user's drops with stats using existing queries
-            const userDrops = await query.drop.findByUserWithStats(req.user.id, { limit: 50 });
+            // Get user's events with stats using existing queries
+            const userEvents = await query.event.findByUserWithStats(req.user.id, { limit: 50 });
 
             // Calculate stats from the actual data
-            const totalDrops = userDrops.length;
-            const activeDrops = userDrops.filter(drop => drop.is_active).length;
-            const totalFans = userDrops.reduce((sum, drop) => sum + (drop.signup_count || 0), 0);
+            const totalEvents = userEvents.length;
+            const activeEvents = userEvents.filter(event => event.is_active).length;
+            const totalFans = userEvents.reduce((sum, event) => sum + (event.signup_count || 0), 0);
 
-            console.log(`📊 Drops page loaded for user ${req.user.id}:`, {
-                totalDrops,
-                activeDrops,
+            console.log(`📊 Events page loaded for user ${req.user.id}:`, {
+                totalEvents,
+                activeEvents,
                 totalFans,
-                dropsFound: userDrops.length
+                eventsFound: userEvents.length
             });
 
-            res.render("modern-drops", {
-                title: "Drops",
-                pageTitle: "Drops",
+            res.render("modern-events", {
+                title: "Events",
+                pageTitle: "Events",
                 layout: "layouts/modern-dashboard",
-                currentPage: "drops",
+                currentPage: "events",
                 user: req.user,
-                drops: userDrops || [],
+                events: userEvents || [],
                 domain: process.env.DEFAULT_DOMAIN || 'localhost:3000',
                 stats: {
-                    totalDrops: totalDrops || 0,
-                    activeDrops: activeDrops || 0,
+                    totalEvents: totalEvents || 0,
+                    activeEvents: activeEvents || 0,
                     totalFans: totalFans || 0
                 }
             });
         } catch (error) {
-            console.error('❌ Drops page error:', error);
+            console.error('❌ Events page error:', error);
 
-            res.render("modern-drops", {
-                title: "Drops",
-                pageTitle: "Drops",
+            res.render("modern-events", {
+                title: "Events",
+                pageTitle: "Events",
                 layout: "layouts/modern-dashboard",
-                currentPage: "drops",
+                currentPage: "events",
                 user: req.user,
-                drops: [],
+                events: [],
                 domain: process.env.DEFAULT_DOMAIN || 'localhost:3000',
                 stats: {
-                    totalDrops: 0,
-                    activeDrops: 0,
+                    totalEvents: 0,
+                    activeEvents: 0,
                     totalFans: 0
                 },
-                error: "Failed to load drops data"
+                error: "Failed to load events data"
             });
         }
     }

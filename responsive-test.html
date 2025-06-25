@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
             background: white;
             border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
         
         h1 {
@@ -197,20 +198,20 @@
         }
     </style>
 </head>
+
 <body>
     <div class="test-container">
         <h1>📱 Responsive Design Test Results</h1>
-        
+
         <div class="breakpoint-section mobile">
             <h2>
-                <span class="status-icon fixed"></span>
-                Mobile Breakpoint (320px-767px) - FIXED ✅
+                <span class="status-icon fixed"></span> Mobile Breakpoint (320px-767px) - FIXED ✅
             </h2>
-            
+
             <div class="viewport-info">
                 Viewport: 320px - 767px | Layout: Vertical Stack | Grid: 1fr / auto auto auto
             </div>
-            
+
             <ul class="issue-list">
                 <li class="fixed">Title/Subtitle Alignment: Center-aligned properly ✅</li>
                 <li class="fixed">Vertical Spacing: Reduced from 32px to 16px between title and card ✅</li>
@@ -218,7 +219,7 @@
                 <li class="fixed">Grid Layout: Three-row vertical stack (image → title → card) ✅</li>
                 <li class="fixed">RSVP Card: Full-width responsive sizing ✅</li>
             </ul>
-            
+
             <div class="grid-visualization">
                 <strong>Mobile Grid Layout:</strong>
                 <div class="mobile-grid">
@@ -228,24 +229,23 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="breakpoint-section tablet">
             <h2>
-                <span class="status-icon fixed"></span>
-                Tablet Breakpoint (768px-1023px) - FIXED ✅
+                <span class="status-icon fixed"></span> Tablet Breakpoint (768px-1023px) - FIXED ✅
             </h2>
-            
+
             <div class="viewport-info">
                 Viewport: 768px - 1023px | Layout: Vertical Stack | Grid: 1fr / auto auto auto
             </div>
-            
+
             <ul class="issue-list">
                 <li class="fixed">Same alignment issues as mobile: RESOLVED ✅</li>
                 <li class="fixed">Sub-header styling: Consistent font weight and alignment ✅</li>
                 <li class="fixed">Improved spacing: 32px gap, better padding ✅</li>
                 <li class="fixed">Container max-width: 600px for better tablet experience ✅</li>
             </ul>
-            
+
             <div class="grid-visualization">
                 <strong>Tablet Grid Layout:</strong>
                 <div class="tablet-grid">
@@ -255,17 +255,16 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="breakpoint-section desktop">
             <h2>
-                <span class="status-icon fixed"></span>
-                Desktop Breakpoint (1024px+) - FIXED ✅
+                <span class="status-icon fixed"></span> Desktop Breakpoint (1024px+) - FIXED ✅
             </h2>
-            
+
             <div class="viewport-info">
                 Viewport: 1024px+ | Layout: Side-by-side | Grid: 1fr auto / auto auto
             </div>
-            
+
             <ul class="issue-list">
                 <li class="fixed">Image Positioning: Left-aligned, spans both rows ✅</li>
                 <li class="fixed">Title Section: Right column, top row, left-aligned ✅</li>
@@ -273,7 +272,7 @@
                 <li class="fixed">Sub-header Layout: No longer constrained to invisible column ✅</li>
                 <li class="fixed">Side-by-side Layout: Restored proper Laylo-style layout ✅</li>
             </ul>
-            
+
             <div class="grid-visualization">
                 <strong>Desktop Grid Layout:</strong>
                 <div class="desktop-grid">
@@ -283,7 +282,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="test-buttons">
             <button class="test-btn" onclick="testViewport(320)">Test 320px</button>
             <button class="test-btn" onclick="testViewport(375)">Test 375px</button>
@@ -292,7 +291,7 @@
             <button class="test-btn" onclick="testViewport(1440)">Test 1440px</button>
             <button class="test-btn active" onclick="openActualPage()">Open Actual Page</button>
         </div>
-        
+
         <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin-top: 20px;">
             <h3 style="margin-top: 0; color: #0369a1;">✅ All Issues Resolved!</h3>
             <p><strong>Key Fixes Applied:</strong></p>
@@ -306,35 +305,36 @@
             </ul>
         </div>
     </div>
-    
+
     <script>
         function testViewport(width) {
             // Remove active class from all buttons
             document.querySelectorAll('.test-btn').forEach(btn => btn.classList.remove('active'));
-            
+
             // Add active class to clicked button
             event.target.classList.add('active');
-            
+
             // Open the drop page in a new window with specified width
             const height = Math.max(800, window.screen.height * 0.8);
             const left = (window.screen.width - width) / 2;
             const top = (window.screen.height - height) / 2;
-            
+
             window.open(
-                'http://localhost:3000/drop/bounce2bounce',
+                'http://localhost:3000/event/bounce2bounce',
                 'responsive-test',
                 `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
             );
         }
-        
+
         function openActualPage() {
-            window.open('http://localhost:3000/drop/bounce2bounce', '_blank');
+            window.open('http://localhost:3000/event/bounce2bounce', '_blank');
         }
-        
+
         // Auto-test on load
         console.log('🧪 Responsive Design Test Suite Loaded');
         console.log('📱 Test different viewport sizes using the buttons above');
         console.log('✅ All responsive design issues have been systematically resolved');
     </script>
 </body>
+
 </html>

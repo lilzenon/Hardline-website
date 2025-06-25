@@ -181,8 +181,8 @@ async function getHomepageData(req, res) {
         // Get home settings
         const homeSettings = await query.homeSettings.get();
 
-        // Get featured drops
-        const featuredDrops = await query.drop.getFeaturedDrops({ limit: 6 });
+        // Get featured events
+        const featuredEvents = await query.event.getFeaturedEvents({ limit: 6 });
 
         // Format the date for display
         let formattedDate = "March 29th, 9:00 P.M.";
@@ -199,13 +199,13 @@ async function getHomepageData(req, res) {
                 .replace(',', 'th,'); // Add 'th' suffix
         }
 
-        console.log(`✅ Homepage data refreshed: ${featuredDrops.length} featured drops`);
+        console.log(`✅ Homepage data refreshed: ${featuredEvents.length} featured events`);
 
         return res.status(200).send({
             homeSettings,
-            featuredDrops,
+            featuredEvents,
             formattedDate,
-            totalCards: 1 + featuredDrops.length // 1 default + featured drops
+            totalCards: 1 + featuredEvents.length // 1 default + featured events
         });
     } catch (error) {
         console.error("Error fetching homepage data:", error);
