@@ -39,7 +39,7 @@ router.get(
 // Home Editor dashboard page
 router.get(
     "/home-editor",
-    asyncHandler(auth.jwtPage),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.homeEditor)
 );
@@ -70,7 +70,7 @@ router.get(
 
 router.get(
     "/settings",
-    asyncHandler(auth.jwtPage),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
         res.render("settings", {
@@ -83,15 +83,14 @@ router.get(
 
 router.get(
     "/admin",
-    asyncHandler(auth.jwtPage),
-    asyncHandler(auth.admin),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.admin)
 );
 
 router.get(
     "/stats",
-    asyncHandler(auth.jwtPage),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.stats)
 );
@@ -300,14 +299,21 @@ router.get(
 
 router.get(
     "/events/:id/edit",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.eventEdit)
 );
 
+// Admin Login page - separate from public login
+router.get(
+    "/dashboard/login",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(renders.adminLogin)
+);
+
 router.get(
     "/dashboard",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     async(req, res) => {
         try {
@@ -408,7 +414,7 @@ router.get(
 // Legacy dashboard route for backup
 router.get(
     "/dashboard-old",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
         // Sample data to match Laylo design
@@ -454,7 +460,7 @@ router.get(
 
 router.get(
     "/sms",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
         res.render("sms_dashboard", { title: "SMS Dashboard - BOUNCE2BOUNCE" });
@@ -466,7 +472,7 @@ router.get(
 // Contact Book page
 router.get(
     "/contact-book",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(async(req, res) => {
         try {
@@ -491,7 +497,7 @@ router.get(
 
 router.get(
     "/profile",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     async(req, res) => {
         try {
@@ -536,7 +542,7 @@ router.get(
 // Events page - Integrated with existing event system
 router.get(
     "/events",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     async(req, res) => {
         try {
@@ -596,7 +602,7 @@ router.get(
 // Links page
 router.get(
     "/links",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     async(req, res) => {
         try {
@@ -649,7 +655,7 @@ router.get(
 // Analytics page
 router.get(
     "/analytics",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     async(req, res) => {
         try {
@@ -758,7 +764,7 @@ router.get(
 
 router.get(
     "/messages",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
         const messages = [{
@@ -796,7 +802,7 @@ router.get(
 
 router.get(
     "/fans",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
         const fans = [{
@@ -858,7 +864,7 @@ router.get(
 
 router.get(
     "/settings",
-    asyncHandler(auth.jwt),
+    asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
         res.render("settings", {

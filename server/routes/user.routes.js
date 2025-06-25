@@ -38,6 +38,18 @@ router.post(
     asyncHandler(user.create)
 );
 
+// Create new admin account (admin-only)
+router.post(
+    "/admin/create-admin",
+    locals.viewTemplate("partials/admin/dialog/create_admin"),
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    asyncHandler(auth.admin),
+    validators.createAdmin,
+    asyncHandler(helpers.verify),
+    asyncHandler(auth.createAdminUser)
+);
+
 router.post(
     "/delete",
     locals.viewTemplate("partials/settings/delete_account"),

@@ -8,9 +8,9 @@ const ms = require("ms");
 
 const { ROLES } = require("../consts");
 const query = require("../queries");
+const env = require("../env");
 const utils = require("../utils");
 const knex = require("../knex");
-const env = require("../env");
 
 const dnsLookup = promisify(dns.lookup);
 
@@ -449,14 +449,34 @@ const login = [
 const createAdmin = [
     body("password", "Password is not valid.")
     .exists({ checkFalsy: true, checkNull: true })
-    .isLength({ min: 8, max: 64 })
-    .withMessage("Password length must be between 8 and 64."),
+    .isLength({ min: 12, max: 64 }) // Stronger password requirement for admins
+    .withMessage("Admin password length must be between 12 and 64 characters.")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage("Admin password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."),
     body("email", "Email is not valid.")
     .exists({ checkFalsy: true, checkNull: true })
     .trim()
-    .isLength({ min: 0, max: 255 })
+    .isLength({ min: 1, max: 255 })
     .withMessage("Email length must be max 255.")
     .isEmail()
+    .custom(async(value, { req }) => {
+        // Check if email domain is allowed (if configured)
+        if (env.ADMIN_EMAIL_DOMAINS) {
+            const allowedDomains = env.ADMIN_EMAIL_DOMAINS.split(',').map(domain => domain.trim().toLowerCase());
+            const emailParts = value.split('@');
+            const emailDomain = emailParts[1] ? emailParts[1].toLowerCase() : null;
+
+            if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+                return Promise.reject(`Email domain not authorized for admin accounts. Allowed domains: ${allowedDomains.join(', ')}`);
+            }
+        }
+
+        // Check if email already exists
+        const existingUser = await query.user.find({ email: value });
+        if (existingUser) {
+            return Promise.reject("An account with this email already exists.");
+        }
+    })
 ];
 
 const changePassword = [

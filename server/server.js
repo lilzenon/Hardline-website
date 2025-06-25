@@ -1,6 +1,7 @@
 const env = require("./env");
 
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
 const passport = require("passport");
 const express = require("express");
 const helmet = require("helmet");
@@ -20,7 +21,7 @@ const utils = require("./utils");
 // the app might be running in cluster mode (multiple instances) so run the cron job only on one cluster (the first one)
 // NODE_APP_INSTANCE variable is added by pm2 automatically, if you're using something else to cluster your app, then make sure to set this variable
 if (env.NODE_APP_INSTANCE === 0) {
-  require("./cron");
+    require("./cron");
 }
 
 // intialize passport authentication library
@@ -32,11 +33,23 @@ const app = express();
 // this tells the express app that it's running behind a proxy server
 // and thus it should get the IP address from the proxy server
 if (env.TRUST_PROXY) {
-  app.set("trust proxy", true);
+    app.set("trust proxy", true);
 }
 
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cookieParser());
+
+// Session configuration for OAuth flows
+app.use(session({
+    secret: env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -53,8 +66,8 @@ app.use(locals.config);
 
 app.set("view engine", "hbs");
 app.set("views", [
-  path.join(__dirname, "../custom/views"),
-  path.join(__dirname, "views"),
+    path.join(__dirname, "../custom/views"),
+    path.join(__dirname, "views"),
 ]);
 utils.registerHandlebarsHelpers();
 
@@ -76,7 +89,7 @@ app.get("*", renders.notFound);
 
 // handle errors coming from above routes
 app.use(helpers.error);
-  
+
 app.listen(env.PORT, () => {
-  console.log(`> Ready on http://localhost:${env.PORT}`);
+    console.log(`> Ready on http://localhost:${env.PORT}`);
 });

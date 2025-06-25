@@ -79,6 +79,18 @@ async function login(req, res) {
     });
 }
 
+async function adminLogin(req, res) {
+    if (req.user && req.user.role === 'admin') {
+        res.redirect("/dashboard");
+        return;
+    }
+
+    res.render("admin-login", {
+        title: "Admin Login - BOUNCE2BOUNCE",
+        layout: false // Use no layout for standalone admin login page
+    });
+}
+
 function logout(req, res) {
     utils.deleteCurrentToken(res);
     res.render("logout", {
@@ -487,6 +499,7 @@ module.exports = {
     addDomainAdmin,
     addDomainForm,
     admin,
+    adminLogin,
     banned,
     confirmDomainBan,
     confirmDomainDelete,

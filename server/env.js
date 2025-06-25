@@ -82,6 +82,21 @@ const spec = {
     REDIS_DB: num({ default: 0 }),
     DISALLOW_ANONYMOUS_LINKS: bool({ default: true }),
     DISALLOW_REGISTRATION: bool({ default: true }),
+
+    // 🔐 ADMIN SECURITY CONFIGURATION
+    ADMIN_EMAIL_DOMAINS: str({
+        default: "",
+        example: "yourcompany.com,yourdomain.org",
+        desc: "Comma-separated list of allowed email domains for admin accounts"
+    }),
+    ALLOW_ADMIN_REGISTRATION: bool({
+        default: false,
+        desc: "Allow new admin account creation (should be false in production)"
+    }),
+    REQUIRE_ADMIN_APPROVAL: bool({
+        default: true,
+        desc: "Require existing admin approval for new admin accounts"
+    }),
     SERVER_IP_ADDRESS: str({ default: "" }),
     SERVER_CNAME_ADDRESS: str({ default: "" }),
     CUSTOM_DOMAIN_USE_HTTPS: bool({ default: false }),
@@ -97,6 +112,14 @@ const spec = {
     REPORT_EMAIL: str({ default: "" }),
     CONTACT_EMAIL: str({ default: "" }),
     NODE_APP_INSTANCE: num({ default: 0 }),
+
+    // 🔐 SOCIAL AUTHENTICATION
+    GOOGLE_CLIENT_ID: str({ default: "" }),
+    GOOGLE_CLIENT_SECRET: str({ default: "" }),
+    APPLE_CLIENT_ID: str({ default: "" }),
+    APPLE_TEAM_ID: str({ default: "" }),
+    APPLE_KEY_ID: str({ default: "" }),
+    APPLE_PRIVATE_KEY: str({ default: "" }),
 };
 
 for (const key in spec) {
