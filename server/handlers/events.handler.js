@@ -917,14 +917,20 @@ async function generateEventQRCode(req, res) {
         const qrUrl = foundEvent.qr_code_custom_url ||
             `${protocol}://${baseUrl}/event/${foundEvent.slug}?qr=${foundEvent.qr_code_identifier}`;
 
-        // Generate QR code
+        // Generate QR code with optimal settings for maximum scannability
         const qrCodeOptions = {
             width: parseInt(size),
-            margin: 2,
+            margin: 4, // Increased margin for better scanning
+            errorCorrectionLevel: 'H', // High error correction (30% recovery capability)
+            type: format === 'svg' ? 'svg' : 'png',
+            quality: 0.95, // High quality for PNG
             color: {
                 dark: '#000000',
                 light: '#FFFFFF'
-            }
+            },
+            // Additional options for better mobile scanning
+            scale: 8, // Higher scale for crisp rendering
+            border: 1 // Additional border for edge detection
         };
 
         if (format === 'svg') {
