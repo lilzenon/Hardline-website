@@ -78,19 +78,19 @@ function switchAdminTab(tabName) {
     
     switch(tabName) {
       case 'links':
-        endpoint = '/admin/links/table';
+        endpoint = '/dashboard/admin/links/table';
         title = 'Recent shortened links.';
         break;
       case 'users':
-        endpoint = '/admin/users/table';
+        endpoint = '/dashboard/admin/users/table';
         title = 'Manage users.';
         break;
       case 'domains':
-        endpoint = '/admin/domains/table';
+        endpoint = '/dashboard/admin/domains/table';
         title = 'Manage domains.';
         break;
       case 'home_settings':
-        endpoint = '/admin/home-settings/table';
+        endpoint = '/dashboard/admin/home-settings/table';
         title = 'Home Page Settings';
         break;
     }

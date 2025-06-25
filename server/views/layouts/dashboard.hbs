@@ -103,7 +103,7 @@
                     <span class="laylo-mobile-nav-text">Profile</span>
                 </a>
 
-                <a href="/messages" class="laylo-mobile-nav-item {{#if (eq currentPage 'messages')}}active{{/if}}">
+                <a href="/dashboard/messages" class="laylo-mobile-nav-item {{#if (eq currentPage 'messages')}}active{{/if}}">
                     <svg class="laylo-mobile-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
@@ -177,7 +177,7 @@
                 </div>
 
                 <!-- Mobile Event Button -->
-                <a href="/events/create" class="laylo-mobile-event-btn">
+                <a href="/dashboard/events/create" class="laylo-mobile-event-btn">
                     <span class="laylo-mobile-event-icon">+</span>
                     Create an Event
                 </a>
@@ -198,7 +198,7 @@
             </div>
 
             <!-- Create an Event Button -->
-            <a href="/events/create" class="laylo-create-btn">
+            <a href="/dashboard/events/create" class="laylo-create-btn">
                 <span class="laylo-create-icon">+</span>
                 Create an Event
             </a>
@@ -221,14 +221,14 @@
                     <span class="laylo-nav-text">Profile</span>
                 </a>
 
-                <a href="/messages" class="laylo-nav-item {{#if (eq currentPage 'messages')}}active{{/if}}">
+                <a href="/dashboard/messages" class="laylo-nav-item {{#if (eq currentPage 'messages')}}active{{/if}}">
                     <svg class="laylo-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                     </svg>
                     <span class="laylo-nav-text">Messages</span>
                 </a>
 
-                <a href="/fans" class="laylo-nav-item {{#if (eq currentPage 'fans')}}active{{/if}}">
+                <a href="/dashboard/fans" class="laylo-nav-item {{#if (eq currentPage 'fans')}}active{{/if}}">
                     <svg class="laylo-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>

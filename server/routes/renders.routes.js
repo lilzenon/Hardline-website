@@ -38,7 +38,7 @@ router.get(
 
 // Home Editor dashboard page
 router.get(
-    "/home-editor",
+    "/dashboard/home-editor",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.homeEditor)
@@ -69,7 +69,7 @@ router.get(
 );
 
 router.get(
-    "/settings",
+    "/dashboard/settings",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
@@ -82,14 +82,14 @@ router.get(
 );
 
 router.get(
-    "/admin",
+    "/dashboard/admin",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.admin)
 );
 
 router.get(
-    "/stats",
+    "/dashboard/stats",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.stats)
@@ -217,7 +217,7 @@ router.get(
 );
 
 router.get(
-    "/admin/link/edit/:id",
+    "/dashboard/admin/link/edit/:id",
     locals.noLayout,
     asyncHandler(auth.jwt),
     asyncHandler(auth.admin),
@@ -226,7 +226,7 @@ router.get(
 
 // Admin table endpoints for tab switching
 router.get(
-    "/admin/links/table",
+    "/dashboard/admin/links/table",
     locals.noLayout,
     asyncHandler(auth.jwt),
     asyncHandler(auth.admin),
@@ -238,7 +238,7 @@ router.get(
 );
 
 router.get(
-    "/admin/users/table",
+    "/dashboard/admin/users/table",
     locals.noLayout,
     asyncHandler(auth.jwt),
     asyncHandler(auth.admin),
@@ -250,7 +250,7 @@ router.get(
 );
 
 router.get(
-    "/admin/domains/table",
+    "/dashboard/admin/domains/table",
     locals.noLayout,
     asyncHandler(auth.jwt),
     asyncHandler(auth.admin),
@@ -262,7 +262,7 @@ router.get(
 );
 
 router.get(
-    "/admin/home-settings/table",
+    "/dashboard/admin/home-settings/table",
     locals.noLayout,
     asyncHandler(auth.jwt),
     asyncHandler(auth.admin),
@@ -297,8 +297,19 @@ router.get(
     asyncHandler(renders.getSupportEmail)
 );
 
+// Event creation page
 router.get(
-    "/events/:id/edit",
+    "/dashboard/events/create",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    (req, res) => {
+        // Redirect to events page with create modal trigger
+        res.redirect("/dashboard/events?create=true");
+    }
+);
+
+router.get(
+    "/dashboard/events/:id/edit",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(renders.eventEdit)
@@ -469,27 +480,27 @@ router.get(
 
 // New Laylo-style pages
 
-// Contact Book page
+// Users page (formerly Contact Book)
 router.get(
-    "/contact-book",
+    "/dashboard/users",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(async(req, res) => {
         try {
             res.render("contact-book", {
-                title: "Contact Book",
-                pageTitle: "Contact Book",
+                title: "Users",
+                pageTitle: "Users",
                 layout: "layouts/modern-dashboard",
-                currentPage: "contact-book",
+                currentPage: "users",
                 user: req.user,
                 domain: env.DEFAULT_DOMAIN
             });
         } catch (error) {
-            console.error('❌ Contact Book page error:', error);
+            console.error('❌ Users page error:', error);
             res.status(500).render("error", {
                 title: "Error",
                 layout: "layouts/modern-dashboard",
-                error: "Failed to load contact book page"
+                error: "Failed to load users page"
             });
         }
     })
@@ -541,7 +552,7 @@ router.get(
 
 // Events page - Integrated with existing event system
 router.get(
-    "/events",
+    "/dashboard/events",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     async(req, res) => {
@@ -763,7 +774,7 @@ router.get(
 );
 
 router.get(
-    "/messages",
+    "/dashboard/messages",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
@@ -801,7 +812,7 @@ router.get(
 );
 
 router.get(
-    "/fans",
+    "/dashboard/fans",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     (req, res) => {
@@ -874,5 +885,28 @@ router.get(
         });
     }
 );
+
+// Backward compatibility redirects - redirect old URLs to new nested structure
+router.get("/admin", (req, res) => res.redirect(301, "/dashboard/admin"));
+router.get("/contact-book", (req, res) => res.redirect(301, "/dashboard/users"));
+router.get("/events", (req, res) => res.redirect(301, "/dashboard/events"));
+router.get("/stats", (req, res) => res.redirect(301, "/dashboard/stats"));
+router.get("/home-editor", (req, res) => res.redirect(301, "/dashboard/home-editor"));
+router.get("/settings", (req, res) => res.redirect(301, "/dashboard/settings"));
+router.get("/messages", (req, res) => res.redirect(301, "/dashboard/messages"));
+router.get("/fans", (req, res) => res.redirect(301, "/dashboard/fans"));
+
+// Redirect old admin table endpoints
+router.get("/admin/links/table", (req, res) => res.redirect(301, "/dashboard/admin/links/table"));
+router.get("/admin/users/table", (req, res) => res.redirect(301, "/dashboard/admin/users/table"));
+router.get("/admin/domains/table", (req, res) => res.redirect(301, "/dashboard/admin/domains/table"));
+router.get("/admin/home-settings/table", (req, res) => res.redirect(301, "/dashboard/admin/home-settings/table"));
+router.get("/admin/link/edit/:id", (req, res) => res.redirect(301, `/dashboard/admin/link/edit/${req.params.id}`));
+
+// Redirect old events edit route
+router.get("/events/:id/edit", (req, res) => res.redirect(301, `/dashboard/events/${req.params.id}/edit`));
+
+// Redirect old events create route
+router.get("/events/create", (req, res) => res.redirect(301, "/dashboard/events/create"));
 
 module.exports = router;
