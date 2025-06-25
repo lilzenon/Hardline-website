@@ -48,17 +48,41 @@
     .btn-group-secondary {
         @apply flex items-center gap-2 px-2 py-1 rounded-md bg-gray-50/50;
     }
-    /* Responsive Button Containers */
+    /* Mobile-First Responsive Design */
     @media (max-width: 640px) {
         .btn-container {
-            @apply p-4 mx-0 bg-gray-50/40;
-            margin-top: 1.5rem;
+            @apply mx-4 mb-6 bg-gray-50/50 border border-gray-100/60;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
         .btn-container-mobile {
-            @apply gap-4;
+            @apply gap-3;
         }
         .btn-icon {
-            @apply w-12 h-12;
+            @apply w-11 h-11;
+            padding: 0.5rem;
+        }
+        .btn-icon svg {
+            @apply w-5 h-5;
+            flex-shrink: 0;
+        }
+        /* Mobile button visual improvements */
+        .btn-icon-primary {
+            @apply shadow-sm;
+        }
+        .btn-icon-secondary {
+            @apply shadow-sm bg-white/90;
+        }
+        .btn-icon-danger {
+            @apply shadow-sm bg-white/90;
+        }
+        /* Mobile container perfect alignment */
+        .drop-card-modern .btn-container {
+            margin-left: 1rem;
+            margin-right: 1rem;
+            margin-bottom: 1.5rem;
         }
     }
     @media (min-width: 641px) and (max-width: 1023px) {
@@ -89,6 +113,24 @@
     @media (prefers-contrast: high) {
         .btn-icon {
             border-width: 2px;
+        }
+    }
+    /* Specific Mobile Viewport Optimizations */
+    @media (max-width: 375px) {
+        .btn-container {
+            padding: 0.875rem;
+            margin-top: 1rem;
+        }
+        .btn-container-mobile {
+            @apply gap-2.5;
+        }
+    }
+    @media (min-width: 376px) and (max-width: 414px) {
+        .btn-container {
+            padding: 1rem;
+        }
+        .btn-container-mobile {
+            @apply gap-3;
         }
     }
 }
