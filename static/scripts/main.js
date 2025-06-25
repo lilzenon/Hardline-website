@@ -354,6 +354,26 @@ function showDeleteEventModal(eventId, eventTitle) {
 
     document.body.appendChild(modal);
 
+    // Add mobile touch event handling for modal buttons
+    const modalButtons = modal.querySelectorAll('.modal-btn');
+    modalButtons.forEach(button => {
+        // Add touch event handling for mobile devices
+        button.addEventListener('touchstart', function(e) {
+            this.style.transform = 'scale(0.98)';
+            this.style.opacity = '0.8';
+        }, { passive: true });
+
+        button.addEventListener('touchend', function(e) {
+            this.style.transform = '';
+            this.style.opacity = '';
+        }, { passive: true });
+
+        // Ensure proper touch target size
+        button.style.minHeight = '44px';
+        button.style.minWidth = '44px';
+        button.style.touchAction = 'manipulation';
+    });
+
     // Animate in
     setTimeout(() => {
         modal.classList.add('show');
@@ -386,10 +406,33 @@ function deleteEvent(eventId, eventTitle) {
     showDeleteEventModal(eventId, eventTitle);
 }
 
-// Confirmed drop deletion
-async function deleteEventConfirmed(dropId) {
+// Edit event function
+function editEvent(eventId) {
+    window.location.href = `/events/${eventId}/edit`;
+}
+
+// View event stats function
+function viewEventStats(eventId) {
+    window.location.href = `/events/${eventId}/analytics`;
+}
+
+// Legacy drop functions for backward compatibility
+function editDrop(eventId) {
+    editEvent(eventId);
+}
+
+function viewDropStats(eventId) {
+    viewEventStats(eventId);
+}
+
+function showDeleteDropModal(eventId, eventTitle) {
+    showDeleteEventModal(eventId, eventTitle);
+}
+
+// Confirmed event deletion
+async function deleteEventConfirmed(eventId) {
     try {
-        const response = await fetch(`/api/events/${dropId}`, {
+        const response = await fetch(`/api/events/${eventId}`, {
             method: 'DELETE'
         });
 

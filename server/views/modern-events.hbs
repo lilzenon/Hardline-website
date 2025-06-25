@@ -413,7 +413,7 @@ function setupEventHandlers() {
         });
     });
 
-    // Delete Event button handlers
+    // Delete Event button handlers with enhanced mobile support
     const deleteEventButtons = document.querySelectorAll('.delete-event-btn, [data-action="delete-event"]');
     console.log('Found delete event buttons:', deleteEventButtons.length);
 
@@ -421,11 +421,35 @@ function setupEventHandlers() {
         const eventId = button.getAttribute('data-event-id');
         const eventTitle = button.getAttribute('data-event-title');
 
+        // Enhanced mobile touch handling
+        button.style.touchAction = 'manipulation';
+        button.style.minHeight = '44px';
+        button.style.minWidth = '44px';
+
+        // Click event handler
         button.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
             console.log('Delete event button clicked:', eventId, eventTitle);
             deleteEvent(eventId, eventTitle);
         });
+
+        // Touch event handlers for mobile feedback
+        button.addEventListener('touchstart', function(e) {
+            this.style.transform = 'scale(0.98)';
+            this.style.opacity = '0.8';
+        }, { passive: true });
+
+        button.addEventListener('touchend', function(e) {
+            this.style.transform = '';
+            this.style.opacity = '';
+        }, { passive: true });
+
+        // Prevent touch conflicts
+        button.addEventListener('touchcancel', function(e) {
+            this.style.transform = '';
+            this.style.opacity = '';
+        }, { passive: true });
     });
 
     console.log('Event handlers setup complete');
@@ -500,7 +524,7 @@ document.getElementById('deleteModal').addEventListener('click', function(e) {
     if (e.target === this) {
         console.log('Modal closed by clicking outside');
         this.classList.add('hidden');
-        dropToDelete = null;
+        eventToDelete = null;
     }
 });
 

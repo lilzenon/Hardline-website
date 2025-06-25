@@ -36,12 +36,12 @@
 
     <!-- ⚡ Quick Actions (Only on Hover) -->
     <div class="quick-actions-overlay">
-      <button type="button" class="quick-action edit-action" title="Edit Drop" onclick="editDrop('{{id}}')">
+      <button type="button" class="quick-action edit-action" title="Edit Event" onclick="editEvent('{{id}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path d="m16 3 5 5L8 21H3v-5z"/>
         </svg>
       </button>
-      <button type="button" class="quick-action stats-action" title="View Stats" onclick="viewDropStats('{{id}}')">
+      <button type="button" class="quick-action stats-action" title="View Stats" onclick="viewEventStats('{{id}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path d="M21.2 15.9A10 10 0 1 1 8 2.9M22 12A10 10 0 0 0 12 2v10z"/>
         </svg>
@@ -93,13 +93,13 @@
   <!-- 🎯 Clean Action Section -->
   <div class="card-actions-clean">
     <div class="primary-actions">
-      <button type="button" class="action-btn primary edit-btn" title="Edit Drop" onclick="editDrop('{{id}}')">
+      <button type="button" class="action-btn primary edit-btn" title="Edit Event" onclick="editEvent('{{id}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path d="m16 3 5 5L8 21H3v-5z"/>
         </svg>
         <span>Edit</span>
       </button>
-      <button type="button" class="action-btn secondary stats-btn" title="View Stats" onclick="viewDropStats('{{id}}')">
+      <button type="button" class="action-btn secondary stats-btn" title="View Stats" onclick="viewEventStats('{{id}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path d="M21.2 15.9A10 10 0 1 1 8 2.9M22 12A10 10 0 0 0 12 2v10z"/>
         </svg>
@@ -117,7 +117,7 @@
           <path d="m10 16 1.5 1.5"/>
         </svg>
       </button>
-      <button type="button" class="icon-btn delete-btn" title="Delete Drop" onclick="showDeleteDropModal('{{id}}', '{{title}}')">
+      <button type="button" class="icon-btn delete-btn" title="Delete Event" onclick="showDeleteEventModal('{{id}}', '{{title}}')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-6 5v6m4-6v6"/>
         </svg>
