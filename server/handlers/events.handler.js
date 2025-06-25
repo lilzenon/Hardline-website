@@ -104,24 +104,24 @@ const updateEventValidation = [
     ...createEventValidation
 ];
 
-// Dynamic validation based on drop settings
+// Dynamic validation based on event settings
 async function createSignupValidation(req, res, next) {
     const { slug } = req.params;
 
     try {
         // Get the drop to check its collection settings
-        const foundDrop = await event.findBySlug(slug);
+        const foundEvent = await event.findBySlug(slug);
 
-        if (!foundDrop) {
-            throw new CustomError("Drop not found", 404);
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
         }
 
-        console.log('📋 Drop collection settings:', {
-            collect_email: foundevent.collect_email,
-            collect_phone: foundevent.collect_phone
+        console.log('📋 Event collection settings:', {
+            collect_email: foundEvent.collect_email,
+            collect_phone: foundEvent.collect_phone
         });
 
-        // Create dynamic validation rules based on drop settings
+        // Create dynamic validation rules based on event settings
         const validationRules = [
             param("slug")
             .isLength({ min: 1, max: 100 })
@@ -129,25 +129,25 @@ async function createSignupValidation(req, res, next) {
         ];
 
         // Add email validation only if email collection is enabled
-        if (foundevent.collect_email) {
+        if (foundEvent.collect_email) {
             validationRules.push(
                 body("email")
                 .isEmail()
                 .normalizeEmail()
                 .withMessage("Valid email is required")
             );
-            console.log('📧 Email validation enabled for this drop');
+            console.log('📧 Email validation enabled for this event');
         } else {
-            console.log('📧 Email validation disabled for this drop');
+            console.log('📧 Email validation disabled for this event');
         }
 
         // PRIORITY 3: Enhanced international phone validation
-        if (foundevent.collect_phone) {
+        if (foundEvent.collect_phone) {
             validationRules.push(
                 body("phone")
                 .custom((value) => {
                     if (!value) {
-                        throw new Error('Phone number is required for this drop');
+                        throw new Error('Phone number is required for this event');
                     }
 
                     console.log('📱 Server validating international phone number:', value);
@@ -212,7 +212,7 @@ async function createSignupValidation(req, res, next) {
                 })
                 .withMessage("Please enter a valid international phone number with country code")
             );
-            console.log('📱 Phone validation enabled for this drop');
+            console.log('📱 Phone validation enabled for this event');
         } else {
             // Phone is optional if not required by drop - use same international validation
             validationRules.push(
@@ -274,7 +274,7 @@ async function createSignupValidation(req, res, next) {
                 })
                 .withMessage("Please enter a valid international phone number with country code")
             );
-            console.log('📱 Optional phone validation enabled for this drop');
+            console.log('📱 Optional phone validation enabled for this event');
         }
 
         // Always allow name (optional)
@@ -286,7 +286,7 @@ async function createSignupValidation(req, res, next) {
         );
 
         // Store the drop in request for later use
-        req.foundDrop = foundDrop;
+        req.foundEvent = foundEvent;
 
         // Apply the dynamic validation rules
         await Promise.all(validationRules.map(rule => rule.run(req)));
@@ -298,31 +298,31 @@ async function createSignupValidation(req, res, next) {
     }
 }
 
-// Create a new drop
+// Create a new event
 async function createEvent(req, res) {
     const userId = req.user.id;
-    const dropData = {
+    const eventData = {
         ...req.body,
         user_id: userId
     };
 
     try {
-        const newDrop = await event.create(dropData);
-        const dropWithStats = await event.findWithStats({ id: newevent.id });
+        const newEvent = await event.create(eventData);
+        const eventWithStats = await event.findWithStats({ id: newEvent.id });
 
         res.status(201).json({
             success: true,
-            data: dropWithStats
+            data: eventWithStats
         });
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY' || error.code === 'SQLITE_CONSTRAINT') {
-            throw new CustomError("A drop with this slug already exists", 400);
+            throw new CustomError("An event with this slug already exists", 400);
         }
         throw error;
     }
 }
 
-// Get user's drops
+// Get user's events
 async function getUserEvents(req, res) {
     const userId = req.user.id;
     const { limit = 20, offset = 0 } = req.query;
@@ -338,37 +338,37 @@ async function getUserEvents(req, res) {
     });
 }
 
-// Get single drop
+// Get single event
 async function getEvent(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
-    const foundDrop = await event.findWithStats({ id, user_id: userId });
+    const foundEvent = await event.findWithStats({ id, user_id: userId });
 
-    if (!foundDrop) {
-        throw new CustomError("Drop not found", 404);
+    if (!foundEvent) {
+        throw new CustomError("Event not found", 404);
     }
 
     res.json({
         success: true,
-        data: foundDrop
+        data: foundEvent
     });
 }
 
-// Update drop with enhanced error handling and column validation
+// Update event with enhanced error handling and column validation
 async function updateEvent(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
     // Check if drop exists and belongs to user
-    const existingDrop = await event.findOne({ id, user_id: userId });
-    if (!existingDrop) {
-        throw new CustomError("Drop not found", 404);
+    const existingEvent = await event.findOne({ id, user_id: userId });
+    if (!existingEvent) {
+        throw new CustomError("Event not found", 404);
     }
 
     try {
         // If slug is being updated, check if it conflicts with other events (not this one)
-        if (req.body.slug && req.body.slug !== existingevent.slug) {
+        if (req.body.slug && req.body.slug !== existingEvent.slug) {
             const conflictingEvent = await event.findBySlug(req.body.slug);
             if (conflictingEvent && conflictingEvent.id !== parseInt(id)) {
                 throw new CustomError("An event with this slug already exists", 400);
@@ -382,16 +382,16 @@ async function updateEvent(req, res) {
 
         // 🚀 DETECT HOMEPAGE TOGGLE CHANGES FOR REAL-TIME UPDATES
         const homepageToggleChanged = 'show_on_homepage' in sanitizedData &&
-            sanitizedData.show_on_homepage !== existingevent.show_on_homepage;
+            sanitizedData.show_on_homepage !== existingEvent.show_on_homepage;
 
         if (homepageToggleChanged) {
-            console.log(`🏠 Homepage toggle changed for drop ${id}: ${existingevent.show_on_homepage} → ${sanitizedData.show_on_homepage}`);
+            console.log(`🏠 Homepage toggle changed for event ${id}: ${existingEvent.show_on_homepage} → ${sanitizedData.show_on_homepage}`);
         }
 
-        const updatedDrop = await event.update(id, sanitizedData);
-        const dropWithStats = await event.findWithStats({ id: updatedevent.id });
+        const updatedEvent = await event.update(id, sanitizedData);
+        const eventWithStats = await event.findWithStats({ id: updatedEvent.id });
 
-        console.log(`✅ Drop ${id} updated successfully`);
+        console.log(`✅ Event ${id} updated successfully`);
 
         // 🚀 TRIGGER HOMEPAGE REFRESH IF TOGGLE CHANGED
         if (homepageToggleChanged) {
@@ -402,8 +402,8 @@ async function updateEvent(req, res) {
                     console.log(`📡 Broadcasting homepage refresh event...`);
                     io.emit('homepage-refresh', {
                         action: sanitizedData.show_on_homepage ? 'card-added' : 'card-removed',
-                        dropId: parseInt(id),
-                        dropData: sanitizedData.show_on_homepage ? dropWithStats : null
+                        eventId: parseInt(id),
+                        eventData: sanitizedData.show_on_homepage ? eventWithStats : null
                     });
                 } else {
                     console.log(`⚠️ Socket.io not available - skipping real-time update`);
@@ -416,14 +416,14 @@ async function updateEvent(req, res) {
 
         res.json({
             success: true,
-            data: dropWithStats,
+            data: eventWithStats,
             homepageRefreshNeeded: homepageToggleChanged // Flag for client-side handling
         });
     } catch (error) {
-        console.error(`❌ Error updating drop ${id}:`, error);
+        console.error(`❌ Error updating event ${id}:`, error);
 
         if (error.code === 'ER_DUP_ENTRY' || error.code === 'SQLITE_CONSTRAINT') {
-            throw new CustomError("A drop with this slug already exists", 400);
+            throw new CustomError("A event with this slug already exists", 400);
         }
 
         // Handle PostgreSQL column errors
@@ -589,15 +589,15 @@ function isValidUrl(string) {
     }
 }
 
-// Delete drop
+// Delete event
 async function deleteEvent(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
 
     // Check if drop exists and belongs to user
-    const existingDrop = await event.findOne({ id, user_id: userId });
-    if (!existingDrop) {
-        throw new CustomError("Drop not found", 404);
+    const existingEvent = await event.findOne({ id, user_id: userId });
+    if (!existingEvent) {
+        throw new CustomError("Event not found", 404);
     }
 
     await event.remove(id);
@@ -608,49 +608,49 @@ async function deleteEvent(req, res) {
     });
 }
 
-// Public drop signup
+// Public event signup
 async function createSignup(req, res) {
     try {
         const { slug } = req.params;
         const { email, phone, name } = req.body;
 
-        console.log(`🚀 Drop signup attempt for slug: ${slug}`);
+        console.log(`🚀 Event signup attempt for slug: ${slug}`);
         console.log(`📧 Email: ${email || 'none'}`);
         console.log(`📱 Phone: ${phone || 'none'}`);
         console.log(`👤 Name: ${name || 'none'}`);
 
         // Use the drop that was already fetched in validation middleware
-        const foundDrop = req.foundDrop;
+        const foundEvent = req.foundEvent;
 
-        if (!foundDrop) {
-            console.error(`❌ Drop not found for slug: ${slug}`);
-            throw new CustomError("Drop not found", 404);
+        if (!foundEvent) {
+            console.error(`❌ Event not found for slug: ${slug}`);
+            throw new CustomError("Event not found", 404);
         }
 
-        if (!foundevent.is_active) {
+        if (!foundEvent.is_active) {
             console.error(`❌ Drop is inactive: ${slug}`);
-            throw new CustomError("Drop is currently inactive", 404);
+            throw new CustomError("Event is currently inactive", 404);
         }
 
-        console.log(`✅ Using pre-fetched drop: ${foundevent.title} (ID: ${foundevent.id})`);
-        console.log(`📋 Drop settings: collect_email=${foundevent.collect_email}, collect_phone=${foundevent.collect_phone}`);
+        console.log(`✅ Using pre-fetched event: ${foundEvent.title} (ID: ${foundEvent.id})`);
+        console.log(`📋 Event settings: collect_email=${foundEvent.collect_email}, collect_phone=${foundEvent.collect_phone}`);
 
-        // Additional validation based on drop settings
-        if (foundevent.collect_email && !email) {
-            throw new CustomError("Email is required for this drop", 400);
+        // Additional validation based on event settings
+        if (foundEvent.collect_email && !email) {
+            throw new CustomError("Email is required for this event", 400);
         }
 
-        if (foundevent.collect_phone && !phone) {
-            throw new CustomError("Phone number is required for this drop", 400);
+        if (foundEvent.collect_phone && !phone) {
+            throw new CustomError("Phone number is required for this event", 400);
         }
 
         // Check for duplicates based on what fields are collected
         if (email) {
             console.log(`🔍 Checking if email already signed up: ${email}`);
-            const emailAlreadySignedUp = await event.isEmailSignedUp(foundevent.id, email);
+            const emailAlreadySignedUp = await event.isEmailSignedUp(foundEvent.id, email);
             if (emailAlreadySignedUp) {
                 console.error(`❌ Email already signed up: ${email}`);
-                throw new CustomError("Email already signed up for this drop", 400);
+                throw new CustomError("Email already signed up for this event", 400);
             }
         } else {
             console.log(`🔍 Skipping email duplicate check - no email provided`);
@@ -659,10 +659,10 @@ async function createSignup(req, res) {
         // Check phone duplicates if phone is provided and email is not (phone-only signup)
         if (phone && !email) {
             console.log(`🔍 Checking if phone already signed up: ${phone}`);
-            const phoneAlreadySignedUp = await event.isPhoneSignedUp(foundevent.id, phone);
+            const phoneAlreadySignedUp = await event.isPhoneSignedUp(foundEvent.id, phone);
             if (phoneAlreadySignedUp) {
                 console.error(`❌ Phone already signed up: ${phone}`);
-                throw new CustomError("Phone number already signed up for this drop", 400);
+                throw new CustomError("Phone number already signed up for this event", 400);
             }
         } else if (phone && email) {
             console.log(`🔍 Skipping phone duplicate check - email provided (email takes precedence)`);
@@ -684,14 +684,14 @@ async function createSignup(req, res) {
         try {
             // Create signup in main database
             console.log(`💾 Inserting signup into database...`);
-            const newSignup = await event.createSignup(foundevent.id, signupData);
+            const newSignup = await event.createSignup(foundEvent.id, signupData);
             console.log(`✅ Signup created successfully:`, newSignup);
 
             // 🚀 OPTIONAL CRM INTEGRATION (graceful fallback if CRM not available)
             try {
                 const contactService = require('../services/crm/contact.service');
-                await contactService.createFromDropSignup(signupData, foundevent.id);
-                console.log('✅ Contact created in CRM for drop signup');
+                await contactService.createFromDropSignup(signupData, foundEvent.id);
+                console.log('✅ Contact created in CRM for event signup');
             } catch (crmError) {
                 console.warn('⚠️ CRM integration failed (continuing without CRM):', crmError.message);
                 // Continue without CRM - don't fail the signup
@@ -710,7 +710,7 @@ async function createSignup(req, res) {
                     if (isOptedOut) {
                         console.log(`📱 Phone ${phone} is opted out - skipping SMS`);
                     } else {
-                        const smsResult = await twilioService.sendDropSignupConfirmation({ name, email, phone }, { id: foundevent.id, title: foundevent.title, slug: foundevent.slug },
+                        const smsResult = await twilioService.sendDropSignupConfirmation({ name, email, phone }, { id: foundEvent.id, title: foundEvent.title, slug: foundEvent.slug },
                             newSignup.id // Pass signup ID for tracking
                         );
 
@@ -732,13 +732,13 @@ async function createSignup(req, res) {
 
             res.status(201).json({
                 success: true,
-                message: foundevent.thank_you_message || "Thank you for signing up! You'll be notified when this drop goes live."
+                message: foundEvent.thank_you_message || "Thank you for signing up! You'll be notified when this event goes live."
             });
         } catch (dbError) {
             console.error(`🚨 Database error during signup creation:`, dbError);
 
             if (dbError.message.includes('already signed up')) {
-                throw new CustomError("Email already signed up for this drop", 400);
+                throw new CustomError("Email already signed up for this event", 400);
             }
 
             // Check for specific database errors
@@ -748,7 +748,7 @@ async function createSignup(req, res) {
             }
 
             if (dbError.code === 'ER_DUP_ENTRY' || dbError.code === 'SQLITE_CONSTRAINT') {
-                throw new CustomError("Email already signed up for this drop", 400);
+                throw new CustomError("Email already signed up for this event", 400);
             }
 
             throw new CustomError("Database error occurred. Please try again.", 500);
@@ -766,16 +766,16 @@ async function createSignup(req, res) {
     }
 }
 
-// Get drop signups (for drop owner)
+// Get event signups (for event owner)
 async function getEventSignups(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
     const { limit = 50, offset = 0 } = req.query;
 
     // Check if drop belongs to user
-    const foundDrop = await event.findOne({ id, user_id: userId });
-    if (!foundDrop) {
-        throw new CustomError("Drop not found", 404);
+    const foundEvent = await event.findOne({ id, user_id: userId });
+    if (!foundEvent) {
+        throw new CustomError("Event not found", 404);
     }
 
     const signups = await event.findSignups(id, {
@@ -799,7 +799,7 @@ async function getFanAnalytics(req, res) {
             offset = 0,
             search = '',
             sortBy = 'latest',
-            dropId = null
+            eventId = null
     } = req.query;
 
     const options = {
@@ -807,7 +807,7 @@ async function getFanAnalytics(req, res) {
         offset: parseInt(offset),
         search: search.trim(),
         sortBy,
-        dropId: dropId ? parseInt(dropId) : null
+        eventId: eventId ? parseInt(eventId) : null
     };
 
     const analytics = await event.getFanAnalytics(userId, options);
@@ -822,11 +822,11 @@ async function getFanAnalytics(req, res) {
 async function getFanSummaryStats(req, res) {
     try {
         const userId = req.user.id;
-        const { dropId = null } = req.query;
+        const { eventId = null } = req.query;
 
-        console.log(`🚀 Getting fan summary stats for user ${userId}, drop ${dropId}`);
+        console.log(`🚀 Getting fan summary stats for user ${userId}, drop ${eventId}`);
 
-        const stats = await event.getFanSummaryStats(userId, dropId ? parseInt(dropId) : null);
+        const stats = await event.getFanSummaryStats(userId, eventId ? parseInt(eventId) : null);
 
         console.log(`✅ Fan summary stats:`, stats);
 
@@ -849,17 +849,17 @@ async function getEventAnalytics(req, res) {
     const userId = req.user.id;
 
     // Check if drop belongs to user
-    const foundDrop = await event.findWithStats({ id, user_id: userId });
-    if (!foundDrop) {
-        throw new CustomError("Drop not found", 404);
+    const foundEvent = await event.findWithStats({ id, user_id: userId });
+    if (!foundEvent) {
+        throw new CustomError("Event not found", 404);
     }
 
-    // Get recent signups for this drop
+    // Get recent signups for this event
     const recentSignups = await event.findSignups(parseInt(id), { limit: 5 });
 
     // Calculate basic analytics
-    const views = foundevent.view_count || 0;
-    const fans = foundevent.signup_count || 0;
+    const views = foundEvent.view_count || 0;
+    const fans = foundEvent.signup_count || 0;
     const conversionRate = views > 0 ? ((fans / views) * 100).toFixed(1) : 0;
 
     res.json({
