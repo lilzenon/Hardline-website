@@ -103,8 +103,8 @@ function adminAuth(req, res, next) {
     }
 
     // Check if user is admin
-    if (req.user.role !== 'admin') {
-        console.log(`🚫 Non-admin user ${req.user.email} attempted to access ${originalUrl}`);
+    if (!utils.isAdmin(req.user)) {
+        console.log(`🚫 Non-admin user ${req.user.email} attempted to access ${originalUrl}. Role: ${req.user.role}`);
         throw new CustomError("Unauthorized. Admin access required.", 403);
     }
 
@@ -133,8 +133,8 @@ function jwtAdminPage(req, res, next) {
         }
 
         // Check if user is admin
-        if (req.user.role !== 'admin') {
-            console.log(`🚫 Non-admin user ${req.user.email} attempted to access ${originalUrl}`);
+        if (!utils.isAdmin(req.user)) {
+            console.log(`🚫 Non-admin user ${req.user.email} attempted to access ${originalUrl}. Role: ${req.user.role}`);
 
             // Store the intended destination in session for potential admin login
             req.session.returnTo = originalUrl;
@@ -204,8 +204,8 @@ async function createAdminUser(req, res) {
         }
 
         // 2. Check if user is already an admin (for admin-created accounts)
-        if (env.REQUIRE_ADMIN_APPROVAL && (!req.user || req.user.role !== 'admin')) {
-            console.log(`🚫 Non-admin user attempted to create admin account: ${email}`);
+        if (env.REQUIRE_ADMIN_APPROVAL && (!req.user || !utils.isAdmin(req.user))) {
+            console.log(`🚫 Non-admin user attempted to create admin account: ${email}. User role: ${req.user?.role || 'none'}`);
             throw new CustomError("Only existing administrators can create new admin accounts.", 403);
         }
     }
@@ -257,8 +257,9 @@ function login(req, res) {
 }
 
 function adminLogin(req, res) {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
+    // Check if user is admin using the proper utility function
+    if (!utils.isAdmin(req.user)) {
+        console.log(`🚫 Non-admin user ${req.user.email} attempted admin login. Role: ${req.user.role}`);
         throw new CustomError("Unauthorized. Admin access required.", 403);
     }
 
@@ -283,7 +284,8 @@ function adminLogin(req, res) {
 
 function socialLogin(req, res) {
     // Check if user is admin for admin login
-    if (req.user.role !== 'admin') {
+    if (!utils.isAdmin(req.user)) {
+        console.log(`🚫 Non-admin user ${req.user.email} attempted social admin login. Role: ${req.user.role}`);
         throw new CustomError("Unauthorized. Admin access required.", 403);
     }
 
