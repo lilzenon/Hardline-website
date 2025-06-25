@@ -76,20 +76,20 @@ router.get(
     })
 );
 
-// 🚀 TEST ENDPOINT - Enable homepage for first drop
+// 🚀 TEST ENDPOINT - Enable homepage for first event
 router.get(
     "/test-enable-homepage",
     asyncHandler(async(req, res) => {
         try {
-            // Get the first drop
-            const firstDrop = await query.drop.find({}, { limit: 1 });
+            // Get the first event
+            const firstEvent = await query.event.find({}, { limit: 1 });
 
-            if (firstDrop.length === 0) {
-                return res.json({ error: "No drops found to test with" });
+            if (firstEvent.length === 0) {
+                return res.json({ error: "No events found to test with" });
             }
 
-            // Enable show_on_homepage for the first drop and add event data
-            await query.drop.update(firstDrop[0].id, {
+            // Enable show_on_homepage for the first event and add event data
+            await query.event.update(firstEvent[0].id, {
                 show_on_homepage: true,
                 is_active: true,
                 artist_name: "Test Artist",
@@ -98,22 +98,22 @@ router.get(
             });
 
             // Get updated data
-            const updatedDrop = await query.drop.findOne({ id: firstDrop[0].id });
-            const featuredDrops = await query.drop.getFeaturedDrops({ limit: 10 });
+            const updatedEvent = await query.event.findOne({ id: firstEvent[0].id });
+            const featuredEvents = await query.event.getFeaturedEvents({ limit: 10 });
 
             res.json({
-                message: "Test completed - enabled homepage for first drop with event data",
-                updatedDrop: {
-                    id: updatedDrop.id,
-                    title: updatedDrop.title,
-                    artist_name: updatedDrop.artist_name,
-                    event_date: updatedDrop.event_date,
-                    event_address: updatedDrop.event_address,
-                    show_on_homepage: updatedDrop.show_on_homepage,
-                    is_active: updatedDrop.is_active
+                message: "Test completed - enabled homepage for first event with event data",
+                updatedEvent: {
+                    id: updatedEvent.id,
+                    title: updatedEvent.title,
+                    artist_name: updatedEvent.artist_name,
+                    event_date: updatedEvent.event_date,
+                    event_address: updatedEvent.event_address,
+                    show_on_homepage: updatedEvent.show_on_homepage,
+                    is_active: updatedEvent.is_active
                 },
-                featuredDropsCount: featuredDrops.length,
-                featuredDrops: featuredDrops.map(drop => ({
+                featuredEventsCount: featuredEvents.length,
+                featuredEvents: featuredEvents.map(drop => ({
                     id: drop.id,
                     title: drop.title,
                     artist_name: drop.artist_name,
@@ -130,7 +130,7 @@ router.get(
     })
 );
 
-// 🚀 COMPREHENSIVE TEST - Create sample drops with homepage enabled
+// 🚀 COMPREHENSIVE TEST - Create sample events with homepage enabled
 router.get(
     "/test-create-sample-drops",
     asyncHandler(async(req, res) => {
@@ -139,9 +139,9 @@ router.get(
             const firstUser = await query.user.find({}, { limit: 1 });
             const userId = firstUser.length > 0 ? firstUser[0].id : 1; // Fallback to user ID 1
 
-            console.log(`🔧 Creating sample drops with user_id: ${userId}`);
+            console.log(`🔧 Creating sample events with user_id: ${userId}`);
 
-            const sampleDrops = [{
+            const sampleEvents = [{
                     title: "Summer Music Festival 2025",
                     description: "Join us for an amazing summer music festival featuring top artists!",
                     slug: "summer-music-festival-2025",
@@ -182,44 +182,44 @@ router.get(
                 }
             ];
 
-            const createdDrops = [];
-            for (const dropData of sampleDrops) {
+            const createdEvents = [];
+            for (const eventData of sampleEvents) {
                 try {
                     // Check if drop with this slug already exists
-                    const existingDrop = await query.drop.findBySlug(dropData.slug);
-                    if (!existingDrop) {
-                        const newDrop = await query.drop.create(dropData);
-                        createdDrops.push(newDrop);
-                        console.log(`✅ Created sample drop: ${dropData.title} with user_id: ${userId}`);
+                    const existingEvent = await query.event.findBySlug(eventData.slug);
+                    if (!existingEvent) {
+                        const newEvent = await query.event.create(eventData);
+                        createdEvents.push(newEvent);
+                        console.log(`✅ Created sample event: ${eventData.title} with user_id: ${userId}`);
                     } else {
-                        // Update existing drop to ensure it has the correct flags
-                        await query.drop.update(existingDrop.id, {
+                        // Update existing event to ensure it has the correct flags
+                        await query.event.update(existingEvent.id, {
                             show_on_homepage: true,
                             is_active: true,
-                            artist_name: dropData.artist_name,
-                            event_date: dropData.event_date,
-                            event_address: dropData.event_address
+                            artist_name: eventData.artist_name,
+                            event_date: eventData.event_date,
+                            event_address: eventData.event_address
                         });
-                        const updatedDrop = await query.drop.findOne({ id: existingDrop.id });
-                        createdDrops.push(updatedDrop);
-                        console.log(`🔄 Updated existing drop: ${dropData.title}`);
+                        const updatedEvent = await query.event.findOne({ id: existingEvent.id });
+                        createdEvents.push(updatedEvent);
+                        console.log(`🔄 Updated existing event: ${eventData.title}`);
                     }
-                } catch (dropError) {
-                    console.error(`❌ Error creating/updating drop ${dropData.title}:`, dropError);
+                } catch (eventError) {
+                    console.error(`❌ Error creating/updating drop ${eventData.title}:`, eventError);
                 }
             }
 
-            // Get featured drops after creation
-            const featuredDrops = await query.drop.getFeaturedDrops({ limit: 10 });
+            // Get featured events after creation
+            const featuredEvents = await query.event.getFeaturedEvents({ limit: 10 });
 
-            console.log(`🎯 Test completed: ${createdDrops.length} drops processed, ${featuredDrops.length} featured drops found`);
+            console.log(`🎯 Test completed: ${createdEvents.length} events processed, ${featuredEvents.length} featured events found`);
 
             res.json({
-                message: `Sample drops created/verified successfully`,
+                message: `Sample events created/verified successfully`,
                 userId: userId,
-                createdCount: createdDrops.length,
-                featuredDropsCount: featuredDrops.length,
-                createdDrops: createdDrops.map(drop => ({
+                createdCount: createdEvents.length,
+                featuredEventsCount: featuredEvents.length,
+                createdEvents: createdEvents.map(drop => ({
                     id: drop.id,
                     title: drop.title,
                     artist_name: drop.artist_name,
@@ -229,7 +229,7 @@ router.get(
                     is_active: drop.is_active,
                     user_id: drop.user_id
                 })),
-                featuredDrops: featuredDrops.map(drop => ({
+                featuredEvents: featuredEvents.map(drop => ({
                     id: drop.id,
                     title: drop.title,
                     artist_name: drop.artist_name,
@@ -241,7 +241,7 @@ router.get(
                 }))
             });
         } catch (error) {
-            console.error('Test create sample drops error:', error);
+            console.error('Test create sample events error:', error);
             res.status(500).json({ error: error.message });
         }
     })
@@ -270,9 +270,9 @@ router.get(
                     event_date: homeSettings.event_date,
                     event_address: homeSettings.event_address
                 },
-                featuredDrops: featuredDrops,
-                featuredDropsCount: featuredDrops.length,
-                totalCards: 1 + featuredDrops.length
+                featuredEvents: featuredEvents,
+                featuredEventsCount: featuredEvents.length,
+                totalCards: 1 + featuredEvents.length
             });
         } catch (error) {
             console.error('Test homepage data error:', error);

@@ -498,9 +498,9 @@ router.get(
             const query = require("../queries");
 
             // Get user stats
-            const totalDrops = await query.drop.countByUser(req.user.id);
+            const totalEvents = await query.event.countByUser(req.user.id);
             const totalLinks = await query.link.countByUser(req.user.id);
-            const totalFans = await query.drop.getTotalFansByUser(req.user.id);
+            const totalFans = await query.event.getTotalFansByUser(req.user.id);
 
             res.render("modern-profile", {
                 title: "Profile",
@@ -509,7 +509,7 @@ router.get(
                 currentPage: "profile",
                 user: req.user,
                 stats: {
-                    totalDrops: totalDrops || 0,
+                    totalEvents: totalEvents || 0,
                     totalLinks: totalLinks || 0,
                     totalFans: totalFans || 0
                 }
@@ -674,7 +674,7 @@ router.get(
                 currentPage: "analytics",
                 user: req.user,
                 stats: analyticsData.stats,
-                recentDrops: analyticsData.recentDrops,
+                recentEvents: analyticsData.recentEvents,
                 recentLinks: analyticsData.recentLinks,
                 fanAnalytics: analyticsData.fanAnalytics,
                 performanceMetrics: analyticsData.performanceMetrics,
@@ -688,25 +688,25 @@ router.get(
                 const query = require("../queries");
 
                 // Get analytics data using existing functions
-                const recentDrops = await query.drop.findByUserWithStats(req.user.id, { limit: 10 });
+                const recentEvents = await query.event.findByUserWithStats(req.user.id, { limit: 10 });
                 const recentLinks = await query.link.get({ "links.user_id": req.user.id }, { skip: 0, limit: 10 });
 
                 // Get recent fan signups for analytics page
-                const fanAnalytics = await query.drop.getFanAnalytics(req.user.id, { limit: 50 }).catch(err => {
+                const fanAnalytics = await query.event.getFanAnalytics(req.user.id, { limit: 50 }).catch(err => {
                     console.error('❌ Error getting fan analytics:', err);
                     return { fans: [], totalCount: 0 };
                 });
 
                 // Calculate stats from actual data
-                const totalDrops = recentDrops.length;
-                const activeDrops = recentDrops.filter(drop => drop.is_active).length;
+                const totalEvents = recentEvents.length;
+                const activeEvents = recentEvents.filter(event => event.is_active).length;
                 const totalLinks = recentLinks.length;
-                const totalFans = recentDrops.reduce((sum, drop) => sum + (drop.signup_count || 0), 0);
+                const totalFans = recentEvents.reduce((sum, event) => sum + (event.signup_count || 0), 0);
                 const totalClicks = recentLinks.reduce((sum, link) => sum + (link.visit_count || 0), 0);
 
                 console.log(`📊 Analytics fallback loaded for user ${req.user.id}:`, {
-                    totalDrops,
-                    activeDrops,
+                    totalEvents,
+                    activeEvents,
                     totalLinks,
                     totalFans,
                     totalClicks,
@@ -720,13 +720,13 @@ router.get(
                     currentPage: "analytics",
                     user: req.user,
                     stats: {
-                        totalDrops: totalDrops || 0,
-                        activeDrops: activeDrops || 0,
+                        totalEvents: totalEvents || 0,
+                        activeEvents: activeEvents || 0,
                         totalLinks: totalLinks || 0,
                         totalFans: totalFans || 0,
                         totalClicks: totalClicks || 0
                     },
-                    recentDrops: recentDrops || [],
+                    recentEvents: recentEvents || [],
                     recentLinks: recentLinks || [],
                     fanAnalytics: fanAnalytics || { fans: [], totalCount: 0 }
                 });
@@ -746,7 +746,7 @@ router.get(
                         totalFans: 0,
                         totalClicks: 0
                     },
-                    recentDrops: [],
+                    recentEvents: [],
                     recentLinks: [],
                     fanAnalytics: { fans: [], totalCount: 0 },
                     error: "Failed to load analytics data"
