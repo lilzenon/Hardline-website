@@ -92,7 +92,29 @@ async function adminLogin(req, res) {
 }
 
 function logout(req, res) {
+    console.log(`🚪 User logging out: ${req.user?.email || 'unknown'}`);
+
+    // Clear authentication token
     utils.deleteCurrentToken(res);
+
+    // Clear session data including returnTo
+    if (req.session) {
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('❌ Error destroying session during logout:', err);
+            } else {
+                console.log('✅ Session destroyed successfully');
+            }
+        });
+    }
+
+    // Clear any cached user data
+    req.user = null;
+    res.locals.user = null;
+    res.locals.isAdmin = false;
+
+    console.log('✅ Logout completed successfully');
+
     res.render("logout", {
         title: "Logging out.."
     });

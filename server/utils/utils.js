@@ -54,7 +54,18 @@ function setToken(res, token) {
 }
 
 function deleteCurrentToken(res) {
-    res.clearCookie("token", { httpOnly: true, secure: env.isProd });
+    // Clear token cookie with all possible configurations to ensure it's removed
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: env.isProd,
+        sameSite: 'lax',
+        path: '/'
+    });
+
+    // Also clear with default options in case the original was set differently
+    res.clearCookie("token");
+
+    console.log('🍪 Authentication token cleared');
 }
 
 async function generateId(query, domain_id) {

@@ -16,7 +16,7 @@
                 <h1 class="login-title">Login</h1>
                 
                 <!-- Login Form -->
-                <form id="admin-login-form" hx-post="/api/auth/admin-login" hx-swap="outerHTML">
+                <form id="admin-login-form" method="POST" action="/api/auth/admin-login">
                     <div class="form-group">
                         <input
                             type="email"
@@ -90,13 +90,8 @@
             window.location.href = '/api/auth/apple';
         }
         
-        // Form submission handling
-        document.getElementById('admin-login-form').addEventListener('htmx:afterRequest', function(event) {
-            if (event.detail.xhr.status === 200) {
-                // Successful login - redirect to dashboard
-                window.location.href = '/dashboard';
-            }
-        });
+        // Form submission handling - now using standard form submission
+        console.log('Admin login page loaded');
     </script>
 </body>
 </html>

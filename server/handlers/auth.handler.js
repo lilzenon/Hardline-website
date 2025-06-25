@@ -74,7 +74,27 @@ function authenticate(type, error, isStrict, redirect) {
     }
 }
 
-const local = authenticate("local", "Login credentials are wrong.", true, null);
+// Enhanced local authentication with debugging
+function localWithDebug(req, res, next) {
+    console.log(`🔐 Local authentication attempt for email: ${req.body?.email}`);
+
+    authenticate("local", "Login credentials are wrong.", true, null)(req, res, (err) => {
+        if (err) {
+            console.log(`❌ Local authentication failed: ${err.message}`);
+            return next(err);
+        }
+
+        if (req.user) {
+            console.log(`✅ Local authentication successful for: ${req.user.email}`);
+        } else {
+            console.log(`❌ Local authentication failed: No user returned`);
+        }
+
+        return next();
+    });
+}
+
+const local = localWithDebug;
 const jwt = authenticate("jwt", "Unauthorized.", true, "header");
 const jwtPage = authenticate("jwt", "Unauthorized.", true, "page");
 const jwtLoose = authenticate("jwt", "Unauthorized.", false, "header");
@@ -257,29 +277,50 @@ function login(req, res) {
 }
 
 function adminLogin(req, res) {
-    // Check if user is admin using the proper utility function
-    if (!utils.isAdmin(req.user)) {
-        console.log(`🚫 Non-admin user ${req.user.email} attempted admin login. Role: ${req.user.role}`);
-        throw new CustomError("Unauthorized. Admin access required.", 403);
+    try {
+        console.log(`🔐 Admin login attempt for user: ${req.user?.email || 'unknown'}`);
+        console.log(`🔍 User object:`, {
+            id: req.user ? req.user.id : null,
+            email: req.user ? req.user.email : null,
+            role: req.user ? req.user.role : null,
+            admin: req.user ? req.user.admin : null,
+            isAdmin: utils.isAdmin(req.user)
+        });
+
+        // Check if user is admin using the proper utility function
+        if (!utils.isAdmin(req.user)) {
+            console.log(`🚫 Non-admin user ${req.user.email} attempted admin login. Role: ${req.user.role}`);
+            throw new CustomError("Unauthorized. Admin access required.", 403);
+        }
+
+        console.log(`🔑 Generating token for admin user ${req.user.email}`);
+        const token = utils.signToken(req.user);
+        console.log(`✅ Token generated successfully`);
+
+        console.log(`🔍 Request type check - req.isHTML: ${req.isHTML}`);
+        if (req.isHTML) {
+            console.log(`🍪 Setting token for user ${req.user.email}`);
+            utils.setToken(res, token);
+
+            // Get the return URL from session or default to dashboard
+            const returnTo = req.session.returnTo || '/dashboard';
+            console.log(`🎯 Return URL from session: ${req.session.returnTo}, using: ${returnTo}`);
+            delete req.session.returnTo; // Clean up session
+
+            console.log(`✅ Admin ${req.user.email} logged in successfully, redirecting to: ${returnTo}`);
+            console.log(`📤 Setting HX-Redirect header to: ${returnTo}`);
+
+            res.setHeader("HX-Redirect", returnTo);
+            res.send("ADMIN_LOGIN_SUCCESS");
+            return;
+        } else {
+            console.log(`📡 Non-HTML request, sending JSON response`);
+            return res.status(200).send({ token, redirect: "/dashboard" });
+        }
+    } catch (error) {
+        console.error(`❌ Error in adminLogin:`, error);
+        throw error;
     }
-
-    const token = utils.signToken(req.user);
-
-    if (req.isHTML) {
-        utils.setToken(res, token);
-
-        // Get the return URL from session or default to dashboard
-        const returnTo = req.session.returnTo || '/dashboard';
-        delete req.session.returnTo; // Clean up session
-
-        console.log(`✅ Admin ${req.user.email} logged in, redirecting to: ${returnTo}`);
-
-        res.setHeader("HX-Redirect", returnTo);
-        res.send("ADMIN_LOGIN_SUCCESS");
-        return;
-    }
-
-    return res.status(200).send({ token, redirect: "/dashboard" });
 }
 
 function socialLogin(req, res) {

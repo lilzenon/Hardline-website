@@ -38,16 +38,29 @@ const localOptions = {
 passport.use(
     new LocalStrategy(localOptions, async(email, password, done) => {
         try {
+            console.log(`🔍 Passport local strategy - email: ${email}, password length: ${password.length}`);
+
             const user = await query.user.find({ email });
             if (!user) {
+                console.log(`❌ User not found for email: ${email}`);
                 return done(null, false);
             }
+
+            console.log(`✅ User found: ${user.email}, role: ${user.role}, verified: ${user.verified}`);
+            console.log(`🔑 Comparing password with hash (length: ${user.password.length})`);
+
             const isMatch = await bcrypt.compare(password, user.password);
+            console.log(`🧪 Password comparison result: ${isMatch}`);
+
             if (!isMatch) {
+                console.log(`❌ Password mismatch for user: ${email}`);
                 return done(null, false);
             }
+
+            console.log(`✅ Authentication successful for user: ${email}`);
             return done(null, user);
         } catch (err) {
+            console.error(`❌ Passport local strategy error:`, err);
             return done(err);
         }
     })
