@@ -81,4 +81,24 @@ router.get(
     asyncHandler(events.getFanSummaryStats)
 );
 
+// 🎯 QR CODE ROUTES
+
+// GET /api/events/:id/qr-code - Generate and download QR code
+router.get(
+    "/:id/qr-code",
+    asyncHandler(events.generateEventQRCode)
+);
+
+// GET /api/events/:id/qr-code/data - Get QR code data and URLs
+router.get(
+    "/:id/qr-code/data",
+    asyncHandler(events.getEventQRCodeData)
+);
+
+// GET /api/events/:id/qr-code/analytics - Get QR code scan analytics
+router.get(
+    "/:id/qr-code/analytics",
+    asyncHandler(events.getEventQRCodeAnalytics)
+);
+
 module.exports = router;

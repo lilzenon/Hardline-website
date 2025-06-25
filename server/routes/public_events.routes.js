@@ -94,8 +94,50 @@ router.get(
         // Check if this is a preview request
         const isPreview = req.query.preview === 'true';
 
+        // Check if this is a QR code access
+        const isQRAccess = req.query.qr === foundEvent.qr_code_identifier || req.query.qr === '1';
+
         if (isPreview) {
             console.log('🖼️ Rendering preview mode for event:', foundEvent.slug);
+        }
+
+        // Track QR code scan if accessed via QR code
+        if (isQRAccess && foundEvent.qr_code_enabled) {
+            try {
+                const useragent = require('useragent');
+                const geoip = require('geoip-lite');
+
+                const userAgent = req.get('User-Agent');
+                const ipAddress = req.ip || req.connection.remoteAddress;
+                const referrer = req.get('Referrer');
+
+                // Parse user agent for device info
+                const agent = useragent.parse(userAgent);
+                const deviceType = agent.device.family === 'Other' ?
+                    (agent.os.family.includes('Mobile') || agent.os.family.includes('Android') || agent.os.family.includes('iOS') ? 'mobile' : 'desktop') :
+                    agent.device.family.toLowerCase().includes('tablet') ? 'tablet' : 'mobile';
+
+                // Get location info
+                const geo = geoip.lookup(ipAddress);
+
+                // Track the scan
+                await query.event.trackQRCodeScan({
+                    event_id: foundEvent.id,
+                    user_agent: userAgent,
+                    ip_address: ipAddress,
+                    referrer: referrer,
+                    device_type: deviceType,
+                    browser_name: agent.family,
+                    os_name: agent.os.family,
+                    country_code: geo ? geo.country : null,
+                    city: geo ? geo.city : null
+                });
+
+                console.log(`🎯 QR code scan tracked for event: ${foundEvent.slug}`);
+            } catch (error) {
+                console.error('🚨 Error tracking QR code scan:', error);
+                // Don't fail the page load if tracking fails
+            }
         }
 
         res.render("event_landing", {
@@ -109,7 +151,8 @@ router.get(
             deviceType: deviceType,
             isMobile: deviceType === 'mobile',
             isDesktop: deviceType === 'desktop',
-            isPreview: isPreview
+            isPreview: isPreview,
+            isQRAccess: isQRAccess
         });
     })
 );
@@ -120,6 +163,12 @@ router.post(
     asyncHandler(events.createSignupValidation),
     validateRequest,
     asyncHandler(events.createSignup)
+);
+
+// GET /qr/:qr_identifier - QR code tracking and redirect
+router.get(
+    "/qr/:qr_identifier",
+    asyncHandler(events.trackQRCodeScan)
 );
 
 module.exports = router;

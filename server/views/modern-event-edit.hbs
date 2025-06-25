@@ -537,16 +537,182 @@
 
                     <!-- SHARING TAB CONTENT -->
                     <div class="tab-content p-6" data-tab-content="sharing">
-                        <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">Sharing & QR Codes</h3>
-                            <p class="mt-1 text-sm text-gray-500">Share your event and generate QR codes for easy access.</p>
-                            <div class="mt-4">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    Coming Soon
-                                </span>
+                        <div class="space-y-8">
+                            <!-- QR Code Section -->
+                            <div class="glass-card p-6">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h3 class="text-lg font-medium text-gray-900">QR Code</h3>
+                                        <p class="text-sm text-gray-500">Generate and download QR codes for your event</p>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" id="qr-enabled-toggle" class="sr-only peer" {{#if event.qr_code_enabled}}checked{{/if}}>
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                        <span class="text-sm text-gray-700">Enabled</span>
+                                    </div>
+                                </div>
+
+                                <div id="qr-code-content" class="{{#unless event.qr_code_enabled}}opacity-50 pointer-events-none{{/unless}}">
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        <!-- QR Code Display -->
+                                        <div class="text-center">
+                                            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200 inline-block">
+                                                <div id="qr-code-display" class="w-48 h-48 mx-auto bg-gray-100 rounded-lg flex items-center justify-center">
+                                                    <div class="text-gray-400">
+                                                        <svg class="w-12 h-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M12 12h.01M12 12v4.01" />
+                                                        </svg>
+                                                        <p class="text-sm">Loading QR Code...</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- QR Code Actions -->
+                                            <div class="mt-4 space-y-2">
+                                                <div class="flex flex-col sm:flex-row gap-2 justify-center">
+                                                    <button id="download-qr-png" class="glass-button px-4 py-2 text-sm">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        Download PNG
+                                                    </button>
+                                                    <button id="copy-qr-url" class="glass-button px-4 py-2 text-sm">
+                                                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                        </svg>
+                                                        Copy URL
+                                                    </button>
+                                                </div>
+                                                <div class="text-xs text-gray-500">
+                                                    <span id="qr-url-display" class="font-mono bg-gray-100 px-2 py-1 rounded"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- QR Code Analytics -->
+                                        <div class="space-y-4">
+                                            <h4 class="font-medium text-gray-900">QR Code Analytics</h4>
+
+                                            <!-- Stats Grid -->
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                                                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M12 12h.01M12 12v4.01" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-3">
+                                                            <p class="text-sm font-medium text-blue-900">Total Scans</p>
+                                                            <p class="text-lg font-semibold text-blue-900" id="qr-total-scans">-</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-4">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                                                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-3">
+                                                            <p class="text-sm font-medium text-green-900">Unique Visitors</p>
+                                                            <p class="text-lg font-semibold text-green-900" id="qr-unique-scans">-</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                                                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-3">
+                                                            <p class="text-sm font-medium text-purple-900">Mobile Scans</p>
+                                                            <p class="text-lg font-semibold text-purple-900" id="qr-mobile-scans">-</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4">
+                                                    <div class="flex items-center">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                                                                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div class="ml-3">
+                                                            <p class="text-sm font-medium text-orange-900">Recent (7d)</p>
+                                                            <p class="text-lg font-semibold text-orange-900" id="qr-recent-scans">-</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Recent Activity -->
+                                            <div class="mt-6">
+                                                <h5 class="text-sm font-medium text-gray-900 mb-3">Recent QR Code Activity</h5>
+                                                <div id="qr-recent-activity" class="space-y-2 max-h-48 overflow-y-auto">
+                                                    <div class="text-sm text-gray-500 text-center py-4">
+                                                        Loading activity...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Event Sharing Section -->
+                            <div class="glass-card p-6">
+                                <h3 class="text-lg font-medium text-gray-900 mb-4">Share Event</h3>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Event URL</label>
+                                        <div class="flex">
+                                            <input type="text" id="event-url" class="glass-input flex-1 mr-2" readonly value="{{baseUrl}}/event/{{event.slug}}">
+                                            <button id="copy-event-url" class="glass-button px-4 py-2">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex space-x-3">
+                                        <button class="glass-button px-4 py-2 text-sm" onclick="shareToSocial('twitter')">
+                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                                            </svg>
+                                            Twitter
+                                        </button>
+                                        <button class="glass-button px-4 py-2 text-sm" onclick="shareToSocial('facebook')">
+                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                            </svg>
+                                            Facebook
+                                        </button>
+                                        <button class="glass-button px-4 py-2 text-sm" onclick="shareToSocial('linkedin')">
+                                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                            </svg>
+                                            LinkedIn
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2725,6 +2891,274 @@ async function loadAnalytics() {
         console.error('Failed to load analytics:', error);
     }
 }
+
+// 🎯 QR CODE FUNCTIONALITY
+
+// Initialize QR code functionality
+function initializeQRCode() {
+    const eventId = {{event.id}};
+
+    // Load QR code data and analytics
+    loadQRCodeData(eventId);
+    loadQRCodeAnalytics(eventId);
+
+    // Set up event listeners
+    setupQRCodeEventListeners(eventId);
+}
+
+// Load QR code data
+async function loadQRCodeData(eventId) {
+    try {
+        const response = await fetch(`/api/events/${eventId}/qr-code/data`);
+        const result = await response.json();
+
+        if (result.success) {
+            const data = result.data;
+
+            // Update QR code display
+            if (data.qr_code_enabled) {
+                displayQRCode(data.qr_code_url);
+                document.getElementById('qr-url-display').textContent = data.qr_code_url;
+            }
+
+            // Store download URLs for later use
+            window.qrDownloadUrls = data.download_urls;
+        }
+    } catch (error) {
+        console.error('🚨 Failed to load QR code data:', error);
+    }
+}
+
+// Display QR code
+function displayQRCode(url) {
+    const qrDisplay = document.getElementById('qr-code-display');
+    qrDisplay.innerHTML = `<img src="/api/events/{{event.id}}/qr-code?format=png&size=192" alt="QR Code" class="w-full h-full object-contain rounded-lg">`;
+}
+
+// Load QR code analytics
+async function loadQRCodeAnalytics(eventId) {
+    try {
+        const response = await fetch(`/api/events/${eventId}/qr-code/analytics`);
+        const result = await response.json();
+
+        if (result.success) {
+            const analytics = result.data;
+
+            // Update analytics display
+            document.getElementById('qr-total-scans').textContent = analytics.totalScans || 0;
+            document.getElementById('qr-unique-scans').textContent = analytics.uniqueScans || 0;
+            document.getElementById('qr-recent-scans').textContent = analytics.recentScans || 0;
+
+            // Calculate mobile scans
+            const mobileScans = analytics.deviceBreakdown?.find(d => d.device_type === 'mobile')?.count || 0;
+            document.getElementById('qr-mobile-scans').textContent = mobileScans;
+
+            // Display recent activity
+            displayRecentActivity(analytics.recentActivity || []);
+        }
+    } catch (error) {
+        console.error('🚨 Failed to load QR code analytics:', error);
+        // Show fallback content
+        document.getElementById('qr-recent-activity').innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Unable to load activity</div>';
+    }
+}
+
+// Display recent QR code activity
+function displayRecentActivity(activities) {
+    const container = document.getElementById('qr-recent-activity');
+
+    if (activities.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">No recent activity</div>';
+        return;
+    }
+
+    const activityHtml = activities.map(activity => {
+        const timeAgo = getTimeAgo(new Date(activity.scan_timestamp));
+        const deviceIcon = getDeviceIcon(activity.device_type);
+        const location = activity.city && activity.country_code ? `${activity.city}, ${activity.country_code}` : 'Unknown location';
+
+        return `
+            <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="text-gray-400">${deviceIcon}</div>
+                    <div>
+                        <div class="text-sm font-medium text-gray-900">${activity.browser_name || 'Unknown'} on ${activity.os_name || 'Unknown'}</div>
+                        <div class="text-xs text-gray-500">${location}</div>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-500">${timeAgo}</div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = activityHtml;
+}
+
+// Get device icon based on device type
+function getDeviceIcon(deviceType) {
+    switch (deviceType) {
+        case 'mobile':
+            return '📱';
+        case 'tablet':
+            return '📱';
+        case 'desktop':
+            return '💻';
+        default:
+            return '📱';
+    }
+}
+
+// Get time ago string
+function getTimeAgo(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+}
+
+// Set up QR code event listeners
+function setupQRCodeEventListeners(eventId) {
+    // QR code enabled toggle
+    const qrToggle = document.getElementById('qr-enabled-toggle');
+    if (qrToggle) {
+        qrToggle.addEventListener('change', async function() {
+            const enabled = this.checked;
+
+            try {
+                const response = await fetch(`/api/events/${eventId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        qr_code_enabled: enabled
+                    })
+                });
+
+                if (response.ok) {
+                    const qrContent = document.getElementById('qr-code-content');
+                    if (enabled) {
+                        qrContent.classList.remove('opacity-50', 'pointer-events-none');
+                        loadQRCodeData(eventId);
+                    } else {
+                        qrContent.classList.add('opacity-50', 'pointer-events-none');
+                    }
+
+                    showToast(enabled ? 'QR code enabled' : 'QR code disabled', 'success');
+                } else {
+                    // Revert toggle if request failed
+                    this.checked = !enabled;
+                    showToast('Failed to update QR code setting', 'error');
+                }
+            } catch (error) {
+                console.error('🚨 Failed to update QR code setting:', error);
+                this.checked = !enabled;
+                showToast('Failed to update QR code setting', 'error');
+            }
+        });
+    }
+
+    // Download QR code PNG
+    const downloadBtn = document.getElementById('download-qr-png');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (window.qrDownloadUrls?.png_512) {
+                const link = document.createElement('a');
+                link.href = window.qrDownloadUrls.png_512;
+                link.download = `qr-code-{{event.slug}}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('QR code downloaded', 'success');
+            }
+        });
+    }
+
+    // Copy QR URL
+    const copyQrBtn = document.getElementById('copy-qr-url');
+    if (copyQrBtn) {
+        copyQrBtn.addEventListener('click', async function() {
+            const urlDisplay = document.getElementById('qr-url-display');
+            const url = urlDisplay.textContent;
+
+            if (url) {
+                try {
+                    await navigator.clipboard.writeText(url);
+                    showToast('QR URL copied to clipboard', 'success');
+                } catch (error) {
+                    console.error('Failed to copy URL:', error);
+                    showToast('Failed to copy URL', 'error');
+                }
+            }
+        });
+    }
+
+    // Copy event URL
+    const copyEventBtn = document.getElementById('copy-event-url');
+    if (copyEventBtn) {
+        copyEventBtn.addEventListener('click', async function() {
+            const eventUrlInput = document.getElementById('event-url');
+            const url = eventUrlInput.value;
+
+            try {
+                await navigator.clipboard.writeText(url);
+                showToast('Event URL copied to clipboard', 'success');
+            } catch (error) {
+                console.error('Failed to copy URL:', error);
+                showToast('Failed to copy URL', 'error');
+            }
+        });
+    }
+}
+
+// Social sharing functions
+function shareToSocial(platform) {
+    const eventUrl = document.getElementById('event-url').value;
+    const eventTitle = '{{event.title}}';
+    const text = `Check out this event: ${eventTitle}`;
+
+    let shareUrl;
+    switch (platform) {
+        case 'twitter':
+            shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(eventUrl)}`;
+            break;
+        case 'facebook':
+            shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`;
+            break;
+        case 'linkedin':
+            shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(eventUrl)}`;
+            break;
+        default:
+            return;
+    }
+
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+// Initialize QR code functionality when sharing tab is activated
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize QR code when page loads if sharing tab is active
+    const sharingTab = document.querySelector('[data-tab="sharing"]');
+    if (sharingTab) {
+        sharingTab.addEventListener('click', function() {
+            // Delay to ensure tab content is visible
+            setTimeout(() => {
+                initializeQRCode();
+            }, 100);
+        });
+
+        // Initialize immediately if sharing tab is already active
+        if (sharingTab.classList.contains('border-primary-500')) {
+            initializeQRCode();
+        }
+    }
+});
 </script>
 
 <style>

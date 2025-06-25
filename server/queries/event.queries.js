@@ -640,6 +640,87 @@ async function getFeaturedEvents(options = {}) {
     }
 }
 
+// 🎯 QR CODE FUNCTIONS
+
+// Find event by QR identifier
+async function findByQRIdentifier(qrIdentifier) {
+    return await knex("events").where("qr_code_identifier", qrIdentifier).first();
+}
+
+// Track QR code scan
+async function trackQRCodeScan(scanData) {
+    const [id] = await knex("qr_code_scans").insert(scanData);
+    return await knex("qr_code_scans").where("id", id).first();
+}
+
+// Get QR code analytics for an event
+async function getQRCodeAnalytics(eventId, days = 30) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    // Total scans
+    const totalScansResult = await knex("qr_code_scans")
+        .where("event_id", eventId)
+        .count("id as count")
+        .first();
+    const totalScans = parseInt(totalScansResult.count) || 0;
+
+    // Unique scans (by IP address)
+    const uniqueScansResult = await knex("qr_code_scans")
+        .where("event_id", eventId)
+        .countDistinct("ip_address as count")
+        .first();
+    const uniqueScans = parseInt(uniqueScansResult.count) || 0;
+
+    // Recent scans (last 7 days)
+    const recentScansResult = await knex("qr_code_scans")
+        .where("event_id", eventId)
+        .where("scan_timestamp", ">=", knex.raw("NOW() - INTERVAL '7 days'"))
+        .count("id as count")
+        .first();
+    const recentScans = parseInt(recentScansResult.count) || 0;
+
+    // Device breakdown
+    const deviceBreakdown = await knex("qr_code_scans")
+        .where("event_id", eventId)
+        .select("device_type")
+        .count("id as count")
+        .groupBy("device_type")
+        .orderBy("count", "desc");
+
+    // Daily scan trend (last 30 days)
+    const dailyTrend = await knex("qr_code_scans")
+        .where("event_id", eventId)
+        .where("scan_timestamp", ">=", startDate)
+        .select(knex.raw("DATE(scan_timestamp) as date"))
+        .count("id as scans")
+        .groupBy("date")
+        .orderBy("date", "asc");
+
+    // Recent scan activity (last 10 scans)
+    const recentActivity = await knex("qr_code_scans")
+        .where("event_id", eventId)
+        .select([
+            "scan_timestamp",
+            "device_type",
+            "browser_name",
+            "os_name",
+            "country_code",
+            "city"
+        ])
+        .orderBy("scan_timestamp", "desc")
+        .limit(10);
+
+    return {
+        totalScans,
+        uniqueScans,
+        recentScans,
+        deviceBreakdown: deviceBreakdown || [],
+        dailyTrend: dailyTrend || [],
+        recentActivity: recentActivity || []
+    };
+}
+
 module.exports = {
     create,
     find,
@@ -663,5 +744,9 @@ module.exports = {
     getLocationFromIP,
     getAcquisitionChannel,
     // 🏠 Homepage Features
-    getFeaturedEvents
+    getFeaturedEvents,
+    // 🎯 QR Code Functions
+    findByQRIdentifier,
+    trackQRCodeScan,
+    getQRCodeAnalytics
 };

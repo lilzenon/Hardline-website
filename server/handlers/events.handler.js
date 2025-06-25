@@ -1,6 +1,10 @@
 const { body, param, query } = require("express-validator");
 const { event } = require("../queries");
 const { CustomError } = require("../utils");
+const QRCode = require('qrcode');
+const { nanoid } = require('nanoid');
+const useragent = require('useragent');
+const geoip = require('geoip-lite');
 
 // Validation rules
 const createEventValidation = [
@@ -97,6 +101,16 @@ const createEventValidation = [
     .withMessage("Posh embed URL must be a valid URL")
     .isLength({ max: 2040 })
     .withMessage("Posh embed URL must be less than 2040 characters"),
+    body("qr_code_enabled")
+    .optional()
+    .isBoolean()
+    .withMessage("QR code enabled must be a boolean"),
+    body("qr_code_custom_url")
+    .optional()
+    .isURL()
+    .withMessage("QR code custom URL must be a valid URL")
+    .isLength({ max: 2040 })
+    .withMessage("QR code custom URL must be less than 2040 characters"),
 ];
 
 const updateEventValidation = [
@@ -303,7 +317,10 @@ async function createEvent(req, res) {
     const userId = req.user.id;
     const eventData = {
         ...req.body,
-        user_id: userId
+        user_id: userId,
+        // Generate unique QR code identifier for new events
+        qr_code_identifier: nanoid(12),
+        qr_code_enabled: true // Enable QR codes by default for new events
     };
 
     try {
@@ -877,6 +894,186 @@ async function getEventAnalytics(req, res) {
     });
 }
 
+// Generate QR code for event
+async function generateEventQRCode(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { format = 'png', size = 256 } = req.query;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        if (!foundEvent.qr_code_enabled) {
+            throw new CustomError("QR code is disabled for this event", 400);
+        }
+
+        // Generate QR code URL
+        const baseUrl = process.env.DEFAULT_DOMAIN || req.get('host');
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
+        const qrUrl = foundEvent.qr_code_custom_url ||
+            `${protocol}://${baseUrl}/event/${foundEvent.slug}?qr=${foundEvent.qr_code_identifier}`;
+
+        // Generate QR code
+        const qrCodeOptions = {
+            width: parseInt(size),
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        };
+
+        if (format === 'svg') {
+            const qrCodeSVG = await QRCode.toString(qrUrl, {
+                ...qrCodeOptions,
+                type: 'svg'
+            });
+            res.setHeader('Content-Type', 'image/svg+xml');
+            res.send(qrCodeSVG);
+        } else {
+            const qrCodeBuffer = await QRCode.toBuffer(qrUrl, {
+                ...qrCodeOptions,
+                type: 'png'
+            });
+            res.setHeader('Content-Type', 'image/png');
+            res.setHeader('Content-Disposition', `attachment; filename="qr-code-${foundEvent.slug}.png"`);
+            res.send(qrCodeBuffer);
+        }
+
+    } catch (error) {
+        console.error('🚨 Error generating QR code:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to generate QR code'
+        });
+    }
+}
+
+// Get QR code data for event
+async function getEventQRCodeData(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        // Generate QR code URL
+        const baseUrl = process.env.DEFAULT_DOMAIN || req.get('host');
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : req.protocol;
+        const qrUrl = foundEvent.qr_code_custom_url ||
+            `${protocol}://${baseUrl}/event/${foundEvent.slug}?qr=${foundEvent.qr_code_identifier}`;
+
+        res.json({
+            success: true,
+            data: {
+                qr_code_enabled: foundEvent.qr_code_enabled,
+                qr_code_identifier: foundEvent.qr_code_identifier,
+                qr_code_url: qrUrl,
+                qr_code_custom_url: foundEvent.qr_code_custom_url,
+                download_urls: {
+                    png_256: `${protocol}://${req.get('host')}/api/events/${id}/qr-code?format=png&size=256`,
+                    png_512: `${protocol}://${req.get('host')}/api/events/${id}/qr-code?format=png&size=512`,
+                    png_1024: `${protocol}://${req.get('host')}/api/events/${id}/qr-code?format=png&size=1024`,
+                    svg: `${protocol}://${req.get('host')}/api/events/${id}/qr-code?format=svg`
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('🚨 Error getting QR code data:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to get QR code data'
+        });
+    }
+}
+
+// Get QR code analytics for event
+async function getEventQRCodeAnalytics(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { days = 30 } = req.query;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        // Get QR code scan analytics
+        const analytics = await event.getQRCodeAnalytics(parseInt(id), parseInt(days));
+
+        res.json({
+            success: true,
+            data: analytics
+        });
+
+    } catch (error) {
+        console.error('🚨 Error getting QR code analytics:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to get QR code analytics'
+        });
+    }
+}
+
+// Track QR code scan
+async function trackQRCodeScan(req, res) {
+    const { qr_identifier } = req.params;
+    const userAgent = req.get('User-Agent');
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    const referrer = req.get('Referrer');
+
+    try {
+        // Find event by QR identifier
+        const foundEvent = await event.findByQRIdentifier(qr_identifier);
+        if (!foundEvent) {
+            throw new CustomError("Invalid QR code", 404);
+        }
+
+        // Parse user agent for device info
+        const agent = useragent.parse(userAgent);
+        const deviceType = agent.device.family === 'Other' ?
+            (agent.os.family.includes('Mobile') || agent.os.family.includes('Android') || agent.os.family.includes('iOS') ? 'mobile' : 'desktop') :
+            agent.device.family.toLowerCase().includes('tablet') ? 'tablet' : 'mobile';
+
+        // Get location info
+        const geo = geoip.lookup(ipAddress);
+
+        // Track the scan
+        await event.trackQRCodeScan({
+            event_id: foundEvent.id,
+            user_agent: userAgent,
+            ip_address: ipAddress,
+            referrer: referrer,
+            device_type: deviceType,
+            browser_name: agent.family,
+            os_name: agent.os.family,
+            country_code: geo ? geo.country : null,
+            city: geo ? geo.city : null
+        });
+
+        // Redirect to event page
+        res.redirect(`/event/${foundEvent.slug}?qr=1`);
+
+    } catch (error) {
+        console.error('🚨 Error tracking QR code scan:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to track QR code scan'
+        });
+    }
+}
+
 module.exports = {
     createEventValidation,
     updateEventValidation,
@@ -891,5 +1088,10 @@ module.exports = {
     // 🚀 Analytics
     getFanAnalytics,
     getFanSummaryStats,
-    getEventAnalytics
+    getEventAnalytics,
+    // 🎯 QR Code functionality
+    generateEventQRCode,
+    getEventQRCodeData,
+    getEventQRCodeAnalytics,
+    trackQRCodeScan
 };
