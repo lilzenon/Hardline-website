@@ -1614,10 +1614,10 @@ function refreshPreview() {
         return;
     }
 
-    // Get the drop slug from the current page URL or data
-    const dropSlug = '{{event.slug}}';
-    if (!dropSlug) {
-        console.error('❌ Drop slug not found');
+    // Get the event slug from the current page URL or data
+    const eventSlug = '{{event.slug}}';
+    if (!eventSlug) {
+        console.error('❌ Event slug not found');
         return;
     }
 
