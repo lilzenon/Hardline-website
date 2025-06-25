@@ -48,45 +48,45 @@ class SearchService {
                 if (this.isPostgreSQL) {
                     // Use PostgreSQL full-text search for better performance
                     query = query.whereRaw(`
-                        to_tsvector('english', coalesce(ds.email, '') || ' ' || coalesce(ds.name, '') || ' ' || coalesce(ds.phone, '') || ' ' || coalesce(d.title, '')) 
+                        to_tsvector('english', coalesce(es.email, '') || ' ' || coalesce(es.name, '') || ' ' || coalesce(es.phone, '') || ' ' || coalesce(e.title, '')) 
                         @@ plainto_tsquery('english', ?)
                     `, [trimmedQuery]);
                 } else {
                     // Fallback to LIKE queries for MySQL/SQLite
                     query = query.where(function() {
-                        this.where("ds.email", "like", `%${trimmedQuery}%`)
-                            .orWhere("ds.name", "like", `%${trimmedQuery}%`)
-                            .orWhere("ds.phone", "like", `%${trimmedQuery}%`)
-                            .orWhere("d.title", "like", `%${trimmedQuery}%`);
+                        this.where("es.email", "like", `%${trimmedQuery}%`)
+                            .orWhere("es.name", "like", `%${trimmedQuery}%`)
+                            .orWhere("es.phone", "like", `%${trimmedQuery}%`)
+                            .orWhere("e.title", "like", `%${trimmedQuery}%`);
                     });
                 }
             }
 
             // Apply drop filter
             if (dropId) {
-                query = query.where("d.id", dropId);
+                query = query.where("e.id", dropId);
             }
 
             // Apply sorting
             switch (sortBy) {
                 case 'latest':
-                    query = query.orderBy("ds.created_at", "desc");
+                    query = query.orderBy("es.created_at", "desc");
                     break;
                 case 'oldest':
-                    query = query.orderBy("ds.created_at", "asc");
+                    query = query.orderBy("es.created_at", "asc");
                     break;
                 case 'email':
-                    query = query.orderBy("ds.email", "asc");
+                    query = query.orderBy("es.email", "asc");
                     break;
                 case 'name':
-                    query = query.orderBy("ds.name", "asc");
+                    query = query.orderBy("es.name", "asc");
                     break;
                 default:
-                    query = query.orderBy("ds.created_at", "desc");
+                    query = query.orderBy("es.created_at", "desc");
             }
 
             // Get total count for pagination
-            const countQuery = query.clone().clearSelect().clearOrder().count("ds.id as total");
+            const countQuery = query.clone().clearSelect().clearOrder().count("es.id as total");
             const [{ total }] = await countQuery;
 
             // Apply pagination
@@ -215,7 +215,7 @@ class SearchService {
                     ...nameSuggestions.map(s => ({ type: 'name', value: s.name }))
                 );
             } else if (type === 'drops') {
-                const dropSuggestions = await knex("drops")
+                const dropSuggestions = await knex("events")
                     .select("title")
                     .where("user_id", userId)
                     .where("title", "like", `${partialQuery}%`)

@@ -263,19 +263,19 @@ async function isPhoneSignedUp(eventId, phone) {
 
 // Count drops by user
 async function countByUser(userId) {
-    const result = await knex("drops")
+    const result = await knex("events")
         .where("user_id", userId)
         .count("id as count")
         .first();
     return parseInt(result.count) || 0;
 }
 
-// Get total fans by user (across all drops)
+// Get total fans by user (across all events)
 async function getTotalFansByUser(userId) {
-    const result = await knex("event_signups as ds")
-        .join("events as e", "ds.event_id", "d.id")
-        .where("d.user_id", userId)
-        .countDistinct("ds.email as count")
+    const result = await knex("event_signups as es")
+        .join("events as e", "es.event_id", "e.id")
+        .where("e.user_id", userId)
+        .countDistinct("es.email as count")
         .first();
     return parseInt(result.count) || 0;
 }
@@ -313,31 +313,31 @@ async function getFanAnalytics(userId, options = {}) {
     // Search functionality
     if (search) {
         query = query.where(function() {
-            this.where("ds.email", "like", `%${search}%`)
-                .orWhere("ds.name", "like", `%${search}%`)
-                .orWhere("d.title", "like", `%${search}%`);
+            this.where("es.email", "like", `%${search}%`)
+                .orWhere("es.name", "like", `%${search}%`)
+                .orWhere("e.title", "like", `%${search}%`);
         });
     }
 
     // Sorting
     switch (sortBy) {
         case 'latest':
-            query = query.orderBy("ds.created_at", "desc");
+            query = query.orderBy("es.created_at", "desc");
             break;
         case 'oldest':
-            query = query.orderBy("ds.created_at", "asc");
+            query = query.orderBy("es.created_at", "asc");
             break;
         case 'most_active':
-            query = query.orderBy("total_rsvps", "desc").orderBy("ds.created_at", "desc");
+            query = query.orderBy("total_rsvps", "desc").orderBy("es.created_at", "desc");
             break;
         case 'name':
-            query = query.orderBy("ds.name", "asc");
+            query = query.orderBy("es.name", "asc");
             break;
         case 'email':
-            query = query.orderBy("ds.email", "asc");
+            query = query.orderBy("es.email", "asc");
             break;
         default:
-            query = query.orderBy("ds.created_at", "desc");
+            query = query.orderBy("es.created_at", "desc");
     }
 
     // Apply pagination
@@ -345,22 +345,22 @@ async function getFanAnalytics(userId, options = {}) {
 
     // Get total count for pagination
     const totalQuery = knex("event_signups as ds")
-        .join("events as e", "ds.event_id", "d.id")
-        .where("d.user_id", userId);
+        .join("events as e", "ds.event_id", "e.id")
+        .where("e.user_id", userId);
 
     if (eventId) {
-        totalQuery.where("d.id", eventId);
+        totalQuery.where("e.id", eventId);
     }
 
     if (search) {
         totalQuery.where(function() {
-            this.where("ds.email", "like", `%${search}%`)
-                .orWhere("ds.name", "like", `%${search}%`)
-                .orWhere("d.title", "like", `%${search}%`);
+            this.where("es.email", "like", `%${search}%`)
+                .orWhere("es.name", "like", `%${search}%`)
+                .orWhere("e.title", "like", `%${search}%`);
         });
     }
 
-    const totalResult = await totalQuery.countDistinct("ds.email as count").first();
+    const totalResult = await totalQuery.countDistinct("es.email as count").first();
     const total = parseInt(totalResult.count) || 0;
 
     // Process fans data to add location and acquisition channel
@@ -408,34 +408,34 @@ async function getFanSummaryStats(userId, eventId = null) {
         console.log(`🚀 Getting fan summary stats for user ${userId}, drop ${eventId}`);
 
         let baseQuery = knex("event_signups as ds")
-            .join("events as e", "ds.event_id", "d.id")
-            .where("d.user_id", userId);
+            .join("events as e", "ds.event_id", "e.id")
+            .where("e.user_id", userId);
 
         if (eventId) {
-            baseQuery = baseQuery.where("d.id", eventId);
+            baseQuery = baseQuery.where("e.id", eventId);
         }
 
         // Total unique fans
-        const uniqueFansResult = await baseQuery.clone().countDistinct("ds.email as count").first();
+        const uniqueFansResult = await baseQuery.clone().countDistinct("es.email as count").first();
         const totalUniqueFans = parseInt(uniqueFansResult.count) || 0;
 
         // Total RSVPs
-        const totalRSVPsResult = await baseQuery.clone().count("ds.id as count").first();
+        const totalRSVPsResult = await baseQuery.clone().count("es.id as count").first();
         const totalRSVPs = parseInt(totalRSVPsResult.count) || 0;
 
-        // Repeat fans (fans who have RSVP'd to multiple drops)
-        const repeatFansResult = await knex("event_signups as ds")
-            .join("events as e", "ds.event_id", "d.id")
-            .where("d.user_id", userId)
-            .select("ds.email")
-            .groupBy("ds.email")
+        // Repeat fans (fans who have RSVP'd to multiple events)
+        const repeatFansResult = await knex("event_signups as es")
+            .join("events as e", "es.event_id", "e.id")
+            .where("e.user_id", userId)
+            .select("es.email")
+            .groupBy("es.email")
             .having(knex.raw("COUNT(*) > 1"))
             .then(results => results.length);
 
         // Recent signups (last 7 days) - PostgreSQL compatible
         const recentSignupsResult = await baseQuery.clone()
-            .where("ds.created_at", ">=", knex.raw("NOW() - INTERVAL '7 days'"))
-            .count("ds.id as count")
+            .where("es.created_at", ">=", knex.raw("NOW() - INTERVAL '7 days'"))
+            .count("es.id as count")
             .first();
         const recentSignups = parseInt(recentSignupsResult.count) || 0;
 
@@ -443,26 +443,26 @@ async function getFanSummaryStats(userId, eventId = null) {
         const topChannels = await baseQuery.clone()
             .select(knex.raw(`
             CASE
-                WHEN ds.referrer IS NULL OR ds.referrer = '' THEN 'Direct'
-                WHEN ds.referrer LIKE '%instagram%' THEN 'Instagram'
-                WHEN ds.referrer LIKE '%twitter%' OR ds.referrer LIKE '%t.co%' THEN 'Twitter'
-                WHEN ds.referrer LIKE '%facebook%' THEN 'Facebook'
-                WHEN ds.referrer LIKE '%tiktok%' THEN 'TikTok'
-                WHEN ds.referrer LIKE '%youtube%' THEN 'YouTube'
-                WHEN ds.referrer LIKE '%google%' THEN 'Google'
+                WHEN es.referrer IS NULL OR es.referrer = '' THEN 'Direct'
+                WHEN es.referrer LIKE '%instagram%' THEN 'Instagram'
+                WHEN es.referrer LIKE '%twitter%' OR es.referrer LIKE '%t.co%' THEN 'Twitter'
+                WHEN es.referrer LIKE '%facebook%' THEN 'Facebook'
+                WHEN es.referrer LIKE '%tiktok%' THEN 'TikTok'
+                WHEN es.referrer LIKE '%youtube%' THEN 'YouTube'
+                WHEN es.referrer LIKE '%google%' THEN 'Google'
                 ELSE 'Other'
             END as channel
         `))
-            .count("ds.id as count")
+            .count("es.id as count")
             .groupBy("channel")
             .orderBy("count", "desc")
             .limit(5);
 
         // Growth trend (last 30 days) - PostgreSQL compatible
         const growthTrend = await baseQuery.clone()
-            .select(knex.raw("DATE(ds.created_at) as date"))
-            .count("ds.id as signups")
-            .where("ds.created_at", ">=", knex.raw("NOW() - INTERVAL '30 days'"))
+            .select(knex.raw("DATE(es.created_at) as date"))
+            .count("es.id as signups")
+            .where("es.created_at", ">=", knex.raw("NOW() - INTERVAL '30 days'"))
             .groupBy("date")
             .orderBy("date", "asc");
 

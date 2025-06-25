@@ -166,7 +166,7 @@ async function getAdmin(match, params) {
         )
         .groupBy("user_id").as("d"),
         "users.id",
-        "d.user_id"
+        "e.user_id"
     )
     query.leftJoin(
         knex("links").select("user_id").count("* as links_count").groupBy("user_id").as("l"),
@@ -202,7 +202,7 @@ async function totalAdmin(match, params) {
             )
             .groupBy("user_id").as("d"),
             "users.id",
-            "d.user_id"
+            "e.user_id"
         );
     }
 
