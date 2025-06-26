@@ -2,7 +2,7 @@
  * 🎫 CHECKOUT NAVIGATION COMPONENT
  *
  * JavaScript functionality for the ticket purchasing navigation
- * Handles expansion animations, iframe loading, and accessibility
+ * Handles modal overlay, iframe loading, and accessibility
  */
 
 class CheckoutNav {
@@ -10,10 +10,10 @@ class CheckoutNav {
         this.container = null;
         this.nav = null;
         this.buyButton = null;
+        this.modal = null;
         this.closeButton = null;
         this.iframe = null;
-        this.isExpanded = false;
-        this.isAnimating = false;
+        this.isModalOpen = false;
 
         this.init();
     }
@@ -23,10 +23,11 @@ class CheckoutNav {
         this.container = document.querySelector('.checkout-nav-container');
         this.nav = document.querySelector('.checkout-nav');
         this.buyButton = document.querySelector('.buy-button');
+        this.modal = document.querySelector('.checkout-modal');
         this.closeButton = document.querySelector('.checkout-close');
         this.iframe = document.querySelector('.checkout-iframe');
 
-        if (!this.container || !this.nav || !this.buyButton) {
+        if (!this.container || !this.nav || !this.buyButton || !this.modal) {
             console.log('🎫 Checkout nav elements not found - component not initialized');
             return;
         }
@@ -46,7 +47,7 @@ class CheckoutNav {
         if (this.closeButton) {
             this.closeButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.collapse();
+                this.closeModal();
             });
         }
 
@@ -62,36 +63,29 @@ class CheckoutNav {
             this.closeButton.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    this.collapse();
+                    this.closeModal();
                 }
             });
         }
 
-        // Tab key navigation within expanded nav
-        this.nav.addEventListener('keydown', (e) => {
-            if (e.key === 'Tab' && this.isExpanded) {
-                this.handleTabNavigation(e);
-            }
-        });
-
-        // Escape key to close
+        // Escape key to close modal
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isExpanded) {
-                this.collapse();
+            if (e.key === 'Escape' && this.isModalOpen) {
+                this.closeModal();
             }
         });
 
-        // Click outside to close
-        document.addEventListener('click', (e) => {
-            if (this.isExpanded && !this.container.contains(e.target)) {
-                this.collapse();
-            }
-        });
+        // Click outside modal to close
+        if (this.modal) {
+            this.modal.addEventListener('click', (e) => {
+                if (e.target === this.modal) {
+                    this.closeModal();
+                }
+            });
+        }
     }
 
     handleBuyClick() {
-        if (this.isAnimating) return;
-
         // Add click animation
         this.buyButton.classList.add('clicking');
         setTimeout(() => {
@@ -103,66 +97,49 @@ class CheckoutNav {
             navigator.vibrate(50);
         }
 
-        if (this.isExpanded) {
-            this.collapse();
-        } else {
-            this.expand();
-        }
+        this.openModal();
     }
 
-    expand() {
-        if (this.isAnimating || this.isExpanded) return;
+    openModal() {
+        if (this.isModalOpen) return;
 
-        console.log('🎫 Expanding checkout nav');
-        this.isAnimating = true;
-        this.isExpanded = true;
-
-        // Update ARIA attributes
-        this.buyButton.setAttribute('aria-expanded', 'true');
-        this.nav.setAttribute('aria-label', 'Expanded ticket checkout');
-
-        // Add expanded class
-        this.nav.classList.add('expanded');
+        console.log('🎫 Opening checkout modal');
+        this.isModalOpen = true;
 
         // Load iframe if not already loaded
         if (this.iframe && !this.iframe.src) {
             this.loadIframe();
         }
 
+        // Show modal
+        this.modal.classList.add('active');
+
         // Focus management
         setTimeout(() => {
             if (this.closeButton) {
                 this.closeButton.focus();
             }
-            this.isAnimating = false;
-        }, 300);
+        }, 100);
     }
 
-    collapse() {
-        if (this.isAnimating || !this.isExpanded) return;
+    closeModal() {
+        if (!this.isModalOpen) return;
 
-        console.log('🎫 Collapsing checkout nav');
-        this.isAnimating = true;
-        this.isExpanded = false;
+        console.log('🎫 Closing checkout modal');
+        this.isModalOpen = false;
 
-        // Update ARIA attributes
-        this.buyButton.setAttribute('aria-expanded', 'false');
-        this.nav.setAttribute('aria-label', 'Ticket checkout navigation');
+        // Hide modal
+        this.modal.classList.remove('active');
 
-        // Add collapsing animation class
-        this.nav.classList.add('collapsing');
-        this.nav.classList.remove('expanded');
+        // Clear iframe
+        if (this.iframe) {
+            this.iframe.src = 'about:blank';
+        }
 
-        // Remove collapsing class after animation
-        setTimeout(() => {
-            this.nav.classList.remove('collapsing');
-        }, 300);
-
-        // Focus management
+        // Return focus to buy button
         setTimeout(() => {
             this.buyButton.focus();
-            this.isAnimating = false;
-        }, 300);
+        }, 100);
     }
 
     loadIframe() {
@@ -245,6 +222,19 @@ class CheckoutNav {
                 firstElement.focus();
             }
         }
+    }
+}
+
+// Global functions for template use
+function openCheckoutModal() {
+    if (window.checkoutNav) {
+        window.checkoutNav.openModal();
+    }
+}
+
+function closeCheckoutModal() {
+    if (window.checkoutNav) {
+        window.checkoutNav.closeModal();
     }
 }
 
