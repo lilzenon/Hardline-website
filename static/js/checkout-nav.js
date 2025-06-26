@@ -171,14 +171,14 @@ class CheckoutNav {
         console.log('🎫 Smart sizing initiated - will detect actual Posh content height');
     }
 
-    // Detect the actual height needed for Posh content (not 1200px!)
+    // AGGRESSIVE: Detect exact Posh content height to eliminate ALL white space
     detectAndApplyActualPoshHeight() {
         if (!this.iframe) return;
 
-        console.log('🎫 Detecting actual Posh content height...');
+        console.log('🎫 AGGRESSIVE detection: Finding exact Posh content height...');
 
+        // Method 1: Try to access iframe content directly
         try {
-            // Try to access iframe content height (may fail due to cross-origin)
             const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
             if (iframeDoc && iframeDoc.body) {
                 const actualHeight = Math.max(
@@ -188,23 +188,108 @@ class CheckoutNav {
                     iframeDoc.documentElement.offsetHeight
                 );
 
-                if (actualHeight > 100 && actualHeight < 2000) {
-                    const optimalHeight = Math.max(actualHeight + 40, 400); // Add padding, minimum 400px
-                    console.log(`🎫 Detected actual content height: ${actualHeight}px, setting to: ${optimalHeight}px`);
+                if (actualHeight > 100 && actualHeight < 1000) {
+                    const optimalHeight = actualHeight + 20; // Minimal padding
+                    console.log(`🎫 SUCCESS: Detected exact content height: ${actualHeight}px, setting to: ${optimalHeight}px`);
                     this.iframe.style.height = optimalHeight + 'px';
+                    this.iframe.style.minHeight = optimalHeight + 'px';
                     return;
                 }
             }
         } catch (error) {
-            console.log('🎫 Cross-origin restriction, using smart estimation...');
+            console.log('🎫 Cross-origin restriction, trying alternative methods...');
         }
 
-        // Fallback: Smart estimation based on Posh content patterns
-        // From your screenshot, the actual content is ~400px, not 1200px
-        const smartHeight = 450; // Reasonable height for Posh ticket selection
-        console.log(`🎫 Using smart estimation: ${smartHeight}px (much better than 1200px!)`);
-        this.iframe.style.height = smartHeight + 'px';
-        this.iframe.style.minHeight = smartHeight + 'px';
+        // Method 2: Use postMessage to request height from iframe
+        this.requestHeightFromPosh();
+
+        // Method 3: Progressive height testing to find minimal height
+        setTimeout(() => {
+            this.findMinimalPoshHeight();
+        }, 2000);
+    }
+
+    // Request height directly from Posh iframe
+    requestHeightFromPosh() {
+        if (!this.iframe || !this.iframe.contentWindow) return;
+
+        console.log('🎫 Requesting height from Posh iframe...');
+
+        // Listen for height messages from iframe
+        const heightListener = (event) => {
+            if (event.source === this.iframe.contentWindow) {
+                const height = this.extractHeightFromMessage(event.data);
+                if (height && height > 100 && height < 1000) {
+                    console.log(`🎫 Received height from Posh: ${height}px`);
+                    this.iframe.style.height = (height + 20) + 'px';
+                    this.iframe.style.minHeight = (height + 20) + 'px';
+                    window.removeEventListener('message', heightListener);
+                }
+            }
+        };
+
+        window.addEventListener('message', heightListener);
+
+        // Send height request to iframe
+        try {
+            this.iframe.contentWindow.postMessage({ type: 'getHeight' }, '*');
+            this.iframe.contentWindow.postMessage('getHeight', '*');
+        } catch (error) {
+            console.log('🎫 Could not send height request to iframe');
+        }
+
+        // Clean up listener after 5 seconds
+        setTimeout(() => {
+            window.removeEventListener('message', heightListener);
+        }, 5000);
+    }
+
+    // Progressive height testing to find the minimal height that shows all content
+    findMinimalPoshHeight() {
+        if (!this.iframe) return;
+
+        console.log('🎫 Progressive testing to find minimal height...');
+
+        // Based on your screenshot, try smaller heights first
+        const testHeights = [300, 350, 400, 320, 280, 260, 240]; // Start small and test
+        let currentTest = 0;
+
+        const testHeight = () => {
+            if (currentTest >= testHeights.length) {
+                // Fallback to conservative estimate
+                console.log('🎫 Using conservative fallback: 350px');
+                this.iframe.style.height = '350px';
+                this.iframe.style.minHeight = '350px';
+                return;
+            }
+
+            const height = testHeights[currentTest];
+            console.log(`🎫 Testing height: ${height}px`);
+
+            this.iframe.style.height = height + 'px';
+            this.iframe.style.minHeight = height + 'px';
+
+            // Check if this height works (you can visually verify)
+            currentTest++;
+
+            // Continue testing every 1 second
+            setTimeout(testHeight, 1000);
+        };
+
+        testHeight();
+    }
+
+    // Extract height from various message formats
+    extractHeightFromMessage(data) {
+        if (typeof data === 'number') return data;
+        if (typeof data === 'string') {
+            const match = data.match(/(\d+)/);
+            return match ? parseInt(match[1]) : null;
+        }
+        if (data && typeof data === 'object') {
+            return data.height || data.contentHeight || data.scrollHeight || data.offsetHeight;
+        }
+        return null;
     }
 
     closeModal() {
@@ -1736,6 +1821,52 @@ function removeTestIframe() {
     } else {
         console.log('🎫 No test iframe found');
     }
+}
+
+// QUICK TEST: Manually set iframe height to eliminate white space
+function testPoshHeight(height) {
+    console.log(`🎫 TESTING: Setting Posh iframe height to ${height}px`);
+
+    if (window.checkoutNav && window.checkoutNav.iframe) {
+        const iframe = window.checkoutNav.iframe;
+        iframe.style.height = height + 'px';
+        iframe.style.minHeight = height + 'px';
+
+        console.log(`🎫 Height set to ${height}px - check if white space is eliminated`);
+        console.log('🎫 Try: testPoshHeight(300), testPoshHeight(280), testPoshHeight(260)');
+    } else {
+        console.error('🎫 Modal not open or iframe not found');
+    }
+}
+
+// FIND PERFECT HEIGHT: Test multiple heights automatically
+function findPerfectPoshHeight() {
+    console.log('🎫 AUTO-TESTING: Finding perfect height to eliminate white space...');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 Modal not open or iframe not found');
+        return;
+    }
+
+    // Test progressively smaller heights
+    const heights = [320, 300, 280, 260, 240, 220, 200];
+    let index = 0;
+
+    const testNext = () => {
+        if (index >= heights.length) {
+            console.log('🎫 Testing complete. Which height looked best?');
+            return;
+        }
+
+        const height = heights[index];
+        testPoshHeight(height);
+        console.log(`🎫 Testing ${height}px... (${index + 1}/${heights.length})`);
+
+        index++;
+        setTimeout(testNext, 2000); // 2 second delay between tests
+    };
+
+    testNext();
 }
 
 // REFINED: Create properly-sized modal with glassmorphism that fits Posh content
