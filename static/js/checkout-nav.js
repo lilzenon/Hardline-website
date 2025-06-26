@@ -101,37 +101,45 @@ class CheckoutNav {
     }
 
     openModal() {
-        if (this.isModalOpen) return;
+        try {
+            if (this.isModalOpen) return;
 
-        console.log('🎫 Opening checkout modal');
-        console.log('🎫 Modal element:', this.modal);
-        console.log('🎫 Iframe element:', this.iframe);
+            console.log('🎫 Opening checkout modal');
+            console.log('🎫 Modal element:', this.modal);
+            console.log('🎫 Iframe element:', this.iframe);
 
-        this.isModalOpen = true;
+            this.isModalOpen = true;
 
-        // Show modal first
-        if (this.modal) {
-            this.modal.classList.add('active');
-            console.log('🎫 Modal active class added');
-        } else {
-            console.error('🎫 Modal element not found!');
-            return;
-        }
-
-        // Load iframe if not already loaded with ticket URL
-        if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
-            console.log('🎫 Loading iframe...');
-            this.loadIframe();
-        } else {
-            console.log('🎫 Iframe not loaded - no URL or iframe element');
-        }
-
-        // Focus management
-        setTimeout(() => {
-            if (this.closeButton) {
-                this.closeButton.focus();
+            // Show modal first
+            if (this.modal) {
+                this.modal.classList.add('active');
+                console.log('🎫 Modal active class added');
+            } else {
+                console.error('🎫 Modal element not found!');
+                return;
             }
-        }, 100);
+
+            // Load iframe if not already loaded with ticket URL
+            if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
+                console.log('🎫 Loading iframe...');
+                this.loadIframe();
+            } else {
+                console.log('🎫 Iframe not loaded - no URL or iframe element');
+            }
+
+            // Focus management
+            setTimeout(() => {
+                if (this.closeButton) {
+                    this.closeButton.focus();
+                }
+            }, 100);
+
+            console.log('🎫 Modal opening completed successfully');
+        } catch (error) {
+            console.error('🎫 ERROR in openModal:', error);
+            console.error('🎫 Error stack:', error.stack);
+            this.isModalOpen = false; // Reset state on error
+        }
     }
 
     closeModal() {
@@ -217,28 +225,39 @@ class CheckoutNav {
     }
 
     loadIframe() {
-        if (!this.iframe) return;
+        try {
+            console.log('🎫 loadIframe called');
 
-        const ticketUrl = this.iframe.dataset.ticketUrl;
-        if (!ticketUrl) {
-            console.warn('🎫 No ticket URL found for iframe');
-            return;
+            if (!this.iframe) {
+                console.log('🎫 No iframe element, returning');
+                return;
+            }
+
+            const ticketUrl = this.iframe.dataset.ticketUrl;
+            if (!ticketUrl) {
+                console.warn('🎫 No ticket URL found for iframe');
+                return;
+            }
+
+            console.log('🎫 Loading ticket iframe:', ticketUrl);
+            console.log('🎫 Original ticket URL length:', ticketUrl.length);
+            console.log('🎫 Original ticket URL ends with:', ticketUrl.slice(-20));
+
+            // Add loading class
+            this.iframe.classList.add('loading');
+
+            // Set iframe source with dynamic sizing parameters
+            const urlWithParams = this.addDynamicSizingParams(ticketUrl);
+            console.log('🎫 URL after processing:', urlWithParams);
+            console.log('🎫 Processed URL length:', urlWithParams.length);
+            console.log('🎫 URLs match:', ticketUrl === urlWithParams);
+
+            this.iframe.src = urlWithParams;
+            console.log('🎫 Iframe src set successfully');
+        } catch (error) {
+            console.error('🎫 ERROR in loadIframe:', error);
+            console.error('🎫 Error stack:', error.stack);
         }
-
-        console.log('🎫 Loading ticket iframe:', ticketUrl);
-        console.log('🎫 Original ticket URL length:', ticketUrl.length);
-        console.log('🎫 Original ticket URL ends with:', ticketUrl.slice(-20));
-
-        // Add loading class
-        this.iframe.classList.add('loading');
-
-        // Set iframe source with dynamic sizing parameters
-        const urlWithParams = this.addDynamicSizingParams(ticketUrl);
-        console.log('🎫 URL after processing:', urlWithParams);
-        console.log('🎫 Processed URL length:', urlWithParams.length);
-        console.log('🎫 URLs match:', ticketUrl === urlWithParams);
-
-        this.iframe.src = urlWithParams;
 
         // Handle iframe load
         this.iframe.addEventListener('load', () => {
@@ -1042,12 +1061,20 @@ class CheckoutNav {
 // Global functions for template use
 function openCheckoutModal() {
     console.log('🎫 Global openCheckoutModal called');
-    console.log('🎫 window.checkoutNav:', window.checkoutNav);
 
-    if (window.checkoutNav) {
-        window.checkoutNav.openModal();
-    } else {
-        console.error('🎫 window.checkoutNav not found!');
+    try {
+        console.log('🎫 window.checkoutNav:', window.checkoutNav);
+
+        if (window.checkoutNav) {
+            console.log('🎫 Calling openModal...');
+            window.checkoutNav.openModal();
+            console.log('🎫 openModal completed');
+        } else {
+            console.error('🎫 window.checkoutNav not found!');
+        }
+    } catch (error) {
+        console.error('🎫 ERROR in openCheckoutModal:', error);
+        console.error('🎫 Error stack:', error.stack);
     }
 }
 
@@ -1402,6 +1429,23 @@ function debugPoshIssue() {
     }
 
     console.log('🎫 ===== END DEBUG ANALYSIS =====');
+}
+
+// Simple test function to open modal without complex logic
+function testOpenModal() {
+    console.log('🎫 SIMPLE modal test...');
+
+    try {
+        const modal = document.querySelector('.checkout-modal');
+        if (modal) {
+            modal.classList.add('active');
+            console.log('🎫 Modal opened successfully with simple method');
+        } else {
+            console.error('🎫 Modal element not found');
+        }
+    } catch (error) {
+        console.error('🎫 Error in testOpenModal:', error);
+    }
 }
 
 // Function to manually set ticket URL for testing
