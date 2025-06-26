@@ -6,6 +6,22 @@ const { nanoid } = require('nanoid');
 const useragent = require('useragent');
 const geoip = require('geoip-lite');
 
+// Sanitizer function for checkbox values
+const sanitizeCheckbox = value => value === true || value === "on" || value;
+
+// Check if ticket fields exist in database
+async function checkTicketFieldsExist() {
+    try {
+        const knex = require('../knex');
+        const hasDisplayTickets = await knex.schema.hasColumn('events', 'display_tickets');
+        const hasTicketPrice = await knex.schema.hasColumn('events', 'ticket_price');
+        return hasDisplayTickets && hasTicketPrice;
+    } catch (error) {
+        console.warn('⚠️ Could not check ticket fields existence:', error.message);
+        return false;
+    }
+}
+
 // Validation rules
 const createEventValidation = [
     body("title")
@@ -112,8 +128,7 @@ const createEventValidation = [
     .isLength({ max: 2040 })
     .withMessage("QR code custom URL must be less than 2040 characters"),
     body("display_tickets")
-    .optional({ nullable: true })
-    .customSanitizer(value => value === true || value === "on" || value === "true")
+    .optional()
     .isBoolean()
     .withMessage("Display tickets must be a boolean"),
     body("ticket_price")
@@ -407,6 +422,18 @@ async function updateEvent(req, res) {
 
         console.log(`🔄 Updating event ${id} with data:`, Object.keys(sanitizedData));
 
+        // Check if ticket fields are being updated but don't exist in database
+        if ((sanitizedData.display_tickets !== undefined || sanitizedData.ticket_price !== undefined)) {
+            console.log('🎫 Ticket fields detected in update request');
+            const ticketFieldsExist = await checkTicketFieldsExist();
+            if (!ticketFieldsExist) {
+                console.warn('⚠️ Ticket fields not found in database - removing from update');
+                delete sanitizedData.display_tickets;
+                delete sanitizedData.ticket_price;
+                console.log('🔄 Updated sanitized data without ticket fields:', Object.keys(sanitizedData));
+            }
+        }
+
         // 🚀 DETECT HOMEPAGE TOGGLE CHANGES FOR REAL-TIME UPDATES
         const homepageToggleChanged = 'show_on_homepage' in sanitizedData &&
             sanitizedData.show_on_homepage !== existingEvent.show_on_homepage;
@@ -456,7 +483,14 @@ async function updateEvent(req, res) {
         // Handle PostgreSQL column errors
         if (error.code === '42703') {
             console.error('🚨 PostgreSQL column error:', error.message);
-            throw new CustomError("Invalid field in update request", 400);
+            console.error('🔍 Attempted to update with fields:', Object.keys(sanitizedData || {}));
+
+            // Check if this is related to new ticket fields
+            if (error.message.includes('display_tickets') || error.message.includes('ticket_price')) {
+                throw new CustomError("Database migration required: Please run 'npm run migrate' to add ticket purchasing fields", 400);
+            }
+
+            throw new CustomError(`Invalid field in update request: ${error.message}`, 400);
         }
 
         throw error;
@@ -599,7 +633,7 @@ function validateAndSanitizeEventData(data) {
                 sanitizedData[key] = value;
             }
         } else {
-            console.warn(`⚠️ Ignoring unknown field: ${key}`);
+            console.warn(`⚠️ Ignoring unknown field: ${key} with value:`, value);
         }
     }
 
