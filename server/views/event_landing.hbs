@@ -164,10 +164,11 @@
         .event-container {
             display: grid;
             grid-template-columns: 1fr;
-            grid-template-rows: auto auto auto;
+            grid-template-rows: auto auto auto auto;
             grid-template-areas:
                 "image"
                 "title"
+                "checkout"
                 "form";
             gap: 4px; /* Reduced from 8px (50% reduction) */
             width: 100%;
@@ -233,9 +234,10 @@
         @media (min-width: 1024px) {
             .event-container {
                 grid-template-columns: 1fr 420px; /* Slightly wider content area for better balance */
-                grid-template-rows: auto 1fr; /* Title takes needed space, form takes remaining space */
+                grid-template-rows: auto auto 1fr; /* Title, checkout, then form takes remaining space */
                 grid-template-areas:
                     "image title"
+                    "image checkout"
                     "image form"; /* Proper grid area for form */
                 gap: 0px 48px; /* Eliminated row gap completely for tighter spacing */
                 align-items: start;
@@ -401,7 +403,6 @@
                 justify-self: start; /* Align to left side of grid area */
                 width: 420px;
                 min-width: 420px;
-                order: 1; /* Position first in title area */
             }
         }
 
@@ -459,22 +460,21 @@
                 padding-bottom: 40px; /* Add bottom padding for proper spacing */
                 margin: 6px 0 0 0 !important; /* Reduced spacing for optimal balance */
                 justify-self: start; /* Align to left side of grid area */
-                order: 3; /* Position after checkout nav */
             }
         }
 
-        /* Ensure proper ordering for mobile/tablet layouts */
+        /* Grid area assignments for mobile/tablet layouts */
         @media (max-width: 1023px) {
             .event-title-section {
-                order: 1;
+                grid-area: title;
             }
 
             .checkout-nav-container {
-                order: 2;
+                grid-area: checkout;
             }
 
             .rsvp-container {
-                order: 3;
+                grid-area: form;
             }
         }
 
@@ -1710,9 +1710,10 @@
 
             .event-container {
                 grid-template-columns: 1fr 350px; /* Side-by-side with smaller right column */
-                grid-template-rows: auto 1fr; /* Title takes needed space, form takes remaining space */
+                grid-template-rows: auto auto 1fr; /* Title, checkout, then form takes remaining space */
                 grid-template-areas:
                     "image title"
+                    "image checkout"
                     "image form";
                 gap: 0px 24px; /* Eliminated row gap completely for tighter spacing */
                 align-items: start;
