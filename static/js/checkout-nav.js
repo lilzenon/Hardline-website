@@ -220,12 +220,18 @@ class CheckoutNav {
         }
 
         console.log('🎫 Loading ticket iframe:', ticketUrl);
+        console.log('🎫 Original ticket URL length:', ticketUrl.length);
+        console.log('🎫 Original ticket URL ends with:', ticketUrl.slice(-20));
 
         // Add loading class
         this.iframe.classList.add('loading');
 
         // Set iframe source with dynamic sizing parameters
         const urlWithParams = this.addDynamicSizingParams(ticketUrl);
+        console.log('🎫 URL after processing:', urlWithParams);
+        console.log('🎫 Processed URL length:', urlWithParams.length);
+        console.log('🎫 URLs match:', ticketUrl === urlWithParams);
+
         this.iframe.src = urlWithParams;
 
         // Handle iframe load
@@ -267,12 +273,22 @@ class CheckoutNav {
     }
 
     addDynamicSizingParams(url) {
+        console.log('🎫 addDynamicSizingParams input URL:', url);
+
         try {
             const urlObj = new URL(url);
+            console.log('🎫 Parsed URL object:', {
+                href: urlObj.href,
+                hostname: urlObj.hostname,
+                pathname: urlObj.pathname,
+                search: urlObj.search
+            });
 
             // Check if this is a Posh embed - they don't support URL parameters
             if (urlObj.hostname.includes('posh.vip') || urlObj.hostname.includes('posh.')) {
-                console.log('🎫 Posh embed detected - not adding URL parameters');
+                console.log('🎫 Posh embed detected - returning original URL unchanged');
+                console.log('🎫 Original URL:', url);
+                console.log('🎫 Returning URL:', url);
                 return url; // Return original URL without modifications
             }
 
