@@ -53,6 +53,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
+    <!-- Checkout Nav Component CSS -->
+    {{#if event.display_tickets}}
+    <link rel="stylesheet" href="/css/checkout-nav.css">
+    {{/if}}
+
     <!-- Laylo-Inspired Design CSS - Updated Typography v2.1 -->
     <style>
         /* CACHE BUSTER: Typography fixes applied - v2.1.0 */
@@ -2244,6 +2249,46 @@
         </div>
     </div>
 
+    <!-- Checkout Nav Component -->
+    {{#if event.display_tickets}}
+    <div class="checkout-nav-container" role="region" aria-label="Ticket purchasing">
+        <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
+            <div class="checkout-nav-header">
+                <div class="ticket-price" aria-live="polite">
+                    <span class="sr-only">Ticket price: </span>
+                    {{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
+                </div>
+                <button class="buy-button"
+                        aria-expanded="false"
+                        aria-label="{{#if event.ticket_price}}Buy tickets for {{event.ticket_price}}{{else}}Buy tickets{{/if}}"
+                        aria-describedby="ticket-price-info">
+                    Buy
+                    <span class="sr-only"> tickets</span>
+                </button>
+                <button class="checkout-close"
+                        aria-label="Close ticket checkout"
+                        style="display: none;"
+                        tabindex="-1">
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">Close</span>
+                </button>
+            </div>
+            <div class="checkout-iframe-container" aria-hidden="true">
+                <iframe
+                    class="checkout-iframe loading"
+                    data-ticket-url="{{event.posh_ticket_url}}"
+                    title="Ticket Checkout - {{event.title}}"
+                    loading="lazy"
+                    aria-label="Ticket purchasing form">
+                </iframe>
+            </div>
+        </nav>
+        <div id="ticket-price-info" class="sr-only">
+            {{#if event.ticket_price}}Tickets are available for {{event.ticket_price}}{{else}}Ticket pricing will be shown during checkout{{/if}}
+        </div>
+    </div>
+    {{/if}}
+
     <!-- JavaScript for Form Handling -->
     <script>
         // Production-ready drop landing page
@@ -3459,7 +3504,10 @@
         })();
     </script>
 
-
+    <!-- Checkout Nav Component JavaScript -->
+    {{#if event.display_tickets}}
+    <script src="/js/checkout-nav.js"></script>
+    {{/if}}
 
 </body>
 </html>

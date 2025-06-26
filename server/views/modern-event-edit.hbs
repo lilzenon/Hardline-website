@@ -560,6 +560,38 @@
                                         <small class="form-help">Enter the Posh embed URL for ticket sales integration. When set, the carousel button will open a ticket modal instead of linking to the drop page.</small>
                                         {{#if errors.posh_embed_url}}<p class="error">{{errors.posh_embed_url}}</p>{{/if}}
                                     </div>
+
+                                    <!-- Ticket Purchasing Section -->
+                                    <div class="form-group">
+                                        <div class="toggle-group">
+                                            <label for="edit-display-tickets" class="toggle-label">
+                                                <span class="toggle-text">Display Tickets</span>
+                                                <div class="toggle-switch">
+                                                    <input type="checkbox" id="edit-display-tickets" name="display_tickets"
+                                                           {{#if event.display_tickets}}checked{{/if}} class="toggle-input">
+                                                    <span class="toggle-slider"></span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <small class="form-help">Enable ticket purchasing functionality on the live event page</small>
+                                        {{#if errors.display_tickets}}<p class="error">{{errors.display_tickets}}</p>{{/if}}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="edit-ticket-price">Ticket Price</label>
+                                        <input type="text" id="edit-ticket-price" name="ticket_price" maxlength="50"
+                                               value="{{event.ticket_price}}" placeholder="$25" class="form-input">
+                                        <small class="form-help">Display price for tickets (e.g., "$25", "Free", "From $20"). This is for display purposes only.</small>
+                                        {{#if errors.ticket_price}}<p class="error">{{errors.ticket_price}}</p>{{/if}}
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="edit-posh-ticket-url">Posh Ticket URL</label>
+                                        <input type="url" id="edit-posh-ticket-url" name="posh_ticket_url" maxlength="2040"
+                                               value="{{event.posh_ticket_url}}" placeholder="https://posh.vip/e/your-event-id" class="form-input">
+                                        <small class="form-help">Enter the Posh URL for the ticket purchasing iframe. This will be embedded when users click the "Buy" button.</small>
+                                        {{#if errors.posh_ticket_url}}<p class="error">{{errors.posh_ticket_url}}</p>{{/if}}
+                                    </div>
                                 </div>
 
                                 <!-- Future Advanced Settings -->

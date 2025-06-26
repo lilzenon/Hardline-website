@@ -111,6 +111,21 @@ const createEventValidation = [
     .withMessage("QR code custom URL must be a valid URL")
     .isLength({ max: 2040 })
     .withMessage("QR code custom URL must be less than 2040 characters"),
+    body("display_tickets")
+    .optional()
+    .isBoolean()
+    .withMessage("Display tickets must be a boolean"),
+    body("ticket_price")
+    .optional()
+    .isLength({ max: 50 })
+    .withMessage("Ticket price must be less than 50 characters")
+    .trim(),
+    body("posh_ticket_url")
+    .optional()
+    .isURL()
+    .withMessage("Posh ticket URL must be a valid URL")
+    .isLength({ max: 2040 })
+    .withMessage("Posh ticket URL must be less than 2040 characters"),
 ];
 
 const updateEventValidation = [
@@ -502,7 +517,10 @@ function validateAndSanitizeEventData(data) {
         'address_components',
         'address_data',
         'address_validated',
-        'address_validated_at'
+        'address_validated_at',
+        'display_tickets',
+        'ticket_price',
+        'posh_ticket_url'
     ];
 
     const sanitizedData = {};
@@ -525,7 +543,7 @@ function validateAndSanitizeEventData(data) {
                 } else {
                     console.warn(`⚠️ Invalid URL format for ${key}: ${value}`);
                 }
-            } else if (typeof value === 'boolean' || key === 'is_active' || key === 'collect_email' || key === 'collect_phone') {
+            } else if (typeof value === 'boolean' || key === 'is_active' || key === 'collect_email' || key === 'collect_phone' || key === 'display_tickets') {
                 // Handle boolean fields
                 sanitizedData[key] = Boolean(value);
             } else if (key === 'gradient_data') {
