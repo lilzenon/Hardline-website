@@ -1366,6 +1366,62 @@ function checkIframeData() {
     console.log('🎫 ===== END IFRAME DATA CHECK =====');
 }
 
+// Function to diagnose why iframe height isn't applying
+function diagnoseIframeHeight() {
+    console.log('🎫 ===== IFRAME HEIGHT DIAGNOSIS =====');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    const modal = window.checkoutNav.modal;
+    const modalContent = modal && modal.querySelector('.checkout-modal-content');
+
+    console.log('🎫 IFRAME ANALYSIS:');
+    console.log('  - style.height:', iframe.style.height);
+    console.log('  - offsetHeight:', iframe.offsetHeight);
+    console.log('  - clientHeight:', iframe.clientHeight);
+    console.log('  - scrollHeight:', iframe.scrollHeight);
+
+    const computed = window.getComputedStyle(iframe);
+    console.log('🎫 COMPUTED STYLES:');
+    console.log('  - height:', computed.height);
+    console.log('  - maxHeight:', computed.maxHeight);
+    console.log('  - minHeight:', computed.minHeight);
+    console.log('  - overflow:', computed.overflow);
+    console.log('  - display:', computed.display);
+    console.log('  - position:', computed.position);
+
+    console.log('🎫 PARENT CONSTRAINTS:');
+    if (modalContent) {
+        const modalComputed = window.getComputedStyle(modalContent);
+        console.log('  - modalContent.style.maxHeight:', modalContent.style.maxHeight);
+        console.log('  - modalContent.computed.maxHeight:', modalComputed.maxHeight);
+        console.log('  - modalContent.computed.height:', modalComputed.height);
+        console.log('  - modalContent.offsetHeight:', modalContent.offsetHeight);
+    }
+
+    if (modal) {
+        const modalStyles = window.getComputedStyle(modal);
+        console.log('  - modal.style.maxHeight:', modal.style.maxHeight);
+        console.log('  - modal.computed.maxHeight:', modalStyles.maxHeight);
+        console.log('  - modal.computed.height:', modalStyles.height);
+        console.log('  - modal.offsetHeight:', modal.offsetHeight);
+    }
+
+    console.log('🎫 RECOMMENDATIONS:');
+    if (iframe.offsetHeight < parseInt(iframe.style.height)) {
+        console.log('  ❌ Height not applying - something is constraining the iframe');
+        console.log('  💡 Try: forceIframeFullHeight() for nuclear option');
+    } else {
+        console.log('  ✅ Height is applying correctly');
+    }
+
+    console.log('🎫 ===== END DIAGNOSIS =====');
+}
+
 // COMPREHENSIVE debugging function
 function debugPoshIssue() {
     console.log('🎫 ===== COMPREHENSIVE POSH DEBUG ANALYSIS =====');
@@ -1558,6 +1614,68 @@ function fixCurrentPoshUrl() {
         console.log('🎫 URL fixed! Try openCheckoutModal() again');
     } else {
         console.log('🎫 URL already has protocol or is invalid');
+    }
+}
+
+// NUCLEAR OPTION: Force iframe to show all content
+function forceIframeFullHeight() {
+    if (window.checkoutNav && window.checkoutNav.iframe) {
+        console.log('🎫 NUCLEAR OPTION: Forcing iframe to show ALL content...');
+
+        const iframe = window.checkoutNav.iframe;
+        const modal = window.checkoutNav.modal;
+        const modalContent = modal && modal.querySelector('.checkout-modal-content');
+
+        // EXTREME height forcing
+        const extremeHeight = 1500;
+
+        console.log('🎫 Before nuclear option:');
+        console.log('  - iframe.style.height:', iframe.style.height);
+        console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
+        console.log('  - iframe.scrollHeight:', iframe.scrollHeight);
+
+        // Remove ALL possible constraints
+        iframe.style.setProperty('height', extremeHeight + 'px', 'important');
+        iframe.style.setProperty('max-height', 'none', 'important');
+        iframe.style.setProperty('min-height', 'auto', 'important');
+        iframe.style.setProperty('overflow', 'visible', 'important');
+
+        // Force modal expansion
+        if (modalContent) {
+            modalContent.style.setProperty('max-height', 'none', 'important');
+            modalContent.style.setProperty('height', 'auto', 'important');
+            modalContent.style.setProperty('overflow', 'visible', 'important');
+        }
+
+        if (modal) {
+            modal.style.setProperty('max-height', 'none', 'important');
+            modal.style.setProperty('height', 'auto', 'important');
+            modal.style.setProperty('overflow', 'visible', 'important');
+        }
+
+        // Wait and verify
+        setTimeout(() => {
+            console.log('🎫 After nuclear option:');
+            console.log('  - iframe.style.height:', iframe.style.height);
+            console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
+            console.log('  - Height successfully applied:', iframe.offsetHeight >= extremeHeight * 0.8);
+
+            if (iframe.offsetHeight < extremeHeight * 0.8) {
+                console.error('🎫 NUCLEAR OPTION FAILED! Something is still constraining the iframe');
+                console.log('🎫 Checking computed styles...');
+                const computed = window.getComputedStyle(iframe);
+                console.log('  - computedHeight:', computed.height);
+                console.log('  - computedMaxHeight:', computed.maxHeight);
+                console.log('  - computedMinHeight:', computed.minHeight);
+                console.log('  - computedOverflow:', computed.overflow);
+            } else {
+                console.log('🎫 SUCCESS! Iframe height forced successfully');
+            }
+        }, 200);
+
+        console.log(`🎫 NUCLEAR OPTION applied: ${extremeHeight}px with !important`);
+    } else {
+        console.error('🎫 window.checkoutNav or iframe not found!');
     }
 }
 
