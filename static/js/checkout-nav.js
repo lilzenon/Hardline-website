@@ -1275,6 +1275,46 @@ function testIframeContent() {
     }
 }
 
+// Function to check iframe data attributes
+function checkIframeData() {
+    console.log('🎫 ===== IFRAME DATA ATTRIBUTE CHECK =====');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 CRITICAL: iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+
+    console.log('🎫 IFRAME ELEMENT:', iframe);
+    console.log('🎫 IFRAME DATASET:', iframe.dataset);
+    console.log('🎫 data-ticket-url attribute:', iframe.getAttribute('data-ticket-url'));
+    console.log('🎫 dataset.ticketUrl:', iframe.dataset.ticketUrl);
+
+    // Check all data attributes
+    const allDataAttrs = {};
+    for (let attr of iframe.attributes) {
+        if (attr.name.startsWith('data-')) {
+            allDataAttrs[attr.name] = attr.value;
+        }
+    }
+    console.log('🎫 ALL DATA ATTRIBUTES:', allDataAttrs);
+
+    // Check if the URL is empty or undefined
+    const ticketUrl = iframe.dataset.ticketUrl;
+    if (!ticketUrl) {
+        console.error('🎫 PROBLEM: data-ticket-url is empty or missing!');
+        console.log('🎫 This explains why iframe src stays "about:blank"');
+        console.log('🎫 The Handlebars template {{event.posh_embed_url}} is not providing a URL');
+    } else {
+        console.log('🎫 SUCCESS: data-ticket-url found:', ticketUrl);
+        console.log('🎫 URL length:', ticketUrl.length);
+        console.log('🎫 Is Posh URL:', ticketUrl.includes('posh.vip') || ticketUrl.includes('posh.'));
+    }
+
+    console.log('🎫 ===== END IFRAME DATA CHECK =====');
+}
+
 // COMPREHENSIVE debugging function
 function debugPoshIssue() {
     console.log('🎫 ===== COMPREHENSIVE POSH DEBUG ANALYSIS =====');
@@ -1362,6 +1402,33 @@ function debugPoshIssue() {
     }
 
     console.log('🎫 ===== END DEBUG ANALYSIS =====');
+}
+
+// Function to manually set ticket URL for testing
+function setTestTicketUrl(url) {
+    console.log('🎫 Setting test ticket URL:', url);
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 CRITICAL: iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+
+    // Set the data attribute
+    iframe.setAttribute('data-ticket-url', url);
+    iframe.dataset.ticketUrl = url;
+
+    console.log('🎫 Test URL set successfully');
+    console.log('🎫 You can now try opening the modal with openCheckoutModal()');
+}
+
+// Function to test with a sample Posh URL
+function testWithSamplePoshUrl() {
+    // Use a sample Posh URL for testing
+    const samplePoshUrl = 'https://embed.posh.vip/ticket-iframe/sample-event';
+    console.log('🎫 Setting sample Posh URL for testing...');
+    setTestTicketUrl(samplePoshUrl);
 }
 
 // Global function to FORCE large height immediately - no more scrolling!
