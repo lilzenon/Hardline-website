@@ -112,7 +112,8 @@ const createEventValidation = [
     .isLength({ max: 2040 })
     .withMessage("QR code custom URL must be less than 2040 characters"),
     body("display_tickets")
-    .optional()
+    .optional({ nullable: true })
+    .customSanitizer(value => value === true || value === "on" || value === "true")
     .isBoolean()
     .withMessage("Display tickets must be a boolean"),
     body("ticket_price")
@@ -120,12 +121,6 @@ const createEventValidation = [
     .isLength({ max: 50 })
     .withMessage("Ticket price must be less than 50 characters")
     .trim(),
-    body("posh_ticket_url")
-    .optional()
-    .isURL()
-    .withMessage("Posh ticket URL must be a valid URL")
-    .isLength({ max: 2040 })
-    .withMessage("Posh ticket URL must be less than 2040 characters"),
 ];
 
 const updateEventValidation = [
@@ -519,8 +514,7 @@ function validateAndSanitizeEventData(data) {
         'address_validated',
         'address_validated_at',
         'display_tickets',
-        'ticket_price',
-        'posh_ticket_url'
+        'ticket_price'
     ];
 
     const sanitizedData = {};
