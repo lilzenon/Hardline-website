@@ -11,93 +11,128 @@
 
 .checkout-nav-container {
     position: fixed;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
     z-index: 1000;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 
 /* ===== CHECKOUT NAV BASE STYLES ===== */
 
 .checkout-nav {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 14px;
+    padding: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
-    min-height: 60px;
+    min-height: 48px;
+    position: relative;
+}
+
+
+/* Subtle connection indicator */
+
+.checkout-nav::before {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 1px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.checkout-nav:hover::before {
+    opacity: 0.6;
+    width: 32px;
 }
 
 
 /* ===== TICKET PRICE DISPLAY ===== */
 
 .ticket-price {
-    padding: 12px 24px;
-    color: rgba(255, 255, 255, 0.9);
+    padding: 8px 16px;
+    color: rgba(255, 255, 255, 0.95);
     font-family: 'Inter', sans-serif;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 15px;
     display: flex;
     align-items: center;
-    min-height: 44px;
+    justify-content: center;
+    min-height: 40px;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
 }
 
 
 /* ===== BUY BUTTON ===== */
 
 .buy-button {
-    padding: 12px 24px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 20px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.22);
     color: #fff;
     text-decoration: none;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
-    min-height: 44px;
+    min-height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: none;
     cursor: pointer;
-    min-width: 80px;
+    min-width: 76px;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .buy-button:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.32);
+    transform: translateY(-0.5px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .buy-button:active {
-    transform: scale(0.95);
+    transform: translateY(0) scale(0.98);
+    transition: all 0.15s ease;
 }
 
 .buy-button.clicking {
-    transform: scale(0.95);
+    transform: translateY(0) scale(0.98);
+    transition: all 0.15s ease;
 }
 
 
 /* ===== EXPANDED STATE ===== */
 
 .checkout-nav.expanded {
-    border-radius: 16px 16px 0 0;
-    min-height: 400px;
+    border-radius: 14px 14px 0 0;
+    min-height: 380px;
     flex-direction: column;
     align-items: stretch;
     padding: 0;
     transform: translateY(0);
-    animation: expandNav 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: expandNav 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
 }
 
 
@@ -105,51 +140,77 @@
 
 @keyframes expandNav {
     0% {
-        min-height: 60px;
-        border-radius: 16px;
+        min-height: 48px;
+        border-radius: 14px;
+        transform: translateY(0) scale(1);
+        background: rgba(255, 255, 255, 0.12);
     }
-    50% {
-        border-radius: 16px 16px 8px 8px;
+    30% {
+        border-radius: 14px 14px 10px 10px;
+        transform: translateY(-2px) scale(1.01);
+        background: rgba(255, 255, 255, 0.13);
+    }
+    70% {
+        border-radius: 14px 14px 4px 4px;
+        transform: translateY(-1px) scale(1.005);
     }
     100% {
-        min-height: 400px;
-        border-radius: 16px 16px 0 0;
+        min-height: 380px;
+        border-radius: 14px 14px 0 0;
+        transform: translateY(0) scale(1);
+        background: rgba(255, 255, 255, 0.14);
     }
 }
 
 @keyframes collapseNav {
     0% {
-        min-height: 400px;
-        border-radius: 16px 16px 0 0;
+        min-height: 380px;
+        border-radius: 14px 14px 0 0;
+        transform: translateY(0) scale(1);
+        background: rgba(255, 255, 255, 0.14);
     }
-    50% {
-        border-radius: 16px 16px 8px 8px;
+    30% {
+        border-radius: 14px 14px 4px 4px;
+        transform: translateY(-1px) scale(1.005);
+    }
+    70% {
+        border-radius: 14px 14px 10px 10px;
+        transform: translateY(-2px) scale(1.01);
+        background: rgba(255, 255, 255, 0.13);
     }
     100% {
-        min-height: 60px;
-        border-radius: 16px;
+        min-height: 48px;
+        border-radius: 14px;
+        transform: translateY(0) scale(1);
+        background: rgba(255, 255, 255, 0.12);
     }
 }
 
 .checkout-nav.collapsing {
-    animation: collapseNav 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: collapseNav 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .checkout-nav.expanded .checkout-nav-header {
-    padding: 8px;
+    padding: 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 60px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    min-height: 48px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 .checkout-nav.expanded .ticket-price {
     margin: 0;
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .checkout-nav.expanded .buy-button {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 13px;
 }
 
 
@@ -206,30 +267,37 @@
 
 @media (max-width: 767px) {
     .checkout-nav-container {
-        bottom: 16px;
-        left: 16px;
-        right: 16px;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
     }
     .checkout-nav {
         border-radius: 12px;
-        min-height: 56px;
+        min-height: 44px;
+        padding: 3px;
     }
     .checkout-nav.expanded {
         border-radius: 12px 12px 0 0;
-        min-height: 350px;
+        min-height: 340px;
     }
     .ticket-price {
-        font-size: 15px;
-        padding: 10px 16px;
+        font-size: 14px;
+        padding: 6px 12px;
+        min-height: 38px;
     }
     .buy-button {
         font-size: 13px;
-        padding: 10px 16px;
-        min-width: 70px;
+        padding: 6px 14px;
+        min-width: 68px;
+        min-height: 38px;
+        border-radius: 9px;
     }
     .checkout-iframe {
-        height: 290px;
+        height: 280px;
         border-radius: 0 0 12px 12px;
+    }
+    .checkout-nav.expanded .checkout-nav-header {
+        min-height: 44px;
     }
 }
 
@@ -238,17 +306,24 @@
 
 @media (min-width: 768px) and (max-width: 1023px) {
     .checkout-nav-container {
-        bottom: 24px;
-        left: 24px;
-        right: 24px;
-        max-width: 600px;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        max-width: 580px;
         margin: 0 auto;
     }
     .checkout-nav.expanded {
-        min-height: 450px;
+        min-height: 420px;
     }
     .checkout-iframe {
-        height: 390px;
+        height: 360px;
+    }
+    .ticket-price {
+        font-size: 15px;
+    }
+    .buy-button {
+        font-size: 14px;
+        min-width: 72px;
     }
 }
 
@@ -257,24 +332,26 @@
 
 @media (min-width: 1024px) {
     .checkout-nav-container {
-        bottom: 32px;
-        left: 32px;
-        right: 32px;
-        max-width: 800px;
+        bottom: 24px;
+        left: 24px;
+        right: 24px;
+        max-width: 720px;
         margin: 0 auto;
     }
     .checkout-nav.expanded {
-        min-height: 500px;
+        min-height: 460px;
     }
     .checkout-iframe {
-        height: 440px;
+        height: 400px;
     }
     .ticket-price {
-        font-size: 18px;
+        font-size: 16px;
+        padding: 8px 18px;
     }
     .buy-button {
-        font-size: 15px;
-        min-width: 90px;
+        font-size: 14px;
+        min-width: 80px;
+        padding: 8px 22px;
     }
 }
 

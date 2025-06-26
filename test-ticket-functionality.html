@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Functionality Test</title>
+    <link rel="stylesheet" href="static/css/checkout-nav.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: white;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1,
+        h2 {
+            margin-top: 0;
+        }
+        
+        .test-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            padding: 12px 24px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .test-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .status {
+            padding: 8px 16px;
+            border-radius: 8px;
+            margin: 8px 0;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+        
+        .status.info {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1>🎫 Ticket Purchasing Functionality Test</h1>
+
+        <div class="test-section">
+            <h2>Component Visibility & Alignment Test</h2>
+            <p>Tests the refined styling with improved alignment, compact height (48px), and visual balance.</p>
+            <button class="test-button" onclick="toggleCheckoutNav()">Toggle Checkout Nav</button>
+            <div id="visibility-status" class="status info">Component should appear at bottom with refined 48px height</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Enhanced Animation Test</h2>
+            <p>Test the improved expansion animations with bounce effects and smoother transitions (0.5s duration).</p>
+            <button class="test-button" onclick="testExpansion()">Test Expansion</button>
+            <button class="test-button" onclick="testCollapse()">Test Collapse</button>
+            <div id="animation-status" class="status info">Watch for smooth bounce effects and visual cohesion</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Accessibility Test</h2>
+            <p>Test keyboard navigation and screen reader support.</p>
+            <button class="test-button" onclick="testKeyboardNav()">Test Keyboard Navigation</button>
+            <button class="test-button" onclick="testAriaLabels()">Test ARIA Labels</button>
+            <div id="accessibility-status" class="status info">Use Tab, Enter, and Escape keys</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Responsive Test</h2>
+            <p>Test responsive behavior at different screen sizes.</p>
+            <button class="test-button" onclick="testMobile()">Simulate Mobile (375px)</button>
+            <button class="test-button" onclick="testTablet()">Simulate Tablet (768px)</button>
+            <button class="test-button" onclick="testDesktop()">Simulate Desktop (1024px)</button>
+            <div id="responsive-status" class="status info">Resize window or use browser dev tools</div>
+        </div>
+    </div>
+
+    <!-- Test Checkout Nav Component -->
+    <div class="checkout-nav-container" id="testCheckoutNav" style="display: none;">
+        <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
+            <div class="checkout-nav-header">
+                <div class="ticket-price" aria-live="polite">
+                    <span class="sr-only">Ticket price: </span> $25
+                </div>
+                <button class="buy-button" aria-expanded="false" aria-label="Buy tickets for $25" aria-describedby="ticket-price-info">
+                    Buy
+                    <span class="sr-only"> tickets</span>
+                </button>
+                <button class="checkout-close" aria-label="Close ticket checkout" style="display: none;" tabindex="-1">
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">Close</span>
+                </button>
+            </div>
+            <div class="checkout-iframe-container" aria-hidden="true">
+                <iframe class="checkout-iframe loading" data-ticket-url="https://example.com/tickets" title="Ticket Checkout - Test Event" loading="lazy" aria-label="Ticket purchasing form">
+                </iframe>
+            </div>
+        </nav>
+        <div id="ticket-price-info" class="sr-only">
+            Tickets are available for $25
+        </div>
+    </div>
+
+    <script src="static/js/checkout-nav.js"></script>
+    <script>
+        // Test functions
+        function toggleCheckoutNav() {
+            const nav = document.getElementById('testCheckoutNav');
+            const isVisible = nav.style.display !== 'none';
+            nav.style.display = isVisible ? 'none' : 'block';
+
+            const status = document.getElementById('visibility-status');
+            status.textContent = isVisible ? 'Component hidden' : 'Component visible';
+            status.className = 'status ' + (isVisible ? 'error' : 'success');
+        }
+
+        function testExpansion() {
+            if (window.checkoutNav) {
+                window.checkoutNav.expand();
+                const status = document.getElementById('animation-status');
+                status.textContent = 'Expansion animation triggered';
+                status.className = 'status success';
+            }
+        }
+
+        function testCollapse() {
+            if (window.checkoutNav) {
+                window.checkoutNav.collapse();
+                const status = document.getElementById('animation-status');
+                status.textContent = 'Collapse animation triggered';
+                status.className = 'status success';
+            }
+        }
+
+        function testKeyboardNav() {
+            const buyButton = document.querySelector('.buy-button');
+            if (buyButton) {
+                buyButton.focus();
+                const status = document.getElementById('accessibility-status');
+                status.textContent = 'Buy button focused. Try Tab, Enter, Escape keys';
+                status.className = 'status success';
+            }
+        }
+
+        function testAriaLabels() {
+            const nav = document.querySelector('.checkout-nav');
+            const buyButton = document.querySelector('.buy-button');
+
+            const ariaLabel = nav.getAttribute('aria-label');
+            const buttonLabel = buyButton.getAttribute('aria-label');
+
+            const status = document.getElementById('accessibility-status');
+            status.textContent = `Nav: "${ariaLabel}", Button: "${buttonLabel}"`;
+            status.className = 'status success';
+        }
+
+        function testMobile() {
+            document.body.style.width = '375px';
+            document.body.style.margin = '0 auto';
+            updateResponsiveStatus('Mobile (375px)');
+        }
+
+        function testTablet() {
+            document.body.style.width = '768px';
+            document.body.style.margin = '0 auto';
+            updateResponsiveStatus('Tablet (768px)');
+        }
+
+        function testDesktop() {
+            document.body.style.width = '100%';
+            document.body.style.margin = '0';
+            updateResponsiveStatus('Desktop (100%)');
+        }
+
+        function updateResponsiveStatus(size) {
+            const status = document.getElementById('responsive-status');
+            status.textContent = `Simulating ${size} - check component positioning`;
+            status.className = 'status success';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎫 Test page loaded');
+
+            // Show the checkout nav by default
+            setTimeout(() => {
+                toggleCheckoutNav();
+            }, 500);
+        });
+    </script>
+</body>
+
+</html>
