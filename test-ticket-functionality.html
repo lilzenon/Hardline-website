@@ -80,18 +80,18 @@
         <h1>🎫 Ticket Purchasing Functionality Test</h1>
 
         <div class="test-section">
-            <h2>Compact Bar Design Test</h2>
-            <p>Tests the new compact bottom navigation bar that stays as a bar (56px height) and doesn't expand to cover the page.</p>
+            <h2>Inline Positioning Test</h2>
+            <p>Tests the repositioned checkout nav that appears inline with page content instead of fixed at bottom.</p>
             <button class="test-button" onclick="toggleCheckoutNav()">Toggle Checkout Nav</button>
-            <div id="visibility-status" class="status info">Component should appear as compact bar at bottom</div>
+            <div id="visibility-status" class="status info">Component should appear inline below this section</div>
         </div>
 
         <div class="test-section">
-            <h2>Modal Functionality Test</h2>
-            <p>Test the new modal approach - clicking Buy opens a modal overlay instead of expanding the bar.</p>
+            <h2>Enhanced Modal Animation Test</h2>
+            <p>Test the enhanced modal with smooth fade-in/fade-out, backdrop blur, and scale animations (250ms duration).</p>
             <button class="test-button" onclick="testExpansion()">Open Modal</button>
             <button class="test-button" onclick="testCollapse()">Close Modal</button>
-            <div id="animation-status" class="status info">Modal should overlay the page with glassmorphism styling</div>
+            <div id="animation-status" class="status info">Watch for smooth backdrop blur and content scale animations</div>
         </div>
 
         <div class="test-section">
@@ -103,12 +103,19 @@
         </div>
 
         <div class="test-section">
-            <h2>Responsive Test</h2>
-            <p>Test responsive behavior at different screen sizes.</p>
+            <h2>Responsive Design Test</h2>
+            <p>Test the inline positioning and width matching across different screen sizes.</p>
             <button class="test-button" onclick="testMobile()">Simulate Mobile (375px)</button>
             <button class="test-button" onclick="testTablet()">Simulate Tablet (768px)</button>
             <button class="test-button" onclick="testDesktop()">Simulate Desktop (1024px)</button>
-            <div id="responsive-status" class="status info">Resize window or use browser dev tools</div>
+            <div id="responsive-status" class="status info">Component should match container width at all breakpoints</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Accessibility Test</h2>
+            <p>Test reduced motion support and accessibility features.</p>
+            <button class="test-button" onclick="testReducedMotion()">Toggle Reduced Motion</button>
+            <div id="accessibility-status" class="status info">Animations should respect motion preferences</div>
         </div>
     </div>
 
@@ -254,6 +261,38 @@
         function updateResponsiveStatus(size) {
             const status = document.getElementById('responsive-status');
             status.textContent = `Simulating ${size} - check component positioning`;
+            status.className = 'status success';
+        }
+
+        function testReducedMotion() {
+            const isReduced = document.documentElement.style.getPropertyValue('--prefers-reduced-motion') === 'reduce';
+
+            if (isReduced) {
+                document.documentElement.style.setProperty('--prefers-reduced-motion', 'no-preference');
+                document.body.style.setProperty('--prefers-reduced-motion', 'no-preference');
+            } else {
+                document.documentElement.style.setProperty('--prefers-reduced-motion', 'reduce');
+                document.body.style.setProperty('--prefers-reduced-motion', 'reduce');
+                // Add CSS to simulate reduced motion
+                const style = document.createElement('style');
+                style.textContent = `
+                    * {
+                        animation-duration: 0.01ms !important;
+                        animation-iteration-count: 1 !important;
+                        transition-duration: 0.01ms !important;
+                        scroll-behavior: auto !important;
+                    }
+                `;
+                style.id = 'reduced-motion-test';
+                if (document.getElementById('reduced-motion-test')) {
+                    document.getElementById('reduced-motion-test').remove();
+                } else {
+                    document.head.appendChild(style);
+                }
+            }
+
+            const status = document.getElementById('accessibility-status');
+            status.textContent = isReduced ? 'Animations enabled' : 'Reduced motion enabled - animations disabled';
             status.className = 'status success';
         }
 
