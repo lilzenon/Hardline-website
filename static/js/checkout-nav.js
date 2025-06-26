@@ -215,8 +215,19 @@ class CheckoutNav {
             console.log('🎫 Ticket iframe loaded successfully');
             this.iframe.classList.remove('loading');
 
-            // Initialize dynamic sizing
-            this.initializeDynamicSizing();
+            // Initialize dynamic sizing with delay for content to render
+            setTimeout(() => {
+                this.initializeDynamicSizing();
+            }, 100);
+
+            // Additional attempts for slow-loading content
+            setTimeout(() => {
+                this.adjustIframeHeight();
+            }, 1000);
+
+            setTimeout(() => {
+                this.adjustIframeHeight();
+            }, 3000);
         }, { once: true });
 
         // Handle iframe error
@@ -262,29 +273,35 @@ class CheckoutNav {
     }
 
     startHeightPolling() {
-        // Poll for height changes every 500ms for cross-origin iframes
+        // More aggressive polling for better height detection
+        let pollCount = 0;
+        const maxPolls = 120; // 60 seconds total
+
         this.heightPollingInterval = setInterval(() => {
+            pollCount++;
+
             if (this.iframe && this.iframe.contentWindow) {
-                // Request height via postMessage
+                // Try direct height detection first
+                this.adjustIframeHeight();
+
+                // Also request height via postMessage
                 try {
                     this.iframe.contentWindow.postMessage({
                         type: 'getHeight',
                         source: 'checkout-nav'
                     }, '*');
                 } catch (error) {
-                    console.log('🎫 PostMessage failed:', error);
+                    // Ignore postMessage errors for cross-origin
                 }
             }
-        }, 500);
 
-        // Stop polling after 30 seconds to avoid infinite polling
-        setTimeout(() => {
-            if (this.heightPollingInterval) {
+            // Stop polling after max attempts
+            if (pollCount >= maxPolls) {
                 clearInterval(this.heightPollingInterval);
                 this.heightPollingInterval = null;
-                console.log('🎫 Height polling stopped');
+                console.log('🎫 Height polling stopped after', pollCount, 'attempts');
             }
-        }, 30000);
+        }, 500);
     }
 
     handleIframeMessage(event) {
@@ -442,9 +459,17 @@ class CheckoutNav {
 
         console.log(`🎫 Setting iframe height: ${height}px (constrained to ${constrainedHeight}px)`);
 
-        // Apply smooth transition
-        this.iframe.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-        this.iframe.style.height = `${constrainedHeight}px`;
+        // Only update if height actually changed to avoid unnecessary transitions
+        const currentHeight = parseInt(this.iframe.style.height) || 400;
+        if (Math.abs(currentHeight - constrainedHeight) > 10) {
+            // Apply smooth transition
+            this.iframe.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            this.iframe.style.height = `${constrainedHeight}px`;
+
+            console.log('🎫 Height updated from', currentHeight, 'to', constrainedHeight);
+        } else {
+            console.log('🎫 Height change too small, skipping update');
+        }
 
         // Update modal content max-height if needed
         this.updateModalHeight(constrainedHeight);
@@ -542,6 +567,21 @@ function testSetHeight(height) {
     if (window.checkoutNav) {
         console.log('🎫 Testing setIframeHeight with:', height);
         window.checkoutNav.setIframeHeight(height);
+    } else {
+        console.error('🎫 window.checkoutNav not found!');
+    }
+}
+
+// Global function to force height detection
+function forceHeightDetection() {
+    if (window.checkoutNav) {
+        console.log('🎫 Forcing height detection...');
+        window.checkoutNav.adjustIframeHeight();
+
+        // Try multiple times with delays
+        setTimeout(() => window.checkoutNav.adjustIframeHeight(), 500);
+        setTimeout(() => window.checkoutNav.adjustIframeHeight(), 1000);
+        setTimeout(() => window.checkoutNav.adjustIframeHeight(), 2000);
     } else {
         console.error('🎫 window.checkoutNav not found!');
     }

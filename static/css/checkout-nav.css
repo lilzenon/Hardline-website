@@ -229,18 +229,20 @@
     max-height: 800px;
     border: none;
     border-radius: 12px;
-    /* Transparent background to match modal glassmorphism */
-    background: transparent;
+    /* Glassmorphism background that shows through transparent areas */
+    background: rgba(255, 255, 255, 0.05);
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex: 1;
     overflow: hidden;
-    /* Ensure iframe content is visible */
-    opacity: 1;
+    position: relative;
+    z-index: 2;
+    /* Subtle border to define iframe area */
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .checkout-iframe.loading {
-    /* Subtle glassmorphism background during loading */
-    background: rgba(255, 255, 255, 0.03);
+    /* Slightly more visible background during loading */
+    background: rgba(255, 255, 255, 0.08);
     position: relative;
 }
 
