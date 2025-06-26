@@ -202,6 +202,12 @@ class CheckoutNav {
             this.resizeObserver.disconnect();
             this.resizeObserver = null;
         }
+
+        // Clear iframe mutation observer
+        if (this.iframeObserver) {
+            this.iframeObserver.disconnect();
+            this.iframeObserver = null;
+        }
     }
 
     loadIframe() {
@@ -232,14 +238,25 @@ class CheckoutNav {
                 this.initializeDynamicSizing();
             }, 100);
 
-            // Additional attempts for slow-loading content
+            // Additional attempts for slow-loading content with special handling for Posh
             setTimeout(() => {
                 this.adjustIframeHeight();
+                this.tryPoshSpecificDetection();
             }, 1000);
 
             setTimeout(() => {
                 this.adjustIframeHeight();
+                this.tryPoshSpecificDetection();
             }, 3000);
+
+            // Extra attempts for Posh embeds which may load content dynamically
+            setTimeout(() => {
+                this.tryPoshSpecificDetection();
+            }, 5000);
+
+            setTimeout(() => {
+                this.tryPoshSpecificDetection();
+            }, 8000);
         }, { once: true });
 
         // Handle iframe error
@@ -526,11 +543,9 @@ class CheckoutNav {
 
         // Method 3: Estimate height based on content type (Posh embed)
         if (!heightDetected) {
-            const src = this.iframe.src;
-            if (src && src.includes('posh')) {
-                // Posh embeds typically need more height for ticket options
-                const estimatedHeight = 600; // Reasonable default for Posh embeds
-                console.log('🎫 Using estimated height for Posh embed:', estimatedHeight);
+            const estimatedHeight = this.estimateHeightFromContent();
+            if (estimatedHeight > 100) {
+                console.log('🎫 Using content-based height estimation:', estimatedHeight);
                 this.setIframeHeight(estimatedHeight);
                 heightDetected = true;
             }
@@ -637,20 +652,91 @@ class CheckoutNav {
         const src = this.iframe.src;
 
         if (src.includes('posh.vip') || src.includes('posh.')) {
-            // Posh embeds typically show ticket options and need more height
-            console.log('🎫 Using Posh-specific height estimation');
-            return 650; // Good default for Posh ticket selection interfaces
+            // Posh embeds need generous height to show full ticket interface
+            // Typical Posh embeds include: header, multiple ticket types, descriptions, purchase buttons
+            console.log('🎫 Using Posh-specific height estimation for full content visibility');
+
+            // Calculate based on viewport but ensure minimum for full content
+            const viewportHeight = window.innerHeight;
+            const minPoshHeight = 800; // Minimum to show most Posh content
+            const maxPoshHeight = Math.min(viewportHeight * 0.85, 1200); // Allow up to 85% of viewport or 1200px
+
+            // Use generous default that should accommodate most Posh ticket interfaces
+            const estimatedHeight = Math.max(minPoshHeight, 900);
+
+            console.log(`🎫 Posh height estimation: ${estimatedHeight}px (viewport: ${viewportHeight}px)`);
+            return estimatedHeight;
         }
 
         if (src.includes('eventbrite')) {
-            return 600;
+            return 700; // Increased for full content
         }
 
         if (src.includes('ticket')) {
-            return 550;
+            return 650; // Increased for full content
         }
 
-        return 500; // Generic fallback
+        return 600; // Increased generic fallback
+    }
+
+    tryPoshSpecificDetection() {
+        if (!this.iframe) return;
+
+        const src = this.iframe.src;
+        const isPoshEmbed = src && (src.includes('posh.vip') || src.includes('posh.'));
+
+        if (!isPoshEmbed) return;
+
+        console.log('🎫 Attempting Posh-specific height detection');
+
+        // Try to detect if Posh content has loaded and expanded
+        const currentHeight = parseInt(this.iframe.style.height) || 400;
+
+        // Check if iframe appears to have content by looking at its computed style
+        const computedStyle = window.getComputedStyle(this.iframe);
+        const iframeRect = this.iframe.getBoundingClientRect();
+
+        console.log('🎫 Posh iframe current state:', {
+            currentHeight,
+            computedHeight: computedStyle.height,
+            boundingHeight: iframeRect.height,
+            scrollHeight: this.iframe.scrollHeight,
+            offsetHeight: this.iframe.offsetHeight
+        });
+
+        // If current height seems too small for Posh content, increase it
+        if (currentHeight < 800) {
+            const newHeight = this.estimateHeightFromContent();
+            console.log(`🎫 Posh content appears truncated (${currentHeight}px), expanding to ${newHeight}px`);
+            this.setIframeHeight(newHeight);
+        }
+
+        // Try to observe iframe for any size changes
+        this.observeIframeChanges();
+    }
+
+    observeIframeChanges() {
+        if (this.iframeObserver) return; // Already observing
+
+        // Use MutationObserver to watch for any changes in iframe attributes
+        if (window.MutationObserver) {
+            this.iframeObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' &&
+                        (mutation.attributeName === 'style' || mutation.attributeName === 'height')) {
+                        console.log('🎫 Iframe attributes changed, rechecking height');
+                        setTimeout(() => this.adjustIframeHeight(), 100);
+                    }
+                });
+            });
+
+            this.iframeObserver.observe(this.iframe, {
+                attributes: true,
+                attributeFilter: ['style', 'height', 'scrollHeight']
+            });
+
+            console.log('🎫 Started observing iframe for attribute changes');
+        }
     }
 
     getHeightFromPostMessage() {
@@ -662,9 +748,21 @@ class CheckoutNav {
     setIframeHeight(height) {
         if (!this.iframe || !height) return;
 
-        // Apply height constraints
+        // Apply height constraints with special handling for Posh embeds
         const minHeight = 300;
-        const maxHeight = Math.min(window.innerHeight * 0.8, 800);
+        const src = this.iframe.src;
+        const isPoshEmbed = src && (src.includes('posh.vip') || src.includes('posh.'));
+
+        let maxHeight;
+        if (isPoshEmbed) {
+            // More generous constraints for Posh embeds to ensure full content visibility
+            maxHeight = Math.min(window.innerHeight * 0.9, 1200); // Up to 90% of viewport or 1200px
+            console.log('🎫 Using generous height constraints for Posh embed');
+        } else {
+            // Standard constraints for other embeds
+            maxHeight = Math.min(window.innerHeight * 0.8, 800);
+        }
+
         const constrainedHeight = Math.max(minHeight, Math.min(height, maxHeight));
 
         console.log(`🎫 Setting iframe height: ${height}px (constrained to ${constrainedHeight}px)`);
@@ -855,6 +953,27 @@ function getIframeInfo() {
     } else {
         console.error('🎫 No iframe found!');
         return null;
+    }
+}
+
+// Global function to test Posh-specific detection
+function testPoshDetection() {
+    if (window.checkoutNav) {
+        console.log('🎫 Testing Posh-specific detection...');
+        window.checkoutNav.tryPoshSpecificDetection();
+
+        // Also run comprehensive height detection
+        setTimeout(() => {
+            console.log('🎫 Running comprehensive height detection...');
+            window.checkoutNav.adjustIframeHeight();
+        }, 500);
+
+        // Check current state
+        setTimeout(() => {
+            getIframeInfo();
+        }, 1000);
+    } else {
+        console.error('🎫 window.checkoutNav not found!');
     }
 }
 
