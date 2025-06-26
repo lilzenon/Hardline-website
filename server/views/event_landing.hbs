@@ -401,6 +401,7 @@
                 justify-self: start; /* Align to left side of grid area */
                 width: 420px;
                 min-width: 420px;
+                order: 1; /* Position first in title area */
             }
         }
 
@@ -458,6 +459,22 @@
                 padding-bottom: 40px; /* Add bottom padding for proper spacing */
                 margin: 6px 0 0 0 !important; /* Reduced spacing for optimal balance */
                 justify-self: start; /* Align to left side of grid area */
+                order: 3; /* Position after checkout nav */
+            }
+        }
+
+        /* Ensure proper ordering for mobile/tablet layouts */
+        @media (max-width: 1023px) {
+            .event-title-section {
+                order: 1;
+            }
+
+            .checkout-nav-container {
+                order: 2;
+            }
+
+            .rsvp-container {
+                order: 3;
             }
         }
 

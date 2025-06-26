@@ -106,8 +106,8 @@ class CheckoutNav {
         console.log('🎫 Opening checkout modal');
         this.isModalOpen = true;
 
-        // Load iframe if not already loaded
-        if (this.iframe && !this.iframe.src) {
+        // Load iframe if not already loaded with ticket URL
+        if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
             this.loadIframe();
         }
 

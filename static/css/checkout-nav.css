@@ -30,6 +30,10 @@
 .event-container .checkout-nav-container {
     max-width: 100%;
     width: 100%;
+    /* Ensure proper grid positioning */
+    grid-column: 1;
+    order: 2;
+    /* Position after title (order 1) but before form (order 3) */
 }
 
 
@@ -279,6 +283,11 @@
     .checkout-nav-container {
         margin: 32px auto 40px auto;
         max-width: 420px;
+        /* Desktop grid positioning - place in title area */
+        grid-area: title;
+        order: 2;
+        align-self: start;
+        justify-self: start;
     }
     .checkout-iframe {
         height: 450px;
