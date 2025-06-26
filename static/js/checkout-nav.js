@@ -208,6 +208,12 @@ class CheckoutNav {
             this.iframeObserver.disconnect();
             this.iframeObserver = null;
         }
+
+        // Clear Posh content monitoring
+        if (this.poshContentMonitor) {
+            clearInterval(this.poshContentMonitor);
+            this.poshContentMonitor = null;
+        }
     }
 
     loadIframe() {
@@ -668,19 +674,41 @@ class CheckoutNav {
         const src = this.iframe.src;
 
         if (src.includes('posh.vip') || src.includes('posh.')) {
-            // Posh embeds need generous height to show full ticket interface
-            // Typical Posh embeds include: header, multiple ticket types, descriptions, purchase buttons
-            console.log('🎫 Using Posh-specific height estimation for full content visibility');
+            // Research-based Posh embed sizing for full content visibility
+            console.log('🎫 Using research-based Posh height estimation for full content visibility');
 
-            // Calculate based on viewport but ensure minimum for full content
             const viewportHeight = window.innerHeight;
-            const minPoshHeight = 800; // Minimum to show most Posh content
-            const maxPoshHeight = Math.min(viewportHeight * 0.85, 1200); // Allow up to 85% of viewport or 1200px
+            const viewportWidth = window.innerWidth;
 
-            // Use generous default that should accommodate most Posh ticket interfaces
-            const estimatedHeight = Math.max(minPoshHeight, 900);
+            // Research findings: Posh ticket interfaces typically need:
+            // - Header: ~80-120px
+            // - Ticket options: ~60-100px per ticket type (usually 2-6 types)
+            // - Descriptions: ~40-80px per ticket
+            // - Purchase buttons: ~60-80px
+            // - Footer/terms: ~40-60px
+            // - Padding/margins: ~40-80px total
 
-            console.log(`🎫 Posh height estimation: ${estimatedHeight}px (viewport: ${viewportHeight}px)`);
+            let estimatedHeight;
+
+            if (viewportWidth < 768) {
+                // Mobile: Content stacks vertically, needs more height
+                estimatedHeight = Math.min(viewportHeight * 0.9, 1000);
+                console.log('🎫 Mobile Posh sizing: prioritizing full content over viewport');
+            } else if (viewportWidth < 1024) {
+                // Tablet: Moderate height needed
+                estimatedHeight = Math.min(viewportHeight * 0.85, 900);
+                console.log('🎫 Tablet Posh sizing: balanced approach');
+            } else {
+                // Desktop: Can accommodate larger heights
+                estimatedHeight = Math.min(viewportHeight * 0.8, 800);
+                console.log('🎫 Desktop Posh sizing: optimized for large screens');
+            }
+
+            // Ensure minimum height for essential content visibility
+            const minPoshHeight = 600; // Absolute minimum for basic functionality
+            estimatedHeight = Math.max(estimatedHeight, minPoshHeight);
+
+            console.log(`🎫 Posh height estimation: ${estimatedHeight}px (viewport: ${viewportWidth}x${viewportHeight})`);
             return estimatedHeight;
         }
 
@@ -703,32 +731,136 @@ class CheckoutNav {
 
         if (!isPoshEmbed) return;
 
-        console.log('🎫 Attempting Posh-specific height detection');
+        console.log('🎫 Research-based Posh height detection starting...');
 
-        // Try to detect if Posh content has loaded and expanded
+        // Get current state
         const currentHeight = parseInt(this.iframe.style.height) || 400;
-
-        // Check if iframe appears to have content by looking at its computed style
-        const computedStyle = window.getComputedStyle(this.iframe);
         const iframeRect = this.iframe.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
 
-        console.log('🎫 Posh iframe current state:', {
+        console.log('🎫 Posh iframe analysis:', {
             currentHeight,
-            computedHeight: computedStyle.height,
             boundingHeight: iframeRect.height,
-            scrollHeight: this.iframe.scrollHeight,
-            offsetHeight: this.iframe.offsetHeight
+            viewportHeight,
+            heightRatio: (currentHeight / viewportHeight * 100).toFixed(1) + '%'
         });
 
-        // If current height seems too small for Posh content, increase it
-        if (currentHeight < 800) {
-            const newHeight = this.estimateHeightFromContent();
-            console.log(`🎫 Posh content appears truncated (${currentHeight}px), expanding to ${newHeight}px`);
-            this.setIframeHeight(newHeight);
+        // Research-based height adequacy check
+        const isHeightAdequate = this.isPoshHeightAdequate(currentHeight);
+
+        if (!isHeightAdequate) {
+            const optimalHeight = this.calculateOptimalPoshHeight();
+            console.log(`🎫 Current height inadequate (${currentHeight}px), setting optimal height: ${optimalHeight}px`);
+            this.setIframeHeight(optimalHeight);
+        } else {
+            console.log(`🎫 Current height appears adequate (${currentHeight}px) for Posh content`);
         }
 
-        // Try to observe iframe for any size changes
+        // Set up advanced monitoring
+        this.setupAdvancedPoshMonitoring();
+    }
+
+    isPoshHeightAdequate(height) {
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Research-based adequacy thresholds
+        let minAdequateHeight;
+
+        if (viewportWidth < 768) {
+            // Mobile: Need more height due to vertical stacking
+            minAdequateHeight = Math.min(viewportHeight * 0.85, 900);
+        } else if (viewportWidth < 1024) {
+            // Tablet: Moderate requirements
+            minAdequateHeight = Math.min(viewportHeight * 0.75, 750);
+        } else {
+            // Desktop: Can be more conservative
+            minAdequateHeight = Math.min(viewportHeight * 0.65, 650);
+        }
+
+        const isAdequate = height >= minAdequateHeight;
+        console.log(`🎫 Height adequacy check: ${height}px vs ${minAdequateHeight}px minimum = ${isAdequate ? 'ADEQUATE' : 'INADEQUATE'}`);
+
+        return isAdequate;
+    }
+
+    calculateOptimalPoshHeight() {
+        // Use the enhanced estimation method
+        const estimatedHeight = this.estimateHeightFromContent();
+
+        // Add buffer for dynamic content that might load
+        const bufferHeight = 100;
+        const optimalHeight = estimatedHeight + bufferHeight;
+
+        console.log(`🎫 Optimal height calculation: ${estimatedHeight}px + ${bufferHeight}px buffer = ${optimalHeight}px`);
+
+        return optimalHeight;
+    }
+
+    setupAdvancedPoshMonitoring() {
+        // Enhanced monitoring for Posh embeds
         this.observeIframeChanges();
+        this.setupPoshContentMonitoring();
+        this.schedulePeriodicPoshChecks();
+    }
+
+    setupPoshContentMonitoring() {
+        if (this.poshContentMonitor) return;
+
+        // Monitor for any visual changes that might indicate content loading
+        let lastVisualState = this.getPoshVisualState();
+
+        this.poshContentMonitor = setInterval(() => {
+            const currentVisualState = this.getPoshVisualState();
+
+            if (this.hasPoshVisualStateChanged(lastVisualState, currentVisualState)) {
+                console.log('🎫 Posh visual state changed, rechecking height');
+                this.tryPoshSpecificDetection();
+                lastVisualState = currentVisualState;
+            }
+        }, 2000); // Check every 2 seconds
+
+        // Stop monitoring after 30 seconds
+        setTimeout(() => {
+            if (this.poshContentMonitor) {
+                clearInterval(this.poshContentMonitor);
+                this.poshContentMonitor = null;
+                console.log('🎫 Posh content monitoring stopped');
+            }
+        }, 30000);
+    }
+
+    getPoshVisualState() {
+        if (!this.iframe) return null;
+
+        const rect = this.iframe.getBoundingClientRect();
+        return {
+            width: rect.width,
+            height: rect.height,
+            scrollHeight: this.iframe.scrollHeight || 0,
+            offsetHeight: this.iframe.offsetHeight || 0
+        };
+    }
+
+    hasPoshVisualStateChanged(oldState, newState) {
+        if (!oldState || !newState) return false;
+
+        const heightChanged = Math.abs(oldState.height - newState.height) > 10;
+        const scrollHeightChanged = Math.abs(oldState.scrollHeight - newState.scrollHeight) > 10;
+
+        return heightChanged || scrollHeightChanged;
+    }
+
+    schedulePeriodicPoshChecks() {
+        // Research shows content can load at various intervals
+        const checkIntervals = [3000, 7000, 15000, 30000]; // 3s, 7s, 15s, 30s
+
+        checkIntervals.forEach((interval, index) => {
+            setTimeout(() => {
+                console.log(`🎫 Periodic Posh check #${index + 1} at ${interval}ms`);
+                this.tryPoshSpecificDetection();
+            }, interval);
+        });
     }
 
     observeIframeChanges() {
@@ -771,9 +903,25 @@ class CheckoutNav {
 
         let maxHeight;
         if (isPoshEmbed) {
-            // More generous constraints for Posh embeds to ensure full content visibility
-            maxHeight = Math.min(window.innerHeight * 0.9, 1200); // Up to 90% of viewport or 1200px
-            console.log('🎫 Using generous height constraints for Posh embed');
+            // Research-based generous constraints for Posh embeds
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+
+            if (viewportWidth < 768) {
+                // Mobile: Allow up to 95% of viewport, minimum 600px
+                maxHeight = Math.max(viewportHeight * 0.95, 600);
+            } else if (viewportWidth < 1024) {
+                // Tablet: Allow up to 90% of viewport, minimum 700px
+                maxHeight = Math.max(viewportHeight * 0.9, 700);
+            } else {
+                // Desktop: Allow up to 85% of viewport, minimum 800px
+                maxHeight = Math.max(viewportHeight * 0.85, 800);
+            }
+
+            // Absolute maximum to prevent excessive heights
+            maxHeight = Math.min(maxHeight, 1400);
+
+            console.log(`🎫 Research-based Posh constraints: ${maxHeight}px (viewport: ${viewportWidth}x${viewportHeight})`);
         } else {
             // Standard constraints for other embeds
             maxHeight = Math.min(window.innerHeight * 0.8, 800);
@@ -972,24 +1120,60 @@ function getIframeInfo() {
     }
 }
 
-// Global function to test Posh-specific detection
+// Global function to test research-based Posh detection
 function testPoshDetection() {
     if (window.checkoutNav) {
-        console.log('🎫 Testing Posh-specific detection...');
+        console.log('🎫 Testing research-based Posh detection...');
+
+        // Get current state
+        const iframe = window.checkoutNav.iframe;
+        if (iframe) {
+            console.log('🎫 Current iframe state before optimization:');
+            console.log('- Height:', iframe.style.height);
+            console.log('- Viewport:', window.innerWidth + 'x' + window.innerHeight);
+            console.log('- Source:', iframe.src);
+        }
+
+        // Run Posh-specific detection
         window.checkoutNav.tryPoshSpecificDetection();
 
-        // Also run comprehensive height detection
+        // Run comprehensive height detection
         setTimeout(() => {
             console.log('🎫 Running comprehensive height detection...');
             window.checkoutNav.adjustIframeHeight();
         }, 500);
 
-        // Check current state
+        // Check final state
         setTimeout(() => {
+            console.log('🎫 Final state after optimization:');
+            if (iframe) {
+                console.log('- Final Height:', iframe.style.height);
+                console.log('- Bounding Height:', iframe.getBoundingClientRect().height);
+            }
             getIframeInfo();
-        }, 1000);
+        }, 2000);
+
+        // Test height adequacy
+        setTimeout(() => {
+            const currentHeight = parseInt(iframe.style.height) || 0;
+            const isAdequate = window.checkoutNav.isPoshHeightAdequate(currentHeight);
+            console.log(`🎫 Height adequacy test: ${currentHeight}px is ${isAdequate ? 'ADEQUATE' : 'INADEQUATE'}`);
+        }, 2500);
+
     } else {
         console.error('🎫 window.checkoutNav not found!');
+    }
+}
+
+// Global function to force optimal Posh height
+function setOptimalPoshHeight() {
+    if (window.checkoutNav && window.checkoutNav.iframe) {
+        console.log('🎫 Setting optimal Posh height...');
+        const optimalHeight = window.checkoutNav.calculateOptimalPoshHeight();
+        window.checkoutNav.setIframeHeight(optimalHeight);
+        console.log(`🎫 Set optimal height: ${optimalHeight}px`);
+    } else {
+        console.error('🎫 window.checkoutNav or iframe not found!');
     }
 }
 
