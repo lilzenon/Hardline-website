@@ -80,18 +80,18 @@
         <h1>🎫 Ticket Purchasing Functionality Test</h1>
 
         <div class="test-section">
-            <h2>Component Visibility & Alignment Test</h2>
-            <p>Tests the refined styling with improved alignment, compact height (48px), and visual balance.</p>
+            <h2>Compact Bar Design Test</h2>
+            <p>Tests the new compact bottom navigation bar that stays as a bar (56px height) and doesn't expand to cover the page.</p>
             <button class="test-button" onclick="toggleCheckoutNav()">Toggle Checkout Nav</button>
-            <div id="visibility-status" class="status info">Component should appear at bottom with refined 48px height</div>
+            <div id="visibility-status" class="status info">Component should appear as compact bar at bottom</div>
         </div>
 
         <div class="test-section">
-            <h2>Enhanced Animation Test</h2>
-            <p>Test the improved expansion animations with bounce effects and smoother transitions (0.5s duration).</p>
-            <button class="test-button" onclick="testExpansion()">Test Expansion</button>
-            <button class="test-button" onclick="testCollapse()">Test Collapse</button>
-            <div id="animation-status" class="status info">Watch for smooth bounce effects and visual cohesion</div>
+            <h2>Modal Functionality Test</h2>
+            <p>Test the new modal approach - clicking Buy opens a modal overlay instead of expanding the bar.</p>
+            <button class="test-button" onclick="testExpansion()">Open Modal</button>
+            <button class="test-button" onclick="testCollapse()">Close Modal</button>
+            <div id="animation-status" class="status info">Modal should overlay the page with glassmorphism styling</div>
         </div>
 
         <div class="test-section">
@@ -113,28 +113,33 @@
     </div>
 
     <!-- Test Checkout Nav Component -->
-    <div class="checkout-nav-container" id="testCheckoutNav" style="display: none;">
+    <div class="checkout-nav-container active" id="testCheckoutNav" style="display: none;">
         <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
-            <div class="checkout-nav-header">
-                <div class="ticket-price" aria-live="polite">
-                    <span class="sr-only">Ticket price: </span> $25
-                </div>
-                <button class="buy-button" aria-expanded="false" aria-label="Buy tickets for $25" aria-describedby="ticket-price-info">
-                    Buy
-                    <span class="sr-only"> tickets</span>
-                </button>
-                <button class="checkout-close" aria-label="Close ticket checkout" style="display: none;" tabindex="-1">
+            <div class="ticket-price" aria-live="polite">
+                <span class="sr-only">Ticket price: </span>$25
+            </div>
+            <button class="buy-button" onclick="openCheckoutModal()" aria-label="Buy tickets for $25" aria-describedby="ticket-price-info">
+                Buy
+                <span class="sr-only"> tickets</span>
+            </button>
+        </nav>
+        <div id="ticket-price-info" class="sr-only">
+            Tickets are available for $25
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="checkout-modal" id="checkoutModal">
+        <div class="checkout-modal-content">
+            <div class="checkout-modal-header">
+                <h3 class="checkout-modal-title">Buy Tickets - $25</h3>
+                <button class="checkout-close" onclick="closeCheckoutModal()" aria-label="Close ticket checkout">
                     <span aria-hidden="true">×</span>
                     <span class="sr-only">Close</span>
                 </button>
             </div>
-            <div class="checkout-iframe-container" aria-hidden="true">
-                <iframe class="checkout-iframe loading" data-ticket-url="https://example.com/tickets" title="Ticket Checkout - Test Event" loading="lazy" aria-label="Ticket purchasing form">
-                </iframe>
-            </div>
-        </nav>
-        <div id="ticket-price-info" class="sr-only">
-            Tickets are available for $25
+            <iframe class="checkout-iframe" src="about:blank" title="Ticket Checkout - Test Event" loading="lazy" aria-label="Ticket purchasing form">
+            </iframe>
         </div>
     </div>
 
@@ -152,21 +157,42 @@
         }
 
         function testExpansion() {
-            if (window.checkoutNav) {
-                window.checkoutNav.expand();
-                const status = document.getElementById('animation-status');
-                status.textContent = 'Expansion animation triggered';
-                status.className = 'status success';
-            }
+            openCheckoutModal();
+            const status = document.getElementById('animation-status');
+            status.textContent = 'Modal opened successfully';
+            status.className = 'status success';
         }
 
         function testCollapse() {
-            if (window.checkoutNav) {
-                window.checkoutNav.collapse();
-                const status = document.getElementById('animation-status');
-                status.textContent = 'Collapse animation triggered';
-                status.className = 'status success';
-            }
+            closeCheckoutModal();
+            const status = document.getElementById('animation-status');
+            status.textContent = 'Modal closed successfully';
+            status.className = 'status success';
+        }
+
+        function openCheckoutModal() {
+            const modal = document.getElementById('checkoutModal');
+            const iframe = modal.querySelector('.checkout-iframe');
+
+            // Set a demo URL for testing
+            iframe.src = 'https://example.com/tickets';
+            modal.classList.add('active');
+
+            // Focus management for accessibility
+            const closeButton = modal.querySelector('.checkout-close');
+            closeButton.focus();
+        }
+
+        function closeCheckoutModal() {
+            const modal = document.getElementById('checkoutModal');
+            const iframe = modal.querySelector('.checkout-iframe');
+
+            modal.classList.remove('active');
+            iframe.src = 'about:blank';
+
+            // Return focus to buy button
+            const buyButton = document.querySelector('.buy-button');
+            buyButton.focus();
         }
 
         function testKeyboardNav() {
@@ -178,6 +204,22 @@
                 status.className = 'status success';
             }
         }
+
+        // Keyboard event handling
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('checkoutModal');
+
+            if (e.key === 'Escape' && modal.classList.contains('active')) {
+                closeCheckoutModal();
+            }
+        });
+
+        // Click outside modal to close
+        document.getElementById('checkoutModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCheckoutModal();
+            }
+        });
 
         function testAriaLabels() {
             const nav = document.querySelector('.checkout-nav');
