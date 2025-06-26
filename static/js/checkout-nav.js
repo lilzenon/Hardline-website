@@ -147,150 +147,27 @@ class CheckoutNav {
         }
     }
 
-    // SMART: Detect actual Posh content height and size modal accordingly
+    // STABLE: Apply fixed optimal sizing based on Posh content analysis
     applyOptimalModalSizing() {
-        console.log('🎫 SMART sizing: Detecting actual Posh content height...');
+        console.log('🎫 STABLE sizing: Applying fixed optimal dimensions...');
 
         if (!this.modal || !this.iframe) {
             console.error('🎫 Modal or iframe not found for optimal sizing');
             return;
         }
 
-        const modalContent = this.modal.querySelector('.checkout-modal-content');
+        // FIXED SIZING - No dynamic detection to prevent refresh loops
+        // Based on screenshot analysis: Posh content fits well in 320px height
+        this.iframe.style.height = '320px';
+        this.iframe.style.minHeight = '320px';
+        this.iframe.style.maxHeight = '320px';
 
-        // Wait for iframe to load, then detect actual content height
-        setTimeout(() => {
-            this.detectAndApplyActualPoshHeight();
-        }, 1000);
-
-        // Also try after a longer delay in case content loads slowly
-        setTimeout(() => {
-            this.detectAndApplyActualPoshHeight();
-        }, 3000);
-
-        console.log('🎫 Smart sizing initiated - will detect actual Posh content height');
+        console.log('🎫 Fixed sizing applied: 320px height (eliminates white space)');
+        console.log('🎫 Modal is now stable - no dynamic resizing or refresh loops');
     }
 
-    // AGGRESSIVE: Detect exact Posh content height to eliminate ALL white space
-    detectAndApplyActualPoshHeight() {
-        if (!this.iframe) return;
-
-        console.log('🎫 AGGRESSIVE detection: Finding exact Posh content height...');
-
-        // Method 1: Try to access iframe content directly
-        try {
-            const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
-            if (iframeDoc && iframeDoc.body) {
-                const actualHeight = Math.max(
-                    iframeDoc.body.scrollHeight,
-                    iframeDoc.body.offsetHeight,
-                    iframeDoc.documentElement.scrollHeight,
-                    iframeDoc.documentElement.offsetHeight
-                );
-
-                if (actualHeight > 100 && actualHeight < 1000) {
-                    const optimalHeight = actualHeight + 20; // Minimal padding
-                    console.log(`🎫 SUCCESS: Detected exact content height: ${actualHeight}px, setting to: ${optimalHeight}px`);
-                    this.iframe.style.height = optimalHeight + 'px';
-                    this.iframe.style.minHeight = optimalHeight + 'px';
-                    return;
-                }
-            }
-        } catch (error) {
-            console.log('🎫 Cross-origin restriction, trying alternative methods...');
-        }
-
-        // Method 2: Use postMessage to request height from iframe
-        this.requestHeightFromPosh();
-
-        // Method 3: Progressive height testing to find minimal height
-        setTimeout(() => {
-            this.findMinimalPoshHeight();
-        }, 2000);
-    }
-
-    // Request height directly from Posh iframe
-    requestHeightFromPosh() {
-        if (!this.iframe || !this.iframe.contentWindow) return;
-
-        console.log('🎫 Requesting height from Posh iframe...');
-
-        // Listen for height messages from iframe
-        const heightListener = (event) => {
-            if (event.source === this.iframe.contentWindow) {
-                const height = this.extractHeightFromMessage(event.data);
-                if (height && height > 100 && height < 1000) {
-                    console.log(`🎫 Received height from Posh: ${height}px`);
-                    this.iframe.style.height = (height + 20) + 'px';
-                    this.iframe.style.minHeight = (height + 20) + 'px';
-                    window.removeEventListener('message', heightListener);
-                }
-            }
-        };
-
-        window.addEventListener('message', heightListener);
-
-        // Send height request to iframe
-        try {
-            this.iframe.contentWindow.postMessage({ type: 'getHeight' }, '*');
-            this.iframe.contentWindow.postMessage('getHeight', '*');
-        } catch (error) {
-            console.log('🎫 Could not send height request to iframe');
-        }
-
-        // Clean up listener after 5 seconds
-        setTimeout(() => {
-            window.removeEventListener('message', heightListener);
-        }, 5000);
-    }
-
-    // Progressive height testing to find the minimal height that shows all content
-    findMinimalPoshHeight() {
-        if (!this.iframe) return;
-
-        console.log('🎫 Progressive testing to find minimal height...');
-
-        // Based on your screenshot, try smaller heights first
-        const testHeights = [300, 350, 400, 320, 280, 260, 240]; // Start small and test
-        let currentTest = 0;
-
-        const testHeight = () => {
-            if (currentTest >= testHeights.length) {
-                // Fallback to conservative estimate
-                console.log('🎫 Using conservative fallback: 350px');
-                this.iframe.style.height = '350px';
-                this.iframe.style.minHeight = '350px';
-                return;
-            }
-
-            const height = testHeights[currentTest];
-            console.log(`🎫 Testing height: ${height}px`);
-
-            this.iframe.style.height = height + 'px';
-            this.iframe.style.minHeight = height + 'px';
-
-            // Check if this height works (you can visually verify)
-            currentTest++;
-
-            // Continue testing every 1 second
-            setTimeout(testHeight, 1000);
-        };
-
-        testHeight();
-    }
-
-    // Extract height from various message formats
-    extractHeightFromMessage(data) {
-        if (typeof data === 'number') return data;
-        if (typeof data === 'string') {
-            const match = data.match(/(\d+)/);
-            return match ? parseInt(match[1]) : null;
-        }
-        if (data && typeof data === 'object') {
-            return data.height || data.contentHeight || data.scrollHeight || data.offsetHeight;
-        }
-        return null;
-    }
+    // REMOVED: All dynamic height detection methods that caused refresh loops
+    // Now using fixed 320px height based on Posh content analysis
 
     closeModal() {
         if (!this.isModalOpen) return;
@@ -1823,51 +1700,7 @@ function removeTestIframe() {
     }
 }
 
-// QUICK TEST: Manually set iframe height to eliminate white space
-function testPoshHeight(height) {
-    console.log(`🎫 TESTING: Setting Posh iframe height to ${height}px`);
-
-    if (window.checkoutNav && window.checkoutNav.iframe) {
-        const iframe = window.checkoutNav.iframe;
-        iframe.style.height = height + 'px';
-        iframe.style.minHeight = height + 'px';
-
-        console.log(`🎫 Height set to ${height}px - check if white space is eliminated`);
-        console.log('🎫 Try: testPoshHeight(300), testPoshHeight(280), testPoshHeight(260)');
-    } else {
-        console.error('🎫 Modal not open or iframe not found');
-    }
-}
-
-// FIND PERFECT HEIGHT: Test multiple heights automatically
-function findPerfectPoshHeight() {
-    console.log('🎫 AUTO-TESTING: Finding perfect height to eliminate white space...');
-
-    if (!window.checkoutNav || !window.checkoutNav.iframe) {
-        console.error('🎫 Modal not open or iframe not found');
-        return;
-    }
-
-    // Test progressively smaller heights
-    const heights = [320, 300, 280, 260, 240, 220, 200];
-    let index = 0;
-
-    const testNext = () => {
-        if (index >= heights.length) {
-            console.log('🎫 Testing complete. Which height looked best?');
-            return;
-        }
-
-        const height = heights[index];
-        testPoshHeight(height);
-        console.log(`🎫 Testing ${height}px... (${index + 1}/${heights.length})`);
-
-        index++;
-        setTimeout(testNext, 2000); // 2 second delay between tests
-    };
-
-    testNext();
-}
+// REMOVED: Manual testing functions no longer needed with fixed sizing
 
 // REFINED: Create properly-sized modal with glassmorphism that fits Posh content
 function createOptimalPoshModal() {
@@ -1907,10 +1740,10 @@ function createOptimalPoshModal() {
 
     // OPTIMAL MODAL CONTENT (sized for Posh content + glassmorphism)
     if (modalContent) {
-        modalContent.style.setProperty('width', 'min(90vw, 800px)', 'important');
+        modalContent.style.setProperty('width', 'min(90vw, 600px)', 'important');
         modalContent.style.setProperty('height', 'auto', 'important');
-        modalContent.style.setProperty('min-height', '1280px', 'important'); // Accommodate 1200px iframe + padding
-        modalContent.style.setProperty('max-height', '90vh', 'important');
+        modalContent.style.setProperty('min-height', '400px', 'important'); // Accommodate 320px iframe + padding
+        modalContent.style.setProperty('max-height', '70vh', 'important');
         modalContent.style.setProperty('overflow', 'auto', 'important');
         modalContent.style.setProperty('padding', '24px', 'important');
         modalContent.style.setProperty('margin', '0', 'important');
@@ -1928,11 +1761,11 @@ function createOptimalPoshModal() {
         modalContent.style.setProperty('gap', '16px', 'important');
     }
 
-    // OPTIMAL IFRAME (exact dimensions that work, no compression)
+    // FIXED IFRAME (320px height - eliminates white space)
     iframe.style.setProperty('width', '100%', 'important');
-    iframe.style.setProperty('height', '1200px', 'important');
-    iframe.style.setProperty('min-height', '1200px', 'important');
-    iframe.style.setProperty('max-height', 'none', 'important');
+    iframe.style.setProperty('height', '320px', 'important');
+    iframe.style.setProperty('min-height', '320px', 'important');
+    iframe.style.setProperty('max-height', '320px', 'important');
     iframe.style.setProperty('border', 'none', 'important');
     iframe.style.setProperty('border-radius', '12px', 'important');
     iframe.style.setProperty('overflow', 'hidden', 'important');

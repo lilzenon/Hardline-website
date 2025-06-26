@@ -161,24 +161,24 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px;
     padding: 24px;
-    /* Compact card sizing - not fullscreen */
-    max-width: min(90vw, 600px);
-    width: 100%;
-    /* Let content determine height, with reasonable limits */
-    max-height: 80vh;
-    min-height: auto;
+    /* STABLE CARD SIZING - Modern modal best practices */
+    width: min(90vw, 600px);
+    max-width: 600px;
+    /* FIXED HEIGHT - No dynamic resizing to prevent refresh loops */
     height: auto;
-    /* Enable scrolling only if needed */
-    overflow: auto;
+    max-height: 70vh;
+    min-height: 400px;
+    /* Stable overflow handling */
+    overflow: hidden;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transform: scale(0.95) translateY(20px);
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
-    /* Flexbox for proper iframe accommodation */
+    /* Stable flexbox layout */
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
 }
 
 .checkout-modal.active .checkout-modal-content {
@@ -229,17 +229,18 @@
 
 .checkout-iframe {
     width: 100%;
-    /* Start with reasonable height, let JavaScript adjust based on actual content */
-    height: 500px;
-    min-height: 400px;
-    /* Allow height to be adjusted by JavaScript based on actual Posh content */
-    max-height: none;
+    /* FIXED HEIGHT - Based on Posh content analysis from screenshots */
+    height: 320px;
+    min-height: 320px;
+    max-height: 320px;
+    /* NO DYNAMIC RESIZING - Prevents refresh loops and instability */
     border: none;
     border-radius: 12px;
     /* Glassmorphism background that shows through transparent areas */
     background: rgba(255, 255, 255, 0.05);
-    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Allow iframe to shrink/grow based on content */
+    /* NO HEIGHT TRANSITIONS - Prevents animation loops */
+    transition: none;
+    /* Stable sizing - no flex grow/shrink */
     flex-shrink: 0;
     flex-grow: 0;
     overflow: hidden;
