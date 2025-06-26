@@ -137,7 +137,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 40px 20px;
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -161,12 +161,14 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px;
     padding: 24px;
-    /* Optimal sizing for Posh iframe content */
-    max-width: min(90vw, 800px);
+    /* Compact card sizing - not fullscreen */
+    max-width: min(90vw, 600px);
     width: 100%;
-    max-height: 90vh;
+    /* Let content determine height, with reasonable limits */
+    max-height: 80vh;
     min-height: auto;
-    /* Enable scrolling if content exceeds viewport */
+    height: auto;
+    /* Enable scrolling only if needed */
     overflow: auto;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -227,16 +229,17 @@
 
 .checkout-iframe {
     width: 100%;
-    /* Optimal height for Posh ticket interfaces */
-    height: 1200px;
-    min-height: 1200px;
-    /* No max-height constraint to allow full Posh content display */
+    /* Start with reasonable height, let JavaScript adjust based on actual content */
+    height: 500px;
+    min-height: 400px;
+    /* Allow height to be adjusted by JavaScript based on actual Posh content */
+    max-height: none;
     border: none;
     border-radius: 12px;
     /* Glassmorphism background that shows through transparent areas */
     background: rgba(255, 255, 255, 0.05);
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    /* Prevent iframe compression - critical for Posh content */
+    /* Allow iframe to shrink/grow based on content */
     flex-shrink: 0;
     flex-grow: 0;
     overflow: hidden;

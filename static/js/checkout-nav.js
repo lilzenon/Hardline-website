@@ -147,9 +147,9 @@ class CheckoutNav {
         }
     }
 
-    // AUTOMATIC: Apply optimal modal sizing for Posh content (no console commands needed)
+    // SMART: Detect actual Posh content height and size modal accordingly
     applyOptimalModalSizing() {
-        console.log('🎫 AUTOMATICALLY applying optimal modal sizing...');
+        console.log('🎫 SMART sizing: Detecting actual Posh content height...');
 
         if (!this.modal || !this.iframe) {
             console.error('🎫 Modal or iframe not found for optimal sizing');
@@ -158,25 +158,53 @@ class CheckoutNav {
 
         const modalContent = this.modal.querySelector('.checkout-modal-content');
 
-        console.log('🎫 Applying optimal sizing automatically...');
+        // Wait for iframe to load, then detect actual content height
+        setTimeout(() => {
+            this.detectAndApplyActualPoshHeight();
+        }, 1000);
 
-        // The CSS already handles most of the sizing, but ensure iframe is properly sized
-        if (this.iframe) {
-            // Ensure iframe has proper dimensions for Posh content
-            this.iframe.style.setProperty('height', '1200px', 'important');
-            this.iframe.style.setProperty('min-height', '1200px', 'important');
-            this.iframe.style.setProperty('flex-shrink', '0', 'important');
-            this.iframe.style.setProperty('flex-grow', '0', 'important');
+        // Also try after a longer delay in case content loads slowly
+        setTimeout(() => {
+            this.detectAndApplyActualPoshHeight();
+        }, 3000);
+
+        console.log('🎫 Smart sizing initiated - will detect actual Posh content height');
+    }
+
+    // Detect the actual height needed for Posh content (not 1200px!)
+    detectAndApplyActualPoshHeight() {
+        if (!this.iframe) return;
+
+        console.log('🎫 Detecting actual Posh content height...');
+
+        try {
+            // Try to access iframe content height (may fail due to cross-origin)
+            const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+            if (iframeDoc && iframeDoc.body) {
+                const actualHeight = Math.max(
+                    iframeDoc.body.scrollHeight,
+                    iframeDoc.body.offsetHeight,
+                    iframeDoc.documentElement.scrollHeight,
+                    iframeDoc.documentElement.offsetHeight
+                );
+
+                if (actualHeight > 100 && actualHeight < 2000) {
+                    const optimalHeight = Math.max(actualHeight + 40, 400); // Add padding, minimum 400px
+                    console.log(`🎫 Detected actual content height: ${actualHeight}px, setting to: ${optimalHeight}px`);
+                    this.iframe.style.height = optimalHeight + 'px';
+                    return;
+                }
+            }
+        } catch (error) {
+            console.log('🎫 Cross-origin restriction, using smart estimation...');
         }
 
-        // Ensure modal content can accommodate the iframe
-        if (modalContent) {
-            modalContent.style.setProperty('max-height', '90vh', 'important');
-            modalContent.style.setProperty('overflow', 'auto', 'important');
-        }
-
-        console.log('🎫 Optimal modal sizing applied automatically');
-        console.log('🎫 Modal should now display full Posh content without compression');
+        // Fallback: Smart estimation based on Posh content patterns
+        // From your screenshot, the actual content is ~400px, not 1200px
+        const smartHeight = 450; // Reasonable height for Posh ticket selection
+        console.log(`🎫 Using smart estimation: ${smartHeight}px (much better than 1200px!)`);
+        this.iframe.style.height = smartHeight + 'px';
+        this.iframe.style.minHeight = smartHeight + 'px';
     }
 
     closeModal() {
