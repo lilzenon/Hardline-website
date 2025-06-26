@@ -1673,6 +1673,85 @@ function removeTestIframe() {
     }
 }
 
+// AGGRESSIVE: Completely remove modal constraints and make it behave like external iframe
+function destroyModalConstraints() {
+    console.log('🎫 DESTROYING ALL MODAL CONSTRAINTS...');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 Modal iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    const modal = window.checkoutNav.modal;
+    const modalContent = modal && modal.querySelector('.checkout-modal-content');
+
+    console.log('🎫 BEFORE constraint destruction:');
+    console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
+    console.log('  - modal.offsetHeight:', modal.offsetHeight);
+    console.log('  - modalContent.offsetHeight:', modalContent && modalContent.offsetHeight);
+
+    // DESTROY ALL MODAL CONSTRAINTS
+    if (modal) {
+        // Remove ALL height/width constraints from modal
+        modal.style.setProperty('position', 'fixed', 'important');
+        modal.style.setProperty('top', '0', 'important');
+        modal.style.setProperty('left', '0', 'important');
+        modal.style.setProperty('width', '100vw', 'important');
+        modal.style.setProperty('height', '100vh', 'important');
+        modal.style.setProperty('max-height', 'none', 'important');
+        modal.style.setProperty('max-width', 'none', 'important');
+        modal.style.setProperty('overflow', 'auto', 'important');
+        modal.style.setProperty('padding', '0', 'important');
+        modal.style.setProperty('margin', '0', 'important');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('align-items', 'center', 'important');
+        modal.style.setProperty('justify-content', 'center', 'important');
+    }
+
+    // DESTROY ALL MODAL CONTENT CONSTRAINTS
+    if (modalContent) {
+        modalContent.style.setProperty('width', '90vw', 'important');
+        modalContent.style.setProperty('height', 'auto', 'important');
+        modalContent.style.setProperty('max-height', 'none', 'important');
+        modalContent.style.setProperty('max-width', 'none', 'important');
+        modalContent.style.setProperty('overflow', 'visible', 'important');
+        modalContent.style.setProperty('padding', '20px', 'important');
+        modalContent.style.setProperty('margin', '0', 'important');
+        modalContent.style.setProperty('display', 'flex', 'important');
+        modalContent.style.setProperty('flex-direction', 'column', 'important');
+        modalContent.style.setProperty('min-height', '1300px', 'important');
+    }
+
+    // FORCE IFRAME TO EXACT EXTERNAL DIMENSIONS
+    iframe.style.setProperty('width', '100%', 'important');
+    iframe.style.setProperty('height', '1200px', 'important');
+    iframe.style.setProperty('min-height', '1200px', 'important');
+    iframe.style.setProperty('max-height', 'none', 'important');
+    iframe.style.setProperty('border', 'none', 'important');
+    iframe.style.setProperty('margin', '0', 'important');
+    iframe.style.setProperty('padding', '0', 'important');
+    iframe.style.setProperty('overflow', 'visible', 'important');
+    iframe.style.setProperty('flex-shrink', '0', 'important');
+    iframe.style.setProperty('flex-grow', '0', 'important');
+
+    setTimeout(() => {
+        console.log('🎫 AFTER constraint destruction:');
+        console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
+        console.log('  - modal.offsetHeight:', modal.offsetHeight);
+        console.log('  - modalContent.offsetHeight:', modalContent && modalContent.offsetHeight);
+        console.log('  - Success:', iframe.offsetHeight >= 1100);
+
+        if (iframe.offsetHeight >= 1100) {
+            console.log('🎫 SUCCESS! Modal constraints destroyed - iframe should show full Posh content!');
+        } else {
+            console.log('🎫 Still constrained. Something deeper is limiting the iframe...');
+        }
+    }, 500);
+
+    console.log('🎫 All modal constraints destroyed - modal should now behave like external iframe');
+}
+
 // SOLUTION: Apply the working external iframe approach to modal iframe
 function fixModalIframeWithWorkingApproach() {
     console.log('🎫 APPLYING WORKING APPROACH to modal iframe...');
