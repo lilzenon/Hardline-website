@@ -3111,12 +3111,43 @@ async function loadAnalytics() {
 function initializeQRCode() {
     const eventId = {{event.id}};
 
-    // Load QR code data and analytics
+    // Load QR code data (for sharing tab)
     loadQRCodeData(eventId);
-    loadQRCodeAnalytics(eventId);
 
     // Set up event listeners
     setupQRCodeEventListeners(eventId);
+}
+
+// Initialize QR analytics functionality (for analytics tab)
+function initializeQRAnalytics() {
+    const eventId = {{event.id}};
+
+    console.log('🔍 Initializing QR analytics for analytics tab');
+
+    // Check if analytics tab content exists and is visible
+    const analyticsTabContent = document.querySelector('[data-tab-content="analytics"]');
+    const qrAnalyticsSection = document.getElementById('qr-total-scans');
+
+    console.log('📊 Analytics tab content found:', !!analyticsTabContent);
+    console.log('📊 QR analytics elements found:', !!qrAnalyticsSection);
+
+    if (analyticsTabContent) {
+        const isVisible = analyticsTabContent.style.display !== 'none' &&
+                         !analyticsTabContent.classList.contains('hidden');
+        console.log('📊 Analytics tab visible:', isVisible);
+
+        if (isVisible || qrAnalyticsSection) {
+            console.log('✅ Loading QR analytics data');
+            loadQRCodeAnalytics(eventId);
+        } else {
+            console.log('⏳ Analytics tab not visible, retrying in 500ms');
+            setTimeout(() => {
+                loadQRCodeAnalytics(eventId);
+            }, 500);
+        }
+    } else {
+        console.warn('❌ Analytics tab content not found');
+    }
 }
 
 // Load QR code data with loading states
@@ -3208,28 +3239,70 @@ async function displayQRCode(url) {
 // Load QR code analytics
 async function loadQRCodeAnalytics(eventId) {
     try {
+        console.log('🔍 Loading QR code analytics for event:', eventId);
         const response = await fetch(`/api/events/${eventId}/qr-code/analytics`);
         const result = await response.json();
 
         if (result.success) {
             const analytics = result.data;
+            console.log('📊 QR Analytics data received:', analytics);
 
-            // Update analytics display
-            document.getElementById('qr-total-scans').textContent = analytics.totalScans || 0;
-            document.getElementById('qr-unique-scans').textContent = analytics.uniqueScans || 0;
-            document.getElementById('qr-recent-scans').textContent = analytics.recentScans || 0;
+            // Helper function to safely update element
+            function safeUpdateElement(elementId, value, fallback = '0') {
+                const element = document.getElementById(elementId);
+                if (element) {
+                    element.textContent = value || fallback;
+                    console.log(`✅ Updated ${elementId}:`, value || fallback);
+                } else {
+                    console.warn(`⚠️ Element not found: ${elementId}`);
+                }
+            }
 
-            // Calculate mobile scans
-            const mobileScans = analytics.deviceBreakdown?.find(d => d.device_type === 'mobile')?.count || 0;
-            document.getElementById('qr-mobile-scans').textContent = mobileScans;
+            // Update main analytics display (top overview cards)
+            safeUpdateElement('qr-total-scans', analytics.totalScans || 0);
+            safeUpdateElement('qr-unique-scans-text', `${analytics.uniqueScans || 0} unique`);
+
+            // Update detailed analytics section
+            safeUpdateElement('qr-total-scans-detail', analytics.totalScans || 0);
+            safeUpdateElement('qr-unique-scans', analytics.uniqueScans || 0);
+            safeUpdateElement('qr-recent-scans', analytics.recentScans || 0);
 
             // Display recent activity
             displayRecentActivity(analytics.recentActivity || []);
+
+            console.log('✅ QR analytics updated successfully');
+        } else {
+            console.error('❌ QR analytics API returned error:', result.message);
         }
     } catch (error) {
         console.error('🚨 Failed to load QR code analytics:', error);
-        // Show fallback content
-        document.getElementById('qr-recent-activity').innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Unable to load activity</div>';
+
+        // Show fallback content with null check
+        const activityContainer = document.getElementById('qr-recent-activity');
+        if (activityContainer) {
+            activityContainer.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Unable to load activity</div>';
+        }
+
+        // Reset analytics to 0 with null checks
+        const fallbackElements = [
+            'qr-total-scans',
+            'qr-total-scans-detail',
+            'qr-unique-scans',
+            'qr-recent-scans'
+        ];
+
+        fallbackElements.forEach(elementId => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = '0';
+            }
+        });
+
+        // Update unique text separately
+        const uniqueTextElement = document.getElementById('qr-unique-scans-text');
+        if (uniqueTextElement) {
+            uniqueTextElement.textContent = '0 unique';
+        }
     }
 }
 
@@ -3237,8 +3310,14 @@ async function loadQRCodeAnalytics(eventId) {
 function displayRecentActivity(activities) {
     const container = document.getElementById('qr-recent-activity');
 
-    if (activities.length === 0) {
-        container.innerHTML = '<div class="text-xs text-gray-500 text-center py-3">No recent activity</div>';
+    // Add null check for container
+    if (!container) {
+        console.warn('⚠️ QR recent activity container not found');
+        return;
+    }
+
+    if (!activities || activities.length === 0) {
+        container.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">No recent activity</div>';
         return;
     }
 
@@ -3248,15 +3327,17 @@ function displayRecentActivity(activities) {
         const location = activity.city && activity.country_code ? `${activity.city}, ${activity.country_code}` : 'Unknown';
 
         return `
-            <div class="flex items-center justify-between py-2 px-2 bg-white rounded-md border border-gray-100 transition-all duration-200 hover:shadow-sm">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xs">${deviceIcon}</span>
+            <div class="flex items-center justify-between py-3 px-4 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-md hover:border-blue-200">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <span class="text-sm">${deviceIcon}</span>
+                    </div>
                     <div class="min-w-0 flex-1">
-                        <div class="text-xs font-medium text-gray-800 truncate">${activity.browser_name || 'Unknown'}</div>
+                        <div class="text-sm font-medium text-gray-900 truncate">${activity.browser_name || 'Unknown Browser'}</div>
                         <div class="text-xs text-gray-500 truncate">${location}</div>
                     </div>
                 </div>
-                <div class="text-xs text-gray-400 ml-2">${timeAgo}</div>
+                <div class="text-xs text-gray-400 ml-3 flex-shrink-0">${timeAgo}</div>
             </div>
         `;
     }).join('');
@@ -3502,6 +3583,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize immediately if sharing tab is already active
         if (sharingTab.classList.contains('border-primary-500')) {
             initializeQRCode();
+        }
+    }
+
+    // Initialize QR analytics when analytics tab is clicked
+    const analyticsTab = document.querySelector('[data-tab="analytics"]');
+    if (analyticsTab) {
+        analyticsTab.addEventListener('click', function() {
+            console.log('📊 Analytics tab clicked, loading QR analytics');
+            // Delay to ensure tab content is visible
+            setTimeout(() => {
+                initializeQRAnalytics();
+            }, 200);
+        });
+
+        // Initialize immediately if analytics tab is already active
+        if (analyticsTab.classList.contains('border-primary-500')) {
+            console.log('📊 Analytics tab already active, loading QR analytics');
+            setTimeout(() => {
+                initializeQRAnalytics();
+            }, 500);
         }
     }
 });
