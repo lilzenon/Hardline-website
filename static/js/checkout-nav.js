@@ -127,12 +127,17 @@ class CheckoutNav {
                 console.log('🎫 Iframe not loaded - no URL or iframe element');
             }
 
+            // AUTOMATICALLY apply optimal modal sizing for Posh content
+            setTimeout(() => {
+                this.applyOptimalModalSizing();
+            }, 100);
+
             // Focus management
             setTimeout(() => {
                 if (this.closeButton) {
                     this.closeButton.focus();
                 }
-            }, 100);
+            }, 200);
 
             console.log('🎫 Modal opening completed successfully');
         } catch (error) {
@@ -140,6 +145,38 @@ class CheckoutNav {
             console.error('🎫 Error stack:', error.stack);
             this.isModalOpen = false; // Reset state on error
         }
+    }
+
+    // AUTOMATIC: Apply optimal modal sizing for Posh content (no console commands needed)
+    applyOptimalModalSizing() {
+        console.log('🎫 AUTOMATICALLY applying optimal modal sizing...');
+
+        if (!this.modal || !this.iframe) {
+            console.error('🎫 Modal or iframe not found for optimal sizing');
+            return;
+        }
+
+        const modalContent = this.modal.querySelector('.checkout-modal-content');
+
+        console.log('🎫 Applying optimal sizing automatically...');
+
+        // The CSS already handles most of the sizing, but ensure iframe is properly sized
+        if (this.iframe) {
+            // Ensure iframe has proper dimensions for Posh content
+            this.iframe.style.setProperty('height', '1200px', 'important');
+            this.iframe.style.setProperty('min-height', '1200px', 'important');
+            this.iframe.style.setProperty('flex-shrink', '0', 'important');
+            this.iframe.style.setProperty('flex-grow', '0', 'important');
+        }
+
+        // Ensure modal content can accommodate the iframe
+        if (modalContent) {
+            modalContent.style.setProperty('max-height', '90vh', 'important');
+            modalContent.style.setProperty('overflow', 'auto', 'important');
+        }
+
+        console.log('🎫 Optimal modal sizing applied automatically');
+        console.log('🎫 Modal should now display full Posh content without compression');
     }
 
     closeModal() {

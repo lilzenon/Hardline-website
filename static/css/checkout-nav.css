@@ -160,19 +160,23 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 16px;
-    padding: 20px;
-    max-width: 600px;
+    padding: 24px;
+    /* Optimal sizing for Posh iframe content */
+    max-width: min(90vw, 800px);
     width: 100%;
-    /* REMOVED max-height constraint to allow dynamic iframe sizing */
+    max-height: 90vh;
+    min-height: auto;
+    /* Enable scrolling if content exceeds viewport */
+    overflow: auto;
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transform: scale(0.95) translateY(20px);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
-    /* Enable dynamic height adjustment */
-    overflow: hidden;
+    /* Flexbox for proper iframe accommodation */
     display: flex;
     flex-direction: column;
+    gap: 16px;
 }
 
 .checkout-modal.active .checkout-modal-content {
@@ -223,16 +227,18 @@
 
 .checkout-iframe {
     width: 100%;
-    min-height: 300px;
-    height: 400px;
-    /* Default height, will be overridden by JavaScript */
-    /* REMOVED max-height constraint to allow JavaScript control for Posh embeds */
+    /* Optimal height for Posh ticket interfaces */
+    height: 1200px;
+    min-height: 1200px;
+    /* No max-height constraint to allow full Posh content display */
     border: none;
     border-radius: 12px;
     /* Glassmorphism background that shows through transparent areas */
     background: rgba(255, 255, 255, 0.05);
     transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    flex: 1;
+    /* Prevent iframe compression - critical for Posh content */
+    flex-shrink: 0;
+    flex-grow: 0;
     overflow: hidden;
     position: relative;
     z-index: 2;
