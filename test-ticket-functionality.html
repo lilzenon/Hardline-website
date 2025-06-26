@@ -95,6 +95,15 @@
         </div>
 
         <div class="test-section">
+            <h2>Dynamic Iframe Sizing Test</h2>
+            <p>Test the dynamic iframe height adjustment and modal scaling functionality.</p>
+            <button class="test-button" onclick="testDynamicSizing()">Test Dynamic Sizing</button>
+            <button class="test-button" onclick="testIframeResize()">Simulate Iframe Resize</button>
+            <button class="test-button" onclick="testHeightConstraints()">Test Height Constraints</button>
+            <div id="sizing-status" class="status info">Modal should adjust height based on iframe content</div>
+        </div>
+
+        <div class="test-section">
             <h2>Accessibility Test</h2>
             <p>Test keyboard navigation and screen reader support.</p>
             <button class="test-button" onclick="testKeyboardNav()">Test Keyboard Navigation</button>
@@ -294,6 +303,84 @@
             const status = document.getElementById('accessibility-status');
             status.textContent = isReduced ? 'Animations enabled' : 'Reduced motion enabled - animations disabled';
             status.className = 'status success';
+        }
+
+        function testDynamicSizing() {
+            openCheckoutModal();
+
+            // Simulate dynamic sizing after modal opens
+            setTimeout(() => {
+                if (window.checkoutNav && window.checkoutNav.iframe) {
+                    // Test different heights
+                    const heights = [300, 500, 700, 400];
+                    let index = 0;
+
+                    const testHeight = () => {
+                        if (index < heights.length) {
+                            window.checkoutNav.setIframeHeight(heights[index]);
+                            console.log(`Testing height: ${heights[index]}px`);
+                            index++;
+                            setTimeout(testHeight, 1500);
+                        }
+                    };
+
+                    testHeight();
+                }
+
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Testing dynamic height adjustments (300px → 500px → 700px → 400px)';
+                status.className = 'status success';
+            }, 500);
+        }
+
+        function testIframeResize() {
+            if (window.checkoutNav && window.checkoutNav.iframe) {
+                // Simulate iframe content resize message
+                const mockEvent = {
+                    origin: 'https://example.com',
+                    data: {
+                        type: 'resize',
+                        height: 600
+                    }
+                };
+
+                window.checkoutNav.handleIframeMessage(mockEvent);
+
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Simulated iframe resize message (600px height)';
+                status.className = 'status success';
+            } else {
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Open modal first to test iframe resize';
+                status.className = 'status warning';
+            }
+        }
+
+        function testHeightConstraints() {
+            if (window.checkoutNav && window.checkoutNav.iframe) {
+                // Test extreme heights to verify constraints
+                const extremeHeights = [100, 1200, 50, 2000]; // Should be constrained to 300-800px
+                let index = 0;
+
+                const testConstraint = () => {
+                    if (index < extremeHeights.length) {
+                        window.checkoutNav.setIframeHeight(extremeHeights[index]);
+                        console.log(`Testing constraint: ${extremeHeights[index]}px (should be constrained)`);
+                        index++;
+                        setTimeout(testConstraint, 1000);
+                    }
+                };
+
+                testConstraint();
+
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Testing height constraints (100px→300px, 1200px→800px, etc.)';
+                status.className = 'status success';
+            } else {
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Open modal first to test height constraints';
+                status.className = 'status warning';
+            }
         }
 
         // Initialize

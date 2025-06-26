@@ -167,8 +167,12 @@
     position: relative;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     transform: scale(0.95) translateY(20px);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
+    /* Enable dynamic height adjustment */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .checkout-modal.active .checkout-modal-content {
@@ -219,10 +223,44 @@
 
 .checkout-iframe {
     width: 100%;
+    min-height: 300px;
     height: 400px;
+    /* Default height, will be overridden by JavaScript */
+    max-height: 800px;
     border: none;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.05);
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex: 1;
+    overflow: hidden;
+}
+
+.checkout-iframe.loading {
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.checkout-iframe.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
 }
 
 
@@ -257,7 +295,9 @@
         max-height: 85vh;
     }
     .checkout-iframe {
+        min-height: 250px;
         height: 350px;
+        max-height: 70vh;
     }
 }
 
@@ -270,7 +310,9 @@
         max-width: 420px;
     }
     .checkout-iframe {
+        min-height: 300px;
         height: 400px;
+        max-height: 75vh;
     }
 }
 
@@ -287,7 +329,9 @@
         justify-self: start;
     }
     .checkout-iframe {
+        min-height: 350px;
         height: 450px;
+        max-height: 80vh;
     }
 }
 
@@ -296,7 +340,8 @@
 
 @media (prefers-reduced-motion: reduce) {
     .checkout-modal,
-    .checkout-modal-content {
+    .checkout-modal-content,
+    .checkout-iframe {
         transition: none;
     }
     .checkout-modal-content {
@@ -315,25 +360,16 @@
     .buy-button.clicking {
         transform: none;
     }
+    @keyframes spin {
+        0%,
+        100% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+    }
 }
 
 
 /* ===== ACCESSIBILITY ===== */
-
-@media (prefers-reduced-motion: reduce) {
-    .checkout-nav,
-    .checkout-nav-container,
-    .buy-button,
-    .checkout-close,
-    .checkout-iframe-container {
-        transition: none;
-        animation: none;
-    }
-    .checkout-nav.expanded,
-    .checkout-nav.collapsing {
-        animation: none;
-    }
-}
 
 
 /* Focus styles for keyboard navigation */

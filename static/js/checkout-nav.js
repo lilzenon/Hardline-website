@@ -128,18 +128,50 @@ class CheckoutNav {
         console.log('🎫 Closing checkout modal');
         this.isModalOpen = false;
 
+        // Clean up dynamic sizing listeners
+        this.cleanupDynamicSizing();
+
         // Hide modal
         this.modal.classList.remove('active');
 
-        // Clear iframe
+        // Clear iframe and reset styles
         if (this.iframe) {
             this.iframe.src = 'about:blank';
+            this.iframe.style.height = '';
+            this.iframe.style.transition = '';
+        }
+
+        // Reset modal content styles
+        const modalContent = this.modal ? .querySelector('.checkout-modal-content');
+        if (modalContent) {
+            modalContent.style.maxHeight = '';
+            modalContent.style.transition = '';
         }
 
         // Return focus to buy button
         setTimeout(() => {
             this.buyButton.focus();
         }, 100);
+    }
+
+    cleanupDynamicSizing() {
+        // Remove message listener
+        if (this.messageListener) {
+            window.removeEventListener('message', this.messageListener);
+            this.messageListener = null;
+        }
+
+        // Disconnect ResizeObserver
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+            this.resizeObserver = null;
+        }
+
+        // Clear resize timeout
+        if (this.resizeTimeout) {
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = null;
+        }
     }
 
     loadIframe() {
@@ -156,13 +188,17 @@ class CheckoutNav {
         // Add loading class
         this.iframe.classList.add('loading');
 
-        // Set iframe source
-        this.iframe.src = ticketUrl;
+        // Set iframe source with dynamic sizing parameters
+        const urlWithParams = this.addDynamicSizingParams(ticketUrl);
+        this.iframe.src = urlWithParams;
 
         // Handle iframe load
         this.iframe.addEventListener('load', () => {
             console.log('🎫 Ticket iframe loaded successfully');
             this.iframe.classList.remove('loading');
+
+            // Initialize dynamic sizing
+            this.initializeDynamicSizing();
         }, { once: true });
 
         // Handle iframe error
@@ -170,6 +206,147 @@ class CheckoutNav {
             console.error('🎫 Failed to load ticket iframe');
             this.iframe.classList.remove('loading');
         }, { once: true });
+    }
+
+    addDynamicSizingParams(url) {
+        try {
+            const urlObj = new URL(url);
+            // Add parameters to help with dynamic sizing if supported by Posh
+            urlObj.searchParams.set('responsive', 'true');
+            urlObj.searchParams.set('autosize', 'true');
+            return urlObj.toString();
+        } catch (error) {
+            console.warn('🎫 Could not parse URL for dynamic sizing params:', error);
+            return url;
+        }
+    }
+
+    initializeDynamicSizing() {
+        if (!this.iframe) return;
+
+        // Set up message listener for iframe height changes
+        this.messageListener = (event) => {
+            this.handleIframeMessage(event);
+        };
+
+        window.addEventListener('message', this.messageListener);
+
+        // Set up ResizeObserver for iframe content changes
+        if (window.ResizeObserver) {
+            this.resizeObserver = new ResizeObserver((entries) => {
+                this.handleIframeResize(entries);
+            });
+
+            this.resizeObserver.observe(this.iframe);
+        }
+
+        // Initial size adjustment
+        setTimeout(() => {
+            this.adjustIframeHeight();
+        }, 500);
+    }
+
+    handleIframeMessage(event) {
+        // Handle messages from Posh iframe for dynamic sizing
+        if (!this.iframe || !event.data) return;
+
+        try {
+            // Check if message is from our iframe
+            const iframeOrigin = new URL(this.iframe.src).origin;
+            if (event.origin !== iframeOrigin) return;
+
+            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+
+            if (data.type === 'resize' && data.height) {
+                console.log('🎫 Received iframe resize message:', data.height);
+                this.setIframeHeight(data.height);
+            } else if (data.type === 'posh-resize' && data.height) {
+                // Posh-specific resize message format
+                console.log('🎫 Received Posh resize message:', data.height);
+                this.setIframeHeight(data.height);
+            }
+        } catch (error) {
+            // Ignore parsing errors for non-JSON messages
+        }
+    }
+
+    handleIframeResize(entries) {
+        // Handle ResizeObserver changes
+        for (const entry of entries) {
+            if (entry.target === this.iframe) {
+                // Debounce resize handling
+                clearTimeout(this.resizeTimeout);
+                this.resizeTimeout = setTimeout(() => {
+                    this.adjustIframeHeight();
+                }, 150);
+            }
+        }
+    }
+
+    adjustIframeHeight() {
+        if (!this.iframe || !this.iframe.contentWindow) return;
+
+        try {
+            // Try to get content height from iframe document
+            const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+            if (iframeDoc && iframeDoc.body) {
+                const contentHeight = Math.max(
+                    iframeDoc.body.scrollHeight,
+                    iframeDoc.body.offsetHeight,
+                    iframeDoc.documentElement.clientHeight,
+                    iframeDoc.documentElement.scrollHeight,
+                    iframeDoc.documentElement.offsetHeight
+                );
+
+                if (contentHeight > 0) {
+                    console.log('🎫 Detected iframe content height:', contentHeight);
+                    this.setIframeHeight(contentHeight);
+                }
+            }
+        } catch (error) {
+            // Cross-origin restrictions prevent direct access
+            console.log('🎫 Cross-origin iframe - using message-based sizing');
+
+            // Request height from iframe via postMessage
+            this.iframe.contentWindow.postMessage({
+                type: 'getHeight',
+                source: 'checkout-nav'
+            }, '*');
+        }
+    }
+
+    setIframeHeight(height) {
+        if (!this.iframe || !height) return;
+
+        // Apply height constraints
+        const minHeight = 300;
+        const maxHeight = Math.min(window.innerHeight * 0.8, 800);
+        const constrainedHeight = Math.max(minHeight, Math.min(height, maxHeight));
+
+        console.log(`🎫 Setting iframe height: ${height}px (constrained to ${constrainedHeight}px)`);
+
+        // Apply smooth transition
+        this.iframe.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+        this.iframe.style.height = `${constrainedHeight}px`;
+
+        // Update modal content max-height if needed
+        this.updateModalHeight(constrainedHeight);
+    }
+
+    updateModalHeight(iframeHeight) {
+        const modalContent = this.modal ? .querySelector('.checkout-modal-content');
+        if (!modalContent) return;
+
+        // Calculate total modal content height including padding and header
+        const header = modalContent.querySelector('.checkout-modal-header');
+        const headerHeight = header ? header.offsetHeight : 60;
+        const padding = 40; // 20px top + 20px bottom
+        const totalHeight = iframeHeight + headerHeight + padding;
+
+        // Set max-height to allow modal to expand
+        const maxModalHeight = Math.min(window.innerHeight * 0.9, totalHeight + 40);
+        modalContent.style.maxHeight = `${maxModalHeight}px`;
+        modalContent.style.transition = 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     }
 
     // Public method to update ticket price
