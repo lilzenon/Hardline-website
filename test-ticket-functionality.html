@@ -129,7 +129,7 @@
     </div>
 
     <!-- Test Checkout Nav Component -->
-    <div class="checkout-nav-container active" id="testCheckoutNav" style="display: none;">
+    <div class="checkout-nav-container active" id="testCheckoutNav">
         <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
             <div class="ticket-price" aria-live="polite">
                 <span class="sr-only">Ticket price: </span>$25
@@ -164,7 +164,7 @@
         // Test functions
         function toggleCheckoutNav() {
             const nav = document.getElementById('testCheckoutNav');
-            const isVisible = nav.style.display !== 'none';
+            const isVisible = nav.style.display !== 'none' && nav.style.display !== '';
             nav.style.display = isVisible ? 'none' : 'block';
 
             const status = document.getElementById('visibility-status');
@@ -186,30 +186,7 @@
             status.className = 'status success';
         }
 
-        function openCheckoutModal() {
-            const modal = document.getElementById('checkoutModal');
-            const iframe = modal.querySelector('.checkout-iframe');
-
-            // Set a demo URL for testing
-            iframe.src = 'https://example.com/tickets';
-            modal.classList.add('active');
-
-            // Focus management for accessibility
-            const closeButton = modal.querySelector('.checkout-close');
-            closeButton.focus();
-        }
-
-        function closeCheckoutModal() {
-            const modal = document.getElementById('checkoutModal');
-            const iframe = modal.querySelector('.checkout-iframe');
-
-            modal.classList.remove('active');
-            iframe.src = 'about:blank';
-
-            // Return focus to buy button
-            const buyButton = document.querySelector('.buy-button');
-            buyButton.focus();
-        }
+        // Note: openCheckoutModal() and closeCheckoutModal() are defined in checkout-nav.js
 
         function testKeyboardNav() {
             const buyButton = document.querySelector('.buy-button');
