@@ -1302,6 +1302,30 @@ function testIframeContent() {
     }
 }
 
+// Function to check what URL is actually being loaded
+function checkCurrentPoshUrl() {
+    console.log('🎫 ===== CHECKING CURRENT POSH URL =====');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    console.log('🎫 Current iframe src:', iframe.src);
+    console.log('🎫 data-ticket-url:', iframe.getAttribute('data-ticket-url'));
+
+    // Test if the URL is accessible
+    if (iframe.src && iframe.src !== 'about:blank') {
+        console.log('🎫 Testing URL accessibility...');
+        fetch(iframe.src, { method: 'HEAD', mode: 'no-cors' })
+            .then(() => console.log('🎫 URL appears to be accessible'))
+            .catch(error => console.log('🎫 URL may not be accessible:', error));
+    }
+
+    console.log('🎫 ===== END URL CHECK =====');
+}
+
 // Function to check iframe data attributes
 function checkIframeData() {
     console.log('🎫 ===== IFRAME DATA ATTRIBUTE CHECK =====');
@@ -1473,6 +1497,68 @@ function testWithSamplePoshUrl() {
     const samplePoshUrl = 'https://embed.posh.vip/ticket-iframe/sample-event';
     console.log('🎫 Setting sample Posh URL for testing...');
     setTestTicketUrl(samplePoshUrl);
+}
+
+// Function to test the current Posh URL in a new window
+function testPoshUrlInNewWindow() {
+    console.log('🎫 Testing current Posh URL in new window...');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    let currentUrl = iframe.getAttribute('data-ticket-url');
+
+    if (!currentUrl) {
+        console.error('🎫 No URL found in data-ticket-url');
+        return;
+    }
+
+    // Add https if missing
+    if (!currentUrl.startsWith('http')) {
+        currentUrl = 'https://' + currentUrl;
+    }
+
+    console.log('🎫 Testing URL:', currentUrl);
+
+    // Open in new window
+    const testWindow = window.open(currentUrl, '_blank', 'width=800,height=600');
+
+    if (testWindow) {
+        console.log('🎫 URL opened in new window - check if it loads correctly');
+    } else {
+        console.log('🎫 Failed to open URL (popup blocked?)');
+    }
+}
+
+// Function to fix the current Posh URL by adding https protocol
+function fixCurrentPoshUrl() {
+    console.log('🎫 Attempting to fix current Posh URL...');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    const currentUrl = iframe.getAttribute('data-ticket-url');
+
+    console.log('🎫 Current URL:', currentUrl);
+
+    if (currentUrl && !currentUrl.startsWith('http')) {
+        const fixedUrl = 'https://' + currentUrl;
+        console.log('🎫 Fixed URL:', fixedUrl);
+
+        // Update the data attribute
+        iframe.setAttribute('data-ticket-url', fixedUrl);
+        iframe.dataset.ticketUrl = fixedUrl;
+
+        console.log('🎫 URL fixed! Try openCheckoutModal() again');
+    } else {
+        console.log('🎫 URL already has protocol or is invalid');
+    }
 }
 
 // Global function to FORCE large height immediately - no more scrolling!
