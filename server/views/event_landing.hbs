@@ -2095,6 +2095,26 @@
                     {{#if event.ticket_price}}Tickets are available for {{event.ticket_price}}{{else}}Ticket pricing will be shown during checkout{{/if}}
                 </div>
             </div>
+
+            <!-- Checkout Modal -->
+            <div class="checkout-modal" id="checkoutModal">
+                <div class="checkout-modal-content">
+                    <div class="checkout-modal-header">
+                        <h3 class="checkout-modal-title">{{#if event.ticket_price}}Buy Tickets - {{event.ticket_price}}{{else}}Buy Tickets{{/if}}</h3>
+                        <button class="checkout-close" onclick="closeCheckoutModal()" aria-label="Close ticket checkout">
+                            <span aria-hidden="true">×</span>
+                            <span class="sr-only">Close</span>
+                        </button>
+                    </div>
+                    <iframe class="checkout-iframe"
+                            src="about:blank"
+                            data-ticket-url="{{event.posh_embed_url}}"
+                            title="Ticket Checkout - {{event.title}}"
+                            loading="lazy"
+                            aria-label="Ticket purchasing form">
+                    </iframe>
+                </div>
+            </div>
             {{/if}}
 
             <!-- RSVP Container - Now positioned lower like Laylo -->
@@ -2272,26 +2292,7 @@
 
 
 
-    <!-- Checkout Modal -->
-    <div class="checkout-modal" id="checkoutModal">
-        <div class="checkout-modal-content">
-            <div class="checkout-modal-header">
-                <h3 class="checkout-modal-title">{{#if event.ticket_price}}Buy Tickets - {{event.ticket_price}}{{else}}Buy Tickets{{/if}}</h3>
-                <button class="checkout-close" onclick="closeCheckoutModal()" aria-label="Close ticket checkout">
-                    <span aria-hidden="true">×</span>
-                    <span class="sr-only">Close</span>
-                </button>
-            </div>
-            <iframe class="checkout-iframe"
-                    src="about:blank"
-                    data-ticket-url="{{event.posh_embed_url}}"
-                    title="Ticket Checkout - {{event.title}}"
-                    loading="lazy"
-                    aria-label="Ticket purchasing form">
-            </iframe>
-        </div>
-    </div>
-    {{/if}}
+
 
     <!-- JavaScript for Form Handling -->
     <script>
