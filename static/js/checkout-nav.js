@@ -243,6 +243,18 @@ class CheckoutNav {
         // Handle iframe load
         this.iframe.addEventListener('load', () => {
             console.log('🎫 Ticket iframe loaded successfully');
+            console.log('🎫 Iframe src after load:', this.iframe.src);
+            console.log('🎫 Iframe dimensions after load:', {
+                width: this.iframe.offsetWidth,
+                height: this.iframe.offsetHeight,
+                styleHeight: this.iframe.style.height,
+                computedHeight: window.getComputedStyle(this.iframe).height
+            });
+
+            // Check if this is a Posh embed
+            const isPoshEmbed = this.iframe.src.includes('posh.vip') || this.iframe.src.includes('posh.');
+            console.log('🎫 Is Posh embed:', isPoshEmbed);
+
             this.iframe.classList.remove('loading');
 
             // Initialize dynamic sizing with delay for content to render
@@ -250,10 +262,21 @@ class CheckoutNav {
                 this.initializeDynamicSizing();
             }, 100);
 
+            // IMMEDIATE Posh height forcing if detected
+            if (isPoshEmbed) {
+                console.log('🎫 IMMEDIATE Posh height forcing...');
+                const immediateHeight = 1000; // Start with generous height
+                this.setIframeHeight(immediateHeight);
+                console.log('🎫 Set immediate Posh height to:', immediateHeight);
+            }
+
             // Additional attempts for slow-loading content with special handling for Posh
             setTimeout(() => {
+                console.log('🎫 First retry attempt (1s)...');
                 this.adjustIframeHeight();
-                this.tryPoshSpecificDetection();
+                if (isPoshEmbed) {
+                    this.tryPoshSpecificDetection();
+                }
             }, 1000);
 
             setTimeout(() => {
@@ -898,14 +921,37 @@ class CheckoutNav {
 
         console.log(`🎫 Setting iframe height: ${height}px (constrained to ${constrainedHeight}px)`);
 
-        // Only update if height actually changed to avoid unnecessary transitions
+        // Debug current iframe state
         const currentHeight = parseInt(this.iframe.style.height) || 400;
-        if (Math.abs(currentHeight - constrainedHeight) > 10) {
+        const currentComputedHeight = this.iframe.offsetHeight;
+        const heightDifference = Math.abs(currentHeight - constrainedHeight);
+
+        console.log('🎫 Height state before update:', {
+            currentStyleHeight: currentHeight,
+            currentActualHeight: currentComputedHeight,
+            targetHeight: constrainedHeight,
+            difference: heightDifference,
+            willUpdate: heightDifference > 10
+        });
+
+        if (heightDifference > 10) {
             // Apply smooth transition
             this.iframe.style.transition = 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             this.iframe.style.height = `${constrainedHeight}px`;
 
             console.log('🎫 Height updated from', currentHeight, 'to', constrainedHeight);
+
+            // Verify the update worked
+            setTimeout(() => {
+                const newActualHeight = this.iframe.offsetHeight;
+                const newStyleHeight = this.iframe.style.height;
+                console.log('🎫 Height verification after update:', {
+                    newStyleHeight,
+                    newActualHeight,
+                    targetHeight: constrainedHeight,
+                    updateSuccessful: newActualHeight >= constrainedHeight * 0.9
+                });
+            }, 100);
         } else {
             console.log('🎫 Height change too small, skipping update');
         }
@@ -1152,6 +1198,170 @@ function setOptimalPoshHeight() {
     } else {
         console.error('🎫 window.checkoutNav or iframe not found!');
     }
+}
+
+// Global function to test Posh URL directly
+function testPoshURL() {
+    if (window.checkoutNav && window.checkoutNav.iframe) {
+        const iframe = window.checkoutNav.iframe;
+        console.log('🎫 TESTING Posh URL directly...');
+
+        // Get the current URL
+        const currentSrc = iframe.src;
+        console.log('🎫 Current iframe src:', currentSrc);
+
+        if (currentSrc && (currentSrc.includes('posh.vip') || currentSrc.includes('posh.'))) {
+            console.log('🎫 Confirmed: This is a Posh URL');
+
+            // Test if we can open it in a new window
+            console.log('🎫 Testing URL accessibility...');
+            const testWindow = window.open(currentSrc, '_blank', 'width=800,height=600');
+
+            if (testWindow) {
+                console.log('🎫 SUCCESS: Posh URL opened in new window');
+                console.log('🎫 Check the new window to see if Posh content loads properly');
+
+                // Close the test window after a few seconds
+                setTimeout(() => {
+                    testWindow.close();
+                    console.log('🎫 Test window closed');
+                }, 5000);
+            } else {
+                console.log('🎫 FAILED: Could not open Posh URL in new window (popup blocked?)');
+            }
+        } else {
+            console.log('🎫 This is not a Posh URL or no URL set');
+        }
+    } else {
+        console.error('🎫 window.checkoutNav or iframe not found!');
+    }
+}
+
+// Global function to test iframe content accessibility
+function testIframeContent() {
+    if (window.checkoutNav && window.checkoutNav.iframe) {
+        const iframe = window.checkoutNav.iframe;
+        console.log('🎫 TESTING iframe content accessibility...');
+        console.log('🎫 Iframe src:', iframe.src);
+        console.log('🎫 Iframe dimensions:', {
+            offsetWidth: iframe.offsetWidth,
+            offsetHeight: iframe.offsetHeight,
+            styleHeight: iframe.style.height,
+            computedHeight: window.getComputedStyle(iframe).height
+        });
+
+        // Test if we can access the content
+        try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (doc) {
+                console.log('🎫 SUCCESS: Can access iframe content');
+                console.log('🎫 Document ready state:', doc.readyState);
+                console.log('🎫 Document body height:', doc.body ? doc.body.scrollHeight : 'No body');
+                console.log('🎫 Document HTML height:', doc.documentElement ? doc.documentElement.scrollHeight : 'No HTML');
+            }
+        } catch (error) {
+            console.log('🎫 CROSS-ORIGIN: Cannot access iframe content:', error.message);
+            console.log('🎫 This is expected for Posh embeds (different domain)');
+        }
+
+        // Test if iframe has loaded
+        if (iframe.src && iframe.src !== 'about:blank') {
+            console.log('🎫 Iframe has valid src, should be loading content');
+        } else {
+            console.log('🎫 WARNING: Iframe has no src or blank src');
+        }
+    } else {
+        console.error('🎫 window.checkoutNav or iframe not found!');
+    }
+}
+
+// COMPREHENSIVE debugging function
+function debugPoshIssue() {
+    console.log('🎫 ===== COMPREHENSIVE POSH DEBUG ANALYSIS =====');
+
+    if (!window.checkoutNav) {
+        console.error('🎫 CRITICAL: window.checkoutNav not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    const modal = window.checkoutNav.modal;
+
+    if (!iframe) {
+        console.error('🎫 CRITICAL: iframe not found!');
+        return;
+    }
+
+    console.log('🎫 1. IFRAME STATE:');
+    console.log('   - src:', iframe.src);
+    console.log('   - style.height:', iframe.style.height);
+    console.log('   - offsetHeight:', iframe.offsetHeight);
+    console.log('   - computedHeight:', window.getComputedStyle(iframe).height);
+    console.log('   - computedMaxHeight:', window.getComputedStyle(iframe).maxHeight);
+
+    console.log('🎫 2. MODAL STATE:');
+    if (modal) {
+        const modalContent = modal.querySelector('.checkout-modal-content');
+        console.log('   - modal found:', true);
+        console.log('   - modal.style.maxHeight:', modal.style.maxHeight);
+        console.log('   - modal computedMaxHeight:', window.getComputedStyle(modal).maxHeight);
+
+        if (modalContent) {
+            console.log('   - modalContent found:', true);
+            console.log('   - modalContent.style.maxHeight:', modalContent.style.maxHeight);
+            console.log('   - modalContent computedMaxHeight:', window.getComputedStyle(modalContent).maxHeight);
+        } else {
+            console.log('   - modalContent found:', false);
+        }
+    } else {
+        console.log('   - modal found:', false);
+    }
+
+    console.log('🎫 3. POSH DETECTION:');
+    const isPosh = iframe.src && (iframe.src.includes('posh.vip') || iframe.src.includes('posh.'));
+    console.log('   - isPoshEmbed:', isPosh);
+
+    if (isPosh) {
+        console.log('🎫 4. FORCING POSH HEIGHT NOW...');
+        const forceHeight = 1200;
+
+        // Remove ALL constraints
+        iframe.style.height = forceHeight + 'px';
+        iframe.style.maxHeight = 'none';
+        iframe.style.minHeight = 'auto';
+
+        if (modal) {
+            modal.style.maxHeight = 'none';
+            const modalContent = modal.querySelector('.checkout-modal-content');
+            if (modalContent) {
+                modalContent.style.maxHeight = 'none';
+                modalContent.style.height = 'auto';
+            }
+        }
+
+        console.log('🎫 5. FORCED HEIGHT APPLIED - checking results...');
+
+        setTimeout(() => {
+            console.log('🎫 6. POST-FORCE VERIFICATION:');
+            console.log('   - iframe.style.height:', iframe.style.height);
+            console.log('   - iframe.offsetHeight:', iframe.offsetHeight);
+            console.log('   - Height successfully applied:', iframe.offsetHeight >= forceHeight * 0.9);
+
+            if (iframe.offsetHeight < forceHeight * 0.9) {
+                console.error('🎫 PROBLEM: Height was not applied correctly!');
+                console.log('🎫 Checking for CSS overrides...');
+
+                const computedStyle = window.getComputedStyle(iframe);
+                console.log('   - computedMaxHeight:', computedStyle.maxHeight);
+                console.log('   - computedHeight:', computedStyle.height);
+                console.log('   - computedMinHeight:', computedStyle.minHeight);
+            } else {
+                console.log('🎫 SUCCESS: Height was applied correctly!');
+            }
+        }, 200);
+    }
+
+    console.log('🎫 ===== END DEBUG ANALYSIS =====');
 }
 
 // Global function to FORCE large height immediately - no more scrolling!
