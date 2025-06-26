@@ -2076,6 +2076,27 @@
                 {{/if}}
             </div>
 
+            <!-- Checkout Nav Component - Inline positioning -->
+            {{#if event.display_tickets}}
+            <div class="checkout-nav-container active" role="region" aria-label="Ticket purchasing">
+                <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
+                    <div class="ticket-price" aria-live="polite">
+                        <span class="sr-only">Ticket price: </span>{{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
+                    </div>
+                    <button class="buy-button"
+                            onclick="openCheckoutModal()"
+                            aria-label="{{#if event.ticket_price}}Buy tickets for {{event.ticket_price}}{{else}}Buy tickets{{/if}}"
+                            aria-describedby="ticket-price-info">
+                        Buy
+                        <span class="sr-only"> tickets</span>
+                    </button>
+                </nav>
+                <div id="ticket-price-info" class="sr-only">
+                    {{#if event.ticket_price}}Tickets are available for {{event.ticket_price}}{{else}}Ticket pricing will be shown during checkout{{/if}}
+                </div>
+            </div>
+            {{/if}}
+
             <!-- RSVP Container - Now positioned lower like Laylo -->
             <div class="rsvp-container">
 
@@ -2249,25 +2270,7 @@
         </div>
     </div>
 
-    <!-- Checkout Nav Component -->
-    {{#if event.display_tickets}}
-    <div class="checkout-nav-container active" role="region" aria-label="Ticket purchasing">
-        <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
-            <div class="ticket-price" aria-live="polite">
-                <span class="sr-only">Ticket price: </span>{{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
-            </div>
-            <button class="buy-button"
-                    onclick="openCheckoutModal()"
-                    aria-label="{{#if event.ticket_price}}Buy tickets for {{event.ticket_price}}{{else}}Buy tickets{{/if}}"
-                    aria-describedby="ticket-price-info">
-                Buy
-                <span class="sr-only"> tickets</span>
-            </button>
-        </nav>
-        <div id="ticket-price-info" class="sr-only">
-            {{#if event.ticket_price}}Tickets are available for {{event.ticket_price}}{{else}}Ticket pricing will be shown during checkout{{/if}}
-        </div>
-    </div>
+
 
     <!-- Checkout Modal -->
     <div class="checkout-modal" id="checkoutModal">
