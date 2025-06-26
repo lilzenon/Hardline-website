@@ -104,15 +104,27 @@ class CheckoutNav {
         if (this.isModalOpen) return;
 
         console.log('🎫 Opening checkout modal');
+        console.log('🎫 Modal element:', this.modal);
+        console.log('🎫 Iframe element:', this.iframe);
+
         this.isModalOpen = true;
+
+        // Show modal first
+        if (this.modal) {
+            this.modal.classList.add('active');
+            console.log('🎫 Modal active class added');
+        } else {
+            console.error('🎫 Modal element not found!');
+            return;
+        }
 
         // Load iframe if not already loaded with ticket URL
         if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
+            console.log('🎫 Loading iframe...');
             this.loadIframe();
+        } else {
+            console.log('🎫 Iframe not loaded - no URL or iframe element');
         }
-
-        // Show modal
-        this.modal.classList.add('active');
 
         // Focus management
         setTimeout(() => {
@@ -404,8 +416,13 @@ class CheckoutNav {
 
 // Global functions for template use
 function openCheckoutModal() {
+    console.log('🎫 Global openCheckoutModal called');
+    console.log('🎫 window.checkoutNav:', window.checkoutNav);
+
     if (window.checkoutNav) {
         window.checkoutNav.openModal();
+    } else {
+        console.error('🎫 window.checkoutNav not found!');
     }
 }
 
@@ -417,9 +434,18 @@ function closeCheckoutModal() {
 
 // Initialize checkout nav when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎫 DOM loaded, checking for checkout nav elements');
+
+    const container = document.querySelector('.checkout-nav-container');
+    console.log('🎫 Container found:', container);
+
     // Only initialize if checkout nav elements exist
-    if (document.querySelector('.checkout-nav-container')) {
+    if (container) {
+        console.log('🎫 Initializing CheckoutNav...');
         window.checkoutNav = new CheckoutNav();
+        console.log('🎫 CheckoutNav initialized:', window.checkoutNav);
+    } else {
+        console.log('🎫 No checkout nav container found');
     }
 });
 
