@@ -374,18 +374,26 @@ class CheckoutNav {
                     const html = iframeDoc.documentElement;
 
                     if (body && html) {
-                        const contentHeight = Math.max(
+                        // Get various height measurements
+                        const heights = [
                             body.scrollHeight || 0,
                             body.offsetHeight || 0,
                             html.clientHeight || 0,
                             html.scrollHeight || 0,
                             html.offsetHeight || 0
-                        );
+                        ];
 
-                        console.log('🎫 Direct access - content height:', contentHeight);
+                        const contentHeight = Math.max(...heights);
+
+                        console.log('🎫 Direct access - height measurements:', heights);
+                        console.log('🎫 Direct access - max content height:', contentHeight);
 
                         if (contentHeight > 100) { // Minimum reasonable height
                             this.setIframeHeight(contentHeight);
+                            return true;
+                        } else if (contentHeight > 0) {
+                            // Even if it's small, set it and add some padding
+                            this.setIframeHeight(Math.max(contentHeight + 50, 300));
                             return true;
                         }
                     }
@@ -526,6 +534,16 @@ function openCheckoutModal() {
 function closeCheckoutModal() {
     if (window.checkoutNav) {
         window.checkoutNav.closeModal();
+    }
+}
+
+// Global function to test height setting
+function testSetHeight(height) {
+    if (window.checkoutNav) {
+        console.log('🎫 Testing setIframeHeight with:', height);
+        window.checkoutNav.setIframeHeight(height);
+    } else {
+        console.error('🎫 window.checkoutNav not found!');
     }
 }
 

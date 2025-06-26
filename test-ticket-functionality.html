@@ -97,10 +97,10 @@
         <div class="test-section">
             <h2>Dynamic Iframe Sizing Test</h2>
             <p>Test the dynamic iframe height adjustment and modal scaling functionality.</p>
+            <button class="test-button" onclick="debugCheckout()">Debug Checkout</button>
+            <button class="test-button" onclick="testManualHeight()">Test Manual Height</button>
             <button class="test-button" onclick="testDynamicSizing()">Test Dynamic Sizing</button>
             <button class="test-button" onclick="testPostMessageSizing()">Test PostMessage</button>
-            <button class="test-button" onclick="testIframeResize()">Simulate Iframe Resize</button>
-            <button class="test-button" onclick="testHeightConstraints()">Test Height Constraints</button>
             <div id="sizing-status" class="status info">Modal should adjust height based on iframe content</div>
         </div>
 
@@ -155,7 +155,8 @@
                     <span class="sr-only">Close</span>
                 </button>
             </div>
-            <iframe class="checkout-iframe" src="about:blank" title="Ticket Checkout - Test Event" loading="lazy" aria-label="Ticket purchasing form">
+            <iframe class="checkout-iframe" src="about:blank" data-ticket-url="data:text/html,<html><body style='margin:0;padding:20px;font-family:Arial;background:linear-gradient(135deg,%23667eea%200%25,%23764ba2%20100%25);color:white;height:500px;'><h2>Test Posh Embed</h2><p>This is a test iframe content.</p><div style='height:400px;background:rgba(255,255,255,0.1);border-radius:8px;padding:20px;margin:20px 0;'>Simulated ticket content with dynamic height</div></body></html>"
+                title="Ticket Checkout - Test Event" loading="lazy" aria-label="Ticket purchasing form">
             </iframe>
         </div>
     </div>
@@ -380,6 +381,40 @@
             } else {
                 const status = document.getElementById('sizing-status');
                 status.textContent = 'Open modal first to test height constraints';
+                status.className = 'status warning';
+            }
+        }
+
+        // Debug function to check if everything is working
+        function debugCheckout() {
+            console.log('🎫 Debug checkout functionality');
+            console.log('🎫 window.checkoutNav:', window.checkoutNav);
+            console.log('🎫 Modal element:', document.querySelector('.checkout-modal'));
+            console.log('🎫 Iframe element:', document.querySelector('.checkout-iframe'));
+            console.log('🎫 Buy button:', document.querySelector('.buy-button'));
+
+            const status = document.getElementById('sizing-status');
+            if (window.checkoutNav) {
+                status.textContent = 'CheckoutNav loaded successfully - check console for details';
+                status.className = 'status success';
+            } else {
+                status.textContent = 'CheckoutNav not loaded - check console for errors';
+                status.className = 'status error';
+            }
+        }
+
+        // Test manual height setting
+        function testManualHeight() {
+            if (window.checkoutNav && window.checkoutNav.iframe) {
+                // Manually set iframe height to test the setIframeHeight function
+                window.checkoutNav.setIframeHeight(600);
+
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Manually set iframe height to 600px';
+                status.className = 'status success';
+            } else {
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Open modal first to test manual height';
                 status.className = 'status warning';
             }
         }
