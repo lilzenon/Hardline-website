@@ -98,6 +98,7 @@
             <h2>Dynamic Iframe Sizing Test</h2>
             <p>Test the dynamic iframe height adjustment and modal scaling functionality.</p>
             <button class="test-button" onclick="testDynamicSizing()">Test Dynamic Sizing</button>
+            <button class="test-button" onclick="testPostMessageSizing()">Test PostMessage</button>
             <button class="test-button" onclick="testIframeResize()">Simulate Iframe Resize</button>
             <button class="test-button" onclick="testHeightConstraints()">Test Height Constraints</button>
             <div id="sizing-status" class="status info">Modal should adjust height based on iframe content</div>
@@ -308,6 +309,29 @@
                 status.textContent = 'Testing dynamic height adjustments (300px → 500px → 700px → 400px)';
                 status.className = 'status success';
             }, 500);
+        }
+
+        function testPostMessageSizing() {
+            if (window.checkoutNav && window.checkoutNav.iframe) {
+                // Simulate receiving postMessage from iframe
+                const mockEvent = {
+                    origin: 'https://example.com',
+                    data: {
+                        type: 'resize',
+                        height: 650
+                    }
+                };
+
+                window.checkoutNav.handleIframeMessage(mockEvent);
+
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Simulated postMessage resize to 650px height';
+                status.className = 'status success';
+            } else {
+                const status = document.getElementById('sizing-status');
+                status.textContent = 'Open modal first to test postMessage sizing';
+                status.className = 'status warning';
+            }
         }
 
         function testIframeResize() {

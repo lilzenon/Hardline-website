@@ -184,6 +184,12 @@ class CheckoutNav {
             clearTimeout(this.resizeTimeout);
             this.resizeTimeout = null;
         }
+
+        // Clear height polling interval
+        if (this.heightPollingInterval) {
+            clearInterval(this.heightPollingInterval);
+            this.heightPollingInterval = null;
+        }
     }
 
     loadIframe() {
@@ -236,6 +242,8 @@ class CheckoutNav {
     initializeDynamicSizing() {
         if (!this.iframe) return;
 
+        console.log('🎫 Initializing dynamic sizing for iframe');
+
         // Set up message listener for iframe height changes
         this.messageListener = (event) => {
             this.handleIframeMessage(event);
@@ -243,42 +251,98 @@ class CheckoutNav {
 
         window.addEventListener('message', this.messageListener);
 
-        // Set up ResizeObserver for iframe content changes
-        if (window.ResizeObserver) {
-            this.resizeObserver = new ResizeObserver((entries) => {
-                this.handleIframeResize(entries);
-            });
+        // Set up periodic height checking for cross-origin iframes
+        this.startHeightPolling();
 
-            this.resizeObserver.observe(this.iframe);
-        }
+        // Initial size adjustment with multiple attempts
+        setTimeout(() => this.adjustIframeHeight(), 100);
+        setTimeout(() => this.adjustIframeHeight(), 500);
+        setTimeout(() => this.adjustIframeHeight(), 1000);
+        setTimeout(() => this.adjustIframeHeight(), 2000);
+    }
 
-        // Initial size adjustment
-        setTimeout(() => {
-            this.adjustIframeHeight();
+    startHeightPolling() {
+        // Poll for height changes every 500ms for cross-origin iframes
+        this.heightPollingInterval = setInterval(() => {
+            if (this.iframe && this.iframe.contentWindow) {
+                // Request height via postMessage
+                try {
+                    this.iframe.contentWindow.postMessage({
+                        type: 'getHeight',
+                        source: 'checkout-nav'
+                    }, '*');
+                } catch (error) {
+                    console.log('🎫 PostMessage failed:', error);
+                }
+            }
         }, 500);
+
+        // Stop polling after 30 seconds to avoid infinite polling
+        setTimeout(() => {
+            if (this.heightPollingInterval) {
+                clearInterval(this.heightPollingInterval);
+                this.heightPollingInterval = null;
+                console.log('🎫 Height polling stopped');
+            }
+        }, 30000);
     }
 
     handleIframeMessage(event) {
         // Handle messages from Posh iframe for dynamic sizing
         if (!this.iframe || !event.data) return;
 
+        console.log('🎫 Received message from iframe:', event.origin, event.data);
+
         try {
-            // Check if message is from our iframe
-            const iframeOrigin = new URL(this.iframe.src).origin;
-            if (event.origin !== iframeOrigin) return;
+            let data = event.data;
 
-            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+            // Parse JSON if it's a string
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (e) {
+                    // Not JSON, might be a simple height value
+                    const height = parseInt(data);
+                    if (!isNaN(height) && height > 0) {
+                        console.log('🎫 Received height as string:', height);
+                        this.setIframeHeight(height);
+                        return;
+                    }
+                }
+            }
 
-            if (data.type === 'resize' && data.height) {
-                console.log('🎫 Received iframe resize message:', data.height);
-                this.setIframeHeight(data.height);
-            } else if (data.type === 'posh-resize' && data.height) {
-                // Posh-specific resize message format
-                console.log('🎫 Received Posh resize message:', data.height);
-                this.setIframeHeight(data.height);
+            // Handle various message formats
+            if (data && typeof data === 'object') {
+                let height = null;
+
+                // Standard resize message
+                if (data.type === 'resize' && data.height) {
+                    height = data.height;
+                }
+                // Posh-specific resize message
+                else if (data.type === 'posh-resize' && data.height) {
+                    height = data.height;
+                }
+                // Generic height message
+                else if (data.height) {
+                    height = data.height;
+                }
+                // Document height message
+                else if (data.documentHeight) {
+                    height = data.documentHeight;
+                }
+                // Content height message
+                else if (data.contentHeight) {
+                    height = data.contentHeight;
+                }
+
+                if (height && height > 0) {
+                    console.log('🎫 Received iframe height message:', height);
+                    this.setIframeHeight(height);
+                }
             }
         } catch (error) {
-            // Ignore parsing errors for non-JSON messages
+            console.log('🎫 Error parsing iframe message:', error);
         }
     }
 
@@ -296,34 +360,67 @@ class CheckoutNav {
     }
 
     adjustIframeHeight() {
-        if (!this.iframe || !this.iframe.contentWindow) return;
+        if (!this.iframe) return;
 
+        console.log('🎫 Attempting to adjust iframe height');
+
+        // First, try direct access (same-origin)
         try {
-            // Try to get content height from iframe document
-            const iframeDoc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+            const iframeDoc = this.iframe.contentDocument || (this.iframe.contentWindow && this.iframe.contentWindow.document);
             if (iframeDoc && iframeDoc.body) {
-                const contentHeight = Math.max(
-                    iframeDoc.body.scrollHeight,
-                    iframeDoc.body.offsetHeight,
-                    iframeDoc.documentElement.clientHeight,
-                    iframeDoc.documentElement.scrollHeight,
-                    iframeDoc.documentElement.offsetHeight
-                );
+                // Wait for content to be fully loaded
+                const checkContent = () => {
+                    const body = iframeDoc.body;
+                    const html = iframeDoc.documentElement;
 
-                if (contentHeight > 0) {
-                    console.log('🎫 Detected iframe content height:', contentHeight);
-                    this.setIframeHeight(contentHeight);
+                    if (body && html) {
+                        const contentHeight = Math.max(
+                            body.scrollHeight || 0,
+                            body.offsetHeight || 0,
+                            html.clientHeight || 0,
+                            html.scrollHeight || 0,
+                            html.offsetHeight || 0
+                        );
+
+                        console.log('🎫 Direct access - content height:', contentHeight);
+
+                        if (contentHeight > 100) { // Minimum reasonable height
+                            this.setIframeHeight(contentHeight);
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
+                // Try immediately and with delays
+                if (!checkContent()) {
+                    setTimeout(checkContent, 100);
+                    setTimeout(checkContent, 500);
                 }
             }
         } catch (error) {
-            // Cross-origin restrictions prevent direct access
-            console.log('🎫 Cross-origin iframe - using message-based sizing');
+            console.log('🎫 Cross-origin iframe detected:', error.message);
+        }
 
-            // Request height from iframe via postMessage
-            this.iframe.contentWindow.postMessage({
-                type: 'getHeight',
-                source: 'checkout-nav'
-            }, '*');
+        // Always try postMessage approach for cross-origin iframes
+        if (this.iframe.contentWindow) {
+            try {
+                // Send multiple message formats that different iframe content might understand
+                const messages = [
+                    { type: 'getHeight', source: 'checkout-nav' },
+                    { type: 'requestHeight', source: 'parent' },
+                    { action: 'getHeight' },
+                    'getHeight'
+                ];
+
+                messages.forEach(message => {
+                    this.iframe.contentWindow.postMessage(message, '*');
+                });
+
+                console.log('🎫 Sent height request messages to iframe');
+            } catch (error) {
+                console.log('🎫 PostMessage failed:', error);
+            }
         }
     }
 
