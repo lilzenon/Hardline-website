@@ -252,9 +252,17 @@ class CheckoutNav {
     addDynamicSizingParams(url) {
         try {
             const urlObj = new URL(url);
-            // Add parameters to help with dynamic sizing if supported by Posh
+
+            // Check if this is a Posh embed - they don't support URL parameters
+            if (urlObj.hostname.includes('posh.vip') || urlObj.hostname.includes('posh.')) {
+                console.log('🎫 Posh embed detected - not adding URL parameters');
+                return url; // Return original URL without modifications
+            }
+
+            // Add parameters for other embed providers that might support them
             urlObj.searchParams.set('responsive', 'true');
             urlObj.searchParams.set('autosize', 'true');
+            console.log('🎫 Added dynamic sizing parameters to URL');
             return urlObj.toString();
         } catch (error) {
             console.warn('🎫 Could not parse URL for dynamic sizing params:', error);
@@ -628,9 +636,10 @@ class CheckoutNav {
         // Estimate height based on iframe source and typical content
         const src = this.iframe.src;
 
-        if (src.includes('posh')) {
-            // Posh embeds typically show ticket options
-            return 650; // Good default for ticket selection interfaces
+        if (src.includes('posh.vip') || src.includes('posh.')) {
+            // Posh embeds typically show ticket options and need more height
+            console.log('🎫 Using Posh-specific height estimation');
+            return 650; // Good default for Posh ticket selection interfaces
         }
 
         if (src.includes('eventbrite')) {
