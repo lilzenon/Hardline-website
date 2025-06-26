@@ -1617,6 +1617,62 @@ function fixCurrentPoshUrl() {
     }
 }
 
+// EXTREME OPTION: Create a new iframe outside the modal to test
+function testIframeOutsideModal() {
+    console.log('🎫 EXTREME TEST: Creating iframe outside modal...');
+
+    // Get the Posh URL
+    const poshUrl = (window.checkoutNav && window.checkoutNav.iframe && window.checkoutNav.iframe.src) || 'https://embed.posh.vip/ticket-iframe/680fb268087c97aeac2468cb/';
+
+    // Create a new iframe element
+    const testIframe = document.createElement('iframe');
+    testIframe.src = poshUrl;
+    testIframe.style.width = '100%';
+    testIframe.style.height = '1200px';
+    testIframe.style.border = '2px solid red';
+    testIframe.style.position = 'fixed';
+    testIframe.style.top = '50px';
+    testIframe.style.left = '50px';
+    testIframe.style.zIndex = '9999';
+    testIframe.style.backgroundColor = 'white';
+    testIframe.id = 'testPoshIframe';
+
+    // Remove any existing test iframe
+    const existing = document.getElementById('testPoshIframe');
+    if (existing) {
+        existing.remove();
+    }
+
+    // Add to body
+    document.body.appendChild(testIframe);
+
+    console.log('🎫 Test iframe created outside modal');
+    console.log('🎫 URL:', poshUrl);
+    console.log('🎫 Check if this iframe shows full Posh content');
+    console.log('🎫 Run removeTestIframe() to remove it');
+
+    // Check height after load
+    testIframe.onload = function() {
+        setTimeout(() => {
+            console.log('🎫 Test iframe loaded:');
+            console.log('  - offsetHeight:', testIframe.offsetHeight);
+            console.log('  - style.height:', testIframe.style.height);
+            console.log('  - Does it show full content?');
+        }, 1000);
+    };
+}
+
+// Function to remove test iframe
+function removeTestIframe() {
+    const testIframe = document.getElementById('testPoshIframe');
+    if (testIframe) {
+        testIframe.remove();
+        console.log('🎫 Test iframe removed');
+    } else {
+        console.log('🎫 No test iframe found');
+    }
+}
+
 // NUCLEAR OPTION: Force iframe to show all content
 function forceIframeFullHeight() {
     if (window.checkoutNav && window.checkoutNav.iframe) {
