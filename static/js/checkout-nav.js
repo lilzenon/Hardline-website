@@ -154,7 +154,7 @@ class CheckoutNav {
         }
 
         // Reset modal content styles
-        const modalContent = this.modal ? .querySelector('.checkout-modal-content');
+        const modalContent = this.modal && this.modal.querySelector('.checkout-modal-content');
         if (modalContent) {
             modalContent.style.maxHeight = '';
             modalContent.style.transition = '';
@@ -346,7 +346,7 @@ class CheckoutNav {
     }
 
     updateModalHeight(iframeHeight) {
-        const modalContent = this.modal ? .querySelector('.checkout-modal-content');
+        const modalContent = this.modal && this.modal.querySelector('.checkout-modal-content');
         if (!modalContent) return;
 
         // Calculate total modal content height including padding and header
