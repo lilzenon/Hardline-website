@@ -674,42 +674,19 @@ class CheckoutNav {
         const src = this.iframe.src;
 
         if (src.includes('posh.vip') || src.includes('posh.')) {
-            // Research-based Posh embed sizing for full content visibility
-            console.log('🎫 Using research-based Posh height estimation for full content visibility');
+            // AGGRESSIVE Posh sizing - eliminate scrolling completely
+            console.log('🎫 AGGRESSIVE Posh height estimation - eliminating scrolling');
 
             const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
 
-            // Research findings: Posh ticket interfaces typically need:
-            // - Header: ~80-120px
-            // - Ticket options: ~60-100px per ticket type (usually 2-6 types)
-            // - Descriptions: ~40-80px per ticket
-            // - Purchase buttons: ~60-80px
-            // - Footer/terms: ~40-60px
-            // - Padding/margins: ~40-80px total
+            // Use very generous height - better too tall than scrolling
+            const aggressiveHeight = Math.max(1000, viewportHeight * 0.75);
+            const finalHeight = Math.min(aggressiveHeight, 1200);
 
-            let estimatedHeight;
+            console.log(`🎫 AGGRESSIVE Posh height: ${finalHeight}px (viewport: ${viewportHeight}px)`);
+            console.log('🎫 Strategy: Better too tall than requiring scrolling');
 
-            if (viewportWidth < 768) {
-                // Mobile: Content stacks vertically, needs more height
-                estimatedHeight = Math.min(viewportHeight * 0.9, 1000);
-                console.log('🎫 Mobile Posh sizing: prioritizing full content over viewport');
-            } else if (viewportWidth < 1024) {
-                // Tablet: Moderate height needed
-                estimatedHeight = Math.min(viewportHeight * 0.85, 900);
-                console.log('🎫 Tablet Posh sizing: balanced approach');
-            } else {
-                // Desktop: Can accommodate larger heights
-                estimatedHeight = Math.min(viewportHeight * 0.8, 800);
-                console.log('🎫 Desktop Posh sizing: optimized for large screens');
-            }
-
-            // Ensure minimum height for essential content visibility
-            const minPoshHeight = 600; // Absolute minimum for basic functionality
-            estimatedHeight = Math.max(estimatedHeight, minPoshHeight);
-
-            console.log(`🎫 Posh height estimation: ${estimatedHeight}px (viewport: ${viewportWidth}x${viewportHeight})`);
-            return estimatedHeight;
+            return finalHeight;
         }
 
         if (src.includes('eventbrite')) {
@@ -896,38 +873,28 @@ class CheckoutNav {
     setIframeHeight(height) {
         if (!this.iframe || !height) return;
 
-        // Apply height constraints with special handling for Posh embeds
-        const minHeight = 300;
+        // DIRECT APPROACH: Set generous height for Posh embeds to eliminate scrolling
         const src = this.iframe.src;
         const isPoshEmbed = src && (src.includes('posh.vip') || src.includes('posh.'));
 
-        let maxHeight;
+        let constrainedHeight;
+
         if (isPoshEmbed) {
-            // Research-based generous constraints for Posh embeds
+            // FORCE large height for Posh to show full content - no more scrolling!
             const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
 
-            if (viewportWidth < 768) {
-                // Mobile: Allow up to 95% of viewport, minimum 600px
-                maxHeight = Math.max(viewportHeight * 0.95, 600);
-            } else if (viewportWidth < 1024) {
-                // Tablet: Allow up to 90% of viewport, minimum 700px
-                maxHeight = Math.max(viewportHeight * 0.9, 700);
-            } else {
-                // Desktop: Allow up to 85% of viewport, minimum 800px
-                maxHeight = Math.max(viewportHeight * 0.85, 800);
-            }
+            // Use a very generous height that should accommodate any Posh content
+            const generousHeight = Math.max(1000, viewportHeight * 0.8);
+            constrainedHeight = Math.min(generousHeight, 1200); // Cap at 1200px max
 
-            // Absolute maximum to prevent excessive heights
-            maxHeight = Math.min(maxHeight, 1400);
-
-            console.log(`🎫 Research-based Posh constraints: ${maxHeight}px (viewport: ${viewportWidth}x${viewportHeight})`);
+            console.log(`🎫 FORCING generous Posh height: ${constrainedHeight}px to eliminate scrolling`);
+            console.log(`🎫 Viewport: ${window.innerWidth}x${viewportHeight}, Requested: ${height}px`);
         } else {
             // Standard constraints for other embeds
-            maxHeight = Math.min(window.innerHeight * 0.8, 800);
+            const minHeight = 300;
+            const maxHeight = Math.min(window.innerHeight * 0.8, 800);
+            constrainedHeight = Math.max(minHeight, Math.min(height, maxHeight));
         }
-
-        const constrainedHeight = Math.max(minHeight, Math.min(height, maxHeight));
 
         console.log(`🎫 Setting iframe height: ${height}px (constrained to ${constrainedHeight}px)`);
 
@@ -1172,6 +1139,25 @@ function setOptimalPoshHeight() {
         const optimalHeight = window.checkoutNav.calculateOptimalPoshHeight();
         window.checkoutNav.setIframeHeight(optimalHeight);
         console.log(`🎫 Set optimal height: ${optimalHeight}px`);
+    } else {
+        console.error('🎫 window.checkoutNav or iframe not found!');
+    }
+}
+
+// Global function to FORCE large height immediately - no more scrolling!
+function forceNoScrollHeight() {
+    if (window.checkoutNav && window.checkoutNav.iframe) {
+        console.log('🎫 FORCING large height to eliminate scrolling...');
+
+        // Force a very large height
+        const forceHeight = 1200;
+        window.checkoutNav.iframe.style.height = forceHeight + 'px';
+
+        // Also update modal
+        window.checkoutNav.updateModalHeight(forceHeight);
+
+        console.log(`🎫 FORCED height to ${forceHeight}px - scrolling should be eliminated`);
+        console.log('🎫 Check if you can see all Posh content without scrolling now');
     } else {
         console.error('🎫 window.checkoutNav or iframe not found!');
     }
