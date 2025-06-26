@@ -918,15 +918,25 @@ class CheckoutNav {
         const modalContent = this.modal && this.modal.querySelector('.checkout-modal-content');
         if (!modalContent) return;
 
-        // Calculate total modal content height including padding and header
-        const header = modalContent.querySelector('.checkout-modal-header');
-        const headerHeight = header ? header.offsetHeight : 60;
-        const padding = 40; // 20px top + 20px bottom
-        const totalHeight = iframeHeight + headerHeight + padding;
+        // AGGRESSIVE APPROACH: Remove all height constraints for Posh embeds
+        const src = this.iframe && this.iframe.src;
+        const isPoshEmbed = src && (src.includes('posh.vip') || src.includes('posh.'));
 
-        // Set max-height to allow modal to expand
-        const maxModalHeight = Math.min(window.innerHeight * 0.9, totalHeight + 40);
-        modalContent.style.maxHeight = `${maxModalHeight}px`;
+        if (isPoshEmbed) {
+            // For Posh embeds: Remove max-height entirely and let content expand
+            modalContent.style.maxHeight = 'none';
+            modalContent.style.height = 'auto';
+            console.log('🎫 REMOVED modal height constraints for Posh embed');
+        } else {
+            // For other embeds: Use conservative constraints
+            const header = modalContent.querySelector('.checkout-modal-header');
+            const headerHeight = header ? header.offsetHeight : 60;
+            const padding = 40; // 20px top + 20px bottom
+            const totalHeight = iframeHeight + headerHeight + padding;
+            const maxModalHeight = Math.min(window.innerHeight * 0.9, totalHeight + 40);
+            modalContent.style.maxHeight = `${maxModalHeight}px`;
+        }
+
         modalContent.style.transition = 'max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     }
 
@@ -1151,13 +1161,33 @@ function forceNoScrollHeight() {
 
         // Force a very large height
         const forceHeight = 1200;
-        window.checkoutNav.iframe.style.height = forceHeight + 'px';
 
-        // Also update modal
-        window.checkoutNav.updateModalHeight(forceHeight);
+        // DIRECT DOM manipulation - bypass all constraints
+        const iframe = window.checkoutNav.iframe;
+        const modal = window.checkoutNav.modal;
+        const modalContent = modal && modal.querySelector('.checkout-modal-content');
 
-        console.log(`🎫 FORCED height to ${forceHeight}px - scrolling should be eliminated`);
+        // Force iframe height
+        iframe.style.height = forceHeight + 'px';
+        iframe.style.maxHeight = 'none';
+        iframe.style.minHeight = 'auto';
+
+        // Force modal content to expand
+        if (modalContent) {
+            modalContent.style.maxHeight = 'none';
+            modalContent.style.height = 'auto';
+            modalContent.style.overflow = 'visible';
+        }
+
+        // Force modal itself to expand
+        if (modal) {
+            modal.style.maxHeight = 'none';
+            modal.style.height = 'auto';
+        }
+
+        console.log(`🎫 FORCED height to ${forceHeight}px - ALL constraints removed`);
         console.log('🎫 Check if you can see all Posh content without scrolling now');
+        console.log('🎫 Applied direct DOM manipulation to iframe, modal, and modal-content');
     } else {
         console.error('🎫 window.checkoutNav or iframe not found!');
     }
