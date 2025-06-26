@@ -1673,6 +1673,72 @@ function removeTestIframe() {
     }
 }
 
+// SOLUTION: Apply the working external iframe approach to modal iframe
+function fixModalIframeWithWorkingApproach() {
+    console.log('🎫 APPLYING WORKING APPROACH to modal iframe...');
+
+    if (!window.checkoutNav || !window.checkoutNav.iframe) {
+        console.error('🎫 Modal iframe not found!');
+        return;
+    }
+
+    const iframe = window.checkoutNav.iframe;
+    const modal = window.checkoutNav.modal;
+    const modalContent = modal && modal.querySelector('.checkout-modal-content');
+
+    console.log('🎫 Before fix:');
+    console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
+    console.log('  - iframe.style.height:', iframe.style.height);
+
+    // Apply the EXACT same styles that worked for external iframe
+    iframe.style.setProperty('width', '100%', 'important');
+    iframe.style.setProperty('height', '1200px', 'important');
+    iframe.style.setProperty('border', 'none', 'important');
+    iframe.style.setProperty('background-color', 'white', 'important');
+    iframe.style.setProperty('min-height', 'auto', 'important');
+    iframe.style.setProperty('max-height', 'none', 'important');
+    iframe.style.setProperty('overflow', 'visible', 'important');
+
+    // Force modal content to accommodate the iframe
+    if (modalContent) {
+        modalContent.style.setProperty('max-height', 'none', 'important');
+        modalContent.style.setProperty('height', 'auto', 'important');
+        modalContent.style.setProperty('overflow', 'visible', 'important');
+        modalContent.style.setProperty('padding', '20px', 'important');
+        modalContent.style.setProperty('display', 'flex', 'important');
+        modalContent.style.setProperty('flex-direction', 'column', 'important');
+    }
+
+    // Force modal to expand
+    if (modal) {
+        modal.style.setProperty('max-height', 'none', 'important');
+        modal.style.setProperty('height', 'auto', 'important');
+        modal.style.setProperty('overflow', 'auto', 'important');
+        modal.style.setProperty('padding', '20px', 'important');
+    }
+
+    // Wait and verify the fix worked
+    setTimeout(() => {
+        console.log('🎫 After fix:');
+        console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
+        console.log('  - iframe.style.height:', iframe.style.height);
+        console.log('  - Fix successful:', iframe.offsetHeight >= 1000);
+
+        if (iframe.offsetHeight >= 1000) {
+            console.log('🎫 SUCCESS! Modal iframe now shows full Posh content!');
+            console.log('🎫 Check the modal - you should see all ticket options without scrolling');
+        } else {
+            console.log('🎫 Still constrained. Checking what\'s limiting it...');
+            const computed = window.getComputedStyle(iframe);
+            console.log('  - computedHeight:', computed.height);
+            console.log('  - computedMaxHeight:', computed.maxHeight);
+            console.log('  - computedMinHeight:', computed.minHeight);
+        }
+    }, 500);
+
+    console.log('🎫 Applied working external iframe approach to modal iframe');
+}
+
 // NUCLEAR OPTION: Force iframe to show all content
 function forceIframeFullHeight() {
     if (window.checkoutNav && window.checkoutNav.iframe) {
