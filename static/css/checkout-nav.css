@@ -83,7 +83,8 @@
 /* ===== BUY BUTTON ===== */
 
 .buy-button {
-    padding: 16px 24px;
+    width: 100%;
+    padding: 0;
     border-radius: 50px;
     /* Clean black background to match design */
     background: #000000;
@@ -96,15 +97,10 @@
     position: relative;
     height: 56px;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
+    align-items: center;
+    justify-content: space-between;
     border: none;
     cursor: pointer;
-    min-width: 200px;
-    padding-left: 24px;
-    padding-right: 60px;
-    /* Make room for arrow section */
     line-height: 1;
     letter-spacing: 0.02em;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -112,7 +108,28 @@
 }
 
 
-/* Button Title and Text Styling */
+/* Button Content Layout */
+
+.buy-button .button-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 16px 24px;
+}
+
+.buy-button .ticket-price {
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.buy-button .button-text-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
 
 .buy-button .button-title {
     font-size: 12px;
@@ -140,11 +157,11 @@
     right: 0;
     top: 0;
     bottom: 0;
-    width: 48px;
+    width: 56px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 400;
     color: #ffffff;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -333,16 +350,17 @@
         font-size: 15px;
     }
     .buy-button {
-        font-size: 14px;
-        padding: 12px 20px;
-        padding-left: 20px;
-        padding-right: 50px;
-        min-width: 160px;
         height: 44px;
         border-radius: 22px;
     }
+    .buy-button .button-content {
+        padding: 12px 20px;
+    }
+    .buy-button .ticket-price {
+        font-size: 16px;
+    }
     .buy-button::after {
-        width: 40px;
+        width: 44px;
         font-size: 16px;
         border-radius: 0 22px 22px 0;
     }
@@ -374,12 +392,17 @@
         max-width: 420px;
     }
     .buy-button {
-        min-width: 180px;
         height: 50px;
         border-radius: 25px;
     }
+    .buy-button .button-content {
+        padding: 14px 22px;
+    }
+    .buy-button .ticket-price {
+        font-size: 17px;
+    }
     .buy-button::after {
-        width: 44px;
+        width: 50px;
         border-radius: 0 25px 25px 0;
     }
     .buy-button .button-title {

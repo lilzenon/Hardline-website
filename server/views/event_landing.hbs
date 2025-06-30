@@ -2104,21 +2104,23 @@
             <!-- Checkout Nav Component - Inline positioning -->
             {{#if event.display_tickets}}
             <div class="checkout-nav-container active" role="region" aria-label="Ticket purchasing">
-                <nav class="checkout-nav" aria-label="Ticket checkout navigation" role="navigation">
-                    <div class="ticket-price" aria-live="polite">
-                        <span class="sr-only">Ticket price: </span>{{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
+                <button class="buy-button"
+                        onclick="handleTicketPurchase()"
+                        aria-label="{{#if event.ticket_price}}{{#if event.buy_button_text}}{{event.buy_button_text}} for {{event.ticket_price}}{{else}}Buy tickets for {{event.ticket_price}}{{/if}}{{else}}{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy tickets{{/if}}{{/if}}"
+                        aria-describedby="ticket-price-info">
+                    <div class="button-content">
+                        <div class="ticket-price" aria-live="polite">
+                            <span class="sr-only">Ticket price: </span>{{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
+                        </div>
+                        <div class="button-text-section">
+                            {{#if event.button_title}}
+                            <span class="button-title">{{event.button_title}}</span>
+                            {{/if}}
+                            <span class="button-text">{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy Tickets{{/if}}</span>
+                        </div>
                     </div>
-                    <button class="buy-button"
-                            onclick="handleTicketPurchase()"
-                            aria-label="{{#if event.ticket_price}}{{#if event.buy_button_text}}{{event.buy_button_text}} for {{event.ticket_price}}{{else}}Buy tickets for {{event.ticket_price}}{{/if}}{{else}}{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy tickets{{/if}}{{/if}}"
-                            aria-describedby="ticket-price-info">
-                        {{#if event.button_title}}
-                        <span class="button-title">{{event.button_title}}</span>
-                        {{/if}}
-                        <span class="button-text">{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy Tickets{{/if}}</span>
-                        <span class="sr-only"> tickets</span>
-                    </button>
-                </nav>
+                    <span class="sr-only"> tickets</span>
+                </button>
                 <div id="ticket-price-info" class="sr-only">
                     {{#if event.ticket_price}}Tickets are available for {{event.ticket_price}}{{else}}Ticket pricing will be shown during checkout{{/if}}
                 </div>
