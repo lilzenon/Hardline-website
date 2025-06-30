@@ -3568,6 +3568,9 @@
             // Prevent body scroll
             document.body.style.overflow = 'hidden';
 
+            // Dynamic viewport fitting
+            adjustModalForViewport();
+
             // Modern entrance animation sequence
             modalOverlay.classList.remove('exiting');
             modalOverlay.classList.add('entering');
@@ -3588,6 +3591,43 @@
             }
 
             console.log('🎫 MODERN: Modal opened with enhanced UX');
+        }
+
+        function adjustModalForViewport() {
+            const modalContent = document.querySelector('.modal-content');
+            const modalIframe = document.querySelector('.modal-iframe-container');
+
+            if (!modalContent || !modalIframe) return;
+
+            const viewportHeight = window.innerHeight;
+            const viewportWidth = window.innerWidth;
+
+            console.log('🎫 VIEWPORT: Adjusting for', viewportWidth + 'x' + viewportHeight);
+
+            // Dynamic height adjustment based on viewport
+            if (viewportHeight < 600) {
+                // Very short screens
+                modalContent.style.maxHeight = '95vh';
+                modalContent.style.marginTop = 'max(2.5vh, 5px)';
+                modalIframe.style.height = '350px';
+            } else if (viewportHeight < 700) {
+                // Short screens
+                modalContent.style.maxHeight = '90vh';
+                modalContent.style.marginTop = 'max(5vh, 10px)';
+                modalIframe.style.height = '450px';
+            } else if (viewportHeight < 900) {
+                // Medium screens
+                modalContent.style.maxHeight = '85vh';
+                modalContent.style.marginTop = 'max(7.5vh, 15px)';
+                modalIframe.style.height = '550px';
+            } else {
+                // Tall screens
+                modalContent.style.maxHeight = '80vh';
+                modalContent.style.marginTop = 'max(10vh, 20px)';
+                modalIframe.style.height = '600px';
+            }
+
+            console.log('🎫 VIEWPORT: Modal adjusted for optimal fit');
         }
 
         function closeSimpleModal() {
@@ -3649,6 +3689,22 @@
             window.addEventListener('beforeunload', function() {
                 if (isModalOpen) {
                     document.body.style.overflow = '';
+                }
+            });
+
+            // Handle window resize to maintain proper modal positioning
+            window.addEventListener('resize', function() {
+                if (isModalOpen) {
+                    adjustModalForViewport();
+                }
+            });
+
+            // Handle orientation change on mobile
+            window.addEventListener('orientationchange', function() {
+                if (isModalOpen) {
+                    setTimeout(() => {
+                        adjustModalForViewport();
+                    }, 100); // Small delay for orientation change to complete
                 }
             });
 
