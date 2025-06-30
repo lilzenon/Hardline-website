@@ -13,7 +13,7 @@
     position: relative;
     width: 100%;
     max-width: 400px;
-    margin: 24px auto 32px auto;
+    margin: 16px auto 16px auto;
     z-index: 100;
     pointer-events: all;
     /* Match the phone input container width exactly */
@@ -280,7 +280,7 @@
 
 @media (max-width: 767px) {
     .checkout-nav-container {
-        margin: 20px auto 24px auto;
+        margin: 8px auto 8px auto;
         max-width: calc(100% - 24px);
         padding: 0 12px;
     }
@@ -315,7 +315,7 @@
 
 @media (min-width: 768px) and (max-width: 1023px) {
     .checkout-nav-container {
-        margin: 28px auto 36px auto;
+        margin: 8px auto 8px auto;
         max-width: 420px;
     }
     .checkout-iframe {
@@ -330,7 +330,7 @@
 
 @media (min-width: 1024px) {
     .checkout-nav-container {
-        margin: 16px auto 24px auto;
+        margin: 8px auto 8px auto;
         max-width: 420px;
         /* Desktop grid positioning - use dedicated checkout area */
         grid-area: checkout;

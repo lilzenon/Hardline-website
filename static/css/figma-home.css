@@ -822,7 +822,7 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     display: none;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     z-index: 1000;
     opacity: 0;
@@ -834,6 +834,39 @@ body {
     overflow-y: auto;
     /* Smooth scrolling */
     scroll-behavior: smooth;
+    /* Better desktop centering */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+
+/* Transparent scrollbar styling for modal */
+
+.modal-overlay::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-overlay::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-overlay::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.modal-overlay::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+
+/* Firefox scrollbar styling */
+
+.modal-overlay {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .modal-overlay.active {
@@ -867,7 +900,8 @@ body {
     padding: 0;
     width: 90%;
     max-width: 600px;
-    max-height: 90vh;
+    max-height: calc(100vh - 40px);
+    /* Account for overlay padding */
     overflow: hidden;
     position: relative;
     border: none;
@@ -875,14 +909,14 @@ body {
     transform: scale(0.9) translateY(20px);
     transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
-    /* Smart positioning - always fits in viewport */
-    margin: 5vh auto;
-    /* Minimum top margin to ensure visibility */
-    margin-top: max(5vh, 20px);
+    /* Improved positioning for better desktop centering */
+    margin: auto;
     /* Prevent content from jumping */
     will-change: transform, opacity;
     /* Ensure content fits */
     box-sizing: border-box;
+    /* Better vertical centering on desktop */
+    align-self: center;
 }
 
 
@@ -975,16 +1009,49 @@ body {
 }
 
 
+/* Transparent scrollbar for iframe content */
+
+.modal-iframe-container iframe {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.modal-iframe-container iframe::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-iframe-container iframe::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-iframe-container iframe::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.modal-iframe-container iframe::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+
 /* Responsive modal positioning */
 
 @media (max-width: 767px) {
+    .modal-overlay {
+        /* Mobile keeps flex-start for better positioning */
+        align-items: flex-start;
+        padding: 15px;
+    }
     .modal-content {
         width: 95%;
         max-width: none;
-        max-height: 95vh;
-        /* Mobile-optimized positioning */
-        margin: 2.5vh auto;
-        margin-top: max(2.5vh, 10px);
+        max-height: calc(100vh - 30px);
+        /* Account for padding */
+        /* Mobile positioning with small top margin */
+        margin: 15px auto 0;
+        align-self: flex-start;
         /* Slightly faster animation on mobile */
         transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -1008,30 +1075,46 @@ body {
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
+    .modal-overlay {
+        /* Better tablet alignment */
+        align-items: center;
+        padding: 30px;
+    }
     .modal-content {
         width: 85%;
-        max-width: 650px;
-        max-height: 90vh;
-        /* Tablet positioning */
-        margin: 5vh auto;
-        margin-top: max(5vh, 15px);
+        max-width: 700px;
+        max-height: calc(100vh - 60px);
+        /* Account for padding */
+        /* Remove manual margins - let flexbox center */
+        margin: 0;
+        align-self: center;
     }
     .modal-iframe-container {
-        height: 550px;
+        height: 580px;
+        border-radius: 14px;
     }
 }
 
 @media (min-width: 1024px) {
+    .modal-overlay {
+        /* Better desktop alignment */
+        align-items: center;
+        padding: 40px;
+    }
     .modal-content {
-        width: 80%;
-        max-width: 700px;
-        max-height: 85vh;
-        /* Desktop positioning */
-        margin: 7.5vh auto;
-        margin-top: max(7.5vh, 20px);
+        width: 75%;
+        max-width: 800px;
+        max-height: calc(100vh - 80px);
+        /* Account for larger padding */
+        /* Remove manual margins - let flexbox center */
+        margin: 0;
+        align-self: center;
+        /* Improved desktop sizing */
+        min-height: 500px;
     }
     .modal-iframe-container {
-        height: 600px;
+        height: 650px;
+        border-radius: 16px;
     }
 }
 
