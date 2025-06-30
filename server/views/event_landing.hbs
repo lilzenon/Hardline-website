@@ -3534,9 +3534,17 @@
     <!-- DISABLED: Using simple home page approach instead -->
 
     <script>
-        // SIMPLE MODAL FUNCTION - EXACT SAME AS HOME PAGE
+        // MODERN MODAL SYSTEM v2025063007 - Research-based UX patterns
+        console.log('🎫 MODERN MODAL v2025063007: Loading enhanced modal system');
+
+        // Modal state management
+        let isModalOpen = false;
+        let animationTimeout = null;
+
         function openSimpleModal() {
-            console.log('🎫 Opening modal - HOME PAGE APPROACH...');
+            console.log('🎫 MODERN: Opening modal with enhanced animations');
+
+            if (isModalOpen) return;
 
             const modalOverlay = document.getElementById('modalOverlay');
             const poshIframe = document.getElementById('poshIframe');
@@ -3546,48 +3554,105 @@
                 return;
             }
 
-            // DEBUG: Log iframe details
+            // Set iframe source if needed
             if (poshIframe) {
-                console.log('🔍 Iframe src:', poshIframe.src);
-                console.log('🔍 Iframe data-ticket-url:', poshIframe.getAttribute('data-ticket-url'));
-                console.log('🔍 Iframe computed styles:', window.getComputedStyle(poshIframe));
+                const ticketUrl = poshIframe.getAttribute('data-ticket-url');
+                if (ticketUrl && poshIframe.src !== ticketUrl) {
+                    poshIframe.src = ticketUrl;
+                    console.log('🎫 MODERN: Set iframe src to:', ticketUrl);
+                }
             }
 
-            // EXACT SAME modal opening as home page - no iframe src manipulation
-            console.log('🎪 Opening modal overlay...');
-            modalOverlay.style.display = 'flex';
-            modalOverlay.classList.add('active');
+            isModalOpen = true;
+
+            // Prevent body scroll
             document.body.style.overflow = 'hidden';
-            console.log('✅ Modal opened successfully with active class');
+
+            // Modern entrance animation sequence
+            modalOverlay.classList.remove('exiting');
+            modalOverlay.classList.add('entering');
+            modalOverlay.style.display = 'flex';
+
+            // Force reflow for animation
+            modalOverlay.offsetHeight;
+
+            // Trigger entrance animation
+            requestAnimationFrame(() => {
+                modalOverlay.classList.remove('entering');
+                modalOverlay.classList.add('entered', 'active');
+            });
+
+            // Haptic feedback on supported devices
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+
+            console.log('🎫 MODERN: Modal opened with enhanced UX');
         }
 
-        // Close modal function - same as home page
+        function closeSimpleModal() {
+            console.log('🎫 MODERN: Closing modal with exit animation');
+
+            if (!isModalOpen) return;
+
+            const modalOverlay = document.getElementById('modalOverlay');
+            if (!modalOverlay) return;
+
+            isModalOpen = false;
+
+            // Clear any existing timeout
+            if (animationTimeout) {
+                clearTimeout(animationTimeout);
+            }
+
+            // Start exit animation
+            modalOverlay.classList.remove('entered', 'active');
+            modalOverlay.classList.add('exiting');
+
+            // Complete exit after animation
+            animationTimeout = setTimeout(() => {
+                modalOverlay.style.display = 'none';
+                modalOverlay.classList.remove('exiting');
+                document.body.style.overflow = '';
+
+                console.log('🎫 MODERN: Modal closed completely');
+            }, 250); // Match CSS transition duration
+        }
+
+        // Enhanced event handling with modern patterns
         document.addEventListener('DOMContentLoaded', function() {
             const modalOverlay = document.getElementById('modalOverlay');
             const modalClose = document.getElementById('modalClose');
 
+            // Close button
             if (modalClose) {
-                modalClose.addEventListener('click', function() {
-                    if (modalOverlay) {
-                        modalOverlay.style.display = 'none';
-                        modalOverlay.classList.remove('active');
-                        document.body.style.overflow = '';
-                        console.log('🚪 Modal closed');
+                modalClose.addEventListener('click', closeSimpleModal);
+            }
+
+            // Outside click to close
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === modalOverlay) {
+                        closeSimpleModal();
                     }
                 });
             }
 
-            // Close on overlay click
-            if (modalOverlay) {
-                modalOverlay.addEventListener('click', function(e) {
-                    if (e.target === modalOverlay) {
-                        modalOverlay.style.display = 'none';
-                        modalOverlay.classList.remove('active');
-                        document.body.style.overflow = '';
-                        console.log('🚪 Modal closed via overlay click');
-                    }
-                });
-            }
+            // Keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && isModalOpen) {
+                    closeSimpleModal();
+                }
+            });
+
+            // Prevent scroll restoration issues
+            window.addEventListener('beforeunload', function() {
+                if (isModalOpen) {
+                    document.body.style.overflow = '';
+                }
+            });
+
+            console.log('🎫 MODERN: Enhanced modal event handlers initialized');
         });
     </script>
     {{/if}}
