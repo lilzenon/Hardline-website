@@ -121,18 +121,21 @@
                                                 <label for="default_title" class="block text-sm font-medium text-gray-700">
                                                     Default Title <span class="text-red-500" aria-label="required">*</span>
                                                 </label>
-                                                <div class="mt-1">
+                                                <div class="mt-1 relative">
                                                     <input
                                                         type="text"
                                                         id="default_title"
                                                         name="default_title"
-                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px] pr-16"
                                                         value="{{seoSettings.default_title}}"
                                                         maxlength="60"
                                                         required
-                                                        aria-describedby="default_title_help"
+                                                        aria-describedby="default_title_help default_title_counter"
                                                         autocomplete="off"
                                                     >
+                                                    <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                        <span id="default_title_counter" class="text-xs text-gray-400">0/60</span>
+                                                    </div>
                                                 </div>
                                                 <p id="default_title_help" class="mt-2 text-sm text-gray-500">Recommended: 50-60 characters</p>
                                             </div>
@@ -156,17 +159,20 @@
                                             <label for="default_description" class="block text-sm font-medium text-gray-700">
                                                 Default Description <span class="text-red-500" aria-label="required">*</span>
                                             </label>
-                                            <div class="mt-1">
+                                            <div class="mt-1 relative">
                                                 <textarea
                                                     id="default_description"
                                                     name="default_description"
                                                     rows="3"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md"
+                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md pr-16"
                                                     maxlength="160"
                                                     required
-                                                    aria-describedby="default_description_help"
+                                                    aria-describedby="default_description_help default_description_counter"
                                                     autocomplete="off"
                                                 >{{seoSettings.default_description}}</textarea>
+                                                <div class="absolute bottom-2 right-2">
+                                                    <span id="default_description_counter" class="text-xs text-gray-400 bg-white px-1">0/160</span>
+                                                </div>
                                             </div>
                                             <p id="default_description_help" class="mt-2 text-sm text-gray-500">Recommended: 120-160 characters</p>
                                         </div>
@@ -699,5 +705,79 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle initial hash on page load
     handleHashNavigation();
+
+    // Character counters
+    function setupCharacterCounter(inputId, counterId, maxLength) {
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(counterId);
+
+        if (input && counter) {
+            function updateCounter() {
+                const currentLength = input.value.length;
+                counter.textContent = `${currentLength}/${maxLength}`;
+
+                // Color coding based on usage
+                if (currentLength > maxLength * 0.9) {
+                    counter.classList.remove('text-gray-400', 'text-yellow-500');
+                    counter.classList.add('text-red-500');
+                } else if (currentLength > maxLength * 0.7) {
+                    counter.classList.remove('text-gray-400', 'text-red-500');
+                    counter.classList.add('text-yellow-500');
+                } else {
+                    counter.classList.remove('text-red-500', 'text-yellow-500');
+                    counter.classList.add('text-gray-400');
+                }
+            }
+
+            // Update on input
+            input.addEventListener('input', updateCounter);
+
+            // Initial update
+            updateCounter();
+        }
+    }
+
+    // Setup character counters
+    setupCharacterCounter('default_title', 'default_title_counter', 60);
+    setupCharacterCounter('default_description', 'default_description_counter', 160);
+
+    // Auto-save draft functionality (optional enhancement)
+    let autoSaveTimeout;
+    const form = document.getElementById('settings-form');
+
+    if (form) {
+        form.addEventListener('input', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                // Save draft to localStorage
+                const formData = new FormData(form);
+                const draftData = {};
+                for (let [key, value] of formData.entries()) {
+                    draftData[key] = value;
+                }
+                localStorage.setItem('settings_draft', JSON.stringify(draftData));
+                console.log('📝 Draft saved automatically');
+            }, 2000); // Save after 2 seconds of inactivity
+        });
+
+        // Load draft on page load
+        const savedDraft = localStorage.getItem('settings_draft');
+        if (savedDraft) {
+            try {
+                const draftData = JSON.parse(savedDraft);
+                Object.keys(draftData).forEach(key => {
+                    const field = form.querySelector(`[name="${key}"]`);
+                    if (field && !field.value) {
+                        field.value = draftData[key];
+                        // Trigger input event to update character counters
+                        field.dispatchEvent(new Event('input'));
+                    }
+                });
+                console.log('📝 Draft loaded from previous session');
+            } catch (e) {
+                console.warn('Failed to load draft:', e);
+            }
+        }
+    }
 });
 </script>
