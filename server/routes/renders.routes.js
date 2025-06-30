@@ -6,6 +6,7 @@ const sitemap = require("../handlers/sitemap.handler");
 const eventsListing = require("../handlers/events-listing.handler");
 const seoMonitoring = require("../handlers/seo-monitoring.handler");
 const seoSettings = require("../handlers/seo-settings.handler");
+const settings = require("../handlers/settings.handler");
 const asyncHandler = require("../utils/asyncHandler");
 const locals = require("../handlers/locals.handler");
 const auth = require("../handlers/auth.handler");
@@ -92,19 +93,51 @@ router.get(
     }
 );
 
-// SEO Settings Routes
+// Settings Routes (Main Settings Hub)
+router.get(
+    "/dashboard/settings",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(settings.renderSettings)
+);
+
+router.post(
+    "/dashboard/settings",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(settings.updateSettings)
+);
+
+router.get(
+    "/dashboard/settings/export",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(settings.exportSettings)
+);
+
+router.post(
+    "/dashboard/settings/reset",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(settings.resetSettings)
+);
+
+// SEO Settings Routes (Legacy - will redirect to main settings)
 router.get(
     "/dashboard/seo-settings",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(seoSettings.renderSEOSettings)
+    (req, res) => {
+        // Redirect to main settings page with SEO section active
+        res.redirect('/dashboard/settings#seo');
+    }
 );
 
 router.post(
     "/dashboard/seo-settings",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(seoSettings.updateSEOSettings)
+    asyncHandler(settings.updateSettings)
 );
 
 router.post(
