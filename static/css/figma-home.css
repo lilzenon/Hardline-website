@@ -834,9 +834,12 @@ body {
     overflow-y: auto;
     /* Smooth scrolling */
     scroll-behavior: smooth;
-    /* Better desktop centering */
-    padding: 20px;
+    /* Universal padding for all breakpoints */
+    padding: 10px;
     box-sizing: border-box;
+    /* Ensure modal is always in viewport */
+    min-height: 100vh;
+    min-width: 100vw;
 }
 
 
@@ -900,8 +903,8 @@ body {
     padding: 0;
     width: 90%;
     max-width: 600px;
-    max-height: calc(100vh - 40px);
-    /* Account for overlay padding */
+    max-height: calc(100vh - 20px);
+    /* Account for universal padding */
     overflow: hidden;
     position: relative;
     border: none;
@@ -909,14 +912,16 @@ body {
     transform: scale(0.9) translateY(20px);
     transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0;
-    /* Improved positioning for better desktop centering */
-    margin: auto;
+    /* Flexbox centering - no manual margins */
+    margin: 0;
     /* Prevent content from jumping */
     will-change: transform, opacity;
     /* Ensure content fits */
     box-sizing: border-box;
-    /* Better vertical centering on desktop */
-    align-self: center;
+    /* Flexible sizing */
+    flex-shrink: 0;
+    /* Ensure modal stays in viewport */
+    min-height: 300px;
 }
 
 
@@ -1040,18 +1045,16 @@ body {
 
 @media (max-width: 767px) {
     .modal-overlay {
-        /* Mobile keeps flex-start for better positioning */
+        /* Mobile: align to top with small padding */
         align-items: flex-start;
-        padding: 15px;
+        padding: 10px;
     }
     .modal-content {
         width: 95%;
         max-width: none;
-        max-height: calc(100vh - 30px);
-        /* Account for padding */
-        /* Mobile positioning with small top margin */
-        margin: 15px auto 0;
-        align-self: flex-start;
+        max-height: calc(100vh - 20px);
+        /* Mobile: small top margin for status bar */
+        margin: 10px 0 0 0;
         /* Slightly faster animation on mobile */
         transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -1076,18 +1079,16 @@ body {
 
 @media (min-width: 768px) and (max-width: 1023px) {
     .modal-overlay {
-        /* Better tablet alignment */
+        /* Tablet: center alignment */
         align-items: center;
-        padding: 30px;
+        padding: 20px;
     }
     .modal-content {
         width: 85%;
         max-width: 700px;
-        max-height: calc(100vh - 60px);
-        /* Account for padding */
-        /* Remove manual margins - let flexbox center */
+        max-height: calc(100vh - 40px);
+        /* Tablet: no margins, let flexbox center */
         margin: 0;
-        align-self: center;
     }
     .modal-iframe-container {
         height: 580px;
@@ -1097,18 +1098,16 @@ body {
 
 @media (min-width: 1024px) {
     .modal-overlay {
-        /* Better desktop alignment */
+        /* Desktop: perfect center alignment */
         align-items: center;
-        padding: 40px;
+        padding: 30px;
     }
     .modal-content {
         width: 75%;
         max-width: 800px;
-        max-height: calc(100vh - 80px);
-        /* Account for larger padding */
-        /* Remove manual margins - let flexbox center */
+        max-height: calc(100vh - 60px);
+        /* Desktop: no margins, let flexbox center */
         margin: 0;
-        align-self: center;
         /* Improved desktop sizing */
         min-height: 500px;
     }
@@ -1119,26 +1118,84 @@ body {
 }
 
 
-/* Additional viewport fitting rules */
+/* Viewport height specific adjustments - no !important overrides */
 
 @media (max-height: 600px) {
     /* Very short screens - like landscape mobile */
+    .modal-overlay {
+        padding: 5px;
+    }
     .modal-content {
-        max-height: 95vh !important;
-        margin: 2.5vh auto !important;
-        margin-top: max(2.5vh, 5px) !important;
+        max-height: calc(100vh - 10px);
+        min-height: 200px;
     }
     .modal-iframe-container {
-        height: 400px !important;
+        height: 350px;
     }
 }
 
-@media (max-height: 800px) and (min-width: 768px) {
+@media (max-height: 700px) and (min-width: 768px) {
     /* Short desktop/tablet screens */
+    .modal-overlay {
+        padding: 15px;
+    }
     .modal-content {
-        max-height: 90vh !important;
-        margin: 5vh auto !important;
-        margin-top: max(5vh, 10px) !important;
+        max-height: calc(100vh - 30px);
+        min-height: 400px;
+    }
+    .modal-iframe-container {
+        height: 450px;
+    }
+}
+
+@media (min-height: 900px) and (min-width: 1024px) {
+    /* Tall desktop screens - can use more space */
+    .modal-content {
+        max-height: calc(100vh - 100px);
+        min-height: 600px;
+    }
+    .modal-iframe-container {
+        height: 700px;
+    }
+}
+
+
+/* Ultra-wide screen adjustments */
+
+@media (min-width: 1440px) {
+    .modal-content {
+        max-width: 900px;
+    }
+}
+
+
+/* Safety rules for edge cases */
+
+@media (max-width: 320px) {
+    /* Very narrow screens */
+    .modal-content {
+        width: 98%;
+        min-height: 250px;
+    }
+    .modal-iframe-container {
+        height: 400px;
+    }
+}
+
+
+/* Landscape orientation adjustments */
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .modal-overlay {
+        padding: 5px;
+        align-items: flex-start;
+    }
+    .modal-content {
+        margin: 5px 0 0 0;
+        max-height: calc(100vh - 10px);
+    }
+    .modal-iframe-container {
+        height: 300px;
     }
 }
 
