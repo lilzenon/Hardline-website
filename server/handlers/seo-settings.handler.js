@@ -13,30 +13,20 @@ const env = require("../env");
 async function renderSEOSettings(req, res) {
     try {
         console.log('🔧 Loading SEO settings page...');
-        
+
         // Get current SEO settings
         const seoSettings = await query.seoSettings.getSEOSettings();
-        
-        // Get current file contents
-        const llmsContent = await getFileContent('llms.txt');
-        const robotsContent = await getFileContent('robots.txt');
-        
-        // Get file backup histories
-        const llmsBackups = await query.seoSettings.getFileBackupHistory('llms.txt', 5);
-        const robotsBackups = await query.seoSettings.getFileBackupHistory('robots.txt', 5);
-        
+
+        // SEO settings loaded successfully
+
         res.render("seo-settings", {
             title: "SEO Settings - BOUNCE2BOUNCE",
             layout: "layouts/dashboard",
             currentPage: "seo-settings",
-            seoSettings,
-            llmsContent,
-            robotsContent,
-            llmsBackups,
-            robotsBackups,
+            seoSettings: seoSettings || {},
             user: req.user
         });
-        
+
     } catch (error) {
         console.error('❌ Error loading SEO settings:', error);
         res.status(500).render("error", {
@@ -54,7 +44,7 @@ async function renderSEOSettings(req, res) {
 async function updateSEOSettings(req, res) {
     try {
         console.log('💾 Updating SEO settings...');
-        
+
         const {
             // Meta tag defaults
             default_title,
@@ -63,7 +53,7 @@ async function updateSEOSettings(req, res) {
             default_author,
             default_og_image,
             twitter_handle,
-            
+
             // Sitemap settings
             sitemap_enabled,
             sitemap_include_events,
@@ -73,7 +63,7 @@ async function updateSEOSettings(req, res) {
             sitemap_max_urls,
             sitemap_changefreq,
             sitemap_priority,
-            
+
             // Robots.txt settings
             robots_enabled,
             robots_custom_rules,
@@ -81,14 +71,14 @@ async function updateSEOSettings(req, res) {
             robots_disallowed_paths,
             robots_allowed_paths,
             robots_crawl_delay,
-            
+
             // Structured data settings
             structured_data_enabled,
             structured_data_events,
             structured_data_organization,
             structured_data_breadcrumbs,
             structured_data_faq,
-            
+
             // Performance settings
             service_worker_enabled,
             lazy_loading_enabled,
@@ -96,17 +86,17 @@ async function updateSEOSettings(req, res) {
             resource_preloading_enabled,
             pwa_enabled,
             cache_duration_hours,
-            
+
             // AI/LLM settings
             llms_txt_enabled,
             ai_optimization_enabled,
             faq_generation_enabled,
-            
+
             // Analytics
             google_analytics_id,
             google_search_console_id
         } = req.body;
-        
+
         // Validate required fields
         if (!default_title || !default_description) {
             return res.status(400).json({
@@ -114,16 +104,16 @@ async function updateSEOSettings(req, res) {
                 error: "Title and description are required"
             });
         }
-        
+
         // Prepare settings data
         const settingsData = {
-            default_title: default_title?.trim(),
-            default_description: default_description?.trim(),
-            default_keywords: default_keywords?.trim(),
-            default_author: default_author?.trim(),
-            default_og_image: default_og_image?.trim(),
-            twitter_handle: twitter_handle?.trim(),
-            
+            default_title: default_title ? .trim(),
+            default_description: default_description ? .trim(),
+            default_keywords: default_keywords ? .trim(),
+            default_author: default_author ? .trim(),
+            default_og_image: default_og_image ? .trim(),
+            twitter_handle: twitter_handle ? .trim(),
+
             sitemap_enabled: sitemap_enabled === 'true' || sitemap_enabled === true,
             sitemap_include_events: sitemap_include_events === 'true' || sitemap_include_events === true,
             sitemap_include_homepage: sitemap_include_homepage === 'true' || sitemap_include_homepage === true,
@@ -132,46 +122,46 @@ async function updateSEOSettings(req, res) {
             sitemap_max_urls: parseInt(sitemap_max_urls) || 1000,
             sitemap_changefreq: sitemap_changefreq || 'weekly',
             sitemap_priority: parseFloat(sitemap_priority) || 0.8,
-            
+
             robots_enabled: robots_enabled === 'true' || robots_enabled === true,
-            robots_custom_rules: robots_custom_rules?.trim(),
+            robots_custom_rules: robots_custom_rules ? .trim(),
             robots_allow_all: robots_allow_all === 'true' || robots_allow_all === true,
-            robots_disallowed_paths: robots_disallowed_paths?.trim(),
-            robots_allowed_paths: robots_allowed_paths?.trim(),
+            robots_disallowed_paths: robots_disallowed_paths ? .trim(),
+            robots_allowed_paths: robots_allowed_paths ? .trim(),
             robots_crawl_delay: parseInt(robots_crawl_delay) || 1,
-            
+
             structured_data_enabled: structured_data_enabled === 'true' || structured_data_enabled === true,
             structured_data_events: structured_data_events === 'true' || structured_data_events === true,
             structured_data_organization: structured_data_organization === 'true' || structured_data_organization === true,
             structured_data_breadcrumbs: structured_data_breadcrumbs === 'true' || structured_data_breadcrumbs === true,
             structured_data_faq: structured_data_faq === 'true' || structured_data_faq === true,
-            
+
             service_worker_enabled: service_worker_enabled === 'true' || service_worker_enabled === true,
             lazy_loading_enabled: lazy_loading_enabled === 'true' || lazy_loading_enabled === true,
             critical_css_enabled: critical_css_enabled === 'true' || critical_css_enabled === true,
             resource_preloading_enabled: resource_preloading_enabled === 'true' || resource_preloading_enabled === true,
             pwa_enabled: pwa_enabled === 'true' || pwa_enabled === true,
             cache_duration_hours: parseInt(cache_duration_hours) || 24,
-            
+
             llms_txt_enabled: llms_txt_enabled === 'true' || llms_txt_enabled === true,
             ai_optimization_enabled: ai_optimization_enabled === 'true' || ai_optimization_enabled === true,
             faq_generation_enabled: faq_generation_enabled === 'true' || faq_generation_enabled === true,
-            
-            google_analytics_id: google_analytics_id?.trim(),
-            google_search_console_id: google_search_console_id?.trim()
+
+            google_analytics_id: google_analytics_id ? .trim(),
+            google_search_console_id: google_search_console_id ? .trim()
         };
-        
+
         // Update settings in database
-        const updatedSettings = await query.seoSettings.updateSEOSettings(settingsData, req.user?.id);
-        
+        const updatedSettings = await query.seoSettings.updateSEOSettings(settingsData, req.user ? .id);
+
         console.log('✅ SEO settings updated successfully');
-        
+
         res.json({
             success: true,
             message: "SEO settings updated successfully",
             settings: updatedSettings
         });
-        
+
     } catch (error) {
         console.error('❌ Error updating SEO settings:', error);
         res.status(500).json({
@@ -189,9 +179,9 @@ async function updateFileContent(req, res) {
     try {
         const { fileName } = req.params;
         const { content, description } = req.body;
-        
+
         console.log(`📝 Updating file: ${fileName}`);
-        
+
         // Validate file name
         if (!['llms.txt', 'robots.txt'].includes(fileName)) {
             return res.status(400).json({
@@ -199,7 +189,7 @@ async function updateFileContent(req, res) {
                 error: "Invalid file name"
             });
         }
-        
+
         // Validate content
         if (!content || typeof content !== 'string') {
             return res.status(400).json({
@@ -207,42 +197,42 @@ async function updateFileContent(req, res) {
                 error: "File content is required"
             });
         }
-        
+
         // Create backup before updating
         const currentContent = await getFileContent(fileName);
         if (currentContent) {
             await query.seoSettings.createFileBackup(
-                fileName, 
-                currentContent, 
-                req.user?.id, 
-                'pre_update', 
+                fileName,
+                currentContent,
+                req.user ? .id,
+                'pre_update',
                 'Backup before manual update'
             );
         }
-        
+
         // Write new content to file
         await writeFileContent(fileName, content);
-        
+
         // Create backup of new content
         await query.seoSettings.createFileBackup(
-            fileName, 
-            content, 
-            req.user?.id, 
-            'manual', 
+            fileName,
+            content,
+            req.user ? .id,
+            'manual',
             description || 'Manual update'
         );
-        
+
         // Clean up old backups (keep last 10)
         await query.seoSettings.cleanupOldBackups(fileName, 10);
-        
+
         console.log(`✅ File ${fileName} updated successfully`);
-        
+
         res.json({
             success: true,
             message: `${fileName} updated successfully`,
             content: content
         });
-        
+
     } catch (error) {
         console.error(`❌ Error updating file ${req.params.fileName}:`, error);
         res.status(500).json({
@@ -259,22 +249,22 @@ async function updateFileContent(req, res) {
 async function restoreFileFromBackup(req, res) {
     try {
         const { backupId } = req.params;
-        
+
         console.log(`🔄 Restoring file from backup: ${backupId}`);
-        
-        const backup = await query.seoSettings.restoreFileFromBackup(backupId, req.user?.id);
-        
+
+        const backup = await query.seoSettings.restoreFileFromBackup(backupId, req.user ? .id);
+
         // Write restored content to file
         await writeFileContent(backup.file_name, backup.file_content);
-        
+
         console.log(`✅ File ${backup.file_name} restored from backup`);
-        
+
         res.json({
             success: true,
             message: `${backup.file_name} restored from backup successfully`,
             backup: backup
         });
-        
+
     } catch (error) {
         console.error('❌ Error restoring file from backup:', error);
         res.status(500).json({
