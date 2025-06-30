@@ -1,2 +1,41 @@
+# Robots.txt for b2b.click - Event Platform SEO Optimization
+# Allow search engines to crawl public content while protecting admin areas
+
 User-agent: *
-Disallow: /
+# Allow public event pages and homepage
+Allow: /
+Allow: /event/
+Allow: /drop/
+Allow: /home
+Allow: /static/
+Allow: /images/
+Allow: /css/
+Allow: /js/
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /login
+Disallow: /logout
+Disallow: /settings
+Disallow: /stats
+Disallow: /create-admin
+Disallow: /reset-password
+Disallow: /verify-email
+
+# Disallow URL shortener paths (focus SEO on events)
+Disallow: /*/stats
+Disallow: /*/edit
+Disallow: /*/delete
+
+# Allow specific files
+Allow: /sitemap.xml
+Allow: /llms.txt
+Allow: /manifest.webmanifest
+
+# Sitemap location
+Sitemap: https://b2b.click/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1

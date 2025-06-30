@@ -2,6 +2,9 @@ const { Router } = require("express");
 
 const helpers = require("../handlers/helpers.handler");
 const renders = require("../handlers/renders.handler");
+const sitemap = require("../handlers/sitemap.handler");
+const eventsListing = require("../handlers/events-listing.handler");
+const seoMonitoring = require("../handlers/seo-monitoring.handler");
 const asyncHandler = require("../utils/asyncHandler");
 const locals = require("../handlers/locals.handler");
 const auth = require("../handlers/auth.handler");
@@ -25,6 +28,13 @@ router.get(
     asyncHandler(helpers.adminSetup),
     asyncHandler(locals.user),
     asyncHandler(renders.home)
+);
+
+// Public events listing page for SEO
+router.get(
+    "/events",
+    asyncHandler(locals.config),
+    asyncHandler(eventsListing.eventsListing)
 );
 
 // 🚀 BACKUP: Original URL shortener homepage
@@ -908,5 +918,21 @@ router.get("/events/:id/edit", (req, res) => res.redirect(301, `/dashboard/event
 
 // Redirect old events create route
 router.get("/events/create", (req, res) => res.redirect(301, "/dashboard/events/create"));
+
+// SEO Routes - XML Sitemap, Robots.txt, and AI/LLM Discovery
+router.get("/sitemap.xml", asyncHandler(sitemap.generateSitemap));
+router.get("/robots.txt", asyncHandler(sitemap.generateRobotsTxt));
+router.get("/llms.txt", (req, res) => {
+    res.set({
+        'Content-Type': 'text/plain',
+        'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+    });
+    res.sendFile('llms.txt', { root: './static' });
+});
+
+// SEO Monitoring and Testing Routes
+router.get("/seo/report", asyncHandler(seoMonitoring.generateSEOReport));
+router.get("/seo/test/:element?", asyncHandler(seoMonitoring.testSEOElements));
+router.get("/seo/analytics", asyncHandler(seoMonitoring.getSEOAnalytics));
 
 module.exports = router;

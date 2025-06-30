@@ -8,8 +8,14 @@
     <title>{{title}}</title>
     <link rel="stylesheet" href="/css/figma-home.css">
     <link rel="stylesheet" href="/css/address-component.css">
+    <link rel="stylesheet" href="/css/breadcrumb.css">
     <meta name="theme-color" content="#000000">
-    <meta name="description" content="BOUNCE2BOUNCE - Exclusive events, contests, and more">
+    <meta name="description" content="Discover exclusive live music events and connect with your favorite artists. BOUNCE2BOUNCE brings you unforgettable music experiences, seamless ticket purchasing, and direct artist engagement.">
+    <meta name="keywords" content="live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE, Asbury Park events">
+    <meta name="author" content="BOUNCE2BOUNCE">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://{{default_domain}}/">
 
     <!-- Modern favicon implementation with B2B logo -->
     <link rel="icon" type="image/svg+xml" href="/images/favicon.svg" />
@@ -30,22 +36,181 @@
     <link rel="apple-touch-icon" sizes="57x57" href="/images/apple-touch-icon-57x57.png" />
     <link rel="mask-icon" href="/images/favicon.svg" color="#000000" />
 
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/images/bounce-logo.svg" as="image" type="image/svg+xml">
+    <!-- Performance Optimization: Resource Hints -->
+    <link rel="dns-prefetch" href="//fonts.gstatic.com">
+    <link rel="dns-prefetch" href="//api.fontshare.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 
-    <!-- Open Graph / Social Media -->
+    <!-- Preload critical resources for Core Web Vitals -->
+    <link rel="preload" href="/images/bounce-logo.svg" as="image" type="image/svg+xml" fetchpriority="high">
+    <link rel="preload" href="/css/figma-home.css" as="style">
+    <link rel="preload" href="/css/address-component.css" as="style">
+
+    <!-- Prefetch likely navigation targets -->
+    <link rel="prefetch" href="/events">
+    <link rel="prefetch" href="/dashboard">
+
+    <!-- Enhanced Open Graph / Social Media -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{{title}}">
-    <meta property="og:description" content="Join us for exclusive events, contests, and more">
-    <meta property="og:image" content="/images/bounce-logo.svg">
+    <meta property="og:title" content="BOUNCE2BOUNCE - Live Music Events & Exclusive Experiences">
+    <meta property="og:description" content="Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.">
+    <meta property="og:image" content="https://{{default_domain}}/images/bounce-logo.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="BOUNCE2BOUNCE - Live Music Events Platform">
+    <meta property="og:url" content="https://{{default_domain}}/">
+    <meta property="og:site_name" content="BOUNCE2BOUNCE">
+    <meta property="og:locale" content="en_US">
 
-    <!-- Twitter Card -->
+    <!-- Enhanced Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{title}}">
-    <meta name="twitter:description" content="Join us for exclusive events, contests, and more">
+    <meta name="twitter:site" content="@bounce2bounce">
+    <meta name="twitter:creator" content="@bounce2bounce">
+    <meta name="twitter:title" content="BOUNCE2BOUNCE - Live Music Events & Exclusive Experiences">
+    <meta name="twitter:description" content="Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.">
+    <meta name="twitter:image" content="https://{{default_domain}}/images/bounce-logo.svg">
+    <meta name="twitter:image:alt" content="BOUNCE2BOUNCE - Live Music Events Platform">
+
+    <!-- Homepage Structured Data for SEO and AI Discovery -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "BOUNCE2BOUNCE",
+        "url": "https://{{default_domain}}/",
+        "logo": "https://{{default_domain}}/images/bounce-logo.svg",
+        "description": "Live music events platform connecting artists with fans through exclusive experiences and seamless ticket sales",
+        "foundingDate": "2024",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "url": "https://{{default_domain}}/contact"
+        },
+        {{#if homeSettings.instagram_url}}
+        "sameAs": [
+            {{#if homeSettings.instagram_url}}"{{homeSettings.instagram_url}}"{{/if}}{{#if homeSettings.twitter_url}},{{/if}}
+            {{#if homeSettings.twitter_url}}"{{homeSettings.twitter_url}}"{{/if}}{{#if homeSettings.tiktok_url}},{{/if}}
+            {{#if homeSettings.tiktok_url}}"{{homeSettings.tiktok_url}}"{{/if}}
+        ],
+        {{/if}}
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Asbury Park",
+            "addressRegion": "NJ",
+            "addressCountry": "US"
+        }
+    }
+    </script>
+
+    {{#if featuredEvents}}
+    <!-- Featured Events List Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Featured Events",
+        "description": "Upcoming live music events and exclusive experiences",
+        "itemListElement": [
+            {{#each featuredEvents}}
+            {
+                "@type": "ListItem",
+                "position": {{@index}},
+                "item": {
+                    "@type": "Event",
+                    "name": "{{this.title}}",
+                    "url": "https://{{../default_domain}}/event/{{this.slug}}",
+                    {{#if this.cover_image}}
+                    "image": "{{this.cover_image}}",
+                    {{/if}}
+                    {{#if this.description}}
+                    "description": "{{this.description}}",
+                    {{/if}}
+                    {{#if this.artist_name}}
+                    "performer": {
+                        "@type": "Person",
+                        "name": "{{this.artist_name}}"
+                    },
+                    {{/if}}
+                    "organizer": {
+                        "@type": "Organization",
+                        "name": "BOUNCE2BOUNCE"
+                    }
+                }
+            }{{#unless @last}},{{/unless}}
+            {{/each}}
+        ]
+    }
+    </script>
+    {{/if}}
+
+    <!-- Critical CSS for Core Web Vitals optimization -->
+    <style>
+        /* Prevent layout shift with font loading */
+        @font-face {
+            font-family: 'Clash Grotesk';
+            font-display: swap;
+        }
+
+        /* Prevent CLS with image containers */
+        .event-image-container {
+            position: relative;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+
+        .event-image-container::before {
+            content: '';
+            display: block;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        }
+
+        .event-image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Optimize glassmorphism for performance */
+        .glassmorphism {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            will-change: transform;
+            transform: translateZ(0);
+        }
+
+        /* Reduce motion for accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
 </head>
 <body>
     {{{body}}}
-    <script src="/js/address-component.js"></script>
+
+    <!-- Performance optimized scripts -->
+    <script src="/js/address-component.js" defer></script>
+
+    <!-- Service Worker registration for PWA and caching -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
