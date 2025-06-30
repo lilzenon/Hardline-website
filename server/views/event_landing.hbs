@@ -2114,23 +2114,19 @@
                 </div>
             </div>
 
-            <!-- Checkout Modal -->
+            <!-- Checkout Modal - Using working homepage modal structure -->
             <div class="checkout-modal" id="checkoutModal">
                 <div class="checkout-modal-content">
-                    <div class="checkout-modal-header">
-                        <h3 class="checkout-modal-title">{{#if event.ticket_price}}Buy Tickets - {{event.ticket_price}}{{else}}Buy Tickets{{/if}}</h3>
-                        <button class="checkout-close" onclick="closeCheckoutModal()" aria-label="Close ticket checkout">
-                            <span aria-hidden="true">×</span>
-                            <span class="sr-only">Close</span>
-                        </button>
+                    <button class="checkout-close" onclick="closeCheckoutModal()" aria-label="Close ticket checkout">&times;</button>
+                    <div class="checkout-iframe-container">
+                        <iframe class="checkout-iframe"
+                                src="about:blank"
+                                data-ticket-url="{{event.posh_embed_url}}"
+                                title="Ticket Checkout - {{event.title}}"
+                                loading="lazy"
+                                aria-label="Ticket purchasing form">
+                        </iframe>
                     </div>
-                    <iframe class="checkout-iframe"
-                            src="about:blank"
-                            data-ticket-url="{{event.posh_embed_url}}"
-                            title="Ticket Checkout - {{event.title}}"
-                            loading="lazy"
-                            aria-label="Ticket purchasing form">
-                    </iframe>
                 </div>
             </div>
             {{/if}}

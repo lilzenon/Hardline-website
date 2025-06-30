@@ -104,67 +104,35 @@ class CheckoutNav {
         try {
             if (this.isModalOpen) return;
 
-            console.log('🎫 Opening checkout modal');
-            console.log('🎫 Modal element:', this.modal);
-            console.log('🎫 Iframe element:', this.iframe);
+            console.log('🎫 Opening checkout modal - SIMPLE like working homepage modal');
 
             this.isModalOpen = true;
 
-            // Show modal first
+            // Load iframe first - SIMPLE like working homepage modal
+            if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
+                console.log('🎫 Loading iframe...');
+                this.loadIframe();
+            }
+
+            // Show modal - SIMPLE like working homepage modal
             if (this.modal) {
+                this.modal.style.display = 'flex';
                 this.modal.classList.add('active');
-                console.log('🎫 Modal active class added');
+                document.body.style.overflow = 'hidden';
+                console.log('🎫 Modal opened with simple pattern');
             } else {
                 console.error('🎫 Modal element not found!');
                 return;
             }
 
-            // Load iframe if not already loaded with ticket URL
-            if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
-                console.log('🎫 Loading iframe...');
-                this.loadIframe();
-            } else {
-                console.log('🎫 Iframe not loaded - no URL or iframe element');
-            }
-
-            // AUTOMATICALLY apply optimal modal sizing for Posh content
-            setTimeout(() => {
-                this.applyOptimalModalSizing();
-            }, 100);
-
-            // Focus management
-            setTimeout(() => {
-                if (this.closeButton) {
-                    this.closeButton.focus();
-                }
-            }, 200);
-
             console.log('🎫 Modal opening completed successfully');
         } catch (error) {
             console.error('🎫 ERROR in openModal:', error);
-            console.error('🎫 Error stack:', error.stack);
             this.isModalOpen = false; // Reset state on error
         }
     }
 
-    // STABLE: Apply fixed optimal sizing based on Posh content analysis
-    applyOptimalModalSizing() {
-        console.log('🎫 STABLE sizing: Applying fixed optimal dimensions...');
-
-        if (!this.modal || !this.iframe) {
-            console.error('🎫 Modal or iframe not found for optimal sizing');
-            return;
-        }
-
-        // FIXED SIZING - No dynamic detection to prevent refresh loops
-        // Based on screenshot analysis: Posh content fits well in 320px height
-        this.iframe.style.height = '320px';
-        this.iframe.style.minHeight = '320px';
-        this.iframe.style.maxHeight = '320px';
-
-        console.log('🎫 Fixed sizing applied: 320px height (eliminates white space)');
-        console.log('🎫 Modal is now stable - no dynamic resizing or refresh loops');
-    }
+    // REMOVED: No complex sizing needed - using working homepage modal pattern
 
     // REMOVED: All dynamic height detection methods that caused refresh loops
     // Now using fixed 320px height based on Posh content analysis
@@ -172,33 +140,20 @@ class CheckoutNav {
     closeModal() {
         if (!this.isModalOpen) return;
 
-        console.log('🎫 Closing checkout modal');
+        console.log('🎫 Closing checkout modal - SIMPLE like working homepage modal');
         this.isModalOpen = false;
 
-        // Clean up dynamic sizing listeners
-        this.cleanupDynamicSizing();
-
-        // Hide modal
+        // Hide modal - SIMPLE like working homepage modal
+        this.modal.style.display = 'none';
         this.modal.classList.remove('active');
+        document.body.style.overflow = '';
 
-        // Clear iframe and reset styles
+        // Clear iframe
         if (this.iframe) {
             this.iframe.src = 'about:blank';
-            this.iframe.style.height = '';
-            this.iframe.style.transition = '';
         }
 
-        // Reset modal content styles
-        const modalContent = this.modal && this.modal.querySelector('.checkout-modal-content');
-        if (modalContent) {
-            modalContent.style.maxHeight = '';
-            modalContent.style.transition = '';
-        }
-
-        // Return focus to buy button
-        setTimeout(() => {
-            this.buyButton.focus();
-        }, 100);
+        console.log('🎫 Modal closed with simple pattern');
     }
 
     cleanupDynamicSizing() {
@@ -253,7 +208,7 @@ class CheckoutNav {
 
     loadIframe() {
         try {
-            console.log('🎫 loadIframe called');
+            console.log('🎫 loadIframe called - SIMPLE like working homepage modal');
 
             if (!this.iframe) {
                 console.log('🎫 No iframe element, returning');
@@ -267,80 +222,20 @@ class CheckoutNav {
             }
 
             console.log('🎫 Loading ticket iframe:', ticketUrl);
-            console.log('🎫 Original ticket URL length:', ticketUrl.length);
-            console.log('🎫 Original ticket URL ends with:', ticketUrl.slice(-20));
 
-            // Add loading class
-            this.iframe.classList.add('loading');
-
-            // Set iframe source with dynamic sizing parameters
-            const urlWithParams = this.addDynamicSizingParams(ticketUrl);
-            console.log('🎫 URL after processing:', urlWithParams);
-            console.log('🎫 Processed URL length:', urlWithParams.length);
-            console.log('🎫 URLs match:', ticketUrl === urlWithParams);
-
-            this.iframe.src = urlWithParams;
-            console.log('🎫 Iframe src set successfully');
+            // SIMPLE iframe loading - like working homepage modal
+            this.iframe.src = ticketUrl;
+            console.log('🎫 Iframe src set successfully with simple pattern');
         } catch (error) {
             console.error('🎫 ERROR in loadIframe:', error);
-            console.error('🎫 Error stack:', error.stack);
         }
 
-        // Handle iframe load
+        // SIMPLE iframe load handling - like working homepage modal
         this.iframe.addEventListener('load', () => {
-            console.log('🎫 Ticket iframe loaded successfully');
-            console.log('🎫 Iframe src after load:', this.iframe.src);
-            console.log('🎫 Iframe dimensions after load:', {
-                width: this.iframe.offsetWidth,
-                height: this.iframe.offsetHeight,
-                styleHeight: this.iframe.style.height,
-                computedHeight: window.getComputedStyle(this.iframe).height
-            });
-
-            // Check if this is a Posh embed
-            const isPoshEmbed = this.iframe.src.includes('posh.vip') || this.iframe.src.includes('posh.');
-            console.log('🎫 Is Posh embed:', isPoshEmbed);
-
-            this.iframe.classList.remove('loading');
-
-            // Initialize dynamic sizing with delay for content to render
-            setTimeout(() => {
-                this.initializeDynamicSizing();
-            }, 100);
-
-            // IMMEDIATE Posh height forcing if detected
-            if (isPoshEmbed) {
-                console.log('🎫 IMMEDIATE Posh height forcing...');
-                const immediateHeight = 1000; // Start with generous height
-                this.setIframeHeight(immediateHeight);
-                console.log('🎫 Set immediate Posh height to:', immediateHeight);
-            }
-
-            // Additional attempts for slow-loading content with special handling for Posh
-            setTimeout(() => {
-                console.log('🎫 First retry attempt (1s)...');
-                this.adjustIframeHeight();
-                if (isPoshEmbed) {
-                    this.tryPoshSpecificDetection();
-                }
-            }, 1000);
-
-            setTimeout(() => {
-                this.adjustIframeHeight();
-                this.tryPoshSpecificDetection();
-            }, 3000);
-
-            // Extra attempts for Posh embeds which may load content dynamically
-            setTimeout(() => {
-                this.tryPoshSpecificDetection();
-            }, 5000);
-
-            setTimeout(() => {
-                this.tryPoshSpecificDetection();
-            }, 8000);
+            console.log('🎫 Ticket iframe loaded successfully - simple pattern');
         }, { once: true });
 
-        // Handle iframe error
+        // SIMPLE iframe error handling
         this.iframe.addEventListener('error', () => {
             console.error('🎫 Failed to load ticket iframe');
             this.iframe.classList.remove('loading');
