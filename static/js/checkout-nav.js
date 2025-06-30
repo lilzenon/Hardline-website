@@ -90,6 +90,9 @@ class CheckoutNav {
             });
         }
 
+        // Setup viewport change handling for modal positioning
+        this.setupViewportHandling();
+
         // Close modal with close button - EXACT SAME as homepage
         if (this.closeButton) {
             this.closeButton.addEventListener('click', () => {
@@ -144,13 +147,23 @@ class CheckoutNav {
                     console.error('❌ poshIframe element not found in DOM');
                 }
 
-                // Show modal - let CSS handle all styling
+                // Show modal with forced viewport positioning
                 if (this.modal) {
                     console.log('🎪 Opening modal overlay...');
+
+                    // Force proper positioning before showing
+                    this.forceModalViewportPosition();
+
                     this.modal.style.display = 'flex';
                     this.modal.classList.add('active');
                     document.body.style.overflow = 'hidden';
-                    console.log('✅ Modal opened - CSS will handle styling');
+
+                    // Ensure positioning after display
+                    requestAnimationFrame(() => {
+                        this.forceModalViewportPosition();
+                    });
+
+                    console.log('✅ Modal opened with forced positioning');
                 } else {
                     console.error('❌ modalOverlay element not found in DOM');
                 }
@@ -169,6 +182,85 @@ class CheckoutNav {
 
     // REMOVED: All dynamic height detection methods that caused refresh loops
     // Now using fixed 320px height based on Posh content analysis
+
+    forceModalViewportPosition() {
+        if (!this.modal) return;
+
+        console.log('🎯 Forcing modal viewport positioning...');
+
+        // Get current viewport dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        console.log('📐 Viewport:', { width: viewportWidth, height: viewportHeight });
+
+        // Force modal overlay to exact viewport bounds
+        this.modal.style.position = 'fixed';
+        this.modal.style.top = '0px';
+        this.modal.style.left = '0px';
+        this.modal.style.width = viewportWidth + 'px';
+        this.modal.style.height = viewportHeight + 'px';
+        this.modal.style.maxWidth = viewportWidth + 'px';
+        this.modal.style.maxHeight = viewportHeight + 'px';
+
+        // Force flexbox centering
+        this.modal.style.display = 'flex';
+        this.modal.style.alignItems = 'center';
+        this.modal.style.justifyContent = 'center';
+
+        // Get modal content
+        const modalContent = this.modal.querySelector('.modal-content');
+        if (modalContent) {
+            // Reset any problematic styles
+            modalContent.style.margin = '0';
+            modalContent.style.transform = 'none';
+            modalContent.style.position = 'relative';
+
+            // Ensure content fits in viewport
+            const maxContentHeight = viewportHeight - 40; // 20px padding top/bottom
+            const maxContentWidth = viewportWidth - 40; // 20px padding left/right
+
+            modalContent.style.maxHeight = maxContentHeight + 'px';
+            modalContent.style.maxWidth = maxContentWidth + 'px';
+            modalContent.style.overflow = 'auto';
+
+            console.log('📦 Modal content constrained to:', {
+                maxWidth: maxContentWidth,
+                maxHeight: maxContentHeight
+            });
+        }
+
+        console.log('✅ Modal positioning forced to viewport bounds');
+    }
+
+    setupViewportHandling() {
+        // Handle window resize and orientation changes
+        const handleViewportChange = () => {
+            if (this.isModalOpen && this.modal) {
+                console.log('📐 Viewport changed, repositioning modal...');
+                // Small delay to ensure viewport dimensions are updated
+                setTimeout(() => {
+                    this.forceModalViewportPosition();
+                }, 100);
+            }
+        };
+
+        // Listen for resize events
+        window.addEventListener('resize', handleViewportChange);
+
+        // Listen for orientation changes (mobile)
+        window.addEventListener('orientationchange', () => {
+            // Longer delay for orientation changes
+            setTimeout(handleViewportChange, 300);
+        });
+
+        // Listen for visual viewport changes (mobile keyboard, etc.)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+        }
+
+        console.log('📐 Viewport change handlers setup for modal positioning');
+    }
 
     closeModal() {
         if (!this.isModalOpen) return;

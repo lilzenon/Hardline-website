@@ -450,10 +450,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (modalOverlay) {
                     console.log('🎪 Opening modal overlay...');
+
+                    // Force proper positioning before showing
+                    forceModalViewportPosition(modalOverlay);
+
                     modalOverlay.style.display = 'flex';
                     modalOverlay.classList.add('active');
                     document.body.style.overflow = 'hidden';
-                    console.log('✅ Modal opened successfully with active class');
+
+                    // Ensure positioning after display
+                    requestAnimationFrame(() => {
+                        forceModalViewportPosition(modalOverlay);
+                    });
+
+                    console.log('✅ Modal opened with forced positioning');
                     console.log('📊 Modal state:', {
                         display: modalOverlay.style.display,
                         hasActiveClass: modalOverlay.classList.contains('active'),
@@ -1618,6 +1628,90 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🚪 Modal closed via Escape key');
         }
     });
+
+    // Force modal viewport positioning function
+    function forceModalViewportPosition(modal) {
+        if (!modal) return;
+
+        console.log('🎯 Forcing modal viewport positioning...');
+
+        // Get current viewport dimensions
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        console.log('📐 Viewport:', { width: viewportWidth, height: viewportHeight });
+
+        // Force modal overlay to exact viewport bounds
+        modal.style.position = 'fixed';
+        modal.style.top = '0px';
+        modal.style.left = '0px';
+        modal.style.width = viewportWidth + 'px';
+        modal.style.height = viewportHeight + 'px';
+        modal.style.maxWidth = viewportWidth + 'px';
+        modal.style.maxHeight = viewportHeight + 'px';
+
+        // Force flexbox centering
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+
+        // Get modal content
+        const modalContent = modal.querySelector('.modal-content');
+        if (modalContent) {
+            // Reset any problematic styles
+            modalContent.style.margin = '0';
+            modalContent.style.transform = 'none';
+            modalContent.style.position = 'relative';
+
+            // Ensure content fits in viewport
+            const maxContentHeight = viewportHeight - 40; // 20px padding top/bottom
+            const maxContentWidth = viewportWidth - 40; // 20px padding left/right
+
+            modalContent.style.maxHeight = maxContentHeight + 'px';
+            modalContent.style.maxWidth = maxContentWidth + 'px';
+            modalContent.style.overflow = 'auto';
+
+            console.log('📦 Modal content constrained to:', {
+                maxWidth: maxContentWidth,
+                maxHeight: maxContentHeight
+            });
+        }
+
+        console.log('✅ Modal positioning forced to viewport bounds');
+    }
+
+    // Setup viewport change handling for modal positioning
+    function setupViewportHandling() {
+        // Handle window resize and orientation changes
+        const handleViewportChange = () => {
+            if (modalOverlay && modalOverlay.classList.contains('active')) {
+                console.log('📐 Viewport changed, repositioning modal...');
+                // Small delay to ensure viewport dimensions are updated
+                setTimeout(() => {
+                    forceModalViewportPosition(modalOverlay);
+                }, 100);
+            }
+        };
+
+        // Listen for resize events
+        window.addEventListener('resize', handleViewportChange);
+
+        // Listen for orientation changes (mobile)
+        window.addEventListener('orientationchange', () => {
+            // Longer delay for orientation changes
+            setTimeout(handleViewportChange, 300);
+        });
+
+        // Listen for visual viewport changes (mobile keyboard, etc.)
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleViewportChange);
+        }
+
+        console.log('📐 Viewport change handlers setup for modal positioning');
+    }
+
+    // Initialize viewport handling
+    setupViewportHandling();
 
     // Share functionality with Web Share API and fallbacks
     async function handleShare(button, shareData) {

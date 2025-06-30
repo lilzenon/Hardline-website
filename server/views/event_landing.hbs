@@ -3598,10 +3598,53 @@
         }
 
         function adjustModalForViewport() {
+            const modalOverlay = document.getElementById('modalOverlay');
             const modalContent = document.querySelector('.modal-content');
             const modalIframe = document.querySelector('.modal-iframe-container');
 
-            if (!modalContent || !modalIframe) return;
+            if (!modalOverlay || !modalContent || !modalIframe) return;
+
+            console.log('🎯 Forcing modal viewport positioning...');
+
+            // Get current viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            console.log('📐 Viewport:', { width: viewportWidth, height: viewportHeight });
+
+            // Force modal overlay to exact viewport bounds
+            modalOverlay.style.position = 'fixed';
+            modalOverlay.style.top = '0px';
+            modalOverlay.style.left = '0px';
+            modalOverlay.style.width = viewportWidth + 'px';
+            modalOverlay.style.height = viewportHeight + 'px';
+            modalOverlay.style.maxWidth = viewportWidth + 'px';
+            modalOverlay.style.maxHeight = viewportHeight + 'px';
+
+            // Force flexbox centering
+            modalOverlay.style.display = 'flex';
+            modalOverlay.style.alignItems = 'center';
+            modalOverlay.style.justifyContent = 'center';
+
+            // Reset any problematic styles on modal content
+            modalContent.style.margin = '0';
+            modalContent.style.transform = 'none';
+            modalContent.style.position = 'relative';
+
+            // Ensure content fits in viewport
+            const maxContentHeight = viewportHeight - 40; // 20px padding top/bottom
+            const maxContentWidth = viewportWidth - 40; // 20px padding left/right
+
+            modalContent.style.maxHeight = maxContentHeight + 'px';
+            modalContent.style.maxWidth = maxContentWidth + 'px';
+            modalContent.style.overflow = 'auto';
+
+            console.log('📦 Modal content constrained to:', {
+                maxWidth: maxContentWidth,
+                maxHeight: maxContentHeight
+            });
+
+            console.log('✅ Modal positioning forced to viewport bounds');
 
             const viewportHeight = window.innerHeight;
             const viewportWidth = window.innerWidth;
