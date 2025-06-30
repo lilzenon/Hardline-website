@@ -4979,9 +4979,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewDescription = document.getElementById('social-preview-description');
     const previewImage = document.getElementById('social-preview-image').querySelector('img');
 
-    const modalPreviewTitle = document.getElementById('modal-preview-title');
-    const modalPreviewDescription = document.getElementById('modal-preview-description');
-    const modalPreviewImage = document.getElementById('modal-preview-image');
     const socialImagePreview = document.getElementById('social-image-preview');
 
     // Open modal
@@ -4992,7 +4989,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imageInput.value = previewImage.src;
 
         // Update modal preview
-        updateModalPreview();
+        updateAllPreviews();
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -5007,26 +5004,12 @@ document.addEventListener('DOMContentLoaded', function() {
     closeButton?.addEventListener('click', closeModal);
     cancelButton?.addEventListener('click', closeModal);
 
-    // Update modal preview in real-time
-    function updateModalPreview() {
-        modalPreviewTitle.textContent = titleInput.value || 'Event Title';
-        modalPreviewDescription.textContent = descriptionInput.value || 'Event description';
 
-        if (imageInput.value) {
-            modalPreviewImage.src = imageInput.value;
-            socialImagePreview.src = imageInput.value;
-            modalPreviewImage.style.display = 'block';
-            socialImagePreview.style.display = 'block';
-        } else {
-            modalPreviewImage.style.display = 'none';
-            socialImagePreview.style.display = 'none';
-        }
-    }
 
     // Real-time preview updates
-    titleInput?.addEventListener('input', updateModalPreview);
-    descriptionInput?.addEventListener('input', updateModalPreview);
-    imageInput?.addEventListener('input', updateModalPreview);
+    titleInput?.addEventListener('input', updateAllPreviews);
+    descriptionInput?.addEventListener('input', updateAllPreviews);
+    imageInput?.addEventListener('input', updateAllPreviews);
 
     // Save changes
     saveButton?.addEventListener('click', function() {
@@ -5068,7 +5051,7 @@ document.addEventListener('DOMContentLoaded', function() {
             descriptionInput.value = `Join us for an amazing event${eventAddress ? ' at ' + eventAddress : ''}`;
         }
 
-        updateModalPreview();
+        updateAllPreviews();
     }, 500);
 });
 
