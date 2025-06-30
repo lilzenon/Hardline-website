@@ -1,4 +1,5 @@
 const { body, param, query } = require("express-validator");
+const validator = require("validator");
 const { event } = require("../queries");
 const { CustomError } = require("../utils");
 const QRCode = require('qrcode');
@@ -116,10 +117,18 @@ const createEventValidation = [
     .withMessage("Show on homepage must be a boolean"),
     body("posh_embed_url")
     .optional()
-    .isURL()
-    .withMessage("Posh embed URL must be a valid URL")
-    .isLength({ max: 2040 })
-    .withMessage("Posh embed URL must be less than 2040 characters"),
+    .custom((value, { req }) => {
+        // Only validate if posh_embed_enabled is true and value is provided
+        if (req.body.posh_embed_enabled && value && value.trim() !== '') {
+            if (!validator.isURL(value)) {
+                throw new Error('Posh embed URL must be a valid URL');
+            }
+            if (value.length > 2040) {
+                throw new Error('Posh embed URL must be less than 2040 characters');
+            }
+        }
+        return true;
+    }),
     body("qr_code_enabled")
     .optional()
     .isBoolean()
@@ -145,14 +154,27 @@ const createEventValidation = [
     .withMessage("Posh embed enabled must be a boolean"),
     body("external_ticket_url")
     .optional()
-    .isURL()
-    .withMessage("External ticket URL must be a valid URL")
-    .isLength({ max: 2040 })
-    .withMessage("External ticket URL must be less than 2040 characters"),
+    .custom((value, { req }) => {
+        // Only validate if posh_embed_enabled is false and value is provided
+        if (!req.body.posh_embed_enabled && value && value.trim() !== '') {
+            if (!validator.isURL(value)) {
+                throw new Error('External ticket URL must be a valid URL');
+            }
+            if (value.length > 2040) {
+                throw new Error('External ticket URL must be less than 2040 characters');
+            }
+        }
+        return true;
+    }),
     body("buy_button_text")
     .optional()
     .isLength({ min: 1, max: 30 })
     .withMessage("Buy button text must be between 1 and 30 characters")
+    .trim(),
+    body("button_title")
+    .optional()
+    .isLength({ min: 1, max: 50 })
+    .withMessage("Button title must be between 1 and 50 characters")
     .trim(),
 ];
 
@@ -597,8 +619,8 @@ function validateAndSanitizeEventData(data) {
                 }
             } else if (key.includes('_link') || key.includes('_url') || key === 'cover_image') {
                 // Validate URL format (optional)
-                if (!value || value === '' || isValidUrl(value)) {
-                    sanitizedData[key] = value || null;
+                if (!value || value === '' || value === 'null' || isValidUrl(value)) {
+                    sanitizedData[key] = (value && value !== 'null' && value.trim() !== '') ? value : null;
                 } else {
                     console.warn(`⚠️ Invalid URL format for ${key}: ${value}`);
                 }

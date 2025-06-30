@@ -592,13 +592,23 @@
                                                 <span class="toggle-text">Posh Embed Mode</span>
                                                 <div class="toggle-switch">
                                                     <input type="checkbox" id="edit-posh-embed-enabled" name="posh_embed_enabled"
-                                                           {{#if event.posh_embed_enabled}}checked{{else}}{{#unless event.posh_embed_enabled}}{{#unless event.external_ticket_url}}checked{{/unless}}{{/unless}}{{/if}} class="toggle-input">
+                                                           {{#if event.posh_embed_enabled}}checked{{else}}{{#if event.external_ticket_url}}{{else}}checked{{/if}}{{/if}} class="toggle-input">
                                                     <span class="toggle-slider"></span>
                                                 </div>
                                             </label>
                                         </div>
                                         <small class="form-help">Enable for embedded iframe modals, disable to redirect to external ticketing pages</small>
                                         {{#if errors.posh_embed_enabled}}<p class="error">{{errors.posh_embed_enabled}}</p>{{/if}}
+                                    </div>
+
+                                    <!-- Button Title Section -->
+                                    <div class="form-group">
+                                        <label for="edit-button-title">Button Title</label>
+                                        <input type="text" id="edit-button-title" name="button_title" maxlength="50"
+                                               value="{{event.button_title}}"
+                                               placeholder="Button Title" class="form-input">
+                                        <small class="form-help">Optional small label displayed above the button text (max 50 characters)</small>
+                                        {{#if errors.button_title}}<p class="error">{{errors.button_title}}</p>{{/if}}
                                     </div>
 
                                     <!-- Custom Buy Button Text Section -->
@@ -3292,6 +3302,8 @@ function initializeTicketPurchasingToggle() {
     const poshEmbedToggle = document.getElementById('edit-posh-embed-enabled');
     const poshEmbedUrlGroup = document.getElementById('posh-embed-url-group');
     const externalTicketUrlGroup = document.getElementById('external-ticket-url-group');
+    const poshEmbedUrlInput = document.getElementById('edit-posh-embed-url');
+    const externalTicketUrlInput = document.getElementById('edit-external-ticket-url');
 
     if (!poshEmbedToggle || !poshEmbedUrlGroup || !externalTicketUrlGroup) {
         console.warn('⚠️ Ticket purchasing toggle elements not found');
@@ -3305,9 +3317,23 @@ function initializeTicketPurchasingToggle() {
         if (isPoshEmbedEnabled) {
             poshEmbedUrlGroup.style.display = 'block';
             externalTicketUrlGroup.style.display = 'none';
+
+            // Enable Posh embed URL input and disable external URL input
+            if (poshEmbedUrlInput) poshEmbedUrlInput.disabled = false;
+            if (externalTicketUrlInput) {
+                externalTicketUrlInput.disabled = true;
+                externalTicketUrlInput.value = ''; // Clear the value when disabled
+            }
         } else {
             poshEmbedUrlGroup.style.display = 'none';
             externalTicketUrlGroup.style.display = 'block';
+
+            // Enable external URL input and disable Posh embed URL input
+            if (externalTicketUrlInput) externalTicketUrlInput.disabled = false;
+            if (poshEmbedUrlInput) {
+                poshEmbedUrlInput.disabled = true;
+                // Don't clear Posh URL value in case user toggles back
+            }
         }
 
         console.log('🎫 Ticket purchasing mode updated:', isPoshEmbedEnabled ? 'Posh Embed' : 'External URL');

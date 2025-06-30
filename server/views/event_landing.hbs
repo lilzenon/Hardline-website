@@ -2112,7 +2112,10 @@
                             onclick="handleTicketPurchase()"
                             aria-label="{{#if event.ticket_price}}{{#if event.buy_button_text}}{{event.buy_button_text}} for {{event.ticket_price}}{{else}}Buy tickets for {{event.ticket_price}}{{/if}}{{else}}{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy tickets{{/if}}{{/if}}"
                             aria-describedby="ticket-price-info">
-                        {{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy{{/if}}
+                        {{#if event.button_title}}
+                        <span class="button-title">{{event.button_title}}</span>
+                        {{/if}}
+                        <span class="button-text">{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy Tickets{{/if}}</span>
                         <span class="sr-only"> tickets</span>
                     </button>
                 </nav>
