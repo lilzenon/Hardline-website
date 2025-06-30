@@ -565,6 +565,7 @@ function validateAndSanitizeEventData(data) {
         'button_text_color',
         'form_field_color',
         'button_text',
+        'button_title',
         'rsvp_title',
         'background_type',
         'card_background_type',
