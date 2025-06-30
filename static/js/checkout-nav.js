@@ -23,9 +23,11 @@ class CheckoutNav {
         this.container = document.querySelector('.checkout-nav-container');
         this.nav = document.querySelector('.checkout-nav');
         this.buyButton = document.querySelector('.buy-button');
-        this.modal = document.querySelector('.checkout-modal');
-        this.closeButton = document.querySelector('.checkout-close');
-        this.iframe = document.querySelector('.checkout-iframe');
+
+        // Use EXACT SAME elements as working homepage modal
+        this.modal = document.querySelector('.modal-overlay');
+        this.closeButton = document.querySelector('.modal-close');
+        this.iframe = document.querySelector('#poshIframe');
 
         if (!this.container || !this.nav || !this.buyButton || !this.modal) {
             console.log('🎫 Checkout nav elements not found - component not initialized');
@@ -33,7 +35,7 @@ class CheckoutNav {
         }
 
         this.setupEventListeners();
-        console.log('🎫 Checkout nav initialized successfully');
+        console.log('🎫 Checkout nav initialized successfully with homepage modal elements');
     }
 
     setupEventListeners() {
@@ -75,12 +77,27 @@ class CheckoutNav {
             }
         });
 
-        // Click outside modal to close
+        // Close modal when clicking outside - EXACT SAME as homepage
         if (this.modal) {
             this.modal.addEventListener('click', (e) => {
                 if (e.target === this.modal) {
-                    this.closeModal();
+                    this.modal.style.display = 'none';
+                    this.modal.classList.remove('active');
+                    document.body.style.overflow = '';
+                    this.isModalOpen = false;
+                    console.log('🚪 Modal closed via outside click');
                 }
+            });
+        }
+
+        // Close modal with close button - EXACT SAME as homepage
+        if (this.closeButton) {
+            this.closeButton.addEventListener('click', () => {
+                this.modal.style.display = 'none';
+                this.modal.classList.remove('active');
+                document.body.style.overflow = '';
+                this.isModalOpen = false;
+                console.log('🚪 Modal closed via close button');
             });
         }
     }
@@ -104,25 +121,36 @@ class CheckoutNav {
         try {
             if (this.isModalOpen) return;
 
-            console.log('🎫 Opening checkout modal - SIMPLE like working homepage modal');
+            console.log('🎫 Opening modal - EXACT SAME as working homepage modal');
 
             this.isModalOpen = true;
 
-            // Load iframe first - SIMPLE like working homepage modal
-            if (this.iframe && (this.iframe.src === 'about:blank' || !this.iframe.src)) {
-                console.log('🎫 Loading iframe...');
-                this.loadIframe();
-            }
+            // Get ticket URL from iframe data attribute
+            const ticketUrl = this.iframe && this.iframe.dataset.ticketUrl;
 
-            // Show modal - SIMPLE like working homepage modal
-            if (this.modal) {
-                this.modal.style.display = 'flex';
-                this.modal.classList.add('active');
-                document.body.style.overflow = 'hidden';
-                console.log('🎫 Modal opened with simple pattern');
+            if (ticketUrl && ticketUrl.trim() !== '' && ticketUrl !== 'null') {
+                console.log('✅ Opening tickets modal with URL:', ticketUrl);
+
+                // Update modal iframe source - EXACT SAME as homepage
+                if (this.iframe) {
+                    console.log('🎯 Setting iframe src to:', ticketUrl);
+                    this.iframe.src = ticketUrl;
+                } else {
+                    console.error('❌ poshIframe element not found in DOM');
+                }
+
+                // Show modal - EXACT SAME as homepage
+                if (this.modal) {
+                    console.log('🎪 Opening modal overlay...');
+                    this.modal.style.display = 'flex';
+                    this.modal.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                    console.log('✅ Modal opened successfully with active class');
+                } else {
+                    console.error('❌ modalOverlay element not found in DOM');
+                }
             } else {
-                console.error('🎫 Modal element not found!');
-                return;
+                console.warn('🎫 No ticket URL found');
             }
 
             console.log('🎫 Modal opening completed successfully');
@@ -140,20 +168,15 @@ class CheckoutNav {
     closeModal() {
         if (!this.isModalOpen) return;
 
-        console.log('🎫 Closing checkout modal - SIMPLE like working homepage modal');
+        console.log('🎫 Closing modal - EXACT SAME as working homepage modal');
         this.isModalOpen = false;
 
-        // Hide modal - SIMPLE like working homepage modal
+        // Hide modal - EXACT SAME as homepage
         this.modal.style.display = 'none';
         this.modal.classList.remove('active');
         document.body.style.overflow = '';
 
-        // Clear iframe
-        if (this.iframe) {
-            this.iframe.src = 'about:blank';
-        }
-
-        console.log('🎫 Modal closed with simple pattern');
+        console.log('🚪 Modal closed via close button');
     }
 
     cleanupDynamicSizing() {
@@ -980,13 +1003,11 @@ class CheckoutNav {
     }
 }
 
-// Global functions for template use
+// Global functions for template use - EXACT SAME pattern as homepage
 function openCheckoutModal() {
-    console.log('🎫 Global openCheckoutModal called');
+    console.log('🎫 Global openCheckoutModal called - using homepage pattern');
 
     try {
-        console.log('🎫 window.checkoutNav:', window.checkoutNav);
-
         if (window.checkoutNav) {
             console.log('🎫 Calling openModal...');
             window.checkoutNav.openModal();
@@ -996,11 +1017,11 @@ function openCheckoutModal() {
         }
     } catch (error) {
         console.error('🎫 ERROR in openCheckoutModal:', error);
-        console.error('🎫 Error stack:', error.stack);
     }
 }
 
 function closeCheckoutModal() {
+    console.log('🎫 Global closeCheckoutModal called - using homepage pattern');
     if (window.checkoutNav) {
         window.checkoutNav.closeModal();
     }

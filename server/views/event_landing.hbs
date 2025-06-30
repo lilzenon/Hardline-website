@@ -56,6 +56,8 @@
     <!-- Checkout Nav Component CSS -->
     {{#if event.display_tickets}}
     <link rel="stylesheet" href="/css/checkout-nav.css">
+    <!-- Working Homepage Modal CSS -->
+    <link rel="stylesheet" href="/css/figma-home.css">
     {{/if}}
 
     <!-- Laylo-Inspired Design CSS - Updated Typography v2.1 -->
@@ -2114,17 +2116,19 @@
                 </div>
             </div>
 
-            <!-- Checkout Modal - Using working homepage modal structure -->
-            <div class="checkout-modal" id="checkoutModal">
-                <div class="checkout-modal-content">
-                    <button class="checkout-close" onclick="closeCheckoutModal()" aria-label="Close ticket checkout">&times;</button>
-                    <div class="checkout-iframe-container">
-                        <iframe class="checkout-iframe"
+            <!-- Modal Overlay - EXACT SAME as working homepage modal -->
+            <div class="modal-overlay" id="modalOverlay">
+                <div class="modal-content">
+                    <button class="modal-close" id="modalClose">&times;</button>
+                    <div class="modal-iframe-container">
+                        <iframe id="poshIframe"
                                 src="about:blank"
                                 data-ticket-url="{{event.posh_embed_url}}"
-                                title="Ticket Checkout - {{event.title}}"
+                                width="100%"
+                                height="600px"
+                                style="border: none;"
                                 loading="lazy"
-                                aria-label="Ticket purchasing form">
+                                title="Ticket Checkout - {{event.title}}">
                         </iframe>
                     </div>
                 </div>
