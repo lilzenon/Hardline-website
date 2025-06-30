@@ -2249,23 +2249,6 @@
 
 </head>
 <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <!-- Breadcrumb Navigation for SEO and UX -->
-    <nav class="breadcrumb-container" aria-label="Breadcrumb">
-        <ol class="breadcrumb-list">
-            <li class="breadcrumb-item">
-                <a href="/" class="breadcrumb-link">Home</a>
-                <span class="breadcrumb-separator" aria-hidden="true">/</span>
-            </li>
-            <li class="breadcrumb-item">
-                <a href="/events" class="breadcrumb-link">Events</a>
-                <span class="breadcrumb-separator" aria-hidden="true">/</span>
-            </li>
-            <li class="breadcrumb-item breadcrumb-active">
-                <span aria-current="page">{{event.title}}</span>
-            </li>
-        </ol>
-    </nav>
-
     <div class="event-page-container">
         <div class="event-container">
             <!-- Image Container - Laylo Style Large Image -->
@@ -3981,6 +3964,23 @@
         });
     </script>
     {{/if}}
+
+    <!-- Hidden Breadcrumb Navigation for SEO (positioned at bottom) -->
+    <nav class="breadcrumb-container" aria-label="Breadcrumb">
+        <ol class="breadcrumb-list">
+            <li class="breadcrumb-item">
+                <a href="/" class="breadcrumb-link">Home</a>
+                <span class="breadcrumb-separator" aria-hidden="true">/</span>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="/events" class="breadcrumb-link">Events</a>
+                <span class="breadcrumb-separator" aria-hidden="true">/</span>
+            </li>
+            <li class="breadcrumb-item breadcrumb-active">
+                <span aria-current="page">{{event.title}}</span>
+            </li>
+        </ol>
+    </nav>
 
 </body>
 </html>
