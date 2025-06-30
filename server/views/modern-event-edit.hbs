@@ -4989,7 +4989,7 @@ document.addEventListener('DOMContentLoaded', function() {
         imageInput.value = previewImage.src;
 
         // Update modal preview
-        updateAllPreviews();
+        window.updateAllPreviews();
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -5007,9 +5007,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // Real-time preview updates
-    titleInput?.addEventListener('input', updateAllPreviews);
-    descriptionInput?.addEventListener('input', updateAllPreviews);
-    imageInput?.addEventListener('input', updateAllPreviews);
+    titleInput?.addEventListener('input', window.updateAllPreviews);
+    descriptionInput?.addEventListener('input', window.updateAllPreviews);
+    imageInput?.addEventListener('input', window.updateAllPreviews);
 
     // Save changes
     saveButton?.addEventListener('click', function() {
@@ -5051,7 +5051,7 @@ document.addEventListener('DOMContentLoaded', function() {
             descriptionInput.value = `Join us for an amazing event${eventAddress ? ' at ' + eventAddress : ''}`;
         }
 
-        updateAllPreviews();
+        window.updateAllPreviews();
     }, 500);
 });
 
@@ -5235,7 +5235,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Update character counts
         updateCharacterCounts();
-        updateAllPreviews();
+        window.updateAllPreviews();
 
         socialModal?.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -5259,8 +5259,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update all preview tabs
-    function updateAllPreviews() {
+    // Update all preview tabs (moved to global scope)
+    window.updateAllPreviews = function() {
         const title = document.getElementById('social-title-input')?.value || 'Event Title';
         const description = document.getElementById('social-description-input')?.value || 'Event description';
         const imageUrl = document.getElementById('social-image-input')?.value || '/static/images/default-event-preview.jpg';
@@ -5308,7 +5308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (mainTitle) mainTitle.textContent = title;
         if (mainDesc) mainDesc.textContent = description;
         if (mainImage) mainImage.src = imageUrl;
-    }
+    };
 
     // Preview tab switching
     document.querySelectorAll('.preview-tab').forEach(tab => {
@@ -5344,16 +5344,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     titleInput?.addEventListener('input', function() {
         updateCharacterCounts();
-        updateAllPreviews();
+        window.updateAllPreviews();
     });
 
     descriptionInput?.addEventListener('input', function() {
         updateCharacterCounts();
-        updateAllPreviews();
+        window.updateAllPreviews();
     });
 
     imageInput?.addEventListener('input', function() {
-        updateAllPreviews();
+        window.updateAllPreviews();
         // Update image preview
         const preview = document.getElementById('social-image-preview');
         if (preview && this.value) {
@@ -5494,7 +5494,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const imageUrl = e.target.result;
                 document.getElementById('social-image-input').value = imageUrl;
                 document.getElementById('social-image-preview').src = imageUrl;
-                updateAllPreviews();
+                window.updateAllPreviews();
                 showToast('✅ Image uploaded successfully!', 'success', 3000);
             };
             reader.readAsDataURL(file);
