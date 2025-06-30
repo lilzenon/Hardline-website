@@ -120,13 +120,17 @@
 }
 
 .buy-button .button-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
-    opacity: 0.6;
-    line-height: 1;
-    margin-bottom: 6px;
-    color: #ffffff;
+    opacity: 1;
+    line-height: 1.2;
+    margin-bottom: 4px;
+    color: #999999;
     text-transform: none;
+    display: block !important;
+    visibility: visible !important;
+    position: relative;
+    z-index: 10;
 }
 
 .buy-button .button-text {
@@ -155,13 +159,6 @@
     color: #ffffff;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 0 16px 16px 0;
-}
-
-
-/* When only button text (no title), center it properly */
-
-.buy-button:not(:has(.button-title)) .button-text {
-    margin: 0;
 }
 
 .buy-button:hover {
