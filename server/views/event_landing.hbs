@@ -3545,33 +3545,35 @@
         let isModalOpen = false;
         let animationTimeout = null;
 
-        // Ticket purchasing configuration
-        const ticketConfig = {
+        // Ticket purchasing configuration - make it globally accessible
+        window.ticketConfig = {
             poshEmbedEnabled: {{#if event.posh_embed_enabled}}true{{else}}false{{/if}},
             poshEmbedUrl: '{{event.posh_embed_url}}',
             externalTicketUrl: '{{event.external_ticket_url}}',
             buyButtonText: '{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy Tickets{{/if}}'
         };
 
-        function handleTicketPurchase() {
-            console.log('🎫 Handling ticket purchase with config:', ticketConfig);
+        // Make handleTicketPurchase globally accessible
+        window.handleTicketPurchase = function() {
+            console.log('🎫 Handling ticket purchase with config:', window.ticketConfig);
 
-            if (ticketConfig.poshEmbedEnabled && ticketConfig.poshEmbedUrl) {
+            if (window.ticketConfig.poshEmbedEnabled && window.ticketConfig.poshEmbedUrl) {
                 // Use embedded modal
                 console.log('🎫 Opening Posh embed modal');
-                openSimpleModal();
-            } else if (!ticketConfig.poshEmbedEnabled && ticketConfig.externalTicketUrl) {
+                window.openSimpleModal();
+            } else if (!window.ticketConfig.poshEmbedEnabled && window.ticketConfig.externalTicketUrl) {
                 // Open external URL in new tab
-                console.log('🎫 Opening external ticket URL:', ticketConfig.externalTicketUrl);
-                window.open(ticketConfig.externalTicketUrl, '_blank', 'noopener,noreferrer');
+                console.log('🎫 Opening external ticket URL:', window.ticketConfig.externalTicketUrl);
+                window.open(window.ticketConfig.externalTicketUrl, '_blank', 'noopener,noreferrer');
             } else {
                 // Fallback to modal if no external URL is configured
                 console.log('🎫 Fallback to modal (no external URL configured)');
-                openSimpleModal();
+                window.openSimpleModal();
             }
         }
 
-        function openSimpleModal() {
+        // Make openSimpleModal globally accessible
+        window.openSimpleModal = function openSimpleModal() {
             console.log('🎫 MODERN: Opening modal with enhanced animations');
 
             if (isModalOpen) return;
@@ -3586,7 +3588,7 @@
 
             // Set iframe source if needed
             if (poshIframe) {
-                const ticketUrl = ticketConfig.poshEmbedUrl || poshIframe.getAttribute('data-ticket-url');
+                const ticketUrl = window.ticketConfig.poshEmbedUrl || poshIframe.getAttribute('data-ticket-url');
                 if (ticketUrl && poshIframe.src !== ticketUrl) {
                     poshIframe.src = ticketUrl;
                     console.log('🎫 MODERN: Set iframe src to:', ticketUrl);
@@ -3672,9 +3674,7 @@
 
             console.log('✅ Modal positioning forced to viewport bounds');
 
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
-
+            // Use existing viewport variables
             console.log('🎫 VIEWPORT: Adjusting for', viewportWidth + 'x' + viewportHeight);
 
             // Dynamic height adjustment based on viewport
