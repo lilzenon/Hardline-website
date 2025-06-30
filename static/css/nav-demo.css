@@ -276,10 +276,10 @@ body {
 }
 
 .modal-iframe-container {
-    border-radius: 20px;
+    border-radius: 0;
     overflow: hidden;
-    background: #ffffff;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: transparent;
+    box-shadow: none;
 }
 
 .modal-iframe-container iframe {

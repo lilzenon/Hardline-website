@@ -1661,20 +1661,19 @@ function createOptimalPoshModal() {
         modalContent.style.setProperty('min-height', '400px', 'important'); // Accommodate 320px iframe + padding
         modalContent.style.setProperty('max-height', '70vh', 'important');
         modalContent.style.setProperty('overflow', 'auto', 'important');
-        modalContent.style.setProperty('padding', '24px', 'important');
+        modalContent.style.setProperty('padding', '0', 'important');
         modalContent.style.setProperty('margin', '0', 'important');
-        modalContent.style.setProperty('border-radius', '16px', 'important');
+        modalContent.style.setProperty('border-radius', '0', 'important');
 
-        // Glassmorphism styling
-        modalContent.style.setProperty('background', 'rgba(255, 255, 255, 0.95)', 'important');
-        modalContent.style.setProperty('backdrop-filter', 'blur(20px)', 'important');
-        modalContent.style.setProperty('border', '1px solid rgba(255, 255, 255, 0.2)', 'important');
-        modalContent.style.setProperty('box-shadow', '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.1) inset', 'important');
+        // Dark styling to match working homepage modal
+        modalContent.style.setProperty('background', '#1a1a1a', 'important');
+        modalContent.style.setProperty('border', 'none', 'important');
+        modalContent.style.setProperty('box-shadow', 'none', 'important');
 
         // Flexbox for proper iframe accommodation
         modalContent.style.setProperty('display', 'flex', 'important');
         modalContent.style.setProperty('flex-direction', 'column', 'important');
-        modalContent.style.setProperty('gap', '16px', 'important');
+        modalContent.style.setProperty('gap', '0', 'important');
     }
 
     // FIXED IFRAME (320px height - eliminates white space)
@@ -1683,11 +1682,22 @@ function createOptimalPoshModal() {
     iframe.style.setProperty('min-height', '320px', 'important');
     iframe.style.setProperty('max-height', '320px', 'important');
     iframe.style.setProperty('border', 'none', 'important');
-    iframe.style.setProperty('border-radius', '12px', 'important');
+    iframe.style.setProperty('border-radius', '0', 'important');
     iframe.style.setProperty('overflow', 'hidden', 'important');
     iframe.style.setProperty('flex-shrink', '0', 'important');
     iframe.style.setProperty('flex-grow', '0', 'important');
-    iframe.style.setProperty('background', 'white', 'important');
+    iframe.style.setProperty('background', 'transparent', 'important');
+
+    // IFRAME CONTAINER STYLING (remove white background)
+    const iframeContainer = modalContent.querySelector('.modal-iframe-container');
+    if (iframeContainer) {
+        iframeContainer.style.setProperty('width', '100%', 'important');
+        iframeContainer.style.setProperty('height', '320px', 'important');
+        iframeContainer.style.setProperty('border-radius', '0', 'important');
+        iframeContainer.style.setProperty('overflow', 'hidden', 'important');
+        iframeContainer.style.setProperty('background', 'transparent', 'important');
+        console.log('🎫 Applied iframe container styling - removed white background');
+    }
 
     setTimeout(() => {
         console.log('🎫 AFTER optimal modal creation:');
@@ -1698,14 +1708,14 @@ function createOptimalPoshModal() {
 
         if (iframe.offsetHeight >= 1100) {
             console.log('🎫 SUCCESS! Optimal modal created - Posh content should display perfectly!');
-            console.log('🎫 Modal is centered, properly sized, with glassmorphism styling');
+            console.log('🎫 Modal is centered, properly sized, with dark styling to match homepage');
             console.log('🎫 Background page visible around modal edges');
         } else {
             console.log('🎫 Still some constraints. Checking...');
         }
     }, 500);
 
-    console.log('🎫 Optimal Posh modal created - centered, properly sized, glassmorphism styling');
+    console.log('🎫 Optimal Posh modal created - centered, properly sized, dark styling to match homepage');
 }
 
 // ENHANCED: Add close button and improve modal UX
@@ -1908,7 +1918,7 @@ function fixModalIframeWithWorkingApproach() {
     iframe.style.setProperty('width', '100%', 'important');
     iframe.style.setProperty('height', '1200px', 'important');
     iframe.style.setProperty('border', 'none', 'important');
-    iframe.style.setProperty('background-color', 'white', 'important');
+    iframe.style.setProperty('background-color', 'transparent', 'important');
     iframe.style.setProperty('min-height', 'auto', 'important');
     iframe.style.setProperty('max-height', 'none', 'important');
     iframe.style.setProperty('overflow', 'visible', 'important');
