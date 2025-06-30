@@ -296,30 +296,59 @@ body {
 }
 
 .modal-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: none;
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 500;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 200ms ease;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1001;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    min-width: 44px;
+    min-height: 44px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .modal-close:hover {
-    background: rgba(0, 0, 0, 0.9);
-    color: #ffffff;
-    transform: scale(1.1);
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+.modal-close:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+
+/* Close button entrance animation */
+
+.modal-overlay:not(.active) .modal-close {
+    opacity: 0;
+    transform: scale(0.8) translateY(-10px);
+}
+
+.modal-overlay.active .modal-close,
+.modal-overlay.entered .modal-close {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transition-delay: 0.1s;
+    /* Appear slightly after modal */
 }
 
 .modal-iframe-container {
