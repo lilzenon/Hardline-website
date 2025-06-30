@@ -67,8 +67,12 @@
         :root {
             --event-title-color: {{event.title_color}};
             --event-description-color: {{event.description_color}};
-            --event-button-color: {{event.button_color}};
-            --event-button-text-color: {{event.button_text_color}};
+            /* Buy button colors (separate from RSVP button) */
+            --event-button-color: {{#if event.buy_button_color}}{{event.buy_button_color}}{{else}}{{#if event.button_color}}{{event.button_color}}{{else}}#007bff{{/if}}{{/if}};
+            --event-button-text-color: {{#if event.buy_button_text_color}}{{event.buy_button_text_color}}{{else}}{{#if event.button_text_color}}{{event.button_text_color}}{{else}}#ffffff{{/if}}{{/if}};
+            /* RSVP button colors (for email signup form) */
+            --event-rsvp-button-color: {{#if event.button_color}}{{event.button_color}}{{else}}#007bff{{/if}};
+            --event-rsvp-button-text-color: {{#if event.button_text_color}}{{event.button_text_color}}{{else}}#ffffff{{/if}};
             --event-background-color: {{event.background_color}};
             --event-overscroll-background-color: {{#if event.overscroll_background_color}}{{event.overscroll_background_color}}{{else}}#ffffff{{/if}};
 
@@ -1214,9 +1218,9 @@
             justify-content: center;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}} !important;
-            background: {{#if event.button_color}}{{event.button_color}}{{else}}#000000{{/if}} !important;
-            /* Debug: Button color value = {{event.button_color}} */
+            background-color: var(--event-rsvp-button-color) !important;
+            background: var(--event-rsvp-button-color) !important;
+            /* RSVP button uses separate color from Buy button */
             outline: 0;
             border: 0;
             margin: 0;
@@ -1236,7 +1240,7 @@
             height: 44px;
             border-radius: 22px; /* Rounded like Laylo button */
             transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-            color: {{#if event.button_text_color}}{{event.button_text_color}}{{else}}#ffffff{{/if}};
+            color: var(--event-rsvp-button-text-color);
             /* Dynamic shadow that works with any button color */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
             z-index: 10;
@@ -1244,8 +1248,8 @@
 
         .laylo-rsvp-button:hover {
             text-decoration: none;
-            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: var(--event-rsvp-button-color) !important;
+            background: var(--event-rsvp-button-color) !important;
             transform: translateY(-50%) scale(1.02);
             /* Enhanced shadow on hover */
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -1254,8 +1258,8 @@
 
         .laylo-rsvp-button:active {
             transform: translateY(-50%) scale(0.98);
-            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: var(--event-rsvp-button-color) !important;
+            background: var(--event-rsvp-button-color) !important;
             /* Reduced shadow on active */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
             opacity: 0.8; /* Stronger active effect using opacity */
@@ -1295,8 +1299,8 @@
 
         .laylo-rsvp-button.standalone:hover {
             transform: scale(1.02);
-            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: var(--event-rsvp-button-color) !important;
+            background: var(--event-rsvp-button-color) !important;
             /* Enhanced shadow on hover */
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
             opacity: 0.9; /* Subtle hover effect using opacity */
@@ -1304,8 +1308,8 @@
 
         .laylo-rsvp-button.standalone:active {
             transform: scale(0.98);
-            background-color: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
-            background: {{#if event.button_color}}{{event.button_color}}{{else}}#333333{{/if}} !important;
+            background-color: var(--event-rsvp-button-color) !important;
+            background: var(--event-rsvp-button-color) !important;
             /* Reduced shadow on active */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 1px 3px rgba(0, 0, 0, 0.1);
             opacity: 0.8; /* Stronger active effect using opacity */

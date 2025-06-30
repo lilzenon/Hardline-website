@@ -397,22 +397,38 @@
 
                                     <div class="form-group">
                                         <label for="edit-title-color">Title Color</label>
-                                        <input type="color" id="edit-title-color" name="title_color" value="{{event.title_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-title-color" name="title_color" value="{{event.title_color}}" class="form-input modern-color-input">
                                     </div>
 
                                     <div class="form-group">
                                         <label for="edit-description-color">Subtitle Color</label>
-                                        <input type="color" id="edit-description-color" name="description_color" value="{{event.description_color}}" class="form-input file-input">
+                                        <input type="color" id="edit-description-color" name="description_color" value="{{event.description_color}}" class="form-input modern-color-input">
+                                    </div>
+
+                                    <!-- RSVP Button Colors -->
+                                    <div class="form-group">
+                                        <label for="edit-button-color">RSVP Button Background Color</label>
+                                        <input type="color" id="edit-button-color" name="button_color" value="{{#if event.button_color}}{{event.button_color}}{{else}}#007bff{{/if}}" class="form-input modern-color-input">
+                                        <small class="form-help">Choose the background color for the RSVP button (email signup form)</small>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="edit-button-color">Button Background</label>
-                                        <input type="color" id="edit-button-color" name="button_color" value="{{event.button_color}}" class="form-input file-input">
+                                        <label for="edit-button-text-color">RSVP Button Text Color</label>
+                                        <input type="color" id="edit-button-text-color" name="button_text_color" value="{{#if event.button_text_color}}{{event.button_text_color}}{{else}}#ffffff{{/if}}" class="form-input modern-color-input">
+                                        <small class="form-help">Choose the text color for the RSVP button</small>
+                                    </div>
+
+                                    <!-- Buy Button Colors (Separate from RSVP) -->
+                                    <div class="form-group">
+                                        <label for="edit-buy-button-color">Buy Button Background Color</label>
+                                        <input type="color" id="edit-buy-button-color" name="buy_button_color" value="{{#if event.buy_button_color}}{{event.buy_button_color}}{{else}}#007bff{{/if}}" class="form-input modern-color-input">
+                                        <small class="form-help">Choose the background color for the Buy button (ticket purchasing)</small>
                                     </div>
 
                                     <div class="form-group">
-                                        <label for="edit-button-text-color">Button Text Color</label>
-                                        <input type="color" id="edit-button-text-color" name="button_text_color" value="{{event.button_text_color}}" class="form-input file-input">
+                                        <label for="edit-buy-button-text-color">Buy Button Text Color</label>
+                                        <input type="color" id="edit-buy-button-text-color" name="buy_button_text_color" value="{{#if event.buy_button_text_color}}{{event.buy_button_text_color}}{{else}}#ffffff{{/if}}" class="form-input modern-color-input">
+                                        <small class="form-help">Choose the text color for the Buy button</small>
                                     </div>
                                 </div>
 
@@ -1422,6 +1438,10 @@ function initializeFormElements() {
     buttonColorInput = document.getElementById('edit-button-color');
     const buttonTextColorInput = document.getElementById('edit-button-text-color');
 
+    // Buy button color inputs (separate from RSVP button)
+    const buyButtonColorInput = document.getElementById('edit-buy-button-color');
+    const buyButtonTextColorInput = document.getElementById('edit-buy-button-text-color');
+
     // Toggle inputs
     collectEmailToggle = document.getElementById('edit-collect-email');
     collectPhoneToggle = document.getElementById('edit-collect-phone');
@@ -1776,6 +1796,10 @@ function initializeRealTimeUpdates() {
     if (buttonColorInput) buttonColorInput.addEventListener('input', updatePreviewColors);
     if (buttonTextColorInput) buttonTextColorInput.addEventListener('input', updatePreviewColors);
 
+    // Buy button color updates (separate from RSVP button)
+    if (buyButtonColorInput) buyButtonColorInput.addEventListener('input', updatePreviewColors);
+    if (buyButtonTextColorInput) buyButtonTextColorInput.addEventListener('input', updatePreviewColors);
+
     // Form field toggles
     if (collectEmailToggle) collectEmailToggle.addEventListener('change', updatePreviewFormFields);
     if (collectPhoneToggle) collectPhoneToggle.addEventListener('change', updatePreviewFormFields);
@@ -1855,6 +1879,10 @@ function updatePreviewColors() {
         const buttonColor = buttonColorInput?.value || '#007bff';
         const formFieldColor = formFieldColorInput?.value || '#ffffff';
 
+        // Buy button colors (separate from RSVP button)
+        const buyButtonColor = buyButtonColorInput?.value || '#007bff';
+        const buyButtonTextColor = buyButtonTextColorInput?.value || '#ffffff';
+
         // Apply colors using CSS custom properties
         const documentRoot = previewDocument.documentElement;
 
@@ -1866,6 +1894,10 @@ function updatePreviewColors() {
         documentRoot.style.setProperty('--drop-button-color', buttonColor);
         documentRoot.style.setProperty('--drop-form-field-color', formFieldColor);
 
+        // Buy button colors (separate from RSVP button)
+        documentRoot.style.setProperty('--event-button-color', buyButtonColor);
+        documentRoot.style.setProperty('--event-button-text-color', buyButtonTextColor);
+
         console.log('🎨 Preview colors updated:', {
             backgroundColor,
             overscrollBackgroundColor,
@@ -1873,7 +1905,9 @@ function updatePreviewColors() {
             titleColor,
             descriptionColor,
             buttonColor,
-            formFieldColor
+            formFieldColor,
+            buyButtonColor,
+            buyButtonTextColor
         });
     } catch (error) {
         console.warn('⚠️ Preview color update failed, refreshing iframe');

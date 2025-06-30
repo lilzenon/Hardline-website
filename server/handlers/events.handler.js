@@ -535,6 +535,9 @@ function validateAndSanitizeEventData(data) {
         'apple_music_url',
         'soundcloud_url',
         'artist_name',
+        // Buy button colors (separate from RSVP button)
+        'buy_button_color',
+        'buy_button_text_color',
         'event_date',
         'event_address',
         'show_on_homepage',
