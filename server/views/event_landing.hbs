@@ -3533,18 +3533,8 @@
     </script>
 
     <!-- Checkout Nav Component JavaScript -->
-    {{#if event.display_tickets}}
-    <!-- <script src="/js/checkout-nav.js?v=2025063005"></script> -->
-    <!-- DISABLED: Using simple home page approach instead -->
-
+    <!-- Ticket purchasing configuration - always available -->
     <script>
-        // MODERN MODAL SYSTEM v2025063007 - Research-based UX patterns
-        console.log('🎫 MODERN MODAL v2025063007: Loading enhanced modal system');
-
-        // Modal state management
-        let isModalOpen = false;
-        let animationTimeout = null;
-
         // Ticket purchasing configuration - make it globally accessible
         window.ticketConfig = {
             poshEmbedEnabled: {{#if event.posh_embed_enabled}}true{{else}}false{{/if}},
@@ -3560,7 +3550,12 @@
             if (window.ticketConfig.poshEmbedEnabled && window.ticketConfig.poshEmbedUrl) {
                 // Use embedded modal
                 console.log('🎫 Opening Posh embed modal');
-                window.openSimpleModal();
+                if (window.openSimpleModal) {
+                    window.openSimpleModal();
+                } else {
+                    console.warn('⚠️ openSimpleModal not available, opening URL directly');
+                    window.open(window.ticketConfig.poshEmbedUrl, '_blank', 'noopener,noreferrer');
+                }
             } else if (!window.ticketConfig.poshEmbedEnabled && window.ticketConfig.externalTicketUrl) {
                 // Open external URL in new tab
                 console.log('🎫 Opening external ticket URL:', window.ticketConfig.externalTicketUrl);
@@ -3568,9 +3563,26 @@
             } else {
                 // Fallback to modal if no external URL is configured
                 console.log('🎫 Fallback to modal (no external URL configured)');
-                window.openSimpleModal();
+                if (window.openSimpleModal) {
+                    window.openSimpleModal();
+                } else {
+                    console.warn('⚠️ No ticket purchasing options configured');
+                }
             }
         }
+    </script>
+
+    {{#if event.display_tickets}}
+    <!-- <script src="/js/checkout-nav.js?v=2025063005"></script> -->
+    <!-- DISABLED: Using simple home page approach instead -->
+
+    <script>
+        // MODERN MODAL SYSTEM v2025063007 - Research-based UX patterns
+        console.log('🎫 MODERN MODAL v2025063007: Loading enhanced modal system');
+
+        // Modal state management
+        let isModalOpen = false;
+        let animationTimeout = null;
 
         // Make openSimpleModal globally accessible
         window.openSimpleModal = function openSimpleModal() {
