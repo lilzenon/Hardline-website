@@ -1158,6 +1158,10 @@ let previewCoverImage, previewCover;
 // Form input elements
 let titleInput, subtitleInput, descriptionInput, rsvpTitleInput, subHeaderInput, subHeaderTitleInput, slugInput, buttonTextInput, coverImageInput;
 let backgroundColorInput, overscrollBackgroundColorInput, cardColorInput, titleColorInput, descriptionColorInput, buttonColorInput, formFieldColorInput;
+let buyButtonColorInput, buyButtonTextColorInput;
+
+// Debounce timer for preview updates
+let previewUpdateTimer = null;
 let collectEmailToggle, collectPhoneToggle;
 
 // Reliable navigation function for back button
@@ -1438,9 +1442,9 @@ function initializeFormElements() {
     buttonColorInput = document.getElementById('edit-button-color');
     const buttonTextColorInput = document.getElementById('edit-button-text-color');
 
-    // Buy button color inputs (separate from RSVP button)
-    const buyButtonColorInput = document.getElementById('edit-buy-button-color');
-    const buyButtonTextColorInput = document.getElementById('edit-buy-button-text-color');
+    // Buy button color inputs (separate from RSVP button) - declare globally
+    buyButtonColorInput = document.getElementById('edit-buy-button-color');
+    buyButtonTextColorInput = document.getElementById('edit-buy-button-text-color');
 
     // Toggle inputs
     collectEmailToggle = document.getElementById('edit-collect-email');
@@ -1789,16 +1793,27 @@ function initializeRealTimeUpdates() {
     const cardBackgroundTypeSelect = document.getElementById('edit-card-background-type');
     const buttonTextColorInput = document.getElementById('edit-button-text-color');
 
-    if (backgroundTypeSelect) backgroundTypeSelect.addEventListener('change', updatePreviewColors);
-    if (cardBackgroundTypeSelect) cardBackgroundTypeSelect.addEventListener('change', updatePreviewColors);
-    if (titleColorInput) titleColorInput.addEventListener('input', updatePreviewColors);
-    if (descriptionColorInput) descriptionColorInput.addEventListener('input', updatePreviewColors);
-    if (buttonColorInput) buttonColorInput.addEventListener('input', updatePreviewColors);
-    if (buttonTextColorInput) buttonTextColorInput.addEventListener('input', updatePreviewColors);
+    if (backgroundTypeSelect) backgroundTypeSelect.addEventListener('change', debouncedUpdatePreviewColors);
+    if (cardBackgroundTypeSelect) cardBackgroundTypeSelect.addEventListener('change', debouncedUpdatePreviewColors);
+    if (titleColorInput) titleColorInput.addEventListener('input', debouncedUpdatePreviewColors);
+    if (descriptionColorInput) descriptionColorInput.addEventListener('input', debouncedUpdatePreviewColors);
+    if (buttonColorInput) buttonColorInput.addEventListener('input', debouncedUpdatePreviewColors);
+    if (buttonTextColorInput) buttonTextColorInput.addEventListener('input', debouncedUpdatePreviewColors);
 
-    // Buy button color updates (separate from RSVP button)
-    if (buyButtonColorInput) buyButtonColorInput.addEventListener('input', updatePreviewColors);
-    if (buyButtonTextColorInput) buyButtonTextColorInput.addEventListener('input', updatePreviewColors);
+    // Buy button color updates (separate from RSVP button) - with null checks and debouncing
+    if (buyButtonColorInput) {
+        buyButtonColorInput.addEventListener('input', debouncedUpdatePreviewColors);
+        console.log('✅ Buy button color input listener added');
+    } else {
+        console.log('⚠️ Buy button color input not found');
+    }
+
+    if (buyButtonTextColorInput) {
+        buyButtonTextColorInput.addEventListener('input', debouncedUpdatePreviewColors);
+        console.log('✅ Buy button text color input listener added');
+    } else {
+        console.log('⚠️ Buy button text color input not found');
+    }
 
     // Form field toggles
     if (collectEmailToggle) collectEmailToggle.addEventListener('change', updatePreviewFormFields);
@@ -1867,9 +1882,23 @@ function updatePreviewContent() {
     }
 }
 
+// Debounced version of updatePreviewColors to prevent excessive updates
+function debouncedUpdatePreviewColors() {
+    if (previewUpdateTimer) {
+        clearTimeout(previewUpdateTimer);
+    }
+
+    previewUpdateTimer = setTimeout(() => {
+        updatePreviewColors();
+    }, 150); // 150ms debounce
+}
+
 function updatePreviewColors() {
     try {
-        if (!previewDocument) return;
+        if (!previewDocument) {
+            console.log('🎨 Preview document not ready, skipping color update');
+            return;
+        }
 
         const backgroundColor = backgroundColorInput?.value || '#ffffff';
         const overscrollBackgroundColor = overscrollBackgroundColorInput?.value || '#ffffff';
@@ -1879,12 +1908,17 @@ function updatePreviewColors() {
         const buttonColor = buttonColorInput?.value || '#007bff';
         const formFieldColor = formFieldColorInput?.value || '#ffffff';
 
-        // Buy button colors (separate from RSVP button)
-        const buyButtonColor = buyButtonColorInput?.value || '#007bff';
-        const buyButtonTextColor = buyButtonTextColorInput?.value || '#ffffff';
+        // Buy button colors (separate from RSVP button) - with safe fallbacks
+        const buyButtonColor = (buyButtonColorInput && buyButtonColorInput.value) ? buyButtonColorInput.value : '#007bff';
+        const buyButtonTextColor = (buyButtonTextColorInput && buyButtonTextColorInput.value) ? buyButtonTextColorInput.value : '#ffffff';
 
         // Apply colors using CSS custom properties
         const documentRoot = previewDocument.documentElement;
+
+        if (!documentRoot) {
+            console.log('🎨 Preview document root not available, skipping color update');
+            return;
+        }
 
         documentRoot.style.setProperty('--drop-background-color', backgroundColor);
         documentRoot.style.setProperty('--drop-overscroll-background-color', overscrollBackgroundColor);
@@ -1898,7 +1932,7 @@ function updatePreviewColors() {
         documentRoot.style.setProperty('--event-button-color', buyButtonColor);
         documentRoot.style.setProperty('--event-button-text-color', buyButtonTextColor);
 
-        console.log('🎨 Preview colors updated:', {
+        console.log('🎨 Preview colors updated successfully:', {
             backgroundColor,
             overscrollBackgroundColor,
             cardColor,
@@ -1910,8 +1944,9 @@ function updatePreviewColors() {
             buyButtonTextColor
         });
     } catch (error) {
-        console.warn('⚠️ Preview color update failed, refreshing iframe');
-        refreshPreview();
+        console.error('❌ Preview color update failed:', error);
+        // Don't refresh iframe automatically - this causes infinite loops
+        // Only log the error and continue
     }
 }
 
