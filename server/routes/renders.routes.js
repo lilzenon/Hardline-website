@@ -80,19 +80,6 @@ router.get(
     asyncHandler(renders.notFound)
 );
 
-router.get(
-    "/dashboard/settings",
-    asyncHandler(auth.jwtAdminPage),
-    asyncHandler(locals.user),
-    (req, res) => {
-        res.render("settings", {
-            title: "Settings - BOUNCE2BOUNCE",
-            layout: "layouts/dashboard",
-            currentPage: "settings"
-        });
-    }
-);
-
 // Settings Routes (Main Settings Hub)
 router.get(
     "/dashboard/settings",
@@ -946,16 +933,11 @@ router.get(
     }
 );
 
+// Legacy /settings route - redirects to modern dashboard settings
 router.get(
     "/settings",
-    asyncHandler(auth.jwtAdminPage),
-    asyncHandler(locals.user),
     (req, res) => {
-        res.render("settings", {
-            title: "Settings - BOUNCE2BOUNCE",
-            layout: "layouts/dashboard",
-            currentPage: "settings"
-        });
+        res.redirect(301, "/dashboard/settings");
     }
 );
 

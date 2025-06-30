@@ -33,10 +33,20 @@
         <!-- Settings Content -->
         <div class="lg:grid lg:grid-cols-12 lg:gap-x-5">
             <!-- Settings Navigation -->
-            <aside class="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3">
-                <nav class="space-y-1">
-                    <a href="#seo" class="bg-blue-50 border-blue-500 text-blue-700 hover:bg-blue-50 hover:text-blue-700 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item active" data-section="seo">
-                        <svg class="text-blue-500 group-hover:text-blue-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <aside class="py-6 px-2 sm:px-6 lg:py-0 lg:px-0 lg:col-span-3" role="navigation" aria-label="Settings navigation">
+                <!-- Mobile Settings Menu Toggle -->
+                <div class="lg:hidden mb-4">
+                    <button type="button" id="mobile-settings-menu" class="w-full flex items-center justify-between px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" aria-expanded="false" aria-controls="mobile-settings-nav">
+                        <span id="mobile-settings-current">SEO & Optimization</span>
+                        <svg class="ml-2 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+
+                <nav class="space-y-1 hidden lg:block" id="mobile-settings-nav" aria-label="Settings sections">
+                    <a href="#seo" class="bg-blue-50 border-blue-500 text-blue-700 hover:bg-blue-50 hover:text-blue-700 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item active min-h-[44px] touch-target" data-section="seo" role="tab" aria-selected="true" aria-controls="seo-section">
+                        <svg class="text-blue-500 group-hover:text-blue-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
                             <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
                             <line x1="12" y1="22.08" x2="12" y2="12"/>
@@ -44,31 +54,31 @@
                         <span class="truncate">SEO & Optimization</span>
                     </a>
 
-                    <a href="#general" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item" data-section="general">
-                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#general" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item min-h-[44px] touch-target" data-section="general" role="tab" aria-selected="false" aria-controls="general-section">
+                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <circle cx="12" cy="12" r="3"/>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                         </svg>
                         <span class="truncate">General</span>
                     </a>
 
-                    <a href="#notifications" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item" data-section="notifications">
-                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#notifications" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item min-h-[44px] touch-target" data-section="notifications" role="tab" aria-selected="false" aria-controls="notifications-section">
+                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                         </svg>
                         <span class="truncate">Notifications</span>
                     </a>
 
-                    <a href="#security" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item" data-section="security">
-                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#security" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item min-h-[44px] touch-target" data-section="security" role="tab" aria-selected="false" aria-controls="security-section">
+                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         </svg>
                         <span class="truncate">Security</span>
                     </a>
 
-                    <a href="#integrations" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item" data-section="integrations">
-                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <a href="#integrations" class="border-transparent text-gray-900 hover:bg-gray-50 hover:text-gray-900 group border-l-4 px-3 py-2 flex items-center text-sm font-medium settings-nav-item min-h-[44px] touch-target" data-section="integrations" role="tab" aria-selected="false" aria-controls="integrations-section">
+                        <svg class="text-gray-400 group-hover:text-gray-500 flex-shrink-0 -ml-1 mr-3 h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M13.828 10.172a4 4 0 0 0-5.656 0l-4 4a4 4 0 1 0 5.656 5.656l1.102-1.101m-.758-4.899a4 4 0 0 0 5.656 0l4-4a4 4 0 0 0-5.656-5.656l-1.1 1.1"/>
                         </svg>
                         <span class="truncate">Integrations</span>
@@ -77,196 +87,229 @@
             </aside>
             <!-- Settings Content -->
             <div class="space-y-6 sm:px-6 lg:px-0 lg:col-span-9">
-                <form id="settings-form">
+                <form id="settings-form" role="form" aria-label="Settings configuration form">
 
                     <!-- SEO & Optimization Section -->
-                    <div id="seo-section" class="settings-section">
+                    <div id="seo-section" class="settings-section" role="tabpanel" aria-labelledby="seo-tab">
                         <div class="bg-white shadow sm:rounded-lg">
                             <div class="px-4 py-5 sm:p-6">
-                                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">SEO & Optimization</h3>
+                                <h3 id="seo-heading" class="text-lg leading-6 font-medium text-gray-900 mb-2">SEO & Optimization</h3>
                                 <p class="text-sm text-gray-500 mb-6">Configure search engine optimization and performance settings for your platform</p>
 
                                 <!-- SEO Settings Tabs -->
                                 <div class="border-b border-gray-200 mb-6">
-                                    <nav class="-mb-px flex space-x-8">
-                                        <button type="button" class="seo-tab-button active border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" data-tab="meta-tags">
+                                    <nav class="-mb-px flex flex-wrap gap-2 sm:gap-0 sm:space-x-8" role="tablist" aria-label="SEO settings tabs">
+                                        <button type="button" class="seo-tab-button active border-blue-500 text-blue-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-target" data-tab="meta-tags" role="tab" aria-selected="true" aria-controls="meta-tags-tab" id="meta-tags-tab-button">
                                             Meta Tags
                                         </button>
-                                        <button type="button" class="seo-tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" data-tab="analytics">
+                                        <button type="button" class="seo-tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-target" data-tab="analytics" role="tab" aria-selected="false" aria-controls="analytics-tab" id="analytics-tab-button">
                                             Analytics
                                         </button>
-                                        <button type="button" class="seo-tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm" data-tab="performance">
+                                        <button type="button" class="seo-tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm min-h-[44px] touch-target" data-tab="performance" role="tab" aria-selected="false" aria-controls="performance-tab" id="performance-tab-button">
                                             Performance
                                         </button>
                                     </nav>
                                 </div>
 
                                 <!-- Meta Tags Tab -->
-                                <div id="meta-tags-tab" class="seo-tab-content">
-                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                        <div>
-                                            <label for="default_title" class="block text-sm font-medium text-gray-700">Default Title</label>
+                                <div id="meta-tags-tab" class="seo-tab-content" role="tabpanel" aria-labelledby="meta-tags-tab-button">
+                                    <fieldset class="space-y-6">
+                                        <legend class="sr-only">Meta Tags Configuration</legend>
+
+                                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                            <div>
+                                                <label for="default_title" class="block text-sm font-medium text-gray-700">
+                                                    Default Title <span class="text-red-500" aria-label="required">*</span>
+                                                </label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        id="default_title"
+                                                        name="default_title"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        value="{{seoSettings.default_title}}"
+                                                        maxlength="60"
+                                                        required
+                                                        aria-describedby="default_title_help"
+                                                        autocomplete="off"
+                                                    >
+                                                </div>
+                                                <p id="default_title_help" class="mt-2 text-sm text-gray-500">Recommended: 50-60 characters</p>
+                                            </div>
+
+                                            <div>
+                                                <label for="default_author" class="block text-sm font-medium text-gray-700">Default Author</label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        id="default_author"
+                                                        name="default_author"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        value="{{seoSettings.default_author}}"
+                                                        autocomplete="name"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-6">
+                                            <label for="default_description" class="block text-sm font-medium text-gray-700">
+                                                Default Description <span class="text-red-500" aria-label="required">*</span>
+                                            </label>
                                             <div class="mt-1">
-                                                <input
-                                                    type="text"
-                                                    id="default_title"
-                                                    name="default_title"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    value="{{seoSettings.default_title}}"
-                                                    maxlength="60"
+                                                <textarea
+                                                    id="default_description"
+                                                    name="default_description"
+                                                    rows="3"
+                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md"
+                                                    maxlength="160"
                                                     required
-                                                >
+                                                    aria-describedby="default_description_help"
+                                                    autocomplete="off"
+                                                >{{seoSettings.default_description}}</textarea>
                                             </div>
-                                            <p class="mt-2 text-sm text-gray-500">Recommended: 50-60 characters</p>
+                                            <p id="default_description_help" class="mt-2 text-sm text-gray-500">Recommended: 120-160 characters</p>
                                         </div>
 
-                                        <div>
-                                            <label for="default_author" class="block text-sm font-medium text-gray-700">Default Author</label>
+                                        <div class="mt-6">
+                                            <label for="default_keywords" class="block text-sm font-medium text-gray-700">Default Keywords</label>
                                             <div class="mt-1">
                                                 <input
                                                     type="text"
-                                                    id="default_author"
-                                                    name="default_author"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    value="{{seoSettings.default_author}}"
+                                                    id="default_keywords"
+                                                    name="default_keywords"
+                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                    value="{{seoSettings.default_keywords}}"
+                                                    placeholder="keyword1, keyword2, keyword3"
+                                                    aria-describedby="default_keywords_help"
+                                                    autocomplete="off"
                                                 >
                                             </div>
+                                            <p id="default_keywords_help" class="mt-2 text-sm text-gray-500">Comma-separated keywords</p>
                                         </div>
-                                    </div>
 
-                                    <div class="mt-6">
-                                        <label for="default_description" class="block text-sm font-medium text-gray-700">Default Description</label>
-                                        <div class="mt-1">
-                                            <textarea
-                                                id="default_description"
-                                                name="default_description"
-                                                rows="3"
-                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                maxlength="160"
-                                                required
-                                            >{{seoSettings.default_description}}</textarea>
-                                        </div>
-                                        <p class="mt-2 text-sm text-gray-500">Recommended: 120-160 characters</p>
-                                    </div>
-
-                                    <div class="mt-6">
-                                        <label for="default_keywords" class="block text-sm font-medium text-gray-700">Default Keywords</label>
-                                        <div class="mt-1">
-                                            <input
-                                                type="text"
-                                                id="default_keywords"
-                                                name="default_keywords"
-                                                class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                value="{{seoSettings.default_keywords}}"
-                                                placeholder="keyword1, keyword2, keyword3"
-                                            >
-                                        </div>
-                                        <p class="mt-2 text-sm text-gray-500">Comma-separated keywords</p>
-                                    </div>
-
-                                    <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                        <div>
-                                            <label for="default_og_image" class="block text-sm font-medium text-gray-700">Default Open Graph Image</label>
-                                            <div class="mt-1">
-                                                <input
-                                                    type="url"
-                                                    id="default_og_image"
-                                                    name="default_og_image"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    value="{{seoSettings.default_og_image}}"
-                                                    placeholder="/images/bounce-logo.svg"
-                                                >
+                                        <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                            <div>
+                                                <label for="default_og_image" class="block text-sm font-medium text-gray-700">Default Open Graph Image</label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="url"
+                                                        id="default_og_image"
+                                                        name="default_og_image"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        value="{{seoSettings.default_og_image}}"
+                                                        placeholder="/images/bounce-logo.svg"
+                                                        aria-describedby="default_og_image_help"
+                                                        autocomplete="url"
+                                                    >
+                                                </div>
+                                                <p id="default_og_image_help" class="mt-2 text-sm text-gray-500">URL to default social sharing image</p>
                                             </div>
-                                            <p class="mt-2 text-sm text-gray-500">URL to default social sharing image</p>
-                                        </div>
 
-                                        <div>
-                                            <label for="twitter_handle" class="block text-sm font-medium text-gray-700">Twitter Handle</label>
-                                            <div class="mt-1">
-                                                <input
-                                                    type="text"
-                                                    id="twitter_handle"
-                                                    name="twitter_handle"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    value="{{seoSettings.twitter_handle}}"
-                                                    placeholder="@bounce2bounce"
-                                                >
+                                            <div>
+                                                <label for="twitter_handle" class="block text-sm font-medium text-gray-700">Twitter Handle</label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        id="twitter_handle"
+                                                        name="twitter_handle"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        value="{{seoSettings.twitter_handle}}"
+                                                        placeholder="@bounce2bounce"
+                                                        aria-describedby="twitter_handle_help"
+                                                        autocomplete="username"
+                                                    >
+                                                </div>
+                                                <p id="twitter_handle_help" class="mt-2 text-sm text-gray-500">Include the @ symbol</p>
                                             </div>
-                                            <p class="mt-2 text-sm text-gray-500">Include the @ symbol</p>
                                         </div>
-                                    </div>
+                                    </fieldset>
                                 </div>
 
                                 <!-- Analytics Tab -->
-                                <div id="analytics-tab" class="seo-tab-content hidden">
-                                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                        <div>
-                                            <label for="google_analytics_id" class="block text-sm font-medium text-gray-700">Google Analytics ID</label>
-                                            <div class="mt-1">
-                                                <input
-                                                    type="text"
-                                                    id="google_analytics_id"
-                                                    name="google_analytics_id"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    value="{{seoSettings.google_analytics_id}}"
-                                                    placeholder="G-XXXXXXXXXX"
-                                                >
-                                            </div>
-                                            <p class="mt-2 text-sm text-gray-500">Google Analytics 4 measurement ID</p>
-                                        </div>
+                                <div id="analytics-tab" class="seo-tab-content hidden" role="tabpanel" aria-labelledby="analytics-tab-button">
+                                    <fieldset class="space-y-6">
+                                        <legend class="sr-only">Analytics Configuration</legend>
 
-                                        <div>
-                                            <label for="google_search_console_id" class="block text-sm font-medium text-gray-700">Search Console Verification</label>
-                                            <div class="mt-1">
-                                                <input
-                                                    type="text"
-                                                    id="google_search_console_id"
-                                                    name="google_search_console_id"
-                                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                    value="{{seoSettings.google_search_console_id}}"
-                                                    placeholder="google-site-verification=..."
-                                                >
+                                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                            <div>
+                                                <label for="google_analytics_id" class="block text-sm font-medium text-gray-700">Google Analytics ID</label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        id="google_analytics_id"
+                                                        name="google_analytics_id"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        value="{{seoSettings.google_analytics_id}}"
+                                                        placeholder="G-XXXXXXXXXX"
+                                                        aria-describedby="google_analytics_id_help"
+                                                        autocomplete="off"
+                                                    >
+                                                </div>
+                                                <p id="google_analytics_id_help" class="mt-2 text-sm text-gray-500">Google Analytics 4 measurement ID</p>
                                             </div>
-                                            <p class="mt-2 text-sm text-gray-500">Google Search Console verification meta tag content</p>
+
+                                            <div>
+                                                <label for="google_search_console_id" class="block text-sm font-medium text-gray-700">Search Console Verification</label>
+                                                <div class="mt-1">
+                                                    <input
+                                                        type="text"
+                                                        id="google_search_console_id"
+                                                        name="google_search_console_id"
+                                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full text-base sm:text-sm border-gray-300 rounded-md min-h-[44px]"
+                                                        value="{{seoSettings.google_search_console_id}}"
+                                                        placeholder="google-site-verification=..."
+                                                        aria-describedby="google_search_console_id_help"
+                                                        autocomplete="off"
+                                                    >
+                                                </div>
+                                                <p id="google_search_console_id_help" class="mt-2 text-sm text-gray-500">Google Search Console verification meta tag content</p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </fieldset>
                                 </div>
 
                                 <!-- Performance Tab -->
-                                <div id="performance-tab" class="seo-tab-content hidden">
-                                    <div class="space-y-6">
-                                        <div class="relative flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input
-                                                    id="enable_compression"
-                                                    name="enable_compression"
-                                                    type="checkbox"
-                                                    class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                                    {{#if seoSettings.enable_compression}}checked{{/if}}
-                                                >
-                                            </div>
-                                            <div class="ml-3 text-sm">
-                                                <label for="enable_compression" class="font-medium text-gray-700">Enable Compression</label>
-                                                <p class="text-gray-500">Compress responses to improve loading speed</p>
-                                            </div>
-                                        </div>
+                                <div id="performance-tab" class="seo-tab-content hidden" role="tabpanel" aria-labelledby="performance-tab-button">
+                                    <fieldset class="space-y-6">
+                                        <legend class="sr-only">Performance Configuration</legend>
 
-                                        <div class="relative flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input
-                                                    id="enable_caching"
-                                                    name="enable_caching"
-                                                    type="checkbox"
-                                                    class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                                                    {{#if seoSettings.enable_caching}}checked{{/if}}
-                                                >
+                                        <div class="space-y-6">
+                                            <div class="relative flex items-start min-h-[44px]">
+                                                <div class="flex items-center h-5 mt-1">
+                                                    <input
+                                                        id="enable_compression"
+                                                        name="enable_compression"
+                                                        type="checkbox"
+                                                        class="focus:ring-blue-500 h-5 w-5 text-blue-600 border-gray-300 rounded"
+                                                        {{#if seoSettings.enable_compression}}checked{{/if}}
+                                                        aria-describedby="enable_compression_help"
+                                                    >
+                                                </div>
+                                                <div class="ml-3 text-sm">
+                                                    <label for="enable_compression" class="font-medium text-gray-700 cursor-pointer">Enable Compression</label>
+                                                    <p id="enable_compression_help" class="text-gray-500">Compress responses to improve loading speed</p>
+                                                </div>
                                             </div>
-                                            <div class="ml-3 text-sm">
-                                                <label for="enable_caching" class="font-medium text-gray-700">Enable Caching</label>
-                                                <p class="text-gray-500">Cache static resources for better performance</p>
+
+                                            <div class="relative flex items-start min-h-[44px]">
+                                                <div class="flex items-center h-5 mt-1">
+                                                    <input
+                                                        id="enable_caching"
+                                                        name="enable_caching"
+                                                        type="checkbox"
+                                                        class="focus:ring-blue-500 h-5 w-5 text-blue-600 border-gray-300 rounded"
+                                                        {{#if seoSettings.enable_caching}}checked{{/if}}
+                                                        aria-describedby="enable_caching_help"
+                                                    >
+                                                </div>
+                                                <div class="ml-3 text-sm">
+                                                    <label for="enable_caching" class="font-medium text-gray-700 cursor-pointer">Enable Caching</label>
+                                                    <p id="enable_caching_help" class="text-gray-500">Cache static resources for better performance</p>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </fieldset>
                                 </div>
                             </div>
                         </div>
@@ -352,81 +395,163 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('⚙️ Settings page loaded');
 
+    // Mobile settings menu functionality
+    const mobileMenuButton = document.getElementById('mobile-settings-menu');
+    const mobileMenuNav = document.getElementById('mobile-settings-nav');
+    const mobileCurrentText = document.getElementById('mobile-settings-current');
+
+    if (mobileMenuButton && mobileMenuNav) {
+        mobileMenuButton.addEventListener('click', function() {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            this.setAttribute('aria-expanded', !isExpanded);
+
+            if (isExpanded) {
+                mobileMenuNav.classList.add('hidden');
+                mobileMenuNav.classList.remove('block');
+            } else {
+                mobileMenuNav.classList.remove('hidden');
+                mobileMenuNav.classList.add('block');
+            }
+        });
+    }
+
     // Initialize modern dashboard navigation
     const navItems = document.querySelectorAll('.settings-nav-item');
     const sections = document.querySelectorAll('.settings-section');
+
+    function switchToSection(targetSection, sectionName) {
+        // Remove active classes from all nav items
+        navItems.forEach(nav => {
+            nav.classList.remove('bg-blue-50', 'border-blue-500', 'text-blue-700');
+            nav.classList.add('border-transparent', 'text-gray-900', 'hover:bg-gray-50', 'hover:text-gray-900');
+            nav.setAttribute('aria-selected', 'false');
+            const svg = nav.querySelector('svg');
+            if (svg) {
+                svg.classList.remove('text-blue-500');
+                svg.classList.add('text-gray-400', 'group-hover:text-gray-500');
+            }
+        });
+
+        // Hide all sections
+        sections.forEach(section => {
+            section.classList.add('hidden');
+        });
+
+        // Find and activate the target nav item
+        const targetNavItem = document.querySelector(`[data-section="${targetSection}"]`);
+        if (targetNavItem) {
+            targetNavItem.classList.remove('border-transparent', 'text-gray-900', 'hover:bg-gray-50', 'hover:text-gray-900');
+            targetNavItem.classList.add('bg-blue-50', 'border-blue-500', 'text-blue-700');
+            targetNavItem.setAttribute('aria-selected', 'true');
+            const svg = targetNavItem.querySelector('svg');
+            if (svg) {
+                svg.classList.remove('text-gray-400', 'group-hover:text-gray-500');
+                svg.classList.add('text-blue-500');
+            }
+        }
+
+        // Show target section
+        const targetElement = document.getElementById(targetSection + '-section');
+        if (targetElement) {
+            targetElement.classList.remove('hidden');
+        }
+
+        // Update mobile menu current text
+        if (mobileCurrentText && sectionName) {
+            mobileCurrentText.textContent = sectionName;
+        }
+
+        // Close mobile menu
+        if (mobileMenuButton && mobileMenuNav) {
+            mobileMenuButton.setAttribute('aria-expanded', 'false');
+            mobileMenuNav.classList.add('hidden');
+            mobileMenuNav.classList.remove('block');
+        }
+
+        console.log(`📋 Switched to section: ${targetSection}`);
+    }
 
     navItems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
 
             const targetSection = this.getAttribute('data-section');
+            const sectionName = this.querySelector('span').textContent.trim();
 
-            // Remove active classes from all nav items
-            navItems.forEach(nav => {
-                nav.classList.remove('bg-blue-50', 'border-blue-500', 'text-blue-700');
-                nav.classList.add('border-transparent', 'text-gray-900', 'hover:bg-gray-50', 'hover:text-gray-900');
-                const svg = nav.querySelector('svg');
-                if (svg) {
-                    svg.classList.remove('text-blue-500');
-                    svg.classList.add('text-gray-400', 'group-hover:text-gray-500');
-                }
-            });
-
-            // Hide all sections
-            sections.forEach(section => {
-                section.classList.add('hidden');
-            });
-
-            // Add active class to clicked nav item
-            this.classList.remove('border-transparent', 'text-gray-900', 'hover:bg-gray-50', 'hover:text-gray-900');
-            this.classList.add('bg-blue-50', 'border-blue-500', 'text-blue-700');
-            const svg = this.querySelector('svg');
-            if (svg) {
-                svg.classList.remove('text-gray-400', 'group-hover:text-gray-500');
-                svg.classList.add('text-blue-500');
-            }
-
-            // Show target section
-            const targetElement = document.getElementById(targetSection + '-section');
-            if (targetElement) {
-                targetElement.classList.remove('hidden');
-            }
-
-            console.log(`📋 Switched to section: ${targetSection}`);
+            switchToSection(targetSection, sectionName);
         });
     });
 
-    // SEO Tab functionality
+    // SEO Tab functionality with keyboard navigation
     const seoTabButtons = document.querySelectorAll('.seo-tab-button');
     const seoTabContents = document.querySelectorAll('.seo-tab-content');
 
-    seoTabButtons.forEach(button => {
+    function switchSEOTab(targetTab) {
+        // Remove active classes from all tab buttons
+        seoTabButtons.forEach(btn => {
+            btn.classList.remove('border-blue-500', 'text-blue-600', 'active');
+            btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            btn.setAttribute('aria-selected', 'false');
+            btn.setAttribute('tabindex', '-1');
+        });
+
+        // Hide all tab contents
+        seoTabContents.forEach(content => {
+            content.classList.add('hidden');
+        });
+
+        // Find and activate target button
+        const targetButton = document.querySelector(`[data-tab="${targetTab}"]`);
+        if (targetButton) {
+            targetButton.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            targetButton.classList.add('border-blue-500', 'text-blue-600', 'active');
+            targetButton.setAttribute('aria-selected', 'true');
+            targetButton.setAttribute('tabindex', '0');
+        }
+
+        // Show target tab content
+        const targetContent = document.getElementById(targetTab + '-tab');
+        if (targetContent) {
+            targetContent.classList.remove('hidden');
+        }
+
+        console.log(`🔧 Switched to SEO tab: ${targetTab}`);
+    }
+
+    seoTabButtons.forEach((button, index) => {
         button.addEventListener('click', function() {
             const targetTab = this.getAttribute('data-tab');
+            switchSEOTab(targetTab);
+        });
 
-            // Remove active classes from all tab buttons
-            seoTabButtons.forEach(btn => {
-                btn.classList.remove('border-blue-500', 'text-blue-600', 'active');
-                btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-            });
+        // Keyboard navigation for tabs
+        button.addEventListener('keydown', function(e) {
+            let targetIndex;
 
-            // Hide all tab contents
-            seoTabContents.forEach(content => {
-                content.classList.add('hidden');
-            });
-
-            // Add active class to clicked button
-            this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-            this.classList.add('border-blue-500', 'text-blue-600', 'active');
-
-            // Show target tab content
-            const targetContent = document.getElementById(targetTab + '-tab');
-            if (targetContent) {
-                targetContent.classList.remove('hidden');
+            switch(e.key) {
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    targetIndex = index > 0 ? index - 1 : seoTabButtons.length - 1;
+                    seoTabButtons[targetIndex].focus();
+                    switchSEOTab(seoTabButtons[targetIndex].getAttribute('data-tab'));
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    targetIndex = index < seoTabButtons.length - 1 ? index + 1 : 0;
+                    seoTabButtons[targetIndex].focus();
+                    switchSEOTab(seoTabButtons[targetIndex].getAttribute('data-tab'));
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    seoTabButtons[0].focus();
+                    switchSEOTab(seoTabButtons[0].getAttribute('data-tab'));
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    seoTabButtons[seoTabButtons.length - 1].focus();
+                    switchSEOTab(seoTabButtons[seoTabButtons.length - 1].getAttribute('data-tab'));
+                    break;
             }
-
-            console.log(`🔧 Switched to SEO tab: ${targetTab}`);
         });
     });
 
@@ -436,6 +561,12 @@ document.addEventListener('DOMContentLoaded', function() {
         saveButton.addEventListener('click', async function() {
             console.log('💾 Saving settings...');
 
+            // Validate form before saving
+            if (!validateForm()) {
+                showMessage('Please fill in all required fields.', 'error');
+                return;
+            }
+
             const form = document.getElementById('settings-form');
             const formData = new FormData(form);
 
@@ -443,6 +574,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = true;
             const originalHTML = this.innerHTML;
             this.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Saving...';
+            this.setAttribute('aria-busy', 'true');
 
             try {
                 const response = await fetch('/dashboard/settings', {
@@ -466,8 +598,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset button state
                 this.disabled = false;
                 this.innerHTML = originalHTML;
+                this.removeAttribute('aria-busy');
             }
         });
+    }
+
+    // Form validation
+    function validateForm() {
+        const form = document.getElementById('settings-form');
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+
+        requiredFields.forEach(field => {
+            const value = field.value.trim();
+            const errorId = field.id + '_error';
+            let errorElement = document.getElementById(errorId);
+
+            // Remove existing error styling
+            field.classList.remove('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+            field.setAttribute('aria-invalid', 'false');
+
+            if (errorElement) {
+                errorElement.remove();
+            }
+
+            if (!value) {
+                isValid = false;
+
+                // Add error styling
+                field.classList.add('border-red-300', 'focus:border-red-500', 'focus:ring-red-500');
+                field.setAttribute('aria-invalid', 'true');
+
+                // Create error message
+                errorElement = document.createElement('p');
+                errorElement.id = errorId;
+                errorElement.className = 'mt-1 text-sm text-red-600';
+                errorElement.textContent = 'This field is required';
+                errorElement.setAttribute('role', 'alert');
+
+                field.parentNode.appendChild(errorElement);
+                field.setAttribute('aria-describedby', field.getAttribute('aria-describedby') + ' ' + errorId);
+            }
+        });
+
+        return isValid;
     }
 
     function showMessage(message, type) {
@@ -483,16 +657,47 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add appropriate styling based on type
             if (type === 'success') {
                 content.classList.add('bg-green-50', 'text-green-800', 'border', 'border-green-200');
+                content.setAttribute('role', 'status');
             } else {
                 content.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-200');
+                content.setAttribute('role', 'alert');
             }
 
             container.classList.remove('hidden');
 
+            // Focus the message for screen readers
+            content.setAttribute('tabindex', '-1');
+            content.focus();
+
             setTimeout(() => {
                 container.classList.add('hidden');
+                content.removeAttribute('tabindex');
             }, 5000);
         }
     }
+
+    // Handle URL hash for direct section navigation
+    function handleHashNavigation() {
+        const hash = window.location.hash.substring(1);
+        if (hash) {
+            const sectionNames = {
+                'seo': 'SEO & Optimization',
+                'general': 'General',
+                'notifications': 'Notifications',
+                'security': 'Security',
+                'integrations': 'Integrations'
+            };
+
+            if (sectionNames[hash]) {
+                switchToSection(hash, sectionNames[hash]);
+            }
+        }
+    }
+
+    // Handle hash changes
+    window.addEventListener('hashchange', handleHashNavigation);
+
+    // Handle initial hash on page load
+    handleHashNavigation();
 });
 </script>
