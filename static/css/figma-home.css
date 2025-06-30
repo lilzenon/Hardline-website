@@ -876,6 +876,15 @@ body {
 }
 
 
+/* FIX: Prevent white background in dark mode iframes */
+
+.modal-iframe-container iframe,
+#poshIframe {
+    color-scheme: normal !important;
+    background: transparent !important;
+}
+
+
 /* Navigation Bar Styles (Existing) */
 
 .navbar-container {

@@ -121,7 +121,7 @@ class CheckoutNav {
         try {
             if (this.isModalOpen) return;
 
-            console.log('🎫 Opening modal - EXACT SAME as working homepage modal');
+            console.log('🎫 Opening modal - using pure CSS styling like homepage');
 
             this.isModalOpen = true;
 
@@ -131,21 +131,26 @@ class CheckoutNav {
             if (ticketUrl && ticketUrl.trim() !== '' && ticketUrl !== 'null') {
                 console.log('✅ Opening tickets modal with URL:', ticketUrl);
 
-                // Update modal iframe source - EXACT SAME as homepage
+                // Update modal iframe source
                 if (this.iframe) {
                     console.log('🎯 Setting iframe src to:', ticketUrl);
                     this.iframe.src = ticketUrl;
+
+                    // CRITICAL FIX: Apply color-scheme fix immediately
+                    this.iframe.style.setProperty('color-scheme', 'normal', 'important');
+                    this.iframe.style.setProperty('background', 'transparent', 'important');
+                    console.log('🎨 Applied color-scheme fix to iframe');
                 } else {
                     console.error('❌ poshIframe element not found in DOM');
                 }
 
-                // Show modal - EXACT SAME as homepage
+                // Show modal - let CSS handle all styling
                 if (this.modal) {
                     console.log('🎪 Opening modal overlay...');
                     this.modal.style.display = 'flex';
                     this.modal.classList.add('active');
                     document.body.style.overflow = 'hidden';
-                    console.log('✅ Modal opened successfully with active class');
+                    console.log('✅ Modal opened - CSS will handle styling');
                 } else {
                     console.error('❌ modalOverlay element not found in DOM');
                 }
@@ -153,7 +158,7 @@ class CheckoutNav {
                 console.warn('🎫 No ticket URL found');
             }
 
-            console.log('🎫 Modal opening completed successfully');
+            console.log('🎫 Modal opening completed - no JavaScript styling overrides');
         } catch (error) {
             console.error('🎫 ERROR in openModal:', error);
             this.isModalOpen = false; // Reset state on error
@@ -168,15 +173,15 @@ class CheckoutNav {
     closeModal() {
         if (!this.isModalOpen) return;
 
-        console.log('🎫 Closing modal - EXACT SAME as working homepage modal');
+        console.log('🎫 Closing modal - using pure CSS styling like homepage');
         this.isModalOpen = false;
 
-        // Hide modal - EXACT SAME as homepage
+        // Hide modal - let CSS handle styling
         this.modal.style.display = 'none';
         this.modal.classList.remove('active');
         document.body.style.overflow = '';
 
-        console.log('🚪 Modal closed via close button');
+        console.log('🚪 Modal closed');
     }
 
     cleanupDynamicSizing() {
@@ -256,6 +261,11 @@ class CheckoutNav {
         // SIMPLE iframe load handling - like working homepage modal
         this.iframe.addEventListener('load', () => {
             console.log('🎫 Ticket iframe loaded successfully - simple pattern');
+
+            // CRITICAL FIX: Apply color-scheme fix after iframe loads
+            this.iframe.style.setProperty('color-scheme', 'normal', 'important');
+            this.iframe.style.setProperty('background', 'transparent', 'important');
+            console.log('🎨 Applied color-scheme fix after iframe load');
         }, { once: true });
 
         // SIMPLE iframe error handling
@@ -925,7 +935,7 @@ class CheckoutNav {
     }
 
     updateModalHeight(iframeHeight) {
-        const modalContent = this.modal && this.modal.querySelector('.checkout-modal-content');
+        const modalContent = this.modal && this.modal.querySelector('.modal-content');
         if (!modalContent) return;
 
         // AGGRESSIVE APPROACH: Remove all height constraints for Posh embeds
@@ -939,7 +949,7 @@ class CheckoutNav {
             console.log('🎫 REMOVED modal height constraints for Posh embed');
         } else {
             // For other embeds: Use conservative constraints
-            const header = modalContent.querySelector('.checkout-modal-header');
+            const header = modalContent.querySelector('.modal-close');
             const headerHeight = header ? header.offsetHeight : 60;
             const padding = 40; // 20px top + 20px bottom
             const totalHeight = iframeHeight + headerHeight + padding;
@@ -1320,7 +1330,7 @@ function diagnoseIframeHeight() {
 
     const iframe = window.checkoutNav.iframe;
     const modal = window.checkoutNav.modal;
-    const modalContent = modal && modal.querySelector('.checkout-modal-content');
+    const modalContent = modal && modal.querySelector('.modal-content');
 
     console.log('🎫 IFRAME ANALYSIS:');
     console.log('  - style.height:', iframe.style.height);
@@ -1391,7 +1401,7 @@ function debugPoshIssue() {
 
     console.log('🎫 2. MODAL STATE:');
     if (modal) {
-        const modalContent = modal.querySelector('.checkout-modal-content');
+        const modalContent = modal.querySelector('.modal-content');
         console.log('   - modal found:', true);
         console.log('   - modal.style.maxHeight:', modal.style.maxHeight);
         console.log('   - modal computedMaxHeight:', window.getComputedStyle(modal).maxHeight);
@@ -1422,7 +1432,7 @@ function debugPoshIssue() {
 
         if (modal) {
             modal.style.maxHeight = 'none';
-            const modalContent = modal.querySelector('.checkout-modal-content');
+            const modalContent = modal.querySelector('.modal-content');
             if (modalContent) {
                 modalContent.style.maxHeight = 'none';
                 modalContent.style.height = 'auto';
@@ -1620,102 +1630,10 @@ function removeTestIframe() {
 
 // REFINED: Create properly-sized modal with glassmorphism that fits Posh content
 function createOptimalPoshModal() {
-    console.log('🎫 CREATING OPTIMAL POSH MODAL...');
+    console.log('🎫 Using pure CSS styling like working homepage - no JavaScript overrides needed');
 
-    if (!window.checkoutNav || !window.checkoutNav.iframe) {
-        console.error('🎫 Modal iframe not found!');
-        return;
-    }
-
-    const iframe = window.checkoutNav.iframe;
-    const modal = window.checkoutNav.modal;
-    const modalContent = modal && modal.querySelector('.checkout-modal-content');
-
-    console.log('🎫 BEFORE optimal modal creation:');
-    console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
-    console.log('  - modal.offsetHeight:', modal.offsetHeight);
-
-    // OPTIMAL MODAL CONTAINER (centered, proper size, glassmorphism)
-    if (modal) {
-        modal.style.setProperty('position', 'fixed', 'important');
-        modal.style.setProperty('top', '0', 'important');
-        modal.style.setProperty('left', '0', 'important');
-        modal.style.setProperty('width', '100vw', 'important');
-        modal.style.setProperty('height', '100vh', 'important');
-        modal.style.setProperty('display', 'flex', 'important');
-        modal.style.setProperty('align-items', 'center', 'important');
-        modal.style.setProperty('justify-content', 'center', 'important');
-        modal.style.setProperty('padding', '20px', 'important');
-        modal.style.setProperty('overflow', 'auto', 'important');
-        modal.style.setProperty('z-index', '2000', 'important');
-
-        // Glassmorphism backdrop
-        modal.style.setProperty('background', 'rgba(0, 0, 0, 0.5)', 'important');
-        modal.style.setProperty('backdrop-filter', 'blur(12px)', 'important');
-    }
-
-    // OPTIMAL MODAL CONTENT (sized for Posh content + glassmorphism)
-    if (modalContent) {
-        modalContent.style.setProperty('width', 'min(90vw, 600px)', 'important');
-        modalContent.style.setProperty('height', 'auto', 'important');
-        modalContent.style.setProperty('min-height', '400px', 'important'); // Accommodate 320px iframe + padding
-        modalContent.style.setProperty('max-height', '70vh', 'important');
-        modalContent.style.setProperty('overflow', 'auto', 'important');
-        modalContent.style.setProperty('padding', '0', 'important');
-        modalContent.style.setProperty('margin', '0', 'important');
-        modalContent.style.setProperty('border-radius', '0', 'important');
-
-        // Dark styling to match working homepage modal
-        modalContent.style.setProperty('background', '#1a1a1a', 'important');
-        modalContent.style.setProperty('border', 'none', 'important');
-        modalContent.style.setProperty('box-shadow', 'none', 'important');
-
-        // Flexbox for proper iframe accommodation
-        modalContent.style.setProperty('display', 'flex', 'important');
-        modalContent.style.setProperty('flex-direction', 'column', 'important');
-        modalContent.style.setProperty('gap', '0', 'important');
-    }
-
-    // FIXED IFRAME (320px height - eliminates white space)
-    iframe.style.setProperty('width', '100%', 'important');
-    iframe.style.setProperty('height', '320px', 'important');
-    iframe.style.setProperty('min-height', '320px', 'important');
-    iframe.style.setProperty('max-height', '320px', 'important');
-    iframe.style.setProperty('border', 'none', 'important');
-    iframe.style.setProperty('border-radius', '0', 'important');
-    iframe.style.setProperty('overflow', 'hidden', 'important');
-    iframe.style.setProperty('flex-shrink', '0', 'important');
-    iframe.style.setProperty('flex-grow', '0', 'important');
-    iframe.style.setProperty('background', 'transparent', 'important');
-
-    // IFRAME CONTAINER STYLING (remove white background)
-    const iframeContainer = modalContent.querySelector('.modal-iframe-container');
-    if (iframeContainer) {
-        iframeContainer.style.setProperty('width', '100%', 'important');
-        iframeContainer.style.setProperty('height', '320px', 'important');
-        iframeContainer.style.setProperty('border-radius', '0', 'important');
-        iframeContainer.style.setProperty('overflow', 'hidden', 'important');
-        iframeContainer.style.setProperty('background', 'transparent', 'important');
-        console.log('🎫 Applied iframe container styling - removed white background');
-    }
-
-    setTimeout(() => {
-        console.log('🎫 AFTER optimal modal creation:');
-        console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
-        console.log('  - modal.offsetHeight:', modal.offsetHeight);
-        console.log('  - modalContent.offsetHeight:', modalContent && modalContent.offsetHeight);
-        console.log('  - Success:', iframe.offsetHeight >= 1100);
-
-        if (iframe.offsetHeight >= 1100) {
-            console.log('🎫 SUCCESS! Optimal modal created - Posh content should display perfectly!');
-            console.log('🎫 Modal is centered, properly sized, with dark styling to match homepage');
-            console.log('🎫 Background page visible around modal edges');
-        } else {
-            console.log('🎫 Still some constraints. Checking...');
-        }
-    }, 500);
-
-    console.log('🎫 Optimal Posh modal created - centered, properly sized, dark styling to match homepage');
+    // The modal will use the exact same CSS styling as the working home page
+    // No JavaScript modifications needed - let figma-home.css handle all styling
 }
 
 // ENHANCED: Add close button and improve modal UX
@@ -1728,7 +1646,7 @@ function enhanceOptimalModal() {
     }
 
     const modal = window.checkoutNav.modal;
-    const modalContent = modal.querySelector('.checkout-modal-content');
+    const modalContent = modal.querySelector('.modal-content');
 
     if (!modalContent) {
         console.error('🎫 Modal content not found!');
@@ -1805,7 +1723,7 @@ function enhanceOptimalModal() {
         title.style.setProperty('text-align', 'center', 'important');
 
         // Insert title before iframe
-        const iframe = modalContent.querySelector('.checkout-iframe');
+        const iframe = modalContent.querySelector('#poshIframe');
         if (iframe) {
             modalContent.insertBefore(title, iframe);
         } else {
@@ -1829,7 +1747,7 @@ function destroyModalConstraints() {
 
     const iframe = window.checkoutNav.iframe;
     const modal = window.checkoutNav.modal;
-    const modalContent = modal && modal.querySelector('.checkout-modal-content');
+    const modalContent = modal && modal.querySelector('.modal-content');
 
     console.log('🎫 BEFORE constraint destruction:');
     console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
@@ -1908,7 +1826,7 @@ function fixModalIframeWithWorkingApproach() {
 
     const iframe = window.checkoutNav.iframe;
     const modal = window.checkoutNav.modal;
-    const modalContent = modal && modal.querySelector('.checkout-modal-content');
+    const modalContent = modal && modal.querySelector('.modal-content');
 
     console.log('🎫 Before fix:');
     console.log('  - iframe.offsetHeight:', iframe.offsetHeight);
@@ -1970,7 +1888,7 @@ function forceIframeFullHeight() {
 
         const iframe = window.checkoutNav.iframe;
         const modal = window.checkoutNav.modal;
-        const modalContent = modal && modal.querySelector('.checkout-modal-content');
+        const modalContent = modal && modal.querySelector('.modal-content');
 
         // EXTREME height forcing
         const extremeHeight = 1500;
@@ -2036,7 +1954,7 @@ function forceNoScrollHeight() {
         // DIRECT DOM manipulation - bypass all constraints
         const iframe = window.checkoutNav.iframe;
         const modal = window.checkoutNav.modal;
-        const modalContent = modal && modal.querySelector('.checkout-modal-content');
+        const modalContent = modal && modal.querySelector('.modal-content');
 
         // Force iframe height
         iframe.style.height = forceHeight + 'px';

@@ -405,6 +405,16 @@
 }
 
 
+/* FIX: Prevent white background in dark mode iframes */
+
+.modal-iframe-container iframe,
+#poshIframe,
+.checkout-iframe {
+    color-scheme: normal !important;
+    background: transparent !important;
+}
+
+
 /* Touch target improvements for mobile */
 
 @media (pointer: coarse) {

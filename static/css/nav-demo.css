@@ -282,6 +282,15 @@ body {
     box-shadow: none;
 }
 
+
+/* FIX: Prevent white background in dark mode iframes */
+
+.modal-iframe-container iframe,
+#poshIframe {
+    color-scheme: normal !important;
+    background: transparent !important;
+}
+
 .modal-iframe-container iframe {
     width: 100%;
     border: none;

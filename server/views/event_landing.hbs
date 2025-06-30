@@ -12,8 +12,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes"/>
     <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 
-    <!-- Color Scheme Support (UIKit dynamic colors approach) -->
-    <meta name="color-scheme" content="light dark"/>
+    <!-- Color Scheme Support (UIKit dynamic colors approach) - DISABLED to prevent iframe white background -->
+    <!-- <meta name="color-scheme" content="light dark"/> -->
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="{{event.description}}">
@@ -58,6 +58,7 @@
     <link rel="stylesheet" href="/css/checkout-nav.css">
     <!-- Working Homepage Modal CSS -->
     <link rel="stylesheet" href="/css/figma-home.css">
+    <!-- SOLUTION: Disabled checkout-nav.js but kept CSS for button styling -->
     {{/if}}
 
     <!-- Laylo-Inspired Design CSS - Updated Typography v2.1 -->
@@ -2104,7 +2105,7 @@
                         <span class="sr-only">Ticket price: </span>{{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
                     </div>
                     <button class="buy-button"
-                            onclick="openCheckoutModal()"
+                            onclick="openSimpleModal()"
                             aria-label="{{#if event.ticket_price}}Buy tickets for {{event.ticket_price}}{{else}}Buy tickets{{/if}}"
                             aria-describedby="ticket-price-info">
                         Buy
@@ -2122,7 +2123,7 @@
                     <button class="modal-close" id="modalClose">&times;</button>
                     <div class="modal-iframe-container">
                         <iframe id="poshIframe"
-                                src="about:blank"
+                                {{#if event.posh_embed_url}}src="{{event.posh_embed_url}}"{{else}}src="about:blank"{{/if}}
                                 data-ticket-url="{{event.posh_embed_url}}"
                                 width="100%"
                                 height="600px"
@@ -3529,7 +3530,66 @@
 
     <!-- Checkout Nav Component JavaScript -->
     {{#if event.display_tickets}}
-    <script src="/js/checkout-nav.js"></script>
+    <!-- <script src="/js/checkout-nav.js?v=2025063005"></script> -->
+    <!-- DISABLED: Using simple home page approach instead -->
+
+    <script>
+        // SIMPLE MODAL FUNCTION - EXACT SAME AS HOME PAGE
+        function openSimpleModal() {
+            console.log('🎫 Opening modal - HOME PAGE APPROACH...');
+
+            const modalOverlay = document.getElementById('modalOverlay');
+            const poshIframe = document.getElementById('poshIframe');
+
+            if (!modalOverlay) {
+                console.error('❌ Modal overlay not found');
+                return;
+            }
+
+            // DEBUG: Log iframe details
+            if (poshIframe) {
+                console.log('🔍 Iframe src:', poshIframe.src);
+                console.log('🔍 Iframe data-ticket-url:', poshIframe.getAttribute('data-ticket-url'));
+                console.log('🔍 Iframe computed styles:', window.getComputedStyle(poshIframe));
+            }
+
+            // EXACT SAME modal opening as home page - no iframe src manipulation
+            console.log('🎪 Opening modal overlay...');
+            modalOverlay.style.display = 'flex';
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            console.log('✅ Modal opened successfully with active class');
+        }
+
+        // Close modal function - same as home page
+        document.addEventListener('DOMContentLoaded', function() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            const modalClose = document.getElementById('modalClose');
+
+            if (modalClose) {
+                modalClose.addEventListener('click', function() {
+                    if (modalOverlay) {
+                        modalOverlay.style.display = 'none';
+                        modalOverlay.classList.remove('active');
+                        document.body.style.overflow = '';
+                        console.log('🚪 Modal closed');
+                    }
+                });
+            }
+
+            // Close on overlay click
+            if (modalOverlay) {
+                modalOverlay.addEventListener('click', function(e) {
+                    if (e.target === modalOverlay) {
+                        modalOverlay.style.display = 'none';
+                        modalOverlay.classList.remove('active');
+                        document.body.style.overflow = '';
+                        console.log('🚪 Modal closed via overlay click');
+                    }
+                });
+            }
+        });
+    </script>
     {{/if}}
 
 </body>
