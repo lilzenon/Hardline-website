@@ -4,7 +4,7 @@ const { event } = require("../queries");
 const { CustomError } = require("../utils");
 const QRCode = require('qrcode');
 const { nanoid } = require('nanoid');
-const useragent = require('useragent');
+const { UAParser } = require('ua-parser-js');
 const geoip = require('geoip-lite');
 
 // Sanitizer function for checkbox values
@@ -1146,10 +1146,10 @@ async function trackQRCodeScan(req, res) {
         }
 
         // Parse user agent for device info
-        const agent = useragent.parse(userAgent);
-        const deviceType = agent.device.family === 'Other' ?
-            (agent.os.family.includes('Mobile') || agent.os.family.includes('Android') || agent.os.family.includes('iOS') ? 'mobile' : 'desktop') :
-            agent.device.family.toLowerCase().includes('tablet') ? 'tablet' : 'mobile';
+        const parser = new UAParser(userAgent);
+        const agent = parser.getResult();
+        const deviceType = agent.device.type === 'tablet' ? 'tablet' :
+            (agent.device.type === 'mobile' || (agent.os.name && agent.os.name.includes('Android')) || (agent.os.name && agent.os.name.includes('iOS'))) ? 'mobile' : 'desktop';
 
         // Get location info
         const geo = geoip.lookup(ipAddress);
@@ -1161,8 +1161,8 @@ async function trackQRCodeScan(req, res) {
             ip_address: ipAddress,
             referrer: referrer,
             device_type: deviceType,
-            browser_name: agent.family,
-            os_name: agent.os.family,
+            browser_name: agent.browser.name,
+            os_name: agent.os.name,
             country_code: geo ? geo.country : null,
             city: geo ? geo.city : null
         });

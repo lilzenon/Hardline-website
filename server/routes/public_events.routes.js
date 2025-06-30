@@ -104,7 +104,7 @@ router.get(
         // Track QR code scan if accessed via QR code
         if (isQRAccess && foundEvent.qr_code_enabled) {
             try {
-                const useragent = require('useragent');
+                const { UAParser } = require('ua-parser-js');
                 const geoip = require('geoip-lite');
 
                 const userAgent = req.get('User-Agent');
@@ -112,10 +112,10 @@ router.get(
                 const referrer = req.get('Referrer');
 
                 // Parse user agent for device info
-                const agent = useragent.parse(userAgent);
-                const deviceType = agent.device.family === 'Other' ?
-                    (agent.os.family.includes('Mobile') || agent.os.family.includes('Android') || agent.os.family.includes('iOS') ? 'mobile' : 'desktop') :
-                    agent.device.family.toLowerCase().includes('tablet') ? 'tablet' : 'mobile';
+                const parser = new UAParser(userAgent);
+                const agent = parser.getResult();
+                const deviceType = agent.device.type === 'tablet' ? 'tablet' :
+                    (agent.device.type === 'mobile' || (agent.os.name && agent.os.name.includes('Android')) || (agent.os.name && agent.os.name.includes('iOS'))) ? 'mobile' : 'desktop';
 
                 // Get location info
                 const geo = geoip.lookup(ipAddress);
@@ -127,8 +127,8 @@ router.get(
                     ip_address: ipAddress,
                     referrer: referrer,
                     device_type: deviceType,
-                    browser_name: agent.family,
-                    os_name: agent.os.family,
+                    browser_name: agent.browser.name,
+                    os_name: agent.os.name,
                     country_code: geo ? geo.country : null,
                     city: geo ? geo.city : null
                 });
