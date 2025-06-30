@@ -2109,10 +2109,10 @@
                         <span class="sr-only">Ticket price: </span>{{#if event.ticket_price}}{{event.ticket_price}}{{else}}Tickets{{/if}}
                     </div>
                     <button class="buy-button"
-                            onclick="openSimpleModal()"
-                            aria-label="{{#if event.ticket_price}}Buy tickets for {{event.ticket_price}}{{else}}Buy tickets{{/if}}"
+                            onclick="handleTicketPurchase()"
+                            aria-label="{{#if event.ticket_price}}{{#if event.buy_button_text}}{{event.buy_button_text}} for {{event.ticket_price}}{{else}}Buy tickets for {{event.ticket_price}}{{/if}}{{else}}{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy tickets{{/if}}{{/if}}"
                             aria-describedby="ticket-price-info">
-                        Buy
+                        {{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy{{/if}}
                         <span class="sr-only"> tickets</span>
                     </button>
                 </nav>
@@ -3545,6 +3545,32 @@
         let isModalOpen = false;
         let animationTimeout = null;
 
+        // Ticket purchasing configuration
+        const ticketConfig = {
+            poshEmbedEnabled: {{#if event.posh_embed_enabled}}true{{else}}false{{/if}},
+            poshEmbedUrl: '{{event.posh_embed_url}}',
+            externalTicketUrl: '{{event.external_ticket_url}}',
+            buyButtonText: '{{#if event.buy_button_text}}{{event.buy_button_text}}{{else}}Buy Tickets{{/if}}'
+        };
+
+        function handleTicketPurchase() {
+            console.log('🎫 Handling ticket purchase with config:', ticketConfig);
+
+            if (ticketConfig.poshEmbedEnabled && ticketConfig.poshEmbedUrl) {
+                // Use embedded modal
+                console.log('🎫 Opening Posh embed modal');
+                openSimpleModal();
+            } else if (!ticketConfig.poshEmbedEnabled && ticketConfig.externalTicketUrl) {
+                // Open external URL in new tab
+                console.log('🎫 Opening external ticket URL:', ticketConfig.externalTicketUrl);
+                window.open(ticketConfig.externalTicketUrl, '_blank', 'noopener,noreferrer');
+            } else {
+                // Fallback to modal if no external URL is configured
+                console.log('🎫 Fallback to modal (no external URL configured)');
+                openSimpleModal();
+            }
+        }
+
         function openSimpleModal() {
             console.log('🎫 MODERN: Opening modal with enhanced animations');
 
@@ -3560,7 +3586,7 @@
 
             // Set iframe source if needed
             if (poshIframe) {
-                const ticketUrl = poshIframe.getAttribute('data-ticket-url');
+                const ticketUrl = ticketConfig.poshEmbedUrl || poshIframe.getAttribute('data-ticket-url');
                 if (ticketUrl && poshIframe.src !== ticketUrl) {
                     poshIframe.src = ticketUrl;
                     console.log('🎫 MODERN: Set iframe src to:', ticketUrl);

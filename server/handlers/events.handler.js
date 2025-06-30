@@ -15,7 +15,10 @@ async function checkTicketFieldsExist() {
         const knex = require('../knex');
         const hasDisplayTickets = await knex.schema.hasColumn('events', 'display_tickets');
         const hasTicketPrice = await knex.schema.hasColumn('events', 'ticket_price');
-        return hasDisplayTickets && hasTicketPrice;
+        const hasPoshEmbedEnabled = await knex.schema.hasColumn('events', 'posh_embed_enabled');
+        const hasExternalTicketUrl = await knex.schema.hasColumn('events', 'external_ticket_url');
+        const hasBuyButtonText = await knex.schema.hasColumn('events', 'buy_button_text');
+        return hasDisplayTickets && hasTicketPrice && hasPoshEmbedEnabled && hasExternalTicketUrl && hasBuyButtonText;
     } catch (error) {
         console.warn('⚠️ Could not check ticket fields existence:', error.message);
         return false;
@@ -135,6 +138,21 @@ const createEventValidation = [
     .optional()
     .isLength({ max: 50 })
     .withMessage("Ticket price must be less than 50 characters")
+    .trim(),
+    body("posh_embed_enabled")
+    .optional()
+    .isBoolean()
+    .withMessage("Posh embed enabled must be a boolean"),
+    body("external_ticket_url")
+    .optional()
+    .isURL()
+    .withMessage("External ticket URL must be a valid URL")
+    .isLength({ max: 2040 })
+    .withMessage("External ticket URL must be less than 2040 characters"),
+    body("buy_button_text")
+    .optional()
+    .isLength({ min: 1, max: 30 })
+    .withMessage("Buy button text must be between 1 and 30 characters")
     .trim(),
 ];
 
@@ -423,13 +441,18 @@ async function updateEvent(req, res) {
         console.log(`🔄 Updating event ${id} with data:`, Object.keys(sanitizedData));
 
         // Check if ticket fields are being updated but don't exist in database
-        if ((sanitizedData.display_tickets !== undefined || sanitizedData.ticket_price !== undefined)) {
+        if ((sanitizedData.display_tickets !== undefined || sanitizedData.ticket_price !== undefined ||
+                sanitizedData.posh_embed_enabled !== undefined || sanitizedData.external_ticket_url !== undefined ||
+                sanitizedData.buy_button_text !== undefined)) {
             console.log('🎫 Ticket fields detected in update request');
             const ticketFieldsExist = await checkTicketFieldsExist();
             if (!ticketFieldsExist) {
                 console.warn('⚠️ Ticket fields not found in database - removing from update');
                 delete sanitizedData.display_tickets;
                 delete sanitizedData.ticket_price;
+                delete sanitizedData.posh_embed_enabled;
+                delete sanitizedData.external_ticket_url;
+                delete sanitizedData.buy_button_text;
                 console.log('🔄 Updated sanitized data without ticket fields:', Object.keys(sanitizedData));
             }
         }
@@ -486,7 +509,9 @@ async function updateEvent(req, res) {
             console.error('🔍 Attempted to update with fields:', Object.keys(sanitizedData || {}));
 
             // Check if this is related to new ticket fields
-            if (error.message.includes('display_tickets') || error.message.includes('ticket_price')) {
+            if (error.message.includes('display_tickets') || error.message.includes('ticket_price') ||
+                error.message.includes('posh_embed_enabled') || error.message.includes('external_ticket_url') ||
+                error.message.includes('buy_button_text')) {
                 throw new CustomError("Database migration required: Please run 'npm run migrate' to add ticket purchasing fields", 400);
             }
 
@@ -551,7 +576,10 @@ function validateAndSanitizeEventData(data) {
         'address_validated',
         'address_validated_at',
         'display_tickets',
-        'ticket_price'
+        'ticket_price',
+        'posh_embed_enabled',
+        'external_ticket_url',
+        'buy_button_text'
     ];
 
     const sanitizedData = {};
@@ -574,7 +602,7 @@ function validateAndSanitizeEventData(data) {
                 } else {
                     console.warn(`⚠️ Invalid URL format for ${key}: ${value}`);
                 }
-            } else if (typeof value === 'boolean' || key === 'is_active' || key === 'collect_email' || key === 'collect_phone' || key === 'display_tickets') {
+            } else if (typeof value === 'boolean' || key === 'is_active' || key === 'collect_email' || key === 'collect_phone' || key === 'display_tickets' || key === 'posh_embed_enabled') {
                 // Handle boolean fields
                 sanitizedData[key] = Boolean(value);
             } else if (key === 'gradient_data') {

@@ -58,7 +58,13 @@
                                 <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
-                        <button class="figma-tickets-btn" data-tickets-url="{{homeSettings.tickets_url}}">Tickets</button>
+                        <button class="figma-tickets-btn"
+                                data-tickets-url="{{homeSettings.tickets_url}}"
+                                data-posh-embed-enabled="true"
+                                data-external-ticket-url=""
+                                data-buy-button-text="Tickets">
+                            Tickets
+                        </button>
                         {{else}}
                         <button class="figma-btn figma-btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
                             <span>Tickets Coming Soon</span>
@@ -131,7 +137,13 @@
                                 <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </button>
-                        <button class="figma-tickets-btn" data-tickets-url="{{this.posh_embed_url}}">Tickets</button>
+                        <button class="figma-tickets-btn"
+                                data-tickets-url="{{this.posh_embed_url}}"
+                                data-posh-embed-enabled="{{#if this.posh_embed_enabled}}true{{else}}false{{/if}}"
+                                data-external-ticket-url="{{this.external_ticket_url}}"
+                                data-buy-button-text="{{#if this.buy_button_text}}{{this.buy_button_text}}{{else}}Tickets{{/if}}">
+                            {{#if this.buy_button_text}}{{this.buy_button_text}}{{else}}Tickets{{/if}}
+                        </button>
                         {{else}}
                         <button class="figma-share-btn" onclick="navigator.share ? navigator.share({title: '{{this.title}}', url: window.location.href + 'event/{{this.slug}}'}) : navigator.clipboard.writeText(window.location.href + 'event/{{this.slug}}')">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -413,10 +425,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const ticketsBtn = e.target.closest('.figma-tickets-btn');
             const ticketsUrl = ticketsBtn.getAttribute('data-tickets-url');
             const eventUrl = ticketsBtn.getAttribute('data-event-url');
+            const poshEmbedEnabled = ticketsBtn.getAttribute('data-posh-embed-enabled') === 'true';
+            const externalTicketUrl = ticketsBtn.getAttribute('data-external-ticket-url');
+            const buyButtonText = ticketsBtn.getAttribute('data-buy-button-text');
 
             console.log('🎫 Tickets button clicked:', {
                 ticketsUrl: ticketsUrl,
                 eventUrl: eventUrl,
+                poshEmbedEnabled: poshEmbedEnabled,
+                externalTicketUrl: externalTicketUrl,
+                buyButtonText: buyButtonText,
                 hasOnclick: ticketsBtn.hasAttribute('onclick'),
                 buttonElement: ticketsBtn
             });
@@ -426,8 +444,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             e.stopImmediatePropagation();
 
-            if (ticketsUrl && ticketsUrl.trim() !== '' && ticketsUrl !== 'null') {
-                console.log('✅ Opening tickets modal with URL:', ticketsUrl);
+            // Use new ticket purchasing logic
+            if (poshEmbedEnabled && ticketsUrl && ticketsUrl.trim() !== '' && ticketsUrl !== 'null') {
+                console.log('✅ Opening Posh embed modal with URL:', ticketsUrl);
 
                 // Update modal iframe source and open modal
                 const poshIframe = document.getElementById('poshIframe');
@@ -472,6 +491,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     console.error('❌ modalOverlay element not found in DOM');
                 }
+            } else if (!poshEmbedEnabled && externalTicketUrl && externalTicketUrl.trim() !== '' && externalTicketUrl !== 'null') {
+                console.log('🔗 Opening external ticket URL:', externalTicketUrl);
+                window.open(externalTicketUrl, '_blank', 'noopener,noreferrer');
             } else if (eventUrl) {
                 console.log('🔗 Navigating to event page:', eventUrl);
                 window.location.href = eventUrl;
@@ -486,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.error('❌ Error executing onclick handler:', error);
                     }
                 } else {
-                    console.log('❌ No valid tickets URL or onclick handler available');
+                    console.log('❌ No valid tickets URL, external URL, or onclick handler available');
                 }
             }
         }
@@ -1474,7 +1496,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
-                    <button class="figma-tickets-btn" data-tickets-url="${homeSettings.tickets_url}">Tickets</button>
+                    <button class="figma-tickets-btn"
+                            data-tickets-url="${homeSettings.tickets_url}"
+                            data-posh-embed-enabled="true"
+                            data-external-ticket-url=""
+                            data-buy-button-text="Tickets">
+                        Tickets
+                    </button>
                 ` : `
                     <button class="figma-btn figma-btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
                         <span>Tickets Coming Soon</span>
@@ -1553,7 +1581,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             <path d="M8 7L12 3L16 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
-                    <button class="figma-tickets-btn" data-tickets-url="${event.posh_embed_url}">${event.button_text || 'Tickets'}</button>
+                    <button class="figma-tickets-btn"
+                            data-tickets-url="${event.posh_embed_url}"
+                            data-posh-embed-enabled="${event.posh_embed_enabled !== false ? 'true' : 'false'}"
+                            data-external-ticket-url="${event.external_ticket_url || ''}"
+                            data-buy-button-text="${event.buy_button_text || 'Tickets'}">
+                        ${event.buy_button_text || 'Tickets'}
+                    </button>
                 ` : `
                     <button class="figma-btn figma-btn-primary" onclick="window.open('/event/${event.slug}', '_blank')">
                         <span>${event.button_text || 'Get Notified'}</span>
