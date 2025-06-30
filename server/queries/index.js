@@ -5,6 +5,7 @@ const user = require("./user.queries");
 const host = require("./host.queries");
 const event = require("./event.queries");
 const homeSettings = require("./home_settings.queries");
+const seoSettings = require("./seo_settings.queries");
 
 module.exports = {
     domain,
@@ -12,6 +13,7 @@ module.exports = {
     host,
     homeSettings,
     link,
+    seoSettings,
     user,
     visit
 };

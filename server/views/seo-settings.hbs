@@ -1,0 +1,789 @@
+{{!-- SEO Settings Page with Glassmorphism Design --}}
+
+<!-- SEO Settings Specific Styles -->
+<link rel="stylesheet" href="/css/seo-settings.css">
+
+<div class="seo-settings-container">
+    <!-- Header Section -->
+    <div class="settings-header">
+        <h1 class="settings-title">SEO Settings</h1>
+        <p class="settings-subtitle">Manage all SEO configurations, file content, and optimization settings for your BOUNCE2BOUNCE platform.</p>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="message-container" class="message-container" style="display: none;">
+        <div id="message-content" class="message-content"></div>
+    </div>
+
+    <!-- Settings Navigation Tabs -->
+    <div class="settings-tabs">
+        <button class="tab-button active" data-tab="meta-tags">Meta Tags</button>
+        <button class="tab-button" data-tab="sitemap">Sitemap</button>
+        <button class="tab-button" data-tab="robots">Robots.txt</button>
+        <button class="tab-button" data-tab="structured-data">Structured Data</button>
+        <button class="tab-button" data-tab="performance">Performance</button>
+        <button class="tab-button" data-tab="ai-optimization">AI/LLM</button>
+        <button class="tab-button" data-tab="files">File Editor</button>
+        <button class="tab-button" data-tab="analytics">Analytics</button>
+    </div>
+
+    <!-- Settings Form -->
+    <form id="seo-settings-form" class="settings-form">
+        
+        <!-- Meta Tags Tab -->
+        <div class="tab-content active" data-tab="meta-tags">
+            <div class="settings-section">
+                <h2 class="section-title">Default Meta Tags</h2>
+                <p class="section-description">Configure default meta tags used across your site when specific page meta tags are not available.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="default_title" class="form-label">Default Title</label>
+                        <input 
+                            type="text" 
+                            id="default_title" 
+                            name="default_title" 
+                            class="form-input" 
+                            value="{{seoSettings.default_title}}"
+                            maxlength="60"
+                            required
+                        >
+                        <span class="form-help">Recommended: 50-60 characters</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="default_description" class="form-label">Default Description</label>
+                        <textarea 
+                            id="default_description" 
+                            name="default_description" 
+                            class="form-textarea" 
+                            rows="3"
+                            maxlength="160"
+                            required
+                        >{{seoSettings.default_description}}</textarea>
+                        <span class="form-help">Recommended: 120-160 characters</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="default_keywords" class="form-label">Default Keywords</label>
+                        <input 
+                            type="text" 
+                            id="default_keywords" 
+                            name="default_keywords" 
+                            class="form-input" 
+                            value="{{seoSettings.default_keywords}}"
+                            placeholder="keyword1, keyword2, keyword3"
+                        >
+                        <span class="form-help">Comma-separated keywords</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="default_author" class="form-label">Default Author</label>
+                        <input 
+                            type="text" 
+                            id="default_author" 
+                            name="default_author" 
+                            class="form-input" 
+                            value="{{seoSettings.default_author}}"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="default_og_image" class="form-label">Default Open Graph Image</label>
+                        <input 
+                            type="url" 
+                            id="default_og_image" 
+                            name="default_og_image" 
+                            class="form-input" 
+                            value="{{seoSettings.default_og_image}}"
+                            placeholder="/images/bounce-logo.svg"
+                        >
+                        <span class="form-help">URL to default social sharing image</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="twitter_handle" class="form-label">Twitter Handle</label>
+                        <input 
+                            type="text" 
+                            id="twitter_handle" 
+                            name="twitter_handle" 
+                            class="form-input" 
+                            value="{{seoSettings.twitter_handle}}"
+                            placeholder="@bounce2bounce"
+                        >
+                        <span class="form-help">Include the @ symbol</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sitemap Tab -->
+        <div class="tab-content" data-tab="sitemap">
+            <div class="settings-section">
+                <h2 class="section-title">XML Sitemap Configuration</h2>
+                <p class="section-description">Control which pages are included in your XML sitemap and how they're prioritized.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input 
+                                type="checkbox" 
+                                id="sitemap_enabled" 
+                                name="sitemap_enabled" 
+                                class="toggle-input"
+                                {{#if seoSettings.sitemap_enabled}}checked{{/if}}
+                            >
+                            <label for="sitemap_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Enable XML Sitemap
+                            </label>
+                        </div>
+                        <span class="form-help">Generate and serve XML sitemap at /sitemap.xml</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input 
+                                type="checkbox" 
+                                id="sitemap_include_events" 
+                                name="sitemap_include_events" 
+                                class="toggle-input"
+                                {{#if seoSettings.sitemap_include_events}}checked{{/if}}
+                            >
+                            <label for="sitemap_include_events" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Include Event Pages
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input 
+                                type="checkbox" 
+                                id="sitemap_include_homepage" 
+                                name="sitemap_include_homepage" 
+                                class="toggle-input"
+                                {{#if seoSettings.sitemap_include_homepage}}checked{{/if}}
+                            >
+                            <label for="sitemap_include_homepage" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Include Homepage
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input 
+                                type="checkbox" 
+                                id="sitemap_include_events_listing" 
+                                name="sitemap_include_events_listing" 
+                                class="toggle-input"
+                                {{#if seoSettings.sitemap_include_events_listing}}checked{{/if}}
+                            >
+                            <label for="sitemap_include_events_listing" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Include Events Listing Page
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sitemap_max_urls" class="form-label">Maximum URLs</label>
+                        <input 
+                            type="number" 
+                            id="sitemap_max_urls" 
+                            name="sitemap_max_urls" 
+                            class="form-input" 
+                            value="{{seoSettings.sitemap_max_urls}}"
+                            min="1"
+                            max="50000"
+                        >
+                        <span class="form-help">Maximum number of URLs to include in sitemap</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sitemap_changefreq" class="form-label">Change Frequency</label>
+                        <select id="sitemap_changefreq" name="sitemap_changefreq" class="form-select">
+                            <option value="always" {{#if (eq seoSettings.sitemap_changefreq "always")}}selected{{/if}}>Always</option>
+                            <option value="hourly" {{#if (eq seoSettings.sitemap_changefreq "hourly")}}selected{{/if}}>Hourly</option>
+                            <option value="daily" {{#if (eq seoSettings.sitemap_changefreq "daily")}}selected{{/if}}>Daily</option>
+                            <option value="weekly" {{#if (eq seoSettings.sitemap_changefreq "weekly")}}selected{{/if}}>Weekly</option>
+                            <option value="monthly" {{#if (eq seoSettings.sitemap_changefreq "monthly")}}selected{{/if}}>Monthly</option>
+                            <option value="yearly" {{#if (eq seoSettings.sitemap_changefreq "yearly")}}selected{{/if}}>Yearly</option>
+                            <option value="never" {{#if (eq seoSettings.sitemap_changefreq "never")}}selected{{/if}}>Never</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sitemap_priority" class="form-label">Default Priority</label>
+                        <input 
+                            type="number" 
+                            id="sitemap_priority" 
+                            name="sitemap_priority" 
+                            class="form-input" 
+                            value="{{seoSettings.sitemap_priority}}"
+                            min="0.0"
+                            max="1.0"
+                            step="0.1"
+                        >
+                        <span class="form-help">Priority from 0.0 to 1.0 (1.0 = highest priority)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Robots.txt Tab -->
+        <div class="tab-content" data-tab="robots">
+            <div class="settings-section">
+                <h2 class="section-title">Robots.txt Configuration</h2>
+                <p class="section-description">Control how search engine crawlers access your site.</p>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input 
+                                type="checkbox" 
+                                id="robots_enabled" 
+                                name="robots_enabled" 
+                                class="toggle-input"
+                                {{#if seoSettings.robots_enabled}}checked{{/if}}
+                            >
+                            <label for="robots_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Enable Robots.txt
+                            </label>
+                        </div>
+                        <span class="form-help">Generate and serve robots.txt at /robots.txt</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input 
+                                type="checkbox" 
+                                id="robots_allow_all" 
+                                name="robots_allow_all" 
+                                class="toggle-input"
+                                {{#if seoSettings.robots_allow_all}}checked{{/if}}
+                            >
+                            <label for="robots_allow_all" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Allow All Crawling
+                            </label>
+                        </div>
+                        <span class="form-help">Override specific rules and allow all crawling</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="robots_allowed_paths" class="form-label">Allowed Paths</label>
+                        <textarea 
+                            id="robots_allowed_paths" 
+                            name="robots_allowed_paths" 
+                            class="form-textarea" 
+                            rows="3"
+                            placeholder="/,/event/,/events,/static/"
+                        >{{seoSettings.robots_allowed_paths}}</textarea>
+                        <span class="form-help">Comma-separated paths to explicitly allow</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="robots_disallowed_paths" class="form-label">Disallowed Paths</label>
+                        <textarea 
+                            id="robots_disallowed_paths" 
+                            name="robots_disallowed_paths" 
+                            class="form-textarea" 
+                            rows="3"
+                            placeholder="/admin/,/dashboard/,/api/"
+                        >{{seoSettings.robots_disallowed_paths}}</textarea>
+                        <span class="form-help">Comma-separated paths to block from crawling</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="robots_crawl_delay" class="form-label">Crawl Delay (seconds)</label>
+                        <input 
+                            type="number" 
+                            id="robots_crawl_delay" 
+                            name="robots_crawl_delay" 
+                            class="form-input" 
+                            value="{{seoSettings.robots_crawl_delay}}"
+                            min="0"
+                            max="60"
+                        >
+                        <span class="form-help">Delay between crawler requests (0 = no delay)</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="robots_custom_rules" class="form-label">Custom Rules</label>
+                        <textarea 
+                            id="robots_custom_rules" 
+                            name="robots_custom_rules" 
+                            class="form-textarea" 
+                            rows="4"
+                            placeholder="User-agent: Googlebot&#10;Allow: /special-path/"
+                        >{{seoSettings.robots_custom_rules}}</textarea>
+                        <span class="form-help">Additional custom robots.txt rules</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Structured Data Tab -->
+        <div class="tab-content" data-tab="structured-data">
+            <div class="settings-section">
+                <h2 class="section-title">Structured Data Configuration</h2>
+                <p class="section-description">Configure JSON-LD structured data markup for better search engine understanding.</p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="structured_data_enabled"
+                                name="structured_data_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.structured_data_enabled}}checked{{/if}}
+                            >
+                            <label for="structured_data_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Enable Structured Data
+                            </label>
+                        </div>
+                        <span class="form-help">Generate JSON-LD structured data markup</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="structured_data_events"
+                                name="structured_data_events"
+                                class="toggle-input"
+                                {{#if seoSettings.structured_data_events}}checked{{/if}}
+                            >
+                            <label for="structured_data_events" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Event Schema Markup
+                            </label>
+                        </div>
+                        <span class="form-help">Add Event schema to event pages</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="structured_data_organization"
+                                name="structured_data_organization"
+                                class="toggle-input"
+                                {{#if seoSettings.structured_data_organization}}checked{{/if}}
+                            >
+                            <label for="structured_data_organization" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Organization Schema
+                            </label>
+                        </div>
+                        <span class="form-help">Add Organization schema to homepage</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="structured_data_breadcrumbs"
+                                name="structured_data_breadcrumbs"
+                                class="toggle-input"
+                                {{#if seoSettings.structured_data_breadcrumbs}}checked{{/if}}
+                            >
+                            <label for="structured_data_breadcrumbs" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Breadcrumb Schema
+                            </label>
+                        </div>
+                        <span class="form-help">Add BreadcrumbList schema for navigation</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="structured_data_faq"
+                                name="structured_data_faq"
+                                class="toggle-input"
+                                {{#if seoSettings.structured_data_faq}}checked{{/if}}
+                            >
+                            <label for="structured_data_faq" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                FAQ Schema
+                            </label>
+                        </div>
+                        <span class="form-help">Add FAQ schema to event pages for AI understanding</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Tab -->
+        <div class="tab-content" data-tab="performance">
+            <div class="settings-section">
+                <h2 class="section-title">Performance Optimization</h2>
+                <p class="section-description">Configure performance features and Core Web Vitals optimizations.</p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="service_worker_enabled"
+                                name="service_worker_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.service_worker_enabled}}checked{{/if}}
+                            >
+                            <label for="service_worker_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Service Worker
+                            </label>
+                        </div>
+                        <span class="form-help">Enable PWA service worker for caching and offline support</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="lazy_loading_enabled"
+                                name="lazy_loading_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.lazy_loading_enabled}}checked{{/if}}
+                            >
+                            <label for="lazy_loading_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Lazy Loading
+                            </label>
+                        </div>
+                        <span class="form-help">Enable lazy loading for images and content</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="critical_css_enabled"
+                                name="critical_css_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.critical_css_enabled}}checked{{/if}}
+                            >
+                            <label for="critical_css_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Critical CSS
+                            </label>
+                        </div>
+                        <span class="form-help">Inline critical CSS for faster rendering</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="resource_preloading_enabled"
+                                name="resource_preloading_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.resource_preloading_enabled}}checked{{/if}}
+                            >
+                            <label for="resource_preloading_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Resource Preloading
+                            </label>
+                        </div>
+                        <span class="form-help">Preload critical resources for better performance</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="pwa_enabled"
+                                name="pwa_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.pwa_enabled}}checked{{/if}}
+                            >
+                            <label for="pwa_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                PWA Features
+                            </label>
+                        </div>
+                        <span class="form-help">Enable Progressive Web App features</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cache_duration_hours" class="form-label">Cache Duration (hours)</label>
+                        <input
+                            type="number"
+                            id="cache_duration_hours"
+                            name="cache_duration_hours"
+                            class="form-input"
+                            value="{{seoSettings.cache_duration_hours}}"
+                            min="1"
+                            max="168"
+                        >
+                        <span class="form-help">How long to cache static resources (1-168 hours)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI/LLM Optimization Tab -->
+        <div class="tab-content" data-tab="ai-optimization">
+            <div class="settings-section">
+                <h2 class="section-title">AI/LLM Optimization</h2>
+                <p class="section-description">Configure settings for better AI and language model understanding of your content.</p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="llms_txt_enabled"
+                                name="llms_txt_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.llms_txt_enabled}}checked{{/if}}
+                            >
+                            <label for="llms_txt_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                LLMs.txt File
+                            </label>
+                        </div>
+                        <span class="form-help">Generate and serve llms.txt for AI model training</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="ai_optimization_enabled"
+                                name="ai_optimization_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.ai_optimization_enabled}}checked{{/if}}
+                            >
+                            <label for="ai_optimization_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                AI Content Optimization
+                            </label>
+                        </div>
+                        <span class="form-help">Optimize content structure for AI understanding</span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="toggle-group">
+                            <input
+                                type="checkbox"
+                                id="faq_generation_enabled"
+                                name="faq_generation_enabled"
+                                class="toggle-input"
+                                {{#if seoSettings.faq_generation_enabled}}checked{{/if}}
+                            >
+                            <label for="faq_generation_enabled" class="toggle-label">
+                                <span class="toggle-switch"></span>
+                                Auto-Generate FAQs
+                            </label>
+                        </div>
+                        <span class="form-help">Automatically generate FAQ structured data for events</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Editor Tab -->
+        <div class="tab-content" data-tab="files">
+            <div class="settings-section">
+                <h2 class="section-title">File Editor</h2>
+                <p class="section-description">Edit SEO-related files directly with backup and restore capabilities.</p>
+
+                <!-- LLMs.txt Editor -->
+                <div class="file-editor-section">
+                    <div class="file-header">
+                        <h3 class="file-title">llms.txt - AI/LLM Optimization File</h3>
+                        <div class="file-actions">
+                            <button type="button" class="btn btn-small btn-outline" onclick="downloadFile('llms.txt')">
+                                <span class="btn-icon">📥</span>
+                                Download
+                            </button>
+                            <button type="button" class="btn btn-small btn-outline" onclick="showBackupHistory('llms.txt')">
+                                <span class="btn-icon">📋</span>
+                                History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="file-editor">
+                        <textarea
+                            id="llms-content"
+                            class="file-textarea"
+                            rows="15"
+                            placeholder="Enter llms.txt content..."
+                        >{{llmsContent}}</textarea>
+
+                        <div class="file-editor-actions">
+                            <input
+                                type="text"
+                                id="llms-description"
+                                class="form-input"
+                                placeholder="Describe your changes..."
+                                style="flex: 1; margin-right: 1rem;"
+                            >
+                            <button type="button" class="btn btn-primary" onclick="saveFile('llms.txt')">
+                                <span class="btn-icon">💾</span>
+                                Save llms.txt
+                            </button>
+                        </div>
+                    </div>
+
+                    {{#if llmsBackups}}
+                    <div class="backup-history">
+                        <h4>Recent Backups</h4>
+                        <div class="backup-list">
+                            {{#each llmsBackups}}
+                            <div class="backup-item">
+                                <div class="backup-info">
+                                    <span class="backup-date">{{this.created_at}}</span>
+                                    <span class="backup-description">{{this.change_description}}</span>
+                                    <span class="backup-type">{{this.backup_type}}</span>
+                                </div>
+                                <button type="button" class="btn btn-small btn-outline" onclick="restoreBackup({{this.id}})">
+                                    <span class="btn-icon">🔄</span>
+                                    Restore
+                                </button>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                    {{/if}}
+                </div>
+
+                <!-- Robots.txt Editor -->
+                <div class="file-editor-section">
+                    <div class="file-header">
+                        <h3 class="file-title">robots.txt - Search Engine Crawling Rules</h3>
+                        <div class="file-actions">
+                            <button type="button" class="btn btn-small btn-outline" onclick="downloadFile('robots.txt')">
+                                <span class="btn-icon">📥</span>
+                                Download
+                            </button>
+                            <button type="button" class="btn btn-small btn-outline" onclick="showBackupHistory('robots.txt')">
+                                <span class="btn-icon">📋</span>
+                                History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="file-editor">
+                        <textarea
+                            id="robots-content"
+                            class="file-textarea"
+                            rows="15"
+                            placeholder="Enter robots.txt content..."
+                        >{{robotsContent}}</textarea>
+
+                        <div class="file-editor-actions">
+                            <input
+                                type="text"
+                                id="robots-description"
+                                class="form-input"
+                                placeholder="Describe your changes..."
+                                style="flex: 1; margin-right: 1rem;"
+                            >
+                            <button type="button" class="btn btn-primary" onclick="saveFile('robots.txt')">
+                                <span class="btn-icon">💾</span>
+                                Save robots.txt
+                            </button>
+                        </div>
+                    </div>
+
+                    {{#if robotsBackups}}
+                    <div class="backup-history">
+                        <h4>Recent Backups</h4>
+                        <div class="backup-list">
+                            {{#each robotsBackups}}
+                            <div class="backup-item">
+                                <div class="backup-info">
+                                    <span class="backup-date">{{this.created_at}}</span>
+                                    <span class="backup-description">{{this.change_description}}</span>
+                                    <span class="backup-type">{{this.backup_type}}</span>
+                                </div>
+                                <button type="button" class="btn btn-small btn-outline" onclick="restoreBackup({{this.id}})">
+                                    <span class="btn-icon">🔄</span>
+                                    Restore
+                                </button>
+                            </div>
+                            {{/each}}
+                        </div>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div class="tab-content" data-tab="analytics">
+            <div class="settings-section">
+                <h2 class="section-title">Analytics & Monitoring</h2>
+                <p class="section-description">Configure analytics tracking and SEO monitoring tools.</p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="google_analytics_id" class="form-label">Google Analytics ID</label>
+                        <input
+                            type="text"
+                            id="google_analytics_id"
+                            name="google_analytics_id"
+                            class="form-input"
+                            value="{{seoSettings.google_analytics_id}}"
+                            placeholder="G-XXXXXXXXXX"
+                        >
+                        <span class="form-help">Google Analytics 4 measurement ID</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="google_search_console_id" class="form-label">Search Console Verification</label>
+                        <input
+                            type="text"
+                            id="google_search_console_id"
+                            name="google_search_console_id"
+                            class="form-input"
+                            value="{{seoSettings.google_search_console_id}}"
+                            placeholder="google-site-verification=..."
+                        >
+                        <span class="form-help">Google Search Console verification meta tag content</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="button" id="save-settings" class="btn btn-primary">
+                <span class="btn-icon">💾</span>
+                Save Settings
+            </button>
+            <button type="button" id="reset-form" class="btn btn-secondary">
+                <span class="btn-icon">🔄</span>
+                Reset
+            </button>
+            <button type="button" id="backup-settings" class="btn btn-outline">
+                <span class="btn-icon">📦</span>
+                Create Backup
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Saving settings...</p>
+    </div>
+</div>
+
+<!-- SEO Settings JavaScript -->
+<script src="/js/seo-settings.js"></script>

@@ -5,6 +5,7 @@ const renders = require("../handlers/renders.handler");
 const sitemap = require("../handlers/sitemap.handler");
 const eventsListing = require("../handlers/events-listing.handler");
 const seoMonitoring = require("../handlers/seo-monitoring.handler");
+const seoSettings = require("../handlers/seo-settings.handler");
 const asyncHandler = require("../utils/asyncHandler");
 const locals = require("../handlers/locals.handler");
 const auth = require("../handlers/auth.handler");
@@ -89,6 +90,35 @@ router.get(
             currentPage: "settings"
         });
     }
+);
+
+// SEO Settings Routes
+router.get(
+    "/dashboard/seo-settings",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(seoSettings.renderSEOSettings)
+);
+
+router.post(
+    "/dashboard/seo-settings",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(seoSettings.updateSEOSettings)
+);
+
+router.post(
+    "/dashboard/seo-settings/file/:fileName",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(seoSettings.updateFileContent)
+);
+
+router.post(
+    "/dashboard/seo-settings/restore/:backupId",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(seoSettings.restoreFileFromBackup)
 );
 
 router.get(
