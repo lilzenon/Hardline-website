@@ -131,20 +131,15 @@
 
     <!-- Test Checkout Nav Component -->
     <div class="checkout-nav-container active" id="testCheckoutNav">
-        <button class="buy-button" onclick="openCheckoutModal()" aria-label="Buy tickets for $25" aria-describedby="ticket-price-info">
-            <div class="button-content">
-                <div class="ticket-price" aria-live="polite">
-                    <span class="sr-only">Ticket price: </span>$25
-                </div>
-                <div class="button-text-section">
-                    <span class="button-title">Button Title</span>
-                    <span class="button-text">Buy Tickets</span>
-                </div>
+        <button class="buy-button" onclick="openCheckoutModal()" aria-label="Buy tickets" aria-describedby="ticket-info">
+            <div class="button-text-section">
+                <span class="button-title">Button Title</span>
+                <span class="button-text">Buy Tickets</span>
             </div>
             <span class="sr-only"> tickets</span>
         </button>
-        <div id="ticket-price-info" class="sr-only">
-            Tickets are available for $25
+        <div id="ticket-info" class="sr-only">
+            Ticket purchasing available
         </div>
     </div>
 

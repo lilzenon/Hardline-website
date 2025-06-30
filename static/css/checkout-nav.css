@@ -84,7 +84,7 @@
 
 .buy-button {
     width: 100%;
-    padding: 0;
+    padding: 16px 24px;
     border-radius: 50px;
     /* Clean black background to match design */
     background: #000000;
@@ -98,37 +98,25 @@
     height: 56px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     border: none;
     cursor: pointer;
     line-height: 1;
     letter-spacing: 0.02em;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    padding-right: 60px;
+    /* Make room for arrow */
 }
 
 
-/* Button Content Layout */
-
-.buy-button .button-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 16px 24px;
-}
-
-.buy-button .ticket-price {
-    font-size: 18px;
-    font-weight: 600;
-    color: #ffffff;
-}
+/* Button Text Section */
 
 .buy-button .button-text-section {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    text-align: right;
+    align-items: flex-start;
+    text-align: left;
 }
 
 .buy-button .button-title {
@@ -352,12 +340,8 @@
     .buy-button {
         height: 44px;
         border-radius: 22px;
-    }
-    .buy-button .button-content {
         padding: 12px 20px;
-    }
-    .buy-button .ticket-price {
-        font-size: 16px;
+        padding-right: 50px;
     }
     .buy-button::after {
         width: 44px;
@@ -394,12 +378,8 @@
     .buy-button {
         height: 50px;
         border-radius: 25px;
-    }
-    .buy-button .button-content {
         padding: 14px 22px;
-    }
-    .buy-button .ticket-price {
-        font-size: 17px;
+        padding-right: 56px;
     }
     .buy-button::after {
         width: 50px;
