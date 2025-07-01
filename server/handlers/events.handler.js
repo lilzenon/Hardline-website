@@ -1,6 +1,9 @@
 const { body, param, query } = require("express-validator");
 const validator = require("validator");
 const { event } = require("../queries");
+const analyticsQueries = require("../queries/analytics.queries");
+const qrCodeService = require("../services/qr-code.service");
+const { trackConversion } = require("../middleware/analytics.middleware");
 const { CustomError } = require("../utils");
 const QRCode = require('qrcode');
 const { nanoid } = require('nanoid');
@@ -845,6 +848,16 @@ async function createSignup(req, res) {
                 // Continue without SMS - don't fail the signup
             }
 
+            // 📊 TRACK CONVERSION IN ANALYTICS
+            try {
+                if (req.analyticsSessionId) {
+                    await trackConversion(req.analyticsSessionId, foundEvent.id);
+                    console.log(`📊 Conversion tracked for session: ${req.analyticsSessionId}`);
+                }
+            } catch (analyticsError) {
+                console.warn('⚠️ Analytics conversion tracking failed (continuing):', analyticsError.message);
+            }
+
             console.log(`🎉 Signup process completed successfully for ${email}`);
 
             res.status(201).json({
@@ -964,34 +977,50 @@ async function getFanSummaryStats(req, res) {
 async function getEventAnalytics(req, res) {
     const { id } = req.params;
     const userId = req.user.id;
+    const { days = 30 } = req.query;
 
-    // Check if drop belongs to user
-    const foundEvent = await event.findWithStats({ id, user_id: userId });
-    if (!foundEvent) {
-        throw new CustomError("Event not found", 404);
-    }
+    try {
+        // Check if drop belongs to user
+        const foundEvent = await event.findWithStats({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
 
-    // Get recent signups for this event
-    const recentSignups = await event.findSignups(parseInt(id), { limit: 5 });
+        // Get comprehensive analytics
+        const analytics = await analyticsQueries.getComprehensiveAnalytics(parseInt(id), parseInt(days));
 
-    // Calculate basic analytics
-    const views = foundEvent.view_count || 0;
-    const fans = foundEvent.signup_count || 0;
-    const conversionRate = views > 0 ? ((fans / views) * 100).toFixed(1) : 0;
+        // Get QR code analytics
+        const qrAnalytics = await event.getQRCodeAnalytics(parseInt(id), parseInt(days));
 
-    res.json({
-        success: true,
-        data: {
-            views,
-            fans,
-            conversionRate,
+        // Get recent signups for this event
+        const recentSignups = await event.findSignups(parseInt(id), { limit: 5 });
+
+        // Combine analytics
+        const combinedAnalytics = {
+            ...analytics,
+            qrCodeAnalytics: qrAnalytics,
+            // Legacy compatibility
+            views: analytics.totalViews,
+            fans: analytics.conversions,
+            conversionRate: analytics.conversionRate,
             recentSignups: recentSignups.map(signup => ({
                 email: signup.email,
                 phone: signup.phone,
                 created_at: signup.created_at
             }))
-        }
-    });
+        };
+
+        res.json({
+            success: true,
+            data: combinedAnalytics
+        });
+    } catch (error) {
+        console.error('🚨 Error getting event analytics:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to get event analytics'
+        });
+    }
 }
 
 // Generate QR code for event
@@ -1180,6 +1209,333 @@ async function trackQRCodeScan(req, res) {
     }
 }
 
+// ===== ENHANCED QR CODE MANAGEMENT =====
+
+// Get all QR codes for an event
+async function getEventQRCodes(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        const qrCodes = await qrCodeService.getEventQRCodesWithUrls(parseInt(id));
+
+        res.json({
+            success: true,
+            data: qrCodes
+        });
+    } catch (error) {
+        console.error('🚨 Error getting QR codes:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to get QR codes'
+        });
+    }
+}
+
+// Create a new QR code for an event
+async function createEventQRCode(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { name, description, custom_url } = req.body;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        // Validate QR code data
+        const qrCodeData = {
+            name: name || 'QR Code',
+            description: description || null,
+            custom_url: custom_url || null
+        };
+
+        const validationErrors = qrCodeService.validateQRCodeData(qrCodeData);
+        if (validationErrors.length > 0) {
+            throw new CustomError(validationErrors.join(', '), 400);
+        }
+
+        const newQRCode = await qrCodeService.createEventQRCode(parseInt(id), qrCodeData);
+
+        res.status(201).json({
+            success: true,
+            data: newQRCode
+        });
+    } catch (error) {
+        console.error('🚨 Error creating QR code:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to create QR code'
+        });
+    }
+}
+
+// Update a QR code
+async function updateEventQRCode(req, res) {
+    const { id, qrId } = req.params;
+    const userId = req.user.id;
+    const { name, description, custom_url, is_active } = req.body;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (custom_url !== undefined) updateData.custom_url = custom_url;
+        if (is_active !== undefined) updateData.is_active = is_active;
+
+        const updatedQRCode = await analyticsQueries.updateQRCode(parseInt(qrId), updateData);
+
+        res.json({
+            success: true,
+            data: updatedQRCode
+        });
+    } catch (error) {
+        console.error('🚨 Error updating QR code:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to update QR code'
+        });
+    }
+}
+
+// Delete a QR code
+async function deleteEventQRCode(req, res) {
+    const { id, qrId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        await analyticsQueries.deleteQRCode(parseInt(qrId));
+
+        res.json({
+            success: true,
+            message: 'QR code deleted successfully'
+        });
+    } catch (error) {
+        console.error('🚨 Error deleting QR code:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to delete QR code'
+        });
+    }
+}
+
+// Generate QR code image for download
+async function generateQRCodeImage(req, res) {
+    const { id, qrId } = req.params;
+    const userId = req.user.id;
+    const { format = 'png', size = 512 } = req.query;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        // Get QR code
+        const qrCodes = await analyticsQueries.getEventQRCodes(parseInt(id));
+        const qrCode = qrCodes.find(qr => qr.id === parseInt(qrId));
+
+        if (!qrCode) {
+            throw new CustomError("QR code not found", 404);
+        }
+
+        const downloadData = await qrCodeService.generateQRCodeDownload(
+            qrCode.identifier,
+            format,
+            size
+        );
+
+        res.setHeader('Content-Type', downloadData.contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${downloadData.filename}"`);
+        res.send(downloadData.data);
+
+    } catch (error) {
+        console.error('🚨 Error generating QR code image:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to generate QR code image'
+        });
+    }
+}
+
+// ===== ADVANCED ANALYTICS API ENDPOINTS =====
+
+// Get detailed page view analytics
+async function getEventPageViews(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { days = 30, limit = 100, offset = 0 } = req.query;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        const pageViews = await analyticsQueries.getEventPageViews(parseInt(id), {
+            days: parseInt(days),
+            limit: parseInt(limit),
+            offset: parseInt(offset)
+        });
+
+        res.json({
+            success: true,
+            data: pageViews,
+            pagination: {
+                limit: parseInt(limit),
+                offset: parseInt(offset),
+                total: pageViews.length
+            }
+        });
+    } catch (error) {
+        console.error('🚨 Error getting page views:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to get page views'
+        });
+    }
+}
+
+// Get session analytics
+async function getEventSessionAnalytics(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { days = 30 } = req.query;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        const sessions = await analyticsQueries.getSessionAnalytics(parseInt(id), parseInt(days));
+
+        res.json({
+            success: true,
+            data: sessions
+        });
+    } catch (error) {
+        console.error('🚨 Error getting session analytics:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to get session analytics'
+        });
+    }
+}
+
+// Export analytics data
+async function exportEventAnalytics(req, res) {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { days = 30, format = 'csv' } = req.query;
+
+    try {
+        // Check if event belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            throw new CustomError("Event not found", 404);
+        }
+
+        // Get comprehensive analytics data
+        const analytics = await analyticsQueries.getComprehensiveAnalytics(parseInt(id), parseInt(days));
+        const pageViews = await analyticsQueries.getEventPageViews(parseInt(id), { days: parseInt(days) });
+        const sessions = await analyticsQueries.getSessionAnalytics(parseInt(id), parseInt(days));
+
+        if (format === 'csv') {
+            // Generate CSV
+            const csvData = generateAnalyticsCSV(analytics, pageViews, sessions, foundEvent);
+
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', `attachment; filename="analytics-${foundEvent.slug}-${new Date().toISOString().split('T')[0]}.csv"`);
+            res.send(csvData);
+        } else {
+            // Return JSON
+            res.json({
+                success: true,
+                data: {
+                    event: foundEvent,
+                    analytics,
+                    pageViews,
+                    sessions,
+                    exportDate: new Date().toISOString()
+                }
+            });
+        }
+    } catch (error) {
+        console.error('🚨 Error exporting analytics:', error);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || 'Failed to export analytics'
+        });
+    }
+}
+
+// Generate CSV from analytics data
+function generateAnalyticsCSV(analytics, pageViews, sessions, event) {
+    const lines = [];
+
+    // Header
+    lines.push('Event Analytics Export');
+    lines.push(`Event: ${event.title}`);
+    lines.push(`Slug: ${event.slug}`);
+    lines.push(`Export Date: ${new Date().toISOString()}`);
+    lines.push('');
+
+    // Summary
+    lines.push('Summary');
+    lines.push('Metric,Value');
+    lines.push(`Total Views,${analytics.totalViews}`);
+    lines.push(`Unique Visitors,${analytics.uniqueVisitors}`);
+    lines.push(`QR Scans,${analytics.qrScans}`);
+    lines.push(`Unique QR Scans,${analytics.uniqueQrScans}`);
+    lines.push(`Conversions,${analytics.conversions}`);
+    lines.push(`Conversion Rate,${analytics.conversionRate}%`);
+    lines.push('');
+
+    // Page Views
+    lines.push('Page Views');
+    lines.push('Date,Time,IP Address,Device Type,Browser,OS,Country,City,Referrer,UTM Source');
+    pageViews.forEach(view => {
+        lines.push([
+            new Date(view.view_timestamp).toLocaleDateString(),
+            new Date(view.view_timestamp).toLocaleTimeString(),
+            view.ip_address || '',
+            view.device_type || '',
+            view.browser_name || '',
+            view.os_name || '',
+            view.country_code || '',
+            view.city || '',
+            view.referrer || '',
+            view.utm_source || ''
+        ].join(','));
+    });
+
+    return lines.join('\n');
+}
+
 module.exports = {
     createEventValidation,
     updateEventValidation,
@@ -1199,5 +1555,16 @@ module.exports = {
     generateEventQRCode,
     getEventQRCodeData,
     getEventQRCodeAnalytics,
-    trackQRCodeScan
+    trackQRCodeScan,
+    // 🎯 Enhanced QR Code Management
+    getEventQRCodes,
+    createEventQRCode,
+    updateEventQRCode,
+    deleteEventQRCode,
+    generateQRCodeImage,
+
+    // 📊 Advanced Analytics API
+    getEventPageViews,
+    getEventSessionAnalytics,
+    exportEventAnalytics
 };

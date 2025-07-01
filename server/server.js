@@ -19,6 +19,7 @@ const locals = require("./handlers/locals.handler");
 const links = require("./handlers/links.handler");
 const routes = require("./routes");
 const utils = require("./utils");
+const { initializePrivacySystem } = require("./middleware/privacy.middleware");
 
 
 // run the cron jobs
@@ -93,6 +94,9 @@ app.get("*", renders.notFound);
 
 // handle errors coming from above routes
 app.use(helpers.error);
+
+// Initialize privacy-compliant tracking system
+initializePrivacySystem();
 
 app.listen(env.PORT, () => {
     console.log(`> Ready on http://localhost:${env.PORT}`);

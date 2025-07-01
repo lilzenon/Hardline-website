@@ -16,6 +16,7 @@ const contactBook = require("./api/contact-book.routes");
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
 const sessionAdmin = require("./admin/session-admin.routes");
+const privacy = require("./privacy.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -35,6 +36,7 @@ apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);
+apiRouter.use("/privacy", privacy);
 
 module.exports = {
     api: apiRouter,

@@ -95,6 +95,58 @@ router.get(
     asyncHandler(events.getEventQRCodeData)
 );
 
+// 🎯 ENHANCED QR CODE MANAGEMENT ROUTES
+
+// GET /api/events/:id/qr-codes - Get all QR codes for an event
+router.get(
+    "/:id/qr-codes",
+    asyncHandler(events.getEventQRCodes)
+);
+
+// POST /api/events/:id/qr-codes - Create a new QR code for an event
+router.post(
+    "/:id/qr-codes",
+    asyncHandler(events.createEventQRCode)
+);
+
+// PUT /api/events/:id/qr-codes/:qrId - Update a QR code
+router.put(
+    "/:id/qr-codes/:qrId",
+    asyncHandler(events.updateEventQRCode)
+);
+
+// DELETE /api/events/:id/qr-codes/:qrId - Delete a QR code
+router.delete(
+    "/:id/qr-codes/:qrId",
+    asyncHandler(events.deleteEventQRCode)
+);
+
+// GET /api/events/:id/qr-codes/:qrId/image - Generate QR code image for download
+router.get(
+    "/:id/qr-codes/:qrId/image",
+    asyncHandler(events.generateQRCodeImage)
+);
+
+// 📊 ADVANCED ANALYTICS ROUTES
+
+// GET /api/events/:id/analytics/page-views - Get detailed page view analytics
+router.get(
+    "/:id/analytics/page-views",
+    asyncHandler(events.getEventPageViews)
+);
+
+// GET /api/events/:id/analytics/sessions - Get session analytics
+router.get(
+    "/:id/analytics/sessions",
+    asyncHandler(events.getEventSessionAnalytics)
+);
+
+// GET /api/events/:id/analytics/export - Export analytics data
+router.get(
+    "/:id/analytics/export",
+    asyncHandler(events.exportEventAnalytics)
+);
+
 // GET /api/events/:id/qr-code/analytics - Get QR code scan analytics
 router.get(
     "/:id/qr-code/analytics",
