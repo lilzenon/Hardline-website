@@ -691,7 +691,7 @@
 
                                 <div id="qr-code-content" class="transition-all duration-300 {{#unless event.qr_code_enabled}}opacity-50 pointer-events-none{{/unless}}">
                                     <!-- QR Codes Grid -->
-                                    <div id="qr-codes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                                    <div id="qr-codes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
                                         <!-- Loading State -->
                                         <div class="col-span-full flex items-center justify-center py-12">
                                             <div class="text-center">
@@ -1432,6 +1432,24 @@ function log(level, prefix, message, ...args) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Prevent unwanted auto-scrolling during initialization
+    const initialScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    // Lock scroll position during initialization
+    let scrollLocked = true;
+    const scrollHandler = () => {
+        if (scrollLocked) {
+            window.scrollTo(0, initialScrollTop);
+        }
+    };
+    window.addEventListener('scroll', scrollHandler, { passive: false });
+
+    // Release scroll lock after initialization is complete
+    setTimeout(() => {
+        scrollLocked = false;
+        window.removeEventListener('scroll', scrollHandler);
+    }, 2000);
+
     log(LOG_LEVELS.INFO, '🚀', 'Drop edit system initialized');
 
     // Initialize form elements
@@ -4092,10 +4110,10 @@ function displayQRCodes(qrCodes) {
     }
 
     grid.innerHTML = qrCodes.map(qr => `
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group max-w-sm mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 hover:shadow-md transition-all duration-200 group w-full max-w-xs mx-auto">
             <!-- QR Code Display -->
-            <div class="flex justify-center mb-6">
-                <div class="w-48 h-48 bg-white border border-gray-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors" onclick="previewQRCode('${qr.identifier}')">
+            <div class="flex justify-center mb-4 lg:mb-6">
+                <div class="w-40 h-40 lg:w-48 lg:h-48 bg-white border border-gray-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors" onclick="previewQRCode('${qr.identifier}')">
                     <div id="qr-preview-${qr.id}" class="w-full h-full flex items-center justify-center">
                         <div class="text-center">
                             <svg class="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
@@ -4108,7 +4126,7 @@ function displayQRCodes(qrCodes) {
             </div>
 
             <!-- QR Code URL Label -->
-            <div class="text-center mb-6">
+            <div class="text-center mb-4 lg:mb-6">
                 <p class="text-sm font-medium text-gray-600 uppercase tracking-wide">/QR CODE URL</p>
                 <p class="text-xs text-gray-500 mt-1 font-mono truncate">${qr.short_url || qr.qr_url}</p>
             </div>
@@ -4332,10 +4350,19 @@ async function loadQRCodeImage(qrId, identifier) {
         img.className = 'w-full h-full object-contain rounded-lg';
         img.alt = `QR Code ${identifier}`;
 
-        // Set up load handler
+        // Set up load handler with scroll prevention
         img.onload = () => {
+            // Store current scroll position to prevent unwanted scrolling
+            const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
             previewContainer.innerHTML = '';
             previewContainer.appendChild(img);
+
+            // Restore scroll position if it changed
+            const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            if (Math.abs(newScrollTop - currentScrollTop) > 5) {
+                window.scrollTo(0, currentScrollTop);
+            }
         };
 
         // Set up error handler
@@ -4477,9 +4504,17 @@ function initializeQRCodeManagement() {
         createBtn.addEventListener('click', showCreateQRCodeModal);
     }
 
-    // Load QR codes when tab is active
-    if (document.querySelector('[data-tab-content="sharing"]')) {
-        loadQRCodes();
+    // Only load QR codes when sharing tab is actually clicked to prevent auto-scroll
+    const sharingTab = document.querySelector('[data-tab="sharing"]');
+    if (sharingTab) {
+        sharingTab.addEventListener('click', function() {
+            // Small delay to ensure tab content is visible before loading
+            setTimeout(() => {
+                if (document.querySelector('[data-tab-content="sharing"].active')) {
+                    loadQRCodes();
+                }
+            }, 100);
+        });
     }
 }
 
