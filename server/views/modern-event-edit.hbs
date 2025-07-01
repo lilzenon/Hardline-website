@@ -3547,6 +3547,24 @@ function initializeTicketPurchasingToggle() {
 
 // Test function removed for cleaner console output
 
+// ===== UTILITY FUNCTIONS =====
+
+// Safe DOM element update function
+function safeUpdateElement(elementId, value, fallback = '0') {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value || fallback;
+        console.log(`✅ Updated ${elementId}:`, value || fallback);
+    } else {
+        console.warn(`⚠️ Element not found: ${elementId}`);
+    }
+}
+
+// Notification function (alias for showToast for consistency)
+function showNotification(message, type = 'info', duration = 5000) {
+    return showToast(message, type, duration);
+}
+
 function showToast(message, type = 'info', duration = 5000) {
     console.log(`🍞 Toast: ${type.toUpperCase()} - ${message}`);
 
@@ -4488,6 +4506,12 @@ async function loadQRCodeData(eventId) {
 async function displayQRCode(url) {
     const qrDisplay = document.getElementById('qr-code-display');
 
+    // Check if element exists
+    if (!qrDisplay) {
+        console.warn('⚠️ QR display element not found');
+        return Promise.resolve();
+    }
+
     return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
@@ -4502,14 +4526,16 @@ async function displayQRCode(url) {
             }, 50);
         };
         img.onerror = () => {
-            qrDisplay.innerHTML = `
-                <div class="text-red-400">
-                    <svg class="w-8 h-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    <p class="text-sm font-medium">Failed to load QR Code</p>
-                </div>
-            `;
+            if (qrDisplay) {
+                qrDisplay.innerHTML = `
+                    <div class="text-red-400">
+                        <svg class="w-8 h-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <p class="text-sm font-medium">Failed to load QR Code</p>
+                    </div>
+                `;
+            }
             resolve();
         };
         img.src = `/api/events/{{event.id}}/qr-code?format=png&size=192`;
@@ -4526,17 +4552,6 @@ async function loadQRCodeAnalytics(eventId) {
         if (result.success) {
             const analytics = result.data;
             console.log('📊 QR Analytics data received:', analytics);
-
-            // Helper function to safely update element
-            function safeUpdateElement(elementId, value, fallback = '0') {
-                const element = document.getElementById(elementId);
-                if (element) {
-                    element.textContent = value || fallback;
-                    console.log(`✅ Updated ${elementId}:`, value || fallback);
-                } else {
-                    console.warn(`⚠️ Element not found: ${elementId}`);
-                }
-            }
 
             // Update main analytics display (top overview cards)
             safeUpdateElement('qr-total-scans', analytics.totalScans || 0);

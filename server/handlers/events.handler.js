@@ -170,12 +170,12 @@ const createEventValidation = [
         return true;
     }),
     body("buy_button_text")
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isLength({ min: 1, max: 30 })
     .withMessage("Buy button text must be between 1 and 30 characters")
     .trim(),
     body("button_title")
-    .optional()
+    .optional({ nullable: true, checkFalsy: true })
     .isLength({ min: 1, max: 50 })
     .withMessage("Button title must be between 1 and 50 characters")
     .trim(),
