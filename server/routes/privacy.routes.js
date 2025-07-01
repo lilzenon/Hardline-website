@@ -5,7 +5,7 @@ const {
     getPrivacyStatus,
     cleanupExpiredData 
 } = require("../middleware/privacy.middleware");
-const { requireAuth } = require("../middleware");
+const auth = require("../handlers/auth.handler");
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.get(
 // POST /api/privacy/cleanup - Manual data cleanup (admin only)
 router.post(
     "/cleanup",
-    requireAuth,
+    asyncHandler(auth.jwt),
     asyncHandler(async (req, res) => {
         try {
             // Only allow admin users to trigger manual cleanup
@@ -107,12 +107,6 @@ router.delete(
                 Reason: ${reason || 'Not specified'}
                 Timestamp: ${new Date().toISOString()}
                 IP: ${req.ip}`);
-            
-            // In a production system, this would:
-            // 1. Verify the email belongs to the requester
-            // 2. Queue the deletion request for review
-            // 3. Send confirmation email
-            // 4. Process deletion after verification
             
             res.json({
                 success: true,
