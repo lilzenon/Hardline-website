@@ -3640,7 +3640,9 @@ async function loadAnalytics() {
         // Show loading states
         showAnalyticsLoading();
 
-        const response = await fetch(`/api/events/{{event.id}}/analytics?days=${timeRange}`);
+        const response = await fetch(`/api/events/{{event.id}}/analytics?days=${timeRange}`, {
+            credentials: 'same-origin'
+        });
         if (response.ok) {
             const result = await response.json();
             const data = result.data;
@@ -3896,7 +3898,9 @@ function updateQRCodeAnalytics(data) {
 // Load QR codes list
 async function loadQRCodesList() {
     try {
-        const response = await fetch(`/api/events/{{event.id}}/qr-codes`);
+        const response = await fetch(`/api/events/{{event.id}}/qr-codes`, {
+            credentials: 'same-origin'
+        });
         if (response.ok) {
             const result = await response.json();
             const qrCodes = result.data || [];
@@ -4020,7 +4024,9 @@ function initializeEnhancedAnalytics() {
 async function exportAnalyticsData() {
     try {
         const timeRange = document.getElementById('analytics-time-range')?.value || 30;
-        const response = await fetch(`/api/events/{{event.id}}/analytics?days=${timeRange}&format=csv`);
+        const response = await fetch(`/api/events/{{event.id}}/analytics?days=${timeRange}&format=csv`, {
+            credentials: 'same-origin'
+        });
 
         if (response.ok) {
             const blob = await response.blob();
@@ -4044,7 +4050,9 @@ async function exportAnalyticsData() {
 // Load and display QR codes
 async function loadQRCodes() {
     try {
-        const response = await fetch(`/api/events/{{event.id}}/qr-codes`);
+        const response = await fetch(`/api/events/{{event.id}}/qr-codes`, {
+            credentials: 'same-origin'
+        });
         if (response.ok) {
             const result = await response.json();
             const qrCodes = result.data || [];
@@ -4268,6 +4276,7 @@ async function createQRCode(formData) {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify(data)
         });
 
@@ -4289,7 +4298,9 @@ async function downloadQRCode(qrId) {
     try {
         const format = 'png';
         const size = 512;
-        const response = await fetch(`/api/events/{{event.id}}/qr-codes/${qrId}/image?format=${format}&size=${size}`);
+        const response = await fetch(`/api/events/{{event.id}}/qr-codes/${qrId}/image?format=${format}&size=${size}`, {
+            credentials: 'same-origin'
+        });
 
         if (response.ok) {
             const blob = await response.blob();
@@ -4320,7 +4331,8 @@ async function deleteQRCode(qrId) {
 
     try {
         const response = await fetch(`/api/events/{{event.id}}/qr-codes/${qrId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'same-origin'
         });
 
         if (response.ok) {
@@ -4546,7 +4558,9 @@ async function displayQRCode(url) {
 async function loadQRCodeAnalytics(eventId) {
     try {
         console.log('🔍 Loading QR code analytics for event:', eventId);
-        const response = await fetch(`/api/events/${eventId}/qr-code/analytics`);
+        const response = await fetch(`/api/events/${eventId}/qr-code/analytics`, {
+            credentials: 'same-origin'
+        });
         const result = await response.json();
 
         if (result.success) {
