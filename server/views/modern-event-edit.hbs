@@ -667,20 +667,15 @@
                     <!-- SHARING TAB CONTENT -->
                     <div class="tab-content p-6" data-tab-content="sharing">
                         <div class="space-y-8">
-                            <!-- Enhanced QR Code Management Section -->
-                            <div class="glass-card p-8">
+                            <!-- QR Code Management Section -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
                                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
                                     <div>
                                         <h2 class="text-xl font-semibold text-gray-900 mb-2">QR Code Management</h2>
                                         <p class="text-sm text-gray-600">Create and manage multiple QR codes for your event with individual tracking</p>
                                     </div>
-                                    <div class="mt-4 sm:mt-0 flex items-center space-x-3">
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" id="qr-enabled-toggle" class="sr-only peer" {{#if event.qr_code_enabled}}checked{{/if}}>
-                                            <div class="w-12 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all duration-200 peer-checked:bg-blue-600"></div>
-                                        </label>
-                                        <span class="text-sm font-medium text-gray-700">QR Codes Enabled</span>
-                                        <button id="create-new-qr-btn" class="ml-4 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2">
+                                    <div class="mt-4 sm:mt-0">
+                                        <button id="create-new-qr-btn" class="px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-all duration-200 flex items-center space-x-2 shadow-sm hover:shadow-md">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                             </svg>
@@ -689,7 +684,7 @@
                                     </div>
                                 </div>
 
-                                <div id="qr-code-content" class="transition-all duration-300 {{#unless event.qr_code_enabled}}opacity-50 pointer-events-none{{/unless}}">
+                                <div id="qr-code-content">
                                     <!-- QR Codes Grid -->
                                     <div id="qr-codes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
                                         <!-- Loading State -->
@@ -769,8 +764,11 @@
                                     </div>
 
                                 </div>
-                                    <!-- Enhanced Social Media Preview Section -->
-                                    <div class="mt-8 space-y-6">
+                            </div>
+
+                            <!-- iMessage & Social Preview Section -->
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                                <div class="space-y-6">
                                         <!-- iMessage Preview Customization -->
                                         <div class="glass-card p-6">
                                             <div class="flex items-center justify-between mb-6">
@@ -4163,15 +4161,15 @@ function displayQRCodes(qrCodes) {
                 </button>
             </div>
 
-            <!-- QR Code Info (Hidden by default, shown on hover/focus) -->
-            <div class="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <div class="flex items-center justify-between text-xs text-gray-500">
-                    <span>${qr.name}</span>
-                    <span>${qr.scan_count || 0} scans</span>
+            <!-- QR Code Info (Always Visible) -->
+            <div class="mt-4 pt-4 border-t border-gray-100">
+                <div class="flex items-center justify-between text-sm text-gray-700 mb-2">
+                    <span class="font-medium truncate">${qr.name}</span>
+                    <span class="text-blue-600 font-semibold">${qr.scan_count || 0} scans</span>
                 </div>
-                <div class="flex items-center justify-between text-xs text-gray-400 mt-1">
+                <div class="flex items-center justify-between text-xs text-gray-500">
                     <span>Created ${formatTimeAgo(qr.created_at)}</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${qr.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${qr.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
                         ${qr.is_active ? 'Active' : 'Inactive'}
                     </span>
                 </div>
@@ -4278,6 +4276,66 @@ function showCreateQRCodeModal() {
     });
 }
 
+// Show edit QR code modal
+function showEditQRCodeModal(qrCode) {
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">Edit QR Code</h3>
+                <button onclick="closeModal(this)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <form id="edit-qr-form" class="space-y-4">
+                <div>
+                    <label for="edit-qr-name" class="block text-sm font-medium text-gray-700 mb-2">QR Code Name</label>
+                    <input type="text" id="edit-qr-name" name="name" value="${qrCode.name || ''}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="Enter QR code name" required>
+                </div>
+
+                <div>
+                    <label for="edit-qr-description" class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                    <textarea id="edit-qr-description" name="description" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter description">${qrCode.description || ''}</textarea>
+                </div>
+
+                <div>
+                    <label for="edit-qr-custom-url" class="block text-sm font-medium text-gray-700 mb-2">Custom URL (Optional)</label>
+                    <input type="url" id="edit-qr-custom-url" name="custom_url" value="${qrCode.custom_url || ''}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="https://example.com">
+                    <p class="text-xs text-gray-500 mt-1">Leave empty to use default event URL</p>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-4">
+                    <button type="button" onclick="closeModal(this)" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors">
+                        Update QR Code
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Handle form submission
+    document.getElementById('edit-qr-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await updateQRCode(qrCode.id, new FormData(e.target));
+        closeModal(modal);
+    });
+}
+
 // Create QR code
 async function createQRCode(formData) {
     try {
@@ -4306,6 +4364,37 @@ async function createQRCode(formData) {
     } catch (error) {
         console.error('Failed to create QR code:', error);
         showNotification(error.message || 'Failed to create QR code', 'error');
+    }
+}
+
+// Update QR code
+async function updateQRCode(qrId, formData) {
+    try {
+        const data = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            custom_url: formData.get('custom_url')
+        };
+
+        const response = await fetch(`/api/events/{{event.id}}/qr-codes/${qrId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            showNotification('QR code updated successfully!', 'success');
+            loadQRCodes(); // Reload the grid
+        } else {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to update QR code');
+        }
+    } catch (error) {
+        console.error('Failed to update QR code:', error);
+        showNotification(error.message || 'Failed to update QR code', 'error');
     }
 }
 
@@ -4490,10 +4579,29 @@ function previewQRCode(identifier) {
 }
 
 // Edit QR code
-function editQRCode(qrId) {
-    // This would open an edit modal similar to create
-    // For now, just show a notification
-    showNotification(`Edit functionality for QR code ${qrId} coming soon!`, 'info');
+async function editQRCode(qrId) {
+    try {
+        // First, fetch the current QR code data
+        const response = await fetch(`/api/events/{{event.id}}/qr-codes`, {
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch QR codes');
+        }
+
+        const result = await response.json();
+        const qrCode = result.data.find(qr => qr.id === qrId);
+
+        if (!qrCode) {
+            throw new Error('QR code not found');
+        }
+
+        showEditQRCodeModal(qrCode);
+    } catch (error) {
+        console.error('Failed to load QR code for editing:', error);
+        showNotification('Failed to load QR code data', 'error');
+    }
 }
 
 // Initialize QR code management
@@ -4596,11 +4704,15 @@ async function loadQRCodeData(eventId) {
                 if (urlDisplayOld) urlDisplayOld.textContent = data.qr_code_url;
                 if (urlDisplayMain) urlDisplayMain.textContent = data.qr_code_url;
 
-                // Add success animation
-                qrDisplay.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    qrDisplay.style.transform = 'scale(1)';
-                }, 100);
+                // Add success animation (with null check)
+                if (qrDisplay) {
+                    qrDisplay.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        if (qrDisplay) {
+                            qrDisplay.style.transform = 'scale(1)';
+                        }
+                    }, 100);
+                }
 
                 // Update generation time
                 const timeElement = document.getElementById('qr-generation-time');
@@ -4611,14 +4723,16 @@ async function loadQRCodeData(eventId) {
                 console.log('✅ QR code display updated successfully');
             } else {
                 console.warn('⚠️ QR code is disabled for this event');
-                qrDisplay.innerHTML = `
-                    <div class="text-gray-400">
-                        <svg class="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                        </svg>
-                        <p class="text-sm font-medium">QR Code Disabled</p>
-                    </div>
-                `;
+                if (qrDisplay) {
+                    qrDisplay.innerHTML = `
+                        <div class="text-gray-400">
+                            <svg class="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                            </svg>
+                            <p class="text-sm font-medium">QR Code Disabled</p>
+                        </div>
+                    `;
+                }
             }
 
             // Store download URLs for later use
@@ -4629,16 +4743,18 @@ async function loadQRCodeData(eventId) {
     } catch (error) {
         console.error('🚨 Failed to load QR code data:', error);
 
-        // Show enhanced error state
-        qrDisplay.innerHTML = `
-            <div class="text-red-400">
-                <svg class="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-                <p class="text-sm font-medium">Failed to load QR Code</p>
-                <p class="text-xs text-red-300 mt-1">Please try refreshing the page</p>
-            </div>
-        `;
+        // Show enhanced error state (with null check)
+        if (qrDisplay) {
+            qrDisplay.innerHTML = `
+                <div class="text-red-400">
+                    <svg class="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <p class="text-sm font-medium">Failed to load QR Code</p>
+                    <p class="text-xs text-red-300 mt-1">Please try refreshing the page</p>
+                </div>
+            `;
+        }
 
         // Update URL displays with error message
         if (urlDisplayOld) urlDisplayOld.textContent = 'Error loading URL';
@@ -4819,45 +4935,7 @@ function getTimeAgo(date) {
 
 // Set up QR code event listeners
 function setupQRCodeEventListeners(eventId) {
-    // QR code enabled toggle
-    const qrToggle = document.getElementById('qr-enabled-toggle');
-    if (qrToggle) {
-        qrToggle.addEventListener('change', async function() {
-            const enabled = this.checked;
-
-            try {
-                const response = await fetch(`/api/events/${eventId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        qr_code_enabled: enabled
-                    })
-                });
-
-                if (response.ok) {
-                    const qrContent = document.getElementById('qr-code-content');
-                    if (enabled) {
-                        qrContent.classList.remove('opacity-50', 'pointer-events-none');
-                        loadQRCodeData(eventId);
-                    } else {
-                        qrContent.classList.add('opacity-50', 'pointer-events-none');
-                    }
-
-                    showToast(enabled ? 'QR code enabled' : 'QR code disabled', 'success');
-                } else {
-                    // Revert toggle if request failed
-                    this.checked = !enabled;
-                    showToast('Failed to update QR code setting', 'error');
-                }
-            } catch (error) {
-                console.error('🚨 Failed to update QR code setting:', error);
-                this.checked = !enabled;
-                showToast('Failed to update QR code setting', 'error');
-            }
-        });
-    }
+    // QR toggle functionality removed - QR codes are always enabled
 
     // Copy QR code image to clipboard
     const copyImageBtn = document.getElementById('copy-qr-image');
