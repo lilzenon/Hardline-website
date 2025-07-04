@@ -101,9 +101,38 @@ async function isUniqueVisitor(eventId, ipAddress, userAgent, days = 30) {
     }
 }
 
+// Check if the current route should be tracked
+function shouldTrackRoute(req) {
+    const url = req.originalUrl || req.url;
+
+    // Exclude dashboard and admin pages
+    if (url.startsWith('/dashboard') ||
+        url.startsWith('/admin') ||
+        url.startsWith('/api/')) {
+        return false;
+    }
+
+    // Exclude preview mode and edit mode (admin functionality)
+    if (url.includes('preview=true') ||
+        url.includes('edit_mode=true') ||
+        url.includes('_refresh=') ||
+        req.query.preview === 'true' ||
+        req.query.edit_mode === 'true') {
+        return false;
+    }
+
+    // Only track public event pages (routes like /event/:slug)
+    return url.startsWith('/event/') && req.params.slug;
+}
+
 // Main analytics tracking middleware
 async function trackPageView(req, res, next) {
     try {
+        // Check if this route should be tracked
+        if (!shouldTrackRoute(req)) {
+            return next();
+        }
+
         // Check privacy compliance first
         if (hasDoNotTrack(req)) {
             console.log('🔒 Analytics tracking skipped: Do Not Track enabled');
