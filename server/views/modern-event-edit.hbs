@@ -1524,23 +1524,37 @@ function log(level, prefix, message, ...args) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Prevent unwanted auto-scrolling during initialization
+    // Store initial scroll position for reference but don't lock it aggressively
     const initialScrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-    // Lock scroll position during initialization
+    // Only prevent scroll during critical initialization phases (much shorter duration)
     let scrollLocked = true;
-    const scrollHandler = () => {
+    let scrollLockTimeout;
+
+    const scrollHandler = (e) => {
         if (scrollLocked) {
-            window.scrollTo(0, initialScrollTop);
+            // Only prevent scroll if it's a significant jump (likely programmatic)
+            const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollDelta = Math.abs(currentScroll - initialScrollTop);
+
+            // Only intervene for large scroll jumps (>100px) that are likely unintentional
+            if (scrollDelta > 100) {
+                e.preventDefault();
+                window.scrollTo(0, initialScrollTop);
+            }
         }
     };
+
+    // Use passive: false only when scroll is locked
     window.addEventListener('scroll', scrollHandler, { passive: false });
 
-    // Release scroll lock after initialization is complete
-    setTimeout(() => {
+    // Much shorter scroll lock duration - only during critical DOM setup
+    scrollLockTimeout = setTimeout(() => {
         scrollLocked = false;
+        // Switch to passive listener after lock is released
         window.removeEventListener('scroll', scrollHandler);
-    }, 2000);
+        window.addEventListener('scroll', () => {}, { passive: true });
+    }, 500); // Reduced from 2000ms to 500ms
 
     log(LOG_LEVELS.INFO, '🚀', 'Drop edit system initialized');
 
@@ -1842,7 +1856,12 @@ function initializeTabSystem() {
     const tabNavigation = document.querySelector('.tab-navigation') || document.querySelector('nav[aria-label="Tabs"]');
 
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent any default behavior
+
+            // Store current scroll position before tab switch
+            const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
             const targetTab = this.getAttribute('data-tab');
 
             // Remove active class from all tabs and contents
@@ -1865,11 +1884,38 @@ function initializeTabSystem() {
                 targetContent.classList.add('active');
             }
 
-            // Note: Auto-scroll behavior removed to prevent unwanted page scrolling
+            // Preserve scroll position after DOM changes
+            requestAnimationFrame(() => {
+                const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                if (Math.abs(newScrollTop - currentScrollTop) > 5) {
+                    window.scrollTo({
+                        top: currentScrollTop,
+                        behavior: 'instant' // No smooth scrolling to avoid visual disruption
+                    });
+                }
+            });
 
-            // Load analytics if analytics tab is clicked
+            // Load analytics if analytics tab is clicked (with scroll preservation)
             if (targetTab === 'analytics') {
-                loadAnalytics();
+                // Delay analytics loading slightly to ensure scroll position is stable
+                setTimeout(() => {
+                    const scrollBeforeAnalytics = window.pageYOffset || document.documentElement.scrollTop;
+                    loadAnalytics().then(() => {
+                        // Restore scroll position after analytics load
+                        requestAnimationFrame(() => {
+                            window.scrollTo({
+                                top: scrollBeforeAnalytics,
+                                behavior: 'instant'
+                            });
+                        });
+                    }).catch(() => {
+                        // Even on error, restore scroll position
+                        window.scrollTo({
+                            top: scrollBeforeAnalytics,
+                            behavior: 'instant'
+                        });
+                    });
+                }, 50);
             }
         });
     });
@@ -2338,6 +2384,10 @@ function isValidUrl(string) {
 function refreshPreview() {
     console.log('🔄 Refreshing preview iframe...');
 
+    // Store current scroll position before any DOM manipulation
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const currentScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
     const iframe = document.getElementById('preview-iframe');
     if (!iframe) {
         console.error('❌ Preview iframe not found');
@@ -2365,16 +2415,17 @@ function refreshPreview() {
 
     console.log('🌐 Refreshing with preview URL:', previewUrl.toString());
 
-    // Show loading state with better UX
+    // Show loading state with better UX (but prevent layout shifts)
     iframe.style.opacity = '0.6';
     iframe.style.filter = 'blur(1px)';
+    iframe.style.transition = 'opacity 0.2s ease, filter 0.2s ease';
 
-    // Add loading indicator
+    // Add loading indicator without affecting layout
     const container = iframe.parentElement;
     let loadingIndicator = container.querySelector('.preview-loading');
     if (!loadingIndicator) {
         loadingIndicator = document.createElement('div');
-        loadingIndicator.className = 'preview-loading absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10';
+        loadingIndicator.className = 'preview-loading absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10 pointer-events-none';
         loadingIndicator.innerHTML = `
             <div class="flex items-center space-x-2 text-gray-600">
                 <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -2395,12 +2446,28 @@ function refreshPreview() {
     setTimeout(() => {
         iframe.src = previewUrl.toString();
 
-        // Enhanced load handling
+        // Enhanced load handling with scroll position restoration
         const handleLoad = () => {
             iframe.style.opacity = '1';
             iframe.style.filter = 'none';
             loadingIndicator.style.display = 'none';
             console.log('✅ Preview refreshed successfully');
+
+            // Restore scroll position after preview refresh
+            requestAnimationFrame(() => {
+                const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const newScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+                // Only restore if position changed significantly
+                if (Math.abs(newScrollTop - currentScrollTop) > 5 || Math.abs(newScrollLeft - currentScrollLeft) > 5) {
+                    window.scrollTo({
+                        top: currentScrollTop,
+                        left: currentScrollLeft,
+                        behavior: 'instant'
+                    });
+                    console.log('🔄 Restored scroll position after preview refresh');
+                }
+            });
 
             // Try to re-establish iframe communication
             setTimeout(() => {
@@ -2422,6 +2489,15 @@ function refreshPreview() {
             iframe.style.filter = 'none';
             loadingIndicator.style.display = 'none';
             console.error('❌ Preview failed to load');
+
+            // Restore scroll position even on error
+            requestAnimationFrame(() => {
+                window.scrollTo({
+                    top: currentScrollTop,
+                    left: currentScrollLeft,
+                    behavior: 'instant'
+                });
+            });
 
             // Show error state
             showPreviewError();
@@ -3420,10 +3496,22 @@ function initializeFormSubmission() {
                     }
                 }
 
-                // Refresh preview after a short delay
+                // Refresh preview after a short delay with scroll preservation
                 setTimeout(() => {
                     console.log('🔄 Refreshing preview...');
+                    const scrollBeforeRefresh = window.pageYOffset || document.documentElement.scrollTop;
                     refreshPreview();
+
+                    // Double-check scroll position after refresh
+                    setTimeout(() => {
+                        const scrollAfterRefresh = window.pageYOffset || document.documentElement.scrollTop;
+                        if (Math.abs(scrollAfterRefresh - scrollBeforeRefresh) > 10) {
+                            window.scrollTo({
+                                top: scrollBeforeRefresh,
+                                behavior: 'instant'
+                            });
+                        }
+                    }, 100);
                 }, 1000);
 
                 // Trigger undo button update by dispatching a custom event
@@ -3694,6 +3782,59 @@ function initializeTicketPurchasingToggle() {
 
 // ===== UTILITY FUNCTIONS =====
 
+// Scroll position preservation utility
+function preserveScrollPosition(callback) {
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const currentScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+    // Execute the callback
+    const result = callback();
+
+    // If callback returns a promise, handle scroll restoration after it resolves
+    if (result && typeof result.then === 'function') {
+        return result.then((value) => {
+            requestAnimationFrame(() => {
+                const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                const newScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+                if (Math.abs(newScrollTop - currentScrollTop) > 5 || Math.abs(newScrollLeft - currentScrollLeft) > 5) {
+                    window.scrollTo({
+                        top: currentScrollTop,
+                        left: currentScrollLeft,
+                        behavior: 'instant'
+                    });
+                }
+            });
+            return value;
+        }).catch((error) => {
+            // Restore scroll position even on error
+            requestAnimationFrame(() => {
+                window.scrollTo({
+                    top: currentScrollTop,
+                    left: currentScrollLeft,
+                    behavior: 'instant'
+                });
+            });
+            throw error;
+        });
+    } else {
+        // For synchronous operations, restore immediately
+        requestAnimationFrame(() => {
+            const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const newScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+            if (Math.abs(newScrollTop - currentScrollTop) > 5 || Math.abs(newScrollLeft - currentScrollLeft) > 5) {
+                window.scrollTo({
+                    top: currentScrollTop,
+                    left: currentScrollLeft,
+                    behavior: 'instant'
+                });
+            }
+        });
+        return result;
+    }
+}
+
 // Safe DOM element update function
 function safeUpdateElement(elementId, value, fallback = '0') {
     const element = document.getElementById(elementId);
@@ -3776,54 +3917,57 @@ function showToast(message, type = 'info', duration = 5000) {
 
 // Debug test function removed for cleaner console output
 
-// Enhanced Analytics Loading Function
+// Enhanced Analytics Loading Function with scroll preservation
 async function loadAnalytics() {
-    try {
-        // Get selected time range
-        const timeRange = document.getElementById('analytics-time-range')?.value || 30;
+    return preserveScrollPosition(async () => {
+        try {
+            // Get selected time range
+            const timeRange = document.getElementById('analytics-time-range')?.value || 30;
 
-        // Show loading states
-        showAnalyticsLoading();
+            // Show loading states
+            showAnalyticsLoading();
 
-        const response = await fetch(`/api/events/{{event.id}}/analytics?days=${timeRange}`, {
-            credentials: 'same-origin'
-        });
-        if (response.ok) {
-            const result = await response.json();
-            const data = result.data;
+            const response = await fetch(`/api/events/{{event.id}}/analytics?days=${timeRange}`, {
+                credentials: 'same-origin'
+            });
+            if (response.ok) {
+                const result = await response.json();
+                const data = result.data;
 
-            // Update overview stats
-            updateOverviewStats(data);
+                // Update overview stats
+                updateOverviewStats(data);
 
-            // Update charts and visualizations
-            updateAnalyticsCharts(data);
+                // Update charts and visualizations
+                updateAnalyticsCharts(data);
 
-            // Update traffic sources
-            updateTrafficSources(data);
+                // Update traffic sources
+                updateTrafficSources(data);
 
-            // Update geographic data
-            updateGeographicData(data);
+                // Update geographic data
+                updateGeographicData(data);
 
-            // Update conversion funnel
-            updateConversionFunnel(data);
+                // Update conversion funnel
+                updateConversionFunnel(data);
 
-            // Update QR code analytics
-            updateQRCodeAnalytics(data);
+                // Update QR code analytics
+                updateQRCodeAnalytics(data);
 
-            // Load QR codes list
-            loadQRCodesList();
+                // Load QR codes list
+                loadQRCodesList();
 
-            // Update live activity feed
-            updateLiveActivityFeed(data);
+                // Update live activity feed
+                updateLiveActivityFeed(data);
 
-            console.log('✅ Analytics loaded successfully');
-        } else {
-            throw new Error('Failed to fetch analytics data');
+                console.log('✅ Analytics loaded successfully');
+            } else {
+                throw new Error('Failed to fetch analytics data');
+            }
+        } catch (error) {
+            console.error('Failed to load analytics:', error);
+            showAnalyticsError();
+            throw error; // Re-throw to ensure scroll preservation handles it
         }
-    } catch (error) {
-        console.error('Failed to load analytics:', error);
-        showAnalyticsError();
-    }
+    });
 }
 
 // Show loading states for analytics
@@ -4568,19 +4712,31 @@ async function loadQRCodeImage(qrId, identifier) {
         img.className = 'w-full h-full object-contain rounded-lg';
         img.alt = `QR Code ${identifier}`;
 
-        // Set up load handler with scroll prevention
+        // Set up load handler with enhanced scroll prevention
         img.onload = () => {
             // Store current scroll position to prevent unwanted scrolling
             const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const currentScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-            previewContainer.innerHTML = '';
-            previewContainer.appendChild(img);
+            // Use requestAnimationFrame to ensure DOM is stable before manipulation
+            requestAnimationFrame(() => {
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(img);
 
-            // Restore scroll position if it changed
-            const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            if (Math.abs(newScrollTop - currentScrollTop) > 5) {
-                window.scrollTo(0, currentScrollTop);
-            }
+                // Restore scroll position if it changed
+                requestAnimationFrame(() => {
+                    const newScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const newScrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+                    if (Math.abs(newScrollTop - currentScrollTop) > 5 || Math.abs(newScrollLeft - currentScrollLeft) > 5) {
+                        window.scrollTo({
+                            top: currentScrollTop,
+                            left: currentScrollLeft,
+                            behavior: 'instant'
+                        });
+                    }
+                });
+            });
         };
 
         // Set up error handler
@@ -5573,6 +5729,42 @@ a:focus-visible {
 .form-input:focus-visible {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
+}
+
+/* Prevent layout shifts during loading and updates */
+.tab-content {
+    min-height: 200px; /* Prevent collapse during content loading */
+}
+
+.preview-loading {
+    position: absolute !important;
+    pointer-events: none !important;
+}
+
+/* Smooth transitions without affecting scroll */
+.tab-content.active {
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Prevent scroll jumps during iframe operations */
+#preview-iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+/* Ensure containers maintain their dimensions */
+.analytics-container,
+.sharing-container,
+.styling-container {
+    min-height: 400px;
 }
 
 /* High contrast mode support */
