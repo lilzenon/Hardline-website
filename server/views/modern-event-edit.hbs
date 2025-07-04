@@ -3320,6 +3320,13 @@ function initializeFormSubmission() {
             const universalDescription = formData.get('social_description') || null;
             const universalImage = formData.get('social_image') || null;
 
+            console.log('🔍 FormData social preview fields:', {
+                social_title: formData.get('social_title'),
+                social_description: formData.get('social_description'),
+                social_image: formData.get('social_image'),
+                social_preview_enabled: formData.get('social_preview_enabled')
+            });
+
             // Apply universal values to all platform-specific database fields
             data.og_title = universalTitle;
             data.og_description = universalDescription;
@@ -3336,7 +3343,16 @@ function initializeFormSubmission() {
                 universal_title: universalTitle,
                 universal_description: universalDescription,
                 universal_image: universalImage,
-                applied_to_all_platforms: true
+                applied_to_all_platforms: true,
+                og_title: data.og_title,
+                og_description: data.og_description,
+                og_image: data.og_image,
+                twitter_title: data.twitter_title,
+                twitter_description: data.twitter_description,
+                twitter_image: data.twitter_image,
+                ios_title: data.ios_title,
+                ios_description: data.ios_description,
+                ios_image: data.ios_image
             });
 
             // CRITICAL FIX: Ensure gradient data is captured
