@@ -10,6 +10,7 @@ const user = require("./user.routes");
 const auth = require("./auth.routes");
 const events = require("./events.routes");
 const publicEvents = require("./public_events.routes");
+const qrRoutes = require("./qr.routes");
 const sms = require("./sms.routes");
 const analytics = require("./api/analytics.routes");
 const contactBook = require("./api/contact-book.routes");
@@ -21,6 +22,9 @@ const privacy = require("./privacy.routes");
 const renderRouter = Router();
 renderRouter.use(renders);
 renderRouter.use("/event", publicEvents);
+
+// QR code redirect route - dedicated router for /qr/:identifier URLs
+renderRouter.use("/qr", qrRoutes);
 
 const apiRouter = Router();
 apiRouter.use(locals.noLayout);

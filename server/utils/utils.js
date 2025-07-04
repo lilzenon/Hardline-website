@@ -13,6 +13,9 @@ const env = require("../env");
 
 const nanoid = customAlphabet(env.LINK_CUSTOM_ALPHABET, env.LINK_LENGTH);
 
+// QR code identifier generator - 4-character alphanumeric for better QR readability
+const qrNanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 4);
+
 class CustomError extends Error {
     constructor(message, statusCode, data) {
         super(message);
@@ -80,6 +83,29 @@ async function generateId(query, domain_id) {
 function addProtocol(url) {
     const hasProtocol = /^(\w+:|\/\/)/.test(url);
     return hasProtocol ? url : "http://" + url;
+}
+
+// Generate unique QR code identifier with collision checking
+async function generateQRId(analyticsQueries) {
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts) {
+        const qrId = qrNanoid();
+
+        // Check if this identifier already exists
+        const existing = await analyticsQueries.getQRCodeByIdentifier(qrId);
+        if (!existing) {
+            return qrId;
+        }
+
+        attempts++;
+    }
+
+    // Fallback to longer identifier if we can't find a unique 4-character one
+    console.warn('⚠️ Could not generate unique 4-character QR ID, falling back to 6-character');
+    const fallbackNanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6);
+    return fallbackNanoid();
 }
 
 function getShortURL(address, domain) {
@@ -589,6 +615,7 @@ module.exports = {
     dateToUTC,
     deleteCurrentToken,
     generateId,
+    generateQRId,
     getContrastColor,
     getCustomCSSFileNames,
     getDifferenceFunction,

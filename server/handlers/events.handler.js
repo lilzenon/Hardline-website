@@ -7,6 +7,7 @@ const { trackConversion } = require("../middleware/analytics.middleware");
 const { CustomError } = require("../utils");
 const QRCode = require('qrcode');
 const { nanoid } = require('nanoid');
+const { generateQRId } = require("../utils/utils");
 const { UAParser } = require('ua-parser-js');
 const geoip = require('geoip-lite');
 const path = require("path");
@@ -492,11 +493,14 @@ async function createSignupValidation(req, res, next) {
 // Create a new event
 async function createEvent(req, res) {
     const userId = req.user.id;
+
+    // Generate unique 4-character QR code identifier for new events
+    const qrIdentifier = await generateQRId(analyticsQueries);
+
     const eventData = {
         ...req.body,
         user_id: userId,
-        // Generate unique QR code identifier for new events
-        qr_code_identifier: nanoid(12),
+        qr_code_identifier: qrIdentifier,
         qr_code_enabled: true // Enable QR codes by default for new events
     };
 

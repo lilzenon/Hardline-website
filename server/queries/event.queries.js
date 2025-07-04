@@ -649,7 +649,13 @@ async function findByQRIdentifier(qrIdentifier) {
 
 // Track QR code scan
 async function trackQRCodeScan(scanData) {
-    const [id] = await knex("qr_code_scans").insert(scanData);
+    const result = await knex("qr_code_scans").insert(scanData).returning("id");
+    let id;
+    if (Array.isArray(result)) {
+        id = typeof result[0] === 'object' ? result[0].id : result[0];
+    } else {
+        id = typeof result === 'object' ? result.id : result;
+    }
     return await knex("qr_code_scans").where("id", id).first();
 }
 

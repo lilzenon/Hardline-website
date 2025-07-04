@@ -1,13 +1,17 @@
 const knex = require("../knex");
 const { nanoid } = require("nanoid");
+const { generateQRId } = require("../utils/utils");
 
 // ===== QR CODE MANAGEMENT =====
 
 // Create a new QR code for an event
 async function createQRCode(eventId, qrCodeData) {
+    // Generate unique 4-character alphanumeric identifier
+    const identifier = await generateQRId(module.exports);
+
     const data = {
         event_id: eventId,
-        identifier: nanoid(12), // Generate unique identifier
+        identifier: identifier,
         scan_count: 0,
         ...qrCodeData
     };
