@@ -686,7 +686,7 @@
 
                                 <div id="qr-code-content">
                                     <!-- QR Codes Grid -->
-                                    <div id="qr-codes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                                    <div id="qr-codes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 mb-8">
                                         <!-- Loading State -->
                                         <div class="col-span-full flex items-center justify-center py-12">
                                             <div class="text-center">
@@ -4237,10 +4237,10 @@ function displayQRCodes(qrCodes) {
     }
 
     grid.innerHTML = qrCodes.map(qr => `
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 hover:shadow-md transition-all duration-200 group w-full max-w-xs mx-auto">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-5 lg:p-6 hover:shadow-md transition-all duration-200 group w-full min-w-0">
             <!-- QR Code Display -->
             <div class="flex justify-center mb-4 lg:mb-6">
-                <div class="w-40 h-40 lg:w-48 lg:h-48 bg-white border border-gray-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors" onclick="previewQRCode('${qr.identifier}')">
+                <div class="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-44 lg:h-44 xl:w-48 xl:h-48 bg-white border border-gray-200 rounded-xl flex items-center justify-center cursor-pointer hover:border-gray-300 transition-colors" onclick="previewQRCode('${qr.identifier}')">
                     <div id="qr-preview-${qr.id}" class="w-full h-full flex items-center justify-center">
                         <div class="text-center">
                             <svg class="w-16 h-16 text-gray-400 mx-auto mb-2" fill="currentColor" viewBox="0 0 20 20">
@@ -5995,6 +5995,80 @@ a:focus-visible {
     }
 }
 
+/* QR Code Management Responsive Design */
+
+/* Mobile First - Base styles (320px+) */
+#qr-codes-grid {
+    min-height: 200px;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+#qr-codes-grid .bg-white {
+    min-width: 280px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Container overflow prevention */
+.tab-content[data-tab-content="sharing"] {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.tab-content[data-tab-content="sharing"] .bg-white.rounded-2xl {
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Extra Small Mobile (280px-319px) */
+@media (max-width: 319px) {
+    #qr-codes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+        padding: 0 0.25rem;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 240px !important;
+        max-width: 260px !important;
+        padding: 0.75rem !important;
+        margin: 0 auto;
+    }
+}
+
+/* Small Mobile (320px-374px) */
+@media (min-width: 320px) and (max-width: 374px) {
+    #qr-codes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+        padding: 0 0.5rem;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 260px;
+        max-width: 300px;
+        padding: 1rem !important;
+        margin: 0 auto;
+    }
+}
+
+/* Mobile (375px-767px) */
+@media (min-width: 375px) and (max-width: 767px) {
+    #qr-codes-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        padding: 0 0.5rem;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 300px;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+}
+
 /* QR Code Sharing Tab Responsive Enhancements */
 @media (max-width: 767px) {
     /* Mobile (320px-767px) */
@@ -6028,8 +6102,19 @@ a:focus-visible {
     }
 }
 
+/* Tablet (768px-1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
-    /* Tablet (768px-1023px) */
+    #qr-codes-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1.25rem !important;
+        padding: 0 1rem;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 280px;
+        max-width: 350px;
+    }
+
     .tab-content[data-tab-content="sharing"] .glass-card {
         padding: 2rem;
     }
@@ -6042,6 +6127,128 @@ a:focus-visible {
     .tab-content[data-tab-content="sharing"] #qr-code-display {
         width: 14rem;
         height: 14rem;
+    }
+}
+
+/* Desktop Small (1024px-1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    #qr-codes-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.5rem !important;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 260px;
+        max-width: 320px;
+    }
+}
+
+/* Desktop Medium (1280px-1439px) */
+@media (min-width: 1280px) and (max-width: 1439px) {
+    #qr-codes-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 1.75rem !important;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 280px;
+        max-width: 360px;
+    }
+}
+
+/* Desktop Large (1440px-1919px) */
+@media (min-width: 1440px) and (max-width: 1919px) {
+    #qr-codes-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 2rem !important;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 280px;
+        max-width: 340px;
+    }
+}
+
+/* Desktop Extra Large (1920px+) */
+@media (min-width: 1920px) {
+    #qr-codes-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 2.5rem !important;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    #qr-codes-grid .bg-white {
+        min-width: 320px;
+        max-width: 380px;
+    }
+}
+
+/* QR Code Button Responsive Enhancements */
+@media (max-width: 374px) {
+    /* Small Mobile - Stack buttons vertically */
+    #qr-codes-grid .grid.grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
+    }
+
+    #qr-codes-grid .grid.grid-cols-3 button {
+        font-size: 0.75rem !important;
+        padding: 0.75rem 1rem !important;
+    }
+}
+
+@media (min-width: 375px) and (max-width: 767px) {
+    /* Mobile - Ensure proper button sizing */
+    #qr-codes-grid .grid.grid-cols-3 {
+        gap: 0.5rem !important;
+    }
+
+    #qr-codes-grid .grid.grid-cols-3 button {
+        font-size: 0.8rem !important;
+        padding: 0.75rem 0.5rem !important;
+        min-height: 44px !important;
+    }
+}
+
+@media (min-width: 768px) {
+    /* Tablet and Desktop - Better button spacing */
+    #qr-codes-grid .grid.grid-cols-3 {
+        gap: 0.75rem !important;
+    }
+
+    #qr-codes-grid .grid.grid-cols-3 button {
+        font-size: 0.875rem !important;
+        padding: 0.75rem 1rem !important;
+    }
+}
+
+/* QR Image Responsive Sizing */
+@media (max-width: 374px) {
+    #qr-codes-grid .bg-white [class*="w-32"] {
+        width: 7rem !important;
+        height: 7rem !important;
+    }
+}
+
+@media (min-width: 375px) and (max-width: 767px) {
+    #qr-codes-grid .bg-white [class*="w-32"] {
+        width: 8rem !important;
+        height: 8rem !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    #qr-codes-grid .bg-white [class*="w-32"] {
+        width: 9rem !important;
+        height: 9rem !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    #qr-codes-grid .bg-white [class*="w-32"] {
+        width: 10rem !important;
+        height: 10rem !important;
     }
 }
 
