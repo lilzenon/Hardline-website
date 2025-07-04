@@ -6780,16 +6780,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update character counts
+    // Update character counts (defensive - don't modify field values)
     function updateCharacterCounts() {
         if (socialTitle && titleCharCount) {
-            const titleLength = socialTitle.value.length;
+            const titleLength = socialTitle.value ? socialTitle.value.length : 0;
             titleCharCount.textContent = `${titleLength}/${titleLimit}`;
             titleCharCount.className = titleLength > titleLimit ? 'text-xs text-red-500' : 'text-xs text-gray-500';
         }
 
         if (socialDescription && descriptionCharCount) {
-            const descLength = socialDescription.value.length;
+            const descLength = socialDescription.value ? socialDescription.value.length : 0;
             descriptionCharCount.textContent = `${descLength}/${descriptionLimit}`;
             descriptionCharCount.className = descLength > descriptionLimit ? 'text-xs text-red-500' : 'text-xs text-gray-500';
         }
@@ -6869,6 +6869,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize with delay to ensure form fields are populated
     setTimeout(() => {
+        // Store original values to prevent accidental clearing
+        const originalValues = {
+            title: socialTitle?.value || '',
+            description: socialDescription?.value || '',
+            image: socialImage?.value || '',
+            toggle: socialPreviewToggle?.checked || false
+        };
+
+        console.log('🔍 Social preview initialization - original field values:', originalValues);
+
+        // Initialize functionality without modifying values
         toggleSocialPreviewFields();
         updateCharacterCounts();
 
@@ -6877,12 +6888,33 @@ document.addEventListener('DOMContentLoaded', function() {
             updateImagePreview(socialImage.value);
         }
 
-        console.log('🔍 Social preview initialization - field values:', {
-            title: socialTitle?.value,
-            description: socialDescription?.value,
-            image: socialImage?.value,
-            toggle: socialPreviewToggle?.checked
-        });
+        // Verify values weren't accidentally cleared
+        const afterValues = {
+            title: socialTitle?.value || '',
+            description: socialDescription?.value || '',
+            image: socialImage?.value || '',
+            toggle: socialPreviewToggle?.checked || false
+        };
+
+        console.log('🔍 Social preview initialization - after init values:', afterValues);
+
+        // Restore values if they were accidentally cleared
+        if (originalValues.title && !afterValues.title) {
+            console.log('⚠️ Title was cleared, restoring:', originalValues.title);
+            socialTitle.value = originalValues.title;
+        }
+        if (originalValues.description && !afterValues.description) {
+            console.log('⚠️ Description was cleared, restoring:', originalValues.description);
+            socialDescription.value = originalValues.description;
+        }
+        if (originalValues.image && !afterValues.image) {
+            console.log('⚠️ Image was cleared, restoring:', originalValues.image);
+            socialImage.value = originalValues.image;
+        }
+
+        // Update character counts again after any restoration
+        updateCharacterCounts();
+
     }, 100);
 
 
