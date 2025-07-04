@@ -12,6 +12,8 @@ const { UAParser } = require('ua-parser-js');
 const geoip = require('geoip-lite');
 const path = require("path");
 const fs = require("fs").promises;
+const env = require("../env");
+const seo = require("../utils/seo.utils");
 
 // Configure multer for social preview image uploads
 let multer, uploadSocialPreviewImage;
