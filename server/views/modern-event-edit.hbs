@@ -766,194 +766,112 @@
                                 </div>
                             </div>
 
-                            <!-- Enhanced Social Media & iMessage Preview Section -->
+                            <!-- Simplified Social Media & iMessage Preview Section -->
                             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-                                <div class="space-y-8">
+                                <div class="space-y-6">
                                     <!-- Header with Enable Toggle -->
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <h2 class="text-xl font-semibold text-gray-900 mb-2">Social Media & iMessage Previews</h2>
-                                            <p class="text-sm text-gray-600">Optimize how your event appears across all platforms</p>
+                                            <p class="text-sm text-gray-600">Customize how your event appears when shared across all platforms</p>
                                         </div>
-                                        <div class="flex items-center space-x-4">
-                                            <div class="flex items-center">
-                                                <input type="checkbox" id="social-preview-enabled" name="social_preview_enabled"
-                                                       {{#if event.social_preview_enabled}}checked{{/if}}
-                                                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
-                                                <label for="social-preview-enabled" class="ml-2 text-sm font-medium text-gray-700">
-                                                    Enable Custom Previews
-                                                </label>
-                                            </div>
-                                            <button id="edit-social-preview-enhanced" class="glass-button px-4 py-2 text-sm font-medium transition-all duration-200 hover:scale-105">
-                                                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                                Customize Previews
-                                            </button>
+                                        <div class="flex items-center">
+                                            <input type="checkbox" id="social-preview-enabled" name="social_preview_enabled"
+                                                   {{#if event.social_preview_enabled}}checked{{/if}}
+                                                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-colors duration-200">
+                                            <label for="social-preview-enabled" class="ml-3 text-sm font-medium text-gray-700">
+                                                Enable Custom Previews
+                                            </label>
                                         </div>
                                     </div>
 
-                                    <!-- Platform Preview Cards -->
-                                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        <!-- iMessage Preview -->
-                                        <div class="glass-card p-6 bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-                                            <div class="flex items-center mb-4">
-                                                <svg class="w-6 h-6 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
-                                                </svg>
-                                                <h4 class="text-sm font-semibold text-blue-900">iMessage</h4>
+                                    <!-- Unified Preview Editor -->
+                                    <div id="social-preview-fields" class="space-y-6 transition-all duration-300 {{#unless event.social_preview_enabled}}opacity-50 pointer-events-none{{/unless}}">
+                                        <!-- Universal Title Field -->
+                                        <div class="glass-card p-6 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                                            <div class="space-y-4">
+                                                <div class="flex items-center justify-between">
+                                                    <label for="social-title" class="text-sm font-semibold text-gray-900">
+                                                        Preview Title
+                                                    </label>
+                                                    <span id="title-char-count" class="text-xs text-gray-500">0/60</span>
+                                                </div>
+                                                <input type="text"
+                                                       id="social-title"
+                                                       name="social_title"
+                                                       value="{{#if event.og_title}}{{event.og_title}}{{else if event.twitter_title}}{{event.twitter_title}}{{else if event.ios_title}}{{event.ios_title}}{{/if}}"
+                                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                                       placeholder="Enter a compelling title for social media sharing"
+                                                       maxlength="90">
+                                                <p class="text-xs text-gray-600">Optimal: 30-60 characters. This title will appear across all social platforms and iMessage.</p>
                                             </div>
-                                            <div class="bg-white rounded-lg p-3 shadow-sm">
-                                                <div class="flex space-x-3">
+                                        </div>
+
+                                        <!-- Universal Description Field -->
+                                        <div class="glass-card p-6 bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+                                            <div class="space-y-4">
+                                                <div class="flex items-center justify-between">
+                                                    <label for="social-description" class="text-sm font-semibold text-gray-900">
+                                                        Preview Description
+                                                    </label>
+                                                    <span id="description-char-count" class="text-xs text-gray-500">0/200</span>
+                                                </div>
+                                                <textarea id="social-description"
+                                                          name="social_description"
+                                                          rows="3"
+                                                          maxlength="300"
+                                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 resize-none"
+                                                          placeholder="Write an engaging description that will appear in link previews">{{#if event.og_description}}{{event.og_description}}{{else if event.twitter_description}}{{event.twitter_description}}{{else if event.ios_description}}{{event.ios_description}}{{/if}}</textarea>
+                                                <p class="text-xs text-gray-600">Optimal: 55-200 characters. This description will be automatically optimized for each platform.</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Universal Image Field -->
+                                        <div class="glass-card p-6 bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200">
+                                            <div class="space-y-4">
+                                                <label for="social-image" class="text-sm font-semibold text-gray-900">
+                                                    Preview Image
+                                                </label>
+
+                                                <!-- Image Preview -->
+                                                <div class="flex items-start space-x-4">
                                                     <div class="flex-shrink-0">
-                                                        <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
-                                                            <img id="ios-preview-image-display" src="{{#if event.ios_image}}{{event.ios_image}}{{else if event.cover_image}}{{event.cover_image}}{{else}}/static/images/default-event-preview.jpg{{/if}}" alt="Event preview" class="w-full h-full object-cover">
+                                                        <div class="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden border-2 border-gray-300">
+                                                            <img id="social-image-preview"
+                                                                 src="{{#if event.og_image}}{{event.og_image}}{{else if event.twitter_image}}{{event.twitter_image}}{{else if event.ios_image}}{{event.ios_image}}{{else if event.cover_image}}{{event.cover_image}}{{else}}/static/images/default-event-preview.jpg{{/if}}"
+                                                                 alt="Preview image"
+                                                                 class="w-full h-full object-cover">
                                                         </div>
                                                     </div>
-                                                    <div class="flex-1 min-w-0">
-                                                        <h5 class="text-xs font-semibold text-gray-900 truncate" id="ios-preview-title-display">
-                                                            {{#if event.ios_title}}{{event.ios_title}}{{else}}{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}{{/if}}
-                                                        </h5>
-                                                        <p class="text-xs text-gray-600 mt-1 line-clamp-2" id="ios-preview-description-display">
-                                                            {{#if event.ios_description}}{{event.ios_description}}{{else if event.description}}{{event.description}}{{else}}Join us for an amazing event experience{{/if}}
-                                                        </p>
-                                                        <p class="text-xs text-blue-600 mt-1 truncate">{{baseUrl}}/event/{{event.slug}}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p class="text-xs text-blue-700 mt-2 text-center font-medium">iOS Messages Preview</p>
-                                        </div>
+                                                    <div class="flex-1 space-y-3">
+                                                        <input type="url"
+                                                               id="social-image"
+                                                               name="social_image"
+                                                               value="{{#if event.og_image}}{{event.og_image}}{{else if event.twitter_image}}{{event.twitter_image}}{{else if event.ios_image}}{{event.ios_image}}{{/if}}"
+                                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                                               placeholder="https://example.com/image.jpg">
 
-                                        <!-- Facebook/WhatsApp Preview -->
-                                        <div class="glass-card p-6 bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-                                            <div class="flex items-center mb-4">
-                                                <svg class="w-6 h-6 text-green-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                                </svg>
-                                                <h4 class="text-sm font-semibold text-green-900">Facebook/WhatsApp</h4>
-                                            </div>
-                                            <div class="bg-white rounded-lg p-3 shadow-sm">
-                                                <div class="space-y-2">
-                                                    <div class="w-full h-24 bg-gray-200 rounded overflow-hidden">
-                                                        <img id="og-preview-image-display" src="{{#if event.og_image}}{{event.og_image}}{{else if event.cover_image}}{{event.cover_image}}{{else}}/static/images/default-event-preview.jpg{{/if}}" alt="Event preview" class="w-full h-full object-cover">
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="text-xs font-semibold text-gray-900 truncate" id="og-preview-title-display">
-                                                            {{#if event.og_title}}{{event.og_title}}{{else}}{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}{{/if}}
-                                                        </h5>
-                                                        <p class="text-xs text-gray-600 mt-1 line-clamp-2" id="og-preview-description-display">
-                                                            {{#if event.og_description}}{{event.og_description}}{{else if event.description}}{{event.description}}{{else}}Join us for an amazing event experience{{/if}}
-                                                        </p>
-                                                        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">{{baseUrl}}</p>
+                                                        <!-- Upload Button -->
+                                                        <div class="flex items-center space-x-3">
+                                                            <input type="file" id="social-image-upload" accept="image/*" class="hidden">
+                                                            <button type="button"
+                                                                    onclick="document.getElementById('social-image-upload').click()"
+                                                                    class="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200">
+                                                                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                </svg>
+                                                                Upload Image
+                                                            </button>
+                                                            <span class="text-xs text-gray-500">JPG, PNG, WebP • Max 5MB</span>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <p class="text-xs text-gray-600">Recommended: 1200x630px for optimal display across all platforms. This image will be automatically optimized for Facebook, Twitter, WhatsApp, and iMessage.</p>
                                             </div>
-                                            <p class="text-xs text-green-700 mt-2 text-center font-medium">Open Graph Preview</p>
-                                        </div>
-
-                                        <!-- Twitter Preview -->
-                                        <div class="glass-card p-6 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
-                                            <div class="flex items-center mb-4">
-                                                <svg class="w-6 h-6 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                                                </svg>
-                                                <h4 class="text-sm font-semibold text-purple-900">Twitter/X</h4>
-                                            </div>
-                                            <div class="bg-white rounded-lg p-3 shadow-sm">
-                                                <div class="space-y-2">
-                                                    <div class="w-full h-24 bg-gray-200 rounded overflow-hidden">
-                                                        <img id="twitter-preview-image-display" src="{{#if event.twitter_image}}{{event.twitter_image}}{{else if event.cover_image}}{{event.cover_image}}{{else}}/static/images/default-event-preview.jpg{{/if}}" alt="Event preview" class="w-full h-full object-cover">
-                                                    </div>
-                                                    <div>
-                                                        <h5 class="text-xs font-semibold text-gray-900 truncate" id="twitter-preview-title-display">
-                                                            {{#if event.twitter_title}}{{event.twitter_title}}{{else}}{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}{{/if}}
-                                                        </h5>
-                                                        <p class="text-xs text-gray-600 mt-1 line-clamp-2" id="twitter-preview-description-display">
-                                                            {{#if event.twitter_description}}{{event.twitter_description}}{{else if event.description}}{{event.description}}{{else}}Join us for an amazing event experience{{/if}}
-                                                        </p>
-                                                        <p class="text-xs text-gray-500 mt-1 uppercase tracking-wide">{{baseUrl}}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <p class="text-xs text-purple-700 mt-2 text-center font-medium">Twitter Card Preview</p>
                                         </div>
                                     </div>
 
-                                    <!-- Quick Actions -->
-                                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        <button onclick="testIMessagePreview()" class="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all duration-200 hover:scale-105 border border-blue-200">
-                                            <svg class="w-6 h-6 text-blue-600 mb-2" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
-                                            </svg>
-                                            <span class="text-xs font-medium text-blue-700">Test iMessage</span>
-                                        </button>
-                                        <button onclick="shareToWhatsApp()" class="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-all duration-200 hover:scale-105 border border-green-200">
-                                            <svg class="w-6 h-6 text-green-600 mb-2" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                                            </svg>
-                                            <span class="text-xs font-medium text-green-700">WhatsApp</span>
-                                        </button>
-                                        <button onclick="copyEventLinkEnhanced()" class="flex flex-col items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all duration-200 hover:scale-105 border border-gray-200">
-                                            <svg class="w-6 h-6 text-gray-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            <span class="text-xs font-medium text-gray-700">Copy Link</span>
-                                        </button>
-                                        <button onclick="shareNatively()" class="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-all duration-200 hover:scale-105 border border-purple-200">
-                                            <svg class="w-6 h-6 text-purple-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                                            </svg>
-                                            <span class="text-xs font-medium text-purple-700">Share</span>
-                                        </button>
-                                    </div>
 
-                                    <!-- Optimization Guidelines -->
-                                    <div class="glass-card p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200">
-                                        <div class="flex items-start space-x-3">
-                                            <div class="flex-shrink-0">
-                                                <svg class="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </div>
-                                            <div>
-                                                <h6 class="text-sm font-semibold text-indigo-900 mb-3">Social Media Optimization Guidelines</h6>
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <div>
-                                                        <h7 class="text-xs font-semibold text-indigo-800 mb-2 block">📱 iOS Messages</h7>
-                                                        <ul class="text-xs text-indigo-700 space-y-1">
-                                                            <li>• Images: Min 900px width, 16:9 ratio preferred</li>
-                                                            <li>• Title: Keep under 90 characters</li>
-                                                            <li>• Description: Clear and concise</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div>
-                                                        <h7 class="text-xs font-semibold text-indigo-800 mb-2 block">📘 Facebook/WhatsApp</h7>
-                                                        <ul class="text-xs text-indigo-700 space-y-1">
-                                                            <li>• Images: 1200x630px optimal (1.91:1 ratio)</li>
-                                                            <li>• Title: 30-60 chars optimal, max 90</li>
-                                                            <li>• Description: 55-200 chars optimal, max 300</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div>
-                                                        <h7 class="text-xs font-semibold text-indigo-800 mb-2 block">🐦 Twitter/X</h7>
-                                                        <ul class="text-xs text-indigo-700 space-y-1">
-                                                            <li>• Images: 1200x675px optimal (16:9 ratio)</li>
-                                                            <li>• Title: 30-60 chars optimal, max 70</li>
-                                                            <li>• Description: 55-200 chars optimal</li>
-                                                        </ul>
-                                                    </div>
-                                                    <div>
-                                                        <h7 class="text-xs font-semibold text-indigo-800 mb-2 block">⚡ General Tips</h7>
-                                                        <ul class="text-xs text-indigo-700 space-y-1">
-                                                            <li>• Avoid text in images (accessibility)</li>
-                                                            <li>• High-quality images for retina displays</li>
-                                                            <li>• Changes may take 5-10 minutes to appear</li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -3397,38 +3315,33 @@ function initializeFormSubmission() {
             data.posh_embed_enabled = formData.has('posh_embed_enabled');
             data.social_preview_enabled = formData.has('social_preview_enabled');
 
-            // Capture social preview data from modal fields
-            const ogTitleInput = document.getElementById('og-title-input');
-            const ogDescriptionInput = document.getElementById('og-description-input');
-            const ogImageInput = document.getElementById('og-image-input');
-            const twitterTitleInput = document.getElementById('twitter-title-input');
-            const twitterDescriptionInput = document.getElementById('twitter-description-input');
-            const twitterImageInput = document.getElementById('twitter-image-input');
-            const iosTitleInput = document.getElementById('ios-title-input');
-            const iosDescriptionInput = document.getElementById('ios-description-input');
-            const iosImageInput = document.getElementById('ios-image-input');
+            // Capture unified social preview data and apply to all platforms
+            const socialTitleInput = document.getElementById('social-title');
+            const socialDescriptionInput = document.getElementById('social-description');
+            const socialImageInput = document.getElementById('social-image');
 
-            if (ogTitleInput) data.og_title = ogTitleInput.value || null;
-            if (ogDescriptionInput) data.og_description = ogDescriptionInput.value || null;
-            if (ogImageInput) data.og_image = ogImageInput.value || null;
-            if (twitterTitleInput) data.twitter_title = twitterTitleInput.value || null;
-            if (twitterDescriptionInput) data.twitter_description = twitterDescriptionInput.value || null;
-            if (twitterImageInput) data.twitter_image = twitterImageInput.value || null;
-            if (iosTitleInput) data.ios_title = iosTitleInput.value || null;
-            if (iosDescriptionInput) data.ios_description = iosDescriptionInput.value || null;
-            if (iosImageInput) data.ios_image = iosImageInput.value || null;
+            // Get universal values
+            const universalTitle = socialTitleInput?.value || null;
+            const universalDescription = socialDescriptionInput?.value || null;
+            const universalImage = socialImageInput?.value || null;
 
-            console.log('📱 Social preview data captured:', {
+            // Apply universal values to all platform-specific fields
+            data.og_title = universalTitle;
+            data.og_description = universalDescription;
+            data.og_image = universalImage;
+            data.twitter_title = universalTitle;
+            data.twitter_description = universalDescription;
+            data.twitter_image = universalImage;
+            data.ios_title = universalTitle;
+            data.ios_description = universalDescription;
+            data.ios_image = universalImage;
+
+            console.log('📱 Unified social preview data captured:', {
                 social_preview_enabled: data.social_preview_enabled,
-                og_title: data.og_title,
-                og_description: data.og_description,
-                og_image: data.og_image,
-                twitter_title: data.twitter_title,
-                twitter_description: data.twitter_description,
-                twitter_image: data.twitter_image,
-                ios_title: data.ios_title,
-                ios_description: data.ios_description,
-                ios_image: data.ios_image
+                universal_title: universalTitle,
+                universal_description: universalDescription,
+                universal_image: universalImage,
+                applied_to_all_platforms: true
             });
 
             // CRITICAL FIX: Ensure gradient data is captured
@@ -6678,34 +6591,18 @@ body.modal-open {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.social-preview-modal-content.max-w-6xl {
-    max-width: 1200px;
+/* Simplified social preview styling */
+.glass-card {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
 }
 
-/* Platform tabs styling */
-.platform-tab.active,
-.preview-platform-tab.active {
-    background-color: #3b82f6;
-    color: white;
-}
-
-.platform-tab,
-.preview-platform-tab {
-    color: #6b7280;
-}
-
-/* Platform fields visibility */
-.platform-fields.hidden,
-.platform-preview.hidden {
-    display: none;
-}
-
-/* Line clamp utilities */
-.line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.glass-card:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .line-clamp-2 {
@@ -6716,281 +6613,17 @@ body.modal-open {
 }
 </style>
 
-<!-- Comprehensive Social Preview Editor Modal -->
-<div id="social-preview-modal" class="social-preview-modal">
-    <div class="social-preview-modal-content max-w-6xl">
-        <div class="flex items-center justify-between mb-6">
-            <div>
-                <h3 class="text-xl font-semibold text-gray-900">Social Media & iMessage Preview Editor</h3>
-                <p class="text-sm text-gray-600 mt-1">Customize how your event appears across all platforms</p>
-            </div>
-            <button id="close-social-preview-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
+<!-- Removed complex modal - using inline editing instead -->
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Left Column: Form Fields -->
-            <div class="space-y-6">
-                <!-- Platform Tabs -->
-                <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                    <button class="platform-tab active px-4 py-2 text-sm font-medium rounded-md transition-colors" data-platform="og">
-                        Facebook/WhatsApp
-                    </button>
-                    <button class="platform-tab px-4 py-2 text-sm font-medium rounded-md transition-colors" data-platform="twitter">
-                        Twitter/X
-                    </button>
-                    <button class="platform-tab px-4 py-2 text-sm font-medium rounded-md transition-colors" data-platform="ios">
-                        iOS Messages
-                    </button>
-                </div>
 
-                <!-- Open Graph Fields -->
-                <div id="og-fields" class="platform-fields space-y-4">
-                    <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
-                        Facebook & WhatsApp (Open Graph)
-                    </h4>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                        <input type="text" id="og-title-input" name="og_title" value="{{event.og_title}}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Custom title for Facebook & WhatsApp" maxlength="90">
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-gray-500">Optimal: 30-60 characters, Max: 90</p>
-                            <span class="text-xs text-gray-400" id="og-title-char-count">0/90</span>
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea id="og-description-input" name="og_description" rows="3" maxlength="300"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Custom description for Facebook & WhatsApp">{{event.og_description}}</textarea>
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-gray-500">Optimal: 55-200 characters, Max: 300</p>
-                            <span class="text-xs text-gray-400" id="og-description-char-count">0/300</span>
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-                        <input type="url" id="og-image-input" name="og_image" value="{{event.og_image}}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="https://example.com/image.jpg">
-                        <p class="text-xs text-gray-500 mt-1">Optimal: 1200x630px (1.91:1 ratio)</p>
-                    </div>
-                </div>
 
-                <!-- Twitter Fields -->
-                <div id="twitter-fields" class="platform-fields space-y-4 hidden">
-                    <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <svg class="w-5 h-5 text-blue-400 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                        </svg>
-                        Twitter/X Card
-                    </h4>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                        <input type="text" id="twitter-title-input" name="twitter_title" value="{{event.twitter_title}}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Custom title for Twitter/X" maxlength="70">
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-gray-500">Optimal: 30-60 characters, Max: 70</p>
-                            <span class="text-xs text-gray-400" id="twitter-title-char-count">0/70</span>
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea id="twitter-description-input" name="twitter_description" rows="3" maxlength="200"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Custom description for Twitter/X">{{event.twitter_description}}</textarea>
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-gray-500">Optimal: 55-200 characters</p>
-                            <span class="text-xs text-gray-400" id="twitter-description-char-count">0/200</span>
-                        </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-                        <input type="url" id="twitter-image-input" name="twitter_image" value="{{event.twitter_image}}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="https://example.com/image.jpg">
-                        <p class="text-xs text-gray-500 mt-1">Optimal: 1200x675px (16:9 ratio)</p>
-                    </div>
-                </div>
 
-                <!-- iOS Messages Fields -->
-                <div id="ios-fields" class="platform-fields space-y-4 hidden">
-                    <h4 class="text-lg font-semibold text-gray-900 flex items-center">
-                        <svg class="w-5 h-5 text-gray-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
-                        </svg>
-                        iOS Messages
-                    </h4>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                        <input type="text" id="ios-title-input" name="ios_title" value="{{event.ios_title}}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="Custom title for iOS Messages" maxlength="90">
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-gray-500">Keep concise for best display</p>
-                            <span class="text-xs text-gray-400" id="ios-title-char-count">0/90</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <textarea id="ios-description-input" name="ios_description" rows="3" maxlength="500"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Custom description for iOS Messages">{{event.ios_description}}</textarea>
-                        <div class="flex justify-between items-center mt-1">
-                            <p class="text-xs text-gray-500">Clear and engaging description</p>
-                            <span class="text-xs text-gray-400" id="ios-description-char-count">0/500</span>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
-                        <input type="url" id="ios-image-input" name="ios_image" value="{{event.ios_image}}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                               placeholder="https://example.com/image.jpg">
-                        <p class="text-xs text-gray-500 mt-1">Minimum: 900px width, 16:9 ratio preferred</p>
-                    </div>
-                </div>
-
-                <!-- Image Upload Section -->
-                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <input type="file" id="social-image-upload" accept="image/*" class="hidden">
-                    <button type="button" onclick="document.getElementById('social-image-upload').click()"
-                            class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        Upload Custom Image
-                    </button>
-                    <p class="text-xs text-gray-500 mt-1">JPG, PNG up to 5MB • Will be applied to current platform</p>
-                </div>
-            </div>
-
-            <!-- Right Column: Live Previews -->
-            <div class="space-y-6">
-                <h4 class="text-lg font-semibold text-gray-900">Live Preview</h4>
-
-                <!-- Platform Preview Selector -->
-                <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-                    <button class="preview-platform-tab active px-3 py-2 text-xs font-medium rounded-md transition-colors" data-preview="og">
-                        Facebook/WhatsApp
-                    </button>
-                    <button class="preview-platform-tab px-3 py-2 text-xs font-medium rounded-md transition-colors" data-preview="twitter">
-                        Twitter/X
-                    </button>
-                    <button class="preview-platform-tab px-3 py-2 text-xs font-medium rounded-md transition-colors" data-preview="ios">
-                        iOS Messages
-                    </button>
-                </div>
-
-                <!-- Open Graph Preview -->
-                <div id="og-preview" class="platform-preview bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                    <div class="bg-white rounded-lg p-4 shadow-sm">
-                        <div class="space-y-3">
-                            <div class="w-full h-32 bg-gray-200 rounded overflow-hidden">
-                                <img id="og-preview-image" src="/static/images/default-event-preview.jpg" alt="Event preview" class="w-full h-full object-cover">
-                            </div>
-                            <div>
-                                <h5 class="text-sm font-semibold text-gray-900" id="og-preview-title">Event Title</h5>
-                                <p class="text-xs text-gray-600 mt-1 line-clamp-3" id="og-preview-description">Event description</p>
-                                <p class="text-xs text-gray-500 mt-2 uppercase tracking-wide">{{baseUrl}}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-blue-700 mt-3 text-center font-medium">Facebook & WhatsApp Preview</p>
-                </div>
-
-                <!-- Twitter Preview -->
-                <div id="twitter-preview" class="platform-preview hidden bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-                    <div class="bg-white rounded-lg p-4 shadow-sm">
-                        <div class="space-y-3">
-                            <div class="w-full h-32 bg-gray-200 rounded overflow-hidden">
-                                <img id="twitter-preview-image" src="/static/images/default-event-preview.jpg" alt="Event preview" class="w-full h-full object-cover">
-                            </div>
-                            <div>
-                                <h5 class="text-sm font-semibold text-gray-900" id="twitter-preview-title">Event Title</h5>
-                                <p class="text-xs text-gray-600 mt-1 line-clamp-3" id="twitter-preview-description">Event description</p>
-                                <p class="text-xs text-gray-500 mt-2 uppercase tracking-wide">{{baseUrl}}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-blue-700 mt-3 text-center font-medium">Twitter/X Card Preview</p>
-                </div>
-
-                <!-- iOS Messages Preview -->
-                <div id="ios-preview" class="platform-preview hidden bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
-                    <div class="bg-white rounded-lg p-3 shadow-sm max-w-sm">
-                        <div class="flex space-x-3">
-                            <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
-                                    <img id="ios-preview-image" src="/static/images/default-event-preview.jpg" alt="Event preview" class="w-full h-full object-cover">
-                                </div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h5 class="text-xs font-semibold text-gray-900 truncate" id="ios-preview-title">Event Title</h5>
-                                <p class="text-xs text-gray-600 mt-1 line-clamp-2" id="ios-preview-description">Event description</p>
-                                <p class="text-xs text-blue-600 mt-1 truncate">{{baseUrl}}/event/{{event.slug}}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-gray-700 mt-3 text-center font-medium">iOS Messages Preview</p>
-                </div>
-
-                <!-- Testing Tools -->
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <h5 class="text-sm font-semibold text-gray-900 mb-3">Testing Tools</h5>
-                    <div class="grid grid-cols-2 gap-3">
-                        <button id="test-imessage-btn" class="flex items-center justify-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm">
-                            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98.97 4.29L1 23l6.71-1.97C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2z"/>
-                            </svg>
-                            Test iMessage
-                        </button>
-                        <button id="validate-meta-btn" class="flex items-center justify-center px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm">
-                            <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Validate Meta
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="flex justify-between items-center pt-6 border-t border-gray-200 mt-8">
-            <div class="flex items-center space-x-2 text-sm text-gray-600">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Changes may take 5-10 minutes to appear on social platforms</span>
-            </div>
-            <div class="flex space-x-3">
-                <button id="cancel-social-preview" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                    Cancel
-                </button>
-                <button id="save-social-preview" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Save Changes
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-semibold text-gray-900 truncate" id="imessage-preview-title">Event Title</h4>
                                 <p class="text-xs text-gray-600 mt-1 line-clamp-2" id="imessage-preview-description">Event description</p>
@@ -7096,300 +6729,67 @@ body.modal-open {
 </div>
 
 <script>
-// Enhanced Social Preview Editor Functionality
+// Simplified Social Preview Functionality
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal elements
-    const editButton = document.getElementById('edit-social-preview-enhanced');
-    const modal = document.getElementById('social-preview-modal');
-    const closeButton = document.getElementById('close-social-preview-modal');
-    const cancelButton = document.getElementById('cancel-social-preview');
-    const saveButton = document.getElementById('save-social-preview');
+    // Form elements
+    const socialPreviewToggle = document.getElementById('social-preview-enabled');
+    const socialPreviewFields = document.getElementById('social-preview-fields');
+    const socialTitle = document.getElementById('social-title');
+    const socialDescription = document.getElementById('social-description');
+    const socialImage = document.getElementById('social-image');
+    const socialImagePreview = document.getElementById('social-image-preview');
+    const socialImageUpload = document.getElementById('social-image-upload');
 
-    // Platform tabs
-    const platformTabs = document.querySelectorAll('.platform-tab');
-    const previewPlatformTabs = document.querySelectorAll('.preview-platform-tab');
-
-    // Form fields for each platform
-    const ogFields = {
-        title: document.getElementById('og-title-input'),
-        description: document.getElementById('og-description-input'),
-        image: document.getElementById('og-image-input'),
-        titleCount: document.getElementById('og-title-char-count'),
-        descriptionCount: document.getElementById('og-description-char-count')
-    };
-
-    const twitterFields = {
-        title: document.getElementById('twitter-title-input'),
-        description: document.getElementById('twitter-description-input'),
-        image: document.getElementById('twitter-image-input'),
-        titleCount: document.getElementById('twitter-title-char-count'),
-        descriptionCount: document.getElementById('twitter-description-char-count')
-    };
-
-    const iosFields = {
-        title: document.getElementById('ios-title-input'),
-        description: document.getElementById('ios-description-input'),
-        image: document.getElementById('ios-image-input'),
-        titleCount: document.getElementById('ios-title-char-count'),
-        descriptionCount: document.getElementById('ios-description-char-count')
-    };
-
-    // Preview elements
-    const ogPreview = {
-        container: document.getElementById('og-preview'),
-        title: document.getElementById('og-preview-title'),
-        description: document.getElementById('og-preview-description'),
-        image: document.getElementById('og-preview-image')
-    };
-
-    const twitterPreview = {
-        container: document.getElementById('twitter-preview'),
-        title: document.getElementById('twitter-preview-title'),
-        description: document.getElementById('twitter-preview-description'),
-        image: document.getElementById('twitter-preview-image')
-    };
-
-    const iosPreview = {
-        container: document.getElementById('ios-preview'),
-        title: document.getElementById('ios-preview-title'),
-        description: document.getElementById('ios-preview-description'),
-        image: document.getElementById('ios-preview-image')
-    };
-
-    // Current active platform
-    let activePlatform = 'og';
+    // Character count elements
+    const titleCharCount = document.getElementById('title-char-count');
+    const descriptionCharCount = document.getElementById('description-char-count');
 
     // Character count limits
-    const limits = {
-        og: { title: 90, description: 300 },
-        twitter: { title: 70, description: 200 },
-        ios: { title: 90, description: 500 }
-    };
+    const titleLimit = 60; // Optimal for all platforms
+    const descriptionLimit = 200; // Optimal for all platforms
 
-    // Initialize character counts
+    // Toggle social preview fields visibility
+    function toggleSocialPreviewFields() {
+        if (socialPreviewToggle?.checked) {
+            socialPreviewFields?.classList.remove('opacity-50', 'pointer-events-none');
+        } else {
+            socialPreviewFields?.classList.add('opacity-50', 'pointer-events-none');
+        }
+    }
+
+    // Update character counts
     function updateCharacterCounts() {
-        Object.keys({ og: ogFields, twitter: twitterFields, ios: iosFields }).forEach(platform => {
-            const fields = platform === 'og' ? ogFields : platform === 'twitter' ? twitterFields : iosFields;
-            const limit = limits[platform];
-
-            if (fields.title && fields.titleCount) {
-                const titleLength = fields.title.value.length;
-                fields.titleCount.textContent = `${titleLength}/${limit.title}`;
-                fields.titleCount.className = titleLength > limit.title ? 'text-xs text-red-500' : 'text-xs text-gray-400';
-            }
-
-            if (fields.description && fields.descriptionCount) {
-                const descLength = fields.description.value.length;
-                fields.descriptionCount.textContent = `${descLength}/${limit.description}`;
-                fields.descriptionCount.className = descLength > limit.description ? 'text-xs text-red-500' : 'text-xs text-gray-400';
-            }
-        });
-    }
-
-    // Update live previews
-    function updatePreviews() {
-        // Update Open Graph preview
-        if (ogPreview.title) ogPreview.title.textContent = ogFields.title?.value || 'Event Title';
-        if (ogPreview.description) ogPreview.description.textContent = ogFields.description?.value || 'Event description';
-        if (ogPreview.image && ogFields.image?.value) ogPreview.image.src = ogFields.image.value;
-
-        // Update Twitter preview
-        if (twitterPreview.title) twitterPreview.title.textContent = twitterFields.title?.value || 'Event Title';
-        if (twitterPreview.description) twitterPreview.description.textContent = twitterFields.description?.value || 'Event description';
-        if (twitterPreview.image && twitterFields.image?.value) twitterPreview.image.src = twitterFields.image.value;
-
-        // Update iOS preview
-        if (iosPreview.title) iosPreview.title.textContent = iosFields.title?.value || 'Event Title';
-        if (iosPreview.description) iosPreview.description.textContent = iosFields.description?.value || 'Event description';
-        if (iosPreview.image && iosFields.image?.value) iosPreview.image.src = iosFields.image.value;
-
-        // Update main page previews
-        updateMainPagePreviews();
-    }
-
-    // Update main page preview displays
-    function updateMainPagePreviews() {
-        const ogTitleDisplay = document.getElementById('og-preview-title-display');
-        const ogDescDisplay = document.getElementById('og-preview-description-display');
-        const ogImageDisplay = document.getElementById('og-preview-image-display');
-
-        const twitterTitleDisplay = document.getElementById('twitter-preview-title-display');
-        const twitterDescDisplay = document.getElementById('twitter-preview-description-display');
-        const twitterImageDisplay = document.getElementById('twitter-preview-image-display');
-
-        const iosTitleDisplay = document.getElementById('ios-preview-title-display');
-        const iosDescDisplay = document.getElementById('ios-preview-description-display');
-        const iosImageDisplay = document.getElementById('ios-preview-image-display');
-
-        if (ogTitleDisplay) ogTitleDisplay.textContent = ogFields.title?.value || '{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}';
-        if (ogDescDisplay) ogDescDisplay.textContent = ogFields.description?.value || '{{#if event.description}}{{event.description}}{{else}}Join us for an amazing event experience{{/if}}';
-        if (ogImageDisplay && ogFields.image?.value) ogImageDisplay.src = ogFields.image.value;
-
-        if (twitterTitleDisplay) twitterTitleDisplay.textContent = twitterFields.title?.value || '{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}';
-        if (twitterDescDisplay) twitterDescDisplay.textContent = twitterFields.description?.value || '{{#if event.description}}{{event.description}}{{else}}Join us for an amazing event experience{{/if}}';
-        if (twitterImageDisplay && twitterFields.image?.value) twitterImageDisplay.src = twitterFields.image.value;
-
-        if (iosTitleDisplay) iosTitleDisplay.textContent = iosFields.title?.value || '{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}';
-        if (iosDescDisplay) iosDescDisplay.textContent = iosFields.description?.value || '{{#if event.description}}{{event.description}}{{else}}Join us for an amazing event experience{{/if}}';
-        if (iosImageDisplay && iosFields.image?.value) iosImageDisplay.src = iosFields.image.value;
-    }
-    // Platform tab switching
-    function switchPlatform(platform) {
-        activePlatform = platform;
-
-        // Update platform tabs
-        platformTabs.forEach(tab => {
-            tab.classList.remove('active', 'bg-blue-600', 'text-white');
-            tab.classList.add('text-gray-600');
-        });
-
-        const activeTab = document.querySelector(`[data-platform="${platform}"]`);
-        if (activeTab) {
-            activeTab.classList.add('active', 'bg-blue-600', 'text-white');
-            activeTab.classList.remove('text-gray-600');
+        if (socialTitle && titleCharCount) {
+            const titleLength = socialTitle.value.length;
+            titleCharCount.textContent = `${titleLength}/${titleLimit}`;
+            titleCharCount.className = titleLength > titleLimit ? 'text-xs text-red-500' : 'text-xs text-gray-500';
         }
 
-        // Show/hide platform fields
-        document.querySelectorAll('.platform-fields').forEach(fields => fields.classList.add('hidden'));
-        const activeFields = document.getElementById(`${platform}-fields`);
-        if (activeFields) activeFields.classList.remove('hidden');
+        if (socialDescription && descriptionCharCount) {
+            const descLength = socialDescription.value.length;
+            descriptionCharCount.textContent = `${descLength}/${descriptionLimit}`;
+            descriptionCharCount.className = descLength > descriptionLimit ? 'text-xs text-red-500' : 'text-xs text-gray-500';
+        }
     }
 
-    // Preview platform tab switching
-    function switchPreviewPlatform(platform) {
-        // Update preview tabs
-        previewPlatformTabs.forEach(tab => {
-            tab.classList.remove('active', 'bg-blue-600', 'text-white');
-            tab.classList.add('text-gray-600');
-        });
-
-        const activeTab = document.querySelector(`[data-preview="${platform}"]`);
-        if (activeTab) {
-            activeTab.classList.add('active', 'bg-blue-600', 'text-white');
-            activeTab.classList.remove('text-gray-600');
+    // Update image preview
+    function updateImagePreview(imageUrl) {
+        if (socialImagePreview && imageUrl) {
+            socialImagePreview.src = imageUrl;
         }
-
-        // Show/hide preview containers
-        document.querySelectorAll('.platform-preview').forEach(preview => preview.classList.add('hidden'));
-        const activePreview = document.getElementById(`${platform}-preview`);
-        if (activePreview) activePreview.classList.remove('hidden');
     }
+    // Event listeners
+    socialPreviewToggle?.addEventListener('change', toggleSocialPreviewFields);
 
-    // Event listeners for platform tabs
-    platformTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const platform = tab.getAttribute('data-platform');
-            switchPlatform(platform);
-        });
+    socialTitle?.addEventListener('input', updateCharacterCounts);
+    socialDescription?.addEventListener('input', updateCharacterCounts);
+
+    socialImage?.addEventListener('input', function() {
+        updateImagePreview(this.value);
     });
 
-    previewPlatformTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const platform = tab.getAttribute('data-preview');
-            switchPreviewPlatform(platform);
-        });
-    });
-
-    // Add event listeners for real-time updates
-    Object.values(ogFields).forEach(field => {
-        if (field && field.addEventListener) {
-            field.addEventListener('input', () => {
-                updateCharacterCounts();
-                updatePreviews();
-            });
-        }
-    });
-
-    Object.values(twitterFields).forEach(field => {
-        if (field && field.addEventListener) {
-            field.addEventListener('input', () => {
-                updateCharacterCounts();
-                updatePreviews();
-            });
-        }
-    });
-
-    Object.values(iosFields).forEach(field => {
-        if (field && field.addEventListener) {
-            field.addEventListener('input', () => {
-                updateCharacterCounts();
-                updatePreviews();
-            });
-        }
-    });
-
-    // Modal handling with scroll position preservation
-    function openModal() {
-        // Store current scroll position before opening modal
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
-        // Store scroll position for restoration
-        modal.dataset.scrollTop = scrollTop;
-        modal.dataset.scrollLeft = scrollLeft;
-
-        // Preserve scroll position when setting body overflow
-        document.body.style.top = `-${scrollTop}px`;
-        document.body.style.left = `-${scrollLeft}px`;
-        document.body.style.position = 'fixed';
-        document.body.style.width = '100%';
-        document.body.style.overflow = 'hidden';
-
-        modal.classList.add('active');
-        updateCharacterCounts();
-        updatePreviews();
-    }
-
-    function closeModal() {
-        // Restore scroll position
-        const scrollTop = parseInt(modal.dataset.scrollTop || '0');
-        const scrollLeft = parseInt(modal.dataset.scrollLeft || '0');
-
-        // Restore body styles
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-
-        // Restore scroll position
-        window.scrollTo({
-            top: scrollTop,
-            left: scrollLeft,
-            behavior: 'instant'
-        });
-
-        modal.classList.remove('active');
-    }
-
-    editButton?.addEventListener('click', openModal);
-    closeButton?.addEventListener('click', closeModal);
-    cancelButton?.addEventListener('click', closeModal);
-
-    // Close modal on outside click
-    modal?.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
-
-    // Save functionality
-    saveButton?.addEventListener('click', function() {
-        // Mark that user has modified social preview data
-        window.userHasModifiedSocialPreview = true;
-
-        // Update main page previews
-        updateMainPagePreviews();
-
-        // Show success message
-        showToast('✅ Social media previews updated successfully!', 'success', 3000);
-
-        closeModal();
-    });
-
-    // Enhanced image upload handling with server upload
-    const imageUpload = document.getElementById('social-image-upload');
-    imageUpload?.addEventListener('change', async function(e) {
+    // Simplified image upload handling
+    socialImageUpload?.addEventListener('change', async function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -7424,18 +6824,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                // Apply uploaded image URL to current platform
-                const imageUrl = result.imageUrl;
-
-                if (activePlatform === 'og' && ogFields.image) {
-                    ogFields.image.value = imageUrl;
-                } else if (activePlatform === 'twitter' && twitterFields.image) {
-                    twitterFields.image.value = imageUrl;
-                } else if (activePlatform === 'ios' && iosFields.image) {
-                    iosFields.image.value = imageUrl;
+                // Apply uploaded image URL to the universal field
+                if (socialImage) {
+                    socialImage.value = result.imageUrl;
+                    updateImagePreview(result.imageUrl);
                 }
 
-                updatePreviews();
                 showToast('✅ Image uploaded successfully!', 'success', 3000);
             } else {
                 throw new Error(result.error || 'Upload failed');
@@ -7447,115 +6841,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Clear the file input
-        imageUpload.value = '';
-    });
-
-    // Testing tools functionality
-    const testIMessageBtn = document.getElementById('test-imessage-btn');
-    const validateMetaBtn = document.getElementById('validate-meta-btn');
-
-    testIMessageBtn?.addEventListener('click', function() {
-        const eventUrl = `${window.location.origin}/event/{{event.slug}}`;
-
-        // Check if on iOS device
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-        if (isIOS) {
-            // Try to open in Messages app
-            const messageUrl = `sms:&body=Check out this event: ${eventUrl}`;
-            window.open(messageUrl, '_blank');
-        } else {
-            // Copy URL and show instructions
-            navigator.clipboard.writeText(eventUrl).then(() => {
-                showToast('📱 URL copied! Send this link in iMessage on an iOS device to test the preview.', 'info', 5000);
-            }).catch(() => {
-                showToast('📱 Test URL: ' + eventUrl, 'info', 5000);
-            });
-        }
-    });
-
-    validateMetaBtn?.addEventListener('click', function() {
-        const eventUrl = `${window.location.origin}/event/{{event.slug}}`;
-        const validationUrl = `https://www.opengraph.xyz/url/${encodeURIComponent(eventUrl)}`;
-        window.open(validationUrl, '_blank');
+        socialImageUpload.value = '';
     });
 
     // Initialize
+    toggleSocialPreviewFields();
     updateCharacterCounts();
-    updatePreviews();
+
+    // Update image preview if there's already a value
+    if (socialImage?.value) {
+        updateImagePreview(socialImage.value);
+    }
+
+
+
 });
 
-// Global functions for sharing functionality
-window.testIMessagePreview = function() {
-    const eventUrl = `${window.location.origin}/event/{{event.slug}}`;
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-    if (isIOS) {
-        const messageUrl = `sms:&body=Check out this event: ${eventUrl}`;
-        window.open(messageUrl, '_blank');
-    } else {
-        navigator.clipboard.writeText(eventUrl).then(() => {
-            showToast('📱 URL copied! Send this link in iMessage on an iOS device to test the preview.', 'info', 5000);
-        }).catch(() => {
-            showToast('📱 Test URL: ' + eventUrl, 'info', 5000);
-        });
-    }
-};
-
-window.shareToWhatsApp = function() {
-    const eventUrl = `${window.location.origin}/event/{{event.slug}}`;
-    const title = document.getElementById('og-preview-title-display')?.textContent || '{{event.title}}';
-    const message = `${title} - ${eventUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-};
-
-window.copyEventLinkEnhanced = function() {
-    const eventUrl = `${window.location.origin}/event/{{event.slug}}`;
-    navigator.clipboard.writeText(eventUrl).then(() => {
-        showToast('🔗 Event link copied to clipboard!', 'success', 3000);
-    }).catch(() => {
-        showToast('🔗 Event URL: ' + eventUrl, 'info', 5000);
-    });
-};
-
-window.shareNatively = function() {
-    const eventUrl = `${window.location.origin}/event/{{event.slug}}`;
-    const title = document.getElementById('og-preview-title-display')?.textContent || '{{event.title}}';
-
-    if (navigator.share) {
-        navigator.share({
-            title: title,
-            text: 'Check out this event!',
-            url: eventUrl
-        }).catch(err => {
-            console.log('Error sharing:', err);
-            window.copyEventLinkEnhanced();
-        });
-    } else {
-        window.copyEventLinkEnhanced();
-    }
-};
-
-// Social preview enabled toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const socialPreviewToggle = document.getElementById('social-preview-enabled');
-    const customizeButton = document.getElementById('edit-social-preview-enhanced');
-
-    function updateCustomizeButtonState() {
-        if (socialPreviewToggle?.checked) {
-            customizeButton?.classList.remove('opacity-50', 'cursor-not-allowed');
-            customizeButton?.removeAttribute('disabled');
-        } else {
-            customizeButton?.classList.add('opacity-50', 'cursor-not-allowed');
-            customizeButton?.setAttribute('disabled', 'true');
-        }
-    }
-
-    socialPreviewToggle?.addEventListener('change', updateCustomizeButtonState);
-    updateCustomizeButtonState();
-});
 
 // Enhanced QR Code & Social Preview Functionality
 document.addEventListener('DOMContentLoaded', function() {
