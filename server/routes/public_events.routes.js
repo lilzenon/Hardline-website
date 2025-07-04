@@ -151,6 +151,10 @@ router.get(
             }
         }
 
+        // Generate dynamic meta tags with social preview support
+        const seoUtils = require('../utils/seo.utils');
+        const metaTags = seoUtils.generateEventMetaTags(foundEvent);
+
         res.render("event_landing", {
             event: {
                 ...foundEvent,
@@ -159,6 +163,7 @@ router.get(
             pageTitle: foundEvent.title,
             metaDescription: foundEvent.description || `Join ${foundEvent.title} - Get notified when this event goes live!`,
             metaImage: foundEvent.cover_image,
+            metaTags: metaTags,
             deviceType: deviceType,
             isMobile: deviceType === 'mobile',
             isDesktop: deviceType === 'desktop',

@@ -34,7 +34,7 @@ function generateMetaTags(options = {}) {
         description: description || 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
         keywords: keywords || 'live music events, concert tickets, artist promotion, event discovery, Asbury Park events, exclusive music experiences',
         author,
-        
+
         // Open Graph tags
         ogTitle: title || 'BOUNCE2BOUNCE - Live Music Events',
         ogDescription: description || 'Discover exclusive live music events and connect with artists',
@@ -42,18 +42,18 @@ function generateMetaTags(options = {}) {
         ogUrl: fullUrl,
         ogType: type,
         ogSiteName: siteName,
-        
+
         // Twitter Card tags
         twitterCard,
         twitterTitle: title || 'BOUNCE2BOUNCE - Live Music Events',
         twitterDescription: description || 'Discover exclusive live music events and connect with artists',
         twitterImage: metaImage,
-        
+
         // Additional SEO tags
         canonical: fullUrl,
         publishedTime,
         modifiedTime,
-        
+
         // Mobile and app tags
         viewport: 'width=device-width, initial-scale=1.0, viewport-fit=cover',
         themeColor: '#000000',
@@ -63,7 +63,7 @@ function generateMetaTags(options = {}) {
 }
 
 /**
- * Generate Event-specific meta tags
+ * Generate Event-specific meta tags with social preview support
  */
 function generateEventMetaTags(event) {
     const eventUrl = `/event/${event.slug}`;
@@ -77,9 +77,25 @@ function generateEventMetaTags(event) {
         minute: '2-digit'
     }) : '';
 
-    const title = `${event.title} - ${event.artist_name || 'BOUNCE2BOUNCE'}`;
-    const description = event.description || 
+    // Default fallback values
+    const defaultTitle = `${event.title} - ${event.artist_name || 'BOUNCE2BOUNCE'}`;
+    const defaultDescription = event.description ||
         `Join ${event.artist_name || 'us'} for ${event.title}${formattedDate ? ` on ${formattedDate}` : ''}${event.event_address ? ` at ${event.event_address}` : ''}. Get notified when tickets go live!`;
+
+    // Use custom social preview fields if enabled and available, otherwise use defaults
+    const useCustomPreviews = event.social_preview_enabled;
+
+    const ogTitle = useCustomPreviews && event.og_title ? event.og_title : defaultTitle;
+    const ogDescription = useCustomPreviews && event.og_description ? event.og_description : defaultDescription;
+    const ogImage = useCustomPreviews && event.og_image ? event.og_image : event.cover_image;
+
+    const twitterTitle = useCustomPreviews && event.twitter_title ? event.twitter_title : ogTitle;
+    const twitterDescription = useCustomPreviews && event.twitter_description ? event.twitter_description : ogDescription;
+    const twitterImage = useCustomPreviews && event.twitter_image ? event.twitter_image : ogImage;
+
+    const iosTitle = useCustomPreviews && event.ios_title ? event.ios_title : ogTitle;
+    const iosDescription = useCustomPreviews && event.ios_description ? event.ios_description : ogDescription;
+    const iosImage = useCustomPreviews && event.ios_image ? event.ios_image : ogImage;
 
     const keywords = [
         event.title,
@@ -90,16 +106,45 @@ function generateEventMetaTags(event) {
         event.event_address ? event.event_address.split(',')[0] : 'live event'
     ].filter(Boolean).join(', ');
 
-    return generateMetaTags({
-        title,
-        description,
-        image: event.cover_image,
-        url: eventUrl,
-        type: 'article',
+    const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+    const fullUrl = `${baseUrl}${eventUrl}`;
+
+    // Generate comprehensive meta tags for all platforms
+    return {
+        // Basic meta tags
+        title: defaultTitle,
+        description: defaultDescription,
         keywords,
-        publishedTime: event.created_at,
-        modifiedTime: event.updated_at
-    });
+
+        // Open Graph (Facebook, LinkedIn, WhatsApp)
+        'og:title': ogTitle,
+        'og:description': ogDescription,
+        'og:image': ogImage,
+        'og:url': fullUrl,
+        'og:type': 'article',
+        'og:site_name': 'BOUNCE2BOUNCE',
+        'og:locale': 'en_US',
+
+        // Twitter Card
+        'twitter:card': 'summary_large_image',
+        'twitter:site': '@bounce2bounce',
+        'twitter:creator': '@bounce2bounce',
+        'twitter:title': twitterTitle,
+        'twitter:description': twitterDescription,
+        'twitter:image': twitterImage,
+
+        // iOS Messages / Apple specific
+        'apple-mobile-web-app-title': iosTitle,
+        'apple-mobile-web-app-capable': 'yes',
+        'apple-mobile-web-app-status-bar-style': 'default',
+
+        // Additional meta for better compatibility
+        'article:published_time': event.created_at,
+        'article:modified_time': event.updated_at,
+        'article:author': event.artist_name || 'BOUNCE2BOUNCE',
+        'article:section': 'Events',
+        'article:tag': keywords
+    };
 }
 
 /**

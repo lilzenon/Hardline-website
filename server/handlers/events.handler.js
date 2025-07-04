@@ -9,6 +9,55 @@ const QRCode = require('qrcode');
 const { nanoid } = require('nanoid');
 const { UAParser } = require('ua-parser-js');
 const geoip = require('geoip-lite');
+const path = require("path");
+const fs = require("fs").promises;
+
+// Configure multer for social preview image uploads
+let multer, uploadSocialPreviewImage;
+
+try {
+    multer = require("multer");
+
+    const storage = multer.diskStorage({
+        destination: async function(req, file, cb) {
+            const uploadDir = path.join(__dirname, "../../static/images/social-previews");
+            try {
+                await fs.mkdir(uploadDir, { recursive: true });
+                cb(null, uploadDir);
+            } catch (error) {
+                cb(error);
+            }
+        },
+        filename: function(req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, 'social-preview-' + uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+
+    const fileFilter = (req, file, cb) => {
+        // Accept only image files
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    };
+
+    uploadSocialPreviewImage = multer({
+        storage: storage,
+        fileFilter: fileFilter,
+        limits: {
+            fileSize: 5 * 1024 * 1024 // 5MB limit
+        }
+    }).single('social_preview_image');
+} catch (error) {
+    console.warn('Multer not installed, social preview image upload will be disabled:', error.message);
+    // Fallback for when multer is not installed
+    uploadSocialPreviewImage = (req, res, next) => {
+        console.warn('Social preview image upload attempted but multer is not installed');
+        next();
+    };
+}
 
 // Sanitizer function for checkbox values
 const sanitizeCheckbox = value => value === true || value === "on" || value;
@@ -179,6 +228,66 @@ const createEventValidation = [
     .isLength({ min: 1, max: 50 })
     .withMessage("Button title must be between 1 and 50 characters")
     .trim(),
+
+    // Social Media Preview Fields
+    body("social_preview_enabled")
+    .optional()
+    .isBoolean()
+    .withMessage("Social preview enabled must be a boolean"),
+
+    // Open Graph fields
+    body("og_title")
+    .optional({ nullable: true, checkFalsy: true })
+    .isLength({ max: 90 })
+    .withMessage("Open Graph title must be 90 characters or less (optimal: 30-60)")
+    .trim(),
+    body("og_description")
+    .optional({ nullable: true, checkFalsy: true })
+    .isLength({ max: 300 })
+    .withMessage("Open Graph description must be 300 characters or less (optimal: 55-200)")
+    .trim(),
+    body("og_image")
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage("Open Graph image must be a valid URL")
+    .isLength({ max: 2040 })
+    .withMessage("Open Graph image URL too long"),
+
+    // Twitter Card fields
+    body("twitter_title")
+    .optional({ nullable: true, checkFalsy: true })
+    .isLength({ max: 70 })
+    .withMessage("Twitter title must be 70 characters or less (optimal: 30-60)")
+    .trim(),
+    body("twitter_description")
+    .optional({ nullable: true, checkFalsy: true })
+    .isLength({ max: 200 })
+    .withMessage("Twitter description must be 200 characters or less (optimal: 55-200)")
+    .trim(),
+    body("twitter_image")
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage("Twitter image must be a valid URL")
+    .isLength({ max: 2040 })
+    .withMessage("Twitter image URL too long"),
+
+    // iOS Messages fields
+    body("ios_title")
+    .optional({ nullable: true, checkFalsy: true })
+    .isLength({ max: 90 })
+    .withMessage("iOS title must be 90 characters or less")
+    .trim(),
+    body("ios_description")
+    .optional({ nullable: true, checkFalsy: true })
+    .isLength({ max: 500 })
+    .withMessage("iOS description must be 500 characters or less")
+    .trim(),
+    body("ios_image")
+    .optional({ nullable: true, checkFalsy: true })
+    .isURL()
+    .withMessage("iOS image must be a valid URL")
+    .isLength({ max: 2040 })
+    .withMessage("iOS image URL too long"),
 ];
 
 const updateEventValidation = [
@@ -1536,6 +1645,80 @@ function generateAnalyticsCSV(analytics, pageViews, sessions, event) {
     return lines.join('\n');
 }
 
+// 📱 Social Preview Image Upload Handler
+async function handleSocialPreviewImageUpload(req, res) {
+    try {
+        const { id } = req.params;
+        const userId = req.user && req.user.id;
+
+        // Check if event exists and belongs to user
+        const foundEvent = await event.findOne({ id, user_id: userId });
+        if (!foundEvent) {
+            return res.status(404).json({
+                error: "Event not found or access denied"
+            });
+        }
+
+        // Check if file was uploaded
+        if (!req.file) {
+            return res.status(400).json({
+                error: "No image file provided"
+            });
+        }
+
+        // Validate image dimensions and format
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(req.file.mimetype)) {
+            // Clean up uploaded file
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.warn('Failed to clean up invalid file:', unlinkError);
+            }
+
+            return res.status(400).json({
+                error: "Invalid file type. Please upload JPG, PNG, or WebP images only."
+            });
+        }
+
+        // Generate public URL for the uploaded image
+        const imageUrl = `/static/images/social-previews/${req.file.filename}`;
+
+        console.log('📱 Social preview image uploaded successfully:', {
+            eventId: id,
+            filename: req.file.filename,
+            size: req.file.size,
+            mimetype: req.file.mimetype,
+            url: imageUrl
+        });
+
+        res.json({
+            success: true,
+            message: "Image uploaded successfully",
+            imageUrl: imageUrl,
+            filename: req.file.filename,
+            size: req.file.size
+        });
+
+    } catch (error) {
+        console.error('❌ Error uploading social preview image:', error);
+
+        // Clean up uploaded file if it exists
+        if (req.file && req.file.path) {
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.warn('Failed to clean up file after error:', unlinkError);
+            }
+        }
+
+        res.status(500).json({
+            error: "Failed to upload image",
+            details: error.message
+        });
+    }
+}
+
 module.exports = {
     createEventValidation,
     updateEventValidation,
@@ -1566,5 +1749,9 @@ module.exports = {
     // 📊 Advanced Analytics API
     getEventPageViews,
     getEventSessionAnalytics,
-    exportEventAnalytics
+    exportEventAnalytics,
+
+    // 📱 Social Preview Image Upload
+    uploadSocialPreviewImage,
+    handleSocialPreviewImageUpload
 };

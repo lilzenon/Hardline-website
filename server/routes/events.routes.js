@@ -127,6 +127,13 @@ router.get(
     asyncHandler(events.generateQRCodeImage)
 );
 
+// POST /api/events/:id/social-preview/upload-image - Upload social preview image
+router.post(
+    "/:id/social-preview/upload-image",
+    events.uploadSocialPreviewImage,
+    asyncHandler(events.handleSocialPreviewImageUpload)
+);
+
 // 📊 ADVANCED ANALYTICS ROUTES
 
 // GET /api/events/:id/analytics/page-views - Get detailed page view analytics
