@@ -500,21 +500,7 @@ async function eventEdit(req, res) {
             });
         }
 
-        // Debug: Log social preview fields being passed to template
-        console.log('🔍 Event edit page - social preview data:', {
-            id: event.id,
-            title: event.title,
-            social_preview_enabled: event.social_preview_enabled,
-            og_title: event.og_title,
-            og_description: event.og_description,
-            og_image: event.og_image,
-            twitter_title: event.twitter_title,
-            twitter_description: event.twitter_description,
-            twitter_image: event.twitter_image,
-            ios_title: event.ios_title,
-            ios_description: event.ios_description,
-            ios_image: event.ios_image
-        });
+
 
         res.render("modern-event-edit", {
             title: `Edit ${event.title}`,

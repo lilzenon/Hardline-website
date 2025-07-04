@@ -547,21 +547,7 @@ async function getEvent(req, res) {
         throw new CustomError("Event not found", 404);
     }
 
-    // Debug: Log social preview fields
-    console.log('🔍 Event social preview data:', {
-        id: foundEvent.id,
-        title: foundEvent.title,
-        social_preview_enabled: foundEvent.social_preview_enabled,
-        og_title: foundEvent.og_title,
-        og_description: foundEvent.og_description,
-        og_image: foundEvent.og_image,
-        twitter_title: foundEvent.twitter_title,
-        twitter_description: foundEvent.twitter_description,
-        twitter_image: foundEvent.twitter_image,
-        ios_title: foundEvent.ios_title,
-        ios_description: foundEvent.ios_description,
-        ios_image: foundEvent.ios_image
-    });
+
 
     res.json({
         success: true,
