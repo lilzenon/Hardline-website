@@ -718,7 +718,18 @@ function validateAndSanitizeEventData(data) {
         'ticket_price',
         'posh_embed_enabled',
         'external_ticket_url',
-        'buy_button_text'
+        'buy_button_text',
+        // Social Media Preview Fields
+        'social_preview_enabled',
+        'og_title',
+        'og_description',
+        'og_image',
+        'twitter_title',
+        'twitter_description',
+        'twitter_image',
+        'ios_title',
+        'ios_description',
+        'ios_image'
     ];
 
     const sanitizedData = {};

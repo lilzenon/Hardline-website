@@ -3315,17 +3315,12 @@ function initializeFormSubmission() {
             data.posh_embed_enabled = formData.has('posh_embed_enabled');
             data.social_preview_enabled = formData.has('social_preview_enabled');
 
-            // Capture unified social preview data and apply to all platforms
-            const socialTitleInput = document.getElementById('social-title');
-            const socialDescriptionInput = document.getElementById('social-description');
-            const socialImageInput = document.getElementById('social-image');
+            // Capture unified social preview data from FormData and apply to all platforms
+            const universalTitle = formData.get('social_title') || null;
+            const universalDescription = formData.get('social_description') || null;
+            const universalImage = formData.get('social_image') || null;
 
-            // Get universal values
-            const universalTitle = socialTitleInput?.value || null;
-            const universalDescription = socialDescriptionInput?.value || null;
-            const universalImage = socialImageInput?.value || null;
-
-            // Apply universal values to all platform-specific fields
+            // Apply universal values to all platform-specific database fields
             data.og_title = universalTitle;
             data.og_description = universalDescription;
             data.og_image = universalImage;
@@ -3336,7 +3331,7 @@ function initializeFormSubmission() {
             data.ios_description = universalDescription;
             data.ios_image = universalImage;
 
-            console.log('📱 Unified social preview data captured:', {
+            console.log('📱 Unified social preview data captured from FormData:', {
                 social_preview_enabled: data.social_preview_enabled,
                 universal_title: universalTitle,
                 universal_description: universalDescription,
