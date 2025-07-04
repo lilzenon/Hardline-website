@@ -785,6 +785,17 @@
                                         </div>
                                     </div>
 
+                                    <!-- Debug Info -->
+                                    <div class="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-4">
+                                        <h4 class="font-semibold text-yellow-800">Debug Info:</h4>
+                                        <p class="text-sm text-yellow-700">
+                                            og_title: "{{event.og_title}}" |
+                                            twitter_title: "{{event.twitter_title}}" |
+                                            ios_title: "{{event.ios_title}}" |
+                                            social_preview_enabled: {{event.social_preview_enabled}}
+                                        </p>
+                                    </div>
+
                                     <!-- Unified Preview Editor -->
                                     <div id="social-preview-fields" class="space-y-6 transition-all duration-300 {{#unless event.social_preview_enabled}}opacity-50 pointer-events-none{{/unless}}">
                                         <!-- Universal Title Field -->
@@ -803,6 +814,7 @@
                                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                                        placeholder="Enter a compelling title for social media sharing"
                                                        maxlength="90">
+                                                <!-- Debug: og_title={{event.og_title}}, twitter_title={{event.twitter_title}}, ios_title={{event.ios_title}} -->
                                                 <p class="text-xs text-gray-600">Optimal: 30-60 characters. This title will appear across all social platforms and iMessage.</p>
                                             </div>
                                         </div>
@@ -6855,14 +6867,23 @@ document.addEventListener('DOMContentLoaded', function() {
         socialImageUpload.value = '';
     });
 
-    // Initialize
-    toggleSocialPreviewFields();
-    updateCharacterCounts();
+    // Initialize with delay to ensure form fields are populated
+    setTimeout(() => {
+        toggleSocialPreviewFields();
+        updateCharacterCounts();
 
-    // Update image preview if there's already a value
-    if (socialImage?.value) {
-        updateImagePreview(socialImage.value);
-    }
+        // Update image preview if there's already a value
+        if (socialImage?.value) {
+            updateImagePreview(socialImage.value);
+        }
+
+        console.log('🔍 Social preview initialization - field values:', {
+            title: socialTitle?.value,
+            description: socialDescription?.value,
+            image: socialImage?.value,
+            toggle: socialPreviewToggle?.checked
+        });
+    }, 100);
 
 
 
