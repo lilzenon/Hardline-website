@@ -1736,6 +1736,45 @@ async function handleSocialPreviewImageUpload(req, res) {
     }
 }
 
+// Social media cache invalidation endpoint
+async function invalidateSocialCache(req, res) {
+    const { id } = req.params;
+    const userId = req.user && req.user.id;
+
+    const foundEvent = await event.findOne({ id, user_id: userId });
+
+    if (!foundEvent) {
+        throw new CustomError("Event not found", 404);
+    }
+
+    const eventUrl = `https://${env.DEFAULT_DOMAIN}/event/${foundEvent.slug}`;
+
+    // Generate debugging information
+    const debugInfo = {
+        eventUrl,
+        metaTags: seo.generateEventMetaTags(foundEvent),
+        socialPlatforms: {
+            facebook: `https://developers.facebook.com/tools/debug/?q=${encodeURIComponent(eventUrl)}`,
+            twitter: `https://cards-dev.twitter.com/validator?url=${encodeURIComponent(eventUrl)}`,
+            linkedin: `https://www.linkedin.com/post-inspector/inspect/${encodeURIComponent(eventUrl)}`,
+            pinterest: `https://developers.pinterest.com/tools/url-debugger/?link=${encodeURIComponent(eventUrl)}`
+        },
+        instructions: {
+            step1: "Copy the event URL above",
+            step2: "Visit each social platform debugger link",
+            step3: "Paste the URL and click 'Scrape' or 'Debug'",
+            step4: "This will force the platform to refresh the cached meta tags",
+            note: "Changes may take 5-10 minutes to appear after cache invalidation"
+        }
+    };
+
+    res.json({
+        success: true,
+        message: "Social media cache invalidation information generated",
+        data: debugInfo
+    });
+}
+
 module.exports = {
     createEventValidation,
     updateEventValidation,
@@ -1770,5 +1809,8 @@ module.exports = {
 
     // 📱 Social Preview Image Upload
     uploadSocialPreviewImage,
-    handleSocialPreviewImageUpload
+    handleSocialPreviewImageUpload,
+
+    // 🔄 Social Media Cache Invalidation
+    invalidateSocialCache
 };

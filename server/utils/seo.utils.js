@@ -120,6 +120,10 @@ function generateEventMetaTags(event) {
         'og:title': ogTitle,
         'og:description': ogDescription,
         'og:image': ogImage,
+        'og:image:width': '1200',
+        'og:image:height': '630',
+        'og:image:alt': `${ogTitle} - Event Image`,
+        'og:image:type': 'image/jpeg',
         'og:url': fullUrl,
         'og:type': 'article',
         'og:site_name': 'BOUNCE2BOUNCE',
@@ -132,6 +136,7 @@ function generateEventMetaTags(event) {
         'twitter:title': twitterTitle,
         'twitter:description': twitterDescription,
         'twitter:image': twitterImage,
+        'twitter:image:alt': `${twitterTitle} - Event Image`,
 
         // iOS Messages / Apple specific
         'apple-mobile-web-app-title': iosTitle,

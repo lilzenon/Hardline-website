@@ -134,6 +134,12 @@ router.post(
     asyncHandler(events.handleSocialPreviewImageUpload)
 );
 
+// GET /api/events/:id/social-preview/invalidate-cache - Get social media cache invalidation info
+router.get(
+    "/:id/social-preview/invalidate-cache",
+    asyncHandler(events.invalidateSocialCache)
+);
+
 // 📊 ADVANCED ANALYTICS ROUTES
 
 // GET /api/events/:id/analytics/page-views - Get detailed page view analytics
