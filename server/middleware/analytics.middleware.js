@@ -201,7 +201,7 @@ async function trackPageView(req, res, next) {
         // Track the page view
         await analyticsQueries.trackPageView(pageViewData);
 
-        // Update or create user session
+        // Update or create user session with time tracking
         const sessionData = {
             session_id: sessionId,
             ip_address: ipAddress,

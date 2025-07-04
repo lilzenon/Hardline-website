@@ -12,7 +12,13 @@ async function createQRCode(eventId, qrCodeData) {
         ...qrCodeData
     };
 
-    const [id] = await knex("event_qr_codes").insert(data);
+    const result = await knex("event_qr_codes").insert(data).returning("id");
+    let id;
+    if (Array.isArray(result)) {
+        id = typeof result[0] === 'object' ? result[0].id : result[0];
+    } else {
+        id = typeof result === 'object' ? result.id : result;
+    }
     return await knex("event_qr_codes").where("id", id).first();
 }
 
@@ -56,7 +62,13 @@ async function incrementQRCodeScanCount(qrCodeId) {
 
 // Track a page view
 async function trackPageView(pageViewData) {
-    const [id] = await knex("event_page_views").insert(pageViewData);
+    const result = await knex("event_page_views").insert(pageViewData).returning("id");
+    let id;
+    if (Array.isArray(result)) {
+        id = typeof result[0] === 'object' ? result[0].id : result[0];
+    } else {
+        id = typeof result === 'object' ? result.id : result;
+    }
     return await knex("event_page_views").where("id", id).first();
 }
 
@@ -114,13 +126,18 @@ async function upsertUserSession(sessionData) {
         .first();
 
     if (existingSession) {
+        // Calculate session duration (time since first visit)
+        const now = new Date();
+        const firstVisit = new Date(existingSession.first_visit);
+        const sessionDuration = Math.floor((now - firstVisit) / 1000); // in seconds
+
         // Update existing session
         await knex("user_sessions")
             .where("session_id", sessionData.session_id)
             .update({
                 last_activity: knex.fn.now(),
                 page_views: knex.raw("page_views + 1"),
-                total_time: sessionData.total_time || existingSession.total_time,
+                total_time: sessionDuration,
                 updated_at: knex.fn.now()
             });
         return await knex("user_sessions")
@@ -128,10 +145,16 @@ async function upsertUserSession(sessionData) {
             .first();
     } else {
         // Create new session
-        const [id] = await knex("user_sessions").insert({
+        const result = await knex("user_sessions").insert({
             ...sessionData,
             page_views: 1
-        });
+        }).returning("id");
+        let id;
+        if (Array.isArray(result)) {
+            id = typeof result[0] === 'object' ? result[0].id : result[0];
+        } else {
+            id = typeof result === 'object' ? result.id : result;
+        }
         return await knex("user_sessions").where("id", id).first();
     }
 }
@@ -168,7 +191,17 @@ async function getSessionAnalytics(eventId, days = 30) {
             "us.converted",
             "us.conversion_timestamp"
         ])
-        .groupBy("us.session_id")
+        .groupBy([
+            "us.session_id",
+            "us.first_visit",
+            "us.last_activity",
+            "us.page_views",
+            "us.total_time",
+            "us.device_type",
+            "us.country_code",
+            "us.converted",
+            "us.conversion_timestamp"
+        ])
         .orderBy("us.first_visit", "desc");
 
     return sessions;
@@ -243,6 +276,16 @@ async function getComprehensiveAnalytics(eventId, days = 30) {
         .groupBy("date")
         .orderBy("date", "asc");
 
+    // Average session time
+    const sessionTimeResult = await knex("user_sessions as us")
+        .join("event_page_views as epv", "us.session_id", "epv.session_id")
+        .where("epv.event_id", eventId)
+        .where("us.first_visit", ">=", startDate)
+        .avg("us.total_time as avg_time")
+        .first();
+
+    const avgSessionTime = parseFloat(sessionTimeResult.avg_time) || 0;
+
     return {
         totalViews,
         uniqueVisitors,
@@ -250,6 +293,7 @@ async function getComprehensiveAnalytics(eventId, days = 30) {
         uniqueQrScans,
         conversions,
         conversionRate: parseFloat(conversionRate),
+        avgSessionTime: Math.round(avgSessionTime),
         deviceBreakdown: deviceBreakdown || [],
         trafficSources: trafficSources || [],
         dailyTrend: dailyTrend || []
