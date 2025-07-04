@@ -526,7 +526,8 @@
         });
     </script>
 
-    <!-- Modern Create Event Dialog with Glassmorphism -->
+    <!-- Modern Create Event Dialog with Glassmorphism - Only show on events listing page -->
+    {{#if (eq currentPage "events")}}
     <div id="create-event-dialog" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center p-4">
         <div class="relative w-full max-w-md mx-auto">
             <!-- Glassmorphism Modal -->
@@ -613,8 +614,10 @@
             </div>
         </div>
     </div>
+    {{/if}}
 
-    <!-- Create Event JavaScript -->
+    <!-- Create Event JavaScript - Only include on events listing page -->
+    {{#if (eq currentPage "events")}}
     <script>
         function createEvent() {
             document.getElementById('create-event-dialog').classList.remove('hidden');
@@ -622,10 +625,27 @@
         }
 
         function closeCreateEventDialog() {
-            document.getElementById('create-event-dialog').classList.add('hidden');
-            document.getElementById('create-event-form').reset();
+            const modal = document.getElementById('create-event-dialog');
+            if (modal) {
+                modal.classList.add('hidden');
+                console.log('✅ Create event dialog closed');
+            }
+
+            const form = document.getElementById('create-event-form');
+            if (form) {
+                form.reset();
+            }
+
             // Reset toggle to active state
             resetToggleToActive();
+
+            // Reset any body styles that might have been set
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            document.body.classList.remove('modal-open');
         }
 
         // Toggle event active status
@@ -778,6 +798,37 @@
         } else {
             console.warn('⚠️ Create event dialog not found');
         }
+
+        // Add escape key handler for create event dialog
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('create-event-dialog');
+                if (modal && !modal.classList.contains('hidden')) {
+                    console.log('🔄 Escape pressed - closing create event dialog');
+                    closeCreateEventDialog();
+                }
+            }
+        });
+
+        // Global function to force close stuck modals (accessible from console)
+        window.forceCloseCreateEventDialog = function() {
+            const modal = document.getElementById('create-event-dialog');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
+
+            // Reset body styles
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.width = '';
+            document.body.style.overflow = '';
+            document.body.classList.remove('modal-open');
+
+            console.log('🔄 Force closed create event dialog and reset body styles');
+        };
     </script>
+    {{/if}}
 </body>
 </html>

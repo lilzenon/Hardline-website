@@ -1547,10 +1547,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.remove();
             });
 
-            // Close existing modal system modals (create event dialog, etc.)
-            const existingModals = document.querySelectorAll('.dialog:not(.hidden), [id*="dialog"]:not(.hidden), [id*="modal"]:not(.hidden)');
+            // Close any remaining modal dialogs (should be rare on event edit page)
+            const existingModals = document.querySelectorAll('.dialog:not(.hidden), [id*="modal"]:not(.hidden)');
             existingModals.forEach(modal => {
                 modal.classList.add('hidden');
+                modal.style.display = 'none';
             });
 
             // Reset body styles in case any modal left them in a bad state
@@ -1559,6 +1560,15 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🔄 Escape pressed - closed any stuck modals and reset body styles');
         }
     });
+
+    // Clean up any residual modal states on page load (should not be needed anymore)
+    setTimeout(() => {
+        resetBodyStyles(); // Ensure clean body state
+        console.log('📄 Event edit page loaded - body styles reset');
+    }, 100);
+
+    // Note: Create event dialog should not exist on this page anymore
+    // Modal is now conditionally included only on events listing page
 
     // Remove any scroll lock mechanism that might interfere with user scrolling
     // The previous scroll lock was causing issues, so we're removing it entirely
@@ -4949,9 +4959,23 @@ function closeAllModalsAndReset() {
     console.log('🔄 All modals closed and styles reset');
 }
 
+// Emergency function to close any stuck modals (should not be needed on event edit page)
+function emergencyCloseAllModals() {
+    // Close any dynamically created modals (QR codes, etc.)
+    const dynamicModals = document.querySelectorAll('.fixed.inset-0');
+    dynamicModals.forEach(modal => modal.remove());
+
+    // Nuclear reset of body styles
+    document.body.style.cssText = '';
+    document.body.className = document.body.className.replace(/modal[^\s]*/g, '');
+
+    console.log('🚨 Emergency modal closure completed');
+}
+
 // Make functions globally accessible for debugging
 window.resetBodyStyles = resetBodyStyles;
 window.closeAllModalsAndReset = closeAllModalsAndReset;
+window.emergencyCloseAllModals = emergencyCloseAllModals;
 
 // Preview QR code
 function previewQRCode(identifier) {

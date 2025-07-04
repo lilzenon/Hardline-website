@@ -504,7 +504,7 @@ async function eventEdit(req, res) {
             title: `Edit ${event.title}`,
             pageTitle: `Edit ${event.title}`,
             layout: "layouts/modern-dashboard",
-            currentPage: "events",
+            currentPage: "event-edit", // Changed from "events" to prevent modal inclusion
             user: req.user,
             event: event,
             domain: env.DEFAULT_DOMAIN
