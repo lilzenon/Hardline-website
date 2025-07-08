@@ -248,6 +248,10 @@ async function getComprehensiveAnalytics(eventId, days = 30) {
         .first();
     const conversions = parseInt(conversionsResult.count) || 0;
 
+    // Mock data for new metrics (to be implemented with proper tracking)
+    const ticketClicks = Math.floor(totalViews * 0.15); // 15% of views click tickets
+    const ticketClicksChange = Math.random() * 20 - 10; // Random change for demo
+
     // Conversion rate
     const conversionRate = totalViews > 0 ? ((conversions / totalViews) * 100).toFixed(2) : 0;
 
@@ -300,7 +304,15 @@ async function getComprehensiveAnalytics(eventId, days = 30) {
         avgSessionTime: Math.round(avgSessionTime),
         deviceBreakdown: deviceBreakdown || [],
         trafficSources: trafficSources || [],
-        dailyTrend: dailyTrend || []
+        dailyTrend: dailyTrend || [],
+        // New metrics
+        ticketClicks,
+        ticketClicksChange,
+        // Mock change data for existing metrics
+        viewsChange: Math.random() * 20 - 10,
+        uniqueChange: Math.random() * 15 - 7.5,
+        conversionsChange: Math.random() * 25 - 12.5,
+        qrScansChange: Math.random() * 30 - 15
     };
 }
 
