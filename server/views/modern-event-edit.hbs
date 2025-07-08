@@ -1007,244 +1007,245 @@
                     <!-- ANALYTICS TAB CONTENT -->
                     <div class="tab-content p-6" data-tab-content="analytics">
                         <div class="space-y-8">
-                            <!-- Header with Modern Time Range Controls -->
-                            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                                <div>
-                                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Event Analytics</h3>
-                                    <p class="text-sm text-gray-600">Real-time insights into your event's visitor engagement and performance</p>
+                            <!-- Header with Dashboard-Style Controls -->
+                            <div class="md:flex md:items-center md:justify-between mb-8">
+                                <div class="flex-1 min-w-0">
+                                    <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                                        Event Analytics
+                                    </h2>
+                                    <p class="mt-1 text-sm text-gray-500">
+                                        Real-time insights into your event's visitor engagement and performance
+                                    </p>
                                 </div>
-                                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                    <!-- Modern Time Period Toggle Buttons -->
+                                <div class="mt-4 flex md:mt-0 md:ml-4 gap-4">
+                                    <!-- Time Period Toggle Buttons -->
                                     <div class="flex bg-gray-100 rounded-lg p-1" role="group" aria-label="Time period selection">
-                                        <button id="time-24h" class="time-period-btn px-4 py-2 text-sm font-medium rounded-md transition-all duration-200" data-period="1" aria-pressed="false">
-                                            24 Hours
+                                        <button id="time-24h" class="time-period-btn px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 text-gray-600" data-period="1" aria-pressed="false">
+                                            24h
                                         </button>
-                                        <button id="time-7d" class="time-period-btn px-4 py-2 text-sm font-medium rounded-md transition-all duration-200" data-period="7" aria-pressed="false">
-                                            7 Days
+                                        <button id="time-7d" class="time-period-btn px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 text-gray-600" data-period="7" aria-pressed="false">
+                                            7d
                                         </button>
-                                        <button id="time-30d" class="time-period-btn px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 active" data-period="30" aria-pressed="true">
-                                            30 Days
+                                        <button id="time-30d" class="time-period-btn px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 bg-white shadow-sm text-gray-900 active" data-period="30" aria-pressed="true">
+                                            30d
                                         </button>
                                     </div>
                                     <!-- Action Buttons -->
                                     <div class="flex items-center gap-2">
-                                        <button id="refresh-analytics" class="glass-button px-4 py-2 text-sm font-medium flex items-center gap-2 hover:scale-105 transition-transform duration-200" aria-label="Refresh analytics data">
+                                        <button id="refresh-analytics" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" aria-label="Refresh analytics data">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                             </svg>
-                                            <span class="hidden sm:inline">Refresh</span>
+                                            <span class="hidden sm:inline ml-2">Refresh</span>
                                         </button>
-                                        <button id="export-analytics" class="glass-button px-4 py-2 text-sm font-medium flex items-center gap-2 hover:scale-105 transition-transform duration-200" aria-label="Export analytics data">
+                                        <button id="export-analytics" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500" aria-label="Export analytics data">
                                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                             </svg>
-                                            <span class="hidden sm:inline">Export</span>
+                                            <span class="hidden sm:inline ml-2">Export</span>
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Modern Analytics Stats Grid -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                            <!-- Analytics Stats Grid - Dashboard Style -->
+                            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-8">
                                 <!-- Total Views -->
-                                <div class="analytics-card group">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="bg-white overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-sm font-semibold text-gray-700">Total Views</h4>
                                             </div>
-                                            <div class="space-y-1">
-                                                <p class="text-3xl font-bold text-gray-900" id="analytics-total-views">
-                                                    <span class="loading-skeleton">-</span>
-                                                </p>
-                                                <p class="text-xs text-gray-500" id="analytics-views-change">Loading...</p>
+                                            <div class="ml-5 w-0 flex-1">
+                                                <dl>
+                                                    <dt class="text-sm font-medium text-gray-500 truncate">Total Views</dt>
+                                                    <dd class="text-lg font-medium text-gray-900" id="analytics-total-views">
+                                                        <span class="loading-skeleton">-</span>
+                                                    </dd>
+                                                </dl>
                                             </div>
                                         </div>
-                                        <div class="analytics-trend-indicator" id="views-trend">
-                                            <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                            </svg>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-500" id="analytics-views-change">Loading...</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Unique Visitors -->
-                                <div class="analytics-card group">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="bg-white overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 bg-indigo-500 rounded-md flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-sm font-semibold text-gray-700">Unique Visitors</h4>
                                             </div>
-                                            <div class="space-y-1">
-                                                <p class="text-3xl font-bold text-gray-900" id="analytics-unique-visitors">
-                                                    <span class="loading-skeleton">-</span>
-                                                </p>
-                                                <p class="text-xs text-gray-500" id="analytics-unique-change">Loading...</p>
+                                            <div class="ml-5 w-0 flex-1">
+                                                <dl>
+                                                    <dt class="text-sm font-medium text-gray-500 truncate">Unique Visitors</dt>
+                                                    <dd class="text-lg font-medium text-gray-900" id="analytics-unique-visitors">
+                                                        <span class="loading-skeleton">-</span>
+                                                    </dd>
+                                                </dl>
                                             </div>
                                         </div>
-                                        <div class="analytics-trend-indicator" id="visitors-trend">
-                                            <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                            </svg>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-500" id="analytics-unique-change">Loading...</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Form Submissions -->
-                                <div class="analytics-card group">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="bg-white overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-sm font-semibold text-gray-700">Form Submissions</h4>
                                             </div>
-                                            <div class="space-y-1">
-                                                <p class="text-3xl font-bold text-gray-900" id="analytics-form-submissions">
-                                                    <span class="loading-skeleton">-</span>
-                                                </p>
-                                                <p class="text-xs text-gray-500">Email & phone signups</p>
+                                            <div class="ml-5 w-0 flex-1">
+                                                <dl>
+                                                    <dt class="text-sm font-medium text-gray-500 truncate">Form Submissions</dt>
+                                                    <dd class="text-lg font-medium text-gray-900" id="analytics-form-submissions">
+                                                        <span class="loading-skeleton">-</span>
+                                                    </dd>
+                                                </dl>
                                             </div>
                                         </div>
-                                        <div class="analytics-trend-indicator" id="submissions-trend">
-                                            <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                            </svg>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-500">Email & phone signups</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Ticket Purchase Clicks -->
-                                <div class="analytics-card group">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="bg-white overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-sm font-semibold text-gray-700">Ticket Clicks</h4>
                                             </div>
-                                            <div class="space-y-1">
-                                                <p class="text-3xl font-bold text-gray-900" id="analytics-ticket-clicks">
-                                                    <span class="loading-skeleton">-</span>
-                                                </p>
-                                                <p class="text-xs text-gray-500">Buy button clicks</p>
+                                            <div class="ml-5 w-0 flex-1">
+                                                <dl>
+                                                    <dt class="text-sm font-medium text-gray-500 truncate">Ticket Clicks</dt>
+                                                    <dd class="text-lg font-medium text-gray-900" id="analytics-ticket-clicks">
+                                                        <span class="loading-skeleton">-</span>
+                                                    </dd>
+                                                </dl>
                                             </div>
                                         </div>
-                                        <div class="analytics-trend-indicator" id="tickets-trend">
-                                            <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                            </svg>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-500">Buy button clicks</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- QR Code Scans -->
-                                <div class="analytics-card group">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-2 mb-2">
-                                                <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="bg-white overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M12 12h.01M12 12v4.01" />
                                                     </svg>
                                                 </div>
-                                                <h4 class="text-sm font-semibold text-gray-700">QR Scans</h4>
                                             </div>
-                                            <div class="space-y-1">
-                                                <p class="text-3xl font-bold text-gray-900" id="analytics-qr-scans">
-                                                    <span class="loading-skeleton">-</span>
-                                                </p>
-                                                <p class="text-xs text-gray-500" id="analytics-qr-unique">Loading...</p>
+                                            <div class="ml-5 w-0 flex-1">
+                                                <dl>
+                                                    <dt class="text-sm font-medium text-gray-500 truncate">QR Scans</dt>
+                                                    <dd class="text-lg font-medium text-gray-900" id="analytics-qr-scans">
+                                                        <span class="loading-skeleton">-</span>
+                                                    </dd>
+                                                </dl>
                                             </div>
                                         </div>
-                                        <div class="analytics-trend-indicator" id="qr-trend">
-                                            <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                            </svg>
+                                        <div class="mt-2">
+                                            <p class="text-xs text-gray-500" id="analytics-qr-unique">Loading...</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Modern Data Visualization Section -->
-                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            <!-- Data Visualization Section - Dashboard Style -->
+                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-8">
                                 <!-- Views Trend Line Chart -->
-                                <div class="analytics-chart-card">
-                                    <div class="chart-header">
-                                        <div>
-                                            <h4 class="chart-title">Views Over Time</h4>
-                                            <p class="chart-subtitle">Daily visitor engagement trends</p>
-                                        </div>
-                                        <div class="chart-legend">
-                                            <div class="legend-item">
-                                                <div class="legend-color bg-blue-500"></div>
-                                                <span class="legend-label">Page Views</span>
+                                <div class="bg-white shadow rounded-lg">
+                                    <div class="px-4 py-5 sm:p-6">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h3 class="text-lg leading-6 font-medium text-gray-900">Views Over Time</h3>
+                                                <p class="mt-1 text-sm text-gray-500">Daily visitor engagement trends</p>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                                <span class="text-xs text-gray-600">Page Views</span>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="chart-container" id="views-trend-chart">
-                                        <div class="chart-loading">
-                                            <div class="loading-spinner"></div>
-                                            <p class="loading-text">Loading chart data...</p>
+                                        <div class="h-80 flex items-center justify-center bg-gray-50 rounded-lg" id="views-trend-chart">
+                                            <div class="text-center">
+                                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                                <p class="text-sm text-gray-500">Loading chart data...</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Geographic Distribution -->
-                                <div class="analytics-chart-card">
-                                    <div class="chart-header">
-                                        <div>
-                                            <h4 class="chart-title">Geographic Distribution</h4>
-                                            <p class="chart-subtitle">Top visitor locations</p>
-                                        </div>
-                                        <div class="chart-controls">
-                                            <div class="toggle-group" role="group" aria-label="Geographic view toggle">
-                                                <button class="toggle-btn active" data-geo-view="city" aria-pressed="true">Cities</button>
-                                                <button class="toggle-btn" data-geo-view="country" aria-pressed="false">Countries</button>
+                                <div class="bg-white shadow rounded-lg">
+                                    <div class="px-4 py-5 sm:p-6">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h3 class="text-lg leading-6 font-medium text-gray-900">Geographic Distribution</h3>
+                                                <p class="mt-1 text-sm text-gray-500">Top visitor locations</p>
+                                            </div>
+                                            <div class="flex bg-gray-100 rounded-lg p-1" role="group" aria-label="Geographic view toggle">
+                                                <button class="toggle-btn px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 bg-white shadow-sm text-gray-900" data-geo-view="city" aria-pressed="true">Cities</button>
+                                                <button class="toggle-btn px-3 py-1 text-sm font-medium rounded-md transition-all duration-200 text-gray-600" data-geo-view="country" aria-pressed="false">Countries</button>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="chart-container" id="geographic-chart">
-                                        <div class="chart-loading">
-                                            <div class="loading-spinner"></div>
-                                            <p class="loading-text">Loading geographic data...</p>
+                                        <div class="h-80 flex items-center justify-center bg-gray-50 rounded-lg" id="geographic-chart">
+                                            <div class="text-center">
+                                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                                <p class="text-sm text-gray-500">Loading geographic data...</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Traffic Sources Pie Chart -->
-                            <div class="analytics-chart-card">
-                                <div class="chart-header">
-                                    <div>
-                                        <h4 class="chart-title">Traffic Acquisition</h4>
-                                        <p class="chart-subtitle">How visitors discovered your event</p>
+                            <!-- Traffic Sources Chart -->
+                            <div class="bg-white shadow rounded-lg mb-8">
+                                <div class="px-4 py-5 sm:p-6">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 class="text-lg leading-6 font-medium text-gray-900">Traffic Acquisition</h3>
+                                            <p class="mt-1 text-sm text-gray-500">How visitors discovered your event</p>
+                                        </div>
+                                        <div class="flex flex-wrap gap-4" id="traffic-legend">
+                                            <!-- Legend items will be populated by D3.js -->
+                                        </div>
                                     </div>
-                                    <div class="chart-legend horizontal" id="traffic-legend">
-                                        <!-- Legend items will be populated by D3.js -->
-                                    </div>
-                                </div>
-                                <div class="chart-container pie-chart-container" id="traffic-sources-chart">
-                                    <div class="chart-loading">
-                                        <div class="loading-spinner"></div>
-                                        <p class="loading-text">Loading traffic sources...</p>
+                                    <div class="h-96 flex items-center justify-center bg-gray-50 rounded-lg" id="traffic-sources-chart">
+                                        <div class="text-center">
+                                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                            <p class="text-sm text-gray-500">Loading traffic sources...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4491,7 +4492,7 @@ function renderGeographicChart(data) {
     ].filter(d => d.count > 0);
 
     if (geoData.length === 0) {
-        container.innerHTML = '<div class="chart-loading"><p class="loading-text">No geographic data available</p></div>';
+        container.innerHTML = '<div class="text-center py-6"><p class="text-sm text-gray-500">No geographic data available</p></div>';
         return;
     }
 
@@ -4582,7 +4583,7 @@ function renderTrafficSourcesChart(data) {
     ].filter(d => d.count > 0);
 
     if (trafficData.length === 0) {
-        container.innerHTML = '<div class="chart-loading"><p class="loading-text">No traffic source data available</p></div>';
+        container.innerHTML = '<div class="text-center py-6"><p class="text-sm text-gray-500">No traffic source data available</p></div>';
         return;
     }
 
@@ -4661,14 +4662,16 @@ function initializeGeographicToggle() {
 
     toggleButtons.forEach(button => {
         button.addEventListener('click', function() {
-            // Remove active class from all buttons
+            // Remove active styling from all buttons
             toggleButtons.forEach(btn => {
-                btn.classList.remove('active');
+                btn.classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
+                btn.classList.add('text-gray-600');
                 btn.setAttribute('aria-pressed', 'false');
             });
 
-            // Add active class to clicked button
-            this.classList.add('active');
+            // Add active styling to clicked button
+            this.classList.remove('text-gray-600');
+            this.classList.add('bg-white', 'shadow-sm', 'text-gray-900');
             this.setAttribute('aria-pressed', 'true');
 
             // Re-render geographic chart with new view
@@ -8218,68 +8221,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-/* Modern Analytics Styles */
+/* Dashboard-Style Analytics */
 .time-period-btn {
     color: #6b7280;
     background: transparent;
     border: none;
-    position: relative;
-    z-index: 1;
+    cursor: pointer;
 }
 
 .time-period-btn.active {
     color: #1f2937;
     background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .time-period-btn:hover:not(.active) {
     color: #374151;
     background: rgba(255, 255, 255, 0.5);
-}
-
-.analytics-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 24px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.analytics-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.analytics-card:hover::before {
-    opacity: 1;
-}
-
-.analytics-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.analytics-trend-indicator {
-    opacity: 0;
-    transform: scale(0.8);
-    transition: all 0.3s ease;
-}
-
-.analytics-card:hover .analytics-trend-indicator {
-    opacity: 1;
-    transform: scale(1);
 }
 
 .loading-skeleton {
@@ -8297,56 +8255,13 @@ document.addEventListener('DOMContentLoaded', function() {
     100% { background-position: 200% 0; }
 }
 
-.analytics-chart-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    padding: 32px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+/* Geographic toggle styling */
+.toggle-btn:hover:not(.active) {
+    color: #374151;
+    background: rgba(255, 255, 255, 0.5);
 }
 
-.analytics-chart-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
-    background: rgba(255, 255, 255, 0.95);
-}
-
-.chart-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.chart-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1f2937;
-    margin: 0;
-}
-
-.chart-subtitle {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 4px 0 0 0;
-}
-
-.chart-legend {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-}
-
-.chart-legend.horizontal {
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
+/* Legend styling for charts */
 .legend-item {
     display: flex;
     align-items: center;
@@ -8365,197 +8280,18 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: 500;
 }
 
-.chart-controls {
-    display: flex;
-    gap: 8px;
-}
-
-.toggle-group {
-    display: flex;
-    background: #f3f4f6;
-    border-radius: 8px;
-    padding: 4px;
-}
-
-.toggle-btn {
-    padding: 8px 16px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #6b7280;
-    background: transparent;
-    border: none;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-
-.toggle-btn.active {
-    color: #1f2937;
-    background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.toggle-btn:hover:not(.active) {
-    color: #374151;
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.chart-container {
-    height: 320px;
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-}
-
-.pie-chart-container {
-    height: 400px;
-}
-
-.chart-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    background: #f9fafb;
-    border-radius: 12px;
-}
-
-.loading-spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid #e5e7eb;
-    border-top: 3px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 12px;
-}
-
-.loading-text {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.glass-button {
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    color: #374151;
-    transition: all 0.2s ease;
-}
-
-.glass-button:hover {
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(255, 255, 255, 0.5);
-    color: #1f2937;
-}
-
 /* Responsive Design */
 @media (max-width: 640px) {
-    .analytics-card {
-        padding: 20px;
-    }
-
-    .analytics-chart-card {
-        padding: 24px;
-    }
-
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .chart-container {
-        height: 280px;
-    }
-
-    .pie-chart-container {
-        height: 320px;
-    }
-
     .time-period-btn {
-        padding: 12px 16px;
+        padding: 8px 12px;
         font-size: 0.875rem;
     }
 }
 
 @media (max-width: 480px) {
-    .analytics-card {
-        padding: 16px;
-    }
-
-    .analytics-chart-card {
-        padding: 20px;
-    }
-
-    .chart-container {
-        height: 240px;
-    }
-
-    .pie-chart-container {
-        height: 280px;
-    }
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .analytics-card,
-    .analytics-chart-card {
-        background: rgba(17, 24, 39, 0.9);
-        border-color: rgba(75, 85, 99, 0.3);
-    }
-
-    .chart-title {
-        color: #f9fafb;
-    }
-
-    .chart-subtitle,
-    .legend-label,
-    .loading-text {
-        color: #d1d5db;
-    }
-
-    .chart-loading {
-        background: #1f2937;
-    }
-
-    .toggle-group {
-        background: #374151;
-    }
-
-    .toggle-btn {
-        color: #d1d5db;
-    }
-
-    .toggle-btn.active {
-        color: #f9fafb;
-        background: #4b5563;
-    }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-    .analytics-card,
-    .analytics-chart-card {
-        background: white;
-        border: 2px solid black;
-    }
-
-    .chart-title {
-        color: black;
-    }
-
-    .toggle-btn.active {
-        background: black;
-        color: white;
+    .time-period-btn {
+        padding: 6px 10px;
+        font-size: 0.75rem;
     }
 }
 </style>
