@@ -18,11 +18,11 @@ async function initiateInstagramAuth(req, res) {
     try {
         const { returnUrl } = req.query;
         const userId = req.user.id;
-        
+
         // Store return URL in session for after auth
         req.session.instagram_auth_return = returnUrl || '/dashboard/settings#integrations';
         req.session.instagram_auth_user_id = userId;
-        
+
         // Instagram OAuth URL with required permissions
         const scopes = [
             'instagram_basic',
@@ -31,17 +31,17 @@ async function initiateInstagramAuth(req, res) {
             'pages_show_list',
             'pages_read_engagement'
         ].join(',');
-        
+
         const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
             `client_id=${process.env.FACEBOOK_APP_ID}&` +
             `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_REDIRECT_URI)}&` +
             `scope=${encodeURIComponent(scopes)}&` +
             `response_type=code&` +
             `state=${crypto.randomBytes(16).toString('hex')}`;
-        
+
         console.log('🔗 Initiating Instagram OAuth flow for user:', userId);
         res.redirect(authUrl);
-        
+
     } catch (error) {
         console.error('❌ Error initiating Instagram auth:', error);
         res.status(500).json({
@@ -60,17 +60,31 @@ async function handleInstagramCallback(req, res) {
         const { code, state, error } = req.query;
         const userId = req.session.instagram_auth_user_id;
         const returnUrl = req.session.instagram_auth_return || '/dashboard/settings#integrations';
-        
+
         if (error) {
             console.error('❌ Instagram OAuth error:', error);
-            return res.redirect(`${returnUrl}?error=oauth_failed`);
+            let errorType = 'oauth_failed';
+
+            // Map specific OAuth errors
+            switch (error) {
+                case 'access_denied':
+                    errorType = 'access_denied';
+                    break;
+                case 'invalid_request':
+                    errorType = 'invalid_callback';
+                    break;
+                default:
+                    errorType = 'oauth_failed';
+            }
+
+            return res.redirect(`${returnUrl}?error=${errorType}&error_description=${encodeURIComponent(error)}`);
         }
-        
+
         if (!code || !userId) {
             console.error('❌ Missing code or user ID in Instagram callback');
             return res.redirect(`${returnUrl}?error=invalid_callback`);
         }
-        
+
         // Exchange code for access token
         const tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
             client_id: process.env.FACEBOOK_APP_ID,
@@ -78,9 +92,9 @@ async function handleInstagramCallback(req, res) {
             redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
             code: code
         });
-        
+
         const { access_token } = tokenResponse.data;
-        
+
         // Get user's Facebook pages (which include Instagram Business accounts)
         const pagesResponse = await axios.get(`${INSTAGRAM_API_BASE}/me/accounts`, {
             params: {
@@ -88,7 +102,7 @@ async function handleInstagramCallback(req, res) {
                 fields: 'id,name,instagram_business_account'
             }
         });
-        
+
         // Find Instagram Business accounts
         const instagramAccounts = [];
         for (const page of pagesResponse.data.data) {
@@ -100,7 +114,7 @@ async function handleInstagramCallback(req, res) {
                         fields: 'id,username,name,profile_picture_url,followers_count,account_type'
                     }
                 });
-                
+
                 instagramAccounts.push({
                     ...igResponse.data,
                     page_id: page.id,
@@ -109,45 +123,81 @@ async function handleInstagramCallback(req, res) {
                 });
             }
         }
-        
+
         if (instagramAccounts.length === 0) {
             console.log('⚠️ No Instagram Business accounts found for user:', userId);
-            return res.redirect(`${returnUrl}?error=no_business_accounts`);
+
+            // Check if user has any Facebook pages at all
+            if (pagesResponse.data.data.length === 0) {
+                return res.redirect(`${returnUrl}?error=account_not_eligible&error_description=${encodeURIComponent('No Facebook Pages found. Please create a Facebook Page and connect it to your Instagram account.')}`);
+            } else {
+                return res.redirect(`${returnUrl}?error=no_business_accounts&error_description=${encodeURIComponent('No Instagram Business accounts found. Please ensure your Instagram account is set to Business or Creator mode and is connected to a Facebook Page.')}`);
+            }
         }
-        
+
         // Store the first Instagram account (or let user choose if multiple)
         const igAccount = instagramAccounts[0];
-        
-        // Save to database
-        await socialQueries.createSocialAccount({
-            platform: 'instagram',
-            platform_account_id: igAccount.id,
-            platform_username: igAccount.username,
-            platform_name: igAccount.name,
-            profile_picture_url: igAccount.profile_picture_url,
-            access_token: access_token, // TODO: Encrypt this
-            token_expires_at: null, // Facebook tokens don't expire for business accounts
-            permissions: ['instagram_basic', 'instagram_manage_comments', 'instagram_manage_messages'],
-            account_type: igAccount.account_type,
-            account_metadata: {
-                page_id: igAccount.page_id,
-                page_name: igAccount.page_name
-            },
-            connected_by_user_id: userId,
-            follower_count: igAccount.followers_count
-        });
-        
+
+        // Check if account already exists (reconnection scenario)
+        const existingAccounts = await socialQueries.getSocialAccounts(userId);
+        const existingAccount = existingAccounts.find(acc =>
+            acc.platform === 'instagram' && acc.platform_account_id === igAccount.id
+        );
+
+        let isReconnection = false;
+
+        if (existingAccount) {
+            // Update existing account
+            await socialQueries.updateSocialAccount(existingAccount.id, {
+                access_token: access_token,
+                platform_username: igAccount.username,
+                platform_name: igAccount.name,
+                profile_picture_url: igAccount.profile_picture_url,
+                follower_count: igAccount.followers_count,
+                account_type: igAccount.account_type,
+                account_metadata: {
+                    page_id: igAccount.page_id,
+                    page_name: igAccount.page_name
+                },
+                is_active: true,
+                last_sync_at: new Date(),
+                last_error: null
+            });
+            isReconnection = true;
+        } else {
+            // Create new account
+            await socialQueries.createSocialAccount({
+                platform: 'instagram',
+                platform_account_id: igAccount.id,
+                platform_username: igAccount.username,
+                platform_name: igAccount.name,
+                profile_picture_url: igAccount.profile_picture_url,
+                access_token: access_token, // TODO: Encrypt this
+                token_expires_at: null, // Facebook tokens don't expire for business accounts
+                permissions: ['instagram_basic', 'instagram_manage_comments', 'instagram_manage_messages'],
+                account_type: igAccount.account_type,
+                account_metadata: {
+                    page_id: igAccount.page_id,
+                    page_name: igAccount.page_name
+                },
+                connected_by_user_id: userId,
+                follower_count: igAccount.followers_count
+            });
+        }
+
         // Set up webhook subscription
         await setupInstagramWebhook(igAccount.id, access_token);
-        
-        console.log('✅ Instagram account connected successfully:', igAccount.username);
-        
+
+        const actionType = isReconnection ? 'reconnected' : 'connected';
+        console.log(`✅ Instagram account ${actionType} successfully:`, igAccount.username);
+
         // Clean up session
         delete req.session.instagram_auth_user_id;
         delete req.session.instagram_auth_return;
-        
-        res.redirect(`${returnUrl}?success=instagram_connected`);
-        
+
+        const successParam = isReconnection ? 'instagram_reconnected' : 'instagram_connected';
+        res.redirect(`${returnUrl}?success=${successParam}`);
+
     } catch (error) {
         console.error('❌ Error handling Instagram callback:', error);
         const returnUrl = req.session.instagram_auth_return || '/dashboard/settings#integrations';
@@ -162,7 +212,7 @@ async function setupInstagramWebhook(instagramAccountId, accessToken) {
     try {
         const webhookUrl = `${process.env.BASE_URL}/api/webhooks/instagram`;
         const verifyToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
-        
+
         // Subscribe to Instagram webhooks
         const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/subscribed_apps`, {
             subscribed_fields: 'comments,messages',
@@ -170,10 +220,10 @@ async function setupInstagramWebhook(instagramAccountId, accessToken) {
             callback_url: webhookUrl,
             verify_token: verifyToken
         });
-        
+
         console.log('✅ Instagram webhook subscription created:', response.data);
         return response.data;
-        
+
     } catch (error) {
         console.error('❌ Error setting up Instagram webhook:', error);
         throw error;
@@ -187,7 +237,7 @@ function verifyInstagramWebhook(req, res) {
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-    
+
     if (mode === 'subscribe' && token === process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN) {
         console.log('✅ Instagram webhook verified');
         res.status(200).send(challenge);
@@ -203,25 +253,25 @@ function verifyInstagramWebhook(req, res) {
 async function handleInstagramWebhook(req, res) {
     try {
         const body = req.body;
-        
+
         // Verify webhook signature
         const signature = req.headers['x-hub-signature-256'];
         if (!verifyWebhookSignature(JSON.stringify(body), signature)) {
             console.error('❌ Invalid Instagram webhook signature');
             return res.status(403).send('Forbidden');
         }
-        
+
         console.log('📨 Instagram webhook received:', JSON.stringify(body, null, 2));
-        
+
         // Process each entry
         for (const entry of body.entry || []) {
             for (const change of entry.changes || []) {
                 await processInstagramChange(change, entry.id);
             }
         }
-        
+
         res.status(200).send('OK');
-        
+
     } catch (error) {
         console.error('❌ Error handling Instagram webhook:', error);
         res.status(500).send('Error');
@@ -234,13 +284,13 @@ async function handleInstagramWebhook(req, res) {
 async function processInstagramChange(change, instagramAccountId) {
     try {
         const { field, value } = change;
-        
+
         if (field === 'comments') {
             await processInstagramComment(value, instagramAccountId);
         } else if (field === 'messages') {
             await processInstagramMessage(value, instagramAccountId);
         }
-        
+
     } catch (error) {
         console.error('❌ Error processing Instagram change:', error);
     }
@@ -254,27 +304,27 @@ async function processInstagramComment(commentData, instagramAccountId) {
         // Get social account from database
         const socialAccount = await socialQueries.getSocialAccount(null);
         const account = socialAccount.find(acc => acc.platform_account_id === instagramAccountId);
-        
+
         if (!account) {
             console.error('❌ Instagram account not found:', instagramAccountId);
             return;
         }
-        
+
         // Extract comment details
         const comment = commentData;
         const commentText = comment.text || '';
-        
+
         // Find matching keywords
         const matchingKeywords = await socialQueries.findMatchingKeywords(commentText, account.id);
-        
+
         if (matchingKeywords.length === 0) {
             console.log('ℹ️ No matching keywords for comment:', commentText);
             return;
         }
-        
+
         // Use the first matching keyword
         const keyword = matchingKeywords[0];
-        
+
         // Create interaction record
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
@@ -289,7 +339,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_created_at: comment.timestamp,
             raw_webhook_data: commentData
         });
-        
+
         // Send auto-response if configured
         if (keyword.send_auto_response && keyword.auto_response_message) {
             await sendInstagramDM(
@@ -299,14 +349,14 @@ async function processInstagramComment(commentData, instagramAccountId) {
                 interaction.id
             );
         }
-        
+
         // Capture user data if configured
         if (keyword.capture_user_data) {
             await captureInstagramUser(comment.from, keyword, interaction.id);
         }
-        
+
         console.log('✅ Instagram comment processed successfully');
-        
+
     } catch (error) {
         console.error('❌ Error processing Instagram comment:', error);
     }
@@ -322,7 +372,7 @@ async function sendInstagramDM(accessToken, recipientId, message, interactionId)
             message: { text: message },
             access_token: accessToken
         });
-        
+
         // Update interaction with response details
         await socialQueries.updateSocialInteraction(interactionId, {
             auto_response_sent: true,
@@ -330,10 +380,10 @@ async function sendInstagramDM(accessToken, recipientId, message, interactionId)
             auto_response_content: message,
             auto_response_id: response.data.message_id
         });
-        
+
         console.log('✅ Instagram DM sent successfully');
         return response.data;
-        
+
     } catch (error) {
         console.error('❌ Error sending Instagram DM:', error);
         throw error;
@@ -347,21 +397,21 @@ async function captureInstagramUser(userInfo, keyword, interactionId) {
     try {
         // Create or update user in KUTT system
         // This is a simplified version - you might want more sophisticated user matching
-        
+
         const userData = {
             first_name: userInfo.username, // Instagram doesn't provide real names
             acquisition_channel: `instagram_${keyword.keyword}`,
             // Add more fields as available
         };
-        
+
         // For now, we'll just update the interaction to mark user as captured
         await socialQueries.updateSocialInteraction(interactionId, {
             user_captured: true,
             captured_user_data: userInfo
         });
-        
+
         console.log('✅ Instagram user captured successfully');
-        
+
     } catch (error) {
         console.error('❌ Error capturing Instagram user:', error);
     }
@@ -372,12 +422,12 @@ async function captureInstagramUser(userInfo, keyword, interactionId) {
  */
 function verifyWebhookSignature(payload, signature) {
     if (!signature) return false;
-    
+
     const expectedSignature = 'sha256=' + crypto
         .createHmac('sha256', process.env.FACEBOOK_APP_SECRET)
         .update(payload)
         .digest('hex');
-    
+
     return crypto.timingSafeEqual(
         Buffer.from(signature),
         Buffer.from(expectedSignature)
@@ -392,7 +442,7 @@ async function getInstagramStatus(req, res) {
         const userId = req.user.id;
         const accounts = await socialQueries.getSocialAccounts(userId);
         const instagramAccounts = accounts.filter(acc => acc.platform === 'instagram');
-        
+
         res.json({
             success: true,
             connected: instagramAccounts.length > 0,
@@ -405,7 +455,7 @@ async function getInstagramStatus(req, res) {
                 connected_at: acc.connected_at
             }))
         });
-        
+
     } catch (error) {
         console.error('❌ Error getting Instagram status:', error);
         res.status(500).json({
@@ -423,14 +473,14 @@ async function disconnectInstagram(req, res) {
     try {
         const { accountId } = req.params;
         const userId = req.user.id;
-        
+
         await socialQueries.deleteSocialAccount(accountId, userId);
-        
+
         res.json({
             success: true,
             message: 'Instagram account disconnected successfully'
         });
-        
+
     } catch (error) {
         console.error('❌ Error disconnecting Instagram:', error);
         res.status(500).json({
