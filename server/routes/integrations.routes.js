@@ -50,18 +50,18 @@ router.get(
     "/keywords",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
-            const { social_account_id } = req.query;
-            
-            const keywords = await socialQueries.getKeywords(userId, social_account_id);
-            
+            const { social_account_id, event_id, keyword_type } = req.query;
+
+            const keywords = await socialQueries.getKeywords(userId, social_account_id, event_id, keyword_type);
+
             res.json({
                 success: true,
                 keywords: keywords
             });
-            
+
         } catch (error) {
             console.error('❌ Error fetching keywords:', error);
             res.status(500).json({
@@ -78,22 +78,22 @@ router.post(
     "/keywords",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const keywordData = {
                 ...req.body,
                 created_by_user_id: userId
             };
-            
+
             const keyword = await socialQueries.createKeyword(keywordData);
-            
+
             res.json({
                 success: true,
                 keyword: keyword,
                 message: 'Keyword created successfully'
             });
-            
+
         } catch (error) {
             console.error('❌ Error creating keyword:', error);
             res.status(500).json({
@@ -110,26 +110,26 @@ router.put(
     "/keywords/:keywordId",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const { keywordId } = req.params;
-            
+
             const keyword = await socialQueries.updateKeyword(keywordId, req.body, userId);
-            
+
             if (!keyword) {
                 return res.status(404).json({
                     success: false,
                     error: 'Keyword not found'
                 });
             }
-            
+
             res.json({
                 success: true,
                 keyword: keyword,
                 message: 'Keyword updated successfully'
             });
-            
+
         } catch (error) {
             console.error('❌ Error updating keyword:', error);
             res.status(500).json({
@@ -146,25 +146,25 @@ router.delete(
     "/keywords/:keywordId",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const { keywordId } = req.params;
-            
+
             const deleted = await socialQueries.deleteKeyword(keywordId, userId);
-            
+
             if (!deleted) {
                 return res.status(404).json({
                     success: false,
                     error: 'Keyword not found'
                 });
             }
-            
+
             res.json({
                 success: true,
                 message: 'Keyword deleted successfully'
             });
-            
+
         } catch (error) {
             console.error('❌ Error deleting keyword:', error);
             res.status(500).json({
@@ -185,7 +185,7 @@ router.get(
     "/interactions",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const {
@@ -198,11 +198,11 @@ router.get(
                 page = 1,
                 limit = 50
             } = req.query;
-            
+
             // Get user's social accounts to filter by
             const userAccounts = await socialQueries.getSocialAccounts(userId);
             const accountIds = userAccounts.map(acc => acc.id);
-            
+
             if (accountIds.length === 0) {
                 return res.json({
                     success: true,
@@ -210,7 +210,7 @@ router.get(
                     pagination: { page: 1, limit, total: 0, pages: 0 }
                 });
             }
-            
+
             const filters = {
                 social_account_id: social_account_id || accountIds,
                 interaction_type,
@@ -219,18 +219,18 @@ router.get(
                 date_from,
                 date_to
             };
-            
+
             const result = await socialQueries.getSocialInteractions(
                 filters,
                 parseInt(page),
                 parseInt(limit)
             );
-            
+
             res.json({
                 success: true,
                 ...result
             });
-            
+
         } catch (error) {
             console.error('❌ Error fetching interactions:', error);
             res.status(500).json({
@@ -251,18 +251,18 @@ router.get(
     "/stats",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const { date_from, date_to } = req.query;
-            
+
             const stats = await socialQueries.getIntegrationStats(userId, date_from, date_to);
-            
+
             res.json({
                 success: true,
                 stats: stats
             });
-            
+
         } catch (error) {
             console.error('❌ Error fetching integration stats:', error);
             res.status(500).json({
@@ -283,11 +283,11 @@ router.get(
     "/accounts",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const accounts = await socialQueries.getSocialAccounts(userId);
-            
+
             // Remove sensitive data before sending
             const safeAccounts = accounts.map(acc => ({
                 id: acc.id,
@@ -303,12 +303,12 @@ router.get(
                 connected_at: acc.connected_at,
                 last_sync_at: acc.last_sync_at
             }));
-            
+
             res.json({
                 success: true,
                 accounts: safeAccounts
             });
-            
+
         } catch (error) {
             console.error('❌ Error fetching social accounts:', error);
             res.status(500).json({
@@ -325,36 +325,70 @@ router.put(
     "/accounts/:accountId",
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             const userId = req.user.id;
             const { accountId } = req.params;
             const { is_active, webhook_configured } = req.body;
-            
+
             const account = await socialQueries.updateSocialAccount(
-                accountId,
-                { is_active, webhook_configured },
+                accountId, { is_active, webhook_configured },
                 userId
             );
-            
+
             if (!account) {
                 return res.status(404).json({
                     success: false,
                     error: 'Social media account not found'
                 });
             }
-            
+
             res.json({
                 success: true,
                 account: account,
                 message: 'Account updated successfully'
             });
-            
+
         } catch (error) {
             console.error('❌ Error updating social account:', error);
             res.status(500).json({
                 success: false,
                 error: 'Failed to update social media account',
+                message: error.message
+            });
+        }
+    })
+);
+
+/**
+ * SMS Configuration Routes
+ */
+
+// Get SMS configuration status
+router.get(
+    "/sms/status",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(async(req, res) => {
+        try {
+            // Check if Twilio is configured
+            const twilioConfigured = !!(
+                process.env.TWILIO_ACCOUNT_SID &&
+                process.env.TWILIO_AUTH_TOKEN &&
+                process.env.TWILIO_PHONE_NUMBER
+            );
+
+            res.json({
+                success: true,
+                configured: twilioConfigured,
+                phone_number: twilioConfigured ? process.env.TWILIO_PHONE_NUMBER : null
+            });
+
+        } catch (error) {
+            console.error('❌ Error checking SMS status:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to check SMS configuration',
                 message: error.message
             });
         }

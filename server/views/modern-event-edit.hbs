@@ -546,16 +546,173 @@
 
                     <!-- MESSAGING TAB CONTENT -->
                     <div class="tab-content p-6" data-tab-content="messaging">
-                        <div class="text-center py-12">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">Messaging</h3>
-                            <p class="mt-1 text-sm text-gray-500">Configure email templates, SMS messages, and notification settings.</p>
-                            <div class="mt-4">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    Coming Soon
-                                </span>
+                        <div class="space-y-8">
+                            <!-- Keywords Section Header -->
+                            <div class="border-b border-gray-200 pb-4">
+                                <h2 class="text-lg font-medium text-gray-900">Keyword Management</h2>
+                                <p class="mt-1 text-sm text-gray-500">Set up automated responses for Instagram comments/DMs and SMS messages when specific keywords are detected.</p>
+                            </div>
+
+                            <!-- Instagram Keywords Section -->
+                            <div class="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-6 w-6 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-lg font-medium text-gray-900">Instagram Keywords</h3>
+                                            <p class="text-sm text-gray-600">Trigger responses when users comment or DM these keywords</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span id="instagram-connection-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Checking...
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Instagram Keywords List -->
+                                <div id="instagram-keywords-container" class="space-y-3">
+                                    <!-- Keywords will be loaded here -->
+                                    <div id="instagram-keywords-loading" class="text-center py-4">
+                                        <svg class="animate-spin h-5 w-5 mx-auto text-purple-600" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p class="mt-2 text-sm text-gray-500">Loading keywords...</p>
+                                    </div>
+                                </div>
+
+                                <!-- Add Instagram Keyword -->
+                                <div id="instagram-add-keyword" class="mt-4 hidden">
+                                    <div class="flex items-center space-x-3">
+                                        <input type="text" id="instagram-keyword-input" placeholder="Enter keyword (e.g., RSVP, TICKETS)" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                        <input type="text" id="instagram-response-input" placeholder="Auto-response message (optional)" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                                        <button type="button" id="instagram-add-keyword-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] touch-target">
+                                            <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Add
+                                        </button>
+                                        <button type="button" id="instagram-cancel-keyword-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] touch-target">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Add Keyword Button -->
+                                <div id="instagram-add-button-container" class="mt-4">
+                                    <button type="button" id="instagram-show-add-keyword" class="inline-flex items-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-white hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] touch-target">
+                                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Add Instagram Keyword
+                                    </button>
+                                </div>
+
+                                <!-- Instagram Not Connected Message -->
+                                <div id="instagram-not-connected" class="hidden mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-yellow-800">Instagram Not Connected</h3>
+                                            <p class="mt-1 text-sm text-yellow-700">Connect your Instagram Business account in Settings > Integrations to manage keywords.</p>
+                                            <div class="mt-3">
+                                                <a href="/dashboard/settings#integrations" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                                    Go to Integrations
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SMS Keywords Section -->
+                            <div class="bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-lg p-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-lg font-medium text-gray-900">SMS Keywords</h3>
+                                            <p class="text-sm text-gray-600">Trigger responses when users text these keywords to your Twilio number</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span id="sms-connection-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            Checking...
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- SMS Keywords List -->
+                                <div id="sms-keywords-container" class="space-y-3">
+                                    <!-- Keywords will be loaded here -->
+                                    <div id="sms-keywords-loading" class="text-center py-4">
+                                        <svg class="animate-spin h-5 w-5 mx-auto text-green-600" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p class="mt-2 text-sm text-gray-500">Loading keywords...</p>
+                                    </div>
+                                </div>
+
+                                <!-- Add SMS Keyword -->
+                                <div id="sms-add-keyword" class="mt-4 hidden">
+                                    <div class="flex items-center space-x-3">
+                                        <input type="text" id="sms-keyword-input" placeholder="Enter keyword (e.g., RSVP, INFO)" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        <input type="text" id="sms-response-input" placeholder="Auto-response message (optional)" class="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                        <button type="button" id="sms-add-keyword-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 min-h-[44px] touch-target">
+                                            <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                            Add
+                                        </button>
+                                        <button type="button" id="sms-cancel-keyword-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 min-h-[44px] touch-target">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Add Keyword Button -->
+                                <div id="sms-add-button-container" class="mt-4">
+                                    <button type="button" id="sms-show-add-keyword" class="inline-flex items-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 min-h-[44px] touch-target">
+                                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Add SMS Keyword
+                                    </button>
+                                </div>
+
+                                <!-- SMS Not Configured Message -->
+                                <div id="sms-not-configured" class="hidden mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-yellow-800">SMS Not Configured</h3>
+                                            <p class="mt-1 text-sm text-yellow-700">Configure your Twilio settings to enable SMS keyword automation.</p>
+                                            <div class="mt-3">
+                                                <a href="/dashboard/settings#integrations" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                                    Configure SMS
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -5964,6 +6121,413 @@ document.addEventListener('DOMContentLoaded', function() {
                 initializeQRAnalytics();
             }, 500);
         }
+    }
+});
+</script>
+
+<!-- Keyword Management JavaScript -->
+<script>
+// Keyword Management System
+document.addEventListener('DOMContentLoaded', function() {
+    const eventId = window.location.pathname.split('/').pop();
+
+    // Instagram keyword elements
+    const instagramKeywordsContainer = document.getElementById('instagram-keywords-container');
+    const instagramKeywordsLoading = document.getElementById('instagram-keywords-loading');
+    const instagramConnectionStatus = document.getElementById('instagram-connection-status');
+    const instagramNotConnected = document.getElementById('instagram-not-connected');
+    const instagramAddKeyword = document.getElementById('instagram-add-keyword');
+    const instagramAddButtonContainer = document.getElementById('instagram-add-button-container');
+    const instagramShowAddKeyword = document.getElementById('instagram-show-add-keyword');
+    const instagramCancelKeyword = document.getElementById('instagram-cancel-keyword-btn');
+    const instagramAddKeywordBtn = document.getElementById('instagram-add-keyword-btn');
+    const instagramKeywordInput = document.getElementById('instagram-keyword-input');
+    const instagramResponseInput = document.getElementById('instagram-response-input');
+
+    // SMS keyword elements
+    const smsKeywordsContainer = document.getElementById('sms-keywords-container');
+    const smsKeywordsLoading = document.getElementById('sms-keywords-loading');
+    const smsConnectionStatus = document.getElementById('sms-connection-status');
+    const smsNotConfigured = document.getElementById('sms-not-configured');
+    const smsAddKeyword = document.getElementById('sms-add-keyword');
+    const smsAddButtonContainer = document.getElementById('sms-add-button-container');
+    const smsShowAddKeyword = document.getElementById('sms-show-add-keyword');
+    const smsCancelKeyword = document.getElementById('sms-cancel-keyword-btn');
+    const smsAddKeywordBtn = document.getElementById('sms-add-keyword-btn');
+    const smsKeywordInput = document.getElementById('sms-keyword-input');
+    const smsResponseInput = document.getElementById('sms-response-input');
+
+    // Initialize keyword management
+    initializeKeywordManagement();
+
+    async function initializeKeywordManagement() {
+        await checkInstagramConnection();
+        await checkSmsConfiguration();
+        await loadKeywords();
+    }
+
+    // Check Instagram connection status
+    async function checkInstagramConnection() {
+        try {
+            const response = await fetch('/api/integrations/instagram/status');
+            const data = await response.json();
+
+            if (data.success && data.connected && data.accounts.length > 0) {
+                instagramConnectionStatus.textContent = 'Connected';
+                instagramConnectionStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+                instagramNotConnected.classList.add('hidden');
+                instagramAddButtonContainer.classList.remove('hidden');
+            } else {
+                instagramConnectionStatus.textContent = 'Not Connected';
+                instagramConnectionStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+                instagramNotConnected.classList.remove('hidden');
+                instagramAddButtonContainer.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error checking Instagram connection:', error);
+            instagramConnectionStatus.textContent = 'Error';
+            instagramConnectionStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800';
+        }
+    }
+
+    // Check SMS configuration status
+    async function checkSmsConfiguration() {
+        try {
+            // Check if SMS is configured (you'll need to implement this endpoint)
+            const response = await fetch('/api/sms/status');
+            const data = await response.json();
+
+            if (data.success && data.configured) {
+                smsConnectionStatus.textContent = 'Configured';
+                smsConnectionStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+                smsNotConfigured.classList.add('hidden');
+                smsAddButtonContainer.classList.remove('hidden');
+            } else {
+                smsConnectionStatus.textContent = 'Not Configured';
+                smsConnectionStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+                smsNotConfigured.classList.remove('hidden');
+                smsAddButtonContainer.classList.add('hidden');
+            }
+        } catch (error) {
+            console.error('Error checking SMS configuration:', error);
+            smsConnectionStatus.textContent = 'Not Configured';
+            smsConnectionStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800';
+            smsNotConfigured.classList.remove('hidden');
+            smsAddButtonContainer.classList.add('hidden');
+        }
+    }
+
+    // Load keywords for this event
+    async function loadKeywords() {
+        try {
+            // Load Instagram keywords
+            const instagramResponse = await fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=instagram`);
+            const instagramData = await instagramResponse.json();
+
+            if (instagramData.success) {
+                displayKeywords(instagramData.keywords, 'instagram');
+            }
+
+            // Load SMS keywords
+            const smsResponse = await fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=sms`);
+            const smsData = await smsResponse.json();
+
+            if (smsData.success) {
+                displayKeywords(smsData.keywords, 'sms');
+            }
+
+        } catch (error) {
+            console.error('Error loading keywords:', error);
+        } finally {
+            instagramKeywordsLoading.classList.add('hidden');
+            smsKeywordsLoading.classList.add('hidden');
+        }
+    }
+
+    // Display keywords in the UI
+    function displayKeywords(keywords, type) {
+        const container = type === 'instagram' ? instagramKeywordsContainer : smsKeywordsContainer;
+        const loadingElement = type === 'instagram' ? instagramKeywordsLoading : smsKeywordsLoading;
+
+        // Clear loading state
+        loadingElement.classList.add('hidden');
+
+        // Clear existing keywords (except loading element)
+        const existingKeywords = container.querySelectorAll('.keyword-item');
+        existingKeywords.forEach(item => item.remove());
+
+        if (keywords.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'text-center py-4 text-gray-500 text-sm';
+            emptyState.textContent = `No ${type} keywords configured yet.`;
+            container.appendChild(emptyState);
+            return;
+        }
+
+        keywords.forEach(keyword => {
+            const keywordElement = createKeywordElement(keyword, type);
+            container.appendChild(keywordElement);
+        });
+    }
+
+    // Create keyword element
+    function createKeywordElement(keyword, type) {
+        const div = document.createElement('div');
+        div.className = 'keyword-item flex items-center justify-between p-3 bg-white bg-opacity-60 rounded-lg border border-gray-200';
+
+        const colorClass = type === 'instagram' ? 'text-purple-600' : 'text-green-600';
+        const bgColorClass = type === 'instagram' ? 'bg-purple-100' : 'bg-green-100';
+
+        div.innerHTML = `
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-3">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bgColorClass} ${colorClass}">
+                        ${keyword.keyword}
+                    </span>
+                    <span class="text-sm text-gray-600">
+                        ${keyword.total_triggers || 0} triggers
+                    </span>
+                    ${keyword.auto_response_message ? `
+                        <span class="text-xs text-gray-500 truncate max-w-xs" title="${keyword.auto_response_message}">
+                            "${keyword.auto_response_message}"
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="flex-shrink-0">
+                <button type="button" class="delete-keyword-btn inline-flex items-center p-1.5 border border-transparent text-xs font-medium rounded text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500" data-keyword-id="${keyword.id}" data-keyword-text="${keyword.keyword}">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        // Add delete functionality
+        const deleteBtn = div.querySelector('.delete-keyword-btn');
+        deleteBtn.addEventListener('click', () => deleteKeyword(keyword.id, keyword.keyword, type));
+
+        return div;
+    }
+
+    // Show add keyword form
+    function showAddKeywordForm(type) {
+        if (type === 'instagram') {
+            instagramAddKeyword.classList.remove('hidden');
+            instagramAddButtonContainer.classList.add('hidden');
+            instagramKeywordInput.focus();
+        } else {
+            smsAddKeyword.classList.remove('hidden');
+            smsAddButtonContainer.classList.add('hidden');
+            smsKeywordInput.focus();
+        }
+    }
+
+    // Hide add keyword form
+    function hideAddKeywordForm(type) {
+        if (type === 'instagram') {
+            instagramAddKeyword.classList.add('hidden');
+            instagramAddButtonContainer.classList.remove('hidden');
+            instagramKeywordInput.value = '';
+            instagramResponseInput.value = '';
+        } else {
+            smsAddKeyword.classList.add('hidden');
+            smsAddButtonContainer.classList.remove('hidden');
+            smsKeywordInput.value = '';
+            smsResponseInput.value = '';
+        }
+    }
+
+    // Add keyword
+    async function addKeyword(type) {
+        const keywordInput = type === 'instagram' ? instagramKeywordInput : smsKeywordInput;
+        const responseInput = type === 'instagram' ? instagramResponseInput : smsResponseInput;
+        const addBtn = type === 'instagram' ? instagramAddKeywordBtn : smsAddKeywordBtn;
+
+        const keyword = keywordInput.value.trim();
+        const response = responseInput.value.trim();
+
+        if (!keyword) {
+            showNotification('Please enter a keyword', 'error');
+            return;
+        }
+
+        // Show loading state
+        addBtn.disabled = true;
+        addBtn.innerHTML = `
+            <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Adding...
+        `;
+
+        try {
+            const response = await fetch('/api/integrations/keywords', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    keyword: keyword,
+                    keyword_type: type,
+                    event_id: eventId,
+                    auto_response_message: response || null,
+                    send_auto_response: !!response,
+                    is_active: true
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} keyword added successfully!`, 'success');
+                hideAddKeywordForm(type);
+                await loadKeywords(); // Reload keywords
+            } else {
+                throw new Error(data.error || 'Failed to add keyword');
+            }
+
+        } catch (error) {
+            console.error('Error adding keyword:', error);
+            showNotification('Failed to add keyword: ' + error.message, 'error');
+        } finally {
+            // Reset button state
+            addBtn.disabled = false;
+            addBtn.innerHTML = `
+                <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                </svg>
+                Add
+            `;
+        }
+    }
+
+    // Delete keyword
+    async function deleteKeyword(keywordId, keywordText, type) {
+        if (!confirm(`Are you sure you want to delete the keyword "${keywordText}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/integrations/keywords/${keywordId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('Keyword deleted successfully', 'success');
+                await loadKeywords(); // Reload keywords
+            } else {
+                throw new Error(data.error || 'Failed to delete keyword');
+            }
+
+        } catch (error) {
+            console.error('Error deleting keyword:', error);
+            showNotification('Failed to delete keyword: ' + error.message, 'error');
+        }
+    }
+
+    // Event listeners
+    if (instagramShowAddKeyword) {
+        instagramShowAddKeyword.addEventListener('click', () => showAddKeywordForm('instagram'));
+    }
+
+    if (instagramCancelKeyword) {
+        instagramCancelKeyword.addEventListener('click', () => hideAddKeywordForm('instagram'));
+    }
+
+    if (instagramAddKeywordBtn) {
+        instagramAddKeywordBtn.addEventListener('click', () => addKeyword('instagram'));
+    }
+
+    if (smsShowAddKeyword) {
+        smsShowAddKeyword.addEventListener('click', () => showAddKeywordForm('sms'));
+    }
+
+    if (smsCancelKeyword) {
+        smsCancelKeyword.addEventListener('click', () => hideAddKeywordForm('sms'));
+    }
+
+    if (smsAddKeywordBtn) {
+        smsAddKeywordBtn.addEventListener('click', () => addKeyword('sms'));
+    }
+
+    // Enter key support for adding keywords
+    if (instagramKeywordInput) {
+        instagramKeywordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addKeyword('instagram');
+            }
+        });
+    }
+
+    if (smsKeywordInput) {
+        smsKeywordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addKeyword('sms');
+            }
+        });
+    }
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden transform transition-all duration-300 translate-x-full`;
+
+        const bgColor = type === 'success' ? 'bg-green-50' : type === 'error' ? 'bg-red-50' : 'bg-blue-50';
+        const textColor = type === 'success' ? 'text-green-800' : type === 'error' ? 'text-red-800' : 'text-blue-800';
+        const iconColor = type === 'success' ? 'text-green-400' : type === 'error' ? 'text-red-400' : 'text-blue-400';
+        const borderColor = type === 'success' ? 'border-green-200' : type === 'error' ? 'border-red-200' : 'border-blue-200';
+
+        notification.innerHTML = `
+            <div class="border-l-4 ${borderColor} ${bgColor} p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 ${iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            ${type === 'success' ?
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />' :
+                                type === 'error' ?
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />' :
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+                            }
+                        </svg>
+                    </div>
+                    <div class="ml-3 w-0 flex-1">
+                        <p class="text-sm font-medium ${textColor} leading-relaxed">${message}</p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0 flex">
+                        <button class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 p-1" onclick="this.closest('.fixed').remove()">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
     }
 });
 </script>

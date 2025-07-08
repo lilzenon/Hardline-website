@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const asyncHandler = require("../utils/asyncHandler");
 const instagramHandler = require("../handlers/instagram-integration.handler");
+const smsHandler = require("../handlers/sms-integration.handler");
 
 const router = Router();
 
@@ -33,7 +34,7 @@ router.get(
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
         const challenge = req.query['hub.challenge'];
-        
+
         if (mode === 'subscribe' && token === process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN) {
             console.log('✅ Facebook webhook verified');
             res.status(200).send(challenge);
@@ -55,6 +56,18 @@ router.post(
 );
 
 /**
+ * SMS/Twilio Webhook Routes
+ */
+
+// SMS webhook for incoming messages
+router.post(
+    "/sms",
+    // Optional: Add Twilio signature verification middleware
+    // smsHandler.verifyTwilioSignature,
+    asyncHandler(smsHandler.handleSmsWebhook)
+);
+
+/**
  * Generic webhook health check
  */
 router.get(
@@ -72,6 +85,9 @@ router.get(
                 facebook: {
                     verification: "/api/webhooks/facebook (GET)",
                     events: "/api/webhooks/facebook (POST)"
+                },
+                sms: {
+                    events: "/api/webhooks/sms (POST)"
                 }
             }
         });

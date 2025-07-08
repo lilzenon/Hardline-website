@@ -315,7 +315,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
         const commentText = comment.text || '';
 
         // Find matching keywords
-        const matchingKeywords = await socialQueries.findMatchingKeywords(commentText, account.id);
+        const matchingKeywords = await socialQueries.findMatchingKeywords(commentText, 'instagram', account.id);
 
         if (matchingKeywords.length === 0) {
             console.log('ℹ️ No matching keywords for comment:', commentText);
@@ -331,9 +331,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_interaction_id: comment.id,
             interaction_type: 'comment',
             content: commentText,
-            post_id: comment.media?.id,
-            platform_user_id: comment.from?.id,
-            platform_username: comment.from?.username,
+            post_id: comment.media ? .id,
+            platform_user_id: comment.from ? .id,
+            platform_username: comment.from ? .username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: comment.timestamp,
