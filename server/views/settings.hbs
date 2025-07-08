@@ -379,12 +379,143 @@
                             <div class="px-4 py-5 sm:p-6">
                                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Integrations</h3>
                                 <p class="text-sm text-gray-500 mb-6">Connect with third-party services and APIs</p>
-                                <div class="text-center py-12">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                    </svg>
-                                    <h3 class="mt-2 text-sm font-medium text-gray-900">Coming Soon</h3>
-                                    <p class="mt-1 text-sm text-gray-500">Integration settings will be available in a future update.</p>
+
+                                <!-- Instagram Integration Card -->
+                                <div class="mb-8">
+                                    <div class="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0">
+                                                    <svg class="h-8 w-8 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <h4 class="text-lg font-medium text-gray-900">Instagram Business</h4>
+                                                    <p class="text-sm text-gray-600">Automate signups from Instagram comments and DMs</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <span id="instagram-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    Not Connected
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                                <div class="flex items-center text-gray-600">
+                                                    <svg class="h-4 w-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Custom keywords
+                                                </div>
+                                                <div class="flex items-center text-gray-600">
+                                                    <svg class="h-4 w-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Auto DM responses
+                                                </div>
+                                                <div class="flex items-center text-gray-600">
+                                                    <svg class="h-4 w-4 mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Comment tracking
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-6 flex space-x-3">
+                                            <button id="connect-instagram-btn" type="button" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] touch-target">
+                                                <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Connect Instagram
+                                            </button>
+                                            <button id="instagram-settings-btn" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] touch-target disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                </svg>
+                                                Manage Keywords
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Facebook Integration Card -->
+                                <div class="mb-8">
+                                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0">
+                                                    <svg class="h-8 w-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+                                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                                    </svg>
+                                                </div>
+                                                <div class="ml-4">
+                                                    <h4 class="text-lg font-medium text-gray-900">Facebook Pages</h4>
+                                                    <p class="text-sm text-gray-600">Connect Facebook Pages for comment automation</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <span id="facebook-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                    Coming Soon
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                                <div class="flex items-center text-gray-400">
+                                                    <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Page comments
+                                                </div>
+                                                <div class="flex items-center text-gray-400">
+                                                    <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Auto responses
+                                                </div>
+                                                <div class="flex items-center text-gray-400">
+                                                    <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                    Lead capture
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-6">
+                                            <button type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed min-h-[44px] touch-target" disabled>
+                                                <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                                </svg>
+                                                Coming Soon
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Integration Stats -->
+                                <div class="bg-gray-50 rounded-lg p-6">
+                                    <h4 class="text-lg font-medium text-gray-900 mb-4">Integration Activity</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-gray-900" id="total-captured">0</div>
+                                            <div class="text-sm text-gray-500">Users Captured</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-gray-900" id="total-responses">0</div>
+                                            <div class="text-sm text-gray-500">Auto Responses</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-2xl font-bold text-gray-900" id="active-keywords">0</div>
+                                            <div class="text-sm text-gray-500">Active Keywords</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -395,6 +526,9 @@
         </div>
     </div>
 </div>
+
+{{!-- Include Keyword Management Modal --}}
+{{> keyword-management-modal}}
 
 <!-- Modern Dashboard JavaScript for Settings -->
 <script>
@@ -649,6 +783,165 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return isValid;
     }
+
+    // Instagram Integration functionality
+    const connectInstagramBtn = document.getElementById('connect-instagram-btn');
+    const instagramSettingsBtn = document.getElementById('instagram-settings-btn');
+    const instagramStatus = document.getElementById('instagram-status');
+
+    // Load Instagram status on page load
+    async function loadInstagramStatus() {
+        try {
+            const response = await fetch('/api/integrations/instagram/status');
+            const data = await response.json();
+
+            if (data.success && data.connected) {
+                instagramStatus.textContent = 'Connected';
+                instagramStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800';
+                connectInstagramBtn.textContent = 'Reconnect';
+                instagramSettingsBtn.disabled = false;
+                instagramSettingsBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+            } else {
+                instagramStatus.textContent = 'Not Connected';
+                instagramStatus.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800';
+                connectInstagramBtn.textContent = 'Connect Instagram';
+                instagramSettingsBtn.disabled = true;
+                instagramSettingsBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+            }
+        } catch (error) {
+            console.error('❌ Error loading Instagram status:', error);
+        }
+    }
+
+    // Connect Instagram button click
+    if (connectInstagramBtn) {
+        connectInstagramBtn.addEventListener('click', function() {
+            const returnUrl = encodeURIComponent(window.location.href);
+            window.location.href = `/api/integrations/instagram/auth?returnUrl=${returnUrl}`;
+        });
+    }
+
+    // Instagram settings button click
+    if (instagramSettingsBtn) {
+        instagramSettingsBtn.addEventListener('click', function() {
+            openKeywordModal();
+        });
+    }
+
+    // Load integration stats
+    async function loadIntegrationStats() {
+        try {
+            const response = await fetch('/api/integrations/stats');
+            const data = await response.json();
+
+            if (data.success) {
+                document.getElementById('total-captured').textContent = data.stats.total_captured || 0;
+                document.getElementById('total-responses').textContent = data.stats.total_responses || 0;
+                document.getElementById('active-keywords').textContent = data.stats.active_keywords || 0;
+            }
+        } catch (error) {
+            console.error('❌ Error loading integration stats:', error);
+        }
+    }
+
+    // Check for URL parameters (success/error messages)
+    function checkUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const success = urlParams.get('success');
+        const error = urlParams.get('error');
+
+        if (success === 'instagram_connected') {
+            showNotification('Instagram account connected successfully!', 'success');
+            loadInstagramStatus();
+            loadIntegrationStats();
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        } else if (error) {
+            let errorMessage = 'An error occurred';
+            switch (error) {
+                case 'oauth_failed':
+                    errorMessage = 'Instagram authentication failed. Please try again.';
+                    break;
+                case 'no_business_accounts':
+                    errorMessage = 'No Instagram Business accounts found. Please ensure your Instagram account is set to Business or Creator.';
+                    break;
+                case 'callback_failed':
+                    errorMessage = 'Failed to complete Instagram connection. Please try again.';
+                    break;
+            }
+            showNotification(errorMessage, 'error');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        }
+    }
+
+    // Show notification function
+    function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden`;
+
+        const bgColor = type === 'success' ? 'bg-green-50' : type === 'error' ? 'bg-red-50' : 'bg-blue-50';
+        const textColor = type === 'success' ? 'text-green-800' : type === 'error' ? 'text-red-800' : 'text-blue-800';
+        const iconColor = type === 'success' ? 'text-green-400' : type === 'error' ? 'text-red-400' : 'text-blue-400';
+
+        notification.innerHTML = `
+            <div class="p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 ${iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            ${type === 'success' ?
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />' :
+                                type === 'error' ?
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />' :
+                                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+                            }
+                        </svg>
+                    </div>
+                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                        <p class="text-sm font-medium ${textColor}">${message}</p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0 flex">
+                        <button class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="this.parentElement.parentElement.parentElement.parentElement.remove()">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+
+    // Initialize integrations functionality when on integrations section
+    if (window.location.hash === '#integrations') {
+        loadInstagramStatus();
+        loadIntegrationStats();
+    }
+
+    // Load when switching to integrations section
+    const integrationsNavItem = document.querySelector('[data-section="integrations"]');
+    if (integrationsNavItem) {
+        integrationsNavItem.addEventListener('click', function() {
+            setTimeout(() => {
+                loadInstagramStatus();
+                loadIntegrationStats();
+            }, 100);
+        });
+    }
+
+    // Check URL params on page load
+    checkUrlParams();
 
     function showMessage(message, type) {
         const container = document.getElementById('message-container');

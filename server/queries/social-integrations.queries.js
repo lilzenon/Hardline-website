@@ -1,0 +1,359 @@
+const knex = require("../knex");
+const { CustomError } = require("../utils");
+
+/**
+ * Social Media Accounts Queries
+ */
+
+// Get all social media accounts for a user
+async function getSocialAccounts(userId) {
+    return await knex("social_media_accounts")
+        .where("connected_by_user_id", userId)
+        .orderBy("created_at", "desc");
+}
+
+// Get a specific social media account
+async function getSocialAccount(accountId, userId = null) {
+    const query = knex("social_media_accounts")
+        .where("id", accountId);
+    
+    if (userId) {
+        query.where("connected_by_user_id", userId);
+    }
+    
+    return await query.first();
+}
+
+// Create a new social media account connection
+async function createSocialAccount(data) {
+    const [account] = await knex("social_media_accounts")
+        .insert({
+            platform: data.platform,
+            platform_account_id: data.platform_account_id,
+            platform_username: data.platform_username,
+            platform_name: data.platform_name,
+            profile_picture_url: data.profile_picture_url,
+            access_token: data.access_token, // Should be encrypted before storing
+            refresh_token: data.refresh_token,
+            token_expires_at: data.token_expires_at,
+            permissions: JSON.stringify(data.permissions || []),
+            account_type: data.account_type,
+            account_metadata: JSON.stringify(data.account_metadata || {}),
+            connected_by_user_id: data.connected_by_user_id,
+            follower_count: data.follower_count
+        })
+        .returning("*");
+    
+    return account;
+}
+
+// Update social media account
+async function updateSocialAccount(accountId, data, userId = null) {
+    const query = knex("social_media_accounts")
+        .where("id", accountId);
+    
+    if (userId) {
+        query.where("connected_by_user_id", userId);
+    }
+    
+    const updateData = {
+        ...data,
+        updated_at: knex.fn.now()
+    };
+    
+    // Handle JSON fields
+    if (data.permissions) updateData.permissions = JSON.stringify(data.permissions);
+    if (data.account_metadata) updateData.account_metadata = JSON.stringify(data.account_metadata);
+    
+    const [account] = await query
+        .update(updateData)
+        .returning("*");
+    
+    return account;
+}
+
+// Delete social media account
+async function deleteSocialAccount(accountId, userId) {
+    return await knex("social_media_accounts")
+        .where("id", accountId)
+        .where("connected_by_user_id", userId)
+        .del();
+}
+
+/**
+ * Keywords Queries
+ */
+
+// Get all keywords for a user or specific social account
+async function getKeywords(userId, socialAccountId = null) {
+    const query = knex("social_keywords")
+        .where("created_by_user_id", userId);
+    
+    if (socialAccountId) {
+        query.where("social_account_id", socialAccountId);
+    }
+    
+    return await query.orderBy("created_at", "desc");
+}
+
+// Get a specific keyword
+async function getKeyword(keywordId, userId = null) {
+    const query = knex("social_keywords")
+        .where("id", keywordId);
+    
+    if (userId) {
+        query.where("created_by_user_id", userId);
+    }
+    
+    return await query.first();
+}
+
+// Create a new keyword
+async function createKeyword(data) {
+    const [keyword] = await knex("social_keywords")
+        .insert({
+            keyword: data.keyword,
+            description: data.description,
+            is_active: data.is_active !== undefined ? data.is_active : true,
+            case_sensitive: data.case_sensitive || false,
+            exact_match: data.exact_match || false,
+            auto_response_message: data.auto_response_message,
+            send_auto_response: data.send_auto_response !== undefined ? data.send_auto_response : true,
+            response_delay_seconds: data.response_delay_seconds || 0,
+            social_account_id: data.social_account_id,
+            target_post_types: JSON.stringify(data.target_post_types || []),
+            target_hashtags: JSON.stringify(data.target_hashtags || []),
+            capture_user_data: data.capture_user_data !== undefined ? data.capture_user_data : true,
+            signup_type: data.signup_type || 'general',
+            drop_id: data.drop_id,
+            custom_fields: JSON.stringify(data.custom_fields || {}),
+            created_by_user_id: data.created_by_user_id
+        })
+        .returning("*");
+    
+    return keyword;
+}
+
+// Update keyword
+async function updateKeyword(keywordId, data, userId = null) {
+    const query = knex("social_keywords")
+        .where("id", keywordId);
+    
+    if (userId) {
+        query.where("created_by_user_id", userId);
+    }
+    
+    const updateData = {
+        ...data,
+        updated_at: knex.fn.now()
+    };
+    
+    // Handle JSON fields
+    if (data.target_post_types) updateData.target_post_types = JSON.stringify(data.target_post_types);
+    if (data.target_hashtags) updateData.target_hashtags = JSON.stringify(data.target_hashtags);
+    if (data.custom_fields) updateData.custom_fields = JSON.stringify(data.custom_fields);
+    
+    const [keyword] = await query
+        .update(updateData)
+        .returning("*");
+    
+    return keyword;
+}
+
+// Delete keyword
+async function deleteKeyword(keywordId, userId) {
+    return await knex("social_keywords")
+        .where("id", keywordId)
+        .where("created_by_user_id", userId)
+        .del();
+}
+
+// Find matching keywords for a given text and social account
+async function findMatchingKeywords(text, socialAccountId) {
+    const keywords = await knex("social_keywords")
+        .where("social_account_id", socialAccountId)
+        .where("is_active", true);
+    
+    const matches = [];
+    const lowerText = text.toLowerCase();
+    
+    for (const keyword of keywords) {
+        const keywordText = keyword.case_sensitive ? keyword.keyword : keyword.keyword.toLowerCase();
+        const searchText = keyword.case_sensitive ? text : lowerText;
+        
+        let isMatch = false;
+        if (keyword.exact_match) {
+            isMatch = searchText === keywordText;
+        } else {
+            isMatch = searchText.includes(keywordText);
+        }
+        
+        if (isMatch) {
+            matches.push(keyword);
+        }
+    }
+    
+    return matches;
+}
+
+/**
+ * Social Interactions Queries
+ */
+
+// Create a new social interaction
+async function createSocialInteraction(data) {
+    const [interaction] = await knex("social_interactions")
+        .insert({
+            social_account_id: data.social_account_id,
+            platform_interaction_id: data.platform_interaction_id,
+            interaction_type: data.interaction_type,
+            content: data.content,
+            post_id: data.post_id,
+            post_url: data.post_url,
+            media_attachments: JSON.stringify(data.media_attachments || []),
+            platform_user_id: data.platform_user_id,
+            platform_username: data.platform_username,
+            platform_display_name: data.platform_display_name,
+            platform_profile_picture: data.platform_profile_picture,
+            platform_follower_count: data.platform_follower_count,
+            matched_keyword_id: data.matched_keyword_id,
+            matched_keyword_text: data.matched_keyword_text,
+            platform_created_at: data.platform_created_at,
+            raw_webhook_data: JSON.stringify(data.raw_webhook_data || {})
+        })
+        .returning("*");
+    
+    return interaction;
+}
+
+// Update social interaction
+async function updateSocialInteraction(interactionId, data) {
+    const updateData = {
+        ...data,
+        updated_at: knex.fn.now()
+    };
+    
+    // Handle JSON fields
+    if (data.media_attachments) updateData.media_attachments = JSON.stringify(data.media_attachments);
+    if (data.captured_user_data) updateData.captured_user_data = JSON.stringify(data.captured_user_data);
+    if (data.raw_webhook_data) updateData.raw_webhook_data = JSON.stringify(data.raw_webhook_data);
+    
+    const [interaction] = await knex("social_interactions")
+        .where("id", interactionId)
+        .update(updateData)
+        .returning("*");
+    
+    return interaction;
+}
+
+// Get social interactions with pagination
+async function getSocialInteractions(filters = {}, page = 1, limit = 50) {
+    const query = knex("social_interactions")
+        .leftJoin("social_media_accounts", "social_interactions.social_account_id", "social_media_accounts.id")
+        .leftJoin("social_keywords", "social_interactions.matched_keyword_id", "social_keywords.id")
+        .select(
+            "social_interactions.*",
+            "social_media_accounts.platform",
+            "social_media_accounts.platform_username as account_username",
+            "social_keywords.keyword as matched_keyword"
+        );
+    
+    // Apply filters
+    if (filters.social_account_id) {
+        query.where("social_interactions.social_account_id", filters.social_account_id);
+    }
+    if (filters.interaction_type) {
+        query.where("social_interactions.interaction_type", filters.interaction_type);
+    }
+    if (filters.processing_status) {
+        query.where("social_interactions.processing_status", filters.processing_status);
+    }
+    if (filters.user_captured !== undefined) {
+        query.where("social_interactions.user_captured", filters.user_captured);
+    }
+    if (filters.date_from) {
+        query.where("social_interactions.created_at", ">=", filters.date_from);
+    }
+    if (filters.date_to) {
+        query.where("social_interactions.created_at", "<=", filters.date_to);
+    }
+    
+    // Get total count
+    const totalQuery = query.clone();
+    const [{ count }] = await totalQuery.count("social_interactions.id as count");
+    
+    // Apply pagination
+    const offset = (page - 1) * limit;
+    const interactions = await query
+        .orderBy("social_interactions.created_at", "desc")
+        .limit(limit)
+        .offset(offset);
+    
+    return {
+        interactions,
+        pagination: {
+            page,
+            limit,
+            total: parseInt(count),
+            pages: Math.ceil(count / limit)
+        }
+    };
+}
+
+/**
+ * Integration Statistics
+ */
+
+// Get integration stats for dashboard
+async function getIntegrationStats(userId, dateFrom = null, dateTo = null) {
+    const baseQuery = knex("social_interactions")
+        .join("social_media_accounts", "social_interactions.social_account_id", "social_media_accounts.id")
+        .where("social_media_accounts.connected_by_user_id", userId);
+    
+    if (dateFrom) baseQuery.where("social_interactions.created_at", ">=", dateFrom);
+    if (dateTo) baseQuery.where("social_interactions.created_at", "<=", dateTo);
+    
+    const [
+        totalCaptured,
+        totalResponses,
+        activeKeywords,
+        totalInteractions
+    ] = await Promise.all([
+        baseQuery.clone().where("user_captured", true).count("* as count").first(),
+        baseQuery.clone().where("auto_response_sent", true).count("* as count").first(),
+        knex("social_keywords").where("created_by_user_id", userId).where("is_active", true).count("* as count").first(),
+        baseQuery.clone().count("* as count").first()
+    ]);
+    
+    return {
+        total_captured: parseInt(totalCaptured.count),
+        total_responses: parseInt(totalResponses.count),
+        active_keywords: parseInt(activeKeywords.count),
+        total_interactions: parseInt(totalInteractions.count)
+    };
+}
+
+module.exports = {
+    // Social Accounts
+    getSocialAccounts,
+    getSocialAccount,
+    createSocialAccount,
+    updateSocialAccount,
+    deleteSocialAccount,
+    
+    // Keywords
+    getKeywords,
+    getKeyword,
+    createKeyword,
+    updateKeyword,
+    deleteKeyword,
+    findMatchingKeywords,
+    
+    // Interactions
+    createSocialInteraction,
+    updateSocialInteraction,
+    getSocialInteractions,
+    
+    // Stats
+    getIntegrationStats
+};

@@ -18,6 +18,8 @@ const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
 const sessionAdmin = require("./admin/session-admin.routes");
 const privacy = require("./privacy.routes");
+const integrations = require("./integrations.routes");
+const webhooks = require("./webhooks.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -41,6 +43,8 @@ apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);
 apiRouter.use("/privacy", privacy);
+apiRouter.use("/integrations", integrations);
+apiRouter.use("/webhooks", webhooks);
 
 module.exports = {
     api: apiRouter,
