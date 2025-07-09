@@ -122,7 +122,7 @@ async function handleInstagramCallback(req, res) {
             }
         });
 
-        console.log('📄 Found pages:', pagesResponse.data.data ? .length || 0);
+        console.log('📄 Found pages:', pagesResponse.data.data?.length || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
@@ -165,7 +165,7 @@ async function handleInstagramCallback(req, res) {
                 const availablePages = pagesResponse.data.data.map(page => ({
                     name: page.name,
                     has_instagram: !!page.instagram_business_account,
-                    instagram_type: page.instagram_business_account ? .account_type
+                    instagram_type: page.instagram_business_account?.account_type
                 }));
                 console.log('📋 Available pages:', availablePages);
 
