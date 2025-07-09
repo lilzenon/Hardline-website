@@ -536,6 +536,8 @@ async function processInstagramChange(change, instagramAccountId) {
             await processInstagramComment(value, instagramAccountId);
         } else if (field === 'messages') {
             await processInstagramMessage(value, instagramAccountId);
+        } else {
+            console.log(`ℹ️ Unhandled webhook field: ${field}`);
         }
 
     } catch (error) {
@@ -613,6 +615,78 @@ async function processInstagramComment(commentData, instagramAccountId) {
 
     } catch (error) {
         console.error('❌ Error processing Instagram comment:', error);
+    }
+}
+
+/**
+ * Process Instagram message/DM
+ */
+async function processInstagramMessage(messageData, instagramAccountId) {
+    try {
+        console.log(`🔍 Processing Instagram message for account: ${instagramAccountId}`);
+
+        // Get all social accounts and find the Instagram one
+        const socialAccounts = await knex("social_media_accounts")
+            .where("platform", "instagram")
+            .where("platform_account_id", instagramAccountId);
+
+        const account = socialAccounts && socialAccounts[0];
+
+        if (!account) {
+            console.error(`❌ Instagram account not found: ${instagramAccountId} (${socialAccounts && socialAccounts.length || 0} accounts checked)`);
+            return;
+        }
+
+        console.log(`✅ Found Instagram account: ${account.platform_account_id}`);
+
+        // Extract message details
+        const message = messageData;
+        const messageText = message.text || '';
+
+        // Find matching keywords
+        const matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', account.id);
+
+        if (matchingKeywords.length === 0) {
+            console.log('ℹ️ No matching keywords for message:', messageText);
+            return;
+        }
+
+        // Use the first matching keyword
+        const keyword = matchingKeywords[0];
+
+        // Create interaction record
+        const interaction = await socialQueries.createSocialInteraction({
+            social_account_id: account.id,
+            platform_interaction_id: message.id,
+            interaction_type: 'message',
+            content: messageText,
+            platform_user_id: message.from && message.from.id,
+            platform_username: message.from && message.from.username,
+            matched_keyword_id: keyword.id,
+            matched_keyword_text: keyword.keyword,
+            platform_created_at: message.timestamp,
+            raw_webhook_data: messageData
+        });
+
+        // Send auto-response if configured
+        if (keyword.send_auto_response && keyword.auto_response_message) {
+            await sendInstagramDM(
+                account.access_token,
+                message.from.id,
+                keyword.auto_response_message,
+                interaction.id
+            );
+        }
+
+        // Capture user data if configured
+        if (keyword.capture_user_data) {
+            await captureInstagramUser(message.from, keyword, interaction.id);
+        }
+
+        console.log('✅ Instagram message processed successfully');
+
+    } catch (error) {
+        console.error('❌ Error processing Instagram message:', error);
     }
 }
 
