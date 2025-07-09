@@ -430,6 +430,12 @@ async function setupInstagramWebhook(pageId, instagramAccountId, accessToken) {
  * Handle Instagram webhook verification
  */
 function verifyInstagramWebhook(req, res) {
+    console.log('🔍 Instagram webhook verification request received:');
+    console.log('🔍 Method:', req.method);
+    console.log('🔍 URL:', req.url);
+    console.log('🔍 Full query object:', JSON.stringify(req.query, null, 2));
+    console.log('🔍 Query keys:', Object.keys(req.query));
+
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
