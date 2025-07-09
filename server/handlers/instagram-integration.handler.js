@@ -9,7 +9,7 @@ const userQueries = require('../queries/user.queries');
  * Handles Instagram Business Account integration, webhooks, and automation
  */
 
-const INSTAGRAM_API_BASE = 'https://graph.facebook.com/v18.0';
+const INSTAGRAM_API_BASE = 'https://graph.facebook.com/v23.0';
 
 /**
  * Initialize Instagram OAuth flow
@@ -58,7 +58,7 @@ async function initiateInstagramAuth(req, res) {
 
         // Use Facebook OAuth for Instagram Business API access
         // This is the correct flow - Instagram Business API uses Facebook's OAuth
-        const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        const authUrl = `https://www.facebook.com/v23.0/dialog/oauth?` +
             `client_id=${process.env.FACEBOOK_APP_ID}&` +
             `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_REDIRECT_URI)}&` +
             `scope=${encodeURIComponent(scopes)}&` +
@@ -187,7 +187,7 @@ async function handleInstagramCallback(req, res) {
 
         let tokenResponse;
         try {
-            tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
+            tokenResponse = await axios.post('https://graph.facebook.com/v23.0/oauth/access_token', {
                 client_id: process.env.FACEBOOK_APP_ID,
                 client_secret: process.env.FACEBOOK_APP_SECRET,
                 redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
@@ -239,12 +239,44 @@ async function handleInstagramCallback(req, res) {
 
         // Get user's Facebook pages (which include Instagram Business accounts)
         console.log('🔍 Fetching Facebook pages with Instagram Business accounts...');
-        const pagesResponse = await axios.get(`${INSTAGRAM_API_BASE}/me/accounts`, {
-            params: {
-                access_token: access_token,
-                fields: 'id,name,instagram_business_account{id,username,account_type}'
+
+        let pagesResponse;
+        try {
+            // Updated for Graph API v23.0 - removed account_type field as it's no longer available
+            pagesResponse = await axios.get(`https://graph.facebook.com/v23.0/me/accounts`, {
+                params: {
+                    access_token: access_token,
+                    fields: 'id,name,instagram_business_account{id,username,name,profile_picture_url,followers_count}'
+                }
+            });
+            console.log('✅ Successfully fetched Facebook pages');
+        } catch (pagesError) {
+            console.error('❌ Facebook Graph API pages request failed:');
+            console.error('❌ Status:', pagesError.response && pagesError.response.status);
+            console.error('❌ Error Data:', JSON.stringify(pagesError.response && pagesError.response.data, null, 2));
+
+            let errorType = 'api_error';
+            let errorMessage = 'Failed to fetch Facebook pages';
+
+            if (pagesError.response && pagesError.response.data && pagesError.response.data.error) {
+                const fbError = pagesError.response.data.error;
+                console.error('❌ Facebook Error Code:', fbError.code);
+                console.error('❌ Facebook Error Type:', fbError.type);
+                console.error('❌ Facebook Error Message:', fbError.message);
+
+                if (fbError.message.includes('nonexisting field')) {
+                    errorType = 'api_field_error';
+                    errorMessage = 'Facebook Graph API field error. The API version may have changed.';
+                } else if (fbError.message.includes('permissions')) {
+                    errorType = 'insufficient_permissions';
+                    errorMessage = 'Insufficient permissions to access Facebook pages. Please reconnect and grant all required permissions.';
+                } else {
+                    errorMessage = `Facebook API error: ${fbError.message}`;
+                }
             }
-        });
+
+            return res.redirect(`${recoveredReturnUrl}?error=${errorType}&error_description=${encodeURIComponent(errorMessage)}`);
+        }
 
         console.log('📄 Found pages:', (pagesResponse.data.data && pagesResponse.data.data.length) || 0);
 
@@ -253,27 +285,26 @@ async function handleInstagramCallback(req, res) {
         for (const page of pagesResponse.data.data) {
             if (page.instagram_business_account) {
                 // Get Instagram account details
-                const igResponse = await axios.get(`${INSTAGRAM_API_BASE}/${page.instagram_business_account.id}`, {
+                // Updated for Graph API v23.0 - removed account_type field as it's no longer available
+                const igResponse = await axios.get(`https://graph.facebook.com/v23.0/${page.instagram_business_account.id}`, {
                     params: {
                         access_token: access_token,
-                        fields: 'id,username,name,profile_picture_url,followers_count,account_type,media_count,biography'
+                        fields: 'id,username,name,profile_picture_url,followers_count,media_count,biography'
                     }
                 });
 
                 const igData = igResponse.data;
 
-                // Only include Business accounts (not Personal or Creator)
-                if (igData.account_type === 'BUSINESS') {
-                    console.log('✅ Found Instagram Business account:', igData.username);
-                    instagramAccounts.push({
-                        ...igData,
-                        page_id: page.id,
-                        page_name: page.name,
-                        access_token: access_token
-                    });
-                } else {
-                    console.log('⚠️ Skipping non-Business Instagram account:', igData.username, 'Type:', igData.account_type);
-                }
+                // In Graph API v23.0, if we can access the Instagram Business account through Facebook pages,
+                // it's already confirmed to be a Business account (not Personal or Creator)
+                console.log('✅ Found Instagram Business account:', igData.username);
+                instagramAccounts.push({
+                    ...igData,
+                    page_id: page.id,
+                    page_name: page.name,
+                    access_token: access_token,
+                    account_type: 'BUSINESS' // Set explicitly since it's confirmed to be Business
+                });
             }
         }
 
@@ -289,7 +320,7 @@ async function handleInstagramCallback(req, res) {
                 const availablePages = pagesResponse.data.data.map(page => ({
                     name: page.name,
                     has_instagram: !!page.instagram_business_account,
-                    instagram_type: page.instagram_business_account && page.instagram_business_account.account_type
+                    instagram_username: page.instagram_business_account && page.instagram_business_account.username
                 }));
                 console.log('📋 Available pages:', availablePages);
 

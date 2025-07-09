@@ -1119,6 +1119,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     errorMessage = 'Authorization code expired or invalid';
                     helpText = 'Please try connecting again. Authorization codes expire quickly for security.';
                     break;
+                case 'api_field_error':
+                    errorMessage = 'Facebook Graph API field error';
+                    helpText = 'The Facebook Graph API version has changed. This has been automatically updated - please try connecting again.';
+                    break;
+                case 'insufficient_permissions':
+                    errorMessage = 'Insufficient Facebook permissions';
+                    helpText = 'Please ensure you grant all requested permissions during the Facebook OAuth process, including access to your Facebook Pages and Instagram Business accounts.';
+                    break;
+                case 'api_error':
+                    errorMessage = 'Facebook Graph API error';
+                    helpText = 'There was an error communicating with Facebook\'s API. Please try again in a few minutes.';
+                    break;
                 case 'callback_failed':
                     errorMessage = 'Failed to complete Instagram connection';
                     helpText = 'There was a technical issue. Please try again in a few moments.';
