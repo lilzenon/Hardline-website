@@ -1,5 +1,6 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const knex = require('../knex');
 const { CustomError } = require('../utils');
 const socialQueries = require('../queries/social-integrations.queries');
 const userQueries = require('../queries/user.queries');
@@ -566,14 +567,25 @@ async function processInstagramChange(change, instagramAccountId) {
  */
 async function processInstagramComment(commentData, instagramAccountId) {
     try {
-        // Get social account from database
-        const socialAccount = await socialQueries.getSocialAccount(null);
-        const account = socialAccount.find(acc => acc.platform_account_id === instagramAccountId);
+        console.log('🔍 Processing Instagram comment for account:', instagramAccountId);
+        console.log('🔍 Comment data:', JSON.stringify(commentData, null, 2));
+
+        // Get all social accounts and find the Instagram one
+        // For webhooks, we need to search across all users' accounts
+        const socialAccounts = await knex("social_media_accounts")
+            .where("platform", "instagram")
+            .where("platform_account_id", instagramAccountId);
+        console.log('🔍 Found social accounts:', socialAccounts ? .length || 0);
+
+        const account = socialAccounts ? .[0]; // Take the first (should be only) match
 
         if (!account) {
             console.error('❌ Instagram account not found:', instagramAccountId);
+            console.error('❌ No connected Instagram accounts found for this platform account ID');
             return;
         }
+
+        console.log('✅ Found Instagram account:', account.platform_account_id);
 
         // Extract comment details
         const comment = commentData;
