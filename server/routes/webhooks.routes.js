@@ -9,24 +9,35 @@ const router = Router();
 // Middleware to capture raw body for webhook signature verification
 const rawBodyMiddleware = (req, res, next) => {
     if (req.path === '/instagram' && req.method === 'POST') {
+        console.log('🔍 Raw body middleware activated for Instagram webhook');
+
         let rawBody = '';
         req.setEncoding('utf8');
 
         req.on('data', (chunk) => {
+            console.log('🔍 Received chunk:', chunk.length, 'bytes');
             rawBody += chunk;
         });
 
         req.on('end', () => {
+            console.log('🔍 Raw body complete:', rawBody.length, 'bytes');
             req.rawBody = rawBody;
             try {
                 req.body = JSON.parse(rawBody);
+                console.log('🔍 Body parsed successfully');
             } catch (error) {
                 console.error('❌ Error parsing webhook JSON:', error);
                 return res.status(400).send('Invalid JSON');
             }
             next();
         });
+
+        req.on('error', (error) => {
+            console.error('❌ Error reading webhook body:', error);
+            next(error);
+        });
     } else {
+        console.log('🔍 Raw body middleware skipped for:', req.method, req.path);
         next();
     }
 };
@@ -127,7 +138,15 @@ router.get(
 // Instagram webhook events (POST request)
 router.post(
     "/instagram",
-    rawBodyMiddleware,
+    (req, res, next) => {
+        console.log('🔍 Instagram POST webhook middleware');
+        console.log('🔍 Content-Type:', req.headers['content-type']);
+        console.log('🔍 Content-Length:', req.headers['content-length']);
+        console.log('🔍 Body available:', !!req.body);
+        console.log('🔍 Body type:', typeof req.body);
+        console.log('🔍 Body content:', JSON.stringify(req.body, null, 2));
+        next();
+    },
     asyncHandler(instagramHandler.handleInstagramWebhook)
 );
 

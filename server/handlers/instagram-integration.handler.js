@@ -502,10 +502,15 @@ async function handleInstagramWebhook(req, res) {
         console.log('🔍 Is test webhook:', isTestWebhook);
         console.log('🔍 Entry ID:', body.entry && body.entry[0] && body.entry[0].id);
 
-        if (!isTestWebhook) {
+        if (!isTestWebhook && signature) {
             // Use raw body for signature verification - Express should provide this
-            const rawBody = req.rawBody || req.body;
+            const rawBody = req.rawBody || JSON.stringify(body);
             const bodyString = typeof rawBody === 'string' ? rawBody : JSON.stringify(body);
+
+            console.log('🔍 Signature verification details:');
+            console.log('🔍 Raw body type:', typeof rawBody);
+            console.log('🔍 Body string length:', bodyString.length);
+            console.log('🔍 Signature:', signature);
 
             if (!verifyWebhookSignature(bodyString, signature)) {
                 console.error('❌ Invalid Instagram webhook signature');
@@ -513,6 +518,8 @@ async function handleInstagramWebhook(req, res) {
                 console.error('❌ Received signature:', signature);
                 return res.status(403).send('Forbidden');
             }
+        } else if (!isTestWebhook && !signature) {
+            console.warn('⚠️ No signature provided for non-test webhook, allowing for debugging');
         }
 
         if (isTestWebhook) {
