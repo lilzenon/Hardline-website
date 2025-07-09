@@ -6,47 +6,23 @@ const smsHandler = require("../handlers/sms-integration.handler");
 
 const router = Router();
 
-// Comprehensive webhook request logging middleware
+// Optimized webhook logging middleware
 const webhookLoggingMiddleware = (req, res, next) => {
-    const timestamp = new Date().toISOString();
-    const requestId = req.requestId || Math.random().toString(36).substr(2, 9);
+    // Get log level from environment or default to NORMAL
+    const LOG_LEVELS = { MINIMAL: 1, NORMAL: 2, VERBOSE: 3, DEBUG: 4 };
+    const logLevel = LOG_LEVELS[process.env.LOG_LEVEL ? .toUpperCase()] || LOG_LEVELS.NORMAL;
 
-    console.log(`\n📡 ===== WEBHOOK MIDDLEWARE ${requestId} =====`);
-    console.log(`📡 [${timestamp}] Webhook middleware processing`);
-    console.log(`📡 Method: ${req.method}`);
-    console.log(`📡 Path: ${req.path}`);
-    console.log(`📡 URL: ${req.url}`);
-    console.log(`📡 Original URL: ${req.originalUrl}`);
-    console.log(`📡 Base URL: ${req.baseUrl}`);
-    console.log(`📡 Protocol: ${req.protocol}`);
-    console.log(`📡 Host: ${req.get('host')}`);
-    console.log(`📡 IP: ${req.ip}`);
-    console.log(`📡 IPs: ${JSON.stringify(req.ips)}`);
+    // Only add detailed logging at VERBOSE+ levels, and only if not already logged by global middleware
+    if (logLevel >= LOG_LEVELS.VERBOSE) {
+        const requestId = req.requestId || 'unknown';
+        console.log(`📡 Webhook Route Processing (${requestId})`);
 
-    // Log all headers with special attention to webhook headers
-    console.log(`📡 Request Headers:`);
-    Object.entries(req.headers).forEach(([key, value]) => {
-        const isWebhookHeader = key.includes('hub') || key.includes('facebook') ||
-            key.includes('signature') || key === 'user-agent' ||
-            key === 'content-type';
-        const prefix = isWebhookHeader ? '🔥' : '📡';
-        console.log(`${prefix}   ${key}: ${value}`);
-    });
-
-    // Log query parameters
-    if (Object.keys(req.query).length > 0) {
-        console.log(`📡 Query Parameters:`);
-        Object.entries(req.query).forEach(([key, value]) => {
-            console.log(`📡   ${key}: ${value}`);
-        });
+        // Log body for webhook POST requests at VERBOSE level
+        if (req.method === 'POST' && req.body && Object.keys(req.body).length > 0) {
+            console.log(`📡 Body: ${JSON.stringify(req.body, null, 2)}`);
+        }
     }
 
-    // Log body if available
-    if (req.body && Object.keys(req.body).length > 0) {
-        console.log(`📡 Request Body:`, JSON.stringify(req.body, null, 2));
-    }
-
-    console.log(`📡 ===== END WEBHOOK MIDDLEWARE ${requestId} =====\n`);
     next();
 };
 
@@ -145,19 +121,8 @@ router.all(
 // Meta webhook URL verification endpoint
 router.all(
     "/instagram/meta-test",
-    webhookLoggingMiddleware,
     asyncHandler((req, res) => {
-        console.log('🚨 ===== META TEST ENDPOINT HIT! =====');
-        console.log('🚨 This confirms Meta can reach your server');
-        console.log('🚨 Method:', req.method);
-        console.log('🚨 URL:', req.url);
-        console.log('🚨 Original URL:', req.originalUrl);
-        console.log('🚨 IP:', req.ip);
-        console.log('🚨 User Agent:', req.headers['user-agent']);
-        console.log('🚨 Headers:', JSON.stringify(req.headers, null, 2));
-        console.log('🚨 Query:', JSON.stringify(req.query, null, 2));
-        console.log('🚨 Body:', JSON.stringify(req.body, null, 2));
-        console.log('🚨 ===================================');
+        console.log('🚨 META TEST ENDPOINT - Confirms Meta can reach server');
 
         // Handle both GET (verification) and POST (webhook) requests
         if (req.method === 'GET' && req.query['hub.challenge']) {
@@ -195,19 +160,11 @@ router.get(
 // Instagram webhook verification (GET request)
 router.get(
     "/instagram",
-    webhookLoggingMiddleware,
     (req, res, next) => {
-        console.log('🔍 ===== INSTAGRAM WEBHOOK VERIFICATION =====');
-        console.log('🔍 Timestamp:', new Date().toISOString());
-        console.log('🔍 This is a GET request for webhook verification');
-        console.log('🔍 Path:', req.path);
-        console.log('🔍 Original URL:', req.originalUrl);
-        console.log('🔍 Raw request URL:', req.url);
-        console.log('🔍 Raw query string:', req.url.split('?')[1] || 'No query string');
-        console.log('🔍 Parsed query object:', JSON.stringify(req.query, null, 2));
-        console.log('🔍 IP:', req.ip);
-        console.log('🔍 User Agent:', req.headers['user-agent']);
-        console.log('🔍 ==========================================');
+        console.log('🔍 Instagram Webhook Verification');
+        if (req.query['hub.challenge']) {
+            console.log('🔍 Challenge token requested');
+        }
         next();
     },
     asyncHandler(instagramHandler.verifyInstagramWebhook)
@@ -217,17 +174,6 @@ router.get(
 router.post(
     "/instagram",
     webhookLoggingMiddleware,
-    (req, res, next) => {
-        console.log('🔍 ===== INSTAGRAM WEBHOOK POST EVENT =====');
-        console.log('🔍 This is a POST request for webhook events');
-        console.log('🔍 Content-Type:', req.headers['content-type']);
-        console.log('🔍 Content-Length:', req.headers['content-length']);
-        console.log('🔍 Body available:', !!req.body);
-        console.log('🔍 Body type:', typeof req.body);
-        console.log('🔍 Body content:', JSON.stringify(req.body, null, 2));
-        console.log('🔍 ========================================');
-        next();
-    },
     asyncHandler(instagramHandler.handleInstagramWebhook)
 );
 

@@ -53,55 +53,49 @@ app.use(session(sessionStore.getSessionConfig()));
 // Request counter for tracking
 let requestCounter = 0;
 
-// Comprehensive request logging middleware
+// Logging configuration
+const LOG_LEVELS = {
+    MINIMAL: 1, // Only webhook requests and errors
+    NORMAL: 2, // Standard logging (default)
+    VERBOSE: 3, // Detailed debugging
+    DEBUG: 4 // Full debugging with all headers
+};
+
+const CURRENT_LOG_LEVEL = process.env.LOG_LEVEL ?
+    LOG_LEVELS[process.env.LOG_LEVEL.toUpperCase()] || LOG_LEVELS.NORMAL :
+    LOG_LEVELS.NORMAL;
+
+// Optimized request logging middleware
 app.use((req, res, next) => {
-    const timestamp = new Date().toISOString();
-    const requestId = Math.random().toString(36).substr(2, 9);
-    const requestNumber = ++requestCounter;
-    const startTime = Date.now();
+            const requestId = Math.random().toString(36).substr(2, 9);
+            const requestNumber = ++requestCounter;
+            const startTime = Date.now();
 
-    // Add request tracking to request object
-    req.requestId = requestId;
-    req.requestNumber = requestNumber;
-    req.startTime = startTime;
+            // Add request tracking to request object
+            req.requestId = requestId;
+            req.requestNumber = requestNumber;
+            req.startTime = startTime;
 
-    // Basic request logging
-    console.log(`\n🌐 ===== REQUEST #${requestNumber} (${requestId}) =====`);
-    console.log(`🌐 [${timestamp}] ${req.method} ${req.url}`);
-    console.log(`🌐 IP: ${req.ip}`);
-    console.log(`🌐 User-Agent: ${req.headers['user-agent'] || 'Unknown'}`);
-    console.log(`🌐 Content-Type: ${req.headers['content-type'] || 'None'}`);
-    console.log(`🌐 Content-Length: ${req.headers['content-length'] || 'Unknown'}`);
-    console.log(`🌐 Referer: ${req.headers['referer'] || 'None'}`);
-    console.log(`🌐 Origin: ${req.headers['origin'] || 'None'}`);
+            const isWebhookRequest = req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
+                req.url.includes('instagram') || req.url.includes('facebook');
 
-    // Enhanced logging for webhook-related requests
-    if (req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
-        req.url.includes('instagram') || req.url.includes('facebook')) {
-        console.log(`\n🚨 ===== WEBHOOK/SOCIAL REQUEST DETECTED! =====`);
-        console.log(`🚨 Request ID: ${requestId}`);
-        console.log(`🚨 Method: ${req.method}`);
-        console.log(`🚨 URL: ${req.url}`);
-        console.log(`🚨 Original URL: ${req.originalUrl}`);
-        console.log(`🚨 Path: ${req.path}`);
-        console.log(`🚨 Query: ${JSON.stringify(req.query, null, 2)}`);
-        console.log(`🚨 All Headers:`);
-        Object.entries(req.headers).forEach(([key, value]) => {
-            console.log(`🚨   ${key}: ${value}`);
-        });
+            // Only log webhook requests at MINIMAL level, all requests at NORMAL+
+            if (CURRENT_LOG_LEVEL >= LOG_LEVELS.MINIMAL && isWebhookRequest) {
+                console.log(`\n🚨 WEBHOOK #${requestNumber} (${requestId}): ${req.method} ${req.url}`);
+                console.log(`🚨 IP: ${req.ip} | User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'Unknown'}`);
 
-        // Log potential Meta/Facebook specific headers
-        const metaHeaders = [
-            'x-hub-signature', 'x-hub-signature-256', 'x-facebook-user-agent',
-            'user-agent', 'content-type', 'content-length'
-        ];
-        console.log(`🚨 Meta-specific headers:`);
-        metaHeaders.forEach(header => {
-            if (req.headers[header]) {
-                console.log(`🚨   ${header}: ${req.headers[header]}`);
-            }
-        });
-        console.log(`🚨 ============================================\n`);
+                // Log webhook-specific headers
+                const webhookHeaders = ['x-hub-signature-256', 'x-hub-signature', 'content-type', 'content-length'];
+                const relevantHeaders = webhookHeaders.filter(h => req.headers[h]);
+                if (relevantHeaders.length > 0) {
+                    console.log(`🚨 Headers: ${relevantHeaders.map(h => `${h}=${req.headers[h]}`).join(', ')}`);
+        }
+
+        if (Object.keys(req.query).length > 0) {
+            console.log(`🚨 Query: ${JSON.stringify(req.query)}`);
+        }
+    } else if (CURRENT_LOG_LEVEL >= LOG_LEVELS.NORMAL && !isWebhookRequest) {
+        console.log(`🌐 #${requestNumber}: ${req.method} ${req.url} (${req.ip})`);
     }
 
     // Log response when it completes
@@ -109,15 +103,19 @@ app.use((req, res, next) => {
     res.send = function(data) {
         const endTime = Date.now();
         const duration = endTime - startTime;
-        console.log(`🌐 Response #${requestNumber} (${requestId}): ${res.statusCode} ${res.statusMessage} [${duration}ms]`);
-        if (req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
-            req.url.includes('instagram') || req.url.includes('facebook')) {
-            console.log(`🚨 Webhook Response #${requestNumber} (${requestId}): ${res.statusCode} - ${data} [${duration}ms]`);
+
+        if (isWebhookRequest) {
+            console.log(`🚨 WEBHOOK RESPONSE #${requestNumber}: ${res.statusCode} [${duration}ms]`);
+            if (res.statusCode >= 400 || CURRENT_LOG_LEVEL >= LOG_LEVELS.VERBOSE) {
+                console.log(`🚨 Response Data: ${data}`);
+            }
+        } else if (CURRENT_LOG_LEVEL >= LOG_LEVELS.VERBOSE) {
+            console.log(`🌐 Response #${requestNumber}: ${res.statusCode} [${duration}ms]`);
         }
+
         return originalSend.call(this, data);
     };
 
-    console.log(`🌐 ===== END REQUEST #${requestNumber} (${requestId}) =====\n`);
     next();
 });
 
@@ -160,15 +158,7 @@ app.use("/api", routes.api);
 // finally, redirect the short link to the target
 app.get("/:id", asyncHandler(links.redirect));
 
-// Catch-all for debugging webhook issues
-app.all("*", (req, res, next) => {
-    if (req.url.includes('webhook') || req.url.includes('instagram') || req.url.includes('facebook')) {
-        console.log(`🚨 UNMATCHED WEBHOOK-RELATED REQUEST: ${req.method} ${req.url}`);
-        console.log(`🚨 Headers:`, req.headers);
-        console.log(`🚨 Body:`, req.body);
-    }
-    next();
-});
+
 
 // 404 pages that don't exist
 app.get("*", renders.notFound);
@@ -181,8 +171,7 @@ initializePrivacySystem();
 
 app.listen(env.PORT, () => {
     console.log(`> Ready on http://localhost:${env.PORT}`);
-    console.log(`🔍 Comprehensive request logging is ACTIVE`);
-    console.log(`🔍 All requests will be logged with detailed information`);
-    console.log(`🔍 Webhook requests will have enhanced logging`);
-    console.log(`🔍 Request counter started at: ${new Date().toISOString()}`);
+    console.log(`🔍 Optimized logging active | Level: ${process.env.LOG_LEVEL || 'NORMAL'}`);
+    console.log(`🔍 Webhook requests will be logged with essential debugging info`);
+    console.log(`🔍 Set LOG_LEVEL=VERBOSE for detailed logs, LOG_LEVEL=MINIMAL for webhook-only logs`);
 });

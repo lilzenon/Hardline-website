@@ -478,55 +478,36 @@ function verifyInstagramWebhook(req, res) {
 async function handleInstagramWebhook(req, res) {
     try {
         const body = req.body;
+        const requestId = req.requestId || 'unknown';
 
-        console.log('🚀 ===== INSTAGRAM WEBHOOK RECEIVED =====');
-        console.log('📨 Timestamp:', new Date().toISOString());
-        console.log('📨 Method:', req.method);
-        console.log('📨 URL:', req.url);
-        console.log('📨 Original URL:', req.originalUrl);
-        console.log('📨 IP Address:', req.ip);
-        console.log('📨 User Agent:', req.headers['user-agent']);
-        console.log('📨 Content Type:', req.headers['content-type']);
-        console.log('📨 Content Length:', req.headers['content-length']);
-        console.log('📨 Body Type:', typeof body);
-        console.log('📨 Body Content:', JSON.stringify(body, null, 2));
-        console.log('📨 All Headers:', JSON.stringify(req.headers, null, 2));
-        console.log('📨 Raw body length:', req.rawBody ? req.rawBody.length : 'No raw body');
-        console.log('🚀 ==========================================');
+        console.log(`🚀 Instagram Webhook Handler (${requestId})`);
+
+        // Get log level for conditional detailed logging
+        const LOG_LEVELS = { MINIMAL: 1, NORMAL: 2, VERBOSE: 3, DEBUG: 4 };
+        const logLevel = LOG_LEVELS[process.env.LOG_LEVEL ? .toUpperCase()] || LOG_LEVELS.NORMAL;
+
+        if (logLevel >= LOG_LEVELS.VERBOSE) {
+            console.log('📨 Body:', JSON.stringify(body, null, 2));
+        }
 
         // Verify webhook signature (skip for test webhooks from Meta dashboard)
         const signature = req.headers['x-hub-signature-256'];
         const isTestWebhook = body.object === 'instagram' && body.entry && body.entry.length > 0 &&
             (body.entry[0].id === 'test' || body.entry[0].id === '0');
 
-        console.log('🔍 Webhook signature verification:');
-        console.log('🔍 Is test webhook:', isTestWebhook);
-        console.log('🔍 Entry ID:', body.entry && body.entry[0] && body.entry[0].id);
+        console.log(`🔍 Webhook Type: ${isTestWebhook ? 'Test' : 'Production'} | Entry ID: ${body.entry?.[0]?.id || 'unknown'}`);
 
         if (!isTestWebhook && signature) {
-            // Use raw body for signature verification - Express should provide this
             const rawBody = req.rawBody || JSON.stringify(body);
             const bodyString = typeof rawBody === 'string' ? rawBody : JSON.stringify(body);
 
-            console.log('🔍 Signature verification details:');
-            console.log('🔍 Raw body type:', typeof rawBody);
-            console.log('🔍 Body string length:', bodyString.length);
-            console.log('🔍 Signature:', signature);
-
             if (!verifyWebhookSignature(bodyString, signature)) {
                 console.error('❌ Invalid Instagram webhook signature');
-                console.error('❌ Expected signature format: sha256=...');
-                console.error('❌ Received signature:', signature);
                 return res.status(403).send('Forbidden');
             }
+            console.log('✅ Webhook signature verified');
         } else if (!isTestWebhook && !signature) {
             console.warn('⚠️ No signature provided for non-test webhook, allowing for debugging');
-        }
-
-        if (isTestWebhook) {
-            console.log('🧪 Test webhook detected, skipping signature verification');
-        } else {
-            console.log('✅ Webhook signature verified');
         }
 
         // Process each entry
@@ -567,25 +548,21 @@ async function processInstagramChange(change, instagramAccountId) {
  */
 async function processInstagramComment(commentData, instagramAccountId) {
     try {
-        console.log('🔍 Processing Instagram comment for account:', instagramAccountId);
-        console.log('🔍 Comment data:', JSON.stringify(commentData, null, 2));
+        console.log(`🔍 Processing comment for account: ${instagramAccountId}`);
 
         // Get all social accounts and find the Instagram one
-        // For webhooks, we need to search across all users' accounts
         const socialAccounts = await knex("social_media_accounts")
             .where("platform", "instagram")
             .where("platform_account_id", instagramAccountId);
-        console.log('🔍 Found social accounts:', socialAccounts && socialAccounts.length || 0);
 
-        const account = socialAccounts && socialAccounts[0]; // Take the first (should be only) match
+        const account = socialAccounts && socialAccounts[0];
 
         if (!account) {
-            console.error('❌ Instagram account not found:', instagramAccountId);
-            console.error('❌ No connected Instagram accounts found for this platform account ID');
+            console.error(`❌ Instagram account not found: ${instagramAccountId} (${socialAccounts?.length || 0} accounts checked)`);
             return;
         }
 
-        console.log('✅ Found Instagram account:', account.platform_account_id);
+        console.log(`✅ Found Instagram account: ${account.platform_account_id}`);
 
         // Extract comment details
         const comment = commentData;
