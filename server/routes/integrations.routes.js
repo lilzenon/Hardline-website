@@ -63,7 +63,12 @@ router.get(
             const userId = req.user.id;
             const { social_account_id, event_id, keyword_type } = req.query;
 
+            console.log('🔍 Fetching keywords for user:', userId);
+            console.log('🔍 Query params:', { social_account_id, event_id, keyword_type });
+
             const keywords = await socialQueries.getKeywords(userId, social_account_id, event_id, keyword_type);
+
+            console.log('🔍 Found keywords:', keywords.length);
 
             res.json({
                 success: true,
@@ -91,8 +96,11 @@ router.post(
             const userId = req.user.id;
             const keywordData = {
                 ...req.body,
-                created_by_user_id: userId
+                created_by_user_id: userId,
+                keyword_type: req.body.keyword_type || 'instagram' // Default to instagram
             };
+
+            console.log('🔧 Creating keyword with data:', JSON.stringify(keywordData, null, 2));
 
             const keyword = await socialQueries.createKeyword(keywordData);
 

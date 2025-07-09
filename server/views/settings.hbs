@@ -1744,8 +1744,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 send_auto_response: formData.has('send_auto_response'),
                 capture_user_data: formData.has('capture_user_data'),
                 signup_type: formData.get('signup_type'),
-                social_account_id: currentSocialAccountId
+                social_account_id: currentSocialAccountId,
+                keyword_type: 'instagram' // Set the keyword type for Instagram
             };
+
+            console.log('📝 Submitting keyword data:', JSON.stringify(data, null, 2));
 
             const url = currentEditingKeyword
                 ? `/api/integrations/keywords/${currentEditingKeyword.id}`

@@ -42,6 +42,23 @@ router.get(
     asyncHandler(instagramHandler.verifyInstagramWebhook)
 );
 
+// Instagram webhook test endpoint
+router.get(
+    "/instagram/test",
+    asyncHandler((req, res) => {
+        console.log('🧪 Instagram webhook test endpoint accessed');
+        console.log('🧪 Query params:', req.query);
+        console.log('🧪 Headers:', req.headers);
+        res.json({
+            success: true,
+            message: "Instagram webhook endpoint is reachable",
+            timestamp: new Date().toISOString(),
+            query: req.query,
+            headers: req.headers
+        });
+    })
+);
+
 // Instagram webhook events (POST request)
 router.post(
     "/instagram",
