@@ -432,13 +432,24 @@ async function handleInstagramWebhook(req, res) {
 
         // Verify webhook signature (skip for test webhooks from Meta dashboard)
         const signature = req.headers['x-hub-signature-256'];
-        const isTestWebhook = body.object === 'instagram' && body.entry && body.entry.length > 0 && body.entry[0].id === 'test';
+        const isTestWebhook = body.object === 'instagram' && body.entry && body.entry.length > 0 &&
+            (body.entry[0].id === 'test' || body.entry[0].id === '0');
 
-        if (!isTestWebhook && !verifyWebhookSignature(JSON.stringify(body), signature)) {
-            console.error('❌ Invalid Instagram webhook signature');
-            console.error('❌ Expected signature format: sha256=...');
-            console.error('❌ Received signature:', signature);
-            return res.status(403).send('Forbidden');
+        console.log('🔍 Webhook signature verification:');
+        console.log('🔍 Is test webhook:', isTestWebhook);
+        console.log('🔍 Entry ID:', body.entry && body.entry[0] && body.entry[0].id);
+
+        if (!isTestWebhook) {
+            // Use raw body for signature verification - Express should provide this
+            const rawBody = req.rawBody || req.body;
+            const bodyString = typeof rawBody === 'string' ? rawBody : JSON.stringify(body);
+
+            if (!verifyWebhookSignature(bodyString, signature)) {
+                console.error('❌ Invalid Instagram webhook signature');
+                console.error('❌ Expected signature format: sha256=...');
+                console.error('❌ Received signature:', signature);
+                return res.status(403).send('Forbidden');
+            }
         }
 
         if (isTestWebhook) {
@@ -605,12 +616,30 @@ async function captureInstagramUser(userInfo, keyword, interactionId) {
  * Verify webhook signature
  */
 function verifyWebhookSignature(payload, signature) {
-    if (!signature) return false;
+    if (!signature) {
+        console.error('❌ No signature provided');
+        return false;
+    }
+
+    // Instagram webhooks use the webhook verify token, not the app secret
+    const webhookSecret = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+    if (!webhookSecret) {
+        console.error('❌ INSTAGRAM_WEBHOOK_VERIFY_TOKEN not configured');
+        return false;
+    }
+
+    console.log('🔍 Verifying webhook signature...');
+    console.log('🔍 Payload length:', payload.length);
+    console.log('🔍 Received signature:', signature);
+    console.log('🔍 Using webhook secret (first 8 chars):', webhookSecret.substring(0, 8) + '...');
 
     const expectedSignature = 'sha256=' + crypto
-        .createHmac('sha256', process.env.FACEBOOK_APP_SECRET)
-        .update(payload)
+        .createHmac('sha256', webhookSecret)
+        .update(payload, 'utf8')
         .digest('hex');
+
+    console.log('🔍 Expected signature:', expectedSignature);
+    console.log('🔍 Signatures match:', signature === expectedSignature);
 
     return crypto.timingSafeEqual(
         Buffer.from(signature),

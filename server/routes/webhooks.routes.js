@@ -1,9 +1,35 @@
 const { Router } = require("express");
+const express = require("express");
 const asyncHandler = require("../utils/asyncHandler");
 const instagramHandler = require("../handlers/instagram-integration.handler");
 const smsHandler = require("../handlers/sms-integration.handler");
 
 const router = Router();
+
+// Middleware to capture raw body for webhook signature verification
+const rawBodyMiddleware = (req, res, next) => {
+    if (req.path === '/instagram' && req.method === 'POST') {
+        let rawBody = '';
+        req.setEncoding('utf8');
+
+        req.on('data', (chunk) => {
+            rawBody += chunk;
+        });
+
+        req.on('end', () => {
+            req.rawBody = rawBody;
+            try {
+                req.body = JSON.parse(rawBody);
+            } catch (error) {
+                console.error('❌ Error parsing webhook JSON:', error);
+                return res.status(400).send('Invalid JSON');
+            }
+            next();
+        });
+    } else {
+        next();
+    }
+};
 
 /**
  * Instagram Webhook Routes
@@ -19,6 +45,7 @@ router.get(
 // Instagram webhook events (POST request)
 router.post(
     "/instagram",
+    rawBodyMiddleware,
     asyncHandler(instagramHandler.handleInstagramWebhook)
 );
 
