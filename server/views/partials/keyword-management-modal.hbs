@@ -163,7 +163,12 @@ let currentEditingKeyword = null;
 let currentSocialAccountId = null;
 
 // Open keyword management modal
-function openKeywordModal() {
+function openKeywordModal(socialAccountId = null) {
+    // Set the current social account ID for keyword operations
+    currentSocialAccountId = socialAccountId;
+
+    console.log('Opening keyword modal for social account:', socialAccountId);
+
     document.getElementById('keyword-management-modal').classList.remove('hidden');
     loadKeywords();
 }
@@ -217,21 +222,33 @@ async function loadKeywords() {
     const loadingEl = document.getElementById('keywords-loading');
     const emptyEl = document.getElementById('keywords-empty');
     const listEl = document.getElementById('keywords-list');
-    
+
+    console.log('Loading keywords for social account:', currentSocialAccountId);
+
     loadingEl.classList.remove('hidden');
     emptyEl.classList.add('hidden');
     listEl.innerHTML = '';
-    
+
     try {
-        const response = await fetch('/api/integrations/keywords');
+        // Build URL with social account ID if available
+        let url = '/api/integrations/keywords';
+        if (currentSocialAccountId) {
+            url += `?social_account_id=${currentSocialAccountId}`;
+        }
+
+        console.log('Fetching keywords from:', url);
+        const response = await fetch(url);
         const data = await response.json();
-        
+
+        console.log('Keywords response:', data);
+
         loadingEl.classList.add('hidden');
-        
+
         if (data.success && data.keywords.length > 0) {
             renderKeywords(data.keywords);
         } else {
             emptyEl.classList.remove('hidden');
+            console.log('No keywords found or empty response');
         }
     } catch (error) {
         console.error('Error loading keywords:', error);

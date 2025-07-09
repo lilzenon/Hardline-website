@@ -592,7 +592,8 @@
     </div>
 </div>
 
-{{!-- Keyword Management Modal will be added inline for now --}}
+{{!-- Keyword Management Modal --}}
+{{> keyword-management-modal}}
 
 <!-- Modern Dashboard JavaScript for Settings -->
 <script>
@@ -853,6 +854,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const reconnectInstagramBtn = document.getElementById('reconnect-instagram-btn');
     const disconnectInstagramBtn = document.getElementById('disconnect-instagram-btn');
     const instagramSettingsBtn = document.getElementById('instagram-settings-btn');
+
+    // Store current Instagram account ID for keyword management
+    let currentInstagramAccountId = null;
     const instagramStatus = document.getElementById('instagram-status');
     const statusText = document.getElementById('status-text');
     const statusLoading = document.getElementById('status-loading');
@@ -901,6 +905,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Display account details
     function displayAccountDetails(account) {
         if (!account) return;
+
+        // Store the account ID for keyword management
+        currentInstagramAccountId = account.id;
+        console.log('Stored Instagram account ID:', currentInstagramAccountId);
 
         document.getElementById('account-profile-picture').src = account.profile_picture || '/images/default-avatar.png';
         document.getElementById('account-username').textContent = '@' + (account.username || 'unknown');
@@ -1046,7 +1054,14 @@ document.addEventListener('DOMContentLoaded', function() {
     if (instagramSettingsBtn) {
         instagramSettingsBtn.addEventListener('click', function() {
             if (instagramSettingsBtn.disabled) return;
-            openKeywordModal();
+
+            if (!currentInstagramAccountId) {
+                showNotification('No Instagram account connected. Please connect an account first.', 'error');
+                return;
+            }
+
+            console.log('Opening keyword modal for account:', currentInstagramAccountId);
+            openKeywordModal(currentInstagramAccountId);
         });
     }
 
