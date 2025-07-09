@@ -50,25 +50,74 @@ app.use(cookieParser());
 // Production-ready session configuration with Redis store
 app.use(session(sessionStore.getSessionConfig()));
 
-// Global request logging middleware to catch ALL requests
+// Request counter for tracking
+let requestCounter = 0;
+
+// Comprehensive request logging middleware
 app.use((req, res, next) => {
     const timestamp = new Date().toISOString();
-    console.log(`🌐 [${timestamp}] ${req.method} ${req.url}`);
-    console.log(`🌐 Headers:`, JSON.stringify(req.headers, null, 2));
-    console.log(`🌐 IP: ${req.ip}`);
-    console.log(`🌐 User-Agent: ${req.headers['user-agent']}`);
+    const requestId = Math.random().toString(36).substr(2, 9);
+    const requestNumber = ++requestCounter;
+    const startTime = Date.now();
 
-    // Log webhook-related requests with extra detail
-    if (req.url.includes('/webhook') || req.url.includes('/api/webhook')) {
-        console.log(`🚨 WEBHOOK REQUEST DETECTED! 🚨`);
+    // Add request tracking to request object
+    req.requestId = requestId;
+    req.requestNumber = requestNumber;
+    req.startTime = startTime;
+
+    // Basic request logging
+    console.log(`\n🌐 ===== REQUEST #${requestNumber} (${requestId}) =====`);
+    console.log(`🌐 [${timestamp}] ${req.method} ${req.url}`);
+    console.log(`🌐 IP: ${req.ip}`);
+    console.log(`🌐 User-Agent: ${req.headers['user-agent'] || 'Unknown'}`);
+    console.log(`🌐 Content-Type: ${req.headers['content-type'] || 'None'}`);
+    console.log(`🌐 Content-Length: ${req.headers['content-length'] || 'Unknown'}`);
+    console.log(`🌐 Referer: ${req.headers['referer'] || 'None'}`);
+    console.log(`🌐 Origin: ${req.headers['origin'] || 'None'}`);
+
+    // Enhanced logging for webhook-related requests
+    if (req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
+        req.url.includes('instagram') || req.url.includes('facebook')) {
+        console.log(`\n🚨 ===== WEBHOOK/SOCIAL REQUEST DETECTED! =====`);
+        console.log(`🚨 Request ID: ${requestId}`);
         console.log(`🚨 Method: ${req.method}`);
         console.log(`🚨 URL: ${req.url}`);
         console.log(`🚨 Original URL: ${req.originalUrl}`);
         console.log(`🚨 Path: ${req.path}`);
-        console.log(`🚨 Query: ${JSON.stringify(req.query)}`);
-        console.log(`🚨 Headers: ${JSON.stringify(req.headers, null, 2)}`);
+        console.log(`🚨 Query: ${JSON.stringify(req.query, null, 2)}`);
+        console.log(`🚨 All Headers:`);
+        Object.entries(req.headers).forEach(([key, value]) => {
+            console.log(`🚨   ${key}: ${value}`);
+        });
+
+        // Log potential Meta/Facebook specific headers
+        const metaHeaders = [
+            'x-hub-signature', 'x-hub-signature-256', 'x-facebook-user-agent',
+            'user-agent', 'content-type', 'content-length'
+        ];
+        console.log(`🚨 Meta-specific headers:`);
+        metaHeaders.forEach(header => {
+            if (req.headers[header]) {
+                console.log(`🚨   ${header}: ${req.headers[header]}`);
+            }
+        });
+        console.log(`🚨 ============================================\n`);
     }
 
+    // Log response when it completes
+    const originalSend = res.send;
+    res.send = function(data) {
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        console.log(`🌐 Response #${requestNumber} (${requestId}): ${res.statusCode} ${res.statusMessage} [${duration}ms]`);
+        if (req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
+            req.url.includes('instagram') || req.url.includes('facebook')) {
+            console.log(`🚨 Webhook Response #${requestNumber} (${requestId}): ${res.statusCode} - ${data} [${duration}ms]`);
+        }
+        return originalSend.call(this, data);
+    };
+
+    console.log(`🌐 ===== END REQUEST #${requestNumber} (${requestId}) =====\n`);
     next();
 });
 
@@ -132,4 +181,8 @@ initializePrivacySystem();
 
 app.listen(env.PORT, () => {
     console.log(`> Ready on http://localhost:${env.PORT}`);
+    console.log(`🔍 Comprehensive request logging is ACTIVE`);
+    console.log(`🔍 All requests will be logged with detailed information`);
+    console.log(`🔍 Webhook requests will have enhanced logging`);
+    console.log(`🔍 Request counter started at: ${new Date().toISOString()}`);
 });

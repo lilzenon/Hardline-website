@@ -6,6 +6,50 @@ const smsHandler = require("../handlers/sms-integration.handler");
 
 const router = Router();
 
+// Comprehensive webhook request logging middleware
+const webhookLoggingMiddleware = (req, res, next) => {
+    const timestamp = new Date().toISOString();
+    const requestId = req.requestId || Math.random().toString(36).substr(2, 9);
+
+    console.log(`\n📡 ===== WEBHOOK MIDDLEWARE ${requestId} =====`);
+    console.log(`📡 [${timestamp}] Webhook middleware processing`);
+    console.log(`📡 Method: ${req.method}`);
+    console.log(`📡 Path: ${req.path}`);
+    console.log(`📡 URL: ${req.url}`);
+    console.log(`📡 Original URL: ${req.originalUrl}`);
+    console.log(`📡 Base URL: ${req.baseUrl}`);
+    console.log(`📡 Protocol: ${req.protocol}`);
+    console.log(`📡 Host: ${req.get('host')}`);
+    console.log(`📡 IP: ${req.ip}`);
+    console.log(`📡 IPs: ${JSON.stringify(req.ips)}`);
+
+    // Log all headers with special attention to webhook headers
+    console.log(`📡 Request Headers:`);
+    Object.entries(req.headers).forEach(([key, value]) => {
+        const isWebhookHeader = key.includes('hub') || key.includes('facebook') ||
+            key.includes('signature') || key === 'user-agent' ||
+            key === 'content-type';
+        const prefix = isWebhookHeader ? '🔥' : '📡';
+        console.log(`${prefix}   ${key}: ${value}`);
+    });
+
+    // Log query parameters
+    if (Object.keys(req.query).length > 0) {
+        console.log(`📡 Query Parameters:`);
+        Object.entries(req.query).forEach(([key, value]) => {
+            console.log(`📡   ${key}: ${value}`);
+        });
+    }
+
+    // Log body if available
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log(`📡 Request Body:`, JSON.stringify(req.body, null, 2));
+    }
+
+    console.log(`📡 ===== END WEBHOOK MIDDLEWARE ${requestId} =====\n`);
+    next();
+};
+
 // Middleware to capture raw body for webhook signature verification
 const rawBodyMiddleware = (req, res, next) => {
     if (req.path === '/instagram' && req.method === 'POST') {
@@ -101,8 +145,9 @@ router.all(
 // Meta webhook URL verification endpoint
 router.all(
     "/instagram/meta-test",
+    webhookLoggingMiddleware,
     asyncHandler((req, res) => {
-        console.log('🚨 META TEST ENDPOINT HIT! 🚨');
+        console.log('🚨 ===== META TEST ENDPOINT HIT! =====');
         console.log('🚨 This confirms Meta can reach your server');
         console.log('🚨 Method:', req.method);
         console.log('🚨 URL:', req.url);
@@ -112,6 +157,7 @@ router.all(
         console.log('🚨 Headers:', JSON.stringify(req.headers, null, 2));
         console.log('🚨 Query:', JSON.stringify(req.query, null, 2));
         console.log('🚨 Body:', JSON.stringify(req.body, null, 2));
+        console.log('🚨 ===================================');
 
         // Handle both GET (verification) and POST (webhook) requests
         if (req.method === 'GET' && req.query['hub.challenge']) {
@@ -149,18 +195,19 @@ router.get(
 // Instagram webhook verification (GET request)
 router.get(
     "/instagram",
+    webhookLoggingMiddleware,
     (req, res, next) => {
-        console.log('🔍 ===== WEBHOOK GET REQUEST =====');
+        console.log('🔍 ===== INSTAGRAM WEBHOOK VERIFICATION =====');
         console.log('🔍 Timestamp:', new Date().toISOString());
+        console.log('🔍 This is a GET request for webhook verification');
         console.log('🔍 Path:', req.path);
         console.log('🔍 Original URL:', req.originalUrl);
         console.log('🔍 Raw request URL:', req.url);
         console.log('🔍 Raw query string:', req.url.split('?')[1] || 'No query string');
         console.log('🔍 Parsed query object:', JSON.stringify(req.query, null, 2));
-        console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
         console.log('🔍 IP:', req.ip);
         console.log('🔍 User Agent:', req.headers['user-agent']);
-        console.log('🔍 ================================');
+        console.log('🔍 ==========================================');
         next();
     },
     asyncHandler(instagramHandler.verifyInstagramWebhook)
@@ -169,13 +216,16 @@ router.get(
 // Instagram webhook events (POST request)
 router.post(
     "/instagram",
+    webhookLoggingMiddleware,
     (req, res, next) => {
-        console.log('🔍 Instagram POST webhook middleware');
+        console.log('🔍 ===== INSTAGRAM WEBHOOK POST EVENT =====');
+        console.log('🔍 This is a POST request for webhook events');
         console.log('🔍 Content-Type:', req.headers['content-type']);
         console.log('🔍 Content-Length:', req.headers['content-length']);
         console.log('🔍 Body available:', !!req.body);
         console.log('🔍 Body type:', typeof req.body);
         console.log('🔍 Body content:', JSON.stringify(req.body, null, 2));
+        console.log('🔍 ========================================');
         next();
     },
     asyncHandler(instagramHandler.handleInstagramWebhook)
@@ -312,6 +362,46 @@ router.get(
                     post: "/api/webhooks/test (POST)"
                 }
             }
+        });
+    })
+);
+
+// Catch-all route for any unmatched webhook requests
+router.all(
+    "*",
+    webhookLoggingMiddleware,
+    asyncHandler((req, res) => {
+        console.log('🚨 ===== UNMATCHED WEBHOOK REQUEST =====');
+        console.log('🚨 This request hit the webhook router but no specific route');
+        console.log('🚨 Method:', req.method);
+        console.log('🚨 URL:', req.url);
+        console.log('🚨 Original URL:', req.originalUrl);
+        console.log('🚨 Path:', req.path);
+        console.log('🚨 Base URL:', req.baseUrl);
+        console.log('🚨 Available routes in this router:');
+        console.log('🚨   GET/POST /instagram');
+        console.log('🚨   GET/POST /instagram/debug');
+        console.log('🚨   GET/POST /instagram/meta-test');
+        console.log('🚨   GET/POST /instagram/external-test');
+        console.log('🚨   GET/POST /facebook');
+        console.log('🚨   GET/POST /sms');
+        console.log('🚨   GET/POST /test');
+        console.log('🚨   GET /health');
+        console.log('🚨 ====================================');
+
+        res.status(404).json({
+            error: "Webhook endpoint not found",
+            method: req.method,
+            url: req.url,
+            availableEndpoints: [
+                "GET/POST /api/webhooks/instagram",
+                "GET/POST /api/webhooks/instagram/debug",
+                "GET/POST /api/webhooks/instagram/meta-test",
+                "GET/POST /api/webhooks/facebook",
+                "GET/POST /api/webhooks/sms",
+                "GET /api/webhooks/health"
+            ],
+            timestamp: new Date().toISOString()
         });
     })
 );
