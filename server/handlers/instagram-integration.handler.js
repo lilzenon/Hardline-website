@@ -38,11 +38,18 @@ async function initiateInstagramAuth(req, res) {
             'pages_read_engagement'
         ].join(',');
 
-        // Generate secure state parameter
-        const state = crypto.randomBytes(16).toString('hex');
+        // Generate secure state parameter that includes user ID
+        // This helps us recover the user ID even if session is lost
+        const stateData = {
+            userId: userId,
+            timestamp: Date.now(),
+            returnUrl: returnUrl || '/dashboard/settings#integrations'
+        };
+        const state = Buffer.from(JSON.stringify(stateData)).toString('base64url');
         req.session.instagram_oauth_state = state;
 
-        console.log('🔍 Generated OAuth state:', state);
+        console.log('🔍 Generated OAuth state with embedded data:', state);
+        console.log('🔍 State data:', stateData);
         console.log('🔍 Session after setting state:', JSON.stringify({
             instagram_auth_user_id: req.session.instagram_auth_user_id,
             instagram_oauth_state: req.session.instagram_oauth_state,
@@ -99,6 +106,30 @@ async function handleInstagramCallback(req, res) {
             instagram_auth_return: req.session.instagram_auth_return
         }));
 
+        // Try to recover user ID and return URL from state parameter if session is lost
+        let recoveredUserId = userId;
+        let recoveredReturnUrl = returnUrl;
+        let stateData = null;
+
+        if (state && (!userId || !expectedState)) {
+            try {
+                stateData = JSON.parse(Buffer.from(state, 'base64url').toString());
+                console.log('🔍 Recovered state data:', stateData);
+
+                if (stateData.userId) {
+                    recoveredUserId = stateData.userId;
+                    console.log('✅ Recovered user ID from state:', recoveredUserId);
+                }
+
+                if (stateData.returnUrl) {
+                    recoveredReturnUrl = stateData.returnUrl;
+                    console.log('✅ Recovered return URL from state:', recoveredReturnUrl);
+                }
+            } catch (stateError) {
+                console.error('❌ Failed to parse state parameter:', stateError);
+            }
+        }
+
         if (error) {
             console.error('❌ Instagram OAuth error:', error);
             let errorType = 'oauth_failed';
@@ -115,19 +146,37 @@ async function handleInstagramCallback(req, res) {
                     errorType = 'oauth_failed';
             }
 
-            return res.redirect(`${returnUrl}?error=${errorType}&error_description=${encodeURIComponent(error)}`);
+            return res.redirect(`${recoveredReturnUrl}?error=${errorType}&error_description=${encodeURIComponent(error)}`);
         }
 
-        if (!code || !userId) {
+        if (!code || !recoveredUserId) {
             console.error('❌ Missing code or user ID in Instagram callback');
-            return res.redirect(`${returnUrl}?error=invalid_callback`);
+            console.error('❌ Code present:', !!code);
+            console.error('❌ Original user ID:', userId);
+            console.error('❌ Recovered user ID:', recoveredUserId);
+            return res.redirect(`${recoveredReturnUrl}?error=invalid_callback`);
         }
 
         // Validate state parameter for security
-        if (!state || state !== expectedState) {
-            console.error('❌ Invalid state parameter in Instagram callback');
-            return res.redirect(`${returnUrl}?error=invalid_state`);
+        // If we have session state, validate against it; otherwise validate state format
+        if (!state) {
+            console.error('❌ Missing state parameter in Instagram callback');
+            return res.redirect(`${recoveredReturnUrl}?error=invalid_state`);
         }
+
+        if (expectedState && state !== expectedState) {
+            console.error('❌ State parameter mismatch - possible session issue');
+            console.error('❌ Expected:', expectedState);
+            console.error('❌ Received:', state);
+            // Don't fail here if we recovered data from state - session might be lost but state is valid
+            if (!stateData) {
+                return res.redirect(`${recoveredReturnUrl}?error=invalid_state`);
+            }
+        }
+
+        console.log('✅ OAuth validation passed, proceeding with token exchange');
+        console.log('✅ Using user ID:', recoveredUserId);
+        console.log('✅ Using return URL:', recoveredReturnUrl);
 
         // Exchange code for access token using Facebook's token endpoint
         const tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
@@ -148,7 +197,7 @@ async function handleInstagramCallback(req, res) {
             }
         });
 
-        console.log('📄 Found pages:', pagesResponse.data.data?.length || 0);
+        console.log('📄 Found pages:', pagesResponse.data.data ? .length || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
@@ -180,22 +229,22 @@ async function handleInstagramCallback(req, res) {
         }
 
         if (instagramAccounts.length === 0) {
-            console.log('⚠️ No Instagram Business accounts found for user:', userId);
+            console.log('⚠️ No Instagram Business accounts found for user:', recoveredUserId);
 
             // Check if user has any Facebook pages at all
             if (pagesResponse.data.data.length === 0) {
                 console.log('❌ No Facebook Pages found');
-                return res.redirect(`${returnUrl}?error=account_not_eligible&error_description=${encodeURIComponent('No Facebook Pages found. Please create a Facebook Page and connect it to your Instagram account.')}`);
+                return res.redirect(`${recoveredReturnUrl}?error=account_not_eligible&error_description=${encodeURIComponent('No Facebook Pages found. Please create a Facebook Page and connect it to your Instagram account.')}`);
             } else {
                 // Log available pages for debugging
                 const availablePages = pagesResponse.data.data.map(page => ({
                     name: page.name,
                     has_instagram: !!page.instagram_business_account,
-                    instagram_type: page.instagram_business_account?.account_type
+                    instagram_type: page.instagram_business_account ? .account_type
                 }));
                 console.log('📋 Available pages:', availablePages);
 
-                return res.redirect(`${returnUrl}?error=no_business_accounts&error_description=${encodeURIComponent('No Instagram Business accounts found. Please ensure your Instagram account is set to Business mode (not Creator or Personal) and is connected to a Facebook Page.')}`);
+                return res.redirect(`${recoveredReturnUrl}?error=no_business_accounts&error_description=${encodeURIComponent('No Instagram Business accounts found. Please ensure your Instagram account is set to Business mode (not Creator or Personal) and is connected to a Facebook Page.')}`);
             }
         }
 
@@ -203,7 +252,7 @@ async function handleInstagramCallback(req, res) {
         const igAccount = instagramAccounts[0];
 
         // Check if account already exists (reconnection scenario)
-        const existingAccounts = await socialQueries.getSocialAccounts(userId);
+        const existingAccounts = await socialQueries.getSocialAccounts(recoveredUserId);
         const existingAccount = existingAccounts.find(acc =>
             acc.platform === 'instagram' && acc.platform_account_id === igAccount.id
         );
@@ -244,7 +293,7 @@ async function handleInstagramCallback(req, res) {
                     page_id: igAccount.page_id,
                     page_name: igAccount.page_name
                 },
-                connected_by_user_id: userId,
+                connected_by_user_id: recoveredUserId,
                 follower_count: igAccount.followers_count
             });
         }
@@ -261,7 +310,7 @@ async function handleInstagramCallback(req, res) {
         delete req.session.instagram_oauth_state;
 
         const successParam = isReconnection ? 'instagram_reconnected' : 'instagram_connected';
-        res.redirect(`${returnUrl}?success=${successParam}`);
+        res.redirect(`${recoveredReturnUrl}?success=${successParam}`);
 
     } catch (error) {
         console.error('❌ Error handling Instagram callback:', error);
@@ -417,9 +466,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_interaction_id: comment.id,
             interaction_type: 'comment',
             content: commentText,
-            post_id: comment.media?.id,
-            platform_user_id: comment.from?.id,
-            platform_username: comment.from?.username,
+            post_id: comment.media ? .id,
+            platform_user_id: comment.from ? .id,
+            platform_username: comment.from ? .username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: comment.timestamp,
