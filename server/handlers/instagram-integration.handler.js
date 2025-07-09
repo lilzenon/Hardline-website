@@ -123,7 +123,7 @@ async function handleInstagramCallback(req, res) {
             }
         });
 
-        console.log('📄 Found pages:', pagesResponse.data.data?.length || 0);
+        console.log('📄 Found pages:', pagesResponse.data.data ? .length || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
@@ -166,7 +166,7 @@ async function handleInstagramCallback(req, res) {
                 const availablePages = pagesResponse.data.data.map(page => ({
                     name: page.name,
                     has_instagram: !!page.instagram_business_account,
-                    instagram_type: page.instagram_business_account?.account_type
+                    instagram_type: page.instagram_business_account ? .account_type
                 }));
                 console.log('📋 Available pages:', availablePages);
 
@@ -278,11 +278,21 @@ function verifyInstagramWebhook(req, res) {
     const token = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
+    console.log('🔍 Instagram webhook verification attempt:');
+    console.log('🔍 Mode:', mode);
+    console.log('🔍 Received token:', token);
+    console.log('🔍 Expected token:', process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN);
+    console.log('🔍 Challenge:', challenge);
+    console.log('🔍 Token match:', token === process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN);
+
     if (mode === 'subscribe' && token === process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN) {
-        console.log('✅ Instagram webhook verified');
+        console.log('✅ Instagram webhook verified successfully');
         res.status(200).send(challenge);
     } else {
         console.error('❌ Instagram webhook verification failed');
+        console.error('❌ Mode check:', mode === 'subscribe');
+        console.error('❌ Token check:', token === process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN);
+        console.error('❌ Environment variable set:', !!process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN);
         res.status(403).send('Forbidden');
     }
 }
@@ -382,9 +392,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_interaction_id: comment.id,
             interaction_type: 'comment',
             content: commentText,
-            post_id: comment.media?.id,
-            platform_user_id: comment.from?.id,
-            platform_username: comment.from?.username,
+            post_id: comment.media ? .id,
+            platform_user_id: comment.from ? .id,
+            platform_username: comment.from ? .username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: comment.timestamp,
