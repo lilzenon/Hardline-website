@@ -98,6 +98,37 @@ router.all(
     })
 );
 
+// Meta webhook URL verification endpoint
+router.all(
+    "/instagram/meta-test",
+    asyncHandler((req, res) => {
+        console.log('🚨 META TEST ENDPOINT HIT! 🚨');
+        console.log('🚨 This confirms Meta can reach your server');
+        console.log('🚨 Method:', req.method);
+        console.log('🚨 URL:', req.url);
+        console.log('🚨 Original URL:', req.originalUrl);
+        console.log('🚨 IP:', req.ip);
+        console.log('🚨 User Agent:', req.headers['user-agent']);
+        console.log('🚨 Headers:', JSON.stringify(req.headers, null, 2));
+        console.log('🚨 Query:', JSON.stringify(req.query, null, 2));
+        console.log('🚨 Body:', JSON.stringify(req.body, null, 2));
+
+        // Handle both GET (verification) and POST (webhook) requests
+        if (req.method === 'GET' && req.query['hub.challenge']) {
+            console.log('🚨 Webhook verification request from Meta');
+            return res.status(200).send(req.query['hub.challenge']);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Meta test endpoint working",
+            method: req.method,
+            timestamp: new Date().toISOString(),
+            note: "If you see this in logs, Meta can reach your server"
+        });
+    })
+);
+
 // Test endpoint - also comes before main route
 router.get(
     "/instagram/test",

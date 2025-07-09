@@ -50,6 +50,28 @@ app.use(cookieParser());
 // Production-ready session configuration with Redis store
 app.use(session(sessionStore.getSessionConfig()));
 
+// Global request logging middleware to catch ALL requests
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    console.log(`🌐 [${timestamp}] ${req.method} ${req.url}`);
+    console.log(`🌐 Headers:`, JSON.stringify(req.headers, null, 2));
+    console.log(`🌐 IP: ${req.ip}`);
+    console.log(`🌐 User-Agent: ${req.headers['user-agent']}`);
+
+    // Log webhook-related requests with extra detail
+    if (req.url.includes('/webhook') || req.url.includes('/api/webhook')) {
+        console.log(`🚨 WEBHOOK REQUEST DETECTED! 🚨`);
+        console.log(`🚨 Method: ${req.method}`);
+        console.log(`🚨 URL: ${req.url}`);
+        console.log(`🚨 Original URL: ${req.originalUrl}`);
+        console.log(`🚨 Path: ${req.path}`);
+        console.log(`🚨 Query: ${JSON.stringify(req.query)}`);
+        console.log(`🚨 Headers: ${JSON.stringify(req.headers, null, 2)}`);
+    }
+
+    next();
+});
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -88,6 +110,16 @@ app.use("/api", routes.api);
 
 // finally, redirect the short link to the target
 app.get("/:id", asyncHandler(links.redirect));
+
+// Catch-all for debugging webhook issues
+app.all("*", (req, res, next) => {
+    if (req.url.includes('webhook') || req.url.includes('instagram') || req.url.includes('facebook')) {
+        console.log(`🚨 UNMATCHED WEBHOOK-RELATED REQUEST: ${req.method} ${req.url}`);
+        console.log(`🚨 Headers:`, req.headers);
+        console.log(`🚨 Body:`, req.body);
+    }
+    next();
+});
 
 // 404 pages that don't exist
 app.get("*", renders.notFound);
