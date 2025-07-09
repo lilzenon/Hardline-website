@@ -70,6 +70,34 @@ router.get(
     })
 );
 
+// Simple test endpoint that logs everything
+router.all(
+    "/instagram/debug",
+    asyncHandler((req, res) => {
+        console.log('🔍 DEBUG: Instagram webhook debug endpoint hit');
+        console.log('🔍 DEBUG: Method:', req.method);
+        console.log('🔍 DEBUG: URL:', req.url);
+        console.log('🔍 DEBUG: Original URL:', req.originalUrl);
+        console.log('🔍 DEBUG: Headers:', JSON.stringify(req.headers, null, 2));
+        console.log('🔍 DEBUG: Query:', JSON.stringify(req.query, null, 2));
+        console.log('🔍 DEBUG: Body:', JSON.stringify(req.body, null, 2));
+        console.log('🔍 DEBUG: IP:', req.ip);
+
+        res.json({
+            success: true,
+            message: "Debug endpoint working",
+            method: req.method,
+            url: req.url,
+            originalUrl: req.originalUrl,
+            headers: req.headers,
+            query: req.query,
+            body: req.body,
+            ip: req.ip,
+            timestamp: new Date().toISOString()
+        });
+    })
+);
+
 // Instagram webhook events (POST request)
 router.post(
     "/instagram",

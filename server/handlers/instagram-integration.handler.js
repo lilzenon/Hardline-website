@@ -478,12 +478,20 @@ async function handleInstagramWebhook(req, res) {
     try {
         const body = req.body;
 
-        console.log('📨 Instagram webhook received at:', new Date().toISOString());
-        console.log('📨 Request method:', req.method);
-        console.log('📨 Request URL:', req.url);
-        console.log('📨 Body:', JSON.stringify(body, null, 2));
-        console.log('📨 Headers:', JSON.stringify(req.headers, null, 2));
+        console.log('🚀 ===== INSTAGRAM WEBHOOK RECEIVED =====');
+        console.log('📨 Timestamp:', new Date().toISOString());
+        console.log('📨 Method:', req.method);
+        console.log('📨 URL:', req.url);
+        console.log('📨 Original URL:', req.originalUrl);
+        console.log('📨 IP Address:', req.ip);
+        console.log('📨 User Agent:', req.headers['user-agent']);
+        console.log('📨 Content Type:', req.headers['content-type']);
+        console.log('📨 Content Length:', req.headers['content-length']);
+        console.log('📨 Body Type:', typeof body);
+        console.log('📨 Body Content:', JSON.stringify(body, null, 2));
+        console.log('📨 All Headers:', JSON.stringify(req.headers, null, 2));
         console.log('📨 Raw body length:', req.rawBody ? req.rawBody.length : 'No raw body');
+        console.log('🚀 ==========================================');
 
         // Verify webhook signature (skip for test webhooks from Meta dashboard)
         const signature = req.headers['x-hub-signature-256'];
