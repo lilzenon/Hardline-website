@@ -592,8 +592,164 @@
     </div>
 </div>
 
-{{!-- Keyword Management Modal --}}
-{{> keyword-management-modal}}
+{{!-- Keyword Management Modal (Inline) --}}
+<div id="keyword-management-modal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="w-full">
+                    <!-- Modal Header -->
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Instagram Keywords Management
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">
+                                Create and manage keywords that trigger automated responses
+                            </p>
+                        </div>
+                        <button type="button" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="closeKeywordModal()">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Add New Keyword Button -->
+                    <div class="mb-6">
+                        <button type="button" id="add-keyword-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                            <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                            </svg>
+                            Add New Keyword
+                        </button>
+                    </div>
+
+                    <!-- Keywords List -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                        <div id="keywords-loading" class="text-center py-8 hidden">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                            <p class="mt-2 text-sm text-gray-500">Loading keywords...</p>
+                        </div>
+
+                        <div id="keywords-empty" class="text-center py-8 hidden">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                            </svg>
+                            <h3 class="mt-2 text-sm font-medium text-gray-900">No keywords yet</h3>
+                            <p class="mt-1 text-sm text-gray-500">Get started by creating your first keyword</p>
+                        </div>
+
+                        <ul id="keywords-list" class="divide-y divide-gray-200">
+                            <!-- Keywords will be populated here -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Keyword Form Modal -->
+<div id="keyword-form-modal" class="fixed inset-0 z-60 overflow-y-auto hidden" aria-labelledby="keyword-form-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+
+        <!-- Modal panel -->
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <form id="keyword-form">
+                <div class="mb-6">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="keyword-form-title">
+                            Add New Keyword
+                        </h3>
+                        <button type="button" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="closeKeywordFormModal()">
+                            <span class="sr-only">Close</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Keyword Input -->
+                    <div>
+                        <label for="keyword-input" class="block text-sm font-medium text-gray-700">Keyword</label>
+                        <input type="text" id="keyword-input" name="keyword" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm" placeholder="e.g., RSVP, TICKETS">
+                        <p class="mt-1 text-xs text-gray-500">The word or phrase that will trigger the automation</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label for="keyword-description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea id="keyword-description" name="description" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm" placeholder="What does this keyword do?"></textarea>
+                    </div>
+
+                    <!-- Auto Response Message -->
+                    <div>
+                        <label for="auto-response" class="block text-sm font-medium text-gray-700">Auto Response Message</label>
+                        <textarea id="auto-response" name="auto_response_message" rows="3" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm" placeholder="Thanks for your interest! We'll send you updates soon."></textarea>
+                        <p class="mt-1 text-xs text-gray-500">This message will be sent as a DM to users who comment with this keyword</p>
+                    </div>
+
+                    <!-- Options -->
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <input id="case-sensitive" name="case_sensitive" type="checkbox" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="case-sensitive" class="ml-2 block text-sm text-gray-900">Case sensitive matching</label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input id="exact-match" name="exact_match" type="checkbox" class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="exact-match" class="ml-2 block text-sm text-gray-900">Exact match only</label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input id="send-auto-response" name="send_auto_response" type="checkbox" checked class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="send-auto-response" class="ml-2 block text-sm text-gray-900">Send auto response</label>
+                        </div>
+
+                        <div class="flex items-center">
+                            <input id="capture-user-data" name="capture_user_data" type="checkbox" checked class="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded">
+                            <label for="capture-user-data" class="ml-2 block text-sm text-gray-900">Capture user data</label>
+                        </div>
+                    </div>
+
+                    <!-- Signup Type -->
+                    <div>
+                        <label for="signup-type" class="block text-sm font-medium text-gray-700">Signup Type</label>
+                        <select id="signup-type" name="signup_type" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
+                            <option value="general">General Interest</option>
+                            <option value="event">Event RSVP</option>
+                            <option value="newsletter">Newsletter Signup</option>
+                            <option value="product">Product Interest</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="closeKeywordFormModal()" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        Cancel
+                    </button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        <span id="keyword-form-submit-text">Create Keyword</span>
+                        <div id="keyword-form-loading" class="hidden ml-2">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Modern Dashboard JavaScript for Settings -->
 <script>
@@ -1394,5 +1550,247 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+
+    // Keyword Management JavaScript
+    let currentEditingKeyword = null;
+    let currentSocialAccountId = null;
+
+    // Open keyword management modal
+    function openKeywordModal(socialAccountId = null) {
+        // Set the current social account ID for keyword operations
+        currentSocialAccountId = socialAccountId;
+
+        console.log('Opening keyword modal for social account:', socialAccountId);
+
+        document.getElementById('keyword-management-modal').classList.remove('hidden');
+        loadKeywords();
+    }
+
+    // Close keyword management modal
+    function closeKeywordModal() {
+        document.getElementById('keyword-management-modal').classList.add('hidden');
+    }
+
+    // Open keyword form modal
+    function openKeywordFormModal(keyword = null) {
+        currentEditingKeyword = keyword;
+        const modal = document.getElementById('keyword-form-modal');
+        const title = document.getElementById('keyword-form-title');
+        const submitText = document.getElementById('keyword-form-submit-text');
+        const form = document.getElementById('keyword-form');
+
+        if (keyword) {
+            title.textContent = 'Edit Keyword';
+            submitText.textContent = 'Update Keyword';
+            populateKeywordForm(keyword);
+        } else {
+            title.textContent = 'Add New Keyword';
+            submitText.textContent = 'Create Keyword';
+            form.reset();
+        }
+
+        modal.classList.remove('hidden');
+    }
+
+    // Close keyword form modal
+    function closeKeywordFormModal() {
+        document.getElementById('keyword-form-modal').classList.add('hidden');
+    }
+
+    // Load keywords from API
+    async function loadKeywords() {
+        const loadingEl = document.getElementById('keywords-loading');
+        const emptyEl = document.getElementById('keywords-empty');
+        const listEl = document.getElementById('keywords-list');
+
+        console.log('Loading keywords for social account:', currentSocialAccountId);
+
+        loadingEl.classList.remove('hidden');
+        emptyEl.classList.add('hidden');
+        listEl.innerHTML = '';
+
+        try {
+            // Build URL with social account ID if available
+            let url = '/api/integrations/keywords';
+            if (currentSocialAccountId) {
+                url += `?social_account_id=${currentSocialAccountId}`;
+            }
+
+            console.log('Fetching keywords from:', url);
+            const response = await fetch(url);
+            const data = await response.json();
+
+            console.log('Keywords response:', data);
+
+            loadingEl.classList.add('hidden');
+
+            if (data.success && data.keywords.length > 0) {
+                renderKeywords(data.keywords);
+            } else {
+                emptyEl.classList.remove('hidden');
+                console.log('No keywords found or empty response');
+            }
+        } catch (error) {
+            console.error('Error loading keywords:', error);
+            loadingEl.classList.add('hidden');
+            emptyEl.classList.remove('hidden');
+        }
+    }
+
+    // Render keywords list
+    function renderKeywords(keywords) {
+        const listEl = document.getElementById('keywords-list');
+
+        listEl.innerHTML = keywords.map(keyword => `
+            <li class="px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center">
+                            <h4 class="text-sm font-medium text-gray-900">${keyword.keyword}</h4>
+                            <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${keyword.send_auto_response ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                ${keyword.send_auto_response ? 'Auto-response' : 'No response'}
+                            </span>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500">${keyword.description || 'No description'}</p>
+                        <div class="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                            <span>Triggers: ${keyword.total_triggers || 0}</span>
+                            <span>Users: ${keyword.total_users_captured || 0}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="editKeyword(${keyword.id})" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                            Edit
+                        </button>
+                        <button onclick="deleteKeyword(${keyword.id})" class="text-red-600 hover:text-red-900 text-sm font-medium">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </li>
+        `).join('');
+    }
+
+    // Edit keyword
+    async function editKeyword(keywordId) {
+        try {
+            const response = await fetch(`/api/integrations/keywords/${keywordId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                openKeywordFormModal(data.keyword);
+            }
+        } catch (error) {
+            console.error('Error loading keyword:', error);
+        }
+    }
+
+    // Delete keyword
+    async function deleteKeyword(keywordId) {
+        if (!confirm('Are you sure you want to delete this keyword?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/integrations/keywords/${keywordId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                loadKeywords(); // Reload the list
+            } else {
+                alert('Failed to delete keyword: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error deleting keyword:', error);
+            alert('Failed to delete keyword');
+        }
+    }
+
+    // Populate keyword form with existing data
+    function populateKeywordForm(keyword) {
+        document.getElementById('keyword-input').value = keyword.keyword || '';
+        document.getElementById('keyword-description').value = keyword.description || '';
+        document.getElementById('auto-response').value = keyword.auto_response_message || '';
+        document.getElementById('case-sensitive').checked = keyword.case_sensitive || false;
+        document.getElementById('exact-match').checked = keyword.exact_match || false;
+        document.getElementById('send-auto-response').checked = keyword.send_auto_response || false;
+        document.getElementById('capture-user-data').checked = keyword.capture_user_data || false;
+        document.getElementById('signup-type').value = keyword.signup_type || 'general';
+    }
+
+    // Handle keyword form submission
+    document.getElementById('keyword-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const submitText = document.getElementById('keyword-form-submit-text');
+        const loadingEl = document.getElementById('keyword-form-loading');
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitText.classList.add('hidden');
+        loadingEl.classList.remove('hidden');
+
+        try {
+            const formData = new FormData(e.target);
+            const data = {
+                keyword: formData.get('keyword'),
+                description: formData.get('description'),
+                auto_response_message: formData.get('auto_response_message'),
+                case_sensitive: formData.has('case_sensitive'),
+                exact_match: formData.has('exact_match'),
+                send_auto_response: formData.has('send_auto_response'),
+                capture_user_data: formData.has('capture_user_data'),
+                signup_type: formData.get('signup_type'),
+                social_account_id: currentSocialAccountId
+            };
+
+            const url = currentEditingKeyword
+                ? `/api/integrations/keywords/${currentEditingKeyword.id}`
+                : '/api/integrations/keywords';
+            const method = currentEditingKeyword ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                closeKeywordFormModal();
+                loadKeywords(); // Reload the list
+                showNotification(currentEditingKeyword ? 'Keyword updated successfully!' : 'Keyword created successfully!', 'success');
+            } else {
+                alert('Failed to save keyword: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error saving keyword:', error);
+            alert('Failed to save keyword');
+        } finally {
+            // Reset loading state
+            submitBtn.disabled = false;
+            submitText.classList.remove('hidden');
+            loadingEl.classList.add('hidden');
+        }
+    });
+
+    // Add event listener for add keyword button
+    document.getElementById('add-keyword-btn').addEventListener('click', function() {
+        openKeywordFormModal();
+    });
+
+    // Make functions globally available
+    window.openKeywordModal = openKeywordModal;
+    window.closeKeywordModal = closeKeywordModal;
+    window.openKeywordFormModal = openKeywordFormModal;
+    window.closeKeywordFormModal = closeKeywordFormModal;
+    window.editKeyword = editKeyword;
+    window.deleteKeyword = deleteKeyword;
 });
 </script>
