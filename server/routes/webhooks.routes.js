@@ -64,6 +64,29 @@ router.all(
     })
 );
 
+// External accessibility test endpoint
+router.all(
+    "/instagram/external-test",
+    asyncHandler((req, res) => {
+        console.log('🌐 EXTERNAL TEST: Webhook accessibility test');
+        console.log('🌐 Method:', req.method);
+        console.log('🌐 IP:', req.ip);
+        console.log('🌐 User Agent:', req.headers['user-agent']);
+        console.log('🌐 Headers:', JSON.stringify(req.headers, null, 2));
+        console.log('🌐 Body:', JSON.stringify(req.body, null, 2));
+
+        res.status(200).json({
+            success: true,
+            message: "External webhook test successful",
+            method: req.method,
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+            timestamp: new Date().toISOString(),
+            note: "This endpoint confirms external accessibility"
+        });
+    })
+);
+
 // Test endpoint - also comes before main route
 router.get(
     "/instagram/test",
@@ -85,14 +108,17 @@ router.get(
 router.get(
     "/instagram",
     (req, res, next) => {
-        console.log('🔍 Webhook GET request received:');
+        console.log('🔍 ===== WEBHOOK GET REQUEST =====');
+        console.log('🔍 Timestamp:', new Date().toISOString());
         console.log('🔍 Path:', req.path);
         console.log('🔍 Original URL:', req.originalUrl);
         console.log('🔍 Raw request URL:', req.url);
         console.log('🔍 Raw query string:', req.url.split('?')[1] || 'No query string');
-        console.log('🔍 Parsed query object:', req.query);
-        console.log('🔍 Headers:', req.headers);
+        console.log('🔍 Parsed query object:', JSON.stringify(req.query, null, 2));
+        console.log('🔍 Headers:', JSON.stringify(req.headers, null, 2));
         console.log('🔍 IP:', req.ip);
+        console.log('🔍 User Agent:', req.headers['user-agent']);
+        console.log('🔍 ================================');
         next();
     },
     asyncHandler(instagramHandler.verifyInstagramWebhook)
