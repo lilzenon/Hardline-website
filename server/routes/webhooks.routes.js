@@ -36,41 +36,7 @@ const rawBodyMiddleware = (req, res, next) => {
  * These routes handle webhook verification and incoming webhook events from Instagram
  */
 
-// Instagram webhook verification (GET request)
-router.get(
-    "/instagram",
-    (req, res, next) => {
-        console.log('🔍 Webhook GET request received:');
-        console.log('🔍 Path:', req.path);
-        console.log('🔍 Original URL:', req.originalUrl);
-        console.log('🔍 Raw request URL:', req.url);
-        console.log('🔍 Raw query string:', req.url.split('?')[1] || 'No query string');
-        console.log('🔍 Parsed query object:', req.query);
-        console.log('🔍 Headers:', req.headers);
-        console.log('🔍 IP:', req.ip);
-        next();
-    },
-    asyncHandler(instagramHandler.verifyInstagramWebhook)
-);
-
-// Instagram webhook test endpoint
-router.get(
-    "/instagram/test",
-    asyncHandler((req, res) => {
-        console.log('🧪 Instagram webhook test endpoint accessed');
-        console.log('🧪 Query params:', req.query);
-        console.log('🧪 Headers:', req.headers);
-        res.json({
-            success: true,
-            message: "Instagram webhook endpoint is reachable",
-            timestamp: new Date().toISOString(),
-            query: req.query,
-            headers: req.headers
-        });
-    })
-);
-
-// Simple test endpoint that logs everything
+// Debug endpoint - MUST come first to avoid being caught by main route
 router.all(
     "/instagram/debug",
     asyncHandler((req, res) => {
@@ -96,6 +62,40 @@ router.all(
             timestamp: new Date().toISOString()
         });
     })
+);
+
+// Test endpoint - also comes before main route
+router.get(
+    "/instagram/test",
+    asyncHandler((req, res) => {
+        console.log('🧪 Instagram webhook test endpoint accessed');
+        console.log('🧪 Query params:', req.query);
+        console.log('🧪 Headers:', req.headers);
+        res.json({
+            success: true,
+            message: "Instagram webhook endpoint is reachable",
+            timestamp: new Date().toISOString(),
+            query: req.query,
+            headers: req.headers
+        });
+    })
+);
+
+// Instagram webhook verification (GET request)
+router.get(
+    "/instagram",
+    (req, res, next) => {
+        console.log('🔍 Webhook GET request received:');
+        console.log('🔍 Path:', req.path);
+        console.log('🔍 Original URL:', req.originalUrl);
+        console.log('🔍 Raw request URL:', req.url);
+        console.log('🔍 Raw query string:', req.url.split('?')[1] || 'No query string');
+        console.log('🔍 Parsed query object:', req.query);
+        console.log('🔍 Headers:', req.headers);
+        console.log('🔍 IP:', req.ip);
+        next();
+    },
+    asyncHandler(instagramHandler.verifyInstagramWebhook)
 );
 
 // Instagram webhook events (POST request)
