@@ -123,7 +123,7 @@ async function handleInstagramCallback(req, res) {
             }
         });
 
-        console.log('📄 Found pages:', pagesResponse.data.data ? .length || 0);
+        console.log('📄 Found pages:', pagesResponse.data.data?.length || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
