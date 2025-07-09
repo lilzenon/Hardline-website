@@ -41,6 +41,14 @@ router.delete(
     asyncHandler(instagramHandler.disconnectInstagram)
 );
 
+// Debug Instagram configuration (admin only)
+router.get(
+    "/instagram/debug",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(instagramHandler.debugInstagramConfig)
+);
+
 /**
  * Keywords Management Routes
  */

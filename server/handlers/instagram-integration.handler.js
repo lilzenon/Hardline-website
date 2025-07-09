@@ -179,12 +179,61 @@ async function handleInstagramCallback(req, res) {
         console.log('✅ Using return URL:', recoveredReturnUrl);
 
         // Exchange code for access token using Facebook's token endpoint
-        const tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
-            client_id: process.env.FACEBOOK_APP_ID,
-            client_secret: process.env.FACEBOOK_APP_SECRET,
-            redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
-            code: code
-        });
+        console.log('🔄 Attempting token exchange with Facebook API...');
+        console.log('🔍 App ID:', process.env.FACEBOOK_APP_ID);
+        console.log('🔍 App Secret (first 8 chars):', process.env.FACEBOOK_APP_SECRET ? process.env.FACEBOOK_APP_SECRET.substring(0, 8) + '...' : 'MISSING');
+        console.log('🔍 Redirect URI:', process.env.FACEBOOK_REDIRECT_URI);
+        console.log('🔍 Authorization Code (first 20 chars):', code ? code.substring(0, 20) + '...' : 'MISSING');
+
+        let tokenResponse;
+        try {
+            tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
+                client_id: process.env.FACEBOOK_APP_ID,
+                client_secret: process.env.FACEBOOK_APP_SECRET,
+                redirect_uri: process.env.FACEBOOK_REDIRECT_URI,
+                code: code
+            });
+            console.log('✅ Token exchange successful');
+        } catch (tokenError) {
+            console.error('❌ Facebook API token exchange failed:');
+            console.error('❌ Status:', tokenError.response && tokenError.response.status);
+            console.error('❌ Status Text:', tokenError.response && tokenError.response.statusText);
+            console.error('❌ Headers:', JSON.stringify(tokenError.response && tokenError.response.headers, null, 2));
+            console.error('❌ Error Data:', JSON.stringify(tokenError.response && tokenError.response.data, null, 2));
+            console.error('❌ Full Error:', tokenError.message);
+
+            // Provide specific error messages based on Facebook API error types
+            let errorType = 'oauth_failed';
+            let errorMessage = 'Facebook API authentication failed';
+
+            if (tokenError.response && tokenError.response.data && tokenError.response.data.error) {
+                const fbError = tokenError.response.data.error;
+                console.error('❌ Facebook Error Code:', fbError.code);
+                console.error('❌ Facebook Error Type:', fbError.type);
+                console.error('❌ Facebook Error Message:', fbError.message);
+
+                switch (fbError.type) {
+                    case 'OAuthException':
+                        if (fbError.message.includes('client secret')) {
+                            errorType = 'invalid_credentials';
+                            errorMessage = 'Invalid App ID or App Secret. Please check your Meta App Dashboard configuration.';
+                        } else if (fbError.message.includes('redirect_uri')) {
+                            errorType = 'invalid_redirect_uri';
+                            errorMessage = 'Invalid redirect URI. Please check your Meta App Dashboard OAuth settings.';
+                        } else if (fbError.message.includes('code')) {
+                            errorType = 'invalid_code';
+                            errorMessage = 'Invalid authorization code. Please try connecting again.';
+                        } else {
+                            errorMessage = `Facebook OAuth error: ${fbError.message}`;
+                        }
+                        break;
+                    default:
+                        errorMessage = `Facebook API error: ${fbError.message}`;
+                }
+            }
+
+            return res.redirect(`${recoveredReturnUrl}?error=${errorType}&error_description=${encodeURIComponent(errorMessage)}`);
+        }
 
         const { access_token } = tokenResponse.data;
 
@@ -626,11 +675,52 @@ async function disconnectInstagram(req, res) {
     }
 }
 
+/**
+ * Debug endpoint to verify environment variables (admin only)
+ */
+async function debugInstagramConfig(req, res) {
+    try {
+        // Only allow in development or for admin users
+        if (process.env.NODE_ENV === 'production' && (!req.user || req.user.role !== 'admin')) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const config = {
+            facebook_app_id: process.env.FACEBOOK_APP_ID || 'MISSING',
+            facebook_app_secret: process.env.FACEBOOK_APP_SECRET ?
+                process.env.FACEBOOK_APP_SECRET.substring(0, 8) + '...' : 'MISSING',
+            facebook_redirect_uri: process.env.FACEBOOK_REDIRECT_URI || 'MISSING',
+            instagram_webhook_verify_token: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ?
+                process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN.substring(0, 8) + '...' : 'MISSING',
+            base_url: process.env.BASE_URL || 'MISSING',
+            node_env: process.env.NODE_ENV || 'MISSING'
+        };
+
+        console.log('🔍 Instagram configuration debug requested');
+        console.log('🔍 Configuration:', config);
+
+        res.json({
+            status: 'success',
+            message: 'Instagram configuration debug info',
+            config: config,
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (error) {
+        console.error('❌ Error in debug endpoint:', error);
+        res.status(500).json({
+            error: 'Debug endpoint failed',
+            message: error.message
+        });
+    }
+}
+
 module.exports = {
     initiateInstagramAuth,
     handleInstagramCallback,
     verifyInstagramWebhook,
     handleInstagramWebhook,
     getInstagramStatus,
-    disconnectInstagram
+    disconnectInstagram,
+    debugInstagramConfig
 };

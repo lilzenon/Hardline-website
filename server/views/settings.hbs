@@ -1107,6 +1107,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     errorMessage = 'Instagram account is not a Business account';
                     helpText = 'Keyword automation requires an Instagram Business account. Please switch your account to Business mode in Instagram settings.';
                     break;
+                case 'invalid_credentials':
+                    errorMessage = 'Invalid App ID or App Secret';
+                    helpText = 'Please check that your Meta App Dashboard credentials are correctly configured in the environment variables.';
+                    break;
+                case 'invalid_redirect_uri':
+                    errorMessage = 'Invalid redirect URI configuration';
+                    helpText = 'Please ensure your Meta App Dashboard has the correct OAuth redirect URI: https://b2b.click/api/integrations/instagram/callback';
+                    break;
+                case 'invalid_code':
+                    errorMessage = 'Authorization code expired or invalid';
+                    helpText = 'Please try connecting again. Authorization codes expire quickly for security.';
+                    break;
                 case 'callback_failed':
                     errorMessage = 'Failed to complete Instagram connection';
                     helpText = 'There was a technical issue. Please try again in a few moments.';
