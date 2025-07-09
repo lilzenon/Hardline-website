@@ -68,6 +68,41 @@ router.post(
 );
 
 /**
+ * Test endpoint for webhook debugging
+ */
+router.get(
+    "/test",
+    asyncHandler((req, res) => {
+        console.log('🧪 Webhook test endpoint accessed');
+        console.log('🧪 Query params:', req.query);
+        console.log('🧪 Headers:', req.headers);
+        res.json({
+            success: true,
+            message: "Webhook test endpoint working",
+            timestamp: new Date().toISOString(),
+            query: req.query,
+            headers: req.headers
+        });
+    })
+);
+
+router.post(
+    "/test",
+    asyncHandler((req, res) => {
+        console.log('🧪 Webhook test POST endpoint accessed');
+        console.log('🧪 Body:', req.body);
+        console.log('🧪 Headers:', req.headers);
+        res.json({
+            success: true,
+            message: "Webhook test POST endpoint working",
+            timestamp: new Date().toISOString(),
+            body: req.body,
+            headers: req.headers
+        });
+    })
+);
+
+/**
  * Generic webhook health check
  */
 router.get(
@@ -88,6 +123,10 @@ router.get(
                 },
                 sms: {
                     events: "/api/webhooks/sms (POST)"
+                },
+                test: {
+                    get: "/api/webhooks/test (GET)",
+                    post: "/api/webhooks/test (POST)"
                 }
             }
         });

@@ -126,6 +126,14 @@ const spec = {
     APPLE_TEAM_ID: str({ default: "" }),
     APPLE_KEY_ID: str({ default: "" }),
     APPLE_PRIVATE_KEY: str({ default: "" }),
+
+    // 📱 FACEBOOK/INSTAGRAM INTEGRATION
+    FACEBOOK_APP_ID: str({ default: "" }),
+    FACEBOOK_APP_SECRET: str({ default: "" }),
+    FACEBOOK_REDIRECT_URI: str({ default: "" }),
+    INSTAGRAM_WEBHOOK_VERIFY_TOKEN: str({ default: "" }),
+    FACEBOOK_WEBHOOK_VERIFY_TOKEN: str({ default: "" }),
+    BASE_URL: str({ default: "" }),
 };
 
 for (const key in spec) {
