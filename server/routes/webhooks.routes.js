@@ -86,6 +86,30 @@ router.get(
     })
 );
 
+/**
+ * Debug endpoint to check environment variables
+ */
+router.get(
+    "/debug-env",
+    asyncHandler((req, res) => {
+        console.log('🔍 Environment debug endpoint accessed');
+        res.json({
+            success: true,
+            message: "Environment variables check",
+            timestamp: new Date().toISOString(),
+            env_check: {
+                facebook_app_id: process.env.FACEBOOK_APP_ID ? 'SET' : 'NOT SET',
+                facebook_app_secret: process.env.FACEBOOK_APP_SECRET ? 'SET' : 'NOT SET',
+                instagram_webhook_verify_token: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ? 'SET' : 'NOT SET',
+                base_url: process.env.BASE_URL ? 'SET' : 'NOT SET',
+                facebook_redirect_uri: process.env.FACEBOOK_REDIRECT_URI ? 'SET' : 'NOT SET',
+                // Show first 4 characters of App ID for debugging (if set)
+                app_id_preview: process.env.FACEBOOK_APP_ID ? process.env.FACEBOOK_APP_ID.substring(0, 4) + '...' : 'NOT SET'
+            }
+        });
+    })
+);
+
 router.post(
     "/test",
     asyncHandler((req, res) => {
