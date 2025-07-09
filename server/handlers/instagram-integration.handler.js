@@ -23,23 +23,34 @@ async function initiateInstagramAuth(req, res) {
         req.session.instagram_auth_return = returnUrl || '/dashboard/settings#integrations';
         req.session.instagram_auth_user_id = userId;
 
-        // Instagram OAuth URL with required permissions
+        // Instagram Business OAuth URL with required permissions
+        // Using Facebook Login for Business to access Instagram Business accounts
         const scopes = [
             'instagram_basic',
             'instagram_manage_comments',
             'instagram_manage_messages',
             'pages_show_list',
-            'pages_read_engagement'
+            'pages_read_engagement',
+            'business_management' // Required for Instagram Business access
         ].join(',');
 
+        // Generate secure state parameter
+        const state = crypto.randomBytes(16).toString('hex');
+        req.session.instagram_oauth_state = state;
+
+        // Use Facebook OAuth with Instagram Business permissions
+        // This is the correct flow for Instagram Business API access
         const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
             `client_id=${process.env.FACEBOOK_APP_ID}&` +
             `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_REDIRECT_URI)}&` +
             `scope=${encodeURIComponent(scopes)}&` +
             `response_type=code&` +
-            `state=${crypto.randomBytes(16).toString('hex')}`;
+            `state=${state}&` +
+            `auth_type=rerequest&` + // Force permission re-request
+            `display=popup`; // Better UX for Instagram Business connection
 
-        console.log('🔗 Initiating Instagram OAuth flow for user:', userId);
+        console.log('🔗 Initiating Instagram Business OAuth flow for user:', userId);
+        console.log('🔗 Requested scopes:', scopes);
         res.redirect(authUrl);
 
     } catch (error) {
@@ -59,6 +70,7 @@ async function handleInstagramCallback(req, res) {
     try {
         const { code, state, error } = req.query;
         const userId = req.session.instagram_auth_user_id;
+        const expectedState = req.session.instagram_oauth_state;
         const returnUrl = req.session.instagram_auth_return || '/dashboard/settings#integrations';
 
         if (error) {
@@ -85,6 +97,12 @@ async function handleInstagramCallback(req, res) {
             return res.redirect(`${returnUrl}?error=invalid_callback`);
         }
 
+        // Validate state parameter for security
+        if (!state || state !== expectedState) {
+            console.error('❌ Invalid state parameter in Instagram callback');
+            return res.redirect(`${returnUrl}?error=invalid_state`);
+        }
+
         // Exchange code for access token
         const tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
             client_id: process.env.FACEBOOK_APP_ID,
@@ -96,12 +114,15 @@ async function handleInstagramCallback(req, res) {
         const { access_token } = tokenResponse.data;
 
         // Get user's Facebook pages (which include Instagram Business accounts)
+        console.log('🔍 Fetching Facebook pages with Instagram Business accounts...');
         const pagesResponse = await axios.get(`${INSTAGRAM_API_BASE}/me/accounts`, {
             params: {
                 access_token: access_token,
-                fields: 'id,name,instagram_business_account'
+                fields: 'id,name,instagram_business_account{id,username,account_type}'
             }
         });
+
+        console.log('📄 Found pages:', pagesResponse.data.data ? .length || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
@@ -111,16 +132,24 @@ async function handleInstagramCallback(req, res) {
                 const igResponse = await axios.get(`${INSTAGRAM_API_BASE}/${page.instagram_business_account.id}`, {
                     params: {
                         access_token: access_token,
-                        fields: 'id,username,name,profile_picture_url,followers_count,account_type'
+                        fields: 'id,username,name,profile_picture_url,followers_count,account_type,media_count,biography'
                     }
                 });
 
-                instagramAccounts.push({
-                    ...igResponse.data,
-                    page_id: page.id,
-                    page_name: page.name,
-                    access_token: access_token
-                });
+                const igData = igResponse.data;
+
+                // Only include Business accounts (not Personal or Creator)
+                if (igData.account_type === 'BUSINESS') {
+                    console.log('✅ Found Instagram Business account:', igData.username);
+                    instagramAccounts.push({
+                        ...igData,
+                        page_id: page.id,
+                        page_name: page.name,
+                        access_token: access_token
+                    });
+                } else {
+                    console.log('⚠️ Skipping non-Business Instagram account:', igData.username, 'Type:', igData.account_type);
+                }
             }
         }
 
@@ -129,9 +158,18 @@ async function handleInstagramCallback(req, res) {
 
             // Check if user has any Facebook pages at all
             if (pagesResponse.data.data.length === 0) {
+                console.log('❌ No Facebook Pages found');
                 return res.redirect(`${returnUrl}?error=account_not_eligible&error_description=${encodeURIComponent('No Facebook Pages found. Please create a Facebook Page and connect it to your Instagram account.')}`);
             } else {
-                return res.redirect(`${returnUrl}?error=no_business_accounts&error_description=${encodeURIComponent('No Instagram Business accounts found. Please ensure your Instagram account is set to Business or Creator mode and is connected to a Facebook Page.')}`);
+                // Log available pages for debugging
+                const availablePages = pagesResponse.data.data.map(page => ({
+                    name: page.name,
+                    has_instagram: !!page.instagram_business_account,
+                    instagram_type: page.instagram_business_account ? .account_type
+                }));
+                console.log('📋 Available pages:', availablePages);
+
+                return res.redirect(`${returnUrl}?error=no_business_accounts&error_description=${encodeURIComponent('No Instagram Business accounts found. Please ensure your Instagram account is set to Business mode (not Creator or Personal) and is connected to a Facebook Page.')}`);
             }
         }
 
@@ -194,6 +232,7 @@ async function handleInstagramCallback(req, res) {
         // Clean up session
         delete req.session.instagram_auth_user_id;
         delete req.session.instagram_auth_return;
+        delete req.session.instagram_oauth_state;
 
         const successParam = isReconnection ? 'instagram_reconnected' : 'instagram_connected';
         res.redirect(`${returnUrl}?success=${successParam}`);
@@ -342,9 +381,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_interaction_id: comment.id,
             interaction_type: 'comment',
             content: commentText,
-            post_id: comment.media?.id,
-            platform_user_id: comment.from?.id,
-            platform_username: comment.from?.username,
+            post_id: comment.media ? .id,
+            platform_user_id: comment.from ? .id,
+            platform_username: comment.from ? .username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: comment.timestamp,

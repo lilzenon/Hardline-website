@@ -974,7 +974,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (connectInstagramBtn.disabled) return;
 
             updateConnectionButton(false, true);
-            showLoadingState('Redirecting to Instagram...');
+            showLoadingState('Redirecting to Instagram Business authentication...');
 
             const returnUrl = encodeURIComponent(window.location.href);
 
@@ -1097,7 +1097,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     break;
                 case 'no_business_accounts':
                     errorMessage = 'No Instagram Business accounts found';
-                    helpText = 'Please ensure your Instagram account is set to Business or Creator mode and is connected to a Facebook Page.';
+                    helpText = 'Please ensure your Instagram account is set to Business mode (not Creator or Personal) and is connected to a Facebook Page.';
+                    break;
+                case 'invalid_state':
+                    errorMessage = 'Security validation failed';
+                    helpText = 'Please try connecting again. This helps protect your account from unauthorized access.';
+                    break;
+                case 'not_business_account':
+                    errorMessage = 'Instagram account is not a Business account';
+                    helpText = 'Keyword automation requires an Instagram Business account. Please switch your account to Business mode in Instagram settings.';
                     break;
                 case 'callback_failed':
                     errorMessage = 'Failed to complete Instagram connection';
