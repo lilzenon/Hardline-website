@@ -378,8 +378,14 @@ async function handleInstagramCallback(req, res) {
             });
         }
 
-        // Set up webhook subscription
-        await setupInstagramWebhook(igAccount.id, access_token);
+        // Note: Instagram webhook subscriptions are typically configured in Meta App Dashboard
+        // Automatic webhook setup is optional and may require additional permissions
+        try {
+            await setupInstagramWebhook(igAccount.page_id, igAccount.id, access_token);
+        } catch (webhookError) {
+            console.log('⚠️ Webhook setup failed - this is normal and can be configured manually in Meta App Dashboard');
+            console.log('⚠️ Webhook error:', webhookError.message);
+        }
 
         const actionType = isReconnection ? 'reconnected' : 'connected';
         console.log(`✅ Instagram account ${actionType} successfully:`, igAccount.username);
@@ -400,28 +406,24 @@ async function handleInstagramCallback(req, res) {
 }
 
 /**
- * Set up Instagram webhook subscription
+ * Set up Instagram webhook subscription (optional)
+ * Note: Instagram webhooks are typically configured in Meta App Dashboard
  */
-async function setupInstagramWebhook(instagramAccountId, accessToken) {
-    try {
-        const webhookUrl = `${process.env.BASE_URL}/api/webhooks/instagram`;
-        const verifyToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+async function setupInstagramWebhook(pageId, instagramAccountId, accessToken) {
+    console.log('🔗 Attempting Instagram webhook subscription...');
+    console.log('🔗 Page ID:', pageId);
+    console.log('🔗 Instagram Account ID:', instagramAccountId);
 
-        // Subscribe to Instagram webhooks
-        const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/subscribed_apps`, {
-            subscribed_fields: 'comments,messages',
-            access_token: accessToken,
-            callback_url: webhookUrl,
-            verify_token: verifyToken
-        });
+    // Instagram webhook subscriptions are usually configured in Meta App Dashboard
+    // This programmatic approach may not work for all app types
+    console.log('ℹ️ Instagram webhooks should be configured in Meta App Dashboard:');
+    console.log('ℹ️ 1. Go to your Meta App Dashboard');
+    console.log('ℹ️ 2. Navigate to Webhooks');
+    console.log('ℹ️ 3. Add webhook URL: https://b2b.click/api/webhooks/instagram');
+    console.log('ℹ️ 4. Subscribe to: comments, mentions, story_insights');
 
-        console.log('✅ Instagram webhook subscription created:', response.data);
-        return response.data;
-
-    } catch (error) {
-        console.error('❌ Error setting up Instagram webhook:', error);
-        throw error;
-    }
+    // Skip automatic webhook setup for now
+    return { success: false, message: 'Configure webhooks manually in Meta App Dashboard' };
 }
 
 /**
