@@ -67,13 +67,38 @@ class SessionSecurityService {
     }
 
     /**
+     * Check if IP is from known webhook providers
+     */
+    isKnownWebhookProvider(ip) {
+        // Meta/Facebook IP ranges (common ones)
+        const metaIPRanges = [
+            '31.13.', '66.220.', '69.63.', '69.171.', '74.119.', '173.252.',
+            '204.15.', '157.240.', '179.60.', '185.60.', '199.201.'
+        ];
+
+        // Twilio IP ranges (common ones)
+        const twilioIPRanges = [
+            '54.172.', '54.244.', '54.171.', '54.65.', '54.169.',
+            '177.71.', '23.21.', '50.16.', '107.20.', '75.101.'
+        ];
+
+        const allWebhookRanges = [...metaIPRanges, ...twilioIPRanges];
+        return allWebhookRanges.some(range => ip.startsWith(range));
+    }
+
+    /**
      * Check for suspicious session activity
      */
     detectSuspiciousActivity(req) {
         const suspiciousIndicators = [];
 
-        // Check for rapid session creation from same IP
+        // Skip suspicious activity detection for known webhook providers
         const ip = req.ip;
+        if (this.isKnownWebhookProvider(ip)) {
+            return suspiciousIndicators; // Return empty array for webhook providers
+        }
+
+        // Check for rapid session creation from same IP
         const now = Date.now();
         const ipActivity = this.rateLimiters.get(ip) || { count: 0, firstSeen: now };
 
@@ -115,8 +140,9 @@ class SessionSecurityService {
     securityMiddleware() {
         return (req, res, next) => {
             try {
-                // Skip security checks for health endpoints
-                if (req.path.startsWith('/api/monitoring/')) {
+                // Skip security checks for health endpoints and webhooks
+                if (req.path.startsWith('/api/monitoring/') ||
+                    req.path.startsWith('/api/webhooks/')) {
                     return next();
                 }
 
