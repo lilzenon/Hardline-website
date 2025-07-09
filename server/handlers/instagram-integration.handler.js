@@ -433,8 +433,20 @@ function verifyInstagramWebhook(req, res) {
     console.log('🔍 Instagram webhook verification request received:');
     console.log('🔍 Method:', req.method);
     console.log('🔍 URL:', req.url);
+    console.log('🔍 Original URL:', req.originalUrl);
     console.log('🔍 Full query object:', JSON.stringify(req.query, null, 2));
     console.log('🔍 Query keys:', Object.keys(req.query));
+
+    // Handle direct access (no query parameters)
+    if (Object.keys(req.query).length === 0) {
+        console.log('ℹ️ Direct access to webhook endpoint - returning info');
+        return res.json({
+            message: 'Instagram Webhook Endpoint',
+            status: 'active',
+            timestamp: new Date().toISOString(),
+            info: 'This endpoint handles Instagram webhook verification and events'
+        });
+    }
 
     const mode = req.query['hub.mode'];
     const token = req.query['hub.verify_token'];

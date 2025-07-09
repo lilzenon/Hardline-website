@@ -39,6 +39,17 @@ const rawBodyMiddleware = (req, res, next) => {
 // Instagram webhook verification (GET request)
 router.get(
     "/instagram",
+    (req, res, next) => {
+        console.log('🔍 Webhook GET request received:');
+        console.log('🔍 Path:', req.path);
+        console.log('🔍 Original URL:', req.originalUrl);
+        console.log('🔍 Raw request URL:', req.url);
+        console.log('🔍 Raw query string:', req.url.split('?')[1] || 'No query string');
+        console.log('🔍 Parsed query object:', req.query);
+        console.log('🔍 Headers:', req.headers);
+        console.log('🔍 IP:', req.ip);
+        next();
+    },
     asyncHandler(instagramHandler.verifyInstagramWebhook)
 );
 
