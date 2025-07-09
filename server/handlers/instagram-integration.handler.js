@@ -197,7 +197,7 @@ async function handleInstagramCallback(req, res) {
             }
         });
 
-        console.log('📄 Found pages:', pagesResponse.data.data?.length || 0);
+        console.log('📄 Found pages:', (pagesResponse.data.data && pagesResponse.data.data.length) || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
@@ -240,7 +240,7 @@ async function handleInstagramCallback(req, res) {
                 const availablePages = pagesResponse.data.data.map(page => ({
                     name: page.name,
                     has_instagram: !!page.instagram_business_account,
-                    instagram_type: page.instagram_business_account?.account_type
+                    instagram_type: page.instagram_business_account && page.instagram_business_account.account_type
                 }));
                 console.log('📋 Available pages:', availablePages);
 
@@ -466,9 +466,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_interaction_id: comment.id,
             interaction_type: 'comment',
             content: commentText,
-            post_id: comment.media?.id,
-            platform_user_id: comment.from?.id,
-            platform_username: comment.from?.username,
+            post_id: comment.media && comment.media.id,
+            platform_user_id: comment.from && comment.from.id,
+            platform_username: comment.from && comment.from.username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: comment.timestamp,
