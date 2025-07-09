@@ -575,9 +575,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
         const socialAccounts = await knex("social_media_accounts")
             .where("platform", "instagram")
             .where("platform_account_id", instagramAccountId);
-        console.log('🔍 Found social accounts:', socialAccounts ? .length || 0);
+        console.log('🔍 Found social accounts:', socialAccounts && socialAccounts.length || 0);
 
-        const account = socialAccounts ? .[0]; // Take the first (should be only) match
+        const account = socialAccounts && socialAccounts[0]; // Take the first (should be only) match
 
         if (!account) {
             console.error('❌ Instagram account not found:', instagramAccountId);
