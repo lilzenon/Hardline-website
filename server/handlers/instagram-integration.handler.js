@@ -24,33 +24,34 @@ async function initiateInstagramAuth(req, res) {
         req.session.instagram_auth_user_id = userId;
 
         // Instagram Business OAuth URL with required permissions
-        // Using Facebook Login for Business to access Instagram Business accounts
+        // For Instagram Business API, we use Facebook Login for Business
         const scopes = [
             'instagram_basic',
             'instagram_manage_comments',
             'instagram_manage_messages',
             'pages_show_list',
-            'pages_read_engagement',
-            'business_management' // Required for Instagram Business access
+            'pages_read_engagement'
         ].join(',');
 
         // Generate secure state parameter
         const state = crypto.randomBytes(16).toString('hex');
         req.session.instagram_oauth_state = state;
 
-        // Use Facebook OAuth with Instagram Business permissions
-        // This is the correct flow for Instagram Business API access
+        // Use Facebook OAuth for Instagram Business API access
+        // This is the correct flow - Instagram Business API uses Facebook's OAuth
         const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
             `client_id=${process.env.FACEBOOK_APP_ID}&` +
             `redirect_uri=${encodeURIComponent(process.env.FACEBOOK_REDIRECT_URI)}&` +
             `scope=${encodeURIComponent(scopes)}&` +
             `response_type=code&` +
             `state=${state}&` +
-            `auth_type=rerequest&` + // Force permission re-request
-            `display=popup`; // Better UX for Instagram Business connection
+            `auth_type=rerequest`; // Force permission re-request
 
         console.log('🔗 Initiating Instagram Business OAuth flow for user:', userId);
         console.log('🔗 Requested scopes:', scopes);
+        console.log('🔗 OAuth URL:', authUrl);
+        console.log('🔗 App ID:', process.env.FACEBOOK_APP_ID);
+        console.log('🔗 Redirect URI:', process.env.FACEBOOK_REDIRECT_URI);
         res.redirect(authUrl);
 
     } catch (error) {
@@ -103,7 +104,7 @@ async function handleInstagramCallback(req, res) {
             return res.redirect(`${returnUrl}?error=invalid_state`);
         }
 
-        // Exchange code for access token
+        // Exchange code for access token using Facebook's token endpoint
         const tokenResponse = await axios.post('https://graph.facebook.com/v18.0/oauth/access_token', {
             client_id: process.env.FACEBOOK_APP_ID,
             client_secret: process.env.FACEBOOK_APP_SECRET,
@@ -122,7 +123,7 @@ async function handleInstagramCallback(req, res) {
             }
         });
 
-        console.log('📄 Found pages:', pagesResponse.data.data?.length || 0);
+        console.log('📄 Found pages:', pagesResponse.data.data ? .length || 0);
 
         // Find Instagram Business accounts
         const instagramAccounts = [];
@@ -165,7 +166,7 @@ async function handleInstagramCallback(req, res) {
                 const availablePages = pagesResponse.data.data.map(page => ({
                     name: page.name,
                     has_instagram: !!page.instagram_business_account,
-                    instagram_type: page.instagram_business_account?.account_type
+                    instagram_type: page.instagram_business_account ? .account_type
                 }));
                 console.log('📋 Available pages:', availablePages);
 
@@ -381,9 +382,9 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_interaction_id: comment.id,
             interaction_type: 'comment',
             content: commentText,
-            post_id: comment.media?.id,
-            platform_user_id: comment.from?.id,
-            platform_username: comment.from?.username,
+            post_id: comment.media ? .id,
+            platform_user_id: comment.from ? .id,
+            platform_username: comment.from ? .username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: comment.timestamp,
