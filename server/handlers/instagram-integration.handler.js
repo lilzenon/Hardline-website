@@ -23,6 +23,11 @@ async function initiateInstagramAuth(req, res) {
         req.session.instagram_auth_return = returnUrl || '/dashboard/settings#integrations';
         req.session.instagram_auth_user_id = userId;
 
+        console.log('🔍 Setting session data for OAuth:');
+        console.log('🔍 User ID:', userId);
+        console.log('🔍 Return URL:', returnUrl || '/dashboard/settings#integrations');
+        console.log('🔍 Session ID:', req.sessionID);
+
         // Instagram Business OAuth URL with required permissions
         // For Instagram Business API, we use Facebook Login for Business
         const scopes = [
@@ -36,6 +41,13 @@ async function initiateInstagramAuth(req, res) {
         // Generate secure state parameter
         const state = crypto.randomBytes(16).toString('hex');
         req.session.instagram_oauth_state = state;
+
+        console.log('🔍 Generated OAuth state:', state);
+        console.log('🔍 Session after setting state:', JSON.stringify({
+            instagram_auth_user_id: req.session.instagram_auth_user_id,
+            instagram_oauth_state: req.session.instagram_oauth_state,
+            instagram_auth_return: req.session.instagram_auth_return
+        }));
 
         // Use Facebook OAuth for Instagram Business API access
         // This is the correct flow - Instagram Business API uses Facebook's OAuth
@@ -73,6 +85,19 @@ async function handleInstagramCallback(req, res) {
         const userId = req.session.instagram_auth_user_id;
         const expectedState = req.session.instagram_oauth_state;
         const returnUrl = req.session.instagram_auth_return || '/dashboard/settings#integrations';
+
+        console.log('🔍 Instagram OAuth callback received:');
+        console.log('🔍 Code:', code ? 'Present' : 'Missing');
+        console.log('🔍 State:', state ? 'Present' : 'Missing');
+        console.log('🔍 Error:', error || 'None');
+        console.log('🔍 User ID from session:', userId || 'Missing');
+        console.log('🔍 Expected state from session:', expectedState ? 'Present' : 'Missing');
+        console.log('🔍 Return URL:', returnUrl);
+        console.log('🔍 Session data:', JSON.stringify({
+            instagram_auth_user_id: req.session.instagram_auth_user_id,
+            instagram_oauth_state: req.session.instagram_oauth_state ? 'Present' : 'Missing',
+            instagram_auth_return: req.session.instagram_auth_return
+        }));
 
         if (error) {
             console.error('❌ Instagram OAuth error:', error);
