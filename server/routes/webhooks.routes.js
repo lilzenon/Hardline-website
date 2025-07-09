@@ -10,7 +10,7 @@ const router = Router();
 const webhookLoggingMiddleware = (req, res, next) => {
     // Get log level from environment or default to NORMAL
     const LOG_LEVELS = { MINIMAL: 1, NORMAL: 2, VERBOSE: 3, DEBUG: 4 };
-    const logLevel = LOG_LEVELS[process.env.LOG_LEVEL ? .toUpperCase()] || LOG_LEVELS.NORMAL;
+    const logLevel = LOG_LEVELS[process.env.LOG_LEVEL && process.env.LOG_LEVEL.toUpperCase()] || LOG_LEVELS.NORMAL;
 
     // Only add detailed logging at VERBOSE+ levels, and only if not already logged by global middleware
     if (logLevel >= LOG_LEVELS.VERBOSE) {

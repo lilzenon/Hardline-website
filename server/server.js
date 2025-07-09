@@ -82,7 +82,7 @@ app.use((req, res, next) => {
             // Only log webhook requests at MINIMAL level, all requests at NORMAL+
             if (CURRENT_LOG_LEVEL >= LOG_LEVELS.MINIMAL && isWebhookRequest) {
                 console.log(`\n🚨 WEBHOOK #${requestNumber} (${requestId}): ${req.method} ${req.url}`);
-                console.log(`🚨 IP: ${req.ip} | User-Agent: ${req.headers['user-agent']?.substring(0, 50) || 'Unknown'}`);
+                console.log(`🚨 IP: ${req.ip} | User-Agent: ${req.headers['user-agent'] && req.headers['user-agent'].substring(0, 50) || 'Unknown'}`);
 
                 // Log webhook-specific headers
                 const webhookHeaders = ['x-hub-signature-256', 'x-hub-signature', 'content-type', 'content-length'];

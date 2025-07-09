@@ -484,7 +484,7 @@ async function handleInstagramWebhook(req, res) {
 
         // Get log level for conditional detailed logging
         const LOG_LEVELS = { MINIMAL: 1, NORMAL: 2, VERBOSE: 3, DEBUG: 4 };
-        const logLevel = LOG_LEVELS[process.env.LOG_LEVEL ? .toUpperCase()] || LOG_LEVELS.NORMAL;
+        const logLevel = LOG_LEVELS[process.env.LOG_LEVEL && process.env.LOG_LEVEL.toUpperCase()] || LOG_LEVELS.NORMAL;
 
         if (logLevel >= LOG_LEVELS.VERBOSE) {
             console.log('📨 Body:', JSON.stringify(body, null, 2));
@@ -495,7 +495,7 @@ async function handleInstagramWebhook(req, res) {
         const isTestWebhook = body.object === 'instagram' && body.entry && body.entry.length > 0 &&
             (body.entry[0].id === 'test' || body.entry[0].id === '0');
 
-        console.log(`🔍 Webhook Type: ${isTestWebhook ? 'Test' : 'Production'} | Entry ID: ${body.entry?.[0]?.id || 'unknown'}`);
+        console.log(`🔍 Webhook Type: ${isTestWebhook ? 'Test' : 'Production'} | Entry ID: ${body.entry && body.entry[0] && body.entry[0].id || 'unknown'}`);
 
         if (!isTestWebhook && signature) {
             const rawBody = req.rawBody || JSON.stringify(body);
