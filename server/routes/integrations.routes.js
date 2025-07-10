@@ -2,10 +2,25 @@ const { Router } = require("express");
 const asyncHandler = require("../utils/asyncHandler");
 const auth = require("../handlers/auth.handler");
 const locals = require("../handlers/locals.handler");
+const helpers = require("../handlers/helpers.handler");
 const instagramHandler = require("../handlers/instagram-integration.handler");
 const socialQueries = require("../queries/social-integrations.queries");
+const knex = require("../knex");
 
 const router = Router();
+
+// Rate limiting for keyword operations
+const keywordRateLimit = helpers.rateLimit({
+    window: 60, // 1 minute
+    limit: 30, // 30 requests per minute per user
+    message: 'Too many keyword requests, please try again later'
+});
+
+const testRateLimit = helpers.rateLimit({
+    window: 60, // 1 minute
+    limit: 10, // 10 tests per minute per user
+    message: 'Too many test requests, please try again later'
+});
 
 /**
  * Instagram Integration Routes
@@ -56,6 +71,7 @@ router.get(
 // Get all keywords for user
 router.get(
     "/keywords",
+    keywordRateLimit,
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(async(req, res) => {
@@ -108,6 +124,7 @@ router.get(
 // Create new keyword
 router.post(
     "/keywords",
+    keywordRateLimit,
     asyncHandler(auth.jwtAdminPage),
     asyncHandler(locals.user),
     asyncHandler(async(req, res) => {
@@ -451,6 +468,7 @@ router.get(
 // Test endpoint to simulate Instagram webhook without Facebook app approval
 router.post(
     "/test-instagram-webhook",
+    testRateLimit,
     asyncHandler(async(req, res) => {
         try {
             const { keyword, comment_text, event_id } = req.body;

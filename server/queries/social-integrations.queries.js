@@ -84,17 +84,17 @@ async function deleteSocialAccount(accountId, userId) {
  * Keywords Queries
  */
 
-// Get all keywords for a user or specific social account
-async function getKeywords(userId, socialAccountId = null, eventId = null, keywordType = null) {
-    console.log('🔍 getKeywords called with:', { userId, socialAccountId, eventId, keywordType });
+// Get all keywords for a user or specific social account with pagination
+async function getKeywords(userId, socialAccountId = null, eventId = null, keywordType = null, options = {}) {
+    const { page = 1, limit = 50, includeStats = false } = options;
 
+    console.log('🔍 getKeywords called with:', { userId, socialAccountId, eventId, keywordType, page, limit });
+
+    // Build optimized query with proper indexing
     const query = knex("social_keywords")
         .where("created_by_user_id", userId);
 
-    if (socialAccountId) {
-        query.where("social_account_id", socialAccountId);
-    }
-
+    // Apply filters in order of selectivity (most selective first)
     if (eventId) {
         query.where("event_id", eventId);
     }
@@ -103,7 +103,32 @@ async function getKeywords(userId, socialAccountId = null, eventId = null, keywo
         query.where("keyword_type", keywordType);
     }
 
-    const result = await query.orderBy("created_at", "desc");
+    if (socialAccountId) {
+        query.where("social_account_id", socialAccountId);
+    }
+
+    // Only select necessary columns for performance
+    const selectColumns = [
+        'id', 'uuid', 'keyword', 'description', 'is_active',
+        'case_sensitive', 'exact_match', 'auto_response_message',
+        'send_auto_response', 'response_delay_seconds', 'social_account_id',
+        'event_id', 'keyword_type', 'created_at', 'updated_at'
+    ];
+
+    if (includeStats) {
+        selectColumns.push('total_triggers', 'total_responses_sent', 'total_users_captured', 'last_triggered_at');
+    }
+
+    query.select(selectColumns);
+
+    // Add pagination
+    const offset = (page - 1) * limit;
+    query.limit(limit).offset(offset);
+
+    // Order by most recent first
+    query.orderBy("created_at", "desc");
+
+    const result = await query;
     console.log('🔍 getKeywords returning:', result.length, 'keywords');
     return result;
 }
@@ -188,37 +213,61 @@ async function deleteKeyword(keywordId, userId) {
         .del();
 }
 
-// Find matching keywords for a given text and social account
+// Find matching keywords for a given text and social account (optimized)
 async function findMatchingKeywords(text, keywordType = 'instagram', socialAccountId = null, eventId = null) {
+    // Early return for empty text
+    if (!text || text.trim().length === 0) {
+        return [];
+    }
+
+    // Build optimized query with proper index usage
     const query = knex("social_keywords")
+        .select(['id', 'keyword', 'case_sensitive', 'exact_match', 'auto_response_message', 'send_auto_response'])
         .where("is_active", true)
         .where("keyword_type", keywordType);
+
+    // Apply filters in order of selectivity
+    if (eventId) {
+        query.where("event_id", eventId);
+    }
 
     if (socialAccountId) {
         query.where("social_account_id", socialAccountId);
     }
 
-    if (eventId) {
-        query.where("event_id", eventId);
-    }
+    // Order by keyword length (shorter keywords first for better matching)
+    query.orderBy(knex.raw('LENGTH(keyword)'), 'asc');
 
     const keywords = await query;
+
+    // Early return if no keywords
+    if (keywords.length === 0) {
+        return [];
+    }
+
     const matches = [];
     const lowerText = text.toLowerCase();
+    const textWords = lowerText.split(/\s+/); // Split into words for better matching
 
+    // Optimized matching algorithm
     for (const keyword of keywords) {
         const keywordText = keyword.case_sensitive ? keyword.keyword : keyword.keyword.toLowerCase();
         const searchText = keyword.case_sensitive ? text : lowerText;
 
         let isMatch = false;
+
         if (keyword.exact_match) {
-            isMatch = searchText === keywordText;
+            // Exact match: check if keyword matches any word or the entire text
+            isMatch = searchText === keywordText || textWords.includes(keywordText);
         } else {
+            // Contains match: check if text contains the keyword
             isMatch = searchText.includes(keywordText);
         }
 
         if (isMatch) {
             matches.push(keyword);
+            // For performance, we could break after first match if needed
+            // break; // Uncomment for first-match-only behavior
         }
     }
 

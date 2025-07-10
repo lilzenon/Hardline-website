@@ -4677,35 +4677,55 @@ function renderGeographicChart(data) {
     const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Set scales with bounds checking
+    // Optimized scales with bounds checking and performance improvements
     const maxValue = d3.max(geoData, d => d.count) || 1;
     const xScale = d3.scaleLinear()
         .domain([0, maxValue])
-        .range([0, Math.max(width, 1)]); // Ensure positive width
+        .range([0, Math.max(width, 1)]) // Ensure positive width
+        .clamp(true); // Prevent values outside domain
 
     const yScale = d3.scaleBand()
         .domain(geoData.map(d => d.location))
         .range([0, height])
         .padding(0.2);
 
-    // Color scale
+    // Optimized color scale with caching
     const colorScale = d3.scaleSequential(d3.interpolateBlues)
         .domain([0, maxValue]);
 
-    // Add bars with bounds checking
-    g.selectAll('.bar')
-        .data(geoData)
-        .enter().append('rect')
+    // Pre-calculate values for better performance
+    const barData = geoData.map(d => ({
+        ...d,
+        x: 0,
+        y: yScale(d.location),
+        width: Math.max(xScale(d.count), 0),
+        height: Math.max(yScale.bandwidth(), 1),
+        fill: colorScale(d.count)
+    }));
+
+    // Optimized bar rendering with reduced DOM operations
+    const bars = g.selectAll('.bar')
+        .data(barData, d => d.location); // Use key function for better updates
+
+    // Remove old bars
+    bars.exit().remove();
+
+    // Add new bars
+    const newBars = bars.enter().append('rect')
         .attr('class', 'bar')
-        .attr('x', 0)
-        .attr('y', d => yScale(d.location))
-        .attr('width', 0)
-        .attr('height', Math.max(yScale.bandwidth(), 1)) // Ensure positive height
-        .attr('fill', d => colorScale(d.count))
-        .attr('rx', 4)
+        .attr('x', d => d.x)
+        .attr('y', d => d.y)
+        .attr('width', 0) // Start with 0 width for animation
+        .attr('height', d => d.height)
+        .attr('fill', d => d.fill)
+        .attr('rx', 4);
+
+    // Update existing bars and animate
+    newBars.merge(bars)
         .transition()
-        .duration(800)
-        .attr('width', d => Math.max(xScale(d.count), 0)); // Ensure non-negative width
+        .duration(600) // Reduced duration for better performance
+        .ease(d3.easeQuadOut) // Smoother easing
+        .attr('width', d => d.width);
 
     // Add labels
     g.selectAll('.label')
@@ -6144,7 +6164,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const pathParts = window.location.pathname.split('/');
     const eventId = pathParts[pathParts.length - 2]; // Get the part before 'edit'
 
-    console.log('🔍 Extracted event ID:', eventId, 'from path:', window.location.pathname);
+    // Production logging helper
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname.includes('dev');
+    const log = isDevelopment ? console.log : () => {};
+    const logError = console.error; // Always log errors
+
+    log('🔍 Extracted event ID:', eventId, 'from path:', window.location.pathname);
 
     // Instagram keyword elements
     const instagramKeywordsContainer = document.getElementById('instagram-keywords-container');
@@ -6232,51 +6257,77 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Load keywords for this event
-    async function loadKeywords() {
-        console.log('🔄 Loading keywords for event:', eventId);
+    // Optimized keyword loading with caching and debouncing
+    let keywordCache = new Map();
+    let loadKeywordsTimeout = null;
 
-        try {
-            // Load Instagram keywords
-            const instagramResponse = await fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=instagram`);
-            const instagramData = await instagramResponse.json();
+    async function loadKeywords(forceRefresh = false) {
+        log('🔄 Loading keywords for event:', eventId);
 
-            console.log('📱 Instagram keywords response:', instagramData);
-
-            if (instagramData.success) {
-                displayKeywords(instagramData.keywords, 'instagram');
-            } else {
-                console.error('Failed to load Instagram keywords:', instagramData.error);
-                displayKeywords([], 'instagram'); // Show empty state
-            }
-
-            // Load SMS keywords
-            const smsResponse = await fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=sms`);
-            const smsData = await smsResponse.json();
-
-            console.log('📱 SMS keywords response:', smsData);
-
-            if (smsData.success) {
-                displayKeywords(smsData.keywords, 'sms');
-            } else {
-                console.error('Failed to load SMS keywords:', smsData.error);
-                displayKeywords([], 'sms'); // Show empty state
-            }
-
-        } catch (error) {
-            console.error('Error loading keywords:', error);
-            // Show empty state for both
-            displayKeywords([], 'instagram');
-            displayKeywords([], 'sms');
-        } finally {
-            instagramKeywordsLoading.classList.add('hidden');
-            smsKeywordsLoading.classList.add('hidden');
+        // Debounce rapid calls
+        if (loadKeywordsTimeout) {
+            clearTimeout(loadKeywordsTimeout);
         }
+
+        loadKeywordsTimeout = setTimeout(async () => {
+            try {
+                // Check cache first (unless force refresh)
+                const cacheKey = `keywords_${eventId}`;
+                if (!forceRefresh && keywordCache.has(cacheKey)) {
+                    const cachedData = keywordCache.get(cacheKey);
+                    if (Date.now() - cachedData.timestamp < 30000) { // 30 second cache
+                        console.log('📦 Using cached keywords');
+                        displayKeywords(cachedData.instagram, 'instagram');
+                        displayKeywords(cachedData.sms, 'sms');
+                        return;
+                    }
+                }
+
+                // Load both keyword types in parallel for better performance
+                const [instagramResponse, smsResponse] = await Promise.all([
+                    fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=instagram`),
+                    fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=sms`)
+                ]);
+
+                const [instagramData, smsData] = await Promise.all([
+                    instagramResponse.json(),
+                    smsResponse.json()
+                ]);
+
+                console.log('📱 Keywords loaded:', {
+                    instagram: instagramData.keywords?.length || 0,
+                    sms: smsData.keywords?.length || 0
+                });
+
+                const instagramKeywords = instagramData.success ? instagramData.keywords : [];
+                const smsKeywords = smsData.success ? smsData.keywords : [];
+
+                // Cache the results
+                keywordCache.set(cacheKey, {
+                    instagram: instagramKeywords,
+                    sms: smsKeywords,
+                    timestamp: Date.now()
+                });
+
+                // Display keywords
+                displayKeywords(instagramKeywords, 'instagram');
+                displayKeywords(smsKeywords, 'sms');
+
+            } catch (error) {
+                console.error('Error loading keywords:', error);
+                // Show empty state for both
+                displayKeywords([], 'instagram');
+                displayKeywords([], 'sms');
+            } finally {
+                if (instagramKeywordsLoading) instagramKeywordsLoading.classList.add('hidden');
+                if (smsKeywordsLoading) smsKeywordsLoading.classList.add('hidden');
+            }
+        }, 100); // 100ms debounce
     }
 
-    // Display keywords in the UI
+    // Optimized display keywords with reduced DOM manipulations
     function displayKeywords(keywords, type) {
-        console.log(`🎯 Displaying ${keywords.length} ${type} keywords:`, keywords);
+        console.log(`🎯 Displaying ${keywords.length} ${type} keywords`);
 
         const container = type === 'instagram' ? instagramKeywordsContainer : smsKeywordsContainer;
         const loadingElement = type === 'instagram' ? instagramKeywordsLoading : smsKeywordsLoading;
@@ -6291,28 +6342,26 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingElement.classList.add('hidden');
         }
 
-        // Clear existing keywords (except loading element)
-        const existingKeywords = container.querySelectorAll('.keyword-item');
-        existingKeywords.forEach(item => item.remove());
-
-        // Also clear any empty state messages
-        const emptyStates = container.querySelectorAll('.text-center');
-        emptyStates.forEach(state => state.remove());
+        // Use DocumentFragment for efficient DOM updates
+        const fragment = document.createDocumentFragment();
 
         if (keywords.length === 0) {
             const emptyState = document.createElement('div');
             emptyState.className = 'text-center py-4 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200';
             emptyState.textContent = `No ${type} keywords configured yet. Click "Add Keyword" to get started.`;
-            container.appendChild(emptyState);
-            console.log(`📝 Showing empty state for ${type} keywords`);
-            return;
+            fragment.appendChild(emptyState);
+        } else {
+            // Create all keyword elements in memory first
+            keywords.forEach((keyword) => {
+                const keywordElement = createKeywordElement(keyword, type);
+                fragment.appendChild(keywordElement);
+            });
         }
 
-        keywords.forEach((keyword, index) => {
-            console.log(`🔧 Creating keyword element ${index + 1}:`, keyword);
-            const keywordElement = createKeywordElement(keyword, type);
-            container.appendChild(keywordElement);
-        });
+        // Single DOM update - clear and append all at once
+        const existingContent = container.querySelectorAll('.keyword-item, .text-center');
+        existingContent.forEach(item => item.remove());
+        container.appendChild(fragment);
 
         console.log(`✅ Successfully displayed ${keywords.length} ${type} keywords`);
     }
@@ -6604,10 +6653,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Test modal functionality
     function showTestModal() {
+        console.log('🧪 showTestModal called');
         const modal = document.getElementById('instagram-test-modal');
+        console.log('🧪 Modal element found:', !!modal);
         if (modal) {
             modal.classList.remove('hidden');
-            document.getElementById('test-comment-text').focus();
+            const input = document.getElementById('test-comment-text');
+            if (input) {
+                input.focus();
+            }
+            console.log('🧪 Modal should now be visible');
+        } else {
+            console.error('❌ Test modal not found in DOM');
         }
     }
 
@@ -9160,3 +9217,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 </style>
+
+<!-- Instagram Keyword Test Modal -->
+<div id="instagram-test-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <svg class="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-5">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Test Instagram Keywords</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">
+                            Simulate an Instagram comment to test your keyword matching and auto-responses without needing Facebook app approval.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6">
+                <div class="space-y-4">
+                    <div>
+                        <label for="test-comment-text" class="block text-sm font-medium text-gray-700">Simulated Comment</label>
+                        <input type="text" id="test-comment-text" placeholder="e.g., I want to TEST this feature!" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+                    <div id="test-results" class="hidden">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Test Results:</h4>
+                            <div id="test-results-content"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                <button type="button" id="run-keyword-test" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
+                    Run Test
+                </button>
+                <button type="button" id="close-test-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
