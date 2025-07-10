@@ -712,9 +712,13 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         console.log('🔍 Date object type:', typeof platformTimestamp);
         console.log('🔍 Date object toString:', platformTimestamp.toString());
 
+        // Extract platform interaction ID from the correct location
+        const platformInteractionId = (messageData.message && messageData.message.mid) || messageData.mid || messageData.id || `dm_${Date.now()}`;
+        console.log('🔍 Platform interaction ID:', platformInteractionId);
+
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
-            platform_interaction_id: messageData.mid || messageData.id,
+            platform_interaction_id: platformInteractionId,
             interaction_type: 'message',
             content: messageText,
             platform_user_id: senderId,
