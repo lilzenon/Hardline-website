@@ -608,12 +608,18 @@
                                 </div>
 
                                 <!-- Add Keyword Button -->
-                                <div id="instagram-add-button-container" class="mt-3">
-                                    <button type="button" id="instagram-show-add-keyword" class="inline-flex items-center px-3 py-2 border border-purple-300/50 text-sm font-medium rounded-lg text-purple-700 bg-white/50 hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] transition-colors backdrop-blur-sm">
+                                <div id="instagram-add-button-container" class="mt-3 flex items-center space-x-2">
+                                    <button type="button" id="instagram-show-add-keyword" class="inline-flex items-center px-3 py-2 border border-purple-300 text-sm font-medium rounded-lg text-purple-700 bg-white hover:bg-purple-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 min-h-[44px] transition-colors shadow-sm">
                                         <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
                                         </svg>
                                         Add Keyword
+                                    </button>
+                                    <button type="button" id="instagram-test-keywords" class="inline-flex items-center px-3 py-2 border border-blue-300 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 min-h-[44px] transition-colors shadow-sm">
+                                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"/>
+                                        </svg>
+                                        Test Keywords
                                     </button>
                                 </div>
 
@@ -6224,25 +6230,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load keywords for this event
     async function loadKeywords() {
+        console.log('🔄 Loading keywords for event:', eventId);
+
         try {
             // Load Instagram keywords
             const instagramResponse = await fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=instagram`);
             const instagramData = await instagramResponse.json();
 
+            console.log('📱 Instagram keywords response:', instagramData);
+
             if (instagramData.success) {
                 displayKeywords(instagramData.keywords, 'instagram');
+            } else {
+                console.error('Failed to load Instagram keywords:', instagramData.error);
+                displayKeywords([], 'instagram'); // Show empty state
             }
 
             // Load SMS keywords
             const smsResponse = await fetch(`/api/integrations/keywords?event_id=${eventId}&keyword_type=sms`);
             const smsData = await smsResponse.json();
 
+            console.log('📱 SMS keywords response:', smsData);
+
             if (smsData.success) {
                 displayKeywords(smsData.keywords, 'sms');
+            } else {
+                console.error('Failed to load SMS keywords:', smsData.error);
+                displayKeywords([], 'sms'); // Show empty state
             }
 
         } catch (error) {
             console.error('Error loading keywords:', error);
+            // Show empty state for both
+            displayKeywords([], 'instagram');
+            displayKeywords([], 'sms');
         } finally {
             instagramKeywordsLoading.classList.add('hidden');
             smsKeywordsLoading.classList.add('hidden');
@@ -6251,28 +6272,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Display keywords in the UI
     function displayKeywords(keywords, type) {
+        console.log(`🎯 Displaying ${keywords.length} ${type} keywords:`, keywords);
+
         const container = type === 'instagram' ? instagramKeywordsContainer : smsKeywordsContainer;
         const loadingElement = type === 'instagram' ? instagramKeywordsLoading : smsKeywordsLoading;
 
+        if (!container) {
+            console.error(`❌ Container not found for ${type} keywords`);
+            return;
+        }
+
         // Clear loading state
-        loadingElement.classList.add('hidden');
+        if (loadingElement) {
+            loadingElement.classList.add('hidden');
+        }
 
         // Clear existing keywords (except loading element)
         const existingKeywords = container.querySelectorAll('.keyword-item');
         existingKeywords.forEach(item => item.remove());
 
+        // Also clear any empty state messages
+        const emptyStates = container.querySelectorAll('.text-center');
+        emptyStates.forEach(state => state.remove());
+
         if (keywords.length === 0) {
             const emptyState = document.createElement('div');
-            emptyState.className = 'text-center py-4 text-gray-500 text-sm';
-            emptyState.textContent = `No ${type} keywords configured yet.`;
+            emptyState.className = 'text-center py-4 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200';
+            emptyState.textContent = `No ${type} keywords configured yet. Click "Add Keyword" to get started.`;
             container.appendChild(emptyState);
+            console.log(`📝 Showing empty state for ${type} keywords`);
             return;
         }
 
-        keywords.forEach(keyword => {
+        keywords.forEach((keyword, index) => {
+            console.log(`🔧 Creating keyword element ${index + 1}:`, keyword);
             const keywordElement = createKeywordElement(keyword, type);
             container.appendChild(keywordElement);
         });
+
+        console.log(`✅ Successfully displayed ${keywords.length} ${type} keywords`);
     }
 
     // Create keyword element with enhanced design
@@ -6537,6 +6575,12 @@ document.addEventListener('DOMContentLoaded', function() {
         smsAddKeywordBtn.addEventListener('click', () => addKeyword('sms'));
     }
 
+    // Test keywords functionality
+    const instagramTestKeywords = document.getElementById('instagram-test-keywords');
+    if (instagramTestKeywords) {
+        instagramTestKeywords.addEventListener('click', showTestModal);
+    }
+
     // Enter key support for adding keywords
     if (instagramKeywordInput) {
         instagramKeywordInput.addEventListener('keypress', (e) => {
@@ -6552,6 +6596,109 @@ document.addEventListener('DOMContentLoaded', function() {
                 addKeyword('sms');
             }
         });
+    }
+
+    // Test modal functionality
+    function showTestModal() {
+        const modal = document.getElementById('instagram-test-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.getElementById('test-comment-text').focus();
+        }
+    }
+
+    function hideTestModal() {
+        const modal = document.getElementById('instagram-test-modal');
+        const results = document.getElementById('test-results');
+        if (modal) {
+            modal.classList.add('hidden');
+            results.classList.add('hidden');
+            document.getElementById('test-comment-text').value = '';
+        }
+    }
+
+    // Test modal event listeners
+    const closeTestModal = document.getElementById('close-test-modal');
+    const runKeywordTest = document.getElementById('run-keyword-test');
+
+    if (closeTestModal) {
+        closeTestModal.addEventListener('click', hideTestModal);
+    }
+
+    if (runKeywordTest) {
+        runKeywordTest.addEventListener('click', async () => {
+            const commentText = document.getElementById('test-comment-text').value.trim();
+            if (!commentText) {
+                showNotification('Please enter a comment to test', 'error');
+                return;
+            }
+
+            try {
+                runKeywordTest.disabled = true;
+                runKeywordTest.textContent = 'Testing...';
+
+                const response = await fetch('/api/integrations/test-instagram-webhook', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        comment_text: commentText,
+                        event_id: eventId
+                    })
+                });
+
+                const data = await response.json();
+                displayTestResults(data);
+
+                // Reload keywords to show updated stats
+                await loadKeywords();
+
+            } catch (error) {
+                console.error('Test error:', error);
+                showNotification('Test failed: ' + error.message, 'error');
+            } finally {
+                runKeywordTest.disabled = false;
+                runKeywordTest.textContent = 'Run Test';
+            }
+        });
+    }
+
+    function displayTestResults(data) {
+        const results = document.getElementById('test-results');
+        const content = document.getElementById('test-results-content');
+
+        if (data.success && data.matched_keyword) {
+            content.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex items-center text-green-600">
+                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-medium">Keyword Matched!</span>
+                    </div>
+                    <p class="text-sm text-gray-600">Matched keyword: <span class="font-medium">"${data.matched_keyword}"</span></p>
+                    ${data.auto_response ? `<p class="text-sm text-gray-600">Auto-response: <span class="font-medium">"${data.auto_response}"</span></p>` : '<p class="text-sm text-gray-500">No auto-response configured</p>'}
+                    <p class="text-xs text-green-600">✅ Usage stats updated</p>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex items-center text-yellow-600">
+                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="font-medium">No Keywords Matched</span>
+                    </div>
+                    <p class="text-sm text-gray-600">${data.message}</p>
+                    ${data.available_keywords && data.available_keywords.length > 0 ?
+                        `<p class="text-sm text-gray-500">Available keywords: ${data.available_keywords.join(', ')}</p>` :
+                        '<p class="text-sm text-gray-500">No keywords configured for this event</p>'
+                    }
+                </div>
+            `;
+        }
+
+        results.classList.remove('hidden');
     }
 
     // Notification function

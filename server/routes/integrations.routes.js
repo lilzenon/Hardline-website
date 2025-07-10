@@ -411,4 +411,69 @@ router.get(
     })
 );
 
+// Test endpoint to simulate Instagram webhook without Facebook app approval
+router.post(
+    "/test-instagram-webhook",
+    asyncHandler(async(req, res) => {
+        try {
+            const { keyword, comment_text, event_id } = req.body;
+
+            console.log('🧪 Testing Instagram webhook simulation');
+            console.log('🧪 Keyword:', keyword);
+            console.log('🧪 Comment:', comment_text);
+            console.log('🧪 Event ID:', event_id);
+
+            // Find matching keywords for this event
+            const keywords = await knex('social_media_keywords')
+                .where('event_id', event_id)
+                .where('keyword_type', 'instagram')
+                .where('is_active', true);
+
+            console.log('🧪 Found keywords:', keywords.length);
+
+            // Check if any keyword matches the comment
+            const matchingKeyword = keywords.find(k =>
+                comment_text.toLowerCase().includes(k.keyword.toLowerCase())
+            );
+
+            if (matchingKeyword) {
+                console.log('🧪 Matching keyword found:', matchingKeyword.keyword);
+
+                // Update keyword usage stats
+                await knex('social_media_keywords')
+                    .where('id', matchingKeyword.id)
+                    .increment('total_triggers', 1);
+
+                if (matchingKeyword.send_auto_response && matchingKeyword.auto_response_message) {
+                    await knex('social_media_keywords')
+                        .where('id', matchingKeyword.id)
+                        .increment('total_responses_sent', 1);
+                }
+
+                res.json({
+                    success: true,
+                    message: 'Instagram webhook simulation successful',
+                    matched_keyword: matchingKeyword.keyword,
+                    auto_response: matchingKeyword.auto_response_message,
+                    stats_updated: true
+                });
+            } else {
+                res.json({
+                    success: true,
+                    message: 'No matching keywords found',
+                    available_keywords: keywords.map(k => k.keyword)
+                });
+            }
+
+        } catch (error) {
+            console.error('❌ Error in test webhook simulation:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Test simulation failed',
+                message: error.message
+            });
+        }
+    })
+);
+
 module.exports = router;
