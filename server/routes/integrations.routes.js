@@ -77,10 +77,18 @@ router.get(
 
         } catch (error) {
             console.error('❌ Error fetching keywords:', error);
+            console.error('❌ Error stack:', error.stack);
+            console.error('❌ Error details:', {
+                name: error.name,
+                message: error.message,
+                code: error.code,
+                sqlState: error.sqlState
+            });
             res.status(500).json({
                 success: false,
                 error: 'Failed to fetch keywords',
-                message: error.message
+                message: error.message,
+                details: error.code || error.name
             });
         }
     })
@@ -112,10 +120,18 @@ router.post(
 
         } catch (error) {
             console.error('❌ Error creating keyword:', error);
+            console.error('❌ Error stack:', error.stack);
+            console.error('❌ Error details:', {
+                name: error.name,
+                message: error.message,
+                code: error.code,
+                sqlState: error.sqlState
+            });
             res.status(500).json({
                 success: false,
                 error: 'Failed to create keyword',
-                message: error.message
+                message: error.message,
+                details: error.code || error.name
             });
         }
     })
