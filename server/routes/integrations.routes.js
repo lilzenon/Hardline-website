@@ -60,6 +60,17 @@ router.get(
     asyncHandler(locals.user),
     asyncHandler(async(req, res) => {
         try {
+            console.log('🔍 Request user object:', req.user);
+            console.log('🔍 Request headers:', req.headers.authorization ? 'Authorization header present' : 'No authorization header');
+
+            if (!req.user) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'User not authenticated',
+                    message: 'No user found in request'
+                });
+            }
+
             const userId = req.user.id;
             const { social_account_id, event_id, keyword_type } = req.query;
 
@@ -101,6 +112,16 @@ router.post(
     asyncHandler(locals.user),
     asyncHandler(async(req, res) => {
         try {
+            console.log('🔧 Create keyword - Request user object:', req.user);
+
+            if (!req.user) {
+                return res.status(401).json({
+                    success: false,
+                    error: 'User not authenticated',
+                    message: 'No user found in request'
+                });
+            }
+
             const userId = req.user.id;
             const keywordData = {
                 ...req.body,
