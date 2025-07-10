@@ -766,11 +766,11 @@ function verifyWebhookSignature(payload, signature) {
         return false;
     }
 
-    // Instagram webhooks use the App Secret for signature verification
+    // Instagram webhooks use the Instagram App Secret for signature verification
     // The verify token is only used for initial webhook verification (GET request)
-    const webhookSecret = process.env.FACEBOOK_APP_SECRET;
+    const webhookSecret = process.env.INSTAGRAM_APP_SECRET || process.env.FACEBOOK_APP_SECRET;
     if (!webhookSecret) {
-        console.error('❌ FACEBOOK_APP_SECRET not configured');
+        console.error('❌ INSTAGRAM_APP_SECRET (or FACEBOOK_APP_SECRET) not configured');
         return false;
     }
 
@@ -779,7 +779,9 @@ function verifyWebhookSignature(payload, signature) {
     console.log('🔍 Payload length:', payload.length);
     console.log('🔍 Received signature:', signature);
     console.log('🔍 Using webhook secret (first 8 chars):', webhookSecret.substring(0, 8) + '...');
-    console.log('🔍 Environment variable FACEBOOK_APP_SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
+    console.log('🔍 INSTAGRAM_APP_SECRET exists:', !!process.env.INSTAGRAM_APP_SECRET);
+    console.log('🔍 FACEBOOK_APP_SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
+    console.log('🔍 Secret source:', process.env.INSTAGRAM_APP_SECRET ? 'INSTAGRAM_APP_SECRET' : 'FACEBOOK_APP_SECRET');
 
     // Debug: Show first 100 chars of payload for verification
     if (Buffer.isBuffer(payload)) {

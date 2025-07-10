@@ -174,11 +174,13 @@ router.post(
         console.log('🔍 Body content:', req.body);
 
         const signature = req.headers['x-hub-signature-256'];
-        const appSecret = process.env.FACEBOOK_APP_SECRET;
+        const appSecret = process.env.INSTAGRAM_APP_SECRET || process.env.FACEBOOK_APP_SECRET;
 
         console.log('🔍 Received signature:', signature);
-        console.log('🔍 App secret exists:', !!appSecret);
-        console.log('🔍 App secret (first 8):', appSecret ? appSecret.substring(0, 8) + '...' : 'NOT SET');
+        console.log('🔍 INSTAGRAM_APP_SECRET exists:', !!process.env.INSTAGRAM_APP_SECRET);
+        console.log('🔍 FACEBOOK_APP_SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
+        console.log('🔍 Using secret (first 8):', appSecret ? appSecret.substring(0, 8) + '...' : 'NOT SET');
+        console.log('🔍 Secret source:', process.env.INSTAGRAM_APP_SECRET ? 'INSTAGRAM_APP_SECRET' : 'FACEBOOK_APP_SECRET');
 
         if (req.rawBodyBuffer && appSecret) {
             const expectedSignature = 'sha256=' + crypto
