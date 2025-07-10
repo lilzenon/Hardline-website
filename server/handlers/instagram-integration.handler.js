@@ -766,10 +766,11 @@ function verifyWebhookSignature(payload, signature) {
         return false;
     }
 
-    // Instagram webhooks use the webhook verify token, not the app secret
-    const webhookSecret = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+    // Instagram webhooks use the App Secret for signature verification
+    // The verify token is only used for initial webhook verification (GET request)
+    const webhookSecret = process.env.FACEBOOK_APP_SECRET;
     if (!webhookSecret) {
-        console.error('❌ INSTAGRAM_WEBHOOK_VERIFY_TOKEN not configured');
+        console.error('❌ FACEBOOK_APP_SECRET not configured');
         return false;
     }
 
