@@ -510,7 +510,19 @@ async function handleInstagramWebhook(req, res) {
             console.warn('⚠️ No signature provided for non-test webhook, allowing for debugging');
         }
 
-        // Process each entry
+        // Handle test webhooks from Facebook
+        if (isTestWebhook) {
+            console.log('✅ Test webhook received from Facebook - responding with success');
+            console.log('ℹ️ This is a test webhook from Meta App Dashboard, not a real Instagram interaction');
+            return res.status(200).json({
+                success: true,
+                message: 'Test webhook received successfully',
+                webhook_type: 'test',
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Process each entry for production webhooks
         for (const entry of body.entry || []) {
             for (const change of entry.changes || []) {
                 await processInstagramChange(change, entry.id);
