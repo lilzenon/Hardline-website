@@ -161,7 +161,39 @@ router.get(
     })
 );
 
-// Debug signature verification endpoint
+// Debug signature verification endpoint (GET for info, POST for testing)
+router.get(
+    "/instagram/debug-signature",
+    asyncHandler((req, res) => {
+        console.log('🔍 SIGNATURE DEBUG INFO ENDPOINT');
+
+        const instagramSecret = process.env.INSTAGRAM_APP_SECRET;
+        const facebookSecret = process.env.FACEBOOK_APP_SECRET;
+        const usingSecret = instagramSecret || facebookSecret;
+
+        console.log('🔍 INSTAGRAM_APP_SECRET exists:', !!instagramSecret);
+        console.log('🔍 FACEBOOK_APP_SECRET exists:', !!facebookSecret);
+        console.log('🔍 Using secret source:', instagramSecret ? 'INSTAGRAM_APP_SECRET' : 'FACEBOOK_APP_SECRET');
+
+        res.json({
+            success: true,
+            message: "Instagram webhook signature debug info",
+            environment: {
+                hasInstagramSecret: !!instagramSecret,
+                hasFacebookSecret: !!facebookSecret,
+                secretSource: instagramSecret ? 'INSTAGRAM_APP_SECRET' : 'FACEBOOK_APP_SECRET',
+                secretPreview: usingSecret ? usingSecret.substring(0, 8) + '...' : 'NOT SET'
+            },
+            instructions: {
+                testSignature: "Send POST request with webhook payload and x-hub-signature-256 header",
+                setSecret: "Set INSTAGRAM_APP_SECRET environment variable with your Instagram app secret",
+                getSecret: "Find your Instagram app secret in Meta Developer Dashboard → App Settings → Basic"
+            },
+            timestamp: new Date().toISOString()
+        });
+    })
+);
+
 router.post(
     "/instagram/debug-signature",
     rawBodyMiddleware,
@@ -374,6 +406,7 @@ router.all(
         console.log('🚨 Available routes in this router:');
         console.log('🚨   GET/POST /instagram');
         console.log('🚨   GET/POST /instagram/debug');
+        console.log('🚨   GET/POST /instagram/debug-signature');
         console.log('🚨   GET/POST /instagram/meta-test');
         console.log('🚨   GET/POST /instagram/external-test');
         console.log('🚨   GET/POST /facebook');
