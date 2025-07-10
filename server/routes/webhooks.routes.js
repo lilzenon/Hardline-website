@@ -31,19 +31,23 @@ const rawBodyMiddleware = (req, res, next) => {
     if (req.path === '/instagram' && req.method === 'POST') {
         console.log('🔍 Raw body middleware activated for Instagram webhook');
 
-        let rawBody = '';
-        req.setEncoding('utf8');
+        const chunks = [];
 
         req.on('data', (chunk) => {
             console.log('🔍 Received chunk:', chunk.length, 'bytes');
-            rawBody += chunk;
+            chunks.push(chunk);
         });
 
         req.on('end', () => {
+            const rawBody = Buffer.concat(chunks);
             console.log('🔍 Raw body complete:', rawBody.length, 'bytes');
-            req.rawBody = rawBody;
+
+            // Store both raw buffer and string version
+            req.rawBody = rawBody.toString('utf8');
+            req.rawBodyBuffer = rawBody;
+
             try {
-                req.body = JSON.parse(rawBody);
+                req.body = JSON.parse(req.rawBody);
                 console.log('🔍 Body parsed successfully');
             } catch (error) {
                 console.error('❌ Error parsing webhook JSON:', error);

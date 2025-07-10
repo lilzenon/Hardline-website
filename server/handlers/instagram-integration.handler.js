@@ -498,10 +498,10 @@ async function handleInstagramWebhook(req, res) {
         console.log(`🔍 Webhook Type: ${isTestWebhook ? 'Test' : 'Production'} | Entry ID: ${body.entry && body.entry[0] && body.entry[0].id || 'unknown'}`);
 
         if (!isTestWebhook && signature) {
-            const rawBody = req.rawBody || JSON.stringify(body);
-            const bodyString = typeof rawBody === 'string' ? rawBody : JSON.stringify(body);
+            // Use raw buffer if available, otherwise fall back to string
+            const rawBody = req.rawBodyBuffer || req.rawBody || JSON.stringify(body);
 
-            if (!verifyWebhookSignature(bodyString, signature)) {
+            if (!verifyWebhookSignature(rawBody, signature)) {
                 console.error('❌ Invalid Instagram webhook signature');
                 return res.status(403).send('Forbidden');
             }
@@ -775,14 +775,20 @@ function verifyWebhookSignature(payload, signature) {
     }
 
     console.log('🔍 Verifying webhook signature...');
+    console.log('🔍 Payload type:', typeof payload);
     console.log('🔍 Payload length:', payload.length);
     console.log('🔍 Received signature:', signature);
     console.log('🔍 Using webhook secret (first 8 chars):', webhookSecret.substring(0, 8) + '...');
 
-    const expectedSignature = 'sha256=' + crypto
-        .createHmac('sha256', webhookSecret)
-        .update(payload, 'utf8')
-        .digest('hex');
+    // Handle both Buffer and string inputs
+    const hmac = crypto.createHmac('sha256', webhookSecret);
+    if (Buffer.isBuffer(payload)) {
+        hmac.update(payload);
+    } else {
+        hmac.update(payload, 'utf8');
+    }
+
+    const expectedSignature = 'sha256=' + hmac.digest('hex');
 
     console.log('🔍 Expected signature:', expectedSignature);
     console.log('🔍 Signatures match:', signature === expectedSignature);
