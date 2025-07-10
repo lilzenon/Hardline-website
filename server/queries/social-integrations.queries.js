@@ -280,6 +280,11 @@ async function findMatchingKeywords(text, keywordType = 'instagram', socialAccou
 
 // Create a new social interaction
 async function createSocialInteraction(data) {
+    // Debug timestamp before database insert
+    console.log('🔍 createSocialInteraction - platform_created_at:', data.platform_created_at);
+    console.log('🔍 createSocialInteraction - timestamp type:', typeof data.platform_created_at);
+    console.log('🔍 createSocialInteraction - timestamp value:', data.platform_created_at);
+
     const [interaction] = await knex("social_interactions")
         .insert({
             social_account_id: data.social_account_id,

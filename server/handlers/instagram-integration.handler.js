@@ -655,6 +655,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
 async function processInstagramMessage(messageData, instagramAccountId) {
     try {
         console.log(`🔍 Processing Instagram message for account: ${instagramAccountId}`);
+        console.log('🔍 Instagram DM Handler Version: 2025-07-10-TIMESTAMP-FIX-V2');
 
         // Get all social accounts and find the Instagram one
         const socialAccounts = await knex("social_media_accounts")
@@ -702,8 +703,14 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 
         // Create interaction record
         // Convert Instagram timestamp (milliseconds) to proper Date object
-        const platformTimestamp = messageData.timestamp ? new Date(messageData.timestamp) : new Date();
-        console.log('🔍 Converting timestamp:', messageData.timestamp, '→', platformTimestamp);
+        // Check multiple possible timestamp locations in the webhook payload
+        const rawTimestamp = messageData.timestamp || (messageData.message && messageData.message.timestamp) || Date.now();
+        const platformTimestamp = new Date(rawTimestamp);
+
+        console.log('🔍 Raw timestamp from webhook:', rawTimestamp);
+        console.log('🔍 Converted to Date object:', platformTimestamp);
+        console.log('🔍 Date object type:', typeof platformTimestamp);
+        console.log('🔍 Date object toString:', platformTimestamp.toString());
 
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
