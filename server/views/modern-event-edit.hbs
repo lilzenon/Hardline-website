@@ -4671,10 +4671,11 @@ function renderGeographicChart(data) {
     const g = svg.append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // Set scales
+    // Set scales with bounds checking
+    const maxValue = d3.max(geoData, d => d.count) || 1;
     const xScale = d3.scaleLinear()
-        .domain([0, d3.max(geoData, d => d.count) || 1])
-        .range([0, width]);
+        .domain([0, maxValue])
+        .range([0, Math.max(width, 1)]); // Ensure positive width
 
     const yScale = d3.scaleBand()
         .domain(geoData.map(d => d.location))
@@ -4683,9 +4684,9 @@ function renderGeographicChart(data) {
 
     // Color scale
     const colorScale = d3.scaleSequential(d3.interpolateBlues)
-        .domain([0, d3.max(geoData, d => d.count) || 1]);
+        .domain([0, maxValue]);
 
-    // Add bars
+    // Add bars with bounds checking
     g.selectAll('.bar')
         .data(geoData)
         .enter().append('rect')
@@ -4693,12 +4694,12 @@ function renderGeographicChart(data) {
         .attr('x', 0)
         .attr('y', d => yScale(d.location))
         .attr('width', 0)
-        .attr('height', yScale.bandwidth())
+        .attr('height', Math.max(yScale.bandwidth(), 1)) // Ensure positive height
         .attr('fill', d => colorScale(d.count))
         .attr('rx', 4)
         .transition()
         .duration(800)
-        .attr('width', d => xScale(d.count));
+        .attr('width', d => Math.max(xScale(d.count), 0)); // Ensure non-negative width
 
     // Add labels
     g.selectAll('.label')
@@ -6361,7 +6362,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const addBtn = type === 'instagram' ? instagramAddKeywordBtn : smsAddKeywordBtn;
 
         const keyword = keywordInput.value.trim();
-        const response = responseInput.value.trim();
+        const autoResponseMessage = responseInput.value.trim();
 
         if (!keyword) {
             showNotification('Please enter a keyword', 'error');
@@ -6379,7 +6380,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         try {
-            const response = await fetch('/api/integrations/keywords', {
+            const fetchResponse = await fetch('/api/integrations/keywords', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -6388,13 +6389,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     keyword: keyword,
                     keyword_type: type,
                     event_id: eventId,
-                    auto_response_message: response || null,
-                    send_auto_response: !!response,
+                    auto_response_message: autoResponseMessage || null,
+                    send_auto_response: !!autoResponseMessage,
                     is_active: true
                 })
             });
 
-            const data = await response.json();
+            const data = await fetchResponse.json();
 
             if (data.success) {
                 showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} keyword added successfully!`, 'success');
