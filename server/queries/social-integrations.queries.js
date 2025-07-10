@@ -88,7 +88,7 @@ async function deleteSocialAccount(accountId, userId) {
 async function getKeywords(userId, socialAccountId = null, eventId = null, keywordType = null) {
     console.log('🔍 getKeywords called with:', { userId, socialAccountId, eventId, keywordType });
 
-    const query = knex("social_media_keywords")
+    const query = knex("social_keywords")
         .where("created_by_user_id", userId);
 
     if (socialAccountId) {
@@ -110,7 +110,7 @@ async function getKeywords(userId, socialAccountId = null, eventId = null, keywo
 
 // Get a specific keyword
 async function getKeyword(keywordId, userId = null) {
-    const query = knex("social_media_keywords")
+    const query = knex("social_keywords")
         .where("id", keywordId);
 
     if (userId) {
@@ -124,7 +124,7 @@ async function getKeyword(keywordId, userId = null) {
 async function createKeyword(data) {
     console.log('🔧 Creating keyword with data:', data);
 
-    const [keyword] = await knex("social_media_keywords")
+    const [keyword] = await knex("social_keywords")
         .insert({
             keyword: data.keyword,
             description: data.description,
@@ -156,7 +156,7 @@ async function createKeyword(data) {
 
 // Update keyword
 async function updateKeyword(keywordId, data, userId = null) {
-    const query = knex("social_media_keywords")
+    const query = knex("social_keywords")
         .where("id", keywordId);
 
     if (userId) {
@@ -182,7 +182,7 @@ async function updateKeyword(keywordId, data, userId = null) {
 
 // Delete keyword
 async function deleteKeyword(keywordId, userId) {
-    return await knex("social_media_keywords")
+    return await knex("social_keywords")
         .where("id", keywordId)
         .where("created_by_user_id", userId)
         .del();
@@ -190,7 +190,7 @@ async function deleteKeyword(keywordId, userId) {
 
 // Find matching keywords for a given text and social account
 async function findMatchingKeywords(text, keywordType = 'instagram', socialAccountId = null, eventId = null) {
-    const query = knex("social_media_keywords")
+    const query = knex("social_keywords")
         .where("is_active", true)
         .where("keyword_type", keywordType);
 

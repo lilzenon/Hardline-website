@@ -424,7 +424,7 @@ router.post(
             console.log('🧪 Event ID:', event_id);
 
             // Find matching keywords for this event
-            const keywords = await knex('social_media_keywords')
+            const keywords = await knex('social_keywords')
                 .where('event_id', event_id)
                 .where('keyword_type', 'instagram')
                 .where('is_active', true);
@@ -440,12 +440,12 @@ router.post(
                 console.log('🧪 Matching keyword found:', matchingKeyword.keyword);
 
                 // Update keyword usage stats
-                await knex('social_media_keywords')
+                await knex('social_keywords')
                     .where('id', matchingKeyword.id)
                     .increment('total_triggers', 1);
 
                 if (matchingKeyword.send_auto_response && matchingKeyword.auto_response_message) {
-                    await knex('social_media_keywords')
+                    await knex('social_keywords')
                         .where('id', matchingKeyword.id)
                         .increment('total_responses_sent', 1);
                 }
