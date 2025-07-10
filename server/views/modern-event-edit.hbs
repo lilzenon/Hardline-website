@@ -575,14 +575,20 @@
                                 </div>
 
                                 <!-- Instagram Keywords List -->
-                                <div id="instagram-keywords-container" class="space-y-2">
+                                <div id="instagram-keywords-container" class="space-y-3">
                                     <!-- Keywords will be loaded here -->
-                                    <div id="instagram-keywords-loading" class="text-center py-6">
-                                        <svg class="animate-spin h-4 w-4 mx-auto text-purple-600" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        <p class="mt-2 text-xs text-gray-500">Loading keywords...</p>
+                                    <div id="instagram-keywords-loading" class="flex flex-col items-center justify-center py-12 px-6">
+                                        <div class="relative">
+                                            <div class="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 opacity-20 animate-pulse"></div>
+                                            <div class="absolute inset-0 flex items-center justify-center">
+                                                <svg class="animate-spin h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p class="mt-4 text-sm font-medium text-gray-600">Loading Instagram keywords...</p>
+                                        <p class="mt-1 text-xs text-gray-500">Setting up your automation triggers</p>
                                     </div>
                                 </div>
 
@@ -6347,8 +6353,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (keywords.length === 0) {
             const emptyState = document.createElement('div');
-            emptyState.className = 'text-center py-4 text-gray-500 text-sm bg-gray-50 rounded-lg border border-gray-200';
-            emptyState.textContent = `No ${type} keywords configured yet. Click "Add Keyword" to get started.`;
+            emptyState.className = 'flex flex-col items-center justify-center py-12 px-6 bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl border-2 border-dashed border-gray-300/60 hover:border-gray-400/60 transition-colors';
+
+            const platformConfig = {
+                instagram: {
+                    icon: `<svg class="w-8 h-8 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>`,
+                    color: 'text-purple-600',
+                    bgColor: 'bg-purple-100'
+                },
+                sms: {
+                    icon: `<svg class="w-8 h-8 text-green-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                    </svg>`,
+                    color: 'text-green-600',
+                    bgColor: 'bg-green-100'
+                }
+            };
+
+            const config = platformConfig[type] || platformConfig.instagram;
+
+            emptyState.innerHTML = `
+                <div class="w-16 h-16 rounded-full ${config.bgColor} flex items-center justify-center mb-4">
+                    ${config.icon}
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">No ${type} keywords yet</h3>
+                <p class="text-sm text-gray-600 mb-4 max-w-sm">
+                    Create your first keyword to start automating ${type === 'instagram' ? 'Instagram' : 'SMS'} responses and capturing leads.
+                </p>
+                <div class="flex items-center space-x-2 text-xs text-gray-500">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Click "Add Keyword" to get started</span>
+                </div>
+            `;
             fragment.appendChild(emptyState);
         } else {
             // Create all keyword elements in memory first
@@ -6366,42 +6406,136 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`✅ Successfully displayed ${keywords.length} ${type} keywords`);
     }
 
-    // Create keyword element with enhanced design
+    // Create modern, professional keyword element with enhanced design
     function createKeywordElement(keyword, type) {
         const div = document.createElement('div');
-        div.className = 'keyword-item glassmorphism-card border border-gray-200/50 rounded-lg p-3 hover:shadow-sm transition-all duration-200';
 
-        const colorClass = type === 'instagram' ? 'text-purple-600' : 'text-green-600';
-        const bgColorClass = type === 'instagram' ? 'bg-purple-100' : 'bg-green-100';
+        // Enhanced glassmorphism styling with better visual hierarchy
+        div.className = 'keyword-item group relative bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-xl p-4 hover:shadow-lg hover:border-gray-300/80 transition-all duration-300 hover:bg-white/90';
+
+        // Platform-specific styling
+        const platformConfig = {
+            instagram: {
+                iconColor: 'text-purple-600',
+                bgGradient: 'from-purple-500 to-pink-500',
+                badgeColor: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700',
+                borderAccent: 'border-l-purple-500'
+            },
+            sms: {
+                iconColor: 'text-green-600',
+                bgGradient: 'from-green-500 to-emerald-500',
+                badgeColor: 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700',
+                borderAccent: 'border-l-green-500'
+            }
+        };
+
+        const config = platformConfig[type] || platformConfig.instagram;
+
+        // Status indicator
+        const isActive = keyword.is_active !== false;
+        const statusIndicator = isActive
+            ? '<div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>'
+            : '<div class="w-2 h-2 bg-gray-300 rounded-full"></div>';
 
         div.innerHTML = `
-            <div class="flex items-center justify-between">
+            <!-- Left accent border -->
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${config.bgGradient} rounded-l-xl"></div>
+
+            <!-- Main content -->
+            <div class="flex items-start justify-between space-x-4">
+                <!-- Left section: Keyword info -->
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center space-x-2 mb-1">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bgColorClass} ${colorClass}">
-                            ${keyword.keyword}
-                        </span>
-                        <div class="flex items-center space-x-1 text-xs">
-                            <span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded" title="Total triggers">${keyword.total_triggers || 0}</span>
-                            <span class="bg-green-100 text-green-800 px-1.5 py-0.5 rounded" title="Responses sent">${keyword.total_responses_sent || 0}</span>
-                            <span class="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded" title="Users captured">${keyword.total_users_captured || 0}</span>
+                    <!-- Header row -->
+                    <div class="flex items-center space-x-3 mb-3">
+                        <!-- Platform icon -->
+                        <div class="flex-shrink-0 w-8 h-8 rounded-lg bg-gradient-to-r ${config.bgGradient} flex items-center justify-center shadow-sm">
+                            ${type === 'instagram' ? `
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                </svg>
+                            ` : `
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+                                </svg>
+                            `}
+                        </div>
+
+                        <!-- Keyword badge -->
+                        <div class="flex items-center space-x-2">
+                            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-semibold ${config.badgeColor} shadow-sm">
+                                "${keyword.keyword}"
+                            </span>
+                            ${statusIndicator}
+                            <span class="text-xs font-medium ${isActive ? 'text-green-600' : 'text-gray-500'}">
+                                ${isActive ? 'Active' : 'Inactive'}
+                            </span>
                         </div>
                     </div>
-                    ${keyword.auto_response_message ? `
-                        <p class="text-xs text-gray-600 truncate" title="${keyword.auto_response_message}">
-                            → "${keyword.auto_response_message}"
-                        </p>
-                    ` : '<p class="text-xs text-gray-400">No auto-response</p>'}
+
+                    <!-- Auto-response section -->
+                    <div class="mb-3">
+                        ${keyword.auto_response_message ? `
+                            <div class="bg-gray-50/80 rounded-lg p-3 border border-gray-200/60">
+                                <div class="flex items-start space-x-2">
+                                    <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-xs font-medium text-gray-700 mb-1">Auto-response:</p>
+                                        <p class="text-sm text-gray-600 leading-relaxed">"${keyword.auto_response_message}"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="bg-gray-50/50 rounded-lg p-3 border border-gray-200/40">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-500">No auto-response configured</span>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Stats row -->
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-1.5">
+                                <div class="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                <span class="text-xs font-medium text-gray-600">Triggers</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                    ${keyword.total_triggers || 0}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-xs font-medium text-gray-600">Responses</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                    ${keyword.total_responses_sent || 0}
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-1.5">
+                                <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+                                <span class="text-xs font-medium text-gray-600">Users</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                    ${keyword.total_users_captured || 0}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-1 ml-3">
-                    <button type="button" class="edit-keyword-btn p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors min-h-[44px] min-w-[44px]" data-keyword-id="${keyword.id}" title="Edit keyword">
-                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+
+                <!-- Right section: Actions -->
+                <div class="flex flex-col space-y-2">
+                    <button type="button" class="edit-keyword-btn group/btn flex items-center justify-center w-11 h-11 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:shadow-sm" data-keyword-id="${keyword.id}" title="Edit keyword" aria-label="Edit keyword ${keyword.keyword}">
+                        <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                     </button>
-                    <button type="button" class="delete-keyword-btn p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors min-h-[44px] min-w-[44px]" data-keyword-id="${keyword.id}" data-keyword-text="${keyword.keyword}" title="Delete keyword">
-                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2h8a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                    <button type="button" class="delete-keyword-btn group/btn flex items-center justify-center w-11 h-11 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:shadow-sm" data-keyword-id="${keyword.id}" data-keyword-text="${keyword.keyword}" title="Delete keyword" aria-label="Delete keyword ${keyword.keyword}">
+                        <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
                     </button>
                 </div>
@@ -6651,40 +6785,93 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Test modal functionality
+    // Enhanced test modal functionality with proper z-index handling
     function showTestModal() {
-        console.log('🧪 showTestModal called');
+        log('🧪 showTestModal called');
         const modal = document.getElementById('instagram-test-modal');
-        console.log('🧪 Modal element found:', !!modal);
+        log('🧪 Modal element found:', !!modal);
+
         if (modal) {
+            // Ensure modal is above all other elements
+            modal.style.zIndex = '9999';
             modal.classList.remove('hidden');
-            const input = document.getElementById('test-comment-text');
-            if (input) {
-                input.focus();
-            }
-            console.log('🧪 Modal should now be visible');
+
+            // Add body scroll lock to prevent background scrolling
+            document.body.style.overflow = 'hidden';
+
+            // Focus on input with slight delay for better UX
+            setTimeout(() => {
+                const input = document.getElementById('test-comment-text');
+                if (input) {
+                    input.focus();
+                    input.select(); // Select any existing text
+                }
+            }, 100);
+
+            log('🧪 Modal should now be visible');
         } else {
-            console.error('❌ Test modal not found in DOM');
+            logError('❌ Test modal not found in DOM');
         }
     }
 
     function hideTestModal() {
         const modal = document.getElementById('instagram-test-modal');
         const results = document.getElementById('test-results');
+        const input = document.getElementById('test-comment-text');
+
         if (modal) {
             modal.classList.add('hidden');
-            results.classList.add('hidden');
-            document.getElementById('test-comment-text').value = '';
+
+            // Restore body scroll
+            document.body.style.overflow = '';
+
+            // Clear form and results
+            if (results) results.classList.add('hidden');
+            if (input) input.value = '';
+
+            // Reset test button state
+            resetTestButton();
         }
     }
 
-    // Test modal event listeners
+    function resetTestButton() {
+        const button = document.getElementById('run-keyword-test');
+        const buttonText = document.getElementById('test-button-text');
+        const spinner = document.getElementById('test-button-spinner');
+
+        if (button) button.disabled = false;
+        if (buttonText) buttonText.textContent = 'Run Test';
+        if (spinner) spinner.classList.add('hidden');
+    }
+
+    // Enhanced test modal event listeners
     const closeTestModal = document.getElementById('close-test-modal');
+    const closeTestModalSecondary = document.getElementById('close-test-modal-secondary');
+    const modalBackdrop = document.getElementById('modal-backdrop');
     const runKeywordTest = document.getElementById('run-keyword-test');
 
+    // Multiple ways to close the modal
     if (closeTestModal) {
         closeTestModal.addEventListener('click', hideTestModal);
     }
+
+    if (closeTestModalSecondary) {
+        closeTestModalSecondary.addEventListener('click', hideTestModal);
+    }
+
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', hideTestModal);
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('instagram-test-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                hideTestModal();
+            }
+        }
+    });
 
     if (runKeywordTest) {
         runKeywordTest.addEventListener('click', async () => {
@@ -6695,8 +6882,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
+                // Enhanced loading state
+                const buttonText = document.getElementById('test-button-text');
+                const spinner = document.getElementById('test-button-spinner');
+
                 runKeywordTest.disabled = true;
-                runKeywordTest.textContent = 'Testing...';
+                if (buttonText) buttonText.textContent = 'Testing...';
+                if (spinner) spinner.classList.remove('hidden');
 
                 const response = await fetch('/api/integrations/test-instagram-webhook', {
                     method: 'POST',
@@ -6707,18 +6899,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const data = await response.json();
                 displayTestResults(data);
 
-                // Reload keywords to show updated stats
-                await loadKeywords();
+                // Reload keywords to show updated stats (force refresh cache)
+                await loadKeywords(true);
+
+                showNotification('Test completed successfully!', 'success');
 
             } catch (error) {
-                console.error('Test error:', error);
+                logError('Test error:', error);
                 showNotification('Test failed: ' + error.message, 'error');
             } finally {
-                runKeywordTest.disabled = false;
-                runKeywordTest.textContent = 'Run Test';
+                resetTestButton();
             }
         });
     }
@@ -6729,32 +6926,119 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (data.success && data.matched_keyword) {
             content.innerHTML = `
-                <div class="space-y-2">
-                    <div class="flex items-center text-green-600">
-                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="font-medium">Keyword Matched!</span>
+                <div class="space-y-4">
+                    <!-- Success header -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-green-800">Keyword Matched!</h4>
+                                <p class="text-xs text-green-600">Test completed successfully</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Success
+                        </span>
                     </div>
-                    <p class="text-sm text-gray-600">Matched keyword: <span class="font-medium">"${data.matched_keyword}"</span></p>
-                    ${data.auto_response ? `<p class="text-sm text-gray-600">Auto-response: <span class="font-medium">"${data.auto_response}"</span></p>` : '<p class="text-sm text-gray-500">No auto-response configured</p>'}
-                    <p class="text-xs text-green-600">✅ Usage stats updated</p>
+
+                    <!-- Match details -->
+                    <div class="bg-white rounded-lg border border-green-200 p-3 space-y-3">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-4 h-4 text-purple-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M9 3a1 1 0 012 0v5.5a.5.5 0 001 0V4a1 1 0 112 0v4.5a.5.5 0 001 0V6a1 1 0 112 0v6a6 6 0 01-6 6H9a6 6 0 01-6-6V9a1 1 0 012 0v.5a.5.5 0 001 0V4a1 1 0 012 0v4.5a.5.5 0 001 0V3z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">Matched Keyword</p>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-700">
+                                        "${data.matched_keyword}"
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+
+                        ${data.auto_response ? `
+                            <div class="flex items-start space-x-3 pt-3 border-t border-gray-100">
+                                <svg class="w-4 h-4 text-blue-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd"/>
+                                </svg>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Auto-response</p>
+                                    <div class="mt-1 p-2 bg-blue-50 rounded-md border border-blue-200">
+                                        <p class="text-sm text-blue-800">"${data.auto_response}"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="flex items-center space-x-2 pt-3 border-t border-gray-100">
+                                <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
+                                </svg>
+                                <p class="text-sm text-gray-500">No auto-response configured for this keyword</p>
+                            </div>
+                        `}
+
+                        <div class="flex items-center space-x-2 pt-3 border-t border-gray-100">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 1.414L10.586 9.5 9.293 10.793a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="text-xs font-medium text-green-600">Usage statistics updated successfully</p>
+                        </div>
+                    </div>
                 </div>
             `;
         } else {
             content.innerHTML = `
-                <div class="space-y-2">
-                    <div class="flex items-center text-yellow-600">
-                        <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        </svg>
-                        <span class="font-medium">No Keywords Matched</span>
+                <div class="space-y-4">
+                    <!-- Warning header -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold text-yellow-800">No Keywords Matched</h4>
+                                <p class="text-xs text-yellow-600">Test completed with no matches</p>
+                            </div>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            No Match
+                        </span>
                     </div>
-                    <p class="text-sm text-gray-600">${data.message}</p>
-                    ${data.available_keywords && data.available_keywords.length > 0 ?
-                        `<p class="text-sm text-gray-500">Available keywords: ${data.available_keywords.join(', ')}</p>` :
-                        '<p class="text-sm text-gray-500">No keywords configured for this event</p>'
-                    }
+
+                    <!-- Details -->
+                    <div class="bg-white rounded-lg border border-yellow-200 p-3 space-y-3">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-4 h-4 text-gray-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">Result</p>
+                                <p class="text-sm text-gray-600 mt-1">${data.message}</p>
+                            </div>
+                        </div>
+
+                        ${data.available_keywords && data.available_keywords.length > 0 ? `
+                            <div class="pt-3 border-t border-gray-100">
+                                <p class="text-sm font-medium text-gray-900 mb-2">Available keywords for this event:</p>
+                                <div class="flex flex-wrap gap-1">
+                                    ${data.available_keywords.map(keyword =>
+                                        `<span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">${keyword}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="pt-3 border-t border-gray-100">
+                                <p class="text-sm text-gray-500">No keywords configured for this event yet.</p>
+                            </div>
+                        `}
+                    </div>
                 </div>
             `;
         }
@@ -9218,47 +9502,68 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
-<!-- Instagram Keyword Test Modal -->
-<div id="instagram-test-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+<!-- Instagram Keyword Test Modal - Fixed z-index and overlay issues -->
+<div id="instagram-test-modal" class="fixed inset-0 z-[9999] hidden overflow-y-auto" style="z-index: 9999;">
     <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+        <!-- Backdrop with proper z-index -->
+        <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" aria-hidden="true" style="z-index: 9998;"></div>
+
+        <!-- Spacer element for centering -->
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-            <div>
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
-                    <svg class="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"/>
+
+        <!-- Modal content with highest z-index -->
+        <div class="relative inline-block align-bottom bg-white rounded-xl px-6 pt-6 pb-6 text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full" style="z-index: 10000;">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center">
+                    <div class="flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
+                        <svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-semibold text-gray-900">Test Instagram Keywords</h3>
+                        <p class="text-sm text-gray-500">Simulate comments without Facebook approval</p>
+                    </div>
+                </div>
+                <button type="button" id="close-test-modal" class="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
-                </div>
-                <div class="mt-3 text-center sm:mt-5">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Test Instagram Keywords</h3>
-                    <div class="mt-2">
-                        <p class="text-sm text-gray-500">
-                            Simulate an Instagram comment to test your keyword matching and auto-responses without needing Facebook app approval.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-5 sm:mt-6">
-                <div class="space-y-4">
-                    <div>
-                        <label for="test-comment-text" class="block text-sm font-medium text-gray-700">Simulated Comment</label>
-                        <input type="text" id="test-comment-text" placeholder="e.g., I want to TEST this feature!" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    </div>
-                    <div id="test-results" class="hidden">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="text-sm font-medium text-gray-900 mb-2">Test Results:</h4>
-                            <div id="test-results-content"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                <button type="button" id="run-keyword-test" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:col-start-2 sm:text-sm">
-                    Run Test
                 </button>
-                <button type="button" id="close-test-modal" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
-                    Close
+            </div>
+
+            <!-- Content -->
+            <div class="space-y-6">
+                <div>
+                    <label for="test-comment-text" class="block text-sm font-medium text-gray-700 mb-2">Simulated Comment</label>
+                    <input type="text" id="test-comment-text" placeholder="e.g., I want to TEST this feature!" class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm transition-colors">
+                </div>
+
+                <div id="test-results" class="hidden">
+                    <div class="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200">
+                        <h4 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="h-4 w-4 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            Test Results
+                        </h4>
+                        <div id="test-results-content"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+                <button type="button" id="close-test-modal-secondary" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" id="run-keyword-test" class="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-sm">
+                    <span id="test-button-text">Run Test</span>
+                    <svg id="test-button-spinner" class="hidden animate-spin ml-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
             </div>
         </div>
