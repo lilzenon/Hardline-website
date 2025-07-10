@@ -578,7 +578,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
         const account = socialAccounts && socialAccounts[0];
 
         if (!account) {
-            console.error(`❌ Instagram account not found: ${instagramAccountId} (${socialAccounts?.length || 0} accounts checked)`);
+            console.error(`❌ Instagram account not found: ${instagramAccountId} (${(socialAccounts && socialAccounts.length) || 0} accounts checked)`);
             return;
         }
 
@@ -662,7 +662,7 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 
         const message = messageData.message || messageData;
         const messageText = message.text || messageData.text || '';
-        const senderId = messageData.sender ? .id || messageData.from ? .id;
+        const senderId = (messageData.sender && messageData.sender.id) || (messageData.from && messageData.from.id);
 
         console.log('🔍 Extracted message text:', messageText);
         console.log('🔍 Sender ID:', senderId);
@@ -685,7 +685,7 @@ async function processInstagramMessage(messageData, instagramAccountId) {
             interaction_type: 'message',
             content: messageText,
             platform_user_id: senderId,
-            platform_username: messageData.sender ? .username || messageData.from ? .username,
+            platform_username: (messageData.sender && messageData.sender.username) || (messageData.from && messageData.from.username),
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
             platform_created_at: messageData.timestamp || new Date(),
