@@ -531,4 +531,62 @@ router.post(
     })
 );
 
+// Debug endpoint to list connected Instagram accounts for webhook testing
+router.get(
+    "/debug/instagram-accounts",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(async(req, res) => {
+        try {
+            const userId = req.user.id;
+
+            // Get all Instagram accounts for this user
+            const accounts = await knex('social_media_accounts')
+                .where('created_by_user_id', userId)
+                .where('platform', 'instagram')
+                .select('id', 'platform_account_id', 'platform_username', 'platform_name', 'is_active');
+
+            console.log('🔍 Found Instagram accounts for user', userId, ':', accounts.length);
+
+            res.json({
+                success: true,
+                user_id: userId,
+                instagram_accounts: accounts,
+                webhook_test_payload_example: accounts.length > 0 ? {
+                    object: "instagram",
+                    entry: [{
+                        id: accounts[0].platform_account_id,
+                        time: Math.floor(Date.now() / 1000),
+                        changes: [{
+                            field: "comments",
+                            value: {
+                                from: {
+                                    id: "232323232",
+                                    username: "test_user"
+                                },
+                                media: {
+                                    id: "123123123"
+                                },
+                                id: "17865799348089039",
+                                text: "TEST keyword for testing"
+                            }
+                        }]
+                    }]
+                } : null,
+                instructions: accounts.length > 0 ?
+                    "Use the webhook_test_payload_example above to test your Instagram webhook" :
+                    "No Instagram accounts connected. Please connect an Instagram Business account first."
+            });
+
+        } catch (error) {
+            console.error('❌ Error getting Instagram accounts:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to get Instagram accounts',
+                message: error.message
+            });
+        }
+    })
+);
+
 module.exports = router;
