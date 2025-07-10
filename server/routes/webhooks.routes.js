@@ -177,6 +177,7 @@ router.get(
 // Instagram webhook events (POST request)
 router.post(
     "/instagram",
+    rawBodyMiddleware, // Must be first to capture raw body before any parsing
     webhookLoggingMiddleware,
     asyncHandler(instagramHandler.handleInstagramWebhook)
 );

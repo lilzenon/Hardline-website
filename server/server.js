@@ -119,8 +119,26 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsing middleware - exclude webhook routes to allow raw body capture
+app.use((req, res, next) => {
+    // Skip body parsing for webhook routes that need raw body access
+    if (req.url.includes('/api/webhooks/')) {
+        console.log('🔍 Skipping body parsing for webhook route:', req.url);
+        return next();
+    }
+
+    // Apply normal body parsing for all other routes
+    express.json()(req, res, next);
+});
+
+app.use((req, res, next) => {
+    // Skip URL encoding for webhook routes
+    if (req.url.includes('/api/webhooks/')) {
+        return next();
+    }
+
+    express.urlencoded({ extended: true })(req, res, next);
+});
 
 // serve static
 app.use("/images", express.static("custom/images"));
