@@ -779,6 +779,14 @@ function verifyWebhookSignature(payload, signature) {
     console.log('🔍 Payload length:', payload.length);
     console.log('🔍 Received signature:', signature);
     console.log('🔍 Using webhook secret (first 8 chars):', webhookSecret.substring(0, 8) + '...');
+    console.log('🔍 Environment variable FACEBOOK_APP_SECRET exists:', !!process.env.FACEBOOK_APP_SECRET);
+
+    // Debug: Show first 100 chars of payload for verification
+    if (Buffer.isBuffer(payload)) {
+        console.log('🔍 Payload preview (first 100 chars):', payload.toString('utf8').substring(0, 100) + '...');
+    } else {
+        console.log('🔍 Payload preview (first 100 chars):', payload.substring(0, 100) + '...');
+    }
 
     // Handle both Buffer and string inputs
     const hmac = crypto.createHmac('sha256', webhookSecret);

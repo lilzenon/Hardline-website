@@ -161,6 +161,46 @@ router.get(
     })
 );
 
+// Debug signature verification endpoint
+router.post(
+    "/instagram/debug-signature",
+    rawBodyMiddleware,
+    asyncHandler((req, res) => {
+        const crypto = require('crypto');
+
+        console.log('🔍 SIGNATURE DEBUG ENDPOINT');
+        console.log('🔍 Raw body type:', typeof req.rawBodyBuffer);
+        console.log('🔍 Raw body length:', req.rawBodyBuffer ? req.rawBodyBuffer.length : 'N/A');
+        console.log('🔍 Body content:', req.body);
+
+        const signature = req.headers['x-hub-signature-256'];
+        const appSecret = process.env.FACEBOOK_APP_SECRET;
+
+        console.log('🔍 Received signature:', signature);
+        console.log('🔍 App secret exists:', !!appSecret);
+        console.log('🔍 App secret (first 8):', appSecret ? appSecret.substring(0, 8) + '...' : 'NOT SET');
+
+        if (req.rawBodyBuffer && appSecret) {
+            const expectedSignature = 'sha256=' + crypto
+                .createHmac('sha256', appSecret)
+                .update(req.rawBodyBuffer)
+                .digest('hex');
+
+            console.log('🔍 Expected signature:', expectedSignature);
+            console.log('🔍 Signatures match:', signature === expectedSignature);
+        }
+
+        res.json({
+            success: true,
+            message: "Signature debug complete",
+            hasRawBody: !!req.rawBodyBuffer,
+            hasAppSecret: !!appSecret,
+            signatureMatch: signature && appSecret && req.rawBodyBuffer ?
+                signature === ('sha256=' + crypto.createHmac('sha256', appSecret).update(req.rawBodyBuffer).digest('hex')) : false
+        });
+    })
+);
+
 // Instagram webhook verification (GET request)
 router.get(
     "/instagram",
