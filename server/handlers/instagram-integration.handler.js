@@ -609,6 +609,10 @@ async function processInstagramComment(commentData, instagramAccountId) {
         const keyword = matchingKeywords[0];
 
         // Create interaction record
+        // Convert Instagram timestamp (milliseconds) to proper Date object
+        const platformTimestamp = comment.timestamp ? new Date(comment.timestamp) : new Date();
+        console.log('🔍 Converting comment timestamp:', comment.timestamp, '→', platformTimestamp);
+
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
             platform_interaction_id: comment.id,
@@ -619,7 +623,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
             platform_username: comment.from && comment.from.username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
-            platform_created_at: comment.timestamp,
+            platform_created_at: platformTimestamp,
             raw_webhook_data: commentData
         });
 
@@ -697,6 +701,10 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         const keyword = matchingKeywords[0];
 
         // Create interaction record
+        // Convert Instagram timestamp (milliseconds) to proper Date object
+        const platformTimestamp = messageData.timestamp ? new Date(messageData.timestamp) : new Date();
+        console.log('🔍 Converting timestamp:', messageData.timestamp, '→', platformTimestamp);
+
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
             platform_interaction_id: messageData.mid || messageData.id,
@@ -706,7 +714,7 @@ async function processInstagramMessage(messageData, instagramAccountId) {
             platform_username: (messageData.sender && messageData.sender.username) || (messageData.from && messageData.from.username),
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
-            platform_created_at: messageData.timestamp || new Date(),
+            platform_created_at: platformTimestamp,
             raw_webhook_data: messageData
         });
 
