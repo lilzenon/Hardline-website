@@ -5152,7 +5152,7 @@ function showCreateQRCodeModal() {
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">Create New QR Code</h3>
-                <button onclick="closeModalWithScrollRestore(this, ${scrollTop}, ${scrollLeft})" class="text-gray-400 hover:text-gray-600">
+                <button onclick="closeModalWithScrollRestore(this, ${scrollTop}, ${scrollLeft})" class="text-gray-600 bg-gray-100 hover:text-gray-700 hover:bg-gray-200 transition-colors rounded-lg p-2 border border-gray-200">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -5218,7 +5218,7 @@ function showEditQRCodeModal(qrCode) {
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">Edit QR Code</h3>
-                <button onclick="closeModalWithScrollRestore(this, ${scrollTop}, ${scrollLeft})" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <button onclick="closeModalWithScrollRestore(this, ${scrollTop}, ${scrollLeft})" class="text-gray-600 bg-gray-100 hover:text-gray-700 hover:bg-gray-200 transition-colors rounded-lg p-2 border border-gray-200">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -6528,12 +6528,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <!-- Right section: Actions -->
                 <div class="flex flex-col space-y-2">
-                    <button type="button" class="edit-keyword-btn group/btn flex items-center justify-center w-11 h-11 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:shadow-sm" data-keyword-id="${keyword.id}" title="Edit keyword" aria-label="Edit keyword ${keyword.keyword}">
+                    <button type="button" class="edit-keyword-btn group/btn flex items-center justify-center w-11 h-11 text-gray-600 bg-gray-100 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:shadow-sm border border-gray-200 hover:border-blue-200" data-keyword-id="${keyword.id}" title="Edit keyword" aria-label="Edit keyword ${keyword.keyword}">
                         <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                     </button>
-                    <button type="button" class="delete-keyword-btn group/btn flex items-center justify-center w-11 h-11 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:shadow-sm" data-keyword-id="${keyword.id}" data-keyword-text="${keyword.keyword}" title="Delete keyword" aria-label="Delete keyword ${keyword.keyword}">
+                    <button type="button" class="delete-keyword-btn group/btn flex items-center justify-center w-11 h-11 text-gray-600 bg-gray-100 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:shadow-sm border border-gray-200 hover:border-red-200" data-keyword-id="${keyword.id}" data-keyword-text="${keyword.keyword}" title="Delete keyword" aria-label="Delete keyword ${keyword.keyword}">
                         <svg class="w-5 h-5 group-hover/btn:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                         </svg>
@@ -7074,7 +7074,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="text-sm font-medium ${textColor} leading-relaxed">${message}</p>
                     </div>
                     <div class="ml-4 flex-shrink-0 flex">
-                        <button class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 p-1" onclick="this.closest('.fixed').remove()">
+                        <button class="bg-gray-100 rounded-md inline-flex text-gray-600 hover:text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 p-1 border border-gray-200" onclick="this.closest('.fixed').remove()">
                             <span class="sr-only">Close</span>
                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -8353,7 +8353,7 @@ body.modal-open {
     <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-auto shadow-2xl">
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-xl font-semibold text-gray-900">QR Code Preview</h3>
-            <button id="close-qr-preview" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <button id="close-qr-preview" class="text-gray-600 bg-gray-100 hover:text-gray-700 hover:bg-gray-200 transition-colors rounded-lg p-2 border border-gray-200">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -9526,7 +9526,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="text-sm text-gray-500">Simulate comments without Facebook approval</p>
                     </div>
                 </div>
-                <button type="button" id="close-test-modal" class="rounded-lg p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="button" id="close-test-modal" class="rounded-lg p-2 text-gray-600 bg-gray-100 hover:text-gray-700 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-200">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
