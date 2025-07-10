@@ -542,7 +542,7 @@ router.get(
 
             // Get all Instagram accounts for this user
             const accounts = await knex('social_media_accounts')
-                .where('created_by_user_id', userId)
+                .where('connected_by_user_id', userId)
                 .where('platform', 'instagram')
                 .select('id', 'platform_account_id', 'platform_username', 'platform_name', 'is_active');
 
@@ -574,8 +574,7 @@ router.get(
                     }]
                 } : null,
                 instructions: accounts.length > 0 ?
-                    "Use the webhook_test_payload_example above to test your Instagram webhook" :
-                    "No Instagram accounts connected. Please connect an Instagram Business account first."
+                    "Use the webhook_test_payload_example above to test your Instagram webhook" : "No Instagram accounts connected. Please connect an Instagram Business account first."
             });
 
         } catch (error) {
