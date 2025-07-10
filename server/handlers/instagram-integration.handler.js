@@ -524,8 +524,14 @@ async function handleInstagramWebhook(req, res) {
 
         // Process each entry for production webhooks
         for (const entry of body.entry || []) {
+            // Handle comment webhooks (changes structure)
             for (const change of entry.changes || []) {
                 await processInstagramChange(change, entry.id);
+            }
+
+            // Handle message webhooks (messaging structure)
+            for (const message of entry.messaging || []) {
+                await processInstagramMessage(message, entry.id);
             }
         }
 
@@ -651,9 +657,15 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 
         console.log(`✅ Found Instagram account: ${account.platform_account_id}`);
 
-        // Extract message details
-        const message = messageData;
-        const messageText = message.text || '';
+        // Extract message details from Instagram DM webhook structure
+        console.log('🔍 Message data structure:', JSON.stringify(messageData, null, 2));
+
+        const message = messageData.message || messageData;
+        const messageText = message.text || messageData.text || '';
+        const senderId = messageData.sender ? .id || messageData.from ? .id;
+
+        console.log('🔍 Extracted message text:', messageText);
+        console.log('🔍 Sender ID:', senderId);
 
         // Find matching keywords
         const matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', account.id);
@@ -669,14 +681,14 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         // Create interaction record
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
-            platform_interaction_id: message.id,
+            platform_interaction_id: messageData.mid || messageData.id,
             interaction_type: 'message',
             content: messageText,
-            platform_user_id: message.from && message.from.id,
-            platform_username: message.from && message.from.username,
+            platform_user_id: senderId,
+            platform_username: messageData.sender ? .username || messageData.from ? .username,
             matched_keyword_id: keyword.id,
             matched_keyword_text: keyword.keyword,
-            platform_created_at: message.timestamp,
+            platform_created_at: messageData.timestamp || new Date(),
             raw_webhook_data: messageData
         });
 
@@ -684,7 +696,7 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         if (keyword.send_auto_response && keyword.auto_response_message) {
             await sendInstagramDM(
                 account.access_token,
-                message.from.id,
+                senderId,
                 keyword.auto_response_message,
                 interaction.id
             );
@@ -692,7 +704,8 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 
         // Capture user data if configured
         if (keyword.capture_user_data) {
-            await captureInstagramUser(message.from, keyword, interaction.id);
+            const userInfo = messageData.sender || messageData.from || { id: senderId };
+            await captureInstagramUser(userInfo, keyword, interaction.id);
         }
 
         console.log('✅ Instagram message processed successfully');
