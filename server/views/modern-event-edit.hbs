@@ -6140,7 +6140,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 // Keyword Management System
 document.addEventListener('DOMContentLoaded', function() {
-    const eventId = window.location.pathname.split('/').pop();
+    // Extract event ID from URL path like /dashboard/events/[eventId]/edit
+    const pathParts = window.location.pathname.split('/');
+    const eventId = pathParts[pathParts.length - 2]; // Get the part before 'edit'
+
+    console.log('🔍 Extracted event ID:', eventId, 'from path:', window.location.pathname);
 
     // Instagram keyword elements
     const instagramKeywordsContainer = document.getElementById('instagram-keywords-container');

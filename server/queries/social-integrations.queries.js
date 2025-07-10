@@ -86,7 +86,9 @@ async function deleteSocialAccount(accountId, userId) {
 
 // Get all keywords for a user or specific social account
 async function getKeywords(userId, socialAccountId = null, eventId = null, keywordType = null) {
-    const query = knex("social_keywords")
+    console.log('🔍 getKeywords called with:', { userId, socialAccountId, eventId, keywordType });
+
+    const query = knex("social_media_keywords")
         .where("created_by_user_id", userId);
 
     if (socialAccountId) {
@@ -101,12 +103,14 @@ async function getKeywords(userId, socialAccountId = null, eventId = null, keywo
         query.where("keyword_type", keywordType);
     }
 
-    return await query.orderBy("created_at", "desc");
+    const result = await query.orderBy("created_at", "desc");
+    console.log('🔍 getKeywords returning:', result.length, 'keywords');
+    return result;
 }
 
 // Get a specific keyword
 async function getKeyword(keywordId, userId = null) {
-    const query = knex("social_keywords")
+    const query = knex("social_media_keywords")
         .where("id", keywordId);
 
     if (userId) {
@@ -118,7 +122,9 @@ async function getKeyword(keywordId, userId = null) {
 
 // Create a new keyword
 async function createKeyword(data) {
-    const [keyword] = await knex("social_keywords")
+    console.log('🔧 Creating keyword with data:', data);
+
+    const [keyword] = await knex("social_media_keywords")
         .insert({
             keyword: data.keyword,
             description: data.description,
@@ -133,18 +139,24 @@ async function createKeyword(data) {
             target_hashtags: JSON.stringify(data.target_hashtags || []),
             capture_user_data: data.capture_user_data !== undefined ? data.capture_user_data : true,
             signup_type: data.signup_type || 'general',
+            event_id: data.event_id, // Add event_id field
+            keyword_type: data.keyword_type || 'instagram', // Add keyword_type field
             drop_id: data.drop_id,
             custom_fields: JSON.stringify(data.custom_fields || {}),
-            created_by_user_id: data.created_by_user_id
+            created_by_user_id: data.created_by_user_id,
+            total_triggers: 0,
+            total_responses_sent: 0,
+            total_users_captured: 0
         })
         .returning("*");
 
+    console.log('🔧 Created keyword:', keyword);
     return keyword;
 }
 
 // Update keyword
 async function updateKeyword(keywordId, data, userId = null) {
-    const query = knex("social_keywords")
+    const query = knex("social_media_keywords")
         .where("id", keywordId);
 
     if (userId) {
@@ -170,7 +182,7 @@ async function updateKeyword(keywordId, data, userId = null) {
 
 // Delete keyword
 async function deleteKeyword(keywordId, userId) {
-    return await knex("social_keywords")
+    return await knex("social_media_keywords")
         .where("id", keywordId)
         .where("created_by_user_id", userId)
         .del();
@@ -178,7 +190,7 @@ async function deleteKeyword(keywordId, userId) {
 
 // Find matching keywords for a given text and social account
 async function findMatchingKeywords(text, keywordType = 'instagram', socialAccountId = null, eventId = null) {
-    const query = knex("social_keywords")
+    const query = knex("social_media_keywords")
         .where("is_active", true)
         .where("keyword_type", keywordType);
 
