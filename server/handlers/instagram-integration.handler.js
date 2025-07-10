@@ -588,8 +588,17 @@ async function processInstagramComment(commentData, instagramAccountId) {
         const comment = commentData;
         const commentText = comment.text || '';
 
-        // Find matching keywords
-        const matchingKeywords = await socialQueries.findMatchingKeywords(commentText, 'instagram', account.id);
+        // Find matching keywords - search across all events for this user
+        console.log('🔍 Searching for keywords with:', { commentText, keywordType: 'instagram', socialAccountId: account.id, userId: account.connected_by_user_id });
+
+        // First try with specific social account
+        let matchingKeywords = await socialQueries.findMatchingKeywords(commentText, 'instagram', account.id);
+
+        // If no matches, try searching all keywords for this user (across all events)
+        if (matchingKeywords.length === 0) {
+            console.log('🔍 No keywords found for specific social account, searching all user keywords...');
+            matchingKeywords = await socialQueries.findMatchingKeywords(commentText, 'instagram', null);
+        }
 
         if (matchingKeywords.length === 0) {
             console.log('ℹ️ No matching keywords for comment:', commentText);
@@ -667,8 +676,17 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         console.log('🔍 Extracted message text:', messageText);
         console.log('🔍 Sender ID:', senderId);
 
-        // Find matching keywords
-        const matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', account.id);
+        // Find matching keywords - search across all events for this user
+        console.log('🔍 Searching for keywords with:', { messageText, keywordType: 'instagram', socialAccountId: account.id, userId: account.connected_by_user_id });
+
+        // First try with specific social account
+        let matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', account.id);
+
+        // If no matches, try searching all keywords for this user (across all events)
+        if (matchingKeywords.length === 0) {
+            console.log('🔍 No keywords found for specific social account, searching all user keywords...');
+            matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', null);
+        }
 
         if (matchingKeywords.length === 0) {
             console.log('ℹ️ No matching keywords for message:', messageText);
