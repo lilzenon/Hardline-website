@@ -28,8 +28,8 @@ const webhookLoggingMiddleware = (req, res, next) => {
 
 // Middleware to capture raw body for webhook signature verification
 const rawBodyMiddleware = (req, res, next) => {
-    if (req.path === '/instagram' && req.method === 'POST') {
-        console.log('🔍 Raw body middleware activated for Instagram webhook');
+    if ((req.path === '/instagram' || req.path === '/messenger') && req.method === 'POST') {
+        console.log('🔍 Raw body middleware activated for webhook:', req.path);
 
         const chunks = [];
 
