@@ -161,6 +161,56 @@ router.get(
     })
 );
 
+// Check Instagram API permissions
+router.get(
+    "/instagram/check-permissions",
+    asyncHandler(async(req, res) => {
+        const axios = require('axios');
+
+        // Get Instagram account from database
+        const socialQueries = require('../queries/social-integrations.queries');
+        const accounts = await socialQueries.getSocialAccounts({ platform: 'instagram' });
+
+        if (accounts.length === 0) {
+            return res.json({
+                error: 'No Instagram accounts found in database'
+            });
+        }
+
+        const account = accounts[0];
+        const accessToken = account.access_token;
+
+        try {
+            // Check token permissions
+            const permissionsResponse = await axios.get(`https://graph.facebook.com/me/permissions`, {
+                params: { access_token: accessToken }
+            });
+
+            // Check token info
+            const tokenInfoResponse = await axios.get(`https://graph.facebook.com/me`, {
+                params: {
+                    access_token: accessToken,
+                    fields: 'id,name,account_type'
+                }
+            });
+
+            res.json({
+                success: true,
+                account_info: tokenInfoResponse.data,
+                permissions: permissionsResponse.data.data,
+                instagram_account_id: account.platform_account_id,
+                access_token_preview: accessToken.substring(0, 20) + '...'
+            });
+
+        } catch (error) {
+            res.json({
+                error: 'Failed to check permissions',
+                details: (error.response && error.response.data) || error.message
+            });
+        }
+    })
+);
+
 // Debug signature verification endpoint (GET for info, POST for testing)
 router.get(
     "/instagram/debug-signature",
