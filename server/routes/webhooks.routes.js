@@ -205,21 +205,39 @@ router.get(
                 .where('is_active', true)
                 .select('*');
 
+            // Filter out corrupted accounts and focus on valid ones
+            const validAccounts = accounts.filter(acc => {
+                if (!acc.account_metadata) return false;
+                if (acc.account_metadata === '[object Object]') return false;
+                try {
+                    JSON.parse(acc.account_metadata);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            });
+
             readinessReport.requirements.database = {
                 instagram_accounts_found: accounts.length,
-                status: accounts.length > 0 ? '✅ FOUND' : '❌ NO ACCOUNTS',
-                accounts: accounts.map(acc => ({
+                valid_accounts_found: validAccounts.length,
+                corrupted_accounts_found: accounts.length - validAccounts.length,
+                status: validAccounts.length > 0 ? '✅ FOUND' : '❌ NO VALID ACCOUNTS',
+                accounts: validAccounts.map(acc => ({
                     username: acc.platform_username,
                     account_id: acc.platform_account_id,
                     has_access_token: !!acc.access_token,
                     token_preview: acc.access_token ? acc.access_token.substring(0, 20) + '...' : 'MISSING',
-                    metadata: acc.account_metadata ? JSON.parse(acc.account_metadata) : null
+                    metadata: JSON.parse(acc.account_metadata)
                 }))
             };
 
+            if (accounts.length - validAccounts.length > 0) {
+                readinessReport.requirements.database.note = `${accounts.length - validAccounts.length} corrupted account(s) found - run force-fix-metadata to clean`;
+            }
+
             // 3. Page Access Token Analysis (CORRECTED for Messenger Platform)
-            if (accounts.length > 0 && accounts[0].access_token) {
-                const account = accounts[0];
+            if (validAccounts.length > 0 && validAccounts[0].access_token) {
+                const account = validAccounts[0];
                 let metadata;
 
                 try {
@@ -305,20 +323,17 @@ router.get(
 
         // 4. Facebook Page Connection Check
         try {
-            const accounts = await knex('social_media_accounts')
-                .where('platform', 'instagram')
-                .where('is_active', true)
-                .first();
-
-            if (accounts && accounts.access_token && accounts.account_metadata) {
-                const metadata = JSON.parse(accounts.account_metadata);
+            // Use the valid accounts we already filtered
+            if (validAccounts.length > 0) {
+                const account = validAccounts[0];
+                const metadata = JSON.parse(account.account_metadata);
 
                 if (metadata.page_id && metadata.page_name) {
                     // Try to access the Facebook Page
                     try {
                         const pageCheck = await axios.get(`https://graph.facebook.com/v23.0/${metadata.page_id}`, {
                             params: {
-                                access_token: accounts.access_token,
+                                access_token: account.access_token,
                                 fields: 'id,name,category,instagram_business_account'
                             }
                         });
