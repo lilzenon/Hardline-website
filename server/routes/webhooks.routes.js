@@ -669,6 +669,133 @@ router.get(
     })
 );
 
+// Direct database fix for persistent metadata corruption
+router.get(
+    "/instagram/force-fix-metadata",
+    asyncHandler(async(req, res) => {
+        const axios = require('axios');
+        const knex = require('../knex');
+
+        console.log('🔧 FORCE FIX: Direct database metadata repair...');
+
+        try {
+            // Get Instagram accounts
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .select('*');
+
+            const results = [];
+
+            for (const account of accounts) {
+                const result = {
+                    id: account.id,
+                    username: account.platform_username,
+                    account_id: account.platform_account_id,
+                    current_metadata: account.account_metadata,
+                    status: 'processing'
+                };
+
+                if (!account.access_token) {
+                    result.status = '❌ NO ACCESS TOKEN';
+                    results.push(result);
+                    continue;
+                }
+
+                try {
+                    // Fetch Facebook Pages directly
+                    console.log(`🔧 FORCE FIX: Fetching pages for ${account.platform_username}...`);
+                    const pagesResponse = await axios.get('https://graph.facebook.com/v23.0/me/accounts', {
+                        params: {
+                            access_token: account.access_token,
+                            fields: 'id,name,instagram_business_account'
+                        }
+                    });
+
+                    const pages = pagesResponse.data.data || [];
+                    let connectedPage = null;
+
+                    // Find connected page
+                    for (const page of pages) {
+                        if (page.instagram_business_account &&
+                            page.instagram_business_account.id === account.platform_account_id) {
+                            connectedPage = page;
+                            break;
+                        }
+                    }
+
+                    if (connectedPage) {
+                        // Create proper JSON metadata
+                        const metadata = {
+                            page_id: connectedPage.id,
+                            page_name: connectedPage.name,
+                            instagram_account_id: account.platform_account_id,
+                            fixed_at: new Date().toISOString(),
+                            fix_method: 'direct_database_update'
+                        };
+
+                        const metadataJson = JSON.stringify(metadata);
+                        console.log(`🔧 FORCE FIX: Generated JSON: ${metadataJson}`);
+
+                        // Direct database update bypassing ORM
+                        await knex.raw(`
+                            UPDATE social_media_accounts
+                            SET account_metadata = ?, updated_at = NOW()
+                            WHERE id = ?
+                        `, [metadataJson, account.id]);
+
+                        // Verify the update
+                        const updated = await knex('social_media_accounts')
+                            .where('id', account.id)
+                            .select('account_metadata')
+                            .first();
+
+                        result.status = '✅ FORCE FIXED';
+                        result.new_metadata = updated.account_metadata;
+                        result.facebook_page = {
+                            page_id: connectedPage.id,
+                            page_name: connectedPage.name
+                        };
+
+                        console.log(`✅ FORCE FIX: Updated ${account.platform_username} with: ${updated.account_metadata}`);
+
+                    } else {
+                        result.status = '❌ NO CONNECTED PAGE';
+                        result.available_pages = pages.map(p => ({
+                            id: p.id,
+                            name: p.name,
+                            has_instagram: !!p.instagram_business_account
+                        }));
+                    }
+
+                } catch (apiError) {
+                    result.status = '❌ API ERROR';
+                    result.error = (apiError.response && apiError.response.data && apiError.response.data.error && apiError.response.data.error.message) || apiError.message;
+                }
+
+                results.push(result);
+            }
+
+            res.json({
+                success: true,
+                message: 'Force metadata fix completed',
+                method: 'Direct database update bypassing ORM',
+                accounts_processed: results.length,
+                results: results,
+                next_step: 'Run readiness check to verify fix',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Force fix failed:', error);
+            res.json({
+                error: 'Force fix failed',
+                details: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
 // Simple test route to verify deployment
 router.get(
     "/instagram/permissions-test",
