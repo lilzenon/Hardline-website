@@ -835,7 +835,7 @@ async function sendInstagramDM(pageAccessToken, facebookPageId, recipientId, mes
         logger.instagram.dmFailed(error, recipientId);
 
         // Log specific error details for debugging
-        if (error.response ? .data ? .error) {
+        if (error.response && error.response.data && error.response.data.error) {
             const apiError = error.response.data.error;
             logger.debug('INSTAGRAM', 'API Error Details', {
                 code: apiError.code,
