@@ -412,16 +412,17 @@ router.get(
     })
 );
 
-// Fix corrupted Instagram account metadata (GET version for easy browser access)
+// Fix corrupted Instagram account metadata for Messenger Platform
 router.get(
     "/instagram/fix-metadata",
     asyncHandler(async(req, res) => {
+        const axios = require('axios');
         const knex = require('../knex');
 
-        console.log('🔧 Starting Instagram account metadata repair...');
+        console.log('🔧 Starting Instagram account metadata repair for Messenger Platform...');
 
         try {
-            // Get all Instagram accounts with corrupted metadata
+            // Get all Instagram accounts with potentially corrupted metadata
             const accounts = await knex('social_media_accounts')
                 .where('platform', 'instagram')
                 .select('*');
@@ -437,60 +438,115 @@ router.get(
                 };
 
                 // Check if metadata is corrupted
-                if (account.account_metadata === '[object Object]' ||
-                    (typeof account.account_metadata === 'string' && account.account_metadata.includes('[object Object]'))) {
+                let metadata;
+                let isCorrupted = false;
 
-                    console.log(`🔧 Fixing corrupted metadata for account: ${account.platform_username}`);
+                try {
+                    if (typeof account.account_metadata === 'string') {
+                        if (account.account_metadata === '[object Object]') {
+                            isCorrupted = true;
+                            result.corruption_type = 'object_string_conversion';
+                        } else {
+                            metadata = JSON.parse(account.account_metadata);
+                        }
+                    } else {
+                        metadata = account.account_metadata;
+                    }
+                } catch (parseError) {
+                    isCorrupted = true;
+                    result.corruption_type = 'invalid_json';
+                    result.parse_error = parseError.message;
+                }
 
-                    // Set to null to force reconnection
-                    await knex('social_media_accounts')
-                        .where('id', account.id)
-                        .update({
-                            account_metadata: null,
-                            updated_at: new Date()
-                        });
+                if (isCorrupted || !metadata || !metadata.page_id) {
+                    console.log(`🔧 Repairing corrupted metadata for account: ${account.platform_username}`);
 
-                    result.status = '✅ FIXED - metadata cleared, reconnection required';
-                    result.action = 'Metadata cleared - please reconnect Instagram';
-
-                } else if (account.account_metadata) {
-                    try {
-                        // Try to parse existing metadata
-                        const parsed = JSON.parse(account.account_metadata);
-                        result.status = '✅ VALID - no fix needed';
-                        result.parsed_metadata = parsed;
-                    } catch (parseError) {
-                        // Invalid JSON, clear it
-                        await knex('social_media_accounts')
-                            .where('id', account.id)
-                            .update({
-                                account_metadata: null,
-                                updated_at: new Date()
+                    // Attempt to reconstruct metadata using Facebook API
+                    if (account.access_token) {
+                        try {
+                            // Try to get user's pages to find the correct page_id
+                            const pagesResponse = await axios.get('https://graph.facebook.com/v23.0/me/accounts', {
+                                params: {
+                                    access_token: account.access_token,
+                                    fields: 'id,name,access_token,instagram_business_account{id,username}'
+                                }
                             });
 
-                        result.status = '✅ FIXED - invalid JSON cleared';
-                        result.action = 'Invalid JSON cleared - please reconnect Instagram';
+                            // Find the page that matches this Instagram account
+                            const matchingPage = pagesResponse.data.data.find(page =>
+                                page.instagram_business_account &&
+                                page.instagram_business_account.id === account.platform_account_id
+                            );
+
+                            if (matchingPage) {
+                                const repairedMetadata = {
+                                    page_id: matchingPage.id,
+                                    page_name: matchingPage.name,
+                                    user_access_token: account.access_token, // Store original token as user token
+                                    repaired_at: new Date().toISOString(),
+                                    repair_method: 'facebook_api_lookup'
+                                };
+
+                                // Update database with repaired metadata and Page Access Token
+                                await knex('social_media_accounts')
+                                    .where('id', account.id)
+                                    .update({
+                                        account_metadata: JSON.stringify(repairedMetadata),
+                                        access_token: matchingPage.access_token || account.access_token, // Use Page Access Token if available
+                                        last_sync_at: new Date()
+                                    });
+
+                                result.status = 'repaired';
+                                result.repaired_metadata = repairedMetadata;
+                                result.page_access_token_updated = !!matchingPage.access_token;
+
+                                console.log(`✅ Successfully repaired metadata for ${account.platform_username}`);
+                            } else {
+                                result.status = 'no_matching_page';
+                                result.error = 'Could not find Facebook Page matching this Instagram account';
+                            }
+                        } catch (apiError) {
+                            result.status = 'api_error';
+                            result.error = (apiError.response && apiError.response.data && apiError.response.data.error && apiError.response.data.error.message) || apiError.message;
+                            console.error(`❌ API error repairing ${account.platform_username}:`, result.error);
+                        }
+                    } else {
+                        result.status = 'no_access_token';
+                        result.error = 'No access token available for repair';
                     }
                 } else {
-                    result.status = '⚠️ NULL - reconnection needed';
-                    result.action = 'No metadata - please connect Instagram';
+                    result.status = 'valid';
+                    result.current_metadata = metadata;
                 }
 
                 results.push(result);
             }
 
+            // Generate summary
+            const summary = {
+                total_accounts: results.length,
+                repaired: results.filter(r => r.status === 'repaired').length,
+                valid: results.filter(r => r.status === 'valid').length,
+                errors: results.filter(r => r.status.includes('error') || r.status.includes('no_')).length
+            };
+
             res.json({
                 success: true,
-                message: 'Instagram metadata repair completed',
-                accounts_processed: results.length,
+                message: 'Instagram metadata repair completed for Messenger Platform',
+                summary: summary,
                 results: results,
-                next_step: 'Reconnect Instagram in dashboard to generate fresh metadata',
+                next_steps: [
+                    'If any accounts were repaired, test the readiness check',
+                    'If no repairs possible, reconnect Instagram with new permissions',
+                    'Verify Page Access Tokens are properly stored'
+                ],
                 timestamp: new Date().toISOString()
             });
 
         } catch (error) {
             console.error('❌ Metadata repair failed:', error);
-            res.json({
+            res.status(500).json({
+                success: false,
                 error: 'Metadata repair failed',
                 details: error.message,
                 timestamp: new Date().toISOString()
@@ -581,6 +637,89 @@ router.post(
                 error: 'Metadata repair failed',
                 details: error.message,
                 timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
+// Force fix corrupted metadata - simple clear and reconnect approach
+router.get(
+    "/instagram/force-fix-metadata",
+    asyncHandler(async(req, res) => {
+        const knex = require('../knex');
+
+        console.log('🔧 FORCE FIX: Clearing all corrupted Instagram metadata...');
+
+        try {
+            // Get all Instagram accounts
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .select('id', 'platform_username', 'account_metadata');
+
+            const results = [];
+
+            for (const account of accounts) {
+                let needsRepair = false;
+                let corruptionType = 'none';
+
+                // Check for corruption
+                if (account.account_metadata === '[object Object]') {
+                    needsRepair = true;
+                    corruptionType = 'object_string';
+                } else if (typeof account.account_metadata === 'string' && account.account_metadata.includes('[object Object]')) {
+                    needsRepair = true;
+                    corruptionType = 'partial_object_string';
+                } else if (account.account_metadata) {
+                    try {
+                        JSON.parse(account.account_metadata);
+                    } catch (e) {
+                        needsRepair = true;
+                        corruptionType = 'invalid_json';
+                    }
+                }
+
+                if (needsRepair) {
+                    // Clear corrupted metadata
+                    await knex('social_media_accounts')
+                        .where('id', account.id)
+                        .update({
+                            account_metadata: null,
+                            last_sync_at: new Date()
+                        });
+
+                    results.push({
+                        username: account.platform_username,
+                        status: 'CLEARED',
+                        corruption_type: corruptionType,
+                        action: 'Metadata cleared - reconnection required'
+                    });
+
+                    console.log(`✅ Cleared corrupted metadata for: ${account.platform_username}`);
+                } else {
+                    results.push({
+                        username: account.platform_username,
+                        status: 'VALID',
+                        action: 'No repair needed'
+                    });
+                }
+            }
+
+            res.json({
+                success: true,
+                message: 'Force fix completed - all corrupted metadata cleared',
+                accounts_processed: accounts.length,
+                accounts_repaired: results.filter(r => r.status === 'CLEARED').length,
+                results: results,
+                next_step: 'Reconnect Instagram: https://b2b.click/api/integrations/instagram/auth',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Force fix failed:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Force fix failed',
+                details: error.message
             });
         }
     })
