@@ -1739,6 +1739,94 @@ router.all(
     })
 );
 
+// Debug Page Access Token permissions and validity
+router.get(
+    "/instagram/debug-token",
+    asyncHandler(async(req, res) => {
+        const knex = require('../knex');
+        const axios = require('axios');
+
+        try {
+            // Get Instagram account from database
+            const account = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .first();
+
+            if (!account) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'No active Instagram account found'
+                });
+            }
+
+            const accountMetadata = typeof account.account_metadata === 'string' ?
+                JSON.parse(account.account_metadata) :
+                account.account_metadata;
+
+            const pageAccessToken = accountMetadata.user_access_token;
+            const facebookPageId = accountMetadata.page_id;
+
+            if (!pageAccessToken || !facebookPageId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Missing Page Access Token or Facebook Page ID',
+                    metadata: accountMetadata
+                });
+            }
+
+            // Debug token info
+            console.log('🔍 TOKEN DEBUG: Checking Page Access Token...');
+
+            // Check token validity and permissions
+            const tokenDebugUrl = `https://graph.facebook.com/debug_token`;
+            const tokenDebugResponse = await axios.get(tokenDebugUrl, {
+                params: {
+                    input_token: pageAccessToken,
+                    access_token: pageAccessToken
+                }
+            });
+
+            // Check page info
+            const pageInfoUrl = `https://graph.facebook.com/v23.0/${facebookPageId}`;
+            const pageInfoResponse = await axios.get(pageInfoUrl, {
+                params: {
+                    access_token: pageAccessToken,
+                    fields: 'id,name,category,access_token,instagram_business_account'
+                }
+            });
+
+            res.json({
+                success: true,
+                message: 'Page Access Token debug information',
+                account: {
+                    username: account.platform_username,
+                    account_id: account.platform_account_id
+                },
+                token_info: {
+                    token_preview: pageAccessToken.substring(0, 20) + '...',
+                    token_length: pageAccessToken.length,
+                    debug_response: tokenDebugResponse.data
+                },
+                page_info: {
+                    page_id: facebookPageId,
+                    page_response: pageInfoResponse.data
+                },
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Token debug failed:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                details: error.response && error.response.data,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
 // Aggressive fix - delete ALL Instagram accounts and start fresh
 router.get(
     "/instagram/nuclear-fix",
