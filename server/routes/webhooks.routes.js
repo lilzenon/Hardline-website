@@ -161,6 +161,19 @@ router.get(
     })
 );
 
+// Simple test route to verify deployment
+router.get(
+    "/instagram/permissions-test",
+    asyncHandler(async(req, res) => {
+        res.json({
+            success: true,
+            message: "Permissions diagnostic route is working!",
+            timestamp: new Date().toISOString(),
+            note: "This confirms the route is deployed and accessible"
+        });
+    })
+);
+
 // Check Instagram API permissions
 router.get(
     "/instagram/check-permissions",
@@ -459,6 +472,8 @@ router.all(
         console.log('🚨   GET/POST /instagram/debug-signature');
         console.log('🚨   GET/POST /instagram/meta-test');
         console.log('🚨   GET/POST /instagram/external-test');
+        console.log('🚨   GET /instagram/permissions-test');
+        console.log('🚨   GET /instagram/check-permissions');
         console.log('🚨   GET/POST /facebook');
         console.log('🚨   GET/POST /sms');
         console.log('🚨   GET/POST /test');
