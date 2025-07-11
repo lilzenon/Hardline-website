@@ -217,47 +217,76 @@ router.get(
                 }))
             };
 
-            // 3. Access Token Analysis
+            // 3. Page Access Token Analysis (CORRECTED for Messenger Platform)
             if (accounts.length > 0 && accounts[0].access_token) {
+                const account = accounts[0];
+                let metadata;
+
                 try {
-                    // Check token validity
-                    const tokenCheck = await axios.get('https://graph.facebook.com/v23.0/me', {
-                        params: { access_token: accounts[0].access_token }
-                    });
-
-                    // Check token permissions
-                    const permissionsCheck = await axios.get('https://graph.facebook.com/v23.0/me/permissions', {
-                        params: { access_token: accounts[0].access_token }
-                    });
-
-                    const permissions = permissionsCheck.data.data || [];
-                    const requiredPermissions = [
-                        'instagram_basic',
-                        'instagram_manage_messages',
-                        'pages_manage_metadata',
-                        'pages_show_list'
-                    ];
-
-                    const permissionStatus = {};
-                    requiredPermissions.forEach(perm => {
-                        const found = permissions.find(p => p.permission === perm && p.status === 'granted');
-                        permissionStatus[perm] = found ? '✅ GRANTED' : '❌ MISSING';
-                    });
-
+                    metadata = typeof account.account_metadata === 'string' ?
+                        JSON.parse(account.account_metadata) :
+                        account.account_metadata;
+                } catch (parseError) {
                     readinessReport.requirements.access_token = {
-                        status: '✅ VALID',
-                        token_owner: tokenCheck.data.name,
-                        token_id: tokenCheck.data.id,
-                        permissions: permissionStatus,
-                        all_permissions_granted: requiredPermissions.every(perm =>
-                            permissions.find(p => p.permission === perm && p.status === 'granted')
-                        )
+                        status: '❌ METADATA ERROR',
+                        error: 'Cannot parse account metadata'
                     };
+                    return;
+                }
 
-                } catch (tokenError) {
+                if (metadata && metadata.page_id) {
+                    try {
+                        // CORRECTED: Test Page Access Token by accessing the Facebook Page
+                        // This validates that we have a proper Page Access Token for Messenger Platform
+                        const pageCheck = await axios.get(`https://graph.facebook.com/v23.0/${metadata.page_id}`, {
+                            params: {
+                                access_token: account.access_token,
+                                fields: 'id,name,access_token,instagram_business_account'
+                            }
+                        });
+
+                        // Test Messenger Platform messaging capability
+                        let messagingCapable = false;
+                        try {
+                            // Try to access conversations endpoint (will fail but with specific error)
+                            await axios.get(`https://graph.facebook.com/v23.0/${metadata.page_id}/conversations`, {
+                                params: {
+                                    access_token: account.access_token,
+                                    fields: 'id'
+                                }
+                            });
+                            messagingCapable = true;
+                        } catch (msgError) {
+                            // Error code 3 = no capability, other errors = likely has capability
+                            const errorCode = msgError.response ? .data ? .error ? .code;
+                            messagingCapable = errorCode !== 3;
+                        }
+
+                        readinessReport.requirements.access_token = {
+                            status: '✅ VALID PAGE ACCESS TOKEN',
+                            token_type: 'Page Access Token',
+                            page_name: pageCheck.data.name,
+                            page_id: pageCheck.data.id,
+                            instagram_connected: !!pageCheck.data.instagram_business_account,
+                            messaging_capable: messagingCapable,
+                            note: 'Correct token type for Messenger Platform Instagram messaging'
+                        };
+
+                    } catch (tokenError) {
+                        const errorCode = tokenError.response ? .data ? .error ? .code;
+                        const errorMessage = tokenError.response ? .data ? .error ? .message || tokenError.message;
+
+                        readinessReport.requirements.access_token = {
+                            status: '❌ INVALID PAGE ACCESS TOKEN',
+                            error: errorMessage,
+                            error_code: errorCode,
+                            note: errorCode === 3 ? 'Application does not have messaging capability' : 'Page Access Token may be expired or invalid'
+                        };
+                    }
+                } else {
                     readinessReport.requirements.access_token = {
-                        status: '❌ INVALID',
-                        error: (tokenError.response && tokenError.response.data && tokenError.response.data.error && tokenError.response.data.error.message) || tokenError.message
+                        status: '❌ MISSING PAGE ID',
+                        note: 'Cannot validate Page Access Token without page_id in metadata'
                     };
                 }
             } else {
@@ -341,19 +370,21 @@ router.get(
         const totalChecks = allChecks.length;
 
         if (passedChecks === totalChecks) {
-            readinessReport.overall_status = '✅ READY FOR MESSAGING API';
+            readinessReport.overall_status = '✅ READY FOR INSTAGRAM MESSAGING VIA MESSENGER PLATFORM';
             readinessReport.next_steps = [
-                '1. Add Messenger product to Facebook app if not already added',
+                '1. Update webhook URL in Meta App Dashboard to: /api/webhooks/messenger',
                 '2. Test DM sending to app testers (bounce2bounce_, zenon.mp3)',
-                '3. Submit app review for Advanced Access if needed for production'
+                '3. Verify webhook events are properly configured',
+                '4. Submit app review for Advanced Access if needed for production'
             ];
         } else {
-            readinessReport.overall_status = `❌ NOT READY (${passedChecks}/${totalChecks} checks passed)`;
+            readinessReport.overall_status = `❌ NOT READY FOR MESSENGER PLATFORM (${passedChecks}/${totalChecks} checks passed)`;
             readinessReport.next_steps = [
                 'Fix the failing requirements above',
-                'Reconnect Instagram if access token issues',
-                'Verify Facebook Page connection',
-                'Check Meta App Dashboard configuration'
+                'Reconnect Instagram using Messenger Platform OAuth flow',
+                'Ensure Facebook Page is connected to Instagram Business account',
+                'Add Messenger Platform product to Meta App Dashboard',
+                'Configure webhook URL: /api/webhooks/messenger'
             ];
         }
 
@@ -362,12 +393,18 @@ router.get(
             readinessReport.recommendations.push('Update FACEBOOK_APP_ID to 2364553920613507 in Render environment');
         }
 
-        if (!(readinessReport.requirements.access_token && readinessReport.requirements.access_token.all_permissions_granted)) {
-            readinessReport.recommendations.push('Reconnect Instagram to get all required permissions');
+        if (!(readinessReport.requirements.access_token && readinessReport.requirements.access_token.status && readinessReport.requirements.access_token.status.includes('✅'))) {
+            readinessReport.recommendations.push('Reconnect Instagram to get Page Access Token for Messenger Platform');
         }
 
         if (!(readinessReport.requirements.facebook_page && readinessReport.requirements.facebook_page.status && readinessReport.requirements.facebook_page.status.includes('✅'))) {
             readinessReport.recommendations.push('Ensure Instagram Business account is connected to Facebook Page');
+        }
+
+        // Add Messenger Platform specific recommendations
+        if (readinessReport.requirements.access_token && readinessReport.requirements.access_token.messaging_capable === false) {
+            readinessReport.recommendations.push('Add Messenger Platform product to Meta App Dashboard');
+            readinessReport.recommendations.push('Configure webhook subscriptions for Instagram messaging');
         }
 
         console.log('✅ Readiness check completed:', readinessReport.overall_status);
