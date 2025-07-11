@@ -764,10 +764,13 @@ async function sendInstagramDM(accessToken, instagramAccountId, recipientId, mes
         console.log('🔍 API Endpoint:', `${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`);
         console.log('🔍 Access Token (first 20 chars):', accessToken.substring(0, 20) + '...');
 
-        // Using the NEW Instagram API with Instagram Login (launched July 2024)
-        // This is what services like Laylo use for Instagram DM automation
-        // Endpoint: POST /{instagram-user-id}/messages
-        console.log('🔍 Using Instagram API with Instagram Login for DM sending');
+        // IMPORTANT: Instagram DM sending uses Facebook App ID, not Instagram App ID
+        // - Webhooks use Instagram App ID (for receiving)
+        // - API calls use Facebook App ID (for sending)
+        // - Access token is from Facebook OAuth flow
+        console.log('🔍 Using Instagram API with Facebook App credentials for DM sending');
+        console.log('🔍 Instagram Account ID:', instagramAccountId);
+        console.log('🔍 Recipient ID:', recipientId);
 
         const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`, {
             recipient: { id: recipientId },

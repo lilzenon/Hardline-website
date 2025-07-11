@@ -247,25 +247,39 @@ router.get(
         const accessToken = account.access_token;
 
         try {
-            // Check token permissions
+            // IMPORTANT: Use Facebook Graph API for token validation
+            // The access token is from Facebook OAuth, not Instagram App
+            console.log('🔍 Checking Facebook access token permissions...');
+
+            // Check token permissions using Facebook Graph API
             const permissionsResponse = await axios.get(`https://graph.facebook.com/me/permissions`, {
                 params: { access_token: accessToken }
             });
 
-            // Check token info
+            // Check token info using Facebook Graph API
             const tokenInfoResponse = await axios.get(`https://graph.facebook.com/me`, {
                 params: {
                     access_token: accessToken,
-                    fields: 'id,name,account_type'
+                    fields: 'id,name'
+                }
+            });
+
+            // Check if token can access Instagram account
+            const instagramCheckResponse = await axios.get(`https://graph.facebook.com/${account.platform_account_id}`, {
+                params: {
+                    access_token: accessToken,
+                    fields: 'id,username,name,account_type'
                 }
             });
 
             res.json({
                 success: true,
-                account_info: tokenInfoResponse.data,
+                facebook_token_info: tokenInfoResponse.data,
+                instagram_account_info: instagramCheckResponse.data,
                 permissions: permissionsResponse.data.data,
                 instagram_account_id: account.platform_account_id,
-                access_token_preview: accessToken.substring(0, 20) + '...'
+                access_token_preview: accessToken.substring(0, 20) + '...',
+                note: 'Token is from Facebook OAuth but can access Instagram account'
             });
 
         } catch (error) {
