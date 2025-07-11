@@ -38,7 +38,13 @@ async function createSocialAccount(data) {
             token_expires_at: data.token_expires_at,
             permissions: JSON.stringify(data.permissions || []),
             account_type: data.account_type,
-            account_metadata: JSON.stringify(data.account_metadata || {}),
+            account_metadata: (() => {
+                console.log('🔍 CREATE: Stringifying account_metadata:', data.account_metadata);
+                console.log('🔍 CREATE: Type of account_metadata:', typeof data.account_metadata);
+                const result = JSON.stringify(data.account_metadata || {});
+                console.log('🔍 CREATE: Stringified result:', result);
+                return result;
+            })(),
             connected_by_user_id: data.connected_by_user_id,
             follower_count: data.follower_count
         })
@@ -61,9 +67,17 @@ async function updateSocialAccount(accountId, data, userId = null) {
         updated_at: knex.fn.now()
     };
 
-    // Handle JSON fields
-    if (data.permissions) updateData.permissions = JSON.stringify(data.permissions);
-    if (data.account_metadata) updateData.account_metadata = JSON.stringify(data.account_metadata);
+    // Handle JSON fields with debugging
+    if (data.permissions) {
+        console.log('🔍 Stringifying permissions:', data.permissions);
+        updateData.permissions = JSON.stringify(data.permissions);
+    }
+    if (data.account_metadata) {
+        console.log('🔍 Stringifying account_metadata:', data.account_metadata);
+        console.log('🔍 Type of account_metadata:', typeof data.account_metadata);
+        updateData.account_metadata = JSON.stringify(data.account_metadata);
+        console.log('🔍 Stringified result:', updateData.account_metadata);
+    }
 
     const [account] = await query
         .update(updateData)
