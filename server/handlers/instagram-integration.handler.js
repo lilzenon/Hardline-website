@@ -656,7 +656,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
 async function processInstagramMessage(messageData, instagramAccountId) {
     try {
         console.log(`🔍 Processing Instagram message for account: ${instagramAccountId}`);
-        console.log('🔍 Instagram DM Handler Version: 2025-07-10-PLATFORM-ID-FIX-V3');
+        console.log('🔍 Instagram DM Handler Version: 2025-07-11-NEW-INSTAGRAM-API-V4');
 
         // Get all social accounts and find the Instagram one
         const socialAccounts = await knex("social_media_accounts")
@@ -759,28 +759,27 @@ async function processInstagramMessage(messageData, instagramAccountId) {
  */
 async function sendInstagramDM(accessToken, instagramAccountId, recipientId, message, interactionId) {
     try {
-        console.log('🔍 Sending Instagram DM via Messenger Platform API');
+        console.log('🔍 Sending Instagram DM via Instagram API with Instagram Login');
         console.log('🔍 Parameters:', { instagramAccountId, recipientId, message: message.substring(0, 50) + '...' });
+        console.log('🔍 API Endpoint:', `${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`);
+        console.log('🔍 Access Token (first 20 chars):', accessToken.substring(0, 20) + '...');
 
-        // IMPORTANT: Instagram DM sending via API has strict limitations
-        // According to Meta documentation, automated DM sending requires:
-        // 1. Instagram Business Account connected to Facebook Page
-        // 2. User must message the business first (24-hour window)
-        // 3. Specific app permissions and review approval
+        // Using the NEW Instagram API with Instagram Login (launched July 2024)
+        // This is what services like Laylo use for Instagram DM automation
+        // Endpoint: POST /{instagram-user-id}/messages
+        console.log('🔍 Using Instagram API with Instagram Login for DM sending');
 
-        // For now, we'll log the attempt and mark as successful for testing
-        // In production, this would need proper Instagram Business API setup
-        console.log('⚠️ Instagram DM sending not fully implemented due to API restrictions');
-        console.log('📝 Would send message:', message);
-        console.log('📝 To recipient:', recipientId);
-
-        // Simulate successful response for testing
-        const response = {
-            data: {
-                message_id: `simulated_${Date.now()}`,
-                recipient_id: recipientId
+        const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`, {
+            recipient: { id: recipientId },
+            message: { text: message }
+        }, {
+            params: {
+                access_token: accessToken
+            },
+            headers: {
+                'Content-Type': 'application/json'
             }
-        };
+        });
 
         // Update interaction with response details
         await socialQueries.updateSocialInteraction(interactionId, {
