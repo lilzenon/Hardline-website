@@ -283,29 +283,44 @@ async function handleInstagramCallback(req, res) {
 
         console.log('📄 Found pages:', (pagesResponse.data.data && pagesResponse.data.data.length) || 0);
 
-        // Find Instagram Business accounts
+        // Find Instagram Business accounts and get Page Access Tokens
         const instagramAccounts = [];
         for (const page of pagesResponse.data.data) {
             if (page.instagram_business_account) {
-                // Get Instagram account details
-                // Updated for Graph API v23.0 - removed account_type field as it's no longer available
+                console.log('🔍 Processing Facebook Page:', page.name, 'with Instagram account');
+
+                // CRITICAL: Get Page Access Token for Messenger Platform
+                // Each Facebook Page has its own Page Access Token for messaging
+                const pageAccessToken = page.access_token;
+
+                if (!pageAccessToken) {
+                    console.error('❌ No Page Access Token found for page:', page.name);
+                    console.error('❌ Page data:', JSON.stringify(page, null, 2));
+                    continue; // Skip this page if no Page Access Token
+                }
+
+                console.log('✅ Found Page Access Token for page:', page.name);
+                console.log('✅ Page Access Token (first 20 chars):', pageAccessToken.substring(0, 20) + '...');
+
+                // Get Instagram account details using User Access Token (for profile info)
                 const igResponse = await axios.get(`https://graph.facebook.com/v23.0/${page.instagram_business_account.id}`, {
                     params: {
-                        access_token: access_token,
+                        access_token: access_token, // Use User Access Token for profile data
                         fields: 'id,username,name,profile_picture_url,followers_count,media_count,biography'
                     }
                 });
 
                 const igData = igResponse.data;
 
-                // In Graph API v23.0, if we can access the Instagram Business account through Facebook pages,
-                // it's already confirmed to be a Business account (not Personal or Creator)
                 console.log('✅ Found Instagram Business account:', igData.username);
+                console.log('✅ Connected to Facebook Page:', page.name, '(ID:', page.id + ')');
+
                 instagramAccounts.push({
                     ...igData,
                     page_id: page.id,
                     page_name: page.name,
-                    access_token: access_token,
+                    access_token: pageAccessToken, // CORRECTED: Use Page Access Token for messaging
+                    user_access_token: access_token, // Store User Access Token for profile operations
                     account_type: 'BUSINESS' // Set explicitly since it's confirmed to be Business
                 });
             }
@@ -343,9 +358,9 @@ async function handleInstagramCallback(req, res) {
         let isReconnection = false;
 
         if (existingAccount) {
-            // Update existing account
+            // Update existing account with Page Access Token
             await socialQueries.updateSocialAccount(existingAccount.id, {
-                access_token: access_token,
+                access_token: igAccount.access_token, // CORRECTED: Use Page Access Token
                 platform_username: igAccount.username,
                 platform_name: igAccount.name,
                 profile_picture_url: igAccount.profile_picture_url,
@@ -353,7 +368,8 @@ async function handleInstagramCallback(req, res) {
                 account_type: igAccount.account_type,
                 account_metadata: {
                     page_id: igAccount.page_id,
-                    page_name: igAccount.page_name
+                    page_name: igAccount.page_name,
+                    user_access_token: igAccount.user_access_token // Store User Access Token for profile operations
                 },
                 is_active: true,
                 last_sync_at: new Date(),
@@ -361,20 +377,21 @@ async function handleInstagramCallback(req, res) {
             });
             isReconnection = true;
         } else {
-            // Create new account
+            // Create new account with Page Access Token
             await socialQueries.createSocialAccount({
                 platform: 'instagram',
                 platform_account_id: igAccount.id,
                 platform_username: igAccount.username,
                 platform_name: igAccount.name,
                 profile_picture_url: igAccount.profile_picture_url,
-                access_token: access_token, // TODO: Encrypt this
-                token_expires_at: null, // Facebook tokens don't expire for business accounts
-                permissions: ['instagram_basic', 'instagram_manage_comments', 'instagram_manage_messages'],
+                access_token: igAccount.access_token, // CORRECTED: Use Page Access Token for messaging
+                token_expires_at: null, // Page Access Tokens don't expire for business accounts
+                permissions: ['instagram_basic', 'instagram_manage_comments', 'instagram_manage_messages', 'pages_messaging'],
                 account_type: igAccount.account_type,
                 account_metadata: {
                     page_id: igAccount.page_id,
-                    page_name: igAccount.page_name
+                    page_name: igAccount.page_name,
+                    user_access_token: igAccount.user_access_token // Store User Access Token for profile operations
                 },
                 connected_by_user_id: recoveredUserId,
                 follower_count: igAccount.followers_count
@@ -384,7 +401,7 @@ async function handleInstagramCallback(req, res) {
         // Note: Instagram webhook subscriptions are typically configured in Meta App Dashboard
         // Automatic webhook setup is optional and may require additional permissions
         try {
-            await setupInstagramWebhook(igAccount.page_id, igAccount.id, access_token);
+            await setupInstagramWebhook(igAccount.page_id, igAccount.id, igAccount.access_token); // Use Page Access Token
         } catch (webhookError) {
             console.log('⚠️ Webhook setup failed - this is normal and can be configured manually in Meta App Dashboard');
             console.log('⚠️ Webhook error:', webhookError.message);
