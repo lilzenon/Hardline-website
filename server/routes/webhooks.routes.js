@@ -1161,7 +1161,94 @@ router.get(
     })
 );
 
-// Test Instagram DM sending endpoint
+// Test Instagram DM sending endpoint (GET version for easy testing)
+router.get(
+    "/instagram/test-dm",
+    asyncHandler(async(req, res) => {
+        const { message, recipient_id } = req.query;
+
+        if (!message || !recipient_id) {
+            return res.json({
+                error: 'Missing required query parameters: message and recipient_id',
+                example: '/api/webhooks/instagram/test-dm?recipient_id=17841402340165773&message=Test'
+            });
+        }
+
+        try {
+            const knex = require('../knex');
+            const instagramHandler = require('../handlers/instagram-integration.handler');
+
+            // Get Instagram account from database
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .first();
+
+            if (!accounts) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'No active Instagram account found',
+                    note: 'Please connect Instagram first'
+                });
+            }
+
+            const account = accounts;
+
+            // Test DM sending
+            console.log('🧪 Testing Instagram DM sending (GET)...');
+            console.log('🧪 Account:', account.platform_username);
+            console.log('🧪 Recipient ID:', recipient_id);
+            console.log('🧪 Message:', message);
+
+            // Extract Facebook Page ID from account metadata for Messenger Platform
+            const accountMetadata = typeof account.account_metadata === 'string' ?
+                JSON.parse(account.account_metadata) :
+                account.account_metadata;
+
+            const facebookPageId = accountMetadata && accountMetadata.page_id;
+
+            if (!facebookPageId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Facebook Page ID not found in account metadata',
+                    account_metadata: account.account_metadata,
+                    note: 'Instagram messaging requires Facebook Page connection via Messenger Platform'
+                });
+            }
+
+            // Use Page Access Token from metadata (CORRECTED)
+            const pageAccessToken = accountMetadata.user_access_token;
+            const result = await instagramHandler.sendInstagramDM(
+                pageAccessToken, // FIXED: Use Page Access Token from metadata
+                facebookPageId, // Use Facebook Page ID for Messenger Platform
+                recipient_id,
+                message,
+                'test-interaction-' + Date.now()
+            );
+
+            res.json({
+                success: true,
+                message: 'DM sent successfully',
+                result: result,
+                account_used: account.platform_username,
+                page_id: facebookPageId,
+                token_type: 'Page Access Token',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Test DM failed:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                details: error.response && error.response.data,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
+// Test Instagram DM sending endpoint (POST version)
 router.post(
     "/instagram/test-dm",
     asyncHandler(async(req, res) => {
@@ -1213,8 +1300,10 @@ router.post(
                 });
             }
 
+            // Use Page Access Token from metadata (CORRECTED)
+            const pageAccessToken = accountMetadata.user_access_token;
             const result = await instagramHandler.sendInstagramDM(
-                account.access_token, // TODO: This should be Page Access Token
+                pageAccessToken, // FIXED: Use Page Access Token from metadata
                 facebookPageId, // Use Facebook Page ID for Messenger Platform
                 recipient_id,
                 message,

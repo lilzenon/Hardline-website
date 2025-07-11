@@ -658,8 +658,10 @@ async function processInstagramComment(commentData, instagramAccountId) {
             const facebookPageId = accountMetadata && accountMetadata.page_id;
 
             if (facebookPageId) {
+                // Use Page Access Token from metadata (CORRECTED)
+                const pageAccessToken = accountMetadata.user_access_token;
                 await sendInstagramDM(
-                    account.access_token, // TODO: This should be Page Access Token, not User Access Token
+                    pageAccessToken, // FIXED: Use Page Access Token from metadata
                     facebookPageId, // Use Facebook Page ID for Messenger Platform
                     comment.from.id,
                     keyword.auto_response_message,
@@ -773,8 +775,10 @@ async function processInstagramMessage(messageData, instagramAccountId) {
             const facebookPageId = accountMetadata && accountMetadata.page_id;
 
             if (facebookPageId) {
+                // Use Page Access Token from metadata (CORRECTED)
+                const pageAccessToken = accountMetadata.user_access_token;
                 await sendInstagramDM(
-                    account.access_token, // TODO: This should be Page Access Token, not User Access Token
+                    pageAccessToken, // FIXED: Use Page Access Token from metadata
                     facebookPageId, // Use Facebook Page ID for Messenger Platform
                     senderId,
                     keyword.auto_response_message,
