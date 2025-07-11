@@ -185,7 +185,9 @@ router.get(
             facebook_app_id: process.env.FACEBOOK_APP_ID || 'NOT SET',
             facebook_app_secret: process.env.FACEBOOK_APP_SECRET ? 'SET (hidden)' : 'NOT SET',
             facebook_redirect_uri: process.env.FACEBOOK_REDIRECT_URI || 'NOT SET',
-            instagram_webhook_verify_token: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ? 'SET (hidden)' : 'NOT SET'
+            instagram_webhook_verify_token: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ? 'SET (hidden)' : 'NOT SET',
+            expected_app_id: '2364553920613507',
+            app_id_status: process.env.FACEBOOK_APP_ID === '2364553920613507' ? '✅ CORRECT' : '❌ MISMATCH'
         };
 
         // Check Instagram accounts in database
@@ -264,8 +266,8 @@ router.get(
                 }
             });
 
-            // Check if token can access Instagram account
-            const instagramCheckResponse = await axios.get(`https://graph.facebook.com/${account.platform_account_id}`, {
+            // Check if token can access Instagram account using Instagram Graph API
+            const instagramCheckResponse = await axios.get(`https://graph.instagram.com/v23.0/${account.platform_account_id}`, {
                 params: {
                     access_token: accessToken,
                     fields: 'id,username,name,account_type'

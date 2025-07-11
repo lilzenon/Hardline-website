@@ -10,7 +10,9 @@ const userQueries = require('../queries/user.queries');
  * Handles Instagram Business Account integration, webhooks, and automation
  */
 
-const INSTAGRAM_API_BASE = 'https://graph.facebook.com/v23.0';
+// CORRECTED: Use Instagram Graph API (not Facebook Graph API)
+// This is required for Instagram API with Instagram Login (launched July 2024)
+const INSTAGRAM_API_BASE = 'https://graph.instagram.com/v23.0';
 
 /**
  * Initialize Instagram OAuth flow
@@ -656,7 +658,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
 async function processInstagramMessage(messageData, instagramAccountId) {
     try {
         console.log(`🔍 Processing Instagram message for account: ${instagramAccountId}`);
-        console.log('🔍 Instagram DM Handler Version: 2025-07-11-NEW-INSTAGRAM-API-V4');
+        console.log('🔍 Instagram DM Handler Version: 2025-07-11-INSTAGRAM-GRAPH-API-V5');
 
         // Get all social accounts and find the Instagram one
         const socialAccounts = await knex("social_media_accounts")
@@ -764,11 +766,12 @@ async function sendInstagramDM(accessToken, instagramAccountId, recipientId, mes
         console.log('🔍 API Endpoint:', `${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`);
         console.log('🔍 Access Token (first 20 chars):', accessToken.substring(0, 20) + '...');
 
-        // IMPORTANT: Instagram DM sending uses Facebook App ID, not Instagram App ID
-        // - Webhooks use Instagram App ID (for receiving)
-        // - API calls use Facebook App ID (for sending)
-        // - Access token is from Facebook OAuth flow
-        console.log('🔍 Using Instagram API with Facebook App credentials for DM sending');
+        // CORRECTED: Instagram API with Instagram Login (July 2024)
+        // - Uses Instagram Graph API (graph.instagram.com)
+        // - Endpoint: /{instagram-user-id}/messages
+        // - Access token from Facebook OAuth with Instagram scopes
+        console.log('🔍 Using Instagram API with Instagram Login (July 2024)');
+        console.log('🔍 API Base:', INSTAGRAM_API_BASE);
         console.log('🔍 Instagram Account ID:', instagramAccountId);
         console.log('🔍 Recipient ID:', recipientId);
 
