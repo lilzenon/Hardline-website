@@ -1476,7 +1476,7 @@ router.get(
 router.post(
     "/messenger",
     rawBodyMiddleware, // Capture raw body for signature verification
-    asyncHandler((req, res) => {
+    asyncHandler(async(req, res) => {
         const crypto = require('crypto');
 
         console.log('📨 Messenger Platform webhook received');
