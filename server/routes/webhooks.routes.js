@@ -1370,8 +1370,48 @@ router.get(
 // Messenger Platform webhook events (POST request)
 router.post(
     "/messenger",
+    rawBodyMiddleware, // Capture raw body for signature verification
     asyncHandler((req, res) => {
+        const crypto = require('crypto');
+
         console.log('📨 Messenger Platform webhook received');
+        console.log('📨 IP:', req.ip);
+        console.log('📨 User-Agent:', req.headers['user-agent']);
+
+        // Verify webhook signature for Messenger Platform
+        const signature = req.headers['x-hub-signature-256'];
+        const webhookSecret = process.env.FACEBOOK_APP_SECRET;
+
+        if (signature && webhookSecret && req.rawBodyBuffer) {
+            console.log('🔍 Verifying Messenger Platform webhook signature...');
+            console.log('🔍 Received signature:', signature);
+            console.log('🔍 Using FACEBOOK_APP_SECRET for Messenger Platform');
+            console.log('🔍 Raw body length:', req.rawBodyBuffer.length);
+
+            const expectedSignature = 'sha256=' + crypto
+                .createHmac('sha256', webhookSecret)
+                .update(req.rawBodyBuffer)
+                .digest('hex');
+
+            console.log('🔍 Expected signature:', expectedSignature);
+            console.log('🔍 Signatures match:', signature === expectedSignature);
+
+            if (signature !== expectedSignature) {
+                console.error('❌ Invalid Messenger Platform webhook signature');
+                console.error('❌ This webhook is not from Facebook/Meta servers');
+                return res.status(403).send('Forbidden');
+            }
+
+            console.log('✅ Messenger Platform webhook signature verified');
+        } else {
+            console.warn('⚠️ No signature verification for Messenger Platform webhook');
+            console.warn('⚠️ Missing:', {
+                signature: !signature,
+                secret: !webhookSecret,
+                rawBody: !req.rawBodyBuffer
+            });
+        }
+
         console.log('📨 Body:', JSON.stringify(req.body, null, 2));
 
         // Handle Instagram messaging via Messenger Platform
@@ -1382,13 +1422,15 @@ router.post(
                     for (const messagingEvent of entry.messaging) {
                         console.log('📨 Instagram messaging event:', messagingEvent);
                         // TODO: Process Instagram DM received via Messenger Platform
+                        // This should call the Instagram handler with Messenger Platform data
                     }
                 }
 
-                // Handle other Messenger Platform events
+                // Handle other Messenger Platform events (like Instagram comments)
                 if (entry.changes) {
                     for (const change of entry.changes) {
                         console.log('📨 Messenger Platform change:', change);
+                        // TODO: Process Instagram changes via Messenger Platform
                     }
                 }
             }
