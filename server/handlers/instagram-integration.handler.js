@@ -655,7 +655,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
 async function processInstagramMessage(messageData, instagramAccountId) {
     try {
         console.log(`🔍 Processing Instagram message for account: ${instagramAccountId}`);
-        console.log('🔍 Instagram DM Handler Version: 2025-07-10-TIMESTAMP-FIX-V2');
+        console.log('🔍 Instagram DM Handler Version: 2025-07-10-PLATFORM-ID-FIX-V3');
 
         // Get all social accounts and find the Instagram one
         const socialAccounts = await knex("social_media_accounts")
