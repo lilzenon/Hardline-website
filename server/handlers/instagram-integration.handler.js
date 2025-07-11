@@ -759,12 +759,20 @@ async function processInstagramMessage(messageData, instagramAccountId) {
  */
 async function sendInstagramDM(accessToken, instagramAccountId, recipientId, message, interactionId) {
     try {
-        console.log('🔍 Sending Instagram DM:', { instagramAccountId, recipientId, message: message.substring(0, 50) + '...' });
+        console.log('🔍 Sending Instagram DM via Messenger Platform API');
+        console.log('🔍 Parameters:', { instagramAccountId, recipientId, message: message.substring(0, 50) + '...' });
 
-        const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`, {
+        // According to Meta documentation, Instagram DMs use Messenger Platform Send API
+        // Endpoint: https://graph.facebook.com/v23.0/me/messages
+        // This requires Messenger Platform permissions, not Instagram Business API
+        const response = await axios.post(`${INSTAGRAM_API_BASE}/me/messages`, {
             recipient: { id: recipientId },
-            message: { text: message },
-            access_token: accessToken
+            message: { text: message }
+        }, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
         });
 
         // Update interaction with response details
@@ -779,8 +787,23 @@ async function sendInstagramDM(accessToken, instagramAccountId, recipientId, mes
         return response.data;
 
     } catch (error) {
-        console.error('❌ Error sending Instagram DM:', error);
-        throw error;
+        console.error('❌ Error sending Instagram DM:', error.message);
+        console.error('❌ Facebook API Error Details:', error.response && error.response.data);
+        console.error('❌ Status Code:', error.response && error.response.status);
+        console.error('❌ Request URL:', error.config && error.config.url);
+        console.error('❌ Request Data:', error.config && error.config.data);
+
+        // Update interaction with error details
+        if (interactionId) {
+            await socialQueries.updateSocialInteraction(interactionId, {
+                auto_response_sent: false,
+                auto_response_error: error.message,
+                auto_response_error_details: JSON.stringify((error.response && error.response.data) || {})
+            });
+        }
+
+        // Don't throw error to prevent webhook processing failure
+        console.log('⚠️ Continuing webhook processing despite DM send failure');
     }
 }
 
