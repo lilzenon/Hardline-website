@@ -375,6 +375,93 @@ router.get(
     })
 );
 
+// Fix corrupted Instagram account metadata
+router.post(
+    "/instagram/fix-metadata",
+    asyncHandler(async(req, res) => {
+        const knex = require('../knex');
+
+        console.log('🔧 Starting Instagram account metadata repair...');
+
+        try {
+            // Get all Instagram accounts with corrupted metadata
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .select('*');
+
+            const results = [];
+
+            for (const account of accounts) {
+                const result = {
+                    id: account.id,
+                    username: account.platform_username,
+                    original_metadata: account.account_metadata,
+                    status: 'checking'
+                };
+
+                // Check if metadata is corrupted
+                if (account.account_metadata === '[object Object]' ||
+                    (typeof account.account_metadata === 'string' && account.account_metadata.includes('[object Object]'))) {
+
+                    console.log(`🔧 Fixing corrupted metadata for account: ${account.platform_username}`);
+
+                    // Set to null to force reconnection
+                    await knex('social_media_accounts')
+                        .where('id', account.id)
+                        .update({
+                            account_metadata: null,
+                            updated_at: new Date()
+                        });
+
+                    result.status = '✅ FIXED - metadata cleared, reconnection required';
+                    result.action = 'Metadata cleared - please reconnect Instagram';
+
+                } else if (account.account_metadata) {
+                    try {
+                        // Try to parse existing metadata
+                        const parsed = JSON.parse(account.account_metadata);
+                        result.status = '✅ VALID - no fix needed';
+                        result.parsed_metadata = parsed;
+                    } catch (parseError) {
+                        // Invalid JSON, clear it
+                        await knex('social_media_accounts')
+                            .where('id', account.id)
+                            .update({
+                                account_metadata: null,
+                                updated_at: new Date()
+                            });
+
+                        result.status = '✅ FIXED - invalid JSON cleared';
+                        result.action = 'Invalid JSON cleared - please reconnect Instagram';
+                    }
+                } else {
+                    result.status = '⚠️ NULL - reconnection needed';
+                    result.action = 'No metadata - please connect Instagram';
+                }
+
+                results.push(result);
+            }
+
+            res.json({
+                success: true,
+                message: 'Instagram metadata repair completed',
+                accounts_processed: results.length,
+                results: results,
+                next_step: 'Reconnect Instagram in dashboard to generate fresh metadata',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Metadata repair failed:', error);
+            res.json({
+                error: 'Metadata repair failed',
+                details: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
 // Simple test route to verify deployment
 router.get(
     "/instagram/permissions-test",
