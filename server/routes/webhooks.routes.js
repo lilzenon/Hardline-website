@@ -182,11 +182,18 @@ router.get(
 
         // Get Instagram account from database
         const socialQueries = require('../queries/social-integrations.queries');
-        const accounts = await socialQueries.getSocialAccounts({ platform: 'instagram' });
+
+        // Get all Instagram accounts (we'll filter by platform in the query)
+        const knex = require('../knex');
+        const accounts = await knex('social_media_accounts')
+            .where('platform', 'instagram')
+            .where('is_active', true)
+            .orderBy('created_at', 'desc');
 
         if (accounts.length === 0) {
             return res.json({
-                error: 'No Instagram accounts found in database'
+                error: 'No Instagram accounts found in database',
+                note: 'Make sure you have connected an Instagram account in the dashboard'
             });
         }
 
