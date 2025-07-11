@@ -4,6 +4,7 @@ const knex = require('../knex');
 const { CustomError } = require('../utils');
 const socialQueries = require('../queries/social-integrations.queries');
 const userQueries = require('../queries/user.queries');
+const logger = require('../utils/logger');
 
 /**
  * Instagram Graph API Integration Handler
@@ -26,10 +27,7 @@ async function initiateInstagramAuth(req, res) {
         req.session.instagram_auth_return = returnUrl || '/dashboard/settings#integrations';
         req.session.instagram_auth_user_id = userId;
 
-        console.log('🔍 Setting session data for OAuth:');
-        console.log('🔍 User ID:', userId);
-        console.log('🔍 Return URL:', returnUrl || '/dashboard/settings#integrations');
-        console.log('🔍 Session ID:', req.sessionID);
+        logger.debug('INSTAGRAM', 'Initiating OAuth', { user: userId });
 
         // Messenger Platform OAuth URL with required permissions
         // CORRECTED: For Instagram messaging via Messenger Platform, we need Page Access Tokens
@@ -690,9 +688,6 @@ async function processInstagramComment(commentData, instagramAccountId) {
  */
 async function processInstagramMessage(messageData, instagramAccountId) {
     try {
-        console.log(`🔍 Processing Instagram message for account: ${instagramAccountId}`);
-        console.log('🔍 Instagram DM Handler Version: 2025-07-11-FACEBOOK-GRAPH-API-V6');
-
         // Get all social accounts and find the Instagram one
         const socialAccounts = await knex("social_media_accounts")
             .where("platform", "instagram")
@@ -701,49 +696,40 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         const account = socialAccounts && socialAccounts[0];
 
         if (!account) {
-            console.error(`❌ Instagram account not found: ${instagramAccountId} (${socialAccounts && socialAccounts.length || 0} accounts checked)`);
+            logger.error('INSTAGRAM', 'Account not found in database', { account: instagramAccountId });
             return;
         }
 
-        console.log(`✅ Found Instagram account: ${account.platform_account_id}`);
-
         // Extract message details from Instagram DM webhook structure
-        console.log('🔍 Message data structure:', JSON.stringify(messageData, null, 2));
-
         const message = messageData.message || messageData;
         const messageText = message.text || messageData.text || '';
         const senderId = (messageData.sender && messageData.sender.id) || (messageData.from && messageData.from.id);
         const isEcho = message.is_echo || messageData.is_echo || false;
 
-        console.log('🔍 Extracted message text:', messageText);
-        console.log('🔍 Sender ID:', senderId);
-        console.log('🔍 Is echo message:', isEcho);
+        // Log webhook received (consolidated)
+        logger.instagram.webhookReceived('message', isEcho, messageText);
 
         // Skip echo messages (our own sent messages)
         if (isEcho) {
-            console.log('ℹ️ Skipping echo message (our own sent message)');
             return;
         }
 
         // Find matching keywords - search across all events for this user
-        console.log('🔍 Searching for keywords with:', { messageText, keywordType: 'instagram', socialAccountId: account.id, userId: account.connected_by_user_id });
-
-        // First try with specific social account
         let matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', account.id);
 
         // If no matches, try searching all keywords for this user (across all events)
         if (matchingKeywords.length === 0) {
-            console.log('🔍 No keywords found for specific social account, searching all user keywords...');
             matchingKeywords = await socialQueries.findMatchingKeywords(messageText, 'instagram', null);
         }
 
         if (matchingKeywords.length === 0) {
-            console.log('ℹ️ No matching keywords for message:', messageText);
+            logger.debug('INSTAGRAM', 'No matching keywords found', { message: messageText });
             return;
         }
 
         // Use the first matching keyword
         const keyword = matchingKeywords[0];
+        logger.instagram.keywordMatch(keyword.keyword, messageText, account.id);
 
         // Create interaction record
         // Convert Instagram timestamp (milliseconds) to proper Date object
@@ -751,14 +737,8 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         const rawTimestamp = messageData.timestamp || (messageData.message && messageData.message.timestamp) || Date.now();
         const platformTimestamp = new Date(rawTimestamp);
 
-        console.log('🔍 Raw timestamp from webhook:', rawTimestamp);
-        console.log('🔍 Converted to Date object:', platformTimestamp);
-        console.log('🔍 Date object type:', typeof platformTimestamp);
-        console.log('🔍 Date object toString:', platformTimestamp.toString());
-
         // Extract platform interaction ID from the correct location
         const platformInteractionId = (messageData.message && messageData.message.mid) || messageData.mid || messageData.id || `dm_${Date.now()}`;
-        console.log('🔍 Platform interaction ID:', platformInteractionId);
 
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
@@ -819,30 +799,16 @@ async function processInstagramMessage(messageData, instagramAccountId) {
  * - Endpoint: /{page-id}/messages (Messenger Platform)
  */
 async function sendInstagramDM(pageAccessToken, facebookPageId, recipientId, message, interactionId) {
+    const startTime = Date.now();
     try {
-        console.log('🔍 Sending Instagram DM via Messenger Platform (CORRECTED APPROACH)');
-        console.log('🔍 Parameters:', {
-            facebookPageId,
-            recipientId,
-            message: message.substring(0, 50) + '...',
-            tokenType: 'Page Access Token'
-        });
+        logger.instagram.tokenDebug('Page Access Token', facebookPageId);
 
-        // MESSENGER PLATFORM APPROACH (CORRECT for Instagram messaging)
-        // - Uses Page Access Token from Facebook Page
-        // - Endpoint: /{page-id}/messages
-        // - Sends Instagram DMs through connected Facebook Page
         const messengerEndpoint = `${INSTAGRAM_API_BASE}/${facebookPageId}/messages`;
-        console.log('🔍 Messenger Platform API Endpoint:', messengerEndpoint);
-        console.log('🔍 Page Access Token (first 20 chars):', pageAccessToken.substring(0, 20) + '...');
-
         const requestData = {
             recipient: { id: recipientId },
             message: { text: message },
-            messaging_type: 'RESPONSE' // Required for Messenger Platform
+            messaging_type: 'RESPONSE'
         };
-
-        console.log('🔍 Request data:', JSON.stringify(requestData, null, 2));
 
         const response = await axios.post(messengerEndpoint, requestData, {
             params: {
@@ -861,33 +827,24 @@ async function sendInstagramDM(pageAccessToken, facebookPageId, recipientId, mes
             auto_response_id: response.data.message_id
         });
 
-        console.log('✅ Instagram DM sent successfully via Messenger Platform');
+        const duration = Date.now() - startTime;
+        logger.instagram.dmSent(recipientId, message.substring(0, 30), duration);
         return response.data;
 
     } catch (error) {
-        console.error('❌ Error sending Instagram DM via Messenger Platform:', error.message);
-        console.error('❌ Facebook API Error Details:', error.response && error.response.data);
-        console.error('❌ Status Code:', error.response && error.response.status);
-        console.error('❌ Request URL:', error.config && error.config.url);
-        console.error('❌ Request Data:', error.config && error.config.data);
+        logger.instagram.dmFailed(error, recipientId);
 
-        // Log specific error analysis
-        if (error.response && error.response.data && error.response.data.error) {
+        // Log specific error details for debugging
+        if (error.response ? .data ? .error) {
             const apiError = error.response.data.error;
-            console.error('❌ API Error Analysis:');
-            console.error('   - Code:', apiError.code);
-            console.error('   - Type:', apiError.type);
-            console.error('   - Message:', apiError.message);
-
-            if (apiError.code === 3) {
-                console.error('❌ ERROR CODE 3: Application does not have capability');
-                console.error('   - This means we need Page Access Token, not User Access Token');
-                console.error('   - Or the Facebook Page is not properly connected to Instagram');
-                console.error('   - Or Messenger Platform product is not properly configured');
-            }
+            logger.debug('INSTAGRAM', 'API Error Details', {
+                code: apiError.code,
+                type: apiError.type,
+                message: apiError.message
+            });
         }
 
-        // Update interaction with error details (using existing columns)
+        // Update interaction with error details
         if (interactionId) {
             await socialQueries.updateSocialInteraction(interactionId, {
                 auto_response_sent: false
@@ -895,7 +852,7 @@ async function sendInstagramDM(pageAccessToken, facebookPageId, recipientId, mes
         }
 
         // Don't throw error to prevent webhook processing failure
-        console.log('⚠️ Continuing webhook processing despite DM send failure');
+        logger.warn('INSTAGRAM', 'DM send failed, continuing webhook processing');
     }
 }
 

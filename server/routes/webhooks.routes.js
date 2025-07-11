@@ -3,25 +3,22 @@ const express = require("express");
 const asyncHandler = require("../utils/asyncHandler");
 const instagramHandler = require("../handlers/instagram-integration.handler");
 const smsHandler = require("../handlers/sms-integration.handler");
+const logger = require("../utils/logger");
 
 const router = Router();
 
 // Optimized webhook logging middleware
 const webhookLoggingMiddleware = (req, res, next) => {
-    // Get log level from environment or default to NORMAL
-    const LOG_LEVELS = { MINIMAL: 1, NORMAL: 2, VERBOSE: 3, DEBUG: 4 };
-    const logLevel = LOG_LEVELS[process.env.LOG_LEVEL && process.env.LOG_LEVEL.toUpperCase()] || LOG_LEVELS.NORMAL;
+    // Use centralized logger for webhook processing
+    const startTime = Date.now();
 
-    // Only add detailed logging at VERBOSE+ levels, and only if not already logged by global middleware
-    if (logLevel >= LOG_LEVELS.VERBOSE) {
-        const requestId = req.requestId || 'unknown';
-        console.log(`📡 Webhook Route Processing (${requestId})`);
-
-        // Log body for webhook POST requests at VERBOSE level
-        if (req.method === 'POST' && req.body && Object.keys(req.body).length > 0) {
-            console.log(`📡 Body: ${JSON.stringify(req.body, null, 2)}`);
-        }
-    }
+    // Override res.end to capture response time
+    const originalEnd = res.end;
+    res.end = function(...args) {
+        const duration = Date.now() - startTime;
+        logger.webhook.received(req.path, req.method, req.ip, duration);
+        originalEnd.apply(this, args);
+    };
 
     next();
 };
@@ -29,39 +26,34 @@ const webhookLoggingMiddleware = (req, res, next) => {
 // Middleware to capture raw body for webhook signature verification
 const rawBodyMiddleware = (req, res, next) => {
     if ((req.path === '/instagram' || req.path === '/messenger') && req.method === 'POST') {
-        console.log('🔍 Raw body middleware activated for webhook:', req.path);
+        logger.debug('WEBHOOK', 'Raw body middleware activated', { path: req.path });
 
         const chunks = [];
 
         req.on('data', (chunk) => {
-            console.log('🔍 Received chunk:', chunk.length, 'bytes');
             chunks.push(chunk);
         });
 
         req.on('end', () => {
             const rawBody = Buffer.concat(chunks);
-            console.log('🔍 Raw body complete:', rawBody.length, 'bytes');
-
-            // Store both raw buffer and string version
             req.rawBody = rawBody.toString('utf8');
             req.rawBodyBuffer = rawBody;
 
             try {
                 req.body = JSON.parse(req.rawBody);
-                console.log('🔍 Body parsed successfully');
+                logger.debug('WEBHOOK', 'Body parsed successfully', { size: rawBody.length });
             } catch (error) {
-                console.error('❌ Error parsing webhook JSON:', error);
+                logger.error('WEBHOOK', 'Error parsing webhook JSON', { error: error.message });
                 return res.status(400).send('Invalid JSON');
             }
             next();
         });
 
         req.on('error', (error) => {
-            console.error('❌ Error reading webhook body:', error);
+            logger.error('WEBHOOK', 'Error reading webhook body', { error: error.message });
             next(error);
         });
     } else {
-        console.log('🔍 Raw body middleware skipped for:', req.method, req.path);
         next();
     }
 };
@@ -1479,20 +1471,12 @@ router.post(
     asyncHandler(async(req, res) => {
         const crypto = require('crypto');
 
-        console.log('📨 Messenger Platform webhook received');
-        console.log('📨 IP:', req.ip);
-        console.log('📨 User-Agent:', req.headers['user-agent']);
-
         // Verify webhook signature for Messenger Platform
         const signature = req.headers['x-hub-signature-256'];
         const facebookSecret = process.env.FACEBOOK_APP_SECRET;
         const instagramSecret = process.env.INSTAGRAM_APP_SECRET;
 
         if (signature && req.rawBodyBuffer) {
-            console.log('🔍 Verifying Messenger Platform webhook signature...');
-            console.log('🔍 Received signature:', signature);
-            console.log('🔍 Raw body length:', req.rawBodyBuffer.length);
-
             let verified = false;
             let usedSecret = '';
 
@@ -1502,9 +1486,6 @@ router.post(
                     .createHmac('sha256', facebookSecret)
                     .update(req.rawBodyBuffer)
                     .digest('hex');
-
-                console.log('🔍 Testing FACEBOOK_APP_SECRET...');
-                console.log('🔍 Expected signature:', expectedSignature);
 
                 if (signature === expectedSignature) {
                     verified = true;
@@ -1519,9 +1500,6 @@ router.post(
                     .update(req.rawBodyBuffer)
                     .digest('hex');
 
-                console.log('🔍 Testing INSTAGRAM_APP_SECRET...');
-                console.log('🔍 Expected signature:', expectedSignature);
-
                 if (signature === expectedSignature) {
                     verified = true;
                     usedSecret = 'INSTAGRAM_APP_SECRET';
@@ -1529,24 +1507,14 @@ router.post(
             }
 
             if (!verified) {
-                console.error('❌ Invalid Messenger Platform webhook signature');
-                console.error('❌ Tried both FACEBOOK_APP_SECRET and INSTAGRAM_APP_SECRET');
-                console.error('❌ This webhook is not from Facebook/Meta servers');
+                logger.error('WEBHOOK', 'Invalid Messenger Platform signature');
                 return res.status(403).send('Forbidden');
             }
 
-            console.log(`✅ Messenger Platform webhook signature verified using ${usedSecret}`);
+            logger.instagram.signatureVerified(usedSecret);
         } else {
-            console.warn('⚠️ No signature verification for Messenger Platform webhook');
-            console.warn('⚠️ Missing:', {
-                signature: !signature,
-                facebookSecret: !facebookSecret,
-                instagramSecret: !instagramSecret,
-                rawBody: !req.rawBodyBuffer
-            });
+            logger.warn('WEBHOOK', 'No signature verification for Messenger Platform webhook');
         }
-
-        console.log('📨 Body:', JSON.stringify(req.body, null, 2));
 
         // Handle Instagram messaging via Messenger Platform
         if (req.body && req.body.entry) {
@@ -1554,12 +1522,9 @@ router.post(
                 // Handle Instagram messaging events
                 if (entry.messaging) {
                     for (const messagingEvent of entry.messaging) {
-                        console.log('📨 Instagram messaging event:', messagingEvent);
-
                         // Skip echo messages (our own sent messages)
                         const isEcho = messagingEvent.message && messagingEvent.message.is_echo;
                         if (isEcho) {
-                            console.log('ℹ️ Skipping echo message (our own sent message)');
                             continue;
                         }
 
