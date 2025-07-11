@@ -1641,6 +1641,57 @@ router.all(
     })
 );
 
+// Aggressive fix - delete ALL Instagram accounts and start fresh
+router.get(
+    "/instagram/nuclear-fix",
+    asyncHandler(async(req, res) => {
+        const knex = require('../knex');
+
+        console.log('💥 NUCLEAR FIX: Deleting ALL Instagram accounts to start fresh...');
+
+        try {
+            // Get all Instagram accounts first for reporting
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .select('*');
+
+            console.log(`📊 Found ${accounts.length} Instagram account(s) to delete`);
+
+            // Delete ALL Instagram accounts
+            const deletedCount = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .del();
+
+            console.log(`🗑️ Deleted ${deletedCount} Instagram account record(s)`);
+
+            res.json({
+                success: true,
+                message: 'Nuclear fix completed - ALL Instagram accounts deleted',
+                accounts_found: accounts.length,
+                accounts_deleted: deletedCount,
+                accounts_details: accounts.map(acc => ({
+                    id: acc.id,
+                    username: acc.platform_username,
+                    account_id: acc.platform_account_id,
+                    was_corrupted: acc.account_metadata === '[object Object]',
+                    metadata_preview: acc.account_metadata ? acc.account_metadata.substring(0, 50) + '...' : 'NULL'
+                })),
+                next_step: 'Reconnect Instagram: https://b2b.click/api/integrations/instagram/auth',
+                note: 'All Instagram records completely removed. Fresh reconnection will create clean database state.',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Nuclear fix failed:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
 // Debug endpoint to check database records for Instagram accounts
 router.get(
     "/debug-database",
