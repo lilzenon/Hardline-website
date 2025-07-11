@@ -31,14 +31,16 @@ async function initiateInstagramAuth(req, res) {
         console.log('🔍 Return URL:', returnUrl || '/dashboard/settings#integrations');
         console.log('🔍 Session ID:', req.sessionID);
 
-        // Instagram Business OAuth URL with required permissions
-        // For Instagram Business API, we use Facebook Login for Business
+        // Messenger Platform OAuth URL with required permissions
+        // CORRECTED: For Instagram messaging via Messenger Platform, we need Page Access Tokens
         const scopes = [
             'instagram_basic',
             'instagram_manage_comments',
             'instagram_manage_messages',
             'pages_show_list',
-            'pages_read_engagement'
+            'pages_read_engagement',
+            'pages_manage_metadata', // CRITICAL: Required to get Page Access Tokens
+            'pages_messaging' // CRITICAL: Required for Messenger Platform messaging
         ].join(',');
 
         // Generate secure state parameter that includes user ID
@@ -245,11 +247,11 @@ async function handleInstagramCallback(req, res) {
 
         let pagesResponse;
         try {
-            // Updated for Graph API v23.0 - removed account_type field as it's no longer available
+            // CORRECTED: Request Page Access Tokens for Messenger Platform
             pagesResponse = await axios.get(`https://graph.facebook.com/v23.0/me/accounts`, {
                 params: {
                     access_token: access_token,
-                    fields: 'id,name,instagram_business_account{id,username,name,profile_picture_url,followers_count}'
+                    fields: 'id,name,access_token,instagram_business_account{id,username,name,profile_picture_url,followers_count}'
                 }
             });
             console.log('✅ Successfully fetched Facebook pages');
