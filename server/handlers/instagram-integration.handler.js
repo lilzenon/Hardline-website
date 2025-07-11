@@ -631,6 +631,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
         if (keyword.send_auto_response && keyword.auto_response_message) {
             await sendInstagramDM(
                 account.access_token,
+                account.platform_account_id, // Use Instagram account ID
                 comment.from.id,
                 keyword.auto_response_message,
                 interaction.id
@@ -733,6 +734,7 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         if (keyword.send_auto_response && keyword.auto_response_message) {
             await sendInstagramDM(
                 account.access_token,
+                account.platform_account_id, // Use Instagram account ID instead of 'me'
                 senderId,
                 keyword.auto_response_message,
                 interaction.id
@@ -755,9 +757,11 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 /**
  * Send Instagram DM
  */
-async function sendInstagramDM(accessToken, recipientId, message, interactionId) {
+async function sendInstagramDM(accessToken, instagramAccountId, recipientId, message, interactionId) {
     try {
-        const response = await axios.post(`${INSTAGRAM_API_BASE}/me/messages`, {
+        console.log('🔍 Sending Instagram DM:', { instagramAccountId, recipientId, message: message.substring(0, 50) + '...' });
+
+        const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`, {
             recipient: { id: recipientId },
             message: { text: message },
             access_token: accessToken
