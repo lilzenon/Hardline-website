@@ -1596,4 +1596,43 @@ router.all(
     })
 );
 
+// Debug endpoint to verify app secrets for signature verification
+router.get(
+    "/debug-app-secrets",
+    asyncHandler((req, res) => {
+        console.log('🔍 APP SECRETS DEBUG ENDPOINT');
+
+        const facebookSecret = process.env.FACEBOOK_APP_SECRET;
+        const instagramSecret = process.env.INSTAGRAM_APP_SECRET;
+
+        res.json({
+            success: true,
+            message: "App secrets debug information",
+            secrets: {
+                facebook_app_secret: {
+                    exists: !!facebookSecret,
+                    first_8_chars: facebookSecret ? facebookSecret.substring(0, 8) + '...' : 'NOT_SET',
+                    length: facebookSecret ? facebookSecret.length : 0
+                },
+                instagram_app_secret: {
+                    exists: !!instagramSecret,
+                    first_8_chars: instagramSecret ? instagramSecret.substring(0, 8) + '...' : 'NOT_SET',
+                    length: instagramSecret ? instagramSecret.length : 0
+                }
+            },
+            current_usage: {
+                messenger_platform: "Uses FACEBOOK_APP_SECRET",
+                instagram_legacy: "Uses INSTAGRAM_APP_SECRET (fallback)"
+            },
+            instructions: [
+                "1. Copy App Secret from Meta App Dashboard → App Settings → Basic",
+                "2. Ensure FACEBOOK_APP_SECRET environment variable matches exactly",
+                "3. For Messenger Platform, Facebook App Secret is required",
+                "4. Instagram App Secret is only used as fallback for legacy webhooks"
+            ],
+            timestamp: new Date().toISOString()
+        });
+    })
+);
+
 module.exports = router;
