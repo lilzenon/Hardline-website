@@ -1380,34 +1380,63 @@ router.post(
 
         // Verify webhook signature for Messenger Platform
         const signature = req.headers['x-hub-signature-256'];
-        const webhookSecret = process.env.FACEBOOK_APP_SECRET;
+        const facebookSecret = process.env.FACEBOOK_APP_SECRET;
+        const instagramSecret = process.env.INSTAGRAM_APP_SECRET;
 
-        if (signature && webhookSecret && req.rawBodyBuffer) {
+        if (signature && req.rawBodyBuffer) {
             console.log('🔍 Verifying Messenger Platform webhook signature...');
             console.log('🔍 Received signature:', signature);
-            console.log('🔍 Using FACEBOOK_APP_SECRET for Messenger Platform');
             console.log('🔍 Raw body length:', req.rawBodyBuffer.length);
 
-            const expectedSignature = 'sha256=' + crypto
-                .createHmac('sha256', webhookSecret)
-                .update(req.rawBodyBuffer)
-                .digest('hex');
+            let verified = false;
+            let usedSecret = '';
 
-            console.log('🔍 Expected signature:', expectedSignature);
-            console.log('🔍 Signatures match:', signature === expectedSignature);
+            // Try Facebook App Secret first (preferred for Messenger Platform)
+            if (facebookSecret) {
+                const expectedSignature = 'sha256=' + crypto
+                    .createHmac('sha256', facebookSecret)
+                    .update(req.rawBodyBuffer)
+                    .digest('hex');
 
-            if (signature !== expectedSignature) {
+                console.log('🔍 Testing FACEBOOK_APP_SECRET...');
+                console.log('🔍 Expected signature:', expectedSignature);
+
+                if (signature === expectedSignature) {
+                    verified = true;
+                    usedSecret = 'FACEBOOK_APP_SECRET';
+                }
+            }
+
+            // Try Instagram App Secret if Facebook secret failed
+            if (!verified && instagramSecret) {
+                const expectedSignature = 'sha256=' + crypto
+                    .createHmac('sha256', instagramSecret)
+                    .update(req.rawBodyBuffer)
+                    .digest('hex');
+
+                console.log('🔍 Testing INSTAGRAM_APP_SECRET...');
+                console.log('🔍 Expected signature:', expectedSignature);
+
+                if (signature === expectedSignature) {
+                    verified = true;
+                    usedSecret = 'INSTAGRAM_APP_SECRET';
+                }
+            }
+
+            if (!verified) {
                 console.error('❌ Invalid Messenger Platform webhook signature');
+                console.error('❌ Tried both FACEBOOK_APP_SECRET and INSTAGRAM_APP_SECRET');
                 console.error('❌ This webhook is not from Facebook/Meta servers');
                 return res.status(403).send('Forbidden');
             }
 
-            console.log('✅ Messenger Platform webhook signature verified');
+            console.log(`✅ Messenger Platform webhook signature verified using ${usedSecret}`);
         } else {
             console.warn('⚠️ No signature verification for Messenger Platform webhook');
             console.warn('⚠️ Missing:', {
                 signature: !signature,
-                secret: !webhookSecret,
+                facebookSecret: !facebookSecret,
+                instagramSecret: !instagramSecret,
                 rawBody: !req.rawBodyBuffer
             });
         }
