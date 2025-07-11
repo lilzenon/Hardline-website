@@ -1216,10 +1216,10 @@ router.get(
                 });
             }
 
-            // Use Page Access Token from metadata (CORRECTED)
-            const pageAccessToken = accountMetadata.user_access_token;
+            // Use Page Access Token from account record (FIXED)
+            const pageAccessToken = account.access_token;
             const result = await instagramHandler.sendInstagramDM(
-                pageAccessToken, // FIXED: Use Page Access Token from metadata
+                pageAccessToken, // FIXED: Use Page Access Token from account.access_token
                 facebookPageId, // Use Facebook Page ID for Messenger Platform
                 recipient_id,
                 message,
@@ -1300,10 +1300,10 @@ router.post(
                 });
             }
 
-            // Use Page Access Token from metadata (CORRECTED)
-            const pageAccessToken = accountMetadata.user_access_token;
+            // Use Page Access Token from account record (FIXED)
+            const pageAccessToken = account.access_token;
             const result = await instagramHandler.sendInstagramDM(
-                pageAccessToken, // FIXED: Use Page Access Token from metadata
+                pageAccessToken, // FIXED: Use Page Access Token from account.access_token
                 facebookPageId, // Use Facebook Page ID for Messenger Platform
                 recipient_id,
                 message,
