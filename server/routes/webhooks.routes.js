@@ -549,6 +549,126 @@ router.post(
     })
 );
 
+// Fetch and populate missing Facebook Page metadata
+router.get(
+    "/instagram/fetch-page-data",
+    asyncHandler(async(req, res) => {
+        const axios = require('axios');
+        const knex = require('../knex');
+
+        console.log('📄 Fetching missing Facebook Page data for Instagram accounts...');
+
+        try {
+            // Get Instagram accounts without metadata
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .select('*');
+
+            const results = [];
+
+            for (const account of accounts) {
+                const result = {
+                    username: account.platform_username,
+                    account_id: account.platform_account_id,
+                    current_metadata: account.account_metadata,
+                    status: 'processing'
+                };
+
+                if (!account.access_token) {
+                    result.status = '❌ NO ACCESS TOKEN';
+                    result.action = 'Reconnect Instagram to get access token';
+                    results.push(result);
+                    continue;
+                }
+
+                try {
+                    // Fetch user's Facebook Pages
+                    console.log(`📄 Fetching Facebook Pages for ${account.platform_username}...`);
+                    const pagesResponse = await axios.get('https://graph.facebook.com/v23.0/me/accounts', {
+                        params: {
+                            access_token: account.access_token,
+                            fields: 'id,name,instagram_business_account'
+                        }
+                    });
+
+                    const pages = pagesResponse.data.data || [];
+                    console.log(`📄 Found ${pages.length} Facebook Pages`);
+
+                    // Find the page connected to this Instagram account
+                    let connectedPage = null;
+                    for (const page of pages) {
+                        if (page.instagram_business_account &&
+                            page.instagram_business_account.id === account.platform_account_id) {
+                            connectedPage = page;
+                            break;
+                        }
+                    }
+
+                    if (connectedPage) {
+                        // Update account with Facebook Page metadata
+                        const metadata = {
+                            page_id: connectedPage.id,
+                            page_name: connectedPage.name,
+                            instagram_account_id: account.platform_account_id,
+                            fetched_at: new Date().toISOString()
+                        };
+
+                        await knex('social_media_accounts')
+                            .where('id', account.id)
+                            .update({
+                                account_metadata: JSON.stringify(metadata),
+                                updated_at: new Date()
+                            });
+
+                        result.status = '✅ SUCCESS';
+                        result.facebook_page = {
+                            page_id: connectedPage.id,
+                            page_name: connectedPage.name
+                        };
+                        result.action = 'Facebook Page metadata populated successfully';
+
+                        console.log(`✅ Updated metadata for ${account.platform_username}: ${connectedPage.name}`);
+
+                    } else {
+                        result.status = '❌ NO CONNECTED PAGE';
+                        result.available_pages = pages.map(p => ({
+                            id: p.id,
+                            name: p.name,
+                            has_instagram: !!p.instagram_business_account
+                        }));
+                        result.action = 'No Facebook Page found connected to this Instagram account';
+                    }
+
+                } catch (apiError) {
+                    result.status = '❌ API ERROR';
+                    result.error = (apiError.response && apiError.response.data && apiError.response.data.error && apiError.response.data.error.message) || apiError.message;
+                    result.action = 'Check access token permissions or reconnect Instagram';
+                }
+
+                results.push(result);
+            }
+
+            res.json({
+                success: true,
+                message: 'Facebook Page data fetch completed',
+                accounts_processed: results.length,
+                results: results,
+                next_step: 'Run readiness check again to verify 5/5 status',
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Page data fetch failed:', error);
+            res.json({
+                error: 'Page data fetch failed',
+                details: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
 // Simple test route to verify deployment
 router.get(
     "/instagram/permissions-test",
