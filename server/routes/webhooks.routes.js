@@ -161,6 +161,220 @@ router.get(
     })
 );
 
+// Instagram Messaging API Readiness Check
+router.get(
+    "/instagram/readiness-check",
+    asyncHandler(async(req, res) => {
+        const axios = require('axios');
+        const knex = require('../knex');
+
+        console.log('🔍 Starting comprehensive Instagram Messaging API readiness check...');
+
+        const readinessReport = {
+            timestamp: new Date().toISOString(),
+            overall_status: 'CHECKING',
+            requirements: {},
+            recommendations: [],
+            next_steps: []
+        };
+
+        // 1. Environment Variables Check
+        readinessReport.requirements.environment = {
+            facebook_app_id: {
+                value: process.env.FACEBOOK_APP_ID || 'NOT SET',
+                status: process.env.FACEBOOK_APP_ID === '2364553920613507' ? '✅ CORRECT' : '❌ INCORRECT',
+                required: '2364553920613507'
+            },
+            facebook_app_secret: {
+                status: process.env.FACEBOOK_APP_SECRET ? '✅ SET' : '❌ NOT SET',
+                note: 'Hidden for security'
+            },
+            facebook_redirect_uri: {
+                value: process.env.FACEBOOK_REDIRECT_URI || 'NOT SET',
+                status: process.env.FACEBOOK_REDIRECT_URI ? '✅ SET' : '❌ NOT SET'
+            },
+            instagram_webhook_verify_token: {
+                status: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ? '✅ SET' : '❌ NOT SET'
+            }
+        };
+
+        // 2. Database Instagram Account Check
+        try {
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .select('*');
+
+            readinessReport.requirements.database = {
+                instagram_accounts_found: accounts.length,
+                status: accounts.length > 0 ? '✅ FOUND' : '❌ NO ACCOUNTS',
+                accounts: accounts.map(acc => ({
+                    username: acc.platform_username,
+                    account_id: acc.platform_account_id,
+                    has_access_token: !!acc.access_token,
+                    token_preview: acc.access_token ? acc.access_token.substring(0, 20) + '...' : 'MISSING',
+                    metadata: acc.account_metadata ? JSON.parse(acc.account_metadata) : null
+                }))
+            };
+
+            // 3. Access Token Analysis
+            if (accounts.length > 0 && accounts[0].access_token) {
+                try {
+                    // Check token validity
+                    const tokenCheck = await axios.get('https://graph.facebook.com/v23.0/me', {
+                        params: { access_token: accounts[0].access_token }
+                    });
+
+                    // Check token permissions
+                    const permissionsCheck = await axios.get('https://graph.facebook.com/v23.0/me/permissions', {
+                        params: { access_token: accounts[0].access_token }
+                    });
+
+                    const permissions = permissionsCheck.data.data || [];
+                    const requiredPermissions = [
+                        'instagram_basic',
+                        'instagram_manage_messages',
+                        'pages_manage_metadata',
+                        'pages_show_list'
+                    ];
+
+                    const permissionStatus = {};
+                    requiredPermissions.forEach(perm => {
+                        const found = permissions.find(p => p.permission === perm && p.status === 'granted');
+                        permissionStatus[perm] = found ? '✅ GRANTED' : '❌ MISSING';
+                    });
+
+                    readinessReport.requirements.access_token = {
+                        status: '✅ VALID',
+                        token_owner: tokenCheck.data.name,
+                        token_id: tokenCheck.data.id,
+                        permissions: permissionStatus,
+                        all_permissions_granted: requiredPermissions.every(perm =>
+                            permissions.find(p => p.permission === perm && p.status === 'granted')
+                        )
+                    };
+
+                } catch (tokenError) {
+                    readinessReport.requirements.access_token = {
+                        status: '❌ INVALID',
+                        error: tokenError.response ? .data ? .error ? .message || tokenError.message
+                    };
+                }
+            } else {
+                readinessReport.requirements.access_token = {
+                    status: '❌ MISSING',
+                    note: 'No access token found in database'
+                };
+            }
+
+        } catch (dbError) {
+            readinessReport.requirements.database = {
+                status: '❌ ERROR',
+                error: dbError.message
+            };
+        }
+
+        // 4. Facebook Page Connection Check
+        try {
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .first();
+
+            if (accounts && accounts.access_token && accounts.account_metadata) {
+                const metadata = JSON.parse(accounts.account_metadata);
+
+                if (metadata.page_id && metadata.page_name) {
+                    // Try to access the Facebook Page
+                    try {
+                        const pageCheck = await axios.get(`https://graph.facebook.com/v23.0/${metadata.page_id}`, {
+                            params: {
+                                access_token: accounts.access_token,
+                                fields: 'id,name,category,instagram_business_account'
+                            }
+                        });
+
+                        readinessReport.requirements.facebook_page = {
+                            status: '✅ CONNECTED',
+                            page_id: metadata.page_id,
+                            page_name: metadata.page_name,
+                            instagram_connected: !!pageCheck.data.instagram_business_account,
+                            instagram_account_id: pageCheck.data.instagram_business_account ? .id || 'Not found'
+                        };
+                    } catch (pageError) {
+                        readinessReport.requirements.facebook_page = {
+                            status: '❌ ACCESS DENIED',
+                            page_id: metadata.page_id,
+                            page_name: metadata.page_name,
+                            error: pageError.response ? .data ? .error ? .message || 'Cannot access Facebook Page'
+                        };
+                    }
+                } else {
+                    readinessReport.requirements.facebook_page = {
+                        status: '❌ NOT FOUND',
+                        note: 'No Facebook Page information in account metadata'
+                    };
+                }
+            } else {
+                readinessReport.requirements.facebook_page = {
+                    status: '❌ NO DATA',
+                    note: 'No Instagram account or metadata found'
+                };
+            }
+        } catch (error) {
+            readinessReport.requirements.facebook_page = {
+                status: '❌ ERROR',
+                error: error.message
+            };
+        }
+
+        // 5. Generate Overall Status and Recommendations
+        const allChecks = [
+            readinessReport.requirements.environment ? .facebook_app_id ? .status ? .includes('✅'),
+            readinessReport.requirements.environment ? .facebook_app_secret ? .status ? .includes('✅'),
+            readinessReport.requirements.database ? .status ? .includes('✅'),
+            readinessReport.requirements.access_token ? .status ? .includes('✅'),
+            readinessReport.requirements.facebook_page ? .status ? .includes('✅')
+        ];
+
+        const passedChecks = allChecks.filter(Boolean).length;
+        const totalChecks = allChecks.length;
+
+        if (passedChecks === totalChecks) {
+            readinessReport.overall_status = '✅ READY FOR MESSAGING API';
+            readinessReport.next_steps = [
+                '1. Add Messenger product to Facebook app if not already added',
+                '2. Test DM sending to app testers (bounce2bounce_, zenon.mp3)',
+                '3. Submit app review for Advanced Access if needed for production'
+            ];
+        } else {
+            readinessReport.overall_status = `❌ NOT READY (${passedChecks}/${totalChecks} checks passed)`;
+            readinessReport.next_steps = [
+                'Fix the failing requirements above',
+                'Reconnect Instagram if access token issues',
+                'Verify Facebook Page connection',
+                'Check Meta App Dashboard configuration'
+            ];
+        }
+
+        // Add specific recommendations based on findings
+        if (!readinessReport.requirements.environment ? .facebook_app_id ? .status ? .includes('✅')) {
+            readinessReport.recommendations.push('Update FACEBOOK_APP_ID to 2364553920613507 in Render environment');
+        }
+
+        if (!readinessReport.requirements.access_token ? .all_permissions_granted) {
+            readinessReport.recommendations.push('Reconnect Instagram to get all required permissions');
+        }
+
+        if (!readinessReport.requirements.facebook_page ? .status ? .includes('✅')) {
+            readinessReport.recommendations.push('Ensure Instagram Business account is connected to Facebook Page');
+        }
+
+        console.log('✅ Readiness check completed:', readinessReport.overall_status);
+        res.json(readinessReport);
+    })
+);
+
 // Simple test route to verify deployment
 router.get(
     "/instagram/permissions-test",
