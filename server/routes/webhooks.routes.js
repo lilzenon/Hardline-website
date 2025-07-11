@@ -1555,8 +1555,17 @@ router.post(
                 if (entry.messaging) {
                     for (const messagingEvent of entry.messaging) {
                         console.log('📨 Instagram messaging event:', messagingEvent);
-                        // TODO: Process Instagram DM received via Messenger Platform
-                        // This should call the Instagram handler with Messenger Platform data
+
+                        // Skip echo messages (our own sent messages)
+                        const isEcho = messagingEvent.message && messagingEvent.message.is_echo;
+                        if (isEcho) {
+                            console.log('ℹ️ Skipping echo message (our own sent message)');
+                            continue;
+                        }
+
+                        // Process incoming Instagram DM via Messenger Platform
+                        const instagramHandler = require('../handlers/instagram-integration.handler');
+                        await instagramHandler.processInstagramMessage(messagingEvent, entry.id);
                     }
                 }
 

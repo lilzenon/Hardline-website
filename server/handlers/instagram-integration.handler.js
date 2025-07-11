@@ -713,9 +713,17 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         const message = messageData.message || messageData;
         const messageText = message.text || messageData.text || '';
         const senderId = (messageData.sender && messageData.sender.id) || (messageData.from && messageData.from.id);
+        const isEcho = message.is_echo || messageData.is_echo || false;
 
         console.log('🔍 Extracted message text:', messageText);
         console.log('🔍 Sender ID:', senderId);
+        console.log('🔍 Is echo message:', isEcho);
+
+        // Skip echo messages (our own sent messages)
+        if (isEcho) {
+            console.log('ℹ️ Skipping echo message (our own sent message)');
+            return;
+        }
 
         // Find matching keywords - search across all events for this user
         console.log('🔍 Searching for keywords with:', { messageText, keywordType: 'instagram', socialAccountId: account.id, userId: account.connected_by_user_id });
