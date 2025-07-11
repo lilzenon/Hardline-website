@@ -257,7 +257,7 @@ router.get(
                 } catch (tokenError) {
                     readinessReport.requirements.access_token = {
                         status: '❌ INVALID',
-                        error: tokenError.response ? .data ? .error ? .message || tokenError.message
+                        error: (tokenError.response && tokenError.response.data && tokenError.response.data.error && tokenError.response.data.error.message) || tokenError.message
                     };
                 }
             } else {
@@ -299,14 +299,14 @@ router.get(
                             page_id: metadata.page_id,
                             page_name: metadata.page_name,
                             instagram_connected: !!pageCheck.data.instagram_business_account,
-                            instagram_account_id: pageCheck.data.instagram_business_account ? .id || 'Not found'
+                            instagram_account_id: (pageCheck.data.instagram_business_account && pageCheck.data.instagram_business_account.id) || 'Not found'
                         };
                     } catch (pageError) {
                         readinessReport.requirements.facebook_page = {
                             status: '❌ ACCESS DENIED',
                             page_id: metadata.page_id,
                             page_name: metadata.page_name,
-                            error: pageError.response ? .data ? .error ? .message || 'Cannot access Facebook Page'
+                            error: (pageError.response && pageError.response.data && pageError.response.data.error && pageError.response.data.error.message) || 'Cannot access Facebook Page'
                         };
                     }
                 } else {
@@ -330,11 +330,11 @@ router.get(
 
         // 5. Generate Overall Status and Recommendations
         const allChecks = [
-            readinessReport.requirements.environment ? .facebook_app_id ? .status ? .includes('✅'),
-            readinessReport.requirements.environment ? .facebook_app_secret ? .status ? .includes('✅'),
-            readinessReport.requirements.database ? .status ? .includes('✅'),
-            readinessReport.requirements.access_token ? .status ? .includes('✅'),
-            readinessReport.requirements.facebook_page ? .status ? .includes('✅')
+            readinessReport.requirements.environment && readinessReport.requirements.environment.facebook_app_id && readinessReport.requirements.environment.facebook_app_id.status && readinessReport.requirements.environment.facebook_app_id.status.includes('✅'),
+            readinessReport.requirements.environment && readinessReport.requirements.environment.facebook_app_secret && readinessReport.requirements.environment.facebook_app_secret.status && readinessReport.requirements.environment.facebook_app_secret.status.includes('✅'),
+            readinessReport.requirements.database && readinessReport.requirements.database.status && readinessReport.requirements.database.status.includes('✅'),
+            readinessReport.requirements.access_token && readinessReport.requirements.access_token.status && readinessReport.requirements.access_token.status.includes('✅'),
+            readinessReport.requirements.facebook_page && readinessReport.requirements.facebook_page.status && readinessReport.requirements.facebook_page.status.includes('✅')
         ];
 
         const passedChecks = allChecks.filter(Boolean).length;
@@ -358,15 +358,15 @@ router.get(
         }
 
         // Add specific recommendations based on findings
-        if (!readinessReport.requirements.environment ? .facebook_app_id ? .status ? .includes('✅')) {
+        if (!(readinessReport.requirements.environment && readinessReport.requirements.environment.facebook_app_id && readinessReport.requirements.environment.facebook_app_id.status && readinessReport.requirements.environment.facebook_app_id.status.includes('✅'))) {
             readinessReport.recommendations.push('Update FACEBOOK_APP_ID to 2364553920613507 in Render environment');
         }
 
-        if (!readinessReport.requirements.access_token ? .all_permissions_granted) {
+        if (!(readinessReport.requirements.access_token && readinessReport.requirements.access_token.all_permissions_granted)) {
             readinessReport.recommendations.push('Reconnect Instagram to get all required permissions');
         }
 
-        if (!readinessReport.requirements.facebook_page ? .status ? .includes('✅')) {
+        if (!(readinessReport.requirements.facebook_page && readinessReport.requirements.facebook_page.status && readinessReport.requirements.facebook_page.status.includes('✅'))) {
             readinessReport.recommendations.push('Ensure Instagram Business account is connected to Facebook Page');
         }
 
@@ -604,7 +604,7 @@ router.post(
             console.error('❌ Test DM failed:', error);
             res.json({
                 error: 'DM sending failed',
-                details: error.response ? .data || error.message,
+                details: (error.response && error.response.data) || error.message,
                 timestamp: new Date().toISOString()
             });
         }
