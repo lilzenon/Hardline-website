@@ -1131,32 +1131,89 @@ router.post(
  * Facebook Webhook Routes (for future implementation)
  */
 
-// Facebook webhook verification (GET request)
+// Messenger Platform webhook verification (GET request)
+// This handles the webhook verification for Instagram messaging via Messenger Platform
 router.get(
-    "/facebook",
+    "/messenger",
     asyncHandler((req, res) => {
-        // Placeholder for Facebook webhook verification
+        console.log('🔍 Messenger Platform webhook verification request');
+        console.log('🔍 Query params:', req.query);
+
         const mode = req.query['hub.mode'];
         const token = req.query['hub.verify_token'];
         const challenge = req.query['hub.challenge'];
 
-        if (mode === 'subscribe' && token === process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN) {
-            console.log('✅ Facebook webhook verified');
+        // Check for multiple possible verify token environment variables
+        const verifyToken = process.env.MESSENGER_WEBHOOK_VERIFY_TOKEN ||
+            process.env.FACEBOOK_WEBHOOK_VERIFY_TOKEN ||
+            process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+
+        console.log('🔍 Mode:', mode);
+        console.log('🔍 Token provided:', token);
+        console.log('🔍 Expected token:', verifyToken ? 'SET' : 'NOT SET');
+
+        if (mode === 'subscribe' && token === verifyToken) {
+            console.log('✅ Messenger Platform webhook verified successfully');
             res.status(200).send(challenge);
         } else {
-            console.error('❌ Facebook webhook verification failed');
+            console.error('❌ Messenger Platform webhook verification failed');
+            console.error('❌ Mode:', mode, 'Expected: subscribe');
+            console.error('❌ Token match:', token === verifyToken);
             res.status(403).send('Forbidden');
         }
     })
 );
 
-// Facebook webhook events (POST request)
+// Facebook webhook verification (GET request) - legacy/backup
+router.get(
+    "/facebook",
+    asyncHandler((req, res) => {
+        // Redirect to messenger endpoint for consistency
+        console.log('🔄 Redirecting Facebook webhook to Messenger Platform handler');
+        req.url = req.url.replace('/facebook', '/messenger');
+        return router.handle(req, res);
+    })
+);
+
+// Messenger Platform webhook events (POST request)
+router.post(
+    "/messenger",
+    asyncHandler((req, res) => {
+        console.log('📨 Messenger Platform webhook received');
+        console.log('📨 Body:', JSON.stringify(req.body, null, 2));
+
+        // Handle Instagram messaging via Messenger Platform
+        if (req.body && req.body.entry) {
+            for (const entry of req.body.entry) {
+                // Handle Instagram messaging events
+                if (entry.messaging) {
+                    for (const messagingEvent of entry.messaging) {
+                        console.log('📨 Instagram messaging event:', messagingEvent);
+                        // TODO: Process Instagram DM received via Messenger Platform
+                    }
+                }
+
+                // Handle other Messenger Platform events
+                if (entry.changes) {
+                    for (const change of entry.changes) {
+                        console.log('📨 Messenger Platform change:', change);
+                    }
+                }
+            }
+        }
+
+        res.status(200).send('OK');
+    })
+);
+
+// Facebook webhook events (POST request) - legacy/backup
 router.post(
     "/facebook",
     asyncHandler((req, res) => {
-        // Placeholder for Facebook webhook events
-        console.log('📨 Facebook webhook received (not implemented yet):', req.body);
-        res.status(200).send('OK');
+        // Redirect to messenger endpoint for consistency
+        console.log('🔄 Redirecting Facebook webhook POST to Messenger Platform handler');
+        req.url = req.url.replace('/facebook', '/messenger');
+        return router.handle(req, res);
     })
 );
 
