@@ -1082,5 +1082,8 @@ module.exports = {
     handleInstagramWebhook,
     getInstagramStatus,
     disconnectInstagram,
-    debugInstagramConfig
+    debugInstagramConfig,
+    processInstagramMessage,
+    processInstagramComment,
+    sendInstagramDM
 };
