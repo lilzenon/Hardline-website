@@ -258,7 +258,7 @@ router.get(
                             messagingCapable = true;
                         } catch (msgError) {
                             // Error code 3 = no capability, other errors = likely has capability
-                            const errorCode = msgError.response ? .data ? .error ? .code;
+                            const errorCode = msgError.response && msgError.response.data && msgError.response.data.error && msgError.response.data.error.code;
                             messagingCapable = errorCode !== 3;
                         }
 
@@ -273,8 +273,8 @@ router.get(
                         };
 
                     } catch (tokenError) {
-                        const errorCode = tokenError.response ? .data ? .error ? .code;
-                        const errorMessage = tokenError.response ? .data ? .error ? .message || tokenError.message;
+                        const errorCode = tokenError.response && tokenError.response.data && tokenError.response.data.error && tokenError.response.data.error.code;
+                        const errorMessage = (tokenError.response && tokenError.response.data && tokenError.response.data.error && tokenError.response.data.error.message) || tokenError.message;
 
                         readinessReport.requirements.access_token = {
                             status: '❌ INVALID PAGE ACCESS TOKEN',
