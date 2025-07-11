@@ -631,13 +631,25 @@ async function processInstagramComment(commentData, instagramAccountId) {
 
         // Send auto-response if configured
         if (keyword.send_auto_response && keyword.auto_response_message) {
-            await sendInstagramDM(
-                account.access_token,
-                account.platform_account_id, // Use Instagram account ID
-                comment.from.id,
-                keyword.auto_response_message,
-                interaction.id
-            );
+            // Extract Facebook Page ID from account metadata for Messenger Platform
+            const accountMetadata = typeof account.account_metadata === 'string' ?
+                JSON.parse(account.account_metadata) :
+                account.account_metadata;
+
+            const facebookPageId = accountMetadata && accountMetadata.page_id;
+
+            if (facebookPageId) {
+                await sendInstagramDM(
+                    account.access_token, // TODO: This should be Page Access Token, not User Access Token
+                    facebookPageId, // Use Facebook Page ID for Messenger Platform
+                    comment.from.id,
+                    keyword.auto_response_message,
+                    interaction.id
+                );
+            } else {
+                console.error('❌ Cannot send Instagram DM: Facebook Page ID not found in account metadata');
+                console.error('❌ Account metadata:', account.account_metadata);
+            }
         }
 
         // Capture user data if configured
@@ -734,13 +746,25 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 
         // Send auto-response if configured
         if (keyword.send_auto_response && keyword.auto_response_message) {
-            await sendInstagramDM(
-                account.access_token,
-                account.platform_account_id, // Use Instagram account ID instead of 'me'
-                senderId,
-                keyword.auto_response_message,
-                interaction.id
-            );
+            // Extract Facebook Page ID from account metadata for Messenger Platform
+            const accountMetadata = typeof account.account_metadata === 'string' ?
+                JSON.parse(account.account_metadata) :
+                account.account_metadata;
+
+            const facebookPageId = accountMetadata && accountMetadata.page_id;
+
+            if (facebookPageId) {
+                await sendInstagramDM(
+                    account.access_token, // TODO: This should be Page Access Token, not User Access Token
+                    facebookPageId, // Use Facebook Page ID for Messenger Platform
+                    senderId,
+                    keyword.auto_response_message,
+                    interaction.id
+                );
+            } else {
+                console.error('❌ Cannot send Instagram DM: Facebook Page ID not found in account metadata');
+                console.error('❌ Account metadata:', account.account_metadata);
+            }
         }
 
         // Capture user data if configured
@@ -757,30 +781,41 @@ async function processInstagramMessage(messageData, instagramAccountId) {
 }
 
 /**
- * Send Instagram DM
+ * Send Instagram DM via Messenger Platform
+ * CORRECTED: Uses Messenger Platform for Instagram messaging (not Instagram API with Instagram Login)
+ * - Requires Page Access Token (not User Access Token)
+ * - Uses Facebook Page ID as sender (not Instagram Account ID)
+ * - Endpoint: /{page-id}/messages (Messenger Platform)
  */
-async function sendInstagramDM(accessToken, instagramAccountId, recipientId, message, interactionId) {
+async function sendInstagramDM(pageAccessToken, facebookPageId, recipientId, message, interactionId) {
     try {
-        console.log('🔍 Sending Instagram DM via Instagram API with Instagram Login');
-        console.log('🔍 Parameters:', { instagramAccountId, recipientId, message: message.substring(0, 50) + '...' });
-        console.log('🔍 API Endpoint:', `${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`);
-        console.log('🔍 Access Token (first 20 chars):', accessToken.substring(0, 20) + '...');
+        console.log('🔍 Sending Instagram DM via Messenger Platform (CORRECTED APPROACH)');
+        console.log('🔍 Parameters:', {
+            facebookPageId,
+            recipientId,
+            message: message.substring(0, 50) + '...',
+            tokenType: 'Page Access Token'
+        });
 
-        // CORRECTED: Instagram API with Instagram Login (July 2024)
-        // - Uses Facebook Graph API with Instagram scopes
-        // - Endpoint: /{instagram-user-id}/messages
-        // - Access token from Facebook OAuth with instagram_manage_messages scope
-        console.log('🔍 Using Instagram API with Instagram Login via Facebook Graph API');
-        console.log('🔍 API Base:', INSTAGRAM_API_BASE);
-        console.log('🔍 Instagram Account ID:', instagramAccountId);
-        console.log('🔍 Recipient ID:', recipientId);
+        // MESSENGER PLATFORM APPROACH (CORRECT for Instagram messaging)
+        // - Uses Page Access Token from Facebook Page
+        // - Endpoint: /{page-id}/messages
+        // - Sends Instagram DMs through connected Facebook Page
+        const messengerEndpoint = `${INSTAGRAM_API_BASE}/${facebookPageId}/messages`;
+        console.log('🔍 Messenger Platform API Endpoint:', messengerEndpoint);
+        console.log('🔍 Page Access Token (first 20 chars):', pageAccessToken.substring(0, 20) + '...');
 
-        const response = await axios.post(`${INSTAGRAM_API_BASE}/${instagramAccountId}/messages`, {
+        const requestData = {
             recipient: { id: recipientId },
-            message: { text: message }
-        }, {
+            message: { text: message },
+            messaging_type: 'RESPONSE' // Required for Messenger Platform
+        };
+
+        console.log('🔍 Request data:', JSON.stringify(requestData, null, 2));
+
+        const response = await axios.post(messengerEndpoint, requestData, {
             params: {
-                access_token: accessToken
+                access_token: pageAccessToken
             },
             headers: {
                 'Content-Type': 'application/json'
@@ -795,21 +830,36 @@ async function sendInstagramDM(accessToken, instagramAccountId, recipientId, mes
             auto_response_id: response.data.message_id
         });
 
-        console.log('✅ Instagram DM sent successfully');
+        console.log('✅ Instagram DM sent successfully via Messenger Platform');
         return response.data;
 
     } catch (error) {
-        console.error('❌ Error sending Instagram DM:', error.message);
+        console.error('❌ Error sending Instagram DM via Messenger Platform:', error.message);
         console.error('❌ Facebook API Error Details:', error.response && error.response.data);
         console.error('❌ Status Code:', error.response && error.response.status);
         console.error('❌ Request URL:', error.config && error.config.url);
         console.error('❌ Request Data:', error.config && error.config.data);
 
+        // Log specific error analysis
+        if (error.response && error.response.data && error.response.data.error) {
+            const apiError = error.response.data.error;
+            console.error('❌ API Error Analysis:');
+            console.error('   - Code:', apiError.code);
+            console.error('   - Type:', apiError.type);
+            console.error('   - Message:', apiError.message);
+
+            if (apiError.code === 3) {
+                console.error('❌ ERROR CODE 3: Application does not have capability');
+                console.error('   - This means we need Page Access Token, not User Access Token');
+                console.error('   - Or the Facebook Page is not properly connected to Instagram');
+                console.error('   - Or Messenger Platform product is not properly configured');
+            }
+        }
+
         // Update interaction with error details (using existing columns)
         if (interactionId) {
             await socialQueries.updateSocialInteraction(interactionId, {
                 auto_response_sent: false
-                    // Note: Error details logged to console for debugging
             });
         }
 

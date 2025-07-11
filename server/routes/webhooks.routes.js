@@ -1005,9 +1005,25 @@ router.post(
             console.log('🧪 Recipient ID:', recipient_id);
             console.log('🧪 Message:', message);
 
+            // Extract Facebook Page ID from account metadata for Messenger Platform
+            const accountMetadata = typeof account.account_metadata === 'string' ?
+                JSON.parse(account.account_metadata) :
+                account.account_metadata;
+
+            const facebookPageId = accountMetadata && accountMetadata.page_id;
+
+            if (!facebookPageId) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Facebook Page ID not found in account metadata',
+                    account_metadata: account.account_metadata,
+                    note: 'Instagram messaging requires Facebook Page connection via Messenger Platform'
+                });
+            }
+
             const result = await instagramHandler.sendInstagramDM(
-                account.access_token,
-                account.platform_account_id,
+                account.access_token, // TODO: This should be Page Access Token
+                facebookPageId, // Use Facebook Page ID for Messenger Platform
                 recipient_id,
                 message,
                 'test-interaction-' + Date.now()
