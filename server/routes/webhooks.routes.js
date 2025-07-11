@@ -1625,6 +1625,56 @@ router.all(
     })
 );
 
+// Debug endpoint to check database records for Instagram accounts
+router.get(
+    "/debug-database",
+    asyncHandler(async(req, res) => {
+        const knex = require('../knex');
+
+        console.log('🔍 DATABASE DEBUG ENDPOINT');
+
+        try {
+            // Get all Instagram accounts
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .select('*');
+
+            const debugInfo = {
+                success: true,
+                message: "Database debug information",
+                total_instagram_accounts: accounts.length,
+                accounts: accounts.map(acc => ({
+                    id: acc.id,
+                    username: acc.platform_username,
+                    account_id: acc.platform_account_id,
+                    is_active: acc.is_active,
+                    has_access_token: !!acc.access_token,
+                    access_token_preview: acc.access_token ? acc.access_token.substring(0, 20) + '...' : 'MISSING',
+                    metadata_type: typeof acc.account_metadata,
+                    metadata_raw: acc.account_metadata,
+                    metadata_is_object_string: acc.account_metadata === '[object Object]',
+                    metadata_length: acc.account_metadata ? acc.account_metadata.length : 0,
+                    created_at: acc.created_at,
+                    updated_at: acc.updated_at
+                })),
+                active_accounts: accounts.filter(acc => acc.is_active).length,
+                corrupted_accounts: accounts.filter(acc => acc.account_metadata === '[object Object]').length,
+                timestamp: new Date().toISOString()
+            };
+
+            res.json(debugInfo);
+
+        } catch (error) {
+            console.error('❌ Database debug error:', error);
+            res.status(500).json({
+                success: false,
+                error: error.message,
+                timestamp: new Date().toISOString()
+            });
+        }
+    })
+);
+
 // Debug endpoint to verify app secrets for signature verification
 router.get(
     "/debug-app-secrets",
