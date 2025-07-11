@@ -267,10 +267,11 @@ router.get(
             });
 
             // Check if token can access Instagram account using Facebook Graph API
+            // Note: account_type field deprecated in v23.0, removed from fields
             const instagramCheckResponse = await axios.get(`https://graph.facebook.com/v23.0/${account.platform_account_id}`, {
                 params: {
                     access_token: accessToken,
-                    fields: 'id,username,name,account_type'
+                    fields: 'id,username,name,followers_count'
                 }
             });
 
@@ -288,6 +289,69 @@ router.get(
             res.json({
                 error: 'Failed to check permissions',
                 details: (error.response && error.response.data) || error.message
+            });
+        }
+    })
+);
+
+// Test Instagram DM sending endpoint
+router.post(
+    "/instagram/test-dm",
+    asyncHandler(async(req, res) => {
+        const { message, recipient_id } = req.body;
+
+        if (!message || !recipient_id) {
+            return res.json({
+                error: 'Missing required fields: message and recipient_id'
+            });
+        }
+
+        try {
+            const knex = require('../knex');
+            const instagramHandler = require('../handlers/instagram-integration.handler');
+
+            // Get Instagram account from database
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .orderBy('created_at', 'desc');
+
+            if (accounts.length === 0) {
+                return res.json({
+                    error: 'No Instagram accounts found in database'
+                });
+            }
+
+            const account = accounts[0];
+
+            // Test DM sending
+            console.log('🧪 Testing Instagram DM sending...');
+            console.log('🧪 Account:', account.platform_username);
+            console.log('🧪 Recipient ID:', recipient_id);
+            console.log('🧪 Message:', message);
+
+            const result = await instagramHandler.sendInstagramDM(
+                account.access_token,
+                account.platform_account_id,
+                recipient_id,
+                message,
+                'test-interaction-' + Date.now()
+            );
+
+            res.json({
+                success: true,
+                message: 'DM sent successfully',
+                result: result,
+                account_used: account.platform_username,
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            console.error('❌ Test DM failed:', error);
+            res.json({
+                error: 'DM sending failed',
+                details: error.response ? .data || error.message,
+                timestamp: new Date().toISOString()
             });
         }
     })
