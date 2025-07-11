@@ -199,6 +199,7 @@ router.get(
         };
 
         // 2. Database Instagram Account Check
+        let validAccounts = [];
         try {
             const accounts = await knex('social_media_accounts')
                 .where('platform', 'instagram')
@@ -206,7 +207,7 @@ router.get(
                 .select('*');
 
             // Filter out corrupted accounts and focus on valid ones
-            const validAccounts = accounts.filter(acc => {
+            validAccounts = accounts.filter(acc => {
                 if (!acc.account_metadata) return false;
                 if (acc.account_metadata === '[object Object]') return false;
                 try {
