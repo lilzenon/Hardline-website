@@ -190,6 +190,39 @@ router.get(
             app_id_status: process.env.FACEBOOK_APP_ID === '2364553920613507' ? '✅ CORRECT' : '❌ MISMATCH'
         };
 
+        // Check token type and permissions
+        let tokenAnalysis = null;
+        try {
+            const accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .where('is_active', true)
+                .select('access_token', 'platform_account_id', 'account_metadata')
+                .first();
+
+            if (accounts && accounts.access_token) {
+                const axios = require('axios');
+
+                // Check what type of token this is
+                const tokenInfo = await axios.get('https://graph.facebook.com/v23.0/me', {
+                    params: { access_token: accounts.access_token }
+                });
+
+                // Check if we can access the Facebook Page
+                const pageInfo = accounts.account_metadata ? JSON.parse(accounts.account_metadata) : {};
+
+                tokenAnalysis = {
+                    token_type: tokenInfo.data.id ? 'User Token' : 'Unknown',
+                    token_owner: tokenInfo.data.name || 'Unknown',
+                    instagram_account_id: accounts.platform_account_id,
+                    facebook_page_id: pageInfo.page_id || 'Not found',
+                    facebook_page_name: pageInfo.page_name || 'Not found',
+                    token_preview: accounts.access_token.substring(0, 20) + '...'
+                };
+            }
+        } catch (error) {
+            tokenAnalysis = { error: error.message };
+        }
+
         // Check Instagram accounts in database
         let accounts = [];
         try {
@@ -209,6 +242,7 @@ router.get(
             success: true,
             message: "Configuration and account check",
             config: config,
+            token_analysis: tokenAnalysis,
             instagram_accounts: accounts.map(acc => ({
                 id: acc.id,
                 platform_account_id: acc.platform_account_id,
@@ -217,7 +251,13 @@ router.get(
                 is_active: acc.is_active,
                 created_at: acc.created_at
             })),
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            next_steps: [
+                "1. Verify Messenger product is added to Facebook app",
+                "2. Confirm Instagram is connected to Facebook Page",
+                "3. Check if Page Access Token is needed instead of User Token",
+                "4. Ensure you're admin of the connected Facebook Page"
+            ]
         });
     })
 );
