@@ -266,8 +266,8 @@ router.get(
                 }
             });
 
-            // Check if token can access Instagram account using Instagram Graph API
-            const instagramCheckResponse = await axios.get(`https://graph.instagram.com/v23.0/${account.platform_account_id}`, {
+            // Check if token can access Instagram account using Facebook Graph API
+            const instagramCheckResponse = await axios.get(`https://graph.facebook.com/v23.0/${account.platform_account_id}`, {
                 params: {
                     access_token: accessToken,
                     fields: 'id,username,name,account_type'
