@@ -174,6 +174,52 @@ router.get(
     })
 );
 
+// Check app configuration and Instagram accounts
+router.get(
+    "/instagram/config-check",
+    asyncHandler(async(req, res) => {
+        const knex = require('../knex');
+
+        // Check environment variables
+        const config = {
+            facebook_app_id: process.env.FACEBOOK_APP_ID || 'NOT SET',
+            facebook_app_secret: process.env.FACEBOOK_APP_SECRET ? 'SET (hidden)' : 'NOT SET',
+            facebook_redirect_uri: process.env.FACEBOOK_REDIRECT_URI || 'NOT SET',
+            instagram_webhook_verify_token: process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN ? 'SET (hidden)' : 'NOT SET'
+        };
+
+        // Check Instagram accounts in database
+        let accounts = [];
+        try {
+            accounts = await knex('social_media_accounts')
+                .where('platform', 'instagram')
+                .select('id', 'platform_account_id', 'platform_username', 'platform_name', 'is_active', 'created_at')
+                .orderBy('created_at', 'desc');
+        } catch (error) {
+            return res.json({
+                error: 'Database query failed',
+                details: error.message,
+                config: config
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Configuration and account check",
+            config: config,
+            instagram_accounts: accounts.map(acc => ({
+                id: acc.id,
+                platform_account_id: acc.platform_account_id,
+                username: acc.platform_username,
+                name: acc.platform_name,
+                is_active: acc.is_active,
+                created_at: acc.created_at
+            })),
+            timestamp: new Date().toISOString()
+        });
+    })
+);
+
 // Check Instagram API permissions
 router.get(
     "/instagram/check-permissions",
