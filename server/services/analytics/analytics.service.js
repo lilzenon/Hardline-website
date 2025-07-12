@@ -269,6 +269,13 @@ class AnalyticsService {
     }
 
     /**
+     * Invalidate event cache when event data changes (alias for invalidateDropCache)
+     */
+    async invalidateEventCache(eventId, userId) {
+        await cache.invalidateDropAnalytics(eventId, userId);
+    }
+
+    /**
      * Get real-time analytics summary
      */
     async getRealTimeStats(userId) {
