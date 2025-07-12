@@ -493,30 +493,30 @@
                                         <div class="toggle-group">
                                             <label for="edit-collect-email" class="toggle-label">
                                                 <span class="toggle-text">Collect Email Addresses</span>
-                                                <div class="toggle-switch">
-                                                    <input type="checkbox" id="edit-collect-email" name="collect_email" {{#if event.collect_email}}checked{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="edit-collect-email-label">
+                                                    <input type="checkbox" id="edit-collect-email" name="collect_email" {{#if event.collect_email}}checked{{/if}} class="toggle-input" aria-describedby="edit-collect-email-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
                                                         <span class="toggle-thumb"></span>
                                                     </span>
                                                 </div>
                                             </label>
                                         </div>
-                                        <small class="form-help">Required for sending notifications when the drop goes live</small>
+                                        <small class="form-help" id="edit-collect-email-help">Required for sending notifications when the drop goes live</small>
                                     </div>
 
                                     <div class="form-group">
                                         <div class="toggle-group">
                                             <label for="edit-collect-phone" class="toggle-label">
                                                 <span class="toggle-text">Collect Phone Numbers</span>
-                                                <div class="toggle-switch">
-                                                    <input type="checkbox" id="edit-collect-phone" name="collect_phone" {{#if event.collect_phone}}checked{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="edit-collect-phone-label">
+                                                    <input type="checkbox" id="edit-collect-phone" name="collect_phone" {{#if event.collect_phone}}checked{{/if}} class="toggle-input" aria-describedby="edit-collect-phone-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
                                                         <span class="toggle-thumb"></span>
                                                     </span>
                                                 </div>
                                             </label>
                                         </div>
-                                        <small class="form-help">Optional: Collect phone numbers for SMS notifications</small>
+                                        <small class="form-help" id="edit-collect-phone-help">Optional: Collect phone numbers for SMS notifications</small>
                                     </div>
 
                                     <div class="form-group">
@@ -535,30 +535,30 @@
                                         <div class="toggle-group">
                                             <label for="edit-is-active" class="toggle-label">
                                                 <span class="toggle-text">Active Event</span>
-                                                <div class="toggle-switch">
-                                                    <input type="checkbox" id="edit-is-active" name="is_active" {{#if event.is_active}}checked{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="edit-is-active-label">
+                                                    <input type="checkbox" id="edit-is-active" name="is_active" {{#if event.is_active}}checked{{/if}} class="toggle-input" aria-describedby="edit-is-active-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
                                                         <span class="toggle-thumb"></span>
                                                     </span>
                                                 </div>
                                             </label>
                                         </div>
-                                        <small class="form-help">When active, your event is publicly accessible and accepts signups. When inactive, the drop URL will show a "Drop Inactive" page and block all signups.</small>
+                                        <small class="form-help" id="edit-is-active-help">When active, your event is publicly accessible and accepts signups. When inactive, the drop URL will show a "Drop Inactive" page and block all signups.</small>
                                     </div>
 
                                     <div class="form-group">
                                         <div class="toggle-group">
                                             <label for="edit-show-on-homepage" class="toggle-label">
                                                 <span class="toggle-text">Show on Homepage</span>
-                                                <div class="toggle-switch">
-                                                    <input type="checkbox" id="edit-show-on-homepage" name="show_on_homepage" {{#if event.show_on_homepage}}checked{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="edit-show-on-homepage-label">
+                                                    <input type="checkbox" id="edit-show-on-homepage" name="show_on_homepage" {{#if event.show_on_homepage}}checked{{/if}} class="toggle-input" aria-describedby="edit-show-on-homepage-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
                                                         <span class="toggle-thumb"></span>
                                                     </span>
                                                 </div>
                                             </label>
                                         </div>
-                                        <small class="form-help">When enabled, this event will appear as a featured card on the homepage for all visitors to see.</small>
+                                        <small class="form-help" id="edit-show-on-homepage-help">When enabled, this event will appear as a featured card on the homepage for all visitors to see.</small>
                                     </div>
                                 </div>
                             </div>
@@ -775,14 +775,16 @@
                                         <div class="toggle-group">
                                             <label for="edit-display-tickets" class="toggle-label">
                                                 <span class="toggle-text">Display Ticket Navigation</span>
-                                                <div class="toggle-switch">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="edit-display-tickets-label">
                                                     <input type="checkbox" id="edit-display-tickets" name="display_tickets"
-                                                           {{#if event.display_tickets}}checked{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider"></span>
+                                                           {{#if event.display_tickets}}checked{{/if}} class="toggle-input" aria-describedby="edit-display-tickets-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
+                                                        <span class="toggle-thumb"></span>
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>
-                                        <small class="form-help">Show/hide ticket-related UI elements on the live event page</small>
+                                        <small class="form-help" id="edit-display-tickets-help">Show/hide ticket-related UI elements on the live event page</small>
                                         {{#if errors.display_tickets}}<p class="error">{{errors.display_tickets}}</p>{{/if}}
                                     </div>
 
@@ -791,14 +793,16 @@
                                         <div class="toggle-group">
                                             <label for="edit-posh-embed-enabled" class="toggle-label">
                                                 <span class="toggle-text">Posh Embed Mode</span>
-                                                <div class="toggle-switch">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="edit-posh-embed-enabled-label">
                                                     <input type="checkbox" id="edit-posh-embed-enabled" name="posh_embed_enabled"
-                                                           {{#if event.posh_embed_enabled}}checked{{else}}{{#if event.external_ticket_url}}{{else}}checked{{/if}}{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider"></span>
+                                                           {{#if event.posh_embed_enabled}}checked{{else}}{{#if event.external_ticket_url}}{{else}}checked{{/if}}{{/if}} class="toggle-input" aria-describedby="edit-posh-embed-enabled-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
+                                                        <span class="toggle-thumb"></span>
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>
-                                        <small class="form-help">Enable for embedded iframe modals, disable to redirect to external ticketing pages</small>
+                                        <small class="form-help" id="edit-posh-embed-enabled-help">Enable for embedded iframe modals, disable to redirect to external ticketing pages</small>
                                         {{#if errors.posh_embed_enabled}}<p class="error">{{errors.posh_embed_enabled}}</p>{{/if}}
                                     </div>
 
@@ -979,10 +983,10 @@
                                         <div class="toggle-group">
                                             <label for="social-preview-enabled" class="toggle-label">
                                                 <span class="toggle-text">Enable Custom Previews</span>
-                                                <div class="toggle-switch">
+                                                <div class="toggle-switch" role="switch" aria-labelledby="social-preview-enabled-label">
                                                     <input type="checkbox" id="social-preview-enabled" name="social_preview_enabled"
-                                                           {{#if event.social_preview_enabled}}checked{{/if}} class="toggle-input">
-                                                    <span class="toggle-slider">
+                                                           {{#if event.social_preview_enabled}}checked{{/if}} class="toggle-input" aria-describedby="social-preview-enabled-help">
+                                                    <span class="toggle-slider" aria-hidden="true">
                                                         <span class="toggle-thumb"></span>
                                                     </span>
                                                 </div>
@@ -7349,28 +7353,41 @@ a:focus-visible {
 }
 
 /* ===== MODERN iOS-STYLE TOGGLE SWITCHES ===== */
+/*
+ * IMPROVEMENTS IMPLEMENTED:
+ * 1. Increased spacing following 8px grid system (24px gap between label and toggle)
+ * 2. Proper inline alignment using flexbox with align-items: center
+ * 3. Enhanced accessibility with 44px minimum touch targets
+ * 4. Responsive design for mobile, tablet, and desktop breakpoints
+ * 5. ARIA attributes for screen readers and keyboard navigation
+ * 6. High contrast and reduced motion support
+ * 7. Improved visual hierarchy with glassmorphism styling
+ */
 .toggle-group {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px; /* Reduced padding for tighter alignment */
+    padding: 12px 16px; /* Increased padding following 8px grid system */
     border-radius: 8px;
     transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(229, 231, 235, 0.8);
 }
 
 .toggle-group:hover {
     background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.2);
 }
 
 .toggle-label {
     display: flex;
-    align-items: center; /* This centers both text and toggle vertically */
+    align-items: center;
     justify-content: space-between;
     width: 100%;
     cursor: pointer;
-    gap: 16px; /* 8px grid system: 2 * 8px */
+    gap: 24px; /* Increased gap following 8px grid system: 3 * 8px */
     min-height: 44px; /* Ensure accessibility touch target */
-    padding: 8px 0; /* Add vertical padding for better touch target */
+    padding: 0; /* Remove padding as it's handled by toggle-group */
 }
 
 .toggle-text {
@@ -7380,13 +7397,21 @@ a:focus-visible {
     line-height: 1.5;
     text-rendering: optimizeLegibility;
     flex: 1;
+    /* Ensure text is perfectly aligned with toggle center */
+    display: flex;
+    align-items: center;
 }
 
 .toggle-switch {
     position: relative;
-    display: inline-block;
+    display: inline-flex; /* Changed to inline-flex for better alignment */
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    align-self: center; /* Ensure the toggle itself is centered within the flex container */
+    /* Ensure minimum touch target size */
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px; /* Add padding for larger touch area */
 }
 
 .toggle-input {
@@ -7399,24 +7424,26 @@ a:focus-visible {
 .toggle-slider {
     position: relative;
     display: block;
-    width: 40px; /* Further reduced for better proportion with text */
-    height: 22px; /* Further reduced for better proportion with text */
+    width: 48px; /* Increased for better proportions and accessibility */
+    height: 28px; /* Increased for better proportions and accessibility */
     background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-    border-radius: 22px; /* Adjusted to match new height */
+    border-radius: 28px; /* Adjusted to match new height */
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow:
         inset 0 1px 3px rgba(0, 0, 0, 0.1),
         0 1px 2px rgba(0, 0, 0, 0.08),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(203, 213, 225, 0.6);
+    /* Ensure toggle is centered within its container */
+    margin: auto;
 }
 
 .toggle-thumb {
     position: absolute;
-    top: 1px; /* Adjusted for smaller toggle */
-    left: 1px; /* Adjusted for smaller toggle */
-    width: 18px; /* Kept at 18px for good visibility */
-    height: 18px; /* Kept at 18px for good visibility */
+    top: 2px; /* Adjusted for new toggle size */
+    left: 2px; /* Adjusted for new toggle size */
+    width: 22px; /* Increased for better visibility and accessibility */
+    height: 22px; /* Increased for better visibility and accessibility */
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     border-radius: 50%;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -7439,7 +7466,7 @@ a:focus-visible {
 }
 
 .toggle-input:checked + .toggle-slider .toggle-thumb {
-    transform: translateX(18px); /* Adjusted for new 40px width (40px - 18px thumb - 2px padding = 20px, but 18px looks better) */
+    transform: translateX(20px); /* Adjusted for new 48px width (48px - 22px thumb - 4px padding = 22px, but 20px provides better visual balance) */
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     box-shadow:
         0 3px 6px rgba(59, 130, 246, 0.3),
@@ -7448,14 +7475,53 @@ a:focus-visible {
     border-color: rgba(59, 130, 246, 0.2);
 }
 
-/* Focus state */
+/* Focus state - Enhanced for accessibility */
 .toggle-input:focus + .toggle-slider {
     outline: none;
     box-shadow:
         inset 0 2px 4px rgba(0, 0, 0, 0.1),
-        0 0 0 3px rgba(59, 130, 246, 0.3),
-        0 2px 6px rgba(59, 130, 246, 0.2),
+        0 0 0 3px rgba(59, 130, 246, 0.4),
+        0 2px 6px rgba(59, 130, 246, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border-color: rgba(59, 130, 246, 0.8);
+}
+
+/* Focus-visible for keyboard navigation */
+.toggle-input:focus-visible + .toggle-slider {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .toggle-slider {
+        border: 2px solid #000;
+        background: #fff;
+    }
+
+    .toggle-input:checked + .toggle-slider {
+        background: #000;
+        border-color: #000;
+    }
+
+    .toggle-thumb {
+        border: 2px solid #000;
+        background: #fff;
+    }
+
+    .toggle-input:checked + .toggle-slider .toggle-thumb {
+        background: #fff;
+        border-color: #fff;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .toggle-slider,
+    .toggle-thumb,
+    .toggle-group {
+        transition: none;
+    }
 }
 
 /* Hover state */
@@ -7465,6 +7531,75 @@ a:focus-visible {
         inset 0 2px 4px rgba(0, 0, 0, 0.12),
         0 2px 6px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ===== RESPONSIVE TOGGLE DESIGN ===== */
+/* Mobile-first responsive improvements for toggle switches */
+
+@media (max-width: 767px) {
+    .toggle-group {
+        padding: 16px; /* Increased padding for mobile touch targets */
+        margin-bottom: 8px; /* Add spacing between toggle groups */
+    }
+
+    .toggle-label {
+        gap: 20px; /* Slightly reduced gap for mobile to prevent overflow */
+        min-height: 48px; /* Increased touch target for mobile */
+    }
+
+    .toggle-text {
+        font-size: 0.9rem; /* Slightly larger text for mobile readability */
+        font-weight: 500;
+    }
+
+    .toggle-switch {
+        min-width: 48px; /* Increased touch target for mobile */
+        min-height: 48px;
+        padding: 8px; /* Increased padding for easier tapping */
+    }
+
+    .toggle-slider {
+        width: 52px; /* Slightly larger for mobile */
+        height: 30px;
+    }
+
+    .toggle-thumb {
+        width: 24px; /* Larger thumb for mobile */
+        height: 24px;
+        top: 2px;
+        left: 2px;
+    }
+
+    .toggle-input:checked + .toggle-slider .toggle-thumb {
+        transform: translateX(22px); /* Adjusted for mobile dimensions */
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .toggle-group {
+        padding: 14px 18px; /* Tablet-optimized padding */
+    }
+
+    .toggle-label {
+        gap: 28px; /* Increased gap for tablet */
+    }
+}
+
+@media (min-width: 1024px) {
+    .toggle-group {
+        padding: 12px 20px; /* Desktop-optimized padding */
+    }
+
+    .toggle-label {
+        gap: 32px; /* Maximum gap for desktop */
+    }
+
+    /* Enhanced hover effects for desktop */
+    .toggle-group:hover {
+        background: rgba(59, 130, 246, 0.08);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
 }
 
 /* Legacy checkbox support for backward compatibility */
