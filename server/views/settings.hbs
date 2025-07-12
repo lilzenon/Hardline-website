@@ -1236,6 +1236,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         showNotification('Instagram account disconnected successfully', 'success');
                         loadInstagramStatus();
                         loadIntegrationStats();
+                        loadKeywordAnalytics();
                     } else {
                         throw new Error(data.error || 'Failed to disconnect account');
                     }
@@ -1272,12 +1273,56 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (data.success) {
+                // Original stats
                 document.getElementById('total-captured').textContent = data.stats.total_captured || 0;
                 document.getElementById('total-responses').textContent = data.stats.total_responses || 0;
                 document.getElementById('active-keywords').textContent = data.stats.active_keywords || 0;
+
+                // Enhanced keyword analytics
+                const keywordTriggersEl = document.getElementById('total-keyword-triggers');
+                const keywordResponsesEl = document.getElementById('total-keyword-responses');
+                const triggeredKeywordsEl = document.getElementById('triggered-keywords');
+
+                if (keywordTriggersEl) keywordTriggersEl.textContent = data.stats.total_keyword_triggers || 0;
+                if (keywordResponsesEl) keywordResponsesEl.textContent = data.stats.total_keyword_responses || 0;
+                if (triggeredKeywordsEl) triggeredKeywordsEl.textContent = data.stats.triggered_keywords || 0;
             }
         } catch (error) {
             console.error('❌ Error loading integration stats:', error);
+        }
+    }
+
+    // Load detailed keyword analytics
+    async function loadKeywordAnalytics() {
+        try {
+            const response = await fetch('/api/integrations/keyword-analytics?limit=5');
+            const data = await response.json();
+
+            if (data.success && data.analytics) {
+                const container = document.getElementById('keyword-analytics-list');
+                if (container) {
+                    container.innerHTML = data.analytics.map(keyword => `
+                        <div class="keyword-analytics-item">
+                            <div class="keyword-info">
+                                <span class="keyword-text">${keyword.keyword}</span>
+                                <span class="keyword-type">${keyword.keyword_type}</span>
+                            </div>
+                            <div class="keyword-stats">
+                                <span class="stat-item">
+                                    <span class="stat-value">${keyword.total_triggers || 0}</span>
+                                    <span class="stat-label">Triggers</span>
+                                </span>
+                                <span class="stat-item">
+                                    <span class="stat-value">${keyword.total_responses_sent || 0}</span>
+                                    <span class="stat-label">Responses</span>
+                                </span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error loading keyword analytics:', error);
         }
     }
 
@@ -1292,12 +1337,14 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('🎉 Instagram account connected successfully! You can now create keywords and start automating responses.', 'success');
             loadInstagramStatus();
             loadIntegrationStats();
+            loadKeywordAnalytics();
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
         } else if (success === 'instagram_reconnected') {
             showNotification('✅ Instagram account reconnected successfully! Your permissions have been refreshed.', 'success');
             loadInstagramStatus();
             loadIntegrationStats();
+            loadKeywordAnalytics();
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
         } else if (error) {
@@ -1449,6 +1496,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash === '#integrations') {
         loadInstagramStatus();
         loadIntegrationStats();
+        loadKeywordAnalytics();
     }
 
     // Load when switching to integrations section
@@ -1458,6 +1506,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 loadInstagramStatus();
                 loadIntegrationStats();
+                loadKeywordAnalytics();
             }, 100);
         });
     }

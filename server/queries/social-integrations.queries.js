@@ -414,20 +414,49 @@ async function getIntegrationStats(userId, dateFrom = null, dateTo = null) {
         totalCaptured,
         totalResponses,
         activeKeywords,
-        totalInteractions
+        totalInteractions,
+        keywordStats
     ] = await Promise.all([
         baseQuery.clone().where("user_captured", true).count("* as count").first(),
         baseQuery.clone().where("auto_response_sent", true).count("* as count").first(),
         knex("social_keywords").where("created_by_user_id", userId).where("is_active", true).count("* as count").first(),
-        baseQuery.clone().count("* as count").first()
+        baseQuery.clone().count("* as count").first(),
+        // Get aggregated keyword statistics
+        knex("social_keywords")
+        .where("created_by_user_id", userId)
+        .select(
+            knex.raw("SUM(total_triggers) as total_keyword_triggers"),
+            knex.raw("SUM(total_responses_sent) as total_keyword_responses"),
+            knex.raw("SUM(total_users_captured) as total_keyword_captures"),
+            knex.raw("COUNT(CASE WHEN total_triggers > 0 THEN 1 END) as triggered_keywords")
+        )
+        .first()
     ]);
 
     return {
         total_captured: parseInt(totalCaptured.count),
         total_responses: parseInt(totalResponses.count),
         active_keywords: parseInt(activeKeywords.count),
-        total_interactions: parseInt(totalInteractions.count)
+        total_interactions: parseInt(totalInteractions.count),
+        // Enhanced keyword analytics
+        total_keyword_triggers: parseInt(keywordStats.total_keyword_triggers) || 0,
+        total_keyword_responses: parseInt(keywordStats.total_keyword_responses) || 0,
+        total_keyword_captures: parseInt(keywordStats.total_keyword_captures) || 0,
+        triggered_keywords: parseInt(keywordStats.triggered_keywords) || 0
     };
+}
+
+// Get detailed keyword analytics for dashboard
+async function getKeywordAnalytics(userId, limit = 10) {
+    return await knex("social_keywords")
+        .where("created_by_user_id", userId)
+        .select([
+            'id', 'keyword', 'keyword_type', 'is_active',
+            'total_triggers', 'total_responses_sent', 'total_users_captured',
+            'last_triggered_at', 'created_at'
+        ])
+        .orderBy('total_triggers', 'desc')
+        .limit(limit);
 }
 
 /**
@@ -586,5 +615,6 @@ module.exports = {
     createOrUpdateSmsUser,
 
     // Stats
-    getIntegrationStats
+    getIntegrationStats,
+    getKeywordAnalytics
 };

@@ -646,6 +646,12 @@ async function processInstagramComment(commentData, instagramAccountId) {
             raw_webhook_data: commentData
         });
 
+        // Update keyword analytics - increment trigger count
+        await socialQueries.updateKeyword(keyword.id, {
+            total_triggers: (keyword.total_triggers || 0) + 1,
+            last_triggered_at: new Date()
+        });
+
         // Send auto-response if configured
         if (keyword.send_auto_response && keyword.auto_response_message) {
             // Extract Facebook Page ID from account metadata for Messenger Platform
@@ -665,9 +671,13 @@ async function processInstagramComment(commentData, instagramAccountId) {
                     keyword.auto_response_message,
                     interaction.id
                 );
+
+                // Update keyword analytics - increment response sent count
+                await socialQueries.updateKeyword(keyword.id, {
+                    total_responses_sent: (keyword.total_responses_sent || 0) + 1
+                });
             } else {
-                console.error('❌ Cannot send Instagram DM: Facebook Page ID not found in account metadata');
-                console.error('❌ Account metadata:', account.account_metadata);
+                logger.error('INSTAGRAM', 'Cannot send DM: Facebook Page ID not found', { account: account.id });
             }
         }
 
@@ -676,7 +686,7 @@ async function processInstagramComment(commentData, instagramAccountId) {
             await captureInstagramUser(comment.from, keyword, interaction.id);
         }
 
-        console.log('✅ Instagram comment processed successfully');
+        logger.debug('INSTAGRAM', 'Comment processed successfully', { keyword: keyword.keyword });
 
     } catch (error) {
         console.error('❌ Error processing Instagram comment:', error);
@@ -764,6 +774,12 @@ async function processInstagramMessage(messageData, instagramAccountId) {
             raw_webhook_data: messageData
         });
 
+        // Update keyword analytics - increment trigger count
+        await socialQueries.updateKeyword(keyword.id, {
+            total_triggers: (keyword.total_triggers || 0) + 1,
+            last_triggered_at: new Date()
+        });
+
         // Send auto-response if configured
         if (keyword.send_auto_response && keyword.auto_response_message) {
             // Extract Facebook Page ID from account metadata for Messenger Platform
@@ -783,9 +799,13 @@ async function processInstagramMessage(messageData, instagramAccountId) {
                     keyword.auto_response_message,
                     interaction.id
                 );
+
+                // Update keyword analytics - increment response sent count
+                await socialQueries.updateKeyword(keyword.id, {
+                    total_responses_sent: (keyword.total_responses_sent || 0) + 1
+                });
             } else {
-                console.error('❌ Cannot send Instagram DM: Facebook Page ID not found in account metadata');
-                console.error('❌ Account metadata:', account.account_metadata);
+                logger.error('INSTAGRAM', 'Cannot send DM: Facebook Page ID not found', { account: account.id });
             }
         }
 
@@ -795,7 +815,7 @@ async function processInstagramMessage(messageData, instagramAccountId) {
             await captureInstagramUser(userInfo, keyword, interaction.id);
         }
 
-        console.log('✅ Instagram message processed successfully');
+        logger.debug('INSTAGRAM', 'Message processed successfully', { keyword: keyword.keyword });
 
     } catch (error) {
         console.error('❌ Error processing Instagram message:', error);

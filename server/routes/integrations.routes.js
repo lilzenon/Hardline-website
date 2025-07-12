@@ -344,6 +344,34 @@ router.get(
     })
 );
 
+// Get detailed keyword analytics
+router.get(
+    "/keyword-analytics",
+    asyncHandler(auth.jwtAdminPage),
+    asyncHandler(locals.user),
+    asyncHandler(async(req, res) => {
+        try {
+            const userId = req.user.id;
+            const { limit = 10 } = req.query;
+
+            const keywordAnalytics = await socialQueries.getKeywordAnalytics(userId, parseInt(limit));
+
+            res.json({
+                success: true,
+                analytics: keywordAnalytics
+            });
+
+        } catch (error) {
+            console.error('❌ Error fetching keyword analytics:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to fetch keyword analytics',
+                message: error.message
+            });
+        }
+    })
+);
+
 /**
  * Social Media Accounts Routes
  */
