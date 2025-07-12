@@ -101,7 +101,7 @@
     </div>
 
     <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         <!-- Form Section (2/3 width on desktop) -->
         <div class="lg:col-span-2">
             <!-- Tab Navigation -->
@@ -1598,23 +1598,7 @@
                     </div>
                 </form>
 
-                <!-- Form Actions - Hidden (replaced by floating buttons) -->
-                <div class="form-actions" style="display: none;">
-                    <div class="flex items-center space-x-3">
-                        <button type="button" id="undo-changes-btn-hidden" class="btn btn-secondary" style="display: none;">
-                            <span class="btn-text">Undo Changes</span>
-                        </button>
-                        <button type="submit" form="drop-edit-form" id="save-changes-btn-hidden" class="btn btn-primary">
-                            <span class="btn-text">Save Changes</span>
-                            <span class="btn-loader" style="display: none;">
-                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </span>
-                        </button>
-                    </div>
-                </div>
+
 
                 <!-- Response Area -->
                 <div id="drop-edit-response" class="form-response"></div>
@@ -7319,24 +7303,9 @@ a:focus-visible {
     box-shadow: none;
 }
 
-.form-actions {
-    text-align: center;
-    padding: 1.5rem 0 0 0;
-    border-top: 1px solid #e5e7eb;
-    margin-top: 2rem;
-}
 
-.form-actions .flex {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
 
 @media (max-width: 640px) {
-    .form-actions .flex {
-        flex-direction: column;
-        align-items: center;
-    }
 
     .btn {
         width: 100%;
@@ -7396,9 +7365,7 @@ a:focus-visible {
         padding: 1.25rem;
     }
 
-    .form-actions {
-        padding: 20px 0;
-    }
+
 }
 
 /* Form response area */
