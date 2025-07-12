@@ -2698,10 +2698,10 @@
                 if (email && email.trim()) dataToSend.email = email;
 
                 console.log('📤 Submitting form data:', dataToSend);
-                console.log('📍 Endpoint:', '/drop/signup/{{event.slug}}');
+                console.log('📍 Endpoint:', '/event/signup/{{event.slug}}');
 
                 try {
-                    const response = await fetch('/drop/signup/{{event.slug}}', {
+                    const response = await fetch('/event/signup/{{event.slug}}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -2712,8 +2712,31 @@
                     console.log('📥 Response status:', response.status);
                     console.log('📥 Response headers:', Object.fromEntries(response.headers.entries()));
 
-                    const result = await response.json();
-                    console.log('📥 Response data:', result);
+                    // Enhanced JSON parsing with error handling
+                    let result;
+                    try {
+                        const responseText = await response.text();
+                        console.log('📥 Raw response:', responseText.substring(0, 200) + (responseText.length > 200 ? '...' : ''));
+
+                        if (!responseText.trim()) {
+                            throw new Error('Empty response from server');
+                        }
+
+                        result = JSON.parse(responseText);
+                        console.log('📥 Parsed response data:', result);
+                    } catch (parseError) {
+                        console.error('❌ JSON parsing error:', parseError);
+                        console.error('❌ Response was not valid JSON, likely a 404 or server error page');
+
+                        // Handle case where server returns HTML instead of JSON (404, 500, etc.)
+                        if (response.status === 404) {
+                            throw new Error('Signup endpoint not found. Please contact support.');
+                        } else if (response.status >= 500) {
+                            throw new Error('Server error. Please try again later.');
+                        } else {
+                            throw new Error('Invalid response from server. Please try again.');
+                        }
+                    }
 
                     if (response.ok) {
                         showSuccess('Thank you! You\'re on the list.');
