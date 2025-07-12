@@ -173,6 +173,47 @@ router.get(
     })
 );
 
+// GET /signup - Handle requests to signup without event slug
+router.get(
+    "/signup",
+    asyncHandler(async(req, res) => {
+        res.status(400).json({
+            error: "Missing Event Slug",
+            message: "Event signup requires a specific event slug. Please visit the event page to sign up.",
+            example: "/event/{event-slug}",
+            code: "MISSING_EVENT_SLUG"
+        });
+    })
+);
+
+// GET /signup/:slug - Handle invalid GET requests to signup endpoint
+router.get(
+    "/signup/:slug",
+    asyncHandler(async(req, res) => {
+        const { slug } = req.params;
+
+        // Check if the event exists to provide a helpful error message
+        const foundEvent = await query.event.findBySlug(slug);
+
+        if (!foundEvent) {
+            return res.status(404).json({
+                error: "Event not found",
+                message: `No event found with slug: ${slug}`,
+                code: "EVENT_NOT_FOUND"
+            });
+        }
+
+        // Event exists but this is a GET request to a POST-only endpoint
+        res.status(405).json({
+            error: "Method Not Allowed",
+            message: "This endpoint only accepts POST requests for event signups. Please use the signup form on the event page.",
+            allowedMethods: ["POST"],
+            eventUrl: `/event/${slug}`,
+            code: "METHOD_NOT_ALLOWED"
+        });
+    })
+);
+
 // POST /signup/:slug - Public signup endpoint with dynamic validation
 router.post(
     "/signup/:slug",
