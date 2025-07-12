@@ -100,54 +100,66 @@
         </div>
     </div>
 
-    <!-- Live Preview Section - Relocated to Top -->
-    <div class="bg-white shadow rounded-lg overflow-hidden">
-        <!-- Preview Header -->
+    <!-- Live Preview Section - Collapsible Card -->
+    <div class="bg-white shadow rounded-lg overflow-hidden" id="live-preview-card">
+        <!-- Preview Header with Collapse Toggle -->
         <div class="px-4 py-3 sm:px-6 border-b border-gray-200">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
                     <h3 class="text-lg font-medium text-gray-900">Live Preview</h3>
                     <p class="text-sm text-gray-500 mt-1">See how your event appears to visitors in real-time</p>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button type="button" id="preview-desktop" class="preview-mode-btn active inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Desktop
-                    </button>
-                    <button type="button" id="preview-mobile" class="preview-mode-btn inline-flex items-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors">
-                        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 00-1-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z" />
-                        </svg>
-                        Mobile
-                    </button>
-                </div>
+                <button
+                    type="button"
+                    id="preview-collapse-toggle"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200"
+                    aria-expanded="false"
+                    aria-controls="preview-content"
+                    aria-label="Toggle live preview visibility"
+                    title="Expand/Collapse Preview"
+                >
+                    <svg
+                        class="w-5 h-5 text-gray-600 transition-transform duration-200"
+                        id="preview-chevron"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- Preview Content -->
-        <div class="p-4 sm:p-6">
-            <div id="preview-container" class="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-                <iframe id="preview-iframe" src="/event/{{event.slug}}?preview=true" class="w-full h-96 sm:h-[500px] lg:h-[600px] border-0 bg-white"></iframe>
-            </div>
+        <!-- Collapsible Preview Content -->
+        <div
+            id="preview-content"
+            class="preview-collapsible-content"
+            aria-hidden="true"
+            style="height: 0; overflow: hidden;"
+        >
+            <div class="p-4 sm:p-6">
+                <div id="preview-container" class="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                    <iframe id="preview-iframe" src="/event/{{event.slug}}?preview=true" class="w-full h-96 sm:h-[500px] lg:h-[600px] border-0 bg-white"></iframe>
+                </div>
 
-            <!-- Preview Actions -->
-            <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <span class="text-sm text-gray-500">Updates automatically as you type</span>
-                <div class="flex items-center space-x-3">
-                    <button type="button" onclick="refreshPreview()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 rounded-md transition-colors">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh
-                    </button>
-                    <a href="/event/{{event.slug}}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-md transition-colors">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                        Open in New Tab
-                    </a>
+                <!-- Preview Actions -->
+                <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span class="text-sm text-gray-500">Updates automatically as you type</span>
+                    <div class="flex items-center space-x-3">
+                        <button type="button" onclick="refreshPreview()" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-600 hover:text-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 rounded-md transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Refresh
+                        </button>
+                        <a href="/event/{{event.slug}}" target="_blank" class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-md transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Open in New Tab
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1860,6 +1872,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize preview system
     initializePreviewSystem();
 
+    // Initialize collapsible preview functionality
+    initializeCollapsiblePreview();
+
     // Initialize form submission with retry logic
     let formInitAttempts = 0;
     const maxFormInitAttempts = 3;
@@ -2385,37 +2400,137 @@ function initializePreviewSystem() {
         setTimeout(handleIframeLoad, 500);
     }
 
-    // Preview mode switching
-    const previewButtons = document.querySelectorAll('.preview-mode-btn');
-
-    previewButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            previewButtons.forEach(btn => btn.classList.remove('active', 'bg-primary-50', 'text-primary-600', 'border-primary-300'));
-            this.classList.add('active', 'bg-primary-50', 'text-primary-600', 'border-primary-300');
-
-            const mode = this.id.replace('preview-', '');
-            const container = document.getElementById('preview-container');
-            const viewport = container.querySelector('.preview-viewport');
-
-            if (mode === 'mobile') {
-                // Mobile preview mode
-                viewport.classList.remove('desktop');
-                viewport.classList.add('mobile');
-                previewIframe.style.width = '375px';
-                previewIframe.style.height = '667px';
-                console.log('📱 Switched to mobile preview mode');
-            } else {
-                // Desktop preview mode
-                viewport.classList.remove('mobile');
-                viewport.classList.add('desktop');
-                previewIframe.style.width = '100%';
-                previewIframe.style.height = '600px';
-                console.log('🖥️ Switched to desktop preview mode');
-            }
-        });
-    });
+    // Preview mode switching removed - iframe now responds dynamically to screen size
 
     console.log('🖥️ Preview system initialized');
+}
+
+// ===== COLLAPSIBLE PREVIEW FUNCTIONALITY =====
+function initializeCollapsiblePreview() {
+    const toggleButton = document.getElementById('preview-collapse-toggle');
+    const previewContent = document.getElementById('preview-content');
+    const chevron = document.getElementById('preview-chevron');
+
+    if (!toggleButton || !previewContent || !chevron) {
+        console.error('❌ Collapsible preview elements not found');
+        return;
+    }
+
+    // Get stored preference from localStorage
+    const STORAGE_KEY = 'livePreviewExpanded';
+    let isExpanded = localStorage.getItem(STORAGE_KEY) === 'true';
+
+    // Set initial state (default collapsed)
+    if (localStorage.getItem(STORAGE_KEY) === null) {
+        isExpanded = false;
+        localStorage.setItem(STORAGE_KEY, 'false');
+    }
+
+    // Function to update UI state
+    function updatePreviewState(expanded, animate = true) {
+        const scrollBeforeToggle = window.pageYOffset || document.documentElement.scrollTop;
+
+        if (expanded) {
+            // Expanding
+            toggleButton.setAttribute('aria-expanded', 'true');
+            previewContent.setAttribute('aria-hidden', 'false');
+            chevron.classList.add('rotated');
+
+            if (animate) {
+                // Get the natural height
+                previewContent.style.height = 'auto';
+                const naturalHeight = previewContent.scrollHeight;
+                previewContent.style.height = '0';
+
+                // Force reflow
+                previewContent.offsetHeight;
+
+                // Add expanding class for transition
+                previewContent.classList.add('expanding');
+                previewContent.style.height = naturalHeight + 'px';
+
+                // After animation completes
+                setTimeout(() => {
+                    previewContent.classList.remove('expanding');
+                    previewContent.classList.add('expanded');
+                    previewContent.style.height = 'auto';
+
+                    // Restore scroll position
+                    requestAnimationFrame(() => {
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        if (Math.abs(currentScroll - scrollBeforeToggle) > 5) {
+                            window.scrollTo({
+                                top: scrollBeforeToggle,
+                                behavior: 'instant'
+                            });
+                        }
+                    });
+                }, 300);
+            } else {
+                previewContent.style.height = 'auto';
+                previewContent.classList.add('expanded');
+            }
+        } else {
+            // Collapsing
+            toggleButton.setAttribute('aria-expanded', 'false');
+            previewContent.setAttribute('aria-hidden', 'true');
+            chevron.classList.remove('rotated');
+
+            if (animate) {
+                previewContent.classList.remove('expanded');
+                const currentHeight = previewContent.scrollHeight;
+                previewContent.style.height = currentHeight + 'px';
+
+                // Force reflow
+                previewContent.offsetHeight;
+
+                previewContent.style.height = '0';
+                previewContent.style.overflow = 'hidden';
+
+                // Restore scroll position after collapse
+                setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                        if (Math.abs(currentScroll - scrollBeforeToggle) > 5) {
+                            window.scrollTo({
+                                top: scrollBeforeToggle,
+                                behavior: 'instant'
+                            });
+                        }
+                    });
+                }, 300);
+            } else {
+                previewContent.style.height = '0';
+                previewContent.style.overflow = 'hidden';
+                previewContent.classList.remove('expanded');
+            }
+        }
+
+        isExpanded = expanded;
+        localStorage.setItem(STORAGE_KEY, expanded.toString());
+        console.log(`🔄 Preview ${expanded ? 'expanded' : 'collapsed'}`);
+    }
+
+    // Toggle function
+    function togglePreview() {
+        updatePreviewState(!isExpanded, true);
+    }
+
+    // Event listeners
+    toggleButton.addEventListener('click', togglePreview);
+
+    // Keyboard support
+    toggleButton.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            togglePreview();
+        }
+    });
+
+    // Set initial state without animation
+    updatePreviewState(isExpanded, false);
+
+    console.log('✅ Collapsible preview initialized');
 }
 
 function initializeRefreshBasedPreview() {
@@ -7998,21 +8113,70 @@ a:focus-visible {
     min-height: 384px; /* 96 * 4 = 384px (h-96) */
 }
 
-/* Enhanced preview section styling for top positioning */
-.preview-mode-btn {
+/* ===== COLLAPSIBLE LIVE PREVIEW COMPONENT ===== */
+/* Modern collapsible component with smooth animations and accessibility */
+
+.preview-collapsible-content {
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: height;
+}
+
+.preview-collapsible-content.expanding {
+    overflow: hidden;
+}
+
+.preview-collapsible-content.expanded {
+    height: auto !important;
+    overflow: visible;
+}
+
+/* Chevron rotation animation */
+#preview-chevron {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#preview-chevron.rotated {
+    transform: rotate(180deg);
+}
+
+/* Collapse toggle button styling */
+#preview-collapse-toggle {
     transition: all 0.2s ease;
-    min-height: 36px; /* Ensure consistent button height */
+    min-width: 40px;
+    min-height: 40px;
 }
 
-.preview-mode-btn.active {
-    background-color: #f3f4f6 !important;
-    border-color: #d1d5db !important;
-    color: #374151 !important;
-}
-
-.preview-mode-btn:hover:not(.active) {
+#preview-collapse-toggle:hover {
     background-color: #f9fafb;
     border-color: #d1d5db;
+    transform: scale(1.05);
+}
+
+#preview-collapse-toggle:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Enhanced accessibility for screen readers */
+.preview-collapsible-content[aria-hidden="true"] {
+    visibility: hidden;
+}
+
+.preview-collapsible-content[aria-hidden="false"] {
+    visibility: visible;
+}
+
+/* Prevent layout shifts during animation */
+#live-preview-card {
+    transition: none; /* Remove any card-level transitions that might interfere */
+}
+
+/* Smooth animation support with reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    .preview-collapsible-content,
+    #preview-chevron,
+    #preview-collapse-toggle {
+        transition: none;
+    }
 }
 
 /* Prevent preview container from causing scroll jumps */
@@ -8094,11 +8258,7 @@ body.modal-open {
     display: block;
 }
 
-.preview-mode-btn.active {
-    background-color: rgb(239 246 255);
-    color: rgb(37 99 235);
-    border-color: rgb(147 197 253);
-}
+/* Preview mode buttons removed - iframe now responds dynamically */
 
 /* Mobile preview styling */
 #preview-container {
