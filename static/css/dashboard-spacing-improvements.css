@@ -1,0 +1,383 @@
+/**
+ * 🎨 DASHBOARD SPACING & LAYOUT IMPROVEMENTS
+ * 
+ * Comprehensive spacing improvements using 8px grid system
+ * Addresses "squished" components and improves visual hierarchy
+ * Maintains responsive design across all breakpoints
+ */
+
+/* ===== 8PX GRID SYSTEM VARIABLES ===== */
+:root {
+    --spacing-1: 8px;   /* 8px */
+    --spacing-2: 16px;  /* 16px */
+    --spacing-3: 24px;  /* 24px */
+    --spacing-4: 32px;  /* 32px */
+    --spacing-5: 40px;  /* 40px */
+    --spacing-6: 48px;  /* 48px */
+    --spacing-7: 56px;  /* 56px */
+    --spacing-8: 64px;  /* 64px */
+    
+    /* Component spacing */
+    --component-padding: var(--spacing-3);
+    --component-margin: var(--spacing-2);
+    --section-spacing: var(--spacing-4);
+    --card-padding: var(--spacing-3);
+    --form-spacing: var(--spacing-2);
+}
+
+/* ===== DASHBOARD LAYOUT IMPROVEMENTS ===== */
+
+/* Main dashboard container */
+.laylo-dashboard,
+.modern-dashboard,
+.analytics-dashboard {
+    padding: var(--spacing-4) var(--spacing-3) !important;
+    margin: 0 auto !important;
+    max-width: 1400px !important;
+}
+
+/* Dashboard sections */
+.dashboard-section {
+    margin-bottom: var(--section-spacing) !important;
+}
+
+.dashboard-section:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* ===== CARD COMPONENT IMPROVEMENTS ===== */
+
+/* All card types */
+.laylo-card,
+.analytics-card,
+.metric-card,
+.integration-card,
+.keyword-card {
+    padding: var(--card-padding) !important;
+    margin-bottom: var(--component-margin) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Card headers */
+.laylo-card-header,
+.card-header {
+    padding: var(--spacing-3) var(--spacing-3) var(--spacing-2) var(--spacing-3) !important;
+    margin-bottom: var(--spacing-2) !important;
+}
+
+/* Card bodies */
+.laylo-card-body,
+.card-content,
+.card-body {
+    padding: 0 var(--spacing-3) var(--spacing-3) var(--spacing-3) !important;
+}
+
+/* ===== INTEGRATION SECTION IMPROVEMENTS ===== */
+
+/* Integration stats grid */
+.integration-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: var(--spacing-2) !important;
+    margin-bottom: var(--spacing-4) !important;
+}
+
+/* Integration stat cards */
+.integration-stat-card {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: var(--spacing-3) !important;
+    text-align: center !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.integration-stat-value {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-bottom: var(--spacing-1) !important;
+    line-height: 1 !important;
+}
+
+.integration-stat-label {
+    font-size: 0.875rem !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+}
+
+/* ===== KEYWORD MANAGEMENT IMPROVEMENTS ===== */
+
+/* Keyword list container */
+.keyword-list-container {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: var(--spacing-3) !important;
+    margin-bottom: var(--spacing-3) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Individual keyword items */
+.keyword-item {
+    padding: var(--spacing-2) var(--spacing-3) !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: var(--spacing-2) !important;
+}
+
+.keyword-item:last-child {
+    border-bottom: none !important;
+}
+
+/* Keyword analytics items */
+.keyword-analytics-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: var(--spacing-2) 0 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.keyword-analytics-item:last-child {
+    border-bottom: none !important;
+}
+
+.keyword-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--spacing-1) !important;
+}
+
+.keyword-text {
+    font-weight: 600 !important;
+    color: #1e293b !important;
+}
+
+.keyword-type {
+    font-size: 0.75rem !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+.keyword-stats {
+    display: flex !important;
+    gap: var(--spacing-3) !important;
+}
+
+.stat-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 2px !important;
+}
+
+.stat-value {
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    font-size: 1.125rem !important;
+}
+
+.stat-label {
+    font-size: 0.75rem !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* ===== FORM IMPROVEMENTS ===== */
+
+/* Form groups */
+.form-group {
+    margin-bottom: var(--form-spacing) !important;
+}
+
+/* Form labels */
+.form-label {
+    margin-bottom: var(--spacing-1) !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+}
+
+/* Form inputs */
+.form-input,
+.form-select,
+.form-textarea {
+    padding: var(--spacing-2) var(--spacing-2) !important;
+    border-radius: 8px !important;
+    border: 1px solid #d1d5db !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    transition: all 0.2s ease !important;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+/* ===== BUTTON IMPROVEMENTS ===== */
+
+/* Button spacing */
+.btn {
+    padding: var(--spacing-2) var(--spacing-3) !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    transition: all 0.2s ease !important;
+}
+
+.btn-sm {
+    padding: var(--spacing-1) var(--spacing-2) !important;
+    font-size: 13px !important;
+}
+
+.btn-lg {
+    padding: var(--spacing-3) var(--spacing-4) !important;
+    font-size: 16px !important;
+}
+
+/* Button groups */
+.btn-group {
+    display: flex !important;
+    gap: var(--spacing-1) !important;
+}
+
+/* ===== TABLE IMPROVEMENTS ===== */
+
+/* Table containers */
+.table-container {
+    background: white !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    margin-bottom: var(--spacing-3) !important;
+}
+
+/* Table cells */
+.table td,
+.table th {
+    padding: var(--spacing-2) var(--spacing-3) !important;
+    vertical-align: middle !important;
+}
+
+/* Table headers */
+.table th {
+    background: #f8fafc !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* ===== MODAL IMPROVEMENTS ===== */
+
+/* Modal content */
+.modal-content {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Modal header */
+.modal-header {
+    padding: var(--spacing-3) var(--spacing-4) !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Modal body */
+.modal-body {
+    padding: var(--spacing-4) !important;
+}
+
+/* Modal footer */
+.modal-footer {
+    padding: var(--spacing-3) var(--spacing-4) !important;
+    border-top: 1px solid #e5e7eb !important;
+    gap: var(--spacing-2) !important;
+}
+
+/* ===== RESPONSIVE IMPROVEMENTS ===== */
+
+/* Tablet breakpoint (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .laylo-dashboard,
+    .modern-dashboard,
+    .analytics-dashboard {
+        padding: var(--spacing-3) var(--spacing-2) !important;
+    }
+    
+    .integration-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .keyword-stats {
+        gap: var(--spacing-2) !important;
+    }
+}
+
+/* Mobile breakpoint (320px - 767px) */
+@media (max-width: 767px) {
+    :root {
+        --component-padding: var(--spacing-2);
+        --component-margin: var(--spacing-2);
+        --section-spacing: var(--spacing-3);
+        --card-padding: var(--spacing-2);
+    }
+    
+    .laylo-dashboard,
+    .modern-dashboard,
+    .analytics-dashboard {
+        padding: var(--spacing-2) var(--spacing-2) !important;
+    }
+    
+    .integration-stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--spacing-2) !important;
+    }
+    
+    .keyword-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: var(--spacing-2) !important;
+    }
+    
+    .keyword-analytics-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: var(--spacing-2) !important;
+    }
+    
+    .keyword-stats {
+        align-self: stretch !important;
+        justify-content: space-around !important;
+    }
+    
+    .btn-group {
+        flex-direction: column !important;
+        gap: var(--spacing-1) !important;
+    }
+    
+    .modal-body {
+        padding: var(--spacing-3) !important;
+    }
+}
+
+/* Large desktop breakpoint (1440px+) */
+@media (min-width: 1440px) {
+    .laylo-dashboard,
+    .modern-dashboard,
+    .analytics-dashboard {
+        padding: var(--spacing-6) var(--spacing-4) !important;
+    }
+    
+    .integration-stats-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
