@@ -740,6 +740,17 @@ async function processInstagramMessage(messageData, instagramAccountId) {
         // Extract platform interaction ID from the correct location
         const platformInteractionId = (messageData.message && messageData.message.mid) || messageData.mid || messageData.id || `dm_${Date.now()}`;
 
+        // Check for duplicate interaction (Facebook webhook retries)
+        const existingInteraction = await knex('social_interactions')
+            .where('platform_interaction_id', platformInteractionId)
+            .where('social_account_id', account.id)
+            .first();
+
+        if (existingInteraction) {
+            logger.debug('INSTAGRAM', 'Duplicate interaction detected, skipping', { id: platformInteractionId });
+            return;
+        }
+
         const interaction = await socialQueries.createSocialInteraction({
             social_account_id: account.id,
             platform_interaction_id: platformInteractionId,
