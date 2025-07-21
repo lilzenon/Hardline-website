@@ -1,55 +1,14 @@
-/* React Homepage Styles - Exact Figma Implementation */
+/* React Homepage Styles - Figma-Exact Implementation */
 
 
-/* Custom styles for React components */
+/* Global font family */
 
 .font-inter {
     font-family: 'Inter', sans-serif;
 }
 
 
-/* FRAME: Desktop */
-
-.desktop {
-    width: 1456px;
-    height: 982px;
-}
-
-
-/* RECTANGLE: Rectangle 3 */
-
-.rectangle-3 {
-    width: 1456px;
-    height: 982px;
-    flex-shrink: 0;
-    background: #000;
-}
-
-
-/* Video Hero specific styles */
-
-.video-hero {
-    flex-shrink: 0;
-}
-
-.video-hero-text-box {
-    backdrop-filter: blur(4px);
-}
-
-
-/* Event Card styles */
-
-.event-card {
-    transition: all 0.2s ease-in-out;
-}
-
-.event-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-
-/* Line clamp utilities */
+/* Essential utilities for text overflow */
 
 .line-clamp-2 {
     display: -webkit-box;
@@ -66,26 +25,60 @@
 }
 
 
-/* Responsive adjustments */
+/* Responsive adjustments for all screen sizes */
 
-@media (max-width: 768px) {
-    .video-hero {
-        max-width: 100%;
-        margin: 0 16px;
+
+/* Base responsive container */
+
+.desktop {
+    box-sizing: border-box;
+}
+
+
+/* Mobile First - 320px to 767px */
+
+@media (max-width: 767px) {
+    .desktop {
+        width: 100% !important;
+        max-width: 100vw;
+        padding: 0 8px !important;
+        overflow-x: hidden;
     }
-    .video-hero-title {
-        font-size: 20px !important;
+    /* Stack hero sections vertically on mobile */
+    .desktop>div:nth-child(2)>div:nth-child(2) {
+        flex-direction: column !important;
+        gap: 16px !important;
     }
-    .video-hero-subtitle {
-        font-size: 9px !important;
+    /* Make event cards single column on mobile */
+    .desktop .eventcardsmall {
+        width: 100% !important;
+        max-width: 280px !important;
     }
 }
 
-@media (max-width: 480px) {
-    .video-hero {
-        height: 200px;
+
+/* Tablet - 768px to 1023px */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .desktop {
+        padding: 0 24px !important;
     }
-    .video-hero-title {
-        font-size: 18px !important;
+}
+
+
+/* Desktop - 1024px to 1455px */
+
+@media (min-width: 1024px) and (max-width: 1455px) {
+    .desktop {
+        padding: 0 32px !important;
+    }
+}
+
+
+/* Large Desktop - 1456px+ */
+
+@media (min-width: 1456px) {
+    .desktop {
+        padding: 0 !important;
     }
 }

@@ -1,24 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>BOUNCE2BOUNCE - Home</title>
-    
+
     <!-- Inter Font for exact Figma styling -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+
     <!-- Tailwind CSS -->
     <link rel="stylesheet" href="/css/tailwind.css">
-    
+
     <meta name="theme-color" content="#000000">
     <meta name="description" content="Discover exclusive live music events and connect with your favorite artists. BOUNCE2BOUNCE brings you unforgettable music experiences, seamless ticket purchasing, and direct artist engagement.">
     <meta name="keywords" content="live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE, Asbury Park events">
-    
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://b2b.click/">
+    <meta property="og:title" content="BOUNCE2BOUNCE - Exclusive Live Music Events">
+    <meta property="og:description" content="Discover exclusive live music events and connect with your favorite artists. Unforgettable music experiences await.">
+    <meta property="og:image" content="https://b2b.click/images/og-image.jpg">
+    <meta property="og:site_name" content="BOUNCE2BOUNCE">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://b2b.click/">
+    <meta property="twitter:title" content="BOUNCE2BOUNCE - Exclusive Live Music Events">
+    <meta property="twitter:description" content="Discover exclusive live music events and connect with your favorite artists. Unforgettable music experiences await.">
+    <meta property="twitter:image" content="https://b2b.click/images/og-image.jpg">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "BOUNCE2BOUNCE",
+            "url": "https://b2b.click",
+            "logo": "https://b2b.click/images/logo.png",
+            "description": "Exclusive live music events and artist promotion platform",
+            "sameAs": [
+                "https://instagram.com/bounce2bounce_",
+                "https://tiktok.com/@bounce2bounce_",
+                "https://twitter.com/bounce2bounce_"
+            ],
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "email": "info@bounce2bounce.com",
+                "contactType": "customer service"
+            }
+        }
+    </script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -33,7 +71,9 @@
         }
     </style>
 </head>
+
 <body>
     <div id="root"></div>
 </body>
+
 </html>

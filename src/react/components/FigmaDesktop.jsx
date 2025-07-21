@@ -1,47 +1,341 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+
+// Simple cache for API responses
+const apiCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache for formatted dates to avoid repeated calculations
+const dateFormatCache = new Map();
 
 const FigmaDesktop = () => {
-  return (
-    <div 
-      className="desktop"
-      style={{
-        width: '1456px',
-        height: '982px',
-        position: 'relative',
-        margin: '0 auto'
-      }}
-    >
-      {/* Rectangle 3 - Black Background */}
-      <div 
+  const [homeSettings, setHomeSettings] = useState(null);
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [formattedDate, setFormattedDate] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneSubmitting, setPhoneSubmitting] = useState(false);
+  const [phoneSubmitted, setPhoneSubmitted] = useState(false);
+
+  const fetchHomepageData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check cache first
+      const cacheKey = 'homepage-data';
+      const cached = apiCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('📦 Using cached homepage data');
+        setHomeSettings(cached.data.homeSettings);
+        setFeaturedEvents(cached.data.featuredEvents || []);
+        setFormattedDate(cached.data.formattedDate || "March 29th, 9:00 P.M.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/home-settings/homepage-data');
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
+      }
+
+      const data = await response.json();
+
+      // Validate API response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid API response format');
+      }
+
+      // Validate home settings
+      const homeSettings = data.homeSettings || {};
+      if (!homeSettings.event_title && !homeSettings.artist_name) {
+        console.warn('Home settings missing required fields, using defaults');
+      }
+
+      // Validate featured events
+      const featuredEvents = Array.isArray(data.featuredEvents) ? data.featuredEvents : [];
+      if (featuredEvents.length === 0) {
+        console.warn('No featured events found, using placeholder cards');
+      }
+
+      // Validate each event has required fields
+      const validatedEvents = featuredEvents.filter(event => {
+        if (!event || typeof event !== 'object') return false;
+        if (!event.id || !event.title) {
+          console.warn('Event missing required fields:', event);
+          return false;
+        }
+        return true;
+      });
+
+      console.log(`✅ Homepage data loaded: ${validatedEvents.length} featured events`);
+
+      // Cache the successful response
+      apiCache.set(cacheKey, {
+        data: data,
+        timestamp: Date.now()
+      });
+
+      setHomeSettings(homeSettings);
+      setFeaturedEvents(validatedEvents);
+      setFormattedDate(data.formattedDate || "March 29th, 9:00 P.M.");
+
+    } catch (err) {
+      console.error('❌ Error fetching homepage data:', err);
+      setError(err.message);
+
+      // Fallback to default values to maintain Figma design
+      setHomeSettings({
+        event_title: "EVENT TITLE",
+        artist_name: "Artist Name",
+        event_address: "101 Address Drive, Asbury Park, NJ",
+        event_image: null,
+        tickets_url: null,
+        instagram_url: null,
+        tiktok_url: null,
+        twitter_url: null,
+        email_url: null
+      });
+      setFeaturedEvents([]);
+      setFormattedDate("March 29th, 9:00 P.M.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchHomepageData();
+  }, [fetchHomepageData]);
+
+  const validatePhoneNumber = useCallback((phone) => {
+    // Basic phone number validation (US format)
+    const phoneRegex = /^[\+]?[1]?[\s\-\.]?[\(]?[0-9]{3}[\)]?[\s\-\.]?[0-9]{3}[\s\-\.]?[0-9]{4}$/;
+    return phoneRegex.test(phone.replace(/\D/g, ''));
+  }, []);
+
+  const handlePhoneSubmit = useCallback(async () => {
+    const trimmedPhone = phoneNumber.trim();
+
+    if (!trimmedPhone || phoneSubmitting) return;
+
+    // Validate phone number format
+    if (!validatePhoneNumber(trimmedPhone)) {
+      console.warn('Invalid phone number format');
+      return;
+    }
+
+    try {
+      setPhoneSubmitting(true);
+
+      console.log('📱 Submitting phone number:', trimmedPhone);
+
+      // Use SMS test endpoint to capture phone numbers
+      const response = await fetch('/api/sms/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: trimmedPhone
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success !== false) {
+        console.log('✅ Phone number submitted successfully');
+        setPhoneSubmitted(true);
+        setPhoneNumber('');
+        // Reset success state after 3 seconds
+        setTimeout(() => setPhoneSubmitted(false), 3000);
+      } else {
+        console.error('❌ Failed to submit phone number:', result.error || 'Unknown error');
+        // Could add user-facing error message here
+      }
+    } catch (error) {
+      console.error('❌ Error submitting phone number:', error);
+      // Could add user-facing error message here
+    } finally {
+      setPhoneSubmitting(false);
+    }
+  }, [phoneNumber, phoneSubmitting, validatePhoneNumber]);
+
+  // Memoized event cards processing for performance
+  const processedEventCards = useMemo(() => {
+    const featuredCards = [];
+
+    // Process only featured events from API
+    featuredEvents.forEach((event, index) => {
+      try {
+        // Validate and parse event date
+        let eventDate = new Date();
+        let formattedDate = 'Tue, Sep 02 @ 10:00PM';
+        let day = '02';
+        let month = 'SEP';
+
+        if (event.event_date) {
+          const cacheKey = event.event_date;
+          let cachedFormat = dateFormatCache.get(cacheKey);
+
+          if (!cachedFormat) {
+            const parsedDate = new Date(event.event_date);
+            if (!isNaN(parsedDate.getTime())) {
+              eventDate = parsedDate;
+              formattedDate = eventDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: '2-digit'
+              }).replace(',', ' @') + ' 10:00PM';
+              day = eventDate.getDate().toString().padStart(2, '0');
+              month = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+
+              cachedFormat = { formattedDate, day, month, eventDate };
+              dateFormatCache.set(cacheKey, cachedFormat);
+            }
+          } else {
+            ({ formattedDate, day, month, eventDate } = cachedFormat);
+          }
+        }
+
+        // Validate and process event data
+        const title = event.title || event.artist_name || `Event ${index + 1}`;
+
+        // Process location to show only venue name and city (truncate long addresses)
+        let location = 'Venue Address';
+        if (event.event_address) {
+          const addressParts = event.event_address.split(',').map(part => part.trim());
+          if (addressParts.length >= 2) {
+            // Show first part (venue/street) and second part (city)
+            location = `${addressParts[0]}, ${addressParts[1]}`;
+            // If too long, just show city and state
+            if (location.length > 25 && addressParts.length >= 3) {
+              location = `${addressParts[1]}, ${addressParts[2]}`;
+            }
+          } else {
+            location = event.event_address;
+          }
+        }
+
+        const coverImage = event.cover_image || '/images/figma-exact/event-card-bg.png';
+        const ticketsUrl = event.posh_embed_url || '#';
+
+        featuredCards.push({
+          id: `event-${event.id}`,
+          title: title,
+          date: formattedDate,
+          day: day,
+          month: month,
+          location: location,
+          coverImage: coverImage,
+          ticketsUrl: ticketsUrl,
+          isRealEvent: true,
+          showOnHomepage: event.show_on_homepage,
+          eventData: event // Store original event data for debugging
+        });
+      } catch (error) {
+        console.warn(`Error processing featured event ${event.id}:`, error);
+        // Skip this event if processing fails
+      }
+    });
+
+    console.log(`🎯 Rendering ${featuredCards.length} featured event cards (no placeholders)`);
+    return featuredCards;
+  }, [featuredEvents]);
+
+  // Show loading state while maintaining Figma layout
+  if (loading) {
+    return (
+      <div
+        className="desktop"
         style={{
-          position: 'absolute',
-          left: '0px',
-          top: '0px',
           width: '1456px',
           height: '982px',
+          position: 'relative',
+          margin: '0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           background: '#000000'
         }}
-      />
+      >
+        <div style={{
+          color: '#FFF',
+          fontSize: '18px',
+          fontFamily: 'Inter',
+          textAlign: 'center'
+        }}>
+          <div>Loading homepage data...</div>
+          {error && (
+            <div style={{
+              color: '#FF6B6B',
+              fontSize: '14px',
+              marginTop: '10px',
+              opacity: 0.8
+            }}>
+              {error}
+              <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.7 }}>
+                Falling back to default content...
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Error boundary fallback
+  if (error && !homeSettings) {
+    console.warn('🚨 Critical error, using fallback UI');
+    // Continue with fallback data that was set in catch block
+  }
+
+  return (
+    <div
+      className="desktop"
+      style={{
+        width: '100vw',
+        minHeight: '100vh',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: '#000000',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Centered Content Container */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '1456px',
+          minWidth: '320px',
+          position: 'relative',
+          margin: '0 auto',
+          padding: '0 16px'
+        }}
+      >
+
       
       {/* Frame 12 - Navigation */}
       <div
         style={{
-          position: 'absolute',
-          left: '313px',
-          top: '35px',
+          position: 'relative',
           display: 'flex',
-          width: '830px',
+          width: '100%',
+          maxWidth: '829px',
           height: '48px',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '500px',
-          paddingLeft: '10px'
+          margin: '35px auto 0 auto',
+          padding: '0 16px'
         }}
       >
         {/* Group 4 - B2B Logo Nav */}
         <img
           src="/images/figma-exact/b2b-logo-nav.svg"
           alt="B2B Logo"
+          loading="lazy"
           style={{
             width: '138.41px',
             height: '43px'
@@ -165,15 +459,16 @@ const FigmaDesktop = () => {
       {/* Dual Hero Section */}
       <div
         style={{
-          position: 'absolute',
-          left: '313px',
-          top: '99px',
+          position: 'relative',
           display: 'flex',
-          width: '829px',
+          width: '100%',
+          maxWidth: '829px',
           height: '299px',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '24px'
+          gap: '24px',
+          margin: '20px auto 0 auto',
+          padding: '0 16px'
         }}
       >
         {/* Frame 20 - Left Hero */}
@@ -242,7 +537,7 @@ const FigmaDesktop = () => {
                     lineHeight: 'normal'
                   }}
                 >
-                  March 29th, 9:00 P.M.
+                  {formattedDate}
                 </span>
               </div>
 
@@ -268,7 +563,7 @@ const FigmaDesktop = () => {
                     lineHeight: 'normal'
                   }}
                 >
-                  Asbury Park, NJ
+                  {homeSettings?.event_address || "Asbury Park, NJ"}
                 </span>
               </div>
             </div>
@@ -338,7 +633,7 @@ const FigmaDesktop = () => {
                 flex: '1'
               }}
             >
-              EVENT TITLE
+              {homeSettings?.event_title || "EVENT TITLE"}
             </div>
           </div>
         </div>
@@ -373,10 +668,10 @@ const FigmaDesktop = () => {
               display: 'flex',
               width: '505px',
               height: '32px',
-              padding: '0px 9px',
+              padding: '0px 16px',
               justifyContent: 'space-between',
               alignItems: 'center',
-              gap: '12px'
+              gap: '16px'
             }}
           >
             {/* Left - Date and title */}
@@ -422,7 +717,7 @@ const FigmaDesktop = () => {
                       lineHeight: 'normal'
                     }}
                   >
-                    March 29th, 9:00 P.M.
+                    {formattedDate}
                   </span>
                 </div>
 
@@ -441,7 +736,7 @@ const FigmaDesktop = () => {
                     lineHeight: 'normal'
                   }}
                 >
-                  EVENT TITLE
+                  {homeSettings?.event_title || "EVENT TITLE"}
                 </div>
               </div>
             </div>
@@ -452,10 +747,10 @@ const FigmaDesktop = () => {
                 display: 'flex',
                 width: '72px',
                 height: '26px',
-                padding: '13px 12px',
+                padding: '8px 16px',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: '10px',
+                gap: '8px',
                 borderRadius: '37px',
                 background: 'rgba(38, 38, 38, 0.80)',
                 cursor: 'pointer'
@@ -480,14 +775,15 @@ const FigmaDesktop = () => {
       {/* Frame 13 - Title Section */}
       <div
         style={{
-          position: 'absolute',
-          left: '319px',
-          top: '405px',
+          position: 'relative',
           display: 'flex',
-          width: '825px',
+          width: '100%',
+          maxWidth: '825px',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '20px'
+          gap: '20px',
+          margin: '16px auto 0 auto',
+          padding: '0 16px'
         }}
       >
         {/* Event Title */}
@@ -553,198 +849,90 @@ const FigmaDesktop = () => {
         </div>
       </div>
 
-      {/* B2B LOGO - Bottom */}
-      <img
-        src="/images/figma-exact/b2b-logo-bottom.svg"
-        alt="B2B LOGO"
-        style={{
-          position: 'absolute',
-          left: '277px',
-          top: '749px',
-          width: '901px',
-          height: '281px',
-          fill: '#101010',
-          filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))'
-        }}
-      />
+
       
-      {/* Phone Number Form */}
-      <div 
-        style={{
-          position: 'absolute',
-          left: '838px',
-          top: '448px',
-          display: 'inline-flex',
-          height: '453px',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '4px'
-        }}
-      >
-        {/* Phone Number Input */}
-        <div 
-          style={{
-            display: 'flex',
-            width: '299px',
-            height: '36px',
-            padding: '0px 2px',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderRadius: '31px',
-            background: '#232323'
-          }}
-        >
-          {/* Frame 19 */}
-          <div 
-            style={{
-              display: 'flex',
-              width: '294px',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            {/* Phone number Field */}
-            <div 
-              style={{
-                display: 'flex',
-                width: '233px',
-                height: '30px',
-                alignItems: 'center',
-                gap: '10px',
-                paddingLeft: '10px',
-                borderRadius: '100px',
-                background: '#303030'
-              }}
-            >
-              {/* flag/US */}
-              <div 
-                style={{
-                  width: '23px',
-                  height: '15px',
-                  background: '#FFFFFF'
-                }}
-              >
-                <svg width="23" height="15" viewBox="0 0 23 15" fill="none">
-                  <rect width="23" height="15" fill="#FFFFFF"/>
-                  <rect width="23" height="1" y="1" fill="#D80027"/>
-                  <rect width="23" height="1" y="3" fill="#D80027"/>
-                  <rect width="23" height="1" y="5" fill="#D80027"/>
-                  <rect width="23" height="1" y="7" fill="#D80027"/>
-                  <rect width="23" height="1" y="9" fill="#D80027"/>
-                  <rect width="23" height="1" y="11" fill="#D80027"/>
-                  <rect width="23" height="1" y="13" fill="#D80027"/>
-                  <rect width="11.5" height="8.07" fill="#2E52B2"/>
-                </svg>
-              </div>
-              
-              {/* Phone Number Field Text */}
-              <span 
-                style={{
-                  width: '190px',
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  lineHeight: 'normal'
-                }}
-              >
-                (555)-434-43904
-              </span>
-            </div>
-            
-            {/* SEND Button */}
-            <div 
-              style={{
-                display: 'flex',
-                width: '51px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '13px 12px',
-                borderRadius: '100px',
-                background: '#00FF40',
-                cursor: 'pointer'
-              }}
-            >
-              <span 
-                style={{
-                  color: '#232323',
-                  fontFamily: 'Inter',
-                  fontSize: '10px',
-                  fontWeight: '700',
-                  lineHeight: 'normal'
-                }}
-              >
-                SEND
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Disclaimer Text */}
-        <div 
-          style={{
-            width: '299.66px',
-            color: '#FFF',
-            textAlign: 'justify',
-            fontFamily: 'Inter',
-            fontSize: '8px',
-            fontWeight: '500',
-            lineHeight: 'normal',
-            letterSpacing: '-0.48px',
-            opacity: '0.46',
-            textDecoration: 'underline'
-          }}
-        >
-          By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's Terms of Service, Cookie Policy and Privacy Policy. Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
-        </div>
-      </div>
+
+
       
       {/* Frame 18 - Event List Container */}
-      <div 
+      <div
         style={{
-          position: 'absolute',
-          left: '313px',
-          top: '448px',
+          position: 'relative',
           display: 'flex',
-          gap: '18px'
+          width: '100%',
+          maxWidth: '825px',
+          gap: '18px',
+          margin: '8px auto 0 auto',
+          padding: '0 16px',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
         }}
       >
         {/* Event List */}
-        <div 
+        <div
           style={{
             display: 'flex',
-            width: '507px',
-            height: '453px',
+            width: '100%',
+            maxWidth: '507px',
             flexDirection: 'column',
-            justifyContent: 'stretch',
+            justifyContent: 'flex-start',
             alignItems: 'stretch',
-            gap: '21px'
+            gap: '21px',
+            flex: '1'
           }}
         >
           {/* EVENT LIST Grid */}
-          <div 
+          <div
             style={{
-              display: 'flex',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              rowGap: '12px',
+              columnGap: '8px',
               alignSelf: 'stretch',
-              flexWrap: 'wrap',
-              gap: '7px',
-              flex: '1'
+              alignItems: 'start'
             }}
           >
-            {/* EventCard_small instances - All 8 cards from Figma */}
-            {[
-              { id: '22:176', text: 'Event Title 1' },
-              { id: '22:146', text: 'Event Title 2' },
-              { id: '32:1195', text: 'Event Title 3' },
-              { id: '32:1223', text: 'Event Title 4' },
-              { id: '32:1447', text: 'Event Title 5' },
-              { id: '32:1475', text: 'Event Title 6' },
-              { id: '32:1503', text: 'Event Title 7' },
-              { id: '32:1531', text: 'Event Title 8' }
-            ].map((card) => (
+            {/* Show featured events or empty state */}
+            {featuredEvents.length === 0 ? (
+              /* Empty State - No Featured Events */
+              <div
+                style={{
+                  display: 'flex',
+                  width: '100%',
+                  height: '200px',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '16px',
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  textAlign: 'center'
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: '0.8'
+                  }}
+                >
+                  No Featured Events
+                </div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    opacity: '0.6',
+                    maxWidth: '300px',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  Events marked as "Show on Homepage" will appear here. Check the admin dashboard to feature events.
+                </div>
+              </div>
+            ) : (
+              /* EventCard_small instances - Dynamic data from featured events only */
+              processedEventCards.map((card) => (
               <div
                 key={card.id}
                 className="eventcardsmall"
@@ -756,7 +944,9 @@ const FigmaDesktop = () => {
                   alignItems: 'center',
                   borderRadius: '16px',
                   background: '#232323',
-                  position: 'relative'
+                  position: 'relative',
+                  margin: '0',
+                  padding: '0'
                 }}
               >
                 {/* Group 1 - Complete Event Card Content */}
@@ -778,7 +968,10 @@ const FigmaDesktop = () => {
                     }}
                   >
                     {/* Rectangle 2 - Event Background Image */}
-                    <div
+                    <img
+                      src={card.coverImage}
+                      alt={`${card.title} event cover`}
+                      loading="lazy"
                       style={{
                         position: 'absolute',
                         left: '3px',
@@ -786,7 +979,12 @@ const FigmaDesktop = () => {
                         width: '79.04px',
                         height: '79.04px',
                         borderRadius: '14px',
-                        background: `url(/images/figma-exact/event-card-bg.png) lightgray 0px 0px / 100% 100% no-repeat`
+                        objectFit: 'cover',
+                        backgroundColor: 'lightgray'
+                      }}
+                      onError={(e) => {
+                        e.target.style.backgroundColor = 'lightgray';
+                        e.target.style.display = 'block';
                       }}
                     />
 
@@ -794,20 +992,20 @@ const FigmaDesktop = () => {
                     <div
                       style={{
                         position: 'absolute',
-                        left: '55.64px',
-                        top: '6px',
-                        width: '21px',
-                        height: '21px'
+                        left: '54px',
+                        top: '5px',
+                        width: '24px',
+                        height: '24px'
                       }}
                     >
                       {/* Rectangle 1 - White Badge Background */}
                       <div
                         style={{
                           position: 'absolute',
-                          left: '0.15px',
-                          top: '-0.86px',
-                          width: '21.16px',
-                          height: '21.16px',
+                          left: '0px',
+                          top: '-1px',
+                          width: '24px',
+                          height: '24px',
                           borderRadius: '4px',
                           background: '#FFF'
                         }}
@@ -817,15 +1015,15 @@ const FigmaDesktop = () => {
                       <div
                         style={{
                           position: 'absolute',
-                          left: '3.36px',
-                          top: '3px',
+                          left: '2px',
+                          top: '2px',
                           display: 'flex',
-                          width: '15px',
-                          height: '14px',
+                          width: '20px',
+                          height: '18px',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'center',
-                          gap: '2px'
+                          gap: '1px'
                         }}
                       >
                         {/* DAY Number */}
@@ -839,7 +1037,7 @@ const FigmaDesktop = () => {
                             lineHeight: 'normal'
                           }}
                         >
-                          02
+                          {card.day}
                         </span>
 
                         {/* MONTH Abbreviation */}
@@ -853,7 +1051,7 @@ const FigmaDesktop = () => {
                             lineHeight: 'normal'
                           }}
                         >
-                          SEP
+                          {card.month}
                         </span>
                       </div>
                     </div>
@@ -879,39 +1077,90 @@ const FigmaDesktop = () => {
                     <div
                       style={{
                         display: 'flex',
-                        height: '53px',
+                        height: '50px',
                         flexDirection: 'column',
                         alignItems: 'flex-start',
-                        alignSelf: 'stretch'
+                        alignSelf: 'stretch',
+                        gap: '1px',
+                        justifyContent: 'space-between'
                       }}
                     >
                       {/* Event Title */}
                       <div
                         style={{
                           display: 'flex',
-                          width: '128px',
-                          height: '20px',
+                          width: '150px',
+                          height: '16px',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           color: '#FFF',
                           fontFamily: 'Inter',
-                          fontSize: '16px',
+                          fontSize: '14px',
                           fontWeight: '800',
-                          lineHeight: 'normal'
+                          lineHeight: '1.0',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
                         }}
                       >
-                        {card.text}
+                        {card.title}
                       </div>
 
                       {/* DATE Information Row */}
                       <div
+                        onClick={() => {
+                          // Create calendar event
+                          const eventTitle = encodeURIComponent(card.title);
+                          const eventLocation = encodeURIComponent(card.location);
+                          const eventDate = card.date;
+
+                          // Parse date string to create proper calendar format
+                          // Assuming card.date format like "Thu @ Jul 03 10:00PM"
+                          const now = new Date();
+                          const currentYear = now.getFullYear();
+
+                          // Extract date parts (this is a simplified parser)
+                          const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                          if (dateMatch) {
+                            const [, , month, day, hour, minute, ampm] = dateMatch;
+                            const monthMap = {
+                              'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                              'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                            };
+
+                            let hour24 = parseInt(hour);
+                            if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                            if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                            const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                            const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+
+                            // Format for calendar URL
+                            const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                            const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                            // Try different calendar methods
+                            const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+
+                            window.open(calendarUrl, '_blank');
+                          }
+                        }}
                         style={{
                           display: 'flex',
-                          height: '15px',
+                          height: '12px',
                           paddingLeft: '1px',
                           alignItems: 'center',
-                          gap: '4px',
-                          alignSelf: 'stretch'
+                          gap: '3px',
+                          alignSelf: 'stretch',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.2s ease-in-out'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.7';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1';
                         }}
                       >
                         {/* Calendar Icon SVG */}
@@ -923,30 +1172,59 @@ const FigmaDesktop = () => {
                         <span
                           style={{
                             display: 'flex',
-                            width: '111px',
-                            height: '12px',
+                            width: '140px',
+                            height: '10px',
                             flexDirection: 'column',
                             justifyContent: 'center',
                             color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: '10px',
-                            fontWeight: '200',
-                            lineHeight: 'normal'
+                            fontSize: '9px',
+                            fontWeight: '300',
+                            lineHeight: '1.0',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
                           }}
                         >
-                          Tue, Sep 02 @ 10:00PM
+                          {card.date}
                         </span>
                       </div>
 
                       {/* LOCATION Information Row */}
                       <div
+                        onClick={() => {
+                          const address = encodeURIComponent(card.location);
+                          const userAgent = navigator.userAgent || '';
+
+                          // Detect iOS
+                          if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                            window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                          }
+                          // Detect Android
+                          else if (/android/i.test(userAgent)) {
+                            window.open(`geo:0,0?q=${address}`, '_blank');
+                          }
+                          // Default to Google Maps for web browsers
+                          else {
+                            window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                          }
+                        }}
                         style={{
                           display: 'flex',
-                          height: '15px',
+                          height: '12px',
                           padding: '0px 1px',
+                          marginTop: '2px',
                           alignItems: 'center',
-                          gap: '4px',
-                          alignSelf: 'stretch'
+                          gap: '3px',
+                          alignSelf: 'stretch',
+                          cursor: 'pointer',
+                          transition: 'opacity 0.2s ease-in-out'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.opacity = '0.7';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.opacity = '1';
                         }}
                       >
                         {/* Location Icon SVG */}
@@ -959,18 +1237,21 @@ const FigmaDesktop = () => {
                         <span
                           style={{
                             display: 'flex',
-                            width: '111px',
-                            height: '12px',
+                            width: '140px',
+                            height: '10px',
                             flexDirection: 'column',
                             justifyContent: 'center',
                             color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: '10px',
-                            fontWeight: '200',
-                            lineHeight: 'normal'
+                            fontSize: '9px',
+                            fontWeight: '300',
+                            lineHeight: '1.0',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
                           }}
                         >
-                          Venue Address
+                          {card.location}
                         </span>
                       </div>
                     </div>
@@ -978,81 +1259,244 @@ const FigmaDesktop = () => {
                     {/* Frame 9 - Action Buttons Section */}
                     <div
                       style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '45px', // Position to align button bottom with image bottom
                         display: 'flex',
-                        height: '26px',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        alignSelf: 'stretch'
+                        width: '156px',
+                        height: '36px',
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-end'
                       }}
                     >
-                      {/* Card Buttons Container */}
+                      {/* Get Tickets Button */}
                       <div
+                        onClick={() => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            window.open(card.ticketsUrl, '_blank');
+                          }
+                        }}
                         style={{
                           display: 'flex',
-                          width: '156px',
-                          paddingRight: '4px',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
-                          alignSelf: 'stretch',
-                          gap: '4px'
+                          width: '120px',
+                          height: '20px',
+                          padding: '8px 10px',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          gap: '6px',
+                          borderRadius: '20px',
+                          background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                            ? 'rgba(23, 23, 23, 0.80)'
+                            : 'rgba(23, 23, 23, 0.40)',
+                          cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                            ? 'pointer'
+                            : 'default',
+                          opacity: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                            ? 1
+                            : 0.6,
+                          transition: 'all 0.2s ease-in-out'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.90)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)';
+                          }
                         }}
                       >
-                        {/* Get Tickets Button */}
-                        <div
+                        <span
                           style={{
-                            display: 'flex',
-                            width: '155px',
-                            height: '26px',
-                            padding: '13px 12px',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '10px',
-                            borderRadius: '37px',
-                            background: 'rgba(23, 23, 23, 0.80)',
-                            cursor: 'pointer'
+                            color: '#FFF',
+                            fontFamily: 'Inter',
+                            fontSize: '10px',
+                            fontWeight: '500',
+                            lineHeight: 'normal',
+                            pointerEvents: 'none'
                           }}
                         >
-                          <span
-                            style={{
-                              color: '#FFF',
-                              fontFamily: 'Inter',
-                              fontSize: '12px',
-                              fontWeight: '500',
-                              lineHeight: 'normal'
-                            }}
-                          >
-                            Get Tickets
-                          </span>
-                        </div>
-
-                        {/* SHARE Button */}
-                        <div
-                          style={{
-                            width: '26px',
-                            height: '25px',
-                            borderRadius: '14px',
-                            background: '#FFF',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          <svg width="15.41" height="15.37" viewBox="0 0 16 16" fill="none">
-                            <path d="M8 1l7 7-7 7M15 8H1" stroke="#000" strokeWidth="1"/>
-                          </svg>
-                        </div>
+                          Get Tickets
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
+
+        {/* Phone Number Form */}
+        <div
+          style={{
+            display: 'flex',
+            width: '299px',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px'
+          }}
+        >
+          {/* Phone Number Input */}
+          <div
+            style={{
+              display: 'flex',
+              width: '299px',
+              height: '36px',
+              padding: '0px 2px',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderRadius: '31px',
+              background: '#232323'
+            }}
+          >
+            {/* Frame 19 */}
+            <div
+              style={{
+                display: 'flex',
+                width: '294px',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              {/* Phone number Field */}
+              <div
+                style={{
+                  display: 'flex',
+                  width: '233px',
+                  height: '30px',
+                  alignItems: 'center',
+                  gap: '10px',
+                  paddingLeft: '10px',
+                  borderRadius: '100px',
+                  background: '#303030'
+                }}
+              >
+                {/* flag/US */}
+                <div
+                  style={{
+                    width: '23px',
+                    height: '15px',
+                    background: '#FFFFFF'
+                  }}
+                >
+                  <svg width="23" height="15" viewBox="0 0 23 15" fill="none">
+                    <rect width="23" height="15" fill="#FFFFFF"/>
+                    <rect width="23" height="1" y="1" fill="#D80027"/>
+                    <rect width="23" height="1" y="3" fill="#D80027"/>
+                    <rect width="23" height="1" y="5" fill="#D80027"/>
+                    <rect width="23" height="1" y="7" fill="#D80027"/>
+                    <rect width="23" height="1" y="9" fill="#D80027"/>
+                    <rect width="23" height="1" y="11" fill="#D80027"/>
+                    <rect width="23" height="1" y="13" fill="#D80027"/>
+                    <rect width="11.5" height="8.07" fill="#2E52B2"/>
+                  </svg>
+                </div>
+
+                {/* Phone Number Input Field */}
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="(555) 123-4567"
+                  style={{
+                    width: '190px',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    lineHeight: 'normal'
+                  }}
+                />
+              </div>
+
+              {/* SEND Button */}
+              <div
+                onClick={handlePhoneSubmit}
+                style={{
+                  display: 'flex',
+                  width: '51px',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '13px 12px',
+                  borderRadius: '100px',
+                  background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
+                  cursor: phoneSubmitting ? 'not-allowed' : 'pointer',
+                  opacity: phoneSubmitting ? 0.7 : 1
+                }}
+              >
+                <span
+                  style={{
+                    color: '#232323',
+                    fontFamily: 'Inter',
+                    fontSize: '10px',
+                    fontWeight: '700',
+                    lineHeight: 'normal'
+                  }}
+                >
+                  {phoneSubmitted ? '✓' : (phoneSubmitting ? '...' : 'SEND')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Disclaimer Text */}
+          <div
+            style={{
+              width: '299.66px',
+              color: '#FFF',
+              textAlign: 'justify',
+              fontFamily: 'Inter',
+              fontSize: '8px',
+              fontWeight: '500',
+              lineHeight: 'normal',
+              letterSpacing: '-0.48px',
+              opacity: '0.46',
+              textDecoration: 'underline'
+            }}
+          >
+            By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's Terms of Service, Cookie Policy and Privacy Policy. Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
+          </div>
+        </div>
+      </div>
+
+      {/* B2B LOGO - Bottom */}
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          justifyContent: 'center',
+          width: '100%',
+          margin: '32px auto 0 auto'
+        }}
+      >
+        <img
+          src="/images/figma-exact/b2b-logo-bottom.svg"
+          alt="B2B LOGO"
+          loading="lazy"
+          style={{
+            width: '100%',
+            maxWidth: '901px',
+            height: 'auto',
+            fill: '#101010',
+            filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))'
+          }}
+        />
+      </div>
+      {/* End Centered Content Container */}
       </div>
     </div>
   );
 };
 
-export default FigmaDesktop;
+export default memo(FigmaDesktop);
