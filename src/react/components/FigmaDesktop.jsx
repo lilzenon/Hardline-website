@@ -440,11 +440,10 @@ const FigmaDesktop = () => {
           display: 'grid',
           gridTemplateColumns: 'auto 1fr auto',  // Logo | Space | Pills
           width: '100%',
-          maxWidth: '825px',  // Fixed container width for alignment
           height: '48px',
           alignItems: 'center',
-          margin: '35px auto 0 auto',
-          padding: '0 16px'
+          margin: '35px 0 0 0',  // Remove auto margins since parent handles centering
+          padding: '0'  // Remove padding since parent handles it
         }}
       >
         {/* Group 4 - B2B Logo Nav */}
@@ -580,13 +579,12 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '825px',  // Fixed container width for alignment
           height: `${scaledDimensions.heroHeight}px`,  // Scaled height to push content down
-          justifyContent: 'center',
+          justifyContent: 'flex-start',  // Use flex-start with gap for precise alignment
           alignItems: 'center',
           gap: `${scaledDimensions.gap}px`,  // Scaled gap between hero sections
-          margin: '20px auto 0 auto',
-          padding: '0 16px',
+          margin: '20px 0 0 0',  // Remove auto margins since parent handles centering
+          padding: '0',  // Remove padding since parent handles it
           flexDirection: 'row'
         }}
       >
@@ -598,7 +596,7 @@ const FigmaDesktop = () => {
             position: 'relative',
             minWidth: `${Math.min(scaledDimensions.heroWidth, 200)}px`,  // Min 200px
             flexShrink: 0,
-            margin: '0 auto'
+            margin: '0'  // Remove auto margin for precise alignment
           }}
         >
           {/* Hero Image with Gradient */}
@@ -780,7 +778,7 @@ const FigmaDesktop = () => {
             position: 'relative',
             minWidth: `${Math.min(scaledDimensions.rightHeroWidth, 250)}px`,  // Min 250px
             flexShrink: 1,
-            margin: '0 auto'
+            margin: '0'  // Remove auto margin for precise alignment
           }}
         >
           {/* Video Background */}
@@ -885,11 +883,10 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '825px',  // Fixed container width for alignment
           justifyContent: 'flex-start',
           alignItems: 'flex-start',
-          margin: '16px auto 0 auto',
-          padding: '0 16px'
+          margin: '16px 0 0 0',  // Remove auto margins since parent handles centering
+          padding: '0'  // Remove padding since parent handles it
         }}
       >
         {/* Event Title */}
@@ -918,10 +915,9 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '825px',  // Fixed container width for alignment
           gap: `${scaledDimensions.eventsTextGap}px`,  // Fixed 18px gap, no scaling
-          margin: '8px auto 0 auto',  // Fixed margin, no scaling
-          padding: '0 16px',  // Match hero sections and navigation padding
+          margin: '8px 0 0 0',  // Remove auto margins since parent handles centering
+          padding: '0',  // Remove padding since parent handles it
           justifyContent: 'flex-start',  // Use flex-start with fixed gap instead of space-between
           alignItems: 'flex-start',
           flexDirection: isMobile ? 'column' : 'row'  // Stack vertically on mobile

@@ -703,13 +703,14 @@
 }
 
 
-/* Navigation */
+/* Navigation - Fixed width to match hero sections exactly */
 
 .figma-navigation {
     position: absolute;
     left: 313px;
     top: 35px;
-    width: 830px;
+    width: 829px;
+    /* Match hero section width exactly (was 830px) */
     height: 48px;
     display: flex;
     justify-content: space-between;

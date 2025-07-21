@@ -4,26 +4,55 @@
 /* 🎯 BIDIRECTIONAL RESPONSIVE SCALING SYSTEM - True zoom-like proportional scaling */
 
 .scalable-homepage-container {
-    /* Optimized base design width for better scaling behavior */
-    --base-width: 825px;
-    /* Bidirectional scale factor: smooth scaling up AND down across full viewport range */
-    --scale-factor: clamp(0.35, calc(100vw / var(--base-width)), 2.0);
-    /* Apply scaling transformation with proper origin */
-    transform: scale(var(--scale-factor));
-    transform-origin: center top;
-    /* Smooth scaling transitions that respect user preferences */
-    transition: transform 0.2s ease-out;
-    /* Container sizing to accommodate scaling */
-    width: var(--base-width);
+    /* Container for responsive hero sections - scaling handled by React */
     margin: 0 auto;
-    /* Dynamic container height adjustment based on scale factor */
-    margin-bottom: calc((1 - var(--scale-factor)) * -40vh);
-    /* Ensure 8px grid system is maintained at all scales */
     box-sizing: border-box;
-    /* Prevent horizontal overflow during scaling */
-    overflow-x: visible;
-    /* Ensure proper scaling behavior */
     position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    /* Ensure content is centered */
+    align-items: flex-start;
+}
+
+
+/* 🔒 FIXED DIMENSIONS - Event cards should never scale */
+
+.eventcardsmall {
+    width: 250px !important;
+    height: 85px !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+    min-height: 85px !important;
+    max-height: 85px !important;
+    /* Prevent any external scaling or resizing */
+}
+
+
+/* Prevent scaling on event card children */
+
+.eventcardsmall * {
+    transform: none !important;
+}
+
+
+/* 🔒 FIXED GAP - Events and Text us section gap should never scale */
+
+.events-text-container {
+    gap: 18px !important;
+    transform: none !important;
+    /* Prevent any external scaling on the container */
+}
+
+
+/* 🔒 FIXED DIMENSIONS - Event list container should maintain fixed width */
+
+.events-text-container>div:first-child {
+    width: 507px !important;
+    flex-shrink: 0 !important;
+    transform: none !important;
 }
 
 
@@ -36,8 +65,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding-top: 20px;
+    padding: 0;
+    /* Remove padding to prevent layout shifts */
     background: #000;
+    width: 100%;
+    position: relative;
+    margin: 0 auto;
+    /* Ensure proper centering */
+}
+
+
+/* Ensure all child elements scale properly */
+
+.scalable-homepage-container * {
+    box-sizing: border-box;
 }
 
 
@@ -73,6 +114,39 @@
 }
 
 
+/* Small viewport handling */
+
+@media (max-width: 480px) {
+    /* Transform handled by JavaScript */
+    .scalable-homepage-wrapper {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+
+/* Extra small viewport handling */
+
+@media (max-width: 360px) {
+    /* Transform handled by JavaScript */
+    .scalable-homepage-wrapper {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+}
+
+
+/* Ultra small viewport handling */
+
+@media (max-width: 280px) {
+    /* Transform handled by JavaScript */
+    .scalable-homepage-wrapper {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+}
+
+
 /* Scaling behavior verification - shows current scale factor for debugging */
 
 .scalable-homepage-container::before {
@@ -97,6 +171,41 @@
 
 .font-inter {
     font-family: 'Inter', sans-serif;
+}
+
+
+/* Prevent horizontal overflow on body */
+
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* Ensure React root is properly centered */
+
+#react-root {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0 auto;
+}
+
+
+/* Prevent layout shifts on load */
+
+.desktop {
+    transform: none !important;
+    /* Prevent any unwanted transforms */
+    left: auto !important;
+    /* Override any fixed positioning */
+    right: auto !important;
+    margin: 0 auto !important;
+    /* Force centering */
 }
 
 
