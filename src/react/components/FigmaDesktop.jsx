@@ -507,9 +507,9 @@ const FigmaDesktop = () => {
           width: '100%',
           maxWidth: '829px',
           height: '299px',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
-          gap: '40px',
+          gap: '28px',
           margin: '20px auto 0 auto',
           padding: '0 16px'
         }}
@@ -545,7 +545,7 @@ const FigmaDesktop = () => {
               width: '299px',
               justifyContent: 'space-between',
               padding: '0px 12px',
-              gap: '45px'
+              gap: '16px'
             }}
           >
             {/* Frame 3 - Left info */}
@@ -627,7 +627,7 @@ const FigmaDesktop = () => {
             <div
               style={{
                 display: 'flex',
-                width: '102px',
+                width: '90px',
                 height: '36px',
                 padding: '4px',
                 justifyContent: 'center',
@@ -638,11 +638,11 @@ const FigmaDesktop = () => {
               <div
                 style={{
                   display: 'flex',
-                  width: '102px',
+                  width: '90px',
                   height: '36px',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '8px',
                   borderRadius: '29px',
                   background: 'rgba(56, 56, 56, 0.80)',
                   cursor: 'pointer'
@@ -707,8 +707,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '511px',
-              height: '289.97px',
+              width: '510px',
+              height: '299px',
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray 0px 0px / 100% 100% no-repeat`
             }}
@@ -805,7 +805,7 @@ const FigmaDesktop = () => {
           width: '100%',
           maxWidth: '825px',
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           gap: '20px',
           margin: '16px auto 0 auto',
           padding: '0 16px'
@@ -833,6 +833,7 @@ const FigmaDesktop = () => {
             height: '32px',
             flexDirection: 'column',
             justifyContent: 'center',
+            alignItems: 'flex-start',
             gap: '4px'
           }}
         >
@@ -1362,8 +1363,9 @@ const FigmaDesktop = () => {
             display: 'flex',
             width: '299px',
             flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px'
+            alignItems: 'flex-start',
+            gap: '4px',
+            alignSelf: 'flex-end'
           }}
         >
           {/* Phone Number Input */}
@@ -1374,7 +1376,7 @@ const FigmaDesktop = () => {
               height: '36px',
               padding: '0px 2px',
               flexDirection: 'column',
-              justifyContent: 'space-between',
+              justifyContent: 'center',
               alignItems: 'center',
               borderRadius: '31px',
               background: '#232323'
