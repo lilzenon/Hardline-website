@@ -787,7 +787,7 @@ const FigmaDesktop = () => {
               width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,  // Match container constraints
               height: `${Math.min(scaledDimensions.rightHeroHeight, 350)}px`,  // Match container constraints
               borderRadius: '24px',
-              background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray 0px 0px / 100% 100% no-repeat`
+              background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray center / cover no-repeat`
             }}
           />
 
