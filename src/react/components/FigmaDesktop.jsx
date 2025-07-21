@@ -509,7 +509,7 @@ const FigmaDesktop = () => {
           height: '299px',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: '24px',
+          gap: '40px',
           margin: '20px auto 0 auto',
           padding: '0 16px'
         }}
@@ -564,11 +564,12 @@ const FigmaDesktop = () => {
                 style={{
                   display: 'flex',
                   alignSelf: 'stretch',
-                  flexWrap: 'wrap',
-                  gap: '4px'
+                  alignItems: 'center',
+                  gap: '4px',
+                  minWidth: 0
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
                   <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
                 </svg>
                 <span
@@ -577,7 +578,12 @@ const FigmaDesktop = () => {
                     fontFamily: 'Inter',
                     fontSize: '10px',
                     fontWeight: '200',
-                    lineHeight: 'normal'
+                    lineHeight: 'normal',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    minWidth: 0
                   }}
                 >
                   {formattedDate}
@@ -589,11 +595,12 @@ const FigmaDesktop = () => {
                 style={{
                   display: 'flex',
                   alignSelf: 'stretch',
-                  flexWrap: 'wrap',
-                  gap: '4px'
+                  alignItems: 'center',
+                  gap: '4px',
+                  minWidth: 0
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
                   <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
                   <circle cx="5" cy="4" r="1" fill="#FFF"/>
                 </svg>
@@ -603,7 +610,12 @@ const FigmaDesktop = () => {
                     fontFamily: 'Inter',
                     fontSize: '10px',
                     fontWeight: '200',
-                    lineHeight: 'normal'
+                    lineHeight: 'normal',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    minWidth: 0
                   }}
                 >
                   {formatLocation(mostRecentEvent?.event_address || homeSettings?.event_address)}
