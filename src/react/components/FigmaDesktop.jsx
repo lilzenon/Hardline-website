@@ -506,13 +506,13 @@ const FigmaDesktop = () => {
           display: 'flex',
           width: '100%',
           maxWidth: '829px',
-          minHeight: '299px',
+          height: '299px',
           justifyContent: 'center',
           alignItems: 'center',
           gap: '32px',
           margin: '20px auto 0 auto',
           padding: '0 16px',
-          flexWrap: 'wrap'
+          flexDirection: 'row'
         }}
       >
         {/* Frame 20 - Left Hero */}

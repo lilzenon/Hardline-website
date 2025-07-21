@@ -1,25 +1,27 @@
 /* React Homepage Styles - Figma-Exact Implementation */
 
 
-/* 🎯 RESPONSIVE SCALING SYSTEM - Integrated with breakpoints */
+/* 🎯 ENHANCED RESPONSIVE SCALING SYSTEM - Proportional zoom-like scaling */
 
 .scalable-homepage-container {
     /* Base design width including padding (825px + 32px padding) */
     --base-width: 857px;
-    /* Calculate scale factor with constraints and breakpoint integration */
+    /* Enhanced scale factor calculation for smooth proportional scaling */
     --scale-factor: clamp(0.37, calc(100vw / var(--base-width)), 1.5);
-    /* Apply scaling transformation */
+    /* Apply scaling transformation with proper origin */
     transform: scale(var(--scale-factor));
     transform-origin: center top;
-    /* Smooth scaling transitions that respect prefers-reduced-motion */
+    /* Smooth scaling transitions that respect user preferences */
     transition: transform 0.2s ease-out;
     /* Container sizing to accommodate scaling */
     width: var(--base-width);
     margin: 0 auto;
-    /* Adjust container height based on scale factor */
+    /* Adjust container height based on scale factor to prevent overflow */
     margin-bottom: calc((1 - var(--scale-factor)) * -50vh);
-    /* Ensure 8px grid system is maintained */
+    /* Ensure 8px grid system is maintained at all scales */
     box-sizing: border-box;
+    /* Prevent horizontal overflow during scaling */
+    overflow-x: visible;
 }
 
 
@@ -144,7 +146,7 @@
 }
 
 
-/* Mobile First - 320px to 767px - Enhanced for scaling integration */
+/* Mobile First - 320px to 767px - Enhanced for proportional scaling */
 
 @media (max-width: 767px) {
     .desktop {
@@ -153,14 +155,15 @@
         padding: 0 8px !important;
         overflow-x: hidden;
     }
-    /* Stack hero sections with proper spacing on mobile */
+    /* Stack hero sections vertically on mobile with proper spacing */
     .desktop>div:nth-child(2)>div:nth-child(2) {
         flex-direction: column !important;
         gap: 16px !important;
         height: auto !important;
         min-height: 614px !important;
+        align-items: center !important;
     }
-    /* Ensure hero sections never overlap */
+    /* Center hero sections on mobile */
     .desktop>div:nth-child(2)>div:nth-child(2)>div {
         margin: 8px auto !important;
     }
@@ -173,58 +176,103 @@
     .scalable-homepage-container button,
     .scalable-homepage-container input,
     .scalable-homepage-container [role="button"] {
-        min-height: calc(44px / var(--scale-factor));
-        min-width: calc(44px / var(--scale-factor));
+        min-height: calc(44px / var(--scale-factor)) !important;
+        min-width: calc(44px / var(--scale-factor)) !important;
     }
-    /* Maintain 8px grid system when scaled */
+    /* Maintain 8px grid system proportions when scaled */
     .scalable-homepage-container * {
         box-sizing: border-box;
     }
 }
 
 
-/* Tablet - 768px to 1023px */
+/* Tablet - 768px to 1023px - Side-by-side hero sections */
 
 @media (min-width: 768px) and (max-width: 1023px) {
     .desktop {
         padding: 0 24px !important;
     }
-    /* Prevent hero sections from overlapping on tablet */
+    /* Keep hero sections side-by-side on tablet with proper spacing */
     .desktop>div:nth-child(2)>div:nth-child(2) {
+        flex-direction: row !important;
         gap: 24px !important;
-        justify-content: space-between !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 299px !important;
     }
-    /* Adjust hero section sizes for tablet */
+    /* Maintain proportional scaling for hero sections on tablet */
     .desktop>div:nth-child(2)>div:nth-child(2)>div:first-child {
         width: 280px !important;
         min-width: 280px !important;
         height: 280px !important;
+        flex-shrink: 0 !important;
     }
     .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child {
         width: 420px !important;
         min-width: 300px !important;
+        height: 280px !important;
+        flex-shrink: 1 !important;
     }
-    /* Adjust video background to match container */
+    /* Adjust video background to match container proportionally */
     .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child>div:first-child,
     .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child>div:nth-child(2) {
         width: 100% !important;
+        height: 280px !important;
     }
 }
 
 
-/* Desktop - 1024px to 1455px */
+/* Desktop - 1024px to 1455px - Full side-by-side hero layout */
 
 @media (min-width: 1024px) and (max-width: 1455px) {
     .desktop {
         padding: 0 32px !important;
     }
+    /* Ensure hero sections remain side-by-side on desktop */
+    .desktop>div:nth-child(2)>div:nth-child(2) {
+        flex-direction: row !important;
+        gap: 32px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 299px !important;
+    }
+    /* Full-size hero sections on desktop */
+    .desktop>div:nth-child(2)>div:nth-child(2)>div:first-child {
+        width: 299px !important;
+        height: 299px !important;
+        flex-shrink: 0 !important;
+    }
+    .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child {
+        width: 498px !important;
+        height: 299px !important;
+        flex-shrink: 0 !important;
+    }
 }
 
 
-/* Large Desktop - 1456px+ */
+/* Large Desktop - 1456px+ - Optimal side-by-side hero layout */
 
 @media (min-width: 1456px) {
     .desktop {
         padding: 0 !important;
+    }
+    /* Maintain side-by-side hero sections on large desktop */
+    .desktop>div:nth-child(2)>div:nth-child(2) {
+        flex-direction: row !important;
+        gap: 32px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        height: 299px !important;
+    }
+    /* Full-size hero sections on large desktop */
+    .desktop>div:nth-child(2)>div:nth-child(2)>div:first-child {
+        width: 299px !important;
+        height: 299px !important;
+        flex-shrink: 0 !important;
+    }
+    .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child {
+        width: 498px !important;
+        height: 299px !important;
+        flex-shrink: 0 !important;
     }
 }
