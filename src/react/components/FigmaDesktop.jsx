@@ -17,6 +17,11 @@ const FigmaDesktop = () => {
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
 
+  // Get the most recent event for hero sections
+  const mostRecentEvent = useMemo(() => {
+    return featuredEvents.length > 0 ? featuredEvents[0] : null;
+  }, [featuredEvents]);
+
   const fetchHomepageData = useCallback(async () => {
     try {
       setLoading(true);
@@ -79,7 +84,23 @@ const FigmaDesktop = () => {
 
       setHomeSettings(homeSettings);
       setFeaturedEvents(validatedEvents);
-      setFormattedDate(data.formattedDate || "March 29th, 9:00 P.M.");
+
+      // Use most recent event data for hero sections if available
+      let heroFormattedDate = data.formattedDate || "March 29th, 9:00 P.M.";
+      if (validatedEvents.length > 0 && validatedEvents[0].event_date) {
+        const eventDate = new Date(validatedEvents[0].event_date);
+        const options = {
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        };
+        heroFormattedDate = eventDate.toLocaleDateString('en-US', options)
+          .replace(',', 'th,'); // Add 'th' suffix
+      }
+
+      setFormattedDate(heroFormattedDate);
 
     } catch (err) {
       console.error('❌ Error fetching homepage data:', err);
@@ -563,7 +584,7 @@ const FigmaDesktop = () => {
                     lineHeight: 'normal'
                   }}
                 >
-                  {homeSettings?.event_address || "Asbury Park, NJ"}
+                  {mostRecentEvent?.event_address || homeSettings?.event_address || "Asbury Park, NJ"}
                 </span>
               </div>
             </div>
@@ -613,13 +634,13 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: '155px',
+              top: '180px',
               display: 'flex',
               width: '159px',
-              height: '93px',
-              padding: '10px 10px 0px 12px',
-              justifyContent: 'stretch',
-              alignItems: 'stretch',
+              height: '68px',
+              padding: '8px 12px',
+              justifyContent: 'flex-start',
+              alignItems: 'flex-start',
               gap: '10px'
             }}
           >
@@ -629,11 +650,11 @@ const FigmaDesktop = () => {
                 fontFamily: 'Inter',
                 fontSize: '24px',
                 fontWeight: '800',
-                lineHeight: 'normal',
+                lineHeight: '1.1',
                 flex: '1'
               }}
             >
-              {homeSettings?.event_title || "EVENT TITLE"}
+              {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
             </div>
           </div>
         </div>
@@ -664,13 +685,13 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: '257px',
+              top: '245px',
               display: 'flex',
               width: '505px',
-              height: '32px',
-              padding: '0px 16px',
+              height: '44px',
+              padding: '8px 16px',
               justifyContent: 'space-between',
-              alignItems: 'center',
+              alignItems: 'flex-end',
               gap: '16px'
             }}
           >
@@ -678,66 +699,36 @@ const FigmaDesktop = () => {
             <div
               style={{
                 display: 'flex',
-                height: '32px',
                 flexDirection: 'column',
-                justifyContent: 'flex-end'
+                justifyContent: 'flex-end',
+                gap: '4px',
+                flex: '1'
               }}
             >
+              {/* Title */}
               <div
                 style={{
-                  width: '197px',
-                  height: '32px'
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: '24px',
+                  fontWeight: '800',
+                  lineHeight: '1.1'
                 }}
               >
-                {/* Date */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '5px',
-                    top: '17px',
-                    display: 'flex',
-                    width: '192px',
-                    height: '15px',
-                    padding: '2px 0px 0px',
-                    alignItems: 'center',
-                    gap: '-9px'
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'flex',
-                      width: '146px',
-                      height: '15px',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '10px',
-                      fontWeight: '200',
-                      lineHeight: 'normal'
-                    }}
-                  >
-                    {formattedDate}
-                  </span>
-                </div>
+                {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
+              </div>
 
-                {/* Title */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '0px',
-                    top: '0px',
-                    width: '192px',
-                    height: '17px',
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '24px',
-                    fontWeight: '800',
-                    lineHeight: 'normal'
-                  }}
-                >
-                  {homeSettings?.event_title || "EVENT TITLE"}
-                </div>
+              {/* Date */}
+              <div
+                style={{
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: '10px',
+                  fontWeight: '200',
+                  lineHeight: 'normal'
+                }}
+              >
+                {formattedDate}
               </div>
             </div>
 
