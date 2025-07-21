@@ -16,6 +16,76 @@ const FigmaDesktop = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [scaledDimensions, setScaledDimensions] = useState({
+    heroWidth: 299,
+    heroHeight: 299,
+    rightHeroWidth: 498,
+    rightHeroHeight: 299,
+    gap: 32,
+    containerWidth: 825,
+    // Fixed layout dimensions that should never scale
+    eventsTextGap: 18,  // Always 18px gap between Events and Text us
+    eventCardWidth: 250,  // Always 250px event card width
+    eventCardHeight: 85,   // Always 85px event card height
+    scale: 1
+  });
+
+  // Calculate responsive dimensions based on viewport
+  useEffect(() => {
+    const calculateDimensions = () => {
+      const viewportWidth = window.innerWidth;
+      const padding = viewportWidth <= 360 ? 16 : viewportWidth <= 480 ? 24 : 32;
+      const availableWidth = viewportWidth - padding;
+
+      // Base dimensions from Figma design
+      const baseHeroWidth = 299;
+      const baseHeroHeight = 299;
+      const baseRightHeroWidth = 498;
+      const baseRightHeroHeight = 299;
+      const baseGap = 32;
+      const baseContainerWidth = 825; // Fixed container width for alignment
+
+      // Calculate scale factor for hero sections only
+      let scale = availableWidth / (baseHeroWidth + baseGap + baseRightHeroWidth);
+
+      // Apply constraints - keep minimum but add reasonable maximum for desktop
+      if (scale < 0.25) scale = 0.25;  // Minimum for small screens
+      if (scale > 1.25) scale = 1.25;    // Maximum for desktop (prevents oversized content)
+
+      const scaledDimensions = {
+        heroWidth: Math.round(baseHeroWidth * scale),
+        heroHeight: Math.round(baseHeroHeight * scale),
+        rightHeroWidth: Math.round(baseRightHeroWidth * scale),
+        rightHeroHeight: Math.round(baseRightHeroHeight * scale),
+        gap: Math.round(baseGap * scale),
+        // Container width stays fixed for alignment
+        containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
+        // Fixed layout dimensions that should never scale
+        eventsTextGap: 18,  // Always 18px gap between Events and Text us
+        eventCardWidth: 250,  // Always 250px event card width
+        eventCardHeight: 85,   // Always 85px event card height
+        scale: scale
+      };
+
+      // Update mobile state based on whether events list can fit alongside text us section
+      // Events list needs ~507px + Text us needs ~299px + gap ~18px = ~824px minimum
+      setIsMobile(viewportWidth <= 850);
+
+      setScaledDimensions(scaledDimensions);
+      console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${viewportWidth}px (max 1.25x)`, scaledDimensions);
+    };
+
+    // Initial calculation
+    calculateDimensions();
+
+    // Update on resize
+    window.addEventListener('resize', calculateDimensions);
+
+    return () => {
+      window.removeEventListener('resize', calculateDimensions);
+    };
+  }, []);
 
   // Get the most recent event for hero sections
   const mostRecentEvent = useMemo(() => {
@@ -352,7 +422,7 @@ const FigmaDesktop = () => {
           <div
             style={{
               width: '100%',
-              maxWidth: '825px',
+              maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
               position: 'relative',
               margin: '0 auto',
               padding: '0 16px'
@@ -366,7 +436,7 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '829px',
+          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
           height: '48px',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -505,11 +575,11 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '829px',
-          height: '299px',
+          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
+          height: `${scaledDimensions.heroHeight}px`,  // Use scaled hero height
           justifyContent: 'center',
           alignItems: 'center',
-          gap: '32px',
+          gap: `${scaledDimensions.gap}px`,  // Use scaled gap
           margin: '20px auto 0 auto',
           padding: '0 16px',
           flexDirection: 'row'
@@ -518,10 +588,10 @@ const FigmaDesktop = () => {
         {/* Frame 20 - Left Hero */}
         <div
           style={{
-            width: '299px',
-            height: '299px',
+            width: `${scaledDimensions.heroWidth}px`,
+            height: `${scaledDimensions.heroHeight}px`,
             position: 'relative',
-            minWidth: '299px',
+            minWidth: `${scaledDimensions.heroWidth}px`,
             flexShrink: 0,
             margin: '0 auto'
           }}
@@ -532,8 +602,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '299px',
-              height: '299px',
+              width: `${scaledDimensions.heroWidth}px`,
+              height: `${scaledDimensions.heroHeight}px`,
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`
             }}
@@ -544,9 +614,9 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: '252px',
+              top: `${scaledDimensions.heroHeight - 47}px`,  // Scale position relative to hero height
               display: 'flex',
-              width: '299px',
+              width: `${scaledDimensions.heroWidth}px`,
               justifyContent: 'space-between',
               padding: '0px 12px',
               gap: '16px'
@@ -700,10 +770,10 @@ const FigmaDesktop = () => {
         {/* Video Hero - Right */}
         <div
           style={{
-            width: '498px',
-            height: '299px',
+            width: `${scaledDimensions.rightHeroWidth}px`,
+            height: `${scaledDimensions.rightHeroHeight}px`,
             position: 'relative',
-            minWidth: '300px',
+            minWidth: `${Math.max(scaledDimensions.rightHeroWidth, 200)}px`,
             flexShrink: 1,
             margin: '0 auto'
           }}
@@ -714,8 +784,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '498px',
-              height: '299px',
+              width: `${scaledDimensions.rightHeroWidth}px`,
+              height: `${scaledDimensions.rightHeroHeight}px`,
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray 0px 0px / 100% 100% no-repeat`
             }}
@@ -726,9 +796,9 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: '245px',
+              top: `${scaledDimensions.rightHeroHeight - 54}px`,  // Scale position relative to hero height
               display: 'flex',
-              width: '498px',
+              width: `${scaledDimensions.rightHeroWidth}px`,
               height: '44px',
               padding: '8px 16px',
               justifyContent: 'space-between',
@@ -810,7 +880,7 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '825px',
+          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
           justifyContent: 'flex-start',
           alignItems: 'flex-start',
           margin: '16px auto 0 auto',
@@ -843,12 +913,13 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: '825px',
-          gap: '18px',
-          margin: '8px auto 0 auto',
-          padding: '0 16px',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start'
+          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
+          gap: `${scaledDimensions.eventsTextGap}px`,  // Fixed 18px gap, no scaling
+          margin: '8px auto 0 auto',  // Fixed margin, no scaling
+          padding: '0 16px',  // Match hero sections and navigation padding
+          justifyContent: 'flex-start',  // Use flex-start with fixed gap instead of space-between
+          alignItems: 'flex-start',
+          flexDirection: isMobile ? 'column' : 'row'  // Stack vertically on mobile
         }}
       >
         {/* Event List */}
