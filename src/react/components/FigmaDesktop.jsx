@@ -45,10 +45,12 @@ const FigmaDesktop = () => {
       const baseRightHeroHeight = 299;
       const baseGap = 32;
       const baseContainerWidth = 825; // Fixed container width for alignment
+      const containerPadding = 32; // 16px on each side
+      const availableContainerWidth = baseContainerWidth - containerPadding; // 793px
 
-      // Calculate scale factor for hero sections to fit within 825px container
+      // Calculate scale factor for hero sections to fit within available container width
       const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
-      let scale = Math.min(availableWidth / totalHeroWidth, baseContainerWidth / totalHeroWidth);
+      let scale = Math.min(availableWidth / totalHeroWidth, availableContainerWidth / totalHeroWidth);
 
       // Apply constraints - keep minimum but add reasonable maximum for desktop
       if (scale < 0.25) scale = 0.25;  // Minimum for small screens
@@ -62,6 +64,9 @@ const FigmaDesktop = () => {
         gap: Math.round(baseGap * scale),
         // Container width stays fixed for alignment
         containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
+        // Scale events and text sections to match hero scaling
+        eventsWidth: Math.round(507 * scale),  // Scale events section width
+        textUsWidth: Math.round(299 * scale),  // Scale text us section width
         // Fixed layout dimensions that should never scale
         eventsTextGap: 18,  // Always 18px gap between Events and Text us
         eventCardWidth: 250,  // Always 250px event card width
@@ -933,7 +938,7 @@ const FigmaDesktop = () => {
         <div
           style={{
             display: 'flex',
-            width: '507px',  // Fixed width as per Figma design
+            width: `${scaledDimensions.eventsWidth}px`,  // Use scaled width
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'stretch',
@@ -1395,11 +1400,11 @@ const FigmaDesktop = () => {
         <div
           style={{
             display: 'flex',
-            width: '299px',
+            width: `${scaledDimensions.textUsWidth}px`,  // Use scaled width
             flexDirection: 'column',
             alignItems: 'flex-start',
             gap: '8px',
-            flexShrink: 0  // Prevent shrinking, maintain fixed width
+            flexShrink: 0  // Prevent shrinking, maintain scaled width
           }}
         >
           {/* Text us Title */}
