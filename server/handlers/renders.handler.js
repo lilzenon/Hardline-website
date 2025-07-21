@@ -521,6 +521,20 @@ async function eventEdit(req, res) {
     }
 }
 
+// 🚀 REACT HOMEPAGE - Serve React app instead of Handlebars
+async function reactHomepage(req, res) {
+    try {
+        // Serve the React built HTML file
+        const path = require('path');
+        const reactIndexPath = path.join(__dirname, '../../static/react/index.html');
+        res.sendFile(reactIndexPath);
+    } catch (error) {
+        console.error('❌ React homepage error:', error);
+        // Fallback to Handlebars homepage
+        return home(req, res);
+    }
+}
+
 module.exports = {
     addDomainAdmin,
     addDomainForm,
@@ -547,6 +561,7 @@ module.exports = {
     login,
     logout,
     notFound,
+    reactHomepage,
     resetPassword,
     resetPasswordSetNewPassword,
     settings,

@@ -1,0 +1,91 @@
+/* React Homepage Styles - Exact Figma Implementation */
+
+
+/* Custom styles for React components */
+
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
+
+
+/* FRAME: Desktop */
+
+.desktop {
+    width: 1456px;
+    height: 982px;
+}
+
+
+/* RECTANGLE: Rectangle 3 */
+
+.rectangle-3 {
+    width: 1456px;
+    height: 982px;
+    flex-shrink: 0;
+    background: #000;
+}
+
+
+/* Video Hero specific styles */
+
+.video-hero {
+    flex-shrink: 0;
+}
+
+.video-hero-text-box {
+    backdrop-filter: blur(4px);
+}
+
+
+/* Event Card styles */
+
+.event-card {
+    transition: all 0.2s ease-in-out;
+}
+
+.event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Line clamp utilities */
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+
+/* Responsive adjustments */
+
+@media (max-width: 768px) {
+    .video-hero {
+        max-width: 100%;
+        margin: 0 16px;
+    }
+    .video-hero-title {
+        font-size: 20px !important;
+    }
+    .video-hero-subtitle {
+        font-size: 9px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-hero {
+        height: 200px;
+    }
+    .video-hero-title {
+        font-size: 18px !important;
+    }
+}

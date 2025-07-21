@@ -143,6 +143,7 @@ app.use((req, res, next) => {
 // serve static
 app.use("/images", express.static("custom/images"));
 app.use("/css", express.static("custom/css", { extensions: ["css"] }));
+app.use("/react", express.static("static/react"));
 app.use(express.static("static"));
 
 // Session security middleware - disabled in development to prevent blocking during testing

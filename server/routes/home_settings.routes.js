@@ -44,6 +44,12 @@ router.get(
     asyncHandler(homeSettings.getHomepageData)
 );
 
+// 🚀 HOMEPAGE DATA ENDPOINT - For React app
+router.get(
+    "/homepage-data",
+    asyncHandler(homeSettings.getHomepageData)
+);
+
 // 🚀 DEBUG ENDPOINT - Check events status
 router.get(
     "/debug-events",

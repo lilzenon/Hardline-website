@@ -14,18 +14,27 @@ const env = require("../env");
 
 const router = Router();
 
-// pages - 🚀 FIXED: Use home template for root route
+// pages - 🚀 NEW: Use React homepage for root route
 router.get(
     "/",
     asyncHandler(auth.jwtLoosePage),
     asyncHandler(helpers.adminSetup),
     asyncHandler(locals.user),
-    asyncHandler(renders.home)
+    asyncHandler(renders.reactHomepage)
 );
 
-// Home page with modern navigation
+// Home page with modern navigation - React version
 router.get(
     "/home",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
+// 🚀 BACKUP: Handlebars homepage fallback
+router.get(
+    "/home-handlebars",
     asyncHandler(auth.jwtLoosePage),
     asyncHandler(helpers.adminSetup),
     asyncHandler(locals.user),
