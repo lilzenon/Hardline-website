@@ -48,9 +48,16 @@ const FigmaDesktop = () => {
       const containerPadding = 32; // 16px on each side
       const availableContainerWidth = baseContainerWidth - containerPadding; // 793px
 
-      // Calculate scale factor for hero sections to fit within available container width
+      // Calculate scale factor to fit both hero sections and events/text sections
       const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
-      let scale = Math.min(availableWidth / totalHeroWidth, availableContainerWidth / totalHeroWidth);
+      const baseEventsWidth = 507;
+      const baseTextUsWidth = 299;
+      const baseEventsTextGap = 18;
+      const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 824px
+
+      // Use the more restrictive constraint to ensure both sections fit
+      const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
+      let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
 
       // Apply constraints - keep minimum but add reasonable maximum for desktop
       if (scale < 0.25) scale = 0.25;  // Minimum for small screens
@@ -65,10 +72,9 @@ const FigmaDesktop = () => {
         // Container width stays fixed for alignment
         containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
         // Scale events and text sections to match hero scaling
-        eventsWidth: Math.round(507 * scale),  // Scale events section width
-        textUsWidth: Math.round(299 * scale),  // Scale text us section width
-        // Fixed layout dimensions that should never scale
-        eventsTextGap: 18,  // Always 18px gap between Events and Text us
+        eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
+        textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
+        eventsTextGap: Math.round(baseEventsTextGap * scale),  // Scale gap between Events and Text us
         eventCardWidth: 250,  // Always 250px event card width
         eventCardHeight: 85,   // Always 85px event card height
         scale: scale
@@ -929,8 +935,9 @@ const FigmaDesktop = () => {
           width: '100%',
           margin: '8px 0 0 0',  // Remove auto margins since parent handles centering
           padding: '0',  // Remove padding since parent handles it
-          justifyContent: 'space-between',  // Space between to match hero alignment
+          justifyContent: 'flex-start',  // Use flex-start with gap for proper spacing
           alignItems: 'flex-start',
+          gap: `${scaledDimensions.eventsTextGap}px`,  // Scaled gap between events and text
           flexDirection: isMobile ? 'column' : 'row'  // Stack vertically on mobile
         }}
       >
