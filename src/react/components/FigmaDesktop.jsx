@@ -438,7 +438,7 @@ const FigmaDesktop = () => {
           width: '100%',
           maxWidth: '825px',  // Fixed container width for alignment
           height: '48px',
-          justifyContent: 'space-between',
+          justifyContent: 'space-between',  // Keep logo left, pills right
           alignItems: 'center',
           margin: '35px auto 0 auto',
           padding: '0 16px'
@@ -460,7 +460,8 @@ const FigmaDesktop = () => {
           style={{
             position: 'relative',
             width: '226.49px',
-            height: '34px'
+            height: '34px',
+            marginRight: `${Math.max(0, (825 - 32 - Math.min(scaledDimensions.heroWidth, 350) - scaledDimensions.gap - Math.min(scaledDimensions.rightHeroWidth, 450)) / 2)}px`  // Align with hero sections' right edge
           }}
         >
           {/* Background pill container */}
@@ -1392,7 +1393,8 @@ const FigmaDesktop = () => {
             width: '299px',
             flexDirection: 'column',
             alignItems: 'flex-start',
-            gap: '8px'
+            gap: '8px',
+            marginLeft: isMobile ? '0' : `${Math.max(0, (825 - 32 - 299 - Math.min(scaledDimensions.rightHeroWidth, 450)) / 2 + Math.min(scaledDimensions.heroWidth, 350) + scaledDimensions.gap)}px`  // Align with hero sections' right edge on desktop
           }}
         >
           {/* Text us Title */}
