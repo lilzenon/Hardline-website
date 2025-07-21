@@ -46,8 +46,9 @@ const FigmaDesktop = () => {
       const baseGap = 32;
       const baseContainerWidth = 825; // Fixed container width for alignment
 
-      // Calculate scale factor for hero sections only
-      let scale = availableWidth / (baseHeroWidth + baseGap + baseRightHeroWidth);
+      // Calculate scale factor for hero sections to fit within 825px container
+      const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
+      let scale = Math.min(availableWidth / totalHeroWidth, baseContainerWidth / totalHeroWidth);
 
       // Apply constraints - keep minimum but add reasonable maximum for desktop
       if (scale < 0.25) scale = 0.25;  // Minimum for small screens
@@ -580,8 +581,9 @@ const FigmaDesktop = () => {
           display: 'flex',
           width: '100%',
           height: `${scaledDimensions.heroHeight}px`,  // Scaled height to push content down
-          justifyContent: 'space-between',  // Space between to align with navigation
+          justifyContent: 'flex-start',  // Use flex-start with gap for precise control
           alignItems: 'center',
+          gap: `${scaledDimensions.gap}px`,  // Scaled gap between heroes
           margin: '20px 0 0 0',  // Remove auto margins since parent handles centering
           padding: '0',  // Remove padding since parent handles it
           flexDirection: 'row'
@@ -590,10 +592,9 @@ const FigmaDesktop = () => {
         {/* Frame 20 - Left Hero */}
         <div
           style={{
-            width: `${Math.min(scaledDimensions.heroWidth, 350)}px`,  // Constrain to max 350px
-            height: `${Math.min(scaledDimensions.heroHeight, 350)}px`,  // Constrain to max 350px
+            width: `${scaledDimensions.heroWidth}px`,  // Use scaled dimensions
+            height: `${scaledDimensions.heroHeight}px`,  // Use scaled dimensions
             position: 'relative',
-            minWidth: `${Math.min(scaledDimensions.heroWidth, 200)}px`,  // Min 200px
             flexShrink: 0,
             margin: '0'  // Remove auto margin for precise alignment
           }}
@@ -604,8 +605,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${Math.min(scaledDimensions.heroWidth, 350)}px`,  // Match container constraints
-              height: `${Math.min(scaledDimensions.heroHeight, 350)}px`,  // Match container constraints
+              width: `${scaledDimensions.heroWidth}px`,  // Use scaled dimensions
+              height: `${scaledDimensions.heroHeight}px`,  // Use scaled dimensions
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`
             }}
@@ -761,7 +762,11 @@ const FigmaDesktop = () => {
                 fontSize: '24px',
                 fontWeight: '800',
                 lineHeight: '1.1',
-                flex: '1'
+                flex: '1',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: `${scaledDimensions.heroWidth - 40}px`  // Container width minus padding
               }}
             >
               {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
@@ -772,11 +777,10 @@ const FigmaDesktop = () => {
         {/* Video Hero - Right */}
         <div
           style={{
-            width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,  // Constrain to max 450px
-            height: `${Math.min(scaledDimensions.rightHeroHeight, 350)}px`,  // Constrain to max 350px
+            width: `${scaledDimensions.rightHeroWidth}px`,  // Use scaled dimensions
+            height: `${scaledDimensions.rightHeroHeight}px`,  // Use scaled dimensions
             position: 'relative',
-            minWidth: `${Math.min(scaledDimensions.rightHeroWidth, 250)}px`,  // Min 250px
-            flexShrink: 1,
+            flexShrink: 0,
             margin: '0'  // Remove auto margin for precise alignment
           }}
         >
@@ -786,8 +790,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,  // Match container constraints
-              height: `${Math.min(scaledDimensions.rightHeroHeight, 350)}px`,  // Match container constraints
+              width: `${scaledDimensions.rightHeroWidth}px`,  // Use scaled dimensions
+              height: `${scaledDimensions.rightHeroHeight}px`,  // Use scaled dimensions
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray center / cover no-repeat`
             }}
@@ -825,7 +829,11 @@ const FigmaDesktop = () => {
                   fontFamily: 'Inter',
                   fontSize: '24px',
                   fontWeight: '800',
-                  lineHeight: '1.1'
+                  lineHeight: '1.1',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: `${scaledDimensions.rightHeroWidth - 60}px`  // Container width minus padding
                 }}
               >
                 {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
