@@ -140,9 +140,10 @@ class SessionSecurityService {
     securityMiddleware() {
         return (req, res, next) => {
             try {
-                // Skip security checks for health endpoints and webhooks
+                // Skip security checks for health endpoints, webhooks, and localhost
                 if (req.path.startsWith('/api/monitoring/') ||
-                    req.path.startsWith('/api/webhooks/')) {
+                    req.path.startsWith('/api/webhooks/') ||
+                    req.ip === '::1' || req.ip === '127.0.0.1') {
                     return next();
                 }
 

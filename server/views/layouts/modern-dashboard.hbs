@@ -34,8 +34,11 @@
     <!-- TailwindCSS -->
     <link rel="stylesheet" href="/css/tailwind.css">
 
-    <!-- Custom Toggle Switch Styles -->
-    <style>
+    <!-- Modern Navigation Styles -->
+    <link rel="stylesheet" href="/css/modern-navigation.css">
+
+
+
         /* Modern Toggle Switch */
         .toggle-switch {
             position: relative;
@@ -85,6 +88,12 @@
         .toggle-switch:active {
             transform: scale(0.98);
         }
+
+
+
+
+
+
     </style>
 
     <!-- HTMX -->
@@ -96,6 +105,8 @@
 
     <!-- Mobile Delete Button Optimization -->
     <link rel="stylesheet" href="/css/mobile-delete-buttons.css">
+
+
 
     <!-- Global Error Handler -->
     <script>
@@ -199,10 +210,10 @@
 </head>
 <body class="h-full bg-gray-50 font-sans antialiased">
     <!-- Mobile Navigation Overlay -->
-    <div id="mobileOverlay" class="fixed inset-0 z-40 bg-black bg-opacity-50 hidden lg:hidden"></div>
+    <div id="mobileOverlay" class="mobile-nav-overlay fixed inset-0 z-40 hidden lg:hidden"></div>
 
     <!-- Mobile Navigation Sidebar -->
-    <div id="mobileSidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full transition-transform duration-300 ease-in-out lg:hidden">
+    <div id="mobileSidebar" class="mobile-nav-sidebar fixed inset-y-0 left-0 z-50 w-64 transform -translate-x-full lg:hidden">
         <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200">
             <div class="flex items-center justify-center w-full">
                 <svg class="h-8 w-auto text-gray-900" viewBox="0 0 3784.75 1161.8" xmlns="http://www.w3.org/2000/svg">

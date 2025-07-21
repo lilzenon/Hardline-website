@@ -519,6 +519,22 @@ function registerHandlebarsHelpers() {
         return !value;
     });
 
+    hbs.registerHelper("gt", function(a, b) {
+        return a > b;
+    });
+
+    hbs.registerHelper("lt", function(a, b) {
+        return a < b;
+    });
+
+    hbs.registerHelper("gte", function(a, b) {
+        return a >= b;
+    });
+
+    hbs.registerHelper("lte", function(a, b) {
+        return a <= b;
+    });
+
     hbs.registerHelper("getInitials", function(name) {
         if (!name) return "";
         return name.split(" ").map(n => n[0]).join("").toUpperCase();

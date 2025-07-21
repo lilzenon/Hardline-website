@@ -232,7 +232,8 @@ async function home(req, res) {
             homeSettings: homeSettings,
             featuredEvents: featuredEvents,
             formattedDate: formattedDate,
-            isPreview: req.query.preview === 'true'
+            isPreview: req.query.preview === 'true',
+            timestamp: Date.now()
         });
     } catch (error) {
         console.error("Error rendering home page:", error);
@@ -256,7 +257,8 @@ async function home(req, res) {
             homeSettings: defaultSettings,
             featuredEvents: [], // Empty array for fallback
             formattedDate: "March 29th, 9:00 P.M.",
-            isPreview: req.query.preview === 'true'
+            isPreview: req.query.preview === 'true',
+            timestamp: Date.now()
         });
     }
 }

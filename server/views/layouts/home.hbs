@@ -6,7 +6,28 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>{{title}}</title>
-    <link rel="stylesheet" href="/css/figma-home.css">
+    <!-- Tailwind CSS CDN for exact Figma classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for exact Figma implementation */
+        .Desktop {
+            font-family: Inter, sans-serif;
+            margin: 0 auto;
+        }
+
+        /* Ensure Inter font is loaded */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+        /* Custom positioning for exact Figma layout */
+        .B2bLogo { z-index: 10; }
+        .PhoneNumberForm { z-index: 20; }
+        .Frame18 { z-index: 15; }
+
+        /* Ensure proper font rendering */
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
     <link rel="stylesheet" href="/css/address-component.css">
     <link rel="stylesheet" href="/css/breadcrumb.css">
     <meta name="theme-color" content="#000000">
@@ -44,7 +65,7 @@
 
     <!-- Preload critical resources for Core Web Vitals -->
     <link rel="preload" href="/images/bounce-logo.svg" as="image" type="image/svg+xml" fetchpriority="high">
-    <link rel="preload" href="/css/figma-home.css" as="style">
+    <link rel="preload" href="/css/figma-tailwind-exact.css?v=20250721-figma-export" as="style">
     <link rel="preload" href="/css/address-component.css" as="style">
 
     <!-- Prefetch likely navigation targets -->
@@ -152,8 +173,8 @@
             font-display: swap;
         }
 
-        /* Prevent CLS with image containers */
-        .event-image-container {
+        /* Prevent CLS with image containers - disabled for Figma design */
+        /* .event-image-container {
             position: relative;
             overflow: hidden;
             background-color: #f0f0f0;
@@ -162,7 +183,7 @@
         .event-image-container::before {
             content: '';
             display: block;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            padding-bottom: 56.25%;
         }
 
         .event-image-container img {
@@ -172,7 +193,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
+        } */
 
         /* Optimize glassmorphism for performance */
         .glassmorphism {
