@@ -22,6 +22,29 @@ const FigmaDesktop = () => {
     return featuredEvents.length > 0 ? featuredEvents[0] : null;
   }, [featuredEvents]);
 
+  // Format location to show just venue and city (prevent overflow)
+  const formatLocation = useCallback((address) => {
+    if (!address) return "Asbury Park, NJ";
+
+    const parts = address.split(',').map(part => part.trim());
+
+    // If it's a full address like "123 Street, City, State"
+    if (parts.length >= 2) {
+      // Check if first part looks like a street address (starts with number)
+      const firstPart = parts[0];
+      if (/^\d/.test(firstPart)) {
+        // Skip street address, return "City, State" or just "City"
+        return parts.slice(1, 3).join(', ');
+      } else {
+        // First part is venue name, return "Venue, City"
+        return parts.slice(0, 2).join(', ');
+      }
+    }
+
+    // Fallback to original if parsing fails
+    return address.length > 25 ? address.substring(0, 22) + '...' : address;
+  }, []);
+
   const fetchHomepageData = useCallback(async () => {
     try {
       setLoading(true);
@@ -584,7 +607,7 @@ const FigmaDesktop = () => {
                     lineHeight: 'normal'
                   }}
                 >
-                  {mostRecentEvent?.event_address || homeSettings?.event_address || "Asbury Park, NJ"}
+                  {formatLocation(mostRecentEvent?.event_address || homeSettings?.event_address)}
                 </span>
               </div>
             </div>
