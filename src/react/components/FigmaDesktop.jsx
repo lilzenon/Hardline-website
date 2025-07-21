@@ -580,9 +580,8 @@ const FigmaDesktop = () => {
           display: 'flex',
           width: '100%',
           height: `${scaledDimensions.heroHeight}px`,  // Scaled height to push content down
-          justifyContent: 'flex-start',  // Use flex-start with gap for precise alignment
+          justifyContent: 'space-between',  // Space between to align with navigation
           alignItems: 'center',
-          gap: `${scaledDimensions.gap}px`,  // Scaled gap between hero sections
           margin: '20px 0 0 0',  // Remove auto margins since parent handles centering
           padding: '0',  // Remove padding since parent handles it
           flexDirection: 'row'
@@ -915,10 +914,9 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          gap: `${scaledDimensions.eventsTextGap}px`,  // Fixed 18px gap, no scaling
           margin: '8px 0 0 0',  // Remove auto margins since parent handles centering
           padding: '0',  // Remove padding since parent handles it
-          justifyContent: 'flex-start',  // Use flex-start with fixed gap instead of space-between
+          justifyContent: 'space-between',  // Space between to match hero alignment
           alignItems: 'flex-start',
           flexDirection: isMobile ? 'column' : 'row'  // Stack vertically on mobile
         }}
@@ -927,13 +925,12 @@ const FigmaDesktop = () => {
         <div
           style={{
             display: 'flex',
-            width: '100%',
-            maxWidth: '507px',
+            width: '507px',  // Fixed width as per Figma design
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'stretch',
             gap: '21px',
-            flex: '1'
+            flexShrink: 0  // Prevent shrinking
           }}
         >
           {/* EVENT LIST Grid */}
@@ -1394,7 +1391,7 @@ const FigmaDesktop = () => {
             flexDirection: 'column',
             alignItems: 'flex-start',
             gap: '8px',
-            alignSelf: isMobile ? 'flex-start' : 'flex-end'  // Align to right edge on desktop, left on mobile
+            flexShrink: 0  // Prevent shrinking, maintain fixed width
           }}
         >
           {/* Text us Title */}
