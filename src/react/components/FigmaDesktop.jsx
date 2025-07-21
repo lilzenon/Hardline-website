@@ -506,12 +506,13 @@ const FigmaDesktop = () => {
           display: 'flex',
           width: '100%',
           maxWidth: '829px',
-          height: '299px',
+          minHeight: '299px',
           justifyContent: 'center',
           alignItems: 'center',
-          gap: '28px',
+          gap: '32px',
           margin: '20px auto 0 auto',
-          padding: '0 16px'
+          padding: '0 16px',
+          flexWrap: 'wrap'
         }}
       >
         {/* Frame 20 - Left Hero */}
@@ -519,7 +520,10 @@ const FigmaDesktop = () => {
           style={{
             width: '299px',
             height: '299px',
-            position: 'relative'
+            position: 'relative',
+            minWidth: '299px',
+            flexShrink: 0,
+            margin: '0 auto'
           }}
         >
           {/* Hero Image with Gradient */}
@@ -696,9 +700,12 @@ const FigmaDesktop = () => {
         {/* Video Hero - Right */}
         <div
           style={{
-            width: '510px',
+            width: '498px',
             height: '299px',
-            position: 'relative'
+            position: 'relative',
+            minWidth: '300px',
+            flexShrink: 1,
+            margin: '0 auto'
           }}
         >
           {/* Video Background */}
@@ -707,7 +714,7 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '510px',
+              width: '498px',
               height: '299px',
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray 0px 0px / 100% 100% no-repeat`
@@ -721,7 +728,7 @@ const FigmaDesktop = () => {
               left: '0px',
               top: '245px',
               display: 'flex',
-              width: '505px',
+              width: '498px',
               height: '44px',
               padding: '8px 16px',
               justifyContent: 'space-between',
@@ -804,9 +811,8 @@ const FigmaDesktop = () => {
           display: 'flex',
           width: '100%',
           maxWidth: '825px',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-start',
           alignItems: 'flex-start',
-          gap: '20px',
           margin: '16px auto 0 auto',
           padding: '0 16px'
         }}
@@ -823,55 +829,6 @@ const FigmaDesktop = () => {
           }}
         >
           Events
-        </div>
-
-        {/* Frame 17 - Right info */}
-        <div
-          style={{
-            display: 'flex',
-            width: '299px',
-            height: '32px',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'flex-start',
-            gap: '4px'
-          }}
-        >
-          {/* Event Title */}
-          <div
-            style={{
-              display: 'flex',
-              height: '17px',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignSelf: 'stretch',
-              color: '#FFF',
-              fontFamily: 'Inter',
-              fontSize: '24px',
-              fontWeight: '800',
-              lineHeight: 'normal'
-            }}
-          >
-            Text us
-          </div>
-
-          {/* Date */}
-          <div
-            style={{
-              display: 'flex',
-              height: '11px',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignSelf: 'stretch',
-              color: '#FFF',
-              fontFamily: 'Inter',
-              fontSize: '10px',
-              fontWeight: '300',
-              lineHeight: 'normal'
-            }}
-          >
-            Exclusive events, contests, and more
-          </div>
         </div>
       </div>
 
@@ -1357,17 +1314,53 @@ const FigmaDesktop = () => {
           </div>
         </div>
 
-        {/* Phone Number Form */}
+        {/* Phone Number Form with Text us Title */}
         <div
           style={{
             display: 'flex',
             width: '299px',
             flexDirection: 'column',
             alignItems: 'flex-start',
-            gap: '4px',
-            alignSelf: 'flex-end'
+            gap: '8px'
           }}
         >
+          {/* Text us Title */}
+          <div
+            style={{
+              display: 'flex',
+              height: '17px',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignSelf: 'stretch',
+              color: '#FFF',
+              fontFamily: 'Inter',
+              fontSize: '24px',
+              fontWeight: '800',
+              lineHeight: 'normal',
+              marginBottom: '4px'
+            }}
+          >
+            Text us
+          </div>
+
+          {/* Subtext */}
+          <div
+            style={{
+              display: 'flex',
+              height: '11px',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignSelf: 'stretch',
+              color: '#FFF',
+              fontFamily: 'Inter',
+              fontSize: '10px',
+              fontWeight: '300',
+              lineHeight: 'normal',
+              marginBottom: '8px'
+            }}
+          >
+            Exclusive events, contests, and more
+          </div>
           {/* Phone Number Input */}
           <div
             style={{
@@ -1431,7 +1424,9 @@ const FigmaDesktop = () => {
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handlePhoneSubmit()}
                   placeholder="(555) 123-4567"
+                  disabled={phoneSubmitting}
                   style={{
                     width: '190px',
                     background: 'transparent',
@@ -1441,7 +1436,8 @@ const FigmaDesktop = () => {
                     fontFamily: 'Inter',
                     fontSize: '14px',
                     fontWeight: '500',
-                    lineHeight: 'normal'
+                    lineHeight: 'normal',
+                    minHeight: '44px'
                   }}
                 />
               </div>
@@ -1459,7 +1455,9 @@ const FigmaDesktop = () => {
                   borderRadius: '100px',
                   background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                   cursor: phoneSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: phoneSubmitting ? 0.7 : 1
+                  opacity: phoneSubmitting ? 0.7 : 1,
+                  minHeight: '44px',
+                  minWidth: '44px'
                 }}
               >
                 <span
