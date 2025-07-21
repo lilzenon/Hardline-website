@@ -290,39 +290,42 @@ const FigmaDesktop = () => {
   // Show loading state while maintaining Figma layout
   if (loading) {
     return (
-      <div
-        className="desktop"
-        style={{
-          width: '1456px',
-          height: '982px',
-          position: 'relative',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#000000'
-        }}
-      >
-        <div style={{
-          color: '#FFF',
-          fontSize: '18px',
-          fontFamily: 'Inter',
-          textAlign: 'center'
-        }}>
-          <div>Loading homepage data...</div>
-          {error && (
+      <div className="scalable-homepage-wrapper">
+        <div className="scalable-homepage-container">
+          <div
+            className="desktop"
+            style={{
+              width: '100%',
+              height: '982px',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: '#000000'
+            }}
+          >
             <div style={{
-              color: '#FF6B6B',
-              fontSize: '14px',
-              marginTop: '10px',
-              opacity: 0.8
+              color: '#FFF',
+              fontSize: '18px',
+              fontFamily: 'Inter',
+              textAlign: 'center'
             }}>
-              {error}
-              <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.7 }}>
-                Falling back to default content...
-              </div>
+              <div>Loading homepage data...</div>
+              {error && (
+                <div style={{
+                  color: '#FF6B6B',
+                  fontSize: '14px',
+                  marginTop: '10px',
+                  opacity: 0.8
+                }}>
+                  {error}
+                  <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.7 }}>
+                    Falling back to default content...
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
@@ -335,30 +338,26 @@ const FigmaDesktop = () => {
   }
 
   return (
-    <div
-      className="desktop"
-      style={{
-        width: '100vw',
-        minHeight: '100vh',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        background: '#000000',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Centered Content Container */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '1456px',
-          minWidth: '320px',
-          position: 'relative',
-          margin: '0 auto',
-          padding: '0 16px'
-        }}
-      >
+    <div className="scalable-homepage-wrapper">
+      <div className="scalable-homepage-container">
+        <div
+          className="desktop"
+          style={{
+            width: '100%',
+            position: 'relative',
+            background: '#000000'
+          }}
+        >
+          {/* Centered Content Container */}
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '825px',
+              position: 'relative',
+              margin: '0 auto',
+              padding: '0 16px'
+            }}
+          >
 
       
       {/* Frame 12 - Navigation */}
@@ -1508,6 +1507,8 @@ const FigmaDesktop = () => {
         />
       </div>
       {/* End Centered Content Container */}
+          </div>
+        </div>
       </div>
     </div>
   );

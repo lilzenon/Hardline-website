@@ -1,6 +1,64 @@
 /* React Homepage Styles - Figma-Exact Implementation */
 
 
+/* 🎯 RESPONSIVE SCALING SYSTEM - Zoom-like proportional scaling */
+
+.scalable-homepage-container {
+    /* Base design width including padding (825px + 32px padding) */
+    --base-width: 857px;
+    /* Calculate scale factor with constraints */
+    --scale-factor: clamp(0.4, calc(100vw / var(--base-width)), 1.5);
+    /* Apply scaling transformation */
+    transform: scale(var(--scale-factor));
+    transform-origin: center top;
+    /* Smooth scaling transitions */
+    transition: transform 0.2s ease-out;
+    /* Container sizing to accommodate scaling */
+    width: var(--base-width);
+    margin: 0 auto;
+    /* Adjust container height based on scale factor */
+    margin-bottom: calc((1 - var(--scale-factor)) * -50vh);
+}
+
+
+/* Ensure scaled content doesn't overflow */
+
+.scalable-homepage-wrapper {
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 20px;
+    background: #000;
+}
+
+
+/* Responsive scaling breakpoints for fine-tuning */
+
+@media (max-width: 320px) {
+    .scalable-homepage-container {
+        --scale-factor: 0.37;
+        /* Minimum for very small screens */
+    }
+}
+
+@media (min-width: 1920px) {
+    .scalable-homepage-container {
+        --scale-factor: 1.4;
+        /* Prevent excessive scaling on large screens */
+    }
+}
+
+@media (min-width: 2560px) {
+    .scalable-homepage-container {
+        --scale-factor: 1.2;
+        /* Further constraint for ultra-wide screens */
+    }
+}
+
+
 /* Global font family */
 
 .font-inter {
