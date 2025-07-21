@@ -422,7 +422,7 @@ const FigmaDesktop = () => {
           <div
             style={{
               width: '100%',
-              maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
+              maxWidth: '825px',  // Fixed container width for alignment
               position: 'relative',
               margin: '0 auto',
               padding: '0 16px'
@@ -436,7 +436,7 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
+          maxWidth: '825px',  // Fixed container width for alignment
           height: '48px',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -575,11 +575,11 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
-          height: `${scaledDimensions.heroHeight}px`,  // Use scaled hero height
+          maxWidth: '825px',  // Fixed container width for alignment
+          height: `${scaledDimensions.heroHeight}px`,  // Scaled height to push content down
           justifyContent: 'center',
           alignItems: 'center',
-          gap: `${scaledDimensions.gap}px`,  // Use scaled gap
+          gap: `${scaledDimensions.gap}px`,  // Scaled gap between hero sections
           margin: '20px auto 0 auto',
           padding: '0 16px',
           flexDirection: 'row'
@@ -588,10 +588,10 @@ const FigmaDesktop = () => {
         {/* Frame 20 - Left Hero */}
         <div
           style={{
-            width: `${scaledDimensions.heroWidth}px`,
-            height: `${scaledDimensions.heroHeight}px`,
+            width: `${Math.min(scaledDimensions.heroWidth, 350)}px`,  // Constrain to max 350px
+            height: `${Math.min(scaledDimensions.heroHeight, 350)}px`,  // Constrain to max 350px
             position: 'relative',
-            minWidth: `${scaledDimensions.heroWidth}px`,
+            minWidth: `${Math.min(scaledDimensions.heroWidth, 200)}px`,  // Min 200px
             flexShrink: 0,
             margin: '0 auto'
           }}
@@ -602,8 +602,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${scaledDimensions.heroWidth}px`,
-              height: `${scaledDimensions.heroHeight}px`,
+              width: `${Math.min(scaledDimensions.heroWidth, 350)}px`,  // Match container constraints
+              height: `${Math.min(scaledDimensions.heroHeight, 350)}px`,  // Match container constraints
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`
             }}
@@ -614,9 +614,9 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: `${scaledDimensions.heroHeight - 47}px`,  // Scale position relative to hero height
+              top: `${Math.min(scaledDimensions.heroHeight, 350) - 47}px`,  // Position relative to constrained height
               display: 'flex',
-              width: `${scaledDimensions.heroWidth}px`,
+              width: `${Math.min(scaledDimensions.heroWidth, 350)}px`,  // Match constrained width
               justifyContent: 'space-between',
               padding: '0px 12px',
               gap: '16px'
@@ -770,10 +770,10 @@ const FigmaDesktop = () => {
         {/* Video Hero - Right */}
         <div
           style={{
-            width: `${scaledDimensions.rightHeroWidth}px`,
-            height: `${scaledDimensions.rightHeroHeight}px`,
+            width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,  // Constrain to max 450px
+            height: `${Math.min(scaledDimensions.rightHeroHeight, 350)}px`,  // Constrain to max 350px
             position: 'relative',
-            minWidth: `${Math.max(scaledDimensions.rightHeroWidth, 200)}px`,
+            minWidth: `${Math.min(scaledDimensions.rightHeroWidth, 250)}px`,  // Min 250px
             flexShrink: 1,
             margin: '0 auto'
           }}
@@ -784,8 +784,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${scaledDimensions.rightHeroWidth}px`,
-              height: `${scaledDimensions.rightHeroHeight}px`,
+              width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,  // Match container constraints
+              height: `${Math.min(scaledDimensions.rightHeroHeight, 350)}px`,  // Match container constraints
               borderRadius: '24px',
               background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray 0px 0px / 100% 100% no-repeat`
             }}
@@ -796,9 +796,9 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: `${scaledDimensions.rightHeroHeight - 54}px`,  // Scale position relative to hero height
+              top: `${Math.min(scaledDimensions.rightHeroHeight, 350) - 54}px`,  // Position relative to constrained height
               display: 'flex',
-              width: `${scaledDimensions.rightHeroWidth}px`,
+              width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,  // Match constrained width
               height: '44px',
               padding: '8px 16px',
               justifyContent: 'space-between',
@@ -880,7 +880,7 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
+          maxWidth: '825px',  // Fixed container width for alignment
           justifyContent: 'flex-start',
           alignItems: 'flex-start',
           margin: '16px auto 0 auto',
@@ -913,7 +913,7 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          maxWidth: `${scaledDimensions.containerWidth}px`,  // Use scaled container width
+          maxWidth: '825px',  // Fixed container width for alignment
           gap: `${scaledDimensions.eventsTextGap}px`,  // Fixed 18px gap, no scaling
           margin: '8px auto 0 auto',  // Fixed margin, no scaling
           padding: '0 16px',  // Match hero sections and navigation padding
