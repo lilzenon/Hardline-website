@@ -414,8 +414,11 @@ const FigmaDesktop = () => {
           className="desktop"
           style={{
             width: '100%',
+            minHeight: '100vh',
             position: 'relative',
-            background: '#000000'
+            background: '#000000',
+            display: 'grid',
+            placeItems: 'center'  // Modern CSS Grid centering
           }}
         >
           {/* Centered Content Container */}
@@ -424,7 +427,7 @@ const FigmaDesktop = () => {
               width: '100%',
               maxWidth: '825px',  // Fixed container width for alignment
               position: 'relative',
-              margin: '0 auto',
+              justifySelf: 'center',  // Use CSS Grid centering instead of margin auto
               padding: '0 16px'
             }}
           >
@@ -434,11 +437,11 @@ const FigmaDesktop = () => {
       <div
         style={{
           position: 'relative',
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr auto',  // Logo | Space | Pills
           width: '100%',
           maxWidth: '825px',  // Fixed container width for alignment
           height: '48px',
-          justifyContent: 'space-between',  // Keep logo left, pills right
           alignItems: 'center',
           margin: '35px auto 0 auto',
           padding: '0 16px'
@@ -461,7 +464,8 @@ const FigmaDesktop = () => {
             position: 'relative',
             width: '226.49px',
             height: '34px',
-            marginRight: `${Math.max(0, (825 - 32 - Math.min(scaledDimensions.heroWidth, 350) - scaledDimensions.gap - Math.min(scaledDimensions.rightHeroWidth, 450)) / 2)}px`  // Align with hero sections' right edge
+            gridColumn: '3',  // Place in third column (right side)
+            justifySelf: 'end'  // Align to right edge of grid cell
           }}
         >
           {/* Background pill container */}
@@ -1394,7 +1398,7 @@ const FigmaDesktop = () => {
             flexDirection: 'column',
             alignItems: 'flex-start',
             gap: '8px',
-            marginLeft: isMobile ? '0' : `${Math.max(0, (825 - 32 - 299 - Math.min(scaledDimensions.rightHeroWidth, 450)) / 2 + Math.min(scaledDimensions.heroWidth, 350) + scaledDimensions.gap)}px`  // Align with hero sections' right edge on desktop
+            alignSelf: isMobile ? 'flex-start' : 'flex-end'  // Align to right edge on desktop, left on mobile
           }}
         >
           {/* Text us Title */}
