@@ -1,29 +1,40 @@
-/* React Homepage Styles - Figma-Exact Implementation */
+/* React Homepage Styles - Simplified Layout */
 
 
-/* 🎯 BIDIRECTIONAL RESPONSIVE SCALING SYSTEM - True zoom-like proportional scaling */
+/* Root container - Clean, simple structure */
 
-.scalable-homepage-container {
-    /* Container for responsive hero sections - scaling handled by React */
-    margin: 0 auto;
-    box-sizing: border-box;
-    position: relative;
+.homepage-root {
     width: 100%;
+    min-height: 100vh;
+    background: #000;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* Content wrapper - Centers content horizontally */
+
+.homepage-content {
+    width: 100%;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
-    /* Ensure content is centered */
     align-items: flex-start;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
 }
 
 
 /* 🔒 FIXED DIMENSIONS - Event cards should never scale */
 
 .eventcardsmall {
-    width: 250px !important;
+    width: 220px !important;
     height: 85px !important;
     flex-shrink: 0 !important;
     transform: none !important;
-    min-width: 250px !important;
+    min-width: 220px !important;
     max-width: 250px !important;
     min-height: 85px !important;
     max-height: 85px !important;
@@ -56,28 +67,26 @@
 }
 
 
-/* Ensure scaled content doesn't overflow */
+/* Desktop container - Responsive with max-width */
 
-.scalable-homepage-wrapper {
-    overflow-x: hidden;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0;
-    /* Remove padding to prevent layout shifts */
-    background: #000;
+.desktop-container {
     width: 100%;
-    position: relative;
+    max-width: 1456px;
     margin: 0 auto;
-    /* Ensure proper centering */
+    position: relative;
+    background: #000;
+    min-height: 100vh;
+    padding: 0 16px;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 
-/* Ensure all child elements scale properly */
+/* Ensure all child elements use border-box */
 
-.scalable-homepage-container * {
+.homepage-root *,
+.homepage-content *,
+.desktop-container * {
     box-sizing: border-box;
 }
 
@@ -85,22 +94,22 @@
 /* Bidirectional scaling system - No restrictive breakpoint overrides */
 
 
-/* Only override scaling for extreme cases where accessibility is critical */
+/* Responsive adjustments for extreme cases */
 
-@media (max-width: 300px) {
-    .scalable-homepage-container {
-        --scale-factor: 0.35;
-        /* Absolute minimum scale for very small screens */
+@media (max-width: 320px) {
+    .desktop-container {
+        padding: 0 8px;
+        /* Reduce padding on very small screens */
     }
 }
 
 
-/* Prevent excessive scaling on ultra-wide screens */
+/* Large screen optimizations */
 
 @media (min-width: 1650px) {
-    .scalable-homepage-container {
-        --scale-factor: clamp(1.5, calc(100vw / var(--base-width)), 2.0);
-        /* Controlled scaling for ultra-wide displays */
+    .desktop-container {
+        max-width: 1600px;
+        /* Prevent excessive width on ultra-wide screens */
     }
 }
 
@@ -108,19 +117,17 @@
 /* Respect user motion preferences */
 
 @media (prefers-reduced-motion: reduce) {
-    .scalable-homepage-container {
+    .desktop-container {
         transition: none;
     }
 }
 
 
-/* Small viewport handling */
+/* Mobile viewport handling */
 
 @media (max-width: 480px) {
-    /* Transform handled by JavaScript */
-    .scalable-homepage-wrapper {
-        padding-left: 12px;
-        padding-right: 12px;
+    .desktop-container {
+        padding: 0 12px;
     }
 }
 
@@ -128,10 +135,8 @@
 /* Extra small viewport handling */
 
 @media (max-width: 360px) {
-    /* Transform handled by JavaScript */
-    .scalable-homepage-wrapper {
-        padding-left: 8px;
-        padding-right: 8px;
+    .desktop-container {
+        padding: 0 8px;
     }
 }
 
@@ -139,32 +144,13 @@
 /* Ultra small viewport handling */
 
 @media (max-width: 280px) {
-    /* Transform handled by JavaScript */
-    .scalable-homepage-wrapper {
-        padding-left: 6px;
-        padding-right: 6px;
+    .desktop-container {
+        padding: 0 6px;
     }
 }
 
 
-/* Scaling behavior verification - shows current scale factor for debugging */
-
-.scalable-homepage-container::before {
-    content: "Scale: " attr(data-scale);
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-family: monospace;
-    z-index: 9999;
-    pointer-events: none;
-    display: none;
-    /* Hidden by default, enable for debugging */
-}
+/* Debug styles removed for production */
 
 
 /* Global font family */
@@ -262,16 +248,12 @@ body {
         width: 100% !important;
         max-width: 280px !important;
     }
-    /* Ensure touch targets remain accessible with bidirectional scaling */
-    .scalable-homepage-container button,
-    .scalable-homepage-container input,
-    .scalable-homepage-container [role="button"] {
-        min-height: max(44px, calc(44px / var(--scale-factor))) !important;
-        min-width: max(44px, calc(44px / var(--scale-factor))) !important;
-    }
-    /* Maintain 8px grid system proportions when scaled */
-    .scalable-homepage-container * {
-        box-sizing: border-box;
+    /* Ensure touch targets remain accessible */
+    .desktop-container button,
+    .desktop-container input,
+    .desktop-container [role="button"] {
+        min-height: 44px !important;
+        min-width: 44px !important;
     }
 }
 
