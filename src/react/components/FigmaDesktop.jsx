@@ -253,6 +253,12 @@ const FigmaDesktop = () => {
   const [phoneInputState, setPhoneInputState] = useState('normal'); // normal, loading, valid, invalid
   const [isButtonPressed, setIsButtonPressed] = useState(false);
 
+  // Verification states
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+  const [verificationPhone, setVerificationPhone] = useState('');
+
   // Refs for animations
   const flagImageRef = useRef(null);
   const phoneContainerRef = useRef(null);
@@ -541,15 +547,29 @@ const FigmaDesktop = () => {
 
       if (response.ok && result.success) {
         console.log('✅ Phone number submitted successfully');
-        setPhoneSubmitted(true);
-        setPhoneInputState('valid');
-        setPhoneNumber('');
 
-        // Reset success state after 3 seconds
-        setTimeout(() => {
-          setPhoneSubmitted(false);
-          setPhoneInputState('normal');
-        }, 3000);
+        if (result.requiresVerification) {
+          // Move to verification step
+          console.log('🔐 Moving to verification step');
+          setPhoneInputState('valid');
+          setVerificationPhone(trimmedPhone);
+
+          // Smooth transition to verification UI
+          setTimeout(() => {
+            setShowVerification(true);
+          }, 500);
+        } else {
+          // Old flow - direct success
+          setPhoneSubmitted(true);
+          setPhoneInputState('valid');
+          setPhoneNumber('');
+
+          // Reset success state after 3 seconds
+          setTimeout(() => {
+            setPhoneSubmitted(false);
+            setPhoneInputState('normal');
+          }, 3000);
+        }
       } else {
         console.error('❌ Failed to submit phone number:', result.error || 'Unknown error');
 
@@ -580,6 +600,92 @@ const FigmaDesktop = () => {
     }
   }, [phoneNumber, phoneSubmitting, selectedCountryId]);
 
+  // Verification code submission handler
+  const handleVerificationSubmit = useCallback(async () => {
+    const trimmedCode = verificationCode.trim();
+
+    if (!trimmedCode || verificationSubmitting) return;
+
+    // Validate code format (4 digits)
+    if (!/^\d{4}$/.test(trimmedCode)) {
+      console.warn('Invalid verification code format');
+
+      // Show invalid state with shake animation
+      setPhoneInputState('invalid');
+      if (phoneContainerRef.current) {
+        phoneContainerRef.current.classList.add('shake');
+        setTimeout(() => {
+          phoneContainerRef.current?.classList.remove('shake');
+          setPhoneInputState('normal');
+        }, 400);
+      }
+      return;
+    }
+
+    try {
+      setVerificationSubmitting(true);
+      setPhoneInputState('loading');
+
+      console.log('🔐 Submitting verification code');
+
+      const response = await fetch('/api/home-settings/verify-phone', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: verificationPhone,
+          code: trimmedCode
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        console.log('✅ Phone verification successful');
+        setPhoneInputState('valid');
+        setPhoneSubmitted(true);
+
+        // Reset to initial state after success
+        setTimeout(() => {
+          setShowVerification(false);
+          setVerificationCode('');
+          setVerificationPhone('');
+          setPhoneNumber('');
+          setPhoneSubmitted(false);
+          setPhoneInputState('normal');
+        }, 3000);
+      } else {
+        console.error('❌ Phone verification failed:', result.error || 'Unknown error');
+
+        // Show error state with shake animation
+        setPhoneInputState('invalid');
+        if (phoneContainerRef.current) {
+          phoneContainerRef.current.classList.add('shake');
+          setTimeout(() => {
+            phoneContainerRef.current?.classList.remove('shake');
+            setPhoneInputState('normal');
+          }, 400);
+        }
+      }
+
+    } catch (error) {
+      console.error('❌ Error submitting verification code:', error);
+
+      // Show error state with shake animation
+      setPhoneInputState('invalid');
+      if (phoneContainerRef.current) {
+        phoneContainerRef.current.classList.add('shake');
+        setTimeout(() => {
+          phoneContainerRef.current?.classList.remove('shake');
+          setPhoneInputState('normal');
+        }, 400);
+      }
+    } finally {
+      setVerificationSubmitting(false);
+    }
+  }, [verificationCode, verificationSubmitting, verificationPhone]);
+
   // Button press animation handlers
   const handleButtonMouseDown = useCallback(() => {
     setIsButtonPressed(true);
@@ -591,6 +697,22 @@ const FigmaDesktop = () => {
 
   const handleButtonMouseLeave = useCallback(() => {
     setIsButtonPressed(false);
+  }, []);
+
+  // Verification code input handler
+  const handleVerificationCodeChange = useCallback((e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Only digits
+    if (value.length <= 4) {
+      setVerificationCode(value);
+    }
+  }, []);
+
+  // Back to phone input handler
+  const handleBackToPhone = useCallback(() => {
+    setShowVerification(false);
+    setVerificationCode('');
+    setVerificationPhone('');
+    setPhoneInputState('normal');
   }, []);
 
   // Robust phone number formatting handler with proper cursor management
@@ -2015,30 +2137,32 @@ const FigmaDesktop = () => {
             style={{
               display: 'flex',
               width: '299px',
-              height: '36px',
+              height: showVerification ? '120px' : '36px', // Expand for verification
               padding: '0px 2px',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               borderRadius: '31px',
-              background: '#232323'
+              background: '#232323',
+              transition: 'height 0.5s ease-in-out'
             }}
           >
-            {/* Frame 19 */}
-            <div
-              style={{
-                display: 'flex',
-                width: '294px',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '10px'
-              }}
-            >
-              {/* Phone number Field */}
+            {!showVerification ? (
+              /* Phone Input UI */
               <div
-                ref={phoneContainerRef}
-                className={phoneInputState === 'invalid' ? 'shake' : ''}
                 style={{
+                  display: 'flex',
+                  width: '294px',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                {/* Phone number Field */}
+                <div
+                  ref={phoneContainerRef}
+                  className={phoneInputState === 'invalid' ? 'shake' : ''}
+                  style={{
                   display: 'flex',
                   width: '243px', // Width accommodates flag + country code + input
                   height: '30px',
@@ -2186,10 +2310,10 @@ const FigmaDesktop = () => {
                     paddingRight: '10px'
                   }}
                 />
-              </div>
+                </div>
 
-              {/* SEND Button */}
-              <div
+                {/* SEND Button */}
+                <div
                 onClick={handlePhoneSubmit}
                 onMouseDown={handleButtonMouseDown}
                 onMouseUp={handleButtonMouseUp}
@@ -2226,27 +2350,190 @@ const FigmaDesktop = () => {
                 >
                   {phoneSubmitted ? '✓' : (phoneSubmitting ? '...' : 'SEND')}
                 </span>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Verification Code UI */
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '294px',
+                  height: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '16px'
+                }}
+              >
+              <>
+                {/* Back Button */}
+                <div
+                  onClick={handleBackToPhone}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '8px',
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    transition: 'background 0.2s ease'
+                  }}
+                >
+                  <span style={{ color: '#FFF', fontSize: '14px', fontWeight: '600' }}>←</span>
+                </div>
+
+                {/* Verification Title */}
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    marginBottom: '4px'
+                  }}
+                >
+                  Enter Verification Code
+                </div>
+
+                {/* Phone Number Display */}
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '11px',
+                    fontWeight: '400',
+                    textAlign: 'center',
+                    opacity: 0.7,
+                    marginBottom: '8px'
+                  }}
+                >
+                  Sent to {verificationPhone}
+                </div>
+
+                {/* 4-Digit Code Input */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '12px'
+                  }}
+                >
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      maxLength="1"
+                      value={verificationCode[index] || ''}
+                      onChange={(e) => {
+                        const newCode = verificationCode.split('');
+                        newCode[index] = e.target.value.replace(/\D/g, '');
+                        const updatedCode = newCode.join('');
+                        setVerificationCode(updatedCode);
+
+                        // Auto-focus next input
+                        if (e.target.value && index < 3) {
+                          const nextInput = e.target.parentElement.children[index + 1];
+                          if (nextInput) nextInput.focus();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+                          const prevInput = e.target.parentElement.children[index - 1];
+                          if (prevInput) prevInput.focus();
+                        }
+                        if (e.key === 'Enter' && verificationCode.length === 4) {
+                          handleVerificationSubmit();
+                        }
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        border: `1px solid ${
+                          phoneInputState === 'loading' ? '#3B82F6' :
+                          phoneInputState === 'valid' ? '#10B981' :
+                          phoneInputState === 'invalid' ? '#EF4444' :
+                          'rgba(255, 255, 255, 0.2)'
+                        }`,
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        outline: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Verify Button */}
+                <div
+                  onClick={handleVerificationSubmit}
+                  onMouseDown={handleButtonMouseDown}
+                  onMouseUp={handleButtonMouseUp}
+                  onMouseLeave={handleButtonMouseLeave}
+                  onTouchStart={handleButtonMouseDown}
+                  onTouchEnd={handleButtonMouseUp}
+                  style={{
+                    display: 'flex',
+                    width: '120px',
+                    height: '32px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: '16px',
+                    background: phoneSubmitted ? '#00AA00' : (verificationSubmitting ? '#888888' : '#00FF40'),
+                    cursor: verificationSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: verificationSubmitting || verificationCode.length !== 4 ? 0.7 : 1,
+                    transform: isButtonPressed && !verificationSubmitting ? 'scale(0.96)' : 'scale(1)',
+                    transition: 'all 0.1s ease',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#232323',
+                      fontFamily: 'Inter',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      lineHeight: '1'
+                    }}
+                  >
+                    {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Disclaimer Text */}
-          <div
-            style={{
-              width: '299.66px',
-              color: '#FFF',
-              textAlign: 'justify',
-              fontFamily: 'Inter',
-              fontSize: '8px',
-              fontWeight: '500',
-              lineHeight: 'normal',
-              letterSpacing: '-0.48px',
-              opacity: '0.46',
-              textDecoration: 'underline'
-            }}
-          >
-            By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's Terms of Service, Cookie Policy and Privacy Policy. Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
-          </div>
+          {/* Disclaimer Text - Only show when not in verification mode */}
+          {!showVerification && (
+            <div
+              style={{
+                width: '299.66px',
+                color: '#FFF',
+                textAlign: 'justify',
+                fontFamily: 'Inter',
+                fontSize: '8px',
+                fontWeight: '500',
+                lineHeight: 'normal',
+                letterSpacing: '-0.48px',
+                opacity: '0.46',
+                textDecoration: 'underline'
+              }}
+            >
+              By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's Terms of Service, Cookie Policy and Privacy Policy. Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
+            </div>
+          )}
         </div>
       </div>
 

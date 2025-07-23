@@ -56,6 +56,12 @@ router.post(
     asyncHandler(homeSettings.submitPhone)
 );
 
+// 🚀 HOMEPAGE PHONE VERIFICATION ENDPOINT - For verification code
+router.post(
+    "/verify-phone",
+    asyncHandler(homeSettings.verifyPhone)
+);
+
 // 🚀 DEBUG ENDPOINT - Check events status
 router.get(
     "/debug-events",

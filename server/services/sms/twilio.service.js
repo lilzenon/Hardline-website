@@ -19,6 +19,7 @@ const db = require('../../knex');
 class TwilioService {
     constructor() {
         this.client = null;
+        this.verifyService = null;
         this.isEnabled = false;
         this.tablesReady = false;
         this.initialize();
@@ -42,6 +43,15 @@ class TwilioService {
 
             // Initialize Twilio client
             this.client = twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+
+            // Initialize Verify service if service SID is provided
+            if (env.TWILIO_VERIFY_SERVICE_SID) {
+                this.verifyService = this.client.verify.v2.services(env.TWILIO_VERIFY_SERVICE_SID);
+                console.log('✅ Twilio Verify service initialized');
+            } else {
+                console.log('⚠️ Twilio Verify service SID not configured - verification disabled');
+            }
+
             this.isEnabled = true;
 
             console.log('✅ Twilio SMS service initialized successfully');
@@ -439,6 +449,99 @@ class TwilioService {
             `SMS service is working correctly!`;
 
         return await this.sendSMS(testPhoneNumber, testMessage);
+    }
+
+    /**
+     * Start phone number verification using Twilio Verify API
+     */
+    async startVerification(phoneNumber, channel = 'sms') {
+        if (!this.isEnabled || !this.verifyService) {
+            return {
+                success: false,
+                error: 'Verification service not enabled or configured'
+            };
+        }
+
+        try {
+            const cleanedNumber = this.cleanPhoneNumber(phoneNumber);
+            if (!cleanedNumber) {
+                throw new Error('Invalid phone number format');
+            }
+
+            console.log(`🔐 Starting verification for ${cleanedNumber} via ${channel}`);
+
+            const verification = await this.verifyService.verifications.create({
+                to: cleanedNumber,
+                channel: channel
+            });
+
+            console.log(`✅ Verification started - SID: ${verification.sid}, Status: ${verification.status}`);
+
+            return {
+                success: true,
+                verificationSid: verification.sid,
+                status: verification.status,
+                to: cleanedNumber,
+                channel: channel
+            };
+
+        } catch (error) {
+            console.error('🚨 Failed to start verification:', error.message);
+
+            return {
+                success: false,
+                error: error.message,
+                code: error.code || 'VERIFICATION_START_FAILED'
+            };
+        }
+    }
+
+    /**
+     * Check verification code using Twilio Verify API
+     */
+    async checkVerification(phoneNumber, code) {
+        if (!this.isEnabled || !this.verifyService) {
+            return {
+                success: false,
+                error: 'Verification service not enabled or configured'
+            };
+        }
+
+        try {
+            const cleanedNumber = this.cleanPhoneNumber(phoneNumber);
+            if (!cleanedNumber) {
+                throw new Error('Invalid phone number format');
+            }
+
+            if (!code || code.length !== 4) {
+                throw new Error('Invalid verification code format');
+            }
+
+            console.log(`🔐 Checking verification code for ${cleanedNumber}`);
+
+            const verificationCheck = await this.verifyService.verificationChecks.create({
+                to: cleanedNumber,
+                code: code
+            });
+
+            console.log(`✅ Verification check completed - Status: ${verificationCheck.status}`);
+
+            return {
+                success: verificationCheck.status === 'approved',
+                status: verificationCheck.status,
+                to: cleanedNumber,
+                valid: verificationCheck.valid
+            };
+
+        } catch (error) {
+            console.error('🚨 Failed to check verification:', error.message);
+
+            return {
+                success: false,
+                error: error.message,
+                code: error.code || 'VERIFICATION_CHECK_FAILED'
+            };
+        }
     }
 }
 

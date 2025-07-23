@@ -254,39 +254,123 @@ async function submitPhone(req, res) {
         // Check if phone number is opted out
         const isOptedOut = await twilioService.isOptedOut(fullPhoneNumber);
         if (isOptedOut) {
-            console.log(`📱 Phone ${fullPhoneNumber} is opted out - skipping SMS`);
+            console.log(`📱 Phone ${fullPhoneNumber} is opted out - skipping verification`);
             return res.status(400).json({
                 success: false,
                 error: 'This phone number has opted out of SMS messages'
             });
         }
 
-        // Send welcome SMS
-        const welcomeMessage = `🎉 Thanks for joining our VIP list! You'll be the first to know about exclusive events, contests, and more from B2B.`;
+        // Start verification process using Twilio Verify API
+        const verificationResult = await twilioService.startVerification(fullPhoneNumber, 'sms');
 
-        const smsResult = await twilioService.sendSMS(fullPhoneNumber, welcomeMessage);
-
-        if (smsResult.success) {
-            console.log(`✅ Homepage SMS sent successfully - SID: ${smsResult.messageSid}`);
-
-            // TODO: Store in database for future marketing campaigns
-            // This could be added to a homepage_signups table or similar
+        if (verificationResult.success) {
+            console.log(`✅ Verification started for ${fullPhoneNumber} - SID: ${verificationResult.verificationSid}`);
 
             return res.json({
                 success: true,
-                message: 'Phone number submitted successfully! Check your phone for a confirmation message.',
-                messageSid: smsResult.messageSid
+                requiresVerification: true,
+                message: 'Verification code sent! Please check your phone.',
+                phoneNumber: fullPhoneNumber,
+                verificationSid: verificationResult.verificationSid
             });
         } else {
-            console.error(`❌ Homepage SMS failed: ${smsResult.error}`);
+            console.error(`❌ Failed to start verification: ${verificationResult.error}`);
             return res.status(500).json({
                 success: false,
-                error: 'Failed to send confirmation message. Please try again.'
+                error: 'Failed to send verification code. Please try again.'
             });
         }
 
     } catch (error) {
         console.error('❌ Error in homepage phone submission:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error. Please try again.'
+        });
+    }
+}
+
+/**
+ * Verify phone number with code from homepage Text Us section
+ */
+async function verifyPhone(req, res) {
+    try {
+        const { phone, code } = req.body;
+
+        console.log('🔐 Homepage phone verification:', { phone, code: code ? '****' : 'missing' });
+
+        // Validate inputs
+        if (!phone || !phone.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Phone number is required'
+            });
+        }
+
+        if (!code || !code.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Verification code is required'
+            });
+        }
+
+        // Clean and validate phone number format
+        const cleanedPhone = phoneUtils.normalizePhone(phone);
+        if (!cleanedPhone) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid phone number format'
+            });
+        }
+
+        // Validate code format (4 digits)
+        const cleanedCode = code.trim().replace(/\D/g, '');
+        if (cleanedCode.length !== 4) {
+            return res.status(400).json({
+                success: false,
+                error: 'Verification code must be 4 digits'
+            });
+        }
+
+        console.log('🔐 Verifying code for:', {
+            phone: cleanedPhone,
+            codeLength: cleanedCode.length
+        });
+
+        // Check verification code
+        const verificationResult = await twilioService.checkVerification(cleanedPhone, cleanedCode);
+
+        if (verificationResult.success) {
+            console.log(`✅ Phone verification successful for ${cleanedPhone}`);
+
+            // Send welcome SMS after successful verification
+            const welcomeMessage = `🎉 Phone verified! Thanks for joining our VIP list! You'll be the first to know about exclusive events, contests, and more from B2B.`;
+
+            // Send welcome message (don't fail if this fails)
+            twilioService.sendSMS(cleanedPhone, welcomeMessage).catch(error => {
+                console.error('⚠️ Failed to send welcome message:', error);
+            });
+
+            // TODO: Store verified phone in database for future marketing campaigns
+            // This could be added to a homepage_signups table or similar
+
+            return res.json({
+                success: true,
+                verified: true,
+                message: 'Phone number verified successfully! Welcome to our VIP list.',
+                phoneNumber: cleanedPhone
+            });
+        } else {
+            console.error(`❌ Phone verification failed for ${cleanedPhone}: ${verificationResult.error}`);
+            return res.status(400).json({
+                success: false,
+                error: verificationResult.error || 'Invalid verification code'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error in homepage phone verification:', error);
         return res.status(500).json({
             success: false,
             error: 'Internal server error. Please try again.'
@@ -300,5 +384,6 @@ module.exports = {
     get,
     getHomepageData,
     submitPhone,
+    verifyPhone,
     upload
 };
