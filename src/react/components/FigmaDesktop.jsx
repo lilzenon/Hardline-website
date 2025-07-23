@@ -302,10 +302,10 @@ const FigmaDesktop = () => {
     return {
       position: 'absolute',
       left: leftPosition,
-      top: '3.61px',
+      top: '4.15px',    // Scaled up by 15% (3.61 × 1.15)
       display: 'flex',
-      width: '71.77px',
-      height: '26.79px',
+      width: '82.54px', // Scaled up by 15% (71.77 × 1.15)
+      height: '30.81px', // Scaled up by 15% (26.79 × 1.15)
       padding: '13px 12px',
       justifyContent: 'center',
       alignItems: 'center',
@@ -506,8 +506,8 @@ const FigmaDesktop = () => {
         <div
           style={{
             position: 'relative',
-            width: '226.49px',
-            height: '34px',
+            width: '260.46px', // Scaled up by 15% (226.49 × 1.15)
+            height: '39.1px',  // Scaled up by 15% (34 × 1.15)
             gridColumn: '3',  // Place in third column (right side)
             justifySelf: 'end'  // Align to right edge of grid cell
           }}
@@ -518,17 +518,17 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '226.49px',
-              height: '34px',
+              width: '260.46px', // Scaled up by 15% (226.49 × 1.15)
+              height: '39.1px',  // Scaled up by 15% (34 × 1.15)
               background: '#232323',
               borderRadius: '12px',
               boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
             }}
           />
 
-          {/* Events */}
+          {/* Events - Scaled up by 15% (3.24 × 1.15) */}
           <div
-            style={getNavPillStyles('Events', '3.24px')}
+            style={getNavPillStyles('Events', '3.73px')}
             onClick={() => handleNavClick('Events')}
           >
             <span style={getNavTextStyles('Events')}>
@@ -536,9 +536,9 @@ const FigmaDesktop = () => {
             </span>
           </div>
 
-          {/* About */}
+          {/* About - Scaled up by 15% (77.03 × 1.15) */}
           <div
-            style={getNavPillStyles('About', '77.03px')}
+            style={getNavPillStyles('About', '88.58px')}
             onClick={() => handleNavClick('About')}
           >
             <span style={getNavTextStyles('About')}>
@@ -546,9 +546,9 @@ const FigmaDesktop = () => {
             </span>
           </div>
 
-          {/* Contact */}
+          {/* Contact - Scaled up by 15% (150.82 × 1.15) */}
           <div
-            style={getNavPillStyles('Contact', '150.82px')}
+            style={getNavPillStyles('Contact', '173.44px')}
             onClick={() => handleNavClick('Contact')}
           >
             <span style={getNavTextStyles('Contact')}>
