@@ -7,18 +7,108 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Cache for formatted dates to avoid repeated calculations
 const dateFormatCache = new Map();
 
-// Country codes and phone patterns for international support
+// Country codes and phone patterns for international support with flag SVGs
 const COUNTRIES = [
-  { id: 'us', code: '+1', name: 'United States', flag: '🇺🇸', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14, digitLength: 10 },
-  { id: 'ca', code: '+1', name: 'Canada', flag: '🇨🇦', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14, digitLength: 10 },
-  { id: 'gb', code: '+44', name: 'United Kingdom', flag: '🇬🇧', pattern: /^\d{10,11}$/, placeholder: '20 1234 5678', maxLength: 13, digitLength: 11 },
-  { id: 'de', code: '+49', name: 'Germany', flag: '🇩🇪', pattern: /^\d{10,12}$/, placeholder: '30 12345678', maxLength: 15, digitLength: 12 },
-  { id: 'fr', code: '+33', name: 'France', flag: '🇫🇷', pattern: /^\d{9,10}$/, placeholder: '1 23 45 67 89', maxLength: 14, digitLength: 10 },
-  { id: 'au', code: '+61', name: 'Australia', flag: '🇦🇺', pattern: /^\d{9}$/, placeholder: '4 1234 5678', maxLength: 12, digitLength: 9 },
-  { id: 'in', code: '+91', name: 'India', flag: '🇮🇳', pattern: /^\d{10}$/, placeholder: '98765 43210', maxLength: 13, digitLength: 10 },
-  { id: 'br', code: '+55', name: 'Brazil', flag: '🇧🇷', pattern: /^\d{10,11}$/, placeholder: '11 99999-9999', maxLength: 15, digitLength: 11 },
-  { id: 'mx', code: '+52', name: 'Mexico', flag: '🇲🇽', pattern: /^\d{10}$/, placeholder: '55 1234 5678', maxLength: 13, digitLength: 10 },
-  { id: 'jp', code: '+81', name: 'Japan', flag: '🇯🇵', pattern: /^\d{10,11}$/, placeholder: '90-1234-5678', maxLength: 13, digitLength: 11 }
+  {
+    id: 'us',
+    code: '+1',
+    name: 'United States',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjQjIyMjM0Ii8+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMCAwSDIxVjFIMFYwWk0wIDJIMjFWM0gwVjJaTTAgNEgyMVY1SDBWNFpNMCA2SDIxVjdIMFY2Wk0wIDhIMjFWOUgwVjhaTTAgMTBIMjFWMTFIMFYxMFpNMCAxMkgyMVYxM0gwVjEyWiIgZmlsbD0id2hpdGUiLz4KPHJlY3Qgd2lkdGg9IjkiIGhlaWdodD0iOCIgZmlsbD0iIzNDM0I2RSIvPgo8L3N2Zz4K',
+    pattern: /^\d{10}$/,
+    placeholder: '(555) 123-4567',
+    maxLength: 14,
+    digitLength: 10
+  },
+  {
+    id: 'gb',
+    code: '+44',
+    name: 'United Kingdom',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjMDEyMTY5Ii8+CjxwYXRoIGQ9Ik0wIDBoMjF2M0gwVjB6bTAgNmgyMXYzSDBWNnptMCA2aDIxdjNIMHYtM3oiIGZpbGw9IiNmZmYiLz4KPHBhdGggZD0iTTAgMGgyMXYxSDBWMHptMCAyaDIxdjFIMFYyem0wIDJoMjF2MUgwVjR6bTAgMmgyMXYxSDBWNnptMCA4aDIxdjFIMHYtMXoiIGZpbGw9IiNjZTExMjQiLz4KPC9zdmc+',
+    pattern: /^\d{10,11}$/,
+    placeholder: '20 1234 5678',
+    maxLength: 13,
+    digitLength: 11
+  },
+  {
+    id: 'ca',
+    code: '+1',
+    name: 'Canada',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjZmZmIi8+CjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjE1IiBmaWxsPSIjZmYwMDAwIi8+CjxyZWN0IHg9IjE0IiB3aWR0aD0iNyIgaGVpZ2h0PSIxNSIgZmlsbD0iI2ZmMDAwMCIvPgo8cGF0aCBkPSJNMTAuNSA0bDEgMi41aDIuNWwtMiAyIDEgMi41LTIuNS0xLTIuNSAxIDEtMi41LTItMmgyLjVsMS0yLjV6IiBmaWxsPSIjZmYwMDAwIi8+Cjwvc3ZnPg==',
+    pattern: /^\d{10}$/,
+    placeholder: '(555) 123-4567',
+    maxLength: 14,
+    digitLength: 10
+  },
+  {
+    id: 'de',
+    code: '+49',
+    name: 'Germany',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjUiIGZpbGw9IiMwMDAiLz4KPHJlY3QgeT0iNSIgd2lkdGg9IjIxIiBoZWlnaHQ9IjUiIGZpbGw9IiNmZjAwMDAiLz4KPHJlY3QgeT0iMTAiIHdpZHRoPSIyMSIgaGVpZ2h0PSI1IiBmaWxsPSIjZmZjZTAwIi8+Cjwvc3ZnPg==',
+    pattern: /^\d{10,12}$/,
+    placeholder: '30 12345678',
+    maxLength: 15,
+    digitLength: 12
+  },
+  {
+    id: 'fr',
+    code: '+33',
+    name: 'France',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMTUiIGZpbGw9IiMwMDIzOTUiLz4KPHJlY3QgeD0iNyIgd2lkdGg9IjciIGhlaWdodD0iMTUiIGZpbGw9IiNmZmYiLz4KPHJlY3QgeD0iMTQiIHdpZHRoPSI3IiBoZWlnaHQ9IjE1IiBmaWxsPSIjZWQyOTM5Ii8+Cjwvc3ZnPg==',
+    pattern: /^\d{9,10}$/,
+    placeholder: '1 23 45 67 89',
+    maxLength: 14,
+    digitLength: 10
+  },
+  {
+    id: 'au',
+    code: '+61',
+    name: 'Australia',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjMDEyMTY5Ii8+CjxyZWN0IHdpZHRoPSIxMC41IiBoZWlnaHQ9IjcuNSIgZmlsbD0iIzAxMjE2OSIvPgo8L3N2Zz4K',
+    pattern: /^\d{9}$/,
+    placeholder: '4 1234 5678',
+    maxLength: 12,
+    digitLength: 9
+  },
+  {
+    id: 'in',
+    code: '+91',
+    name: 'India',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjUiIGZpbGw9IiNmZjk5MzMiLz4KPHJlY3QgeT0iNSIgd2lkdGg9IjIxIiBoZWlnaHQ9IjUiIGZpbGw9IiNmZmYiLz4KPHJlY3QgeT0iMTAiIHdpZHRoPSIyMSIgaGVpZ2h0PSI1IiBmaWxsPSIjMTM4ODA4Ii8+Cjwvc3ZnPg==',
+    pattern: /^\d{10}$/,
+    placeholder: '98765 43210',
+    maxLength: 13,
+    digitLength: 10
+  },
+  {
+    id: 'br',
+    code: '+55',
+    name: 'Brazil',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjMDA5NzM5Ii8+CjxwYXRoIGQ9Ik0xMC41IDJMMTggNy41IDEwLjUgMTMgMyA3LjUgMTAuNSAyeiIgZmlsbD0iI2ZlZGYwMCIvPgo8L3N2Zz4K',
+    pattern: /^\d{10,11}$/,
+    placeholder: '11 99999-9999',
+    maxLength: 15,
+    digitLength: 11
+  },
+  {
+    id: 'mx',
+    code: '+52',
+    name: 'Mexico',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMTUiIGZpbGw9IiMwMDY4NDciLz4KPHJlY3QgeD0iNyIgd2lkdGg9IjciIGhlaWdodD0iMTUiIGZpbGw9IiNmZmYiLz4KPHJlY3QgeD0iMTQiIHdpZHRoPSI3IiBoZWlnaHQ9IjE1IiBmaWxsPSIjY2UxMTI2Ii8+Cjwvc3ZnPg==',
+    pattern: /^\d{10}$/,
+    placeholder: '55 1234 5678',
+    maxLength: 13,
+    digitLength: 10
+  },
+  {
+    id: 'jp',
+    code: '+81',
+    name: 'Japan',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjZmZmIi8+CjxjaXJjbGUgY3g9IjEwLjUiIGN5PSI3LjUiIHI9IjMiIGZpbGw9IiNiYzAwMmQiLz4KPC9zdmc+',
+    pattern: /^\d{10,11}$/,
+    placeholder: '90-1234-5678',
+    maxLength: 13,
+    digitLength: 11
+  }
 ];
 
 // Enhanced phone formatting functions with intelligent length management
@@ -127,6 +217,9 @@ const FigmaDesktop = () => {
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
   const [selectedCountryId, setSelectedCountryId] = useState('us'); // Use country ID instead of code
+
+  // Ref for the flag image
+  const flagImageRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
@@ -496,10 +589,18 @@ const FigmaDesktop = () => {
     }
   }, [selectedCountryId]);
 
-  // Country change handler
+  // Country change handler with flag update
   const handleCountryChange = useCallback((e) => {
     const newCountryId = e.target.value;
+    const newCountry = getCurrentCountry(newCountryId);
+
     setSelectedCountryId(newCountryId);
+
+    // Update flag image
+    if (flagImageRef.current && newCountry.flag) {
+      flagImageRef.current.src = newCountry.flag;
+      flagImageRef.current.alt = newCountry.name;
+    }
 
     // Reformat existing phone number for new country
     if (phoneNumber) {
@@ -507,6 +608,8 @@ const FigmaDesktop = () => {
       const newFormattedValue = formatPhoneNumber(cleanNumber, newCountryId);
       setPhoneNumber(newFormattedValue);
     }
+
+    console.log(`🌍 Country changed to: ${newCountry.code} (${newCountry.name})`);
   }, [phoneNumber]);
 
   // Navigation handler
@@ -1841,6 +1944,7 @@ const FigmaDesktop = () => {
               {/* Phone number Field */}
               <div
                 style={{
+                  position: 'relative',
                   display: 'flex',
                   width: '233px',
                   height: '30px',
@@ -1851,64 +1955,106 @@ const FigmaDesktop = () => {
                   background: '#303030'
                 }}
               >
-                {/* Country Code Dropdown */}
+                {/* Country Code Dropdown - Native Implementation */}
                 <div
                   style={{
-                    position: 'relative',
+                    position: 'absolute',
+                    left: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
                     display: 'flex',
                     alignItems: 'center',
-                    width: '50px',
-                    height: '24px'
+                    zIndex: 3,
+                    pointerEvents: 'none',
+                    width: '60px'
                   }}
                 >
-                  <select
-                    value={selectedCountryId}
-                    onChange={handleCountryChange}
-                    style={{
-                      position: 'absolute',
-                      width: '100%',
-                      height: '100%',
-                      opacity: 0,
-                      cursor: 'pointer',
-                      zIndex: 2,
-                      fontSize: '16px' // Prevent zoom on iOS
-                    }}
-                  >
-                    {COUNTRIES.map((country) => (
-                      <option
-                        key={country.id}
-                        value={country.id}
-                        style={{
-                          backgroundColor: '#303030',
-                          color: '#FFF',
-                          padding: '8px'
-                        }}
-                      >
-                        {country.flag} {country.name} {country.code}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Visual Display */}
                   <div
                     style={{
+                      position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '12px',
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      pointerEvents: 'none',
-                      zIndex: 1
+                      pointerEvents: 'auto',
+                      backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                      borderRadius: '6px',
+                      padding: '2px 4px',
+                      height: '28px',
+                      width: '56px',
+                      overflow: 'hidden'
                     }}
                   >
-                    <span style={{ fontSize: '14px' }}>
-                      {getCurrentCountry(selectedCountryId).flag}
-                    </span>
-                    <span style={{ fontSize: '10px', opacity: 0.8 }}>
-                      {getCurrentCountry(selectedCountryId).code}
-                    </span>
-                    <span style={{ fontSize: '8px', opacity: 0.6 }}>▼</span>
+                    {/* Flag Display */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '4px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        pointerEvents: 'none',
+                        zIndex: 2
+                      }}
+                    >
+                      <img
+                        ref={flagImageRef}
+                        alt={getCurrentCountry(selectedCountryId).name}
+                        src={getCurrentCountry(selectedCountryId).flag}
+                        style={{
+                          width: '20px',
+                          height: '15px',
+                          marginRight: '6px',
+                          borderRadius: '2px'
+                        }}
+                      />
+                    </div>
+
+                    {/* Native Select */}
+                    <select
+                      value={selectedCountryId}
+                      onChange={handleCountryChange}
+                      style={{
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'transparent',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: '500',
+                        fontSize: '14px',
+                        padding: '4px 8px 4px 24px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        MozAppearance: 'none',
+                        width: '52px',
+                        height: '24px',
+                        position: 'relative',
+                        zIndex: 3,
+                        minHeight: '44px', // iOS minimum touch target
+                        touchAction: 'manipulation'
+                      }}
+                      aria-label="Select country code"
+                    >
+                      {COUNTRIES.map((country) => (
+                        <option
+                          key={country.id}
+                          value={country.id}
+                          data-country={country.id.toUpperCase()}
+                          data-name={country.name}
+                          style={{
+                            backgroundColor: '#ffffff',
+                            color: '#000000',
+                            padding: '8px 12px',
+                            fontSize: '14px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: '400'
+                          }}
+                        >
+                          {country.id.toUpperCase()} {country.code} {country.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -1927,7 +2073,7 @@ const FigmaDesktop = () => {
                   placeholder={getCurrentCountry(selectedCountryId).placeholder}
                   disabled={phoneSubmitting}
                   style={{
-                    width: '160px', // Reduced to accommodate country dropdown
+                    width: '160px',
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
@@ -1936,7 +2082,9 @@ const FigmaDesktop = () => {
                     fontSize: '14px',
                     fontWeight: '500',
                     lineHeight: 'normal',
-                    minHeight: '44px'
+                    minHeight: '44px',
+                    paddingLeft: '60px', // Space for flag and country selector
+                    marginLeft: '-60px' // Overlap with the container padding
                   }}
                 />
               </div>
