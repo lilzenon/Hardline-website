@@ -826,6 +826,7 @@ const FigmaDesktop = () => {
             e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
           }}
         >
+          {/* Video background container */}
           <div
             style={{
               position: 'absolute',
@@ -834,10 +835,54 @@ const FigmaDesktop = () => {
               width: `${scaledDimensions.rightHeroWidth}px`,
               height: `${scaledDimensions.rightHeroHeight}px`,
               borderRadius: '24px',
-              background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray center / cover no-repeat`,
               overflow: 'hidden'
             }}
-          />
+          >
+            {/* YouTube iframe wrapper with aspect ratio preservation */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '100%',
+                height: '100%',
+                overflow: 'hidden'
+              }}
+            >
+              {/* Calculate dimensions to cover the container while maintaining aspect ratio */}
+              <iframe
+                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1"
+                title="Henry Fong YouTube Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '100%',
+                  height: '100%',
+                  transform: 'translate(-50%, -50%) scale(1.5)', // Scale up to ensure coverage
+                  pointerEvents: 'none', // Disable user interaction with the video
+                  border: 'none' // Modern replacement for frameBorder="0"
+                }}
+              />
+            </div>
+
+            {/* Gradient overlay to match original design */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '0',
+                left: '0',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
+                borderRadius: '24px',
+                zIndex: 1 // Ensure overlay is above video but below text
+              }}
+            />
+          </div>
 
           {/* Video Hero Text Box */}
           <div
@@ -851,7 +896,8 @@ const FigmaDesktop = () => {
               padding: '8px 16px',
               justifyContent: 'space-between',
               alignItems: 'flex-end',
-              gap: '16px'
+              gap: '16px',
+              zIndex: 2 // Ensure text appears above video and gradient overlay
             }}
           >
             {/* Left - Date and title */}
