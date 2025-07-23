@@ -222,6 +222,25 @@ const EventCard = memo(({ card, scaledDimensions }) => {
 });
 
 const FigmaDesktop = () => {
+  // Add shake animation styles
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-4px); }
+        75% { transform: translateX(4px); }
+      }
+      .shake {
+        animation: shake 400ms cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   const [homeSettings, setHomeSettings] = useState(null);
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [formattedDate, setFormattedDate] = useState('');
@@ -231,9 +250,12 @@ const FigmaDesktop = () => {
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
   const [selectedCountryId, setSelectedCountryId] = useState('us'); // Use country ID instead of code
+  const [phoneInputState, setPhoneInputState] = useState('normal'); // normal, loading, valid, invalid
+  const [isButtonPressed, setIsButtonPressed] = useState(false);
 
-  // Ref for the flag image
+  // Refs for animations
   const flagImageRef = useRef(null);
+  const phoneContainerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
@@ -484,11 +506,22 @@ const FigmaDesktop = () => {
     const currentCountry = getCurrentCountry(selectedCountryId);
     if (!isValidPhoneNumber(trimmedPhone, selectedCountryId)) {
       console.warn('Invalid phone number format for', currentCountry.name);
+
+      // Show invalid state with shake animation
+      setPhoneInputState('invalid');
+      if (phoneContainerRef.current) {
+        phoneContainerRef.current.classList.add('shake');
+        setTimeout(() => {
+          phoneContainerRef.current?.classList.remove('shake');
+          setPhoneInputState('normal');
+        }, 400);
+      }
       return;
     }
 
     try {
       setPhoneSubmitting(true);
+      setPhoneInputState('loading');
 
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
@@ -509,20 +542,56 @@ const FigmaDesktop = () => {
       if (response.ok && result.success) {
         console.log('✅ Phone number submitted successfully');
         setPhoneSubmitted(true);
+        setPhoneInputState('valid');
         setPhoneNumber('');
+
         // Reset success state after 3 seconds
-        setTimeout(() => setPhoneSubmitted(false), 3000);
+        setTimeout(() => {
+          setPhoneSubmitted(false);
+          setPhoneInputState('normal');
+        }, 3000);
       } else {
         console.error('❌ Failed to submit phone number:', result.error || 'Unknown error');
-        // Could add user-facing error message here
+
+        // Show error state with shake animation
+        setPhoneInputState('invalid');
+        if (phoneContainerRef.current) {
+          phoneContainerRef.current.classList.add('shake');
+          setTimeout(() => {
+            phoneContainerRef.current?.classList.remove('shake');
+            setPhoneInputState('normal');
+          }, 400);
+        }
       }
     } catch (error) {
       console.error('❌ Error submitting phone number:', error);
-      // Could add user-facing error message here
+
+      // Show error state with shake animation
+      setPhoneInputState('invalid');
+      if (phoneContainerRef.current) {
+        phoneContainerRef.current.classList.add('shake');
+        setTimeout(() => {
+          phoneContainerRef.current?.classList.remove('shake');
+          setPhoneInputState('normal');
+        }, 400);
+      }
     } finally {
       setPhoneSubmitting(false);
     }
   }, [phoneNumber, phoneSubmitting, selectedCountryId]);
+
+  // Button press animation handlers
+  const handleButtonMouseDown = useCallback(() => {
+    setIsButtonPressed(true);
+  }, []);
+
+  const handleButtonMouseUp = useCallback(() => {
+    setIsButtonPressed(false);
+  }, []);
+
+  const handleButtonMouseLeave = useCallback(() => {
+    setIsButtonPressed(false);
+  }, []);
 
   // Robust phone number formatting handler with proper cursor management
   const handlePhoneChange = useCallback((e) => {
@@ -1967,6 +2036,8 @@ const FigmaDesktop = () => {
             >
               {/* Phone number Field */}
               <div
+                ref={phoneContainerRef}
+                className={phoneInputState === 'invalid' ? 'shake' : ''}
                 style={{
                   display: 'flex',
                   width: '243px', // Width accommodates flag + country code + input
@@ -1974,7 +2045,19 @@ const FigmaDesktop = () => {
                   alignItems: 'center',
                   borderRadius: '15px', // Consistent with send button radius
                   background: '#303030',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  border: `1px solid ${
+                    phoneInputState === 'loading' ? '#3B82F6' :
+                    phoneInputState === 'valid' ? '#10B981' :
+                    phoneInputState === 'invalid' ? '#EF4444' :
+                    'transparent'
+                  }`,
+                  boxShadow:
+                    phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
+                    phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
+                    phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
+                    'none',
+                  transition: 'all 0.3s ease'
                 }}
               >
                 {/* Country Code Dropdown Section */}
@@ -2108,6 +2191,11 @@ const FigmaDesktop = () => {
               {/* SEND Button */}
               <div
                 onClick={handlePhoneSubmit}
+                onMouseDown={handleButtonMouseDown}
+                onMouseUp={handleButtonMouseUp}
+                onMouseLeave={handleButtonMouseLeave}
+                onTouchStart={handleButtonMouseDown}
+                onTouchEnd={handleButtonMouseUp}
                 style={{
                   display: 'flex',
                   width: '51px',
@@ -2119,7 +2207,11 @@ const FigmaDesktop = () => {
                   background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                   cursor: phoneSubmitting ? 'not-allowed' : 'pointer',
                   opacity: phoneSubmitting ? 0.7 : 1,
-                  boxSizing: 'border-box' // Ensure padding is included in dimensions
+                  boxSizing: 'border-box', // Ensure padding is included in dimensions
+                  transform: isButtonPressed && !phoneSubmitting ? 'scale(0.96)' : 'scale(1)',
+                  transition: 'all 0.1s ease',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent'
                 }}
               >
                 <span
