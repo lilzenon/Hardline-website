@@ -1969,10 +1969,10 @@ const FigmaDesktop = () => {
               <div
                 style={{
                   display: 'flex',
-                  width: '233px',
+                  width: '243px', // Width accommodates flag + country code + input
                   height: '30px',
                   alignItems: 'center',
-                  borderRadius: '100px',
+                  borderRadius: '15px', // Consistent with send button radius
                   background: '#303030',
                   overflow: 'hidden'
                 }}
@@ -1983,22 +1983,23 @@ const FigmaDesktop = () => {
                     position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
-                    width: '60px',
+                    width: '90px', // Increased width to accommodate flag + country code
                     height: '100%',
                     flexShrink: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                    borderRadius: '100px 0 0 100px'
+                    backgroundColor: '#303030', // Same as container background for unified look
+                    borderRadius: '15px 0 0 15px' // Match container radius
                   }}
                 >
-                  {/* Flag Display */}
+                  {/* Flag and Country Code Display */}
                   <div
                     style={{
                       position: 'absolute',
-                      left: '8px',
+                      left: '8px', // Padding from left edge
                       top: '50%',
                       transform: 'translateY(-50%)',
                       display: 'flex',
                       alignItems: 'center',
+                      gap: '6px', // Space between flag and country code
                       pointerEvents: 'none',
                       zIndex: 2
                     }}
@@ -2013,9 +2014,21 @@ const FigmaDesktop = () => {
                         borderRadius: '2px'
                       }}
                     />
+                    <span
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        lineHeight: '1',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {getCurrentCountry(selectedCountryId).code}
+                    </span>
                   </div>
 
-                  {/* Native Select */}
+                  {/* Native Select - Covers entire flag + country code area */}
                   <select
                     value={selectedCountryId}
                     onChange={handleCountryChange}
@@ -2023,7 +2036,7 @@ const FigmaDesktop = () => {
                       position: 'absolute',
                       top: 0,
                       left: 0,
-                      width: '100%',
+                      width: '100%', // Covers the full 90px width
                       height: '100%',
                       backgroundColor: 'transparent',
                       border: 'none',
