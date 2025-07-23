@@ -1737,25 +1737,25 @@ const FigmaDesktop = () => {
                 style={{
                   display: 'flex',
                   width: '51px',
+                  height: '30px', // Match the phone field height
                   justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '10px',
-                  padding: '13px 12px',
-                  borderRadius: '100px',
+                  padding: '6px 8px', // Reduced padding to fit within container
+                  borderRadius: '15px', // Adjusted for smaller height (half of 30px)
                   background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                   cursor: phoneSubmitting ? 'not-allowed' : 'pointer',
                   opacity: phoneSubmitting ? 0.7 : 1,
-                  minHeight: '44px',
-                  minWidth: '44px'
+                  boxSizing: 'border-box' // Ensure padding is included in dimensions
                 }}
               >
                 <span
                   style={{
                     color: '#232323',
                     fontFamily: 'Inter',
-                    fontSize: '10px',
+                    fontSize: '9px', // Slightly smaller for better fit
                     fontWeight: '700',
-                    lineHeight: 'normal'
+                    lineHeight: '1',
+                    whiteSpace: 'nowrap' // Prevent text wrapping
                   }}
                 >
                   {phoneSubmitted ? '✓' : (phoneSubmitting ? '...' : 'SEND')}

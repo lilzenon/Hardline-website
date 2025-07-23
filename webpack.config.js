@@ -6,23 +6,9 @@ module.exports = {
     entry: './src/react/index.js',
     output: {
         path: path.resolve(__dirname, 'static/react'),
-        filename: process.env.NODE_ENV === 'production' ? '[name].[contenthash].js' : 'bundle.js',
+        filename: 'bundle.js',
         publicPath: '/react/',
         clean: true
-    },
-    optimization: {
-        splitChunks: {
-            chunks: 'all',
-            cacheGroups: {
-                vendor: {
-                    test: /[\\/]node_modules[\\/]/,
-                    name: 'vendors',
-                    chunks: 'all',
-                },
-            },
-        },
-        usedExports: true, // Enable tree shaking
-        sideEffects: false, // Mark as side-effect free for better tree shaking
     },
     module: {
         rules: [{
