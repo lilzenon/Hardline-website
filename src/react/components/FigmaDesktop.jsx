@@ -9,45 +9,71 @@ const dateFormatCache = new Map();
 
 // Country codes and phone patterns for international support
 const COUNTRIES = [
-  { code: '+1', name: 'United States', flag: '🇺🇸', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14 },
-  { code: '+1', name: 'Canada', flag: '🇨🇦', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14 },
-  { code: '+44', name: 'United Kingdom', flag: '🇬🇧', pattern: /^\d{10,11}$/, placeholder: '20 1234 5678', maxLength: 13 },
-  { code: '+49', name: 'Germany', flag: '🇩🇪', pattern: /^\d{10,12}$/, placeholder: '30 12345678', maxLength: 15 },
-  { code: '+33', name: 'France', flag: '🇫🇷', pattern: /^\d{9,10}$/, placeholder: '1 23 45 67 89', maxLength: 14 },
-  { code: '+61', name: 'Australia', flag: '🇦🇺', pattern: /^\d{9}$/, placeholder: '4 1234 5678', maxLength: 12 },
-  { code: '+91', name: 'India', flag: '🇮🇳', pattern: /^\d{10}$/, placeholder: '98765 43210', maxLength: 13 },
-  { code: '+55', name: 'Brazil', flag: '🇧🇷', pattern: /^\d{10,11}$/, placeholder: '11 99999-9999', maxLength: 15 },
-  { code: '+52', name: 'Mexico', flag: '🇲🇽', pattern: /^\d{10}$/, placeholder: '55 1234 5678', maxLength: 13 },
-  { code: '+81', name: 'Japan', flag: '🇯🇵', pattern: /^\d{10,11}$/, placeholder: '90-1234-5678', maxLength: 13 }
+  { id: 'us', code: '+1', name: 'United States', flag: '🇺🇸', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14, digitLength: 10 },
+  { id: 'ca', code: '+1', name: 'Canada', flag: '🇨🇦', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14, digitLength: 10 },
+  { id: 'gb', code: '+44', name: 'United Kingdom', flag: '🇬🇧', pattern: /^\d{10,11}$/, placeholder: '20 1234 5678', maxLength: 13, digitLength: 11 },
+  { id: 'de', code: '+49', name: 'Germany', flag: '🇩🇪', pattern: /^\d{10,12}$/, placeholder: '30 12345678', maxLength: 15, digitLength: 12 },
+  { id: 'fr', code: '+33', name: 'France', flag: '🇫🇷', pattern: /^\d{9,10}$/, placeholder: '1 23 45 67 89', maxLength: 14, digitLength: 10 },
+  { id: 'au', code: '+61', name: 'Australia', flag: '🇦🇺', pattern: /^\d{9}$/, placeholder: '4 1234 5678', maxLength: 12, digitLength: 9 },
+  { id: 'in', code: '+91', name: 'India', flag: '🇮🇳', pattern: /^\d{10}$/, placeholder: '98765 43210', maxLength: 13, digitLength: 10 },
+  { id: 'br', code: '+55', name: 'Brazil', flag: '🇧🇷', pattern: /^\d{10,11}$/, placeholder: '11 99999-9999', maxLength: 15, digitLength: 11 },
+  { id: 'mx', code: '+52', name: 'Mexico', flag: '🇲🇽', pattern: /^\d{10}$/, placeholder: '55 1234 5678', maxLength: 13, digitLength: 10 },
+  { id: 'jp', code: '+81', name: 'Japan', flag: '🇯🇵', pattern: /^\d{10,11}$/, placeholder: '90-1234-5678', maxLength: 13, digitLength: 11 }
 ];
 
-// Phone formatting functions
-const formatPhoneNumber = (value, countryCode) => {
+// Enhanced phone formatting functions with intelligent length management
+const formatPhoneNumber = (value, countryId) => {
   const phoneNumber = value.replace(/[^\d]/g, '');
-  if (phoneNumber.length === 0) return '';
+  const country = COUNTRIES.find(c => c.id === countryId);
+  if (!country) return phoneNumber;
 
-  switch (countryCode) {
+  // Limit digits to country's max digit length
+  const limitedNumber = phoneNumber.slice(0, country.digitLength);
+  if (limitedNumber.length === 0) return '';
+
+  switch (country.code) {
     case '+1': // US/Canada
-      if (phoneNumber.length <= 3) return `(${phoneNumber}`;
-      if (phoneNumber.length <= 6) return `(${phoneNumber.slice(0,3)}) ${phoneNumber.slice(3)}`;
-      return `(${phoneNumber.slice(0,3)}) ${phoneNumber.slice(3,6)}-${phoneNumber.slice(6,10)}`;
+      if (limitedNumber.length <= 3) return `(${limitedNumber}`;
+      if (limitedNumber.length <= 6) return `(${limitedNumber.slice(0,3)}) ${limitedNumber.slice(3)}`;
+      return `(${limitedNumber.slice(0,3)}) ${limitedNumber.slice(3,6)}-${limitedNumber.slice(6,10)}`;
 
     case '+44': // UK
-      if (phoneNumber.length <= 2) return phoneNumber;
-      if (phoneNumber.length <= 6) return `${phoneNumber.slice(0,2)} ${phoneNumber.slice(2)}`;
-      if (phoneNumber.length === 10) return `${phoneNumber.slice(0,2)} ${phoneNumber.slice(2,6)} ${phoneNumber.slice(6)}`;
-      return `${phoneNumber.slice(0,3)} ${phoneNumber.slice(3,7)} ${phoneNumber.slice(7)}`;
+      if (limitedNumber.length <= 2) return limitedNumber;
+      if (limitedNumber.length <= 6) return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+      if (limitedNumber.length <= 10) return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,7)} ${limitedNumber.slice(7)}`;
+
+    case '+49': // Germany
+      if (limitedNumber.length <= 3) return limitedNumber;
+      if (limitedNumber.length <= 7) return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3)}`;
+      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,7)} ${limitedNumber.slice(7)}`;
+
+    case '+33': // France
+      if (limitedNumber.length <= 1) return limitedNumber;
+      if (limitedNumber.length <= 3) return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1)}`;
+      if (limitedNumber.length <= 5) return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1,3)} ${limitedNumber.slice(3)}`;
+      if (limitedNumber.length <= 7) return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1,3)} ${limitedNumber.slice(3,5)} ${limitedNumber.slice(5)}`;
+      return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1,3)} ${limitedNumber.slice(3,5)} ${limitedNumber.slice(5,7)} ${limitedNumber.slice(7)}`;
 
     default:
-      return phoneNumber;
+      // Generic formatting for other countries
+      if (limitedNumber.length <= 3) return limitedNumber;
+      if (limitedNumber.length <= 6) return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3)}`;
+      if (limitedNumber.length <= 9) return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,6)} ${limitedNumber.slice(6,9)} ${limitedNumber.slice(9)}`;
   }
 };
 
-const isValidPhoneNumber = (value, countryCode) => {
+const isValidPhoneNumber = (value, countryId) => {
   const phoneNumber = value.replace(/[^\d]/g, '');
-  const country = COUNTRIES.find(c => c.code === countryCode);
+  const country = COUNTRIES.find(c => c.id === countryId);
   if (!country) return phoneNumber.length >= 10 && phoneNumber.length <= 15;
   return country.pattern.test(phoneNumber);
+};
+
+// Get current country data
+const getCurrentCountry = (countryId) => {
+  return COUNTRIES.find(c => c.id === countryId) || COUNTRIES[0];
 };
 
 // Memoized Event Card Component for better performance
@@ -100,7 +126,7 @@ const FigmaDesktop = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
-  const [selectedCountryCode, setSelectedCountryCode] = useState('+1');
+  const [selectedCountryId, setSelectedCountryId] = useState('us'); // Use country ID instead of code
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
@@ -348,15 +374,16 @@ const FigmaDesktop = () => {
     if (!trimmedPhone || phoneSubmitting) return;
 
     // Validate phone number format with selected country
-    if (!isValidPhoneNumber(trimmedPhone, selectedCountryCode)) {
-      console.warn('Invalid phone number format for', selectedCountryCode);
+    const currentCountry = getCurrentCountry(selectedCountryId);
+    if (!isValidPhoneNumber(trimmedPhone, selectedCountryId)) {
+      console.warn('Invalid phone number format for', currentCountry.name);
       return;
     }
 
     try {
       setPhoneSubmitting(true);
 
-      console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: selectedCountryCode });
+      console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
       // Use the new homepage phone submission endpoint
       const response = await fetch('/api/home-settings/submit-phone', {
@@ -366,7 +393,7 @@ const FigmaDesktop = () => {
         },
         body: JSON.stringify({
           phone: trimmedPhone,
-          countryCode: selectedCountryCode
+          countryCode: currentCountry.code
         })
       });
 
@@ -388,24 +415,96 @@ const FigmaDesktop = () => {
     } finally {
       setPhoneSubmitting(false);
     }
-  }, [phoneNumber, phoneSubmitting, selectedCountryCode]);
+  }, [phoneNumber, phoneSubmitting, selectedCountryId]);
 
-  // Phone number formatting handler
+  // Enhanced phone number formatting handler with intelligent input management
   const handlePhoneChange = useCallback((e) => {
-    const value = e.target.value;
-    const formattedValue = formatPhoneNumber(value, selectedCountryCode);
-    setPhoneNumber(formattedValue);
-  }, [selectedCountryCode]);
+    const input = e.target;
+    const newValue = input.value;
+    const currentCountry = getCurrentCountry(selectedCountryId);
 
-  // Country code change handler
+    // Get cursor position before formatting
+    const cursorPosition = input.selectionStart;
+    const oldValue = phoneNumber;
+
+    // Check if user is trying to type beyond max length
+    const newDigits = newValue.replace(/[^\d]/g, '');
+    if (newDigits.length > currentCountry.digitLength) {
+      // Don't allow typing beyond max digits
+      return;
+    }
+
+    // Format the new value
+    const formattedValue = formatPhoneNumber(newValue, selectedCountryId);
+
+    // Update state
+    setPhoneNumber(formattedValue);
+
+    // Restore cursor position after formatting
+    setTimeout(() => {
+      if (input === document.activeElement) {
+        // Calculate new cursor position based on formatting changes
+        let newCursorPosition = cursorPosition;
+
+        // If formatted value is longer, cursor should move forward
+        if (formattedValue.length > oldValue.length && cursorPosition === oldValue.length) {
+          newCursorPosition = formattedValue.length;
+        }
+        // If we're at the end and value got shorter due to max length, stay at end
+        else if (formattedValue.length < newValue.length) {
+          newCursorPosition = formattedValue.length;
+        }
+
+        input.setSelectionRange(newCursorPosition, newCursorPosition);
+      }
+    }, 0);
+  }, [selectedCountryId, phoneNumber]);
+
+  // Enhanced backspace handling
+  const handlePhoneKeyDown = useCallback((e) => {
+    if (e.key === 'Backspace') {
+      const input = e.target;
+      const cursorPosition = input.selectionStart;
+      const value = input.value;
+
+      // If cursor is after a formatting character, delete the digit before it
+      if (cursorPosition > 0) {
+        const charBefore = value[cursorPosition - 1];
+        if ([' ', '(', ')', '-'].includes(charBefore)) {
+          e.preventDefault();
+
+          // Find the last digit before the formatting character
+          let newCursorPos = cursorPosition - 1;
+          while (newCursorPos > 0 && ![...value.slice(0, newCursorPos)].reverse().find(c => /\d/.test(c))) {
+            newCursorPos--;
+          }
+
+          // Remove the digit and reformat
+          const newValue = value.slice(0, newCursorPos - 1) + value.slice(cursorPosition);
+          const formattedValue = formatPhoneNumber(newValue, selectedCountryId);
+          setPhoneNumber(formattedValue);
+
+          // Set cursor position
+          setTimeout(() => {
+            if (input === document.activeElement) {
+              const newPos = Math.max(0, newCursorPos - 1);
+              input.setSelectionRange(newPos, newPos);
+            }
+          }, 0);
+        }
+      }
+    }
+  }, [selectedCountryId]);
+
+  // Country change handler
   const handleCountryChange = useCallback((e) => {
-    const newCountryCode = e.target.value;
-    setSelectedCountryCode(newCountryCode);
+    const newCountryId = e.target.value;
+    setSelectedCountryId(newCountryId);
 
     // Reformat existing phone number for new country
     if (phoneNumber) {
       const cleanNumber = phoneNumber.replace(/[^\d]/g, '');
-      const newFormattedValue = formatPhoneNumber(cleanNumber, newCountryCode);
+      const newFormattedValue = formatPhoneNumber(cleanNumber, newCountryId);
       setPhoneNumber(newFormattedValue);
     }
   }, [phoneNumber]);
@@ -1763,7 +1862,7 @@ const FigmaDesktop = () => {
                   }}
                 >
                   <select
-                    value={selectedCountryCode}
+                    value={selectedCountryId}
                     onChange={handleCountryChange}
                     style={{
                       position: 'absolute',
@@ -1771,12 +1870,21 @@ const FigmaDesktop = () => {
                       height: '100%',
                       opacity: 0,
                       cursor: 'pointer',
-                      zIndex: 2
+                      zIndex: 2,
+                      fontSize: '16px' // Prevent zoom on iOS
                     }}
                   >
-                    {COUNTRIES.map((country, index) => (
-                      <option key={`${country.code}-${index}`} value={country.code}>
-                        {country.flag} {country.code}
+                    {COUNTRIES.map((country) => (
+                      <option
+                        key={country.id}
+                        value={country.id}
+                        style={{
+                          backgroundColor: '#303030',
+                          color: '#FFF',
+                          padding: '8px'
+                        }}
+                      >
+                        {country.flag} {country.name} {country.code}
                       </option>
                     ))}
                   </select>
@@ -1795,10 +1903,10 @@ const FigmaDesktop = () => {
                     }}
                   >
                     <span style={{ fontSize: '14px' }}>
-                      {COUNTRIES.find(c => c.code === selectedCountryCode)?.flag || '🇺🇸'}
+                      {getCurrentCountry(selectedCountryId).flag}
                     </span>
                     <span style={{ fontSize: '10px', opacity: 0.8 }}>
-                      {selectedCountryCode}
+                      {getCurrentCountry(selectedCountryId).code}
                     </span>
                     <span style={{ fontSize: '8px', opacity: 0.6 }}>▼</span>
                   </div>
@@ -1809,8 +1917,14 @@ const FigmaDesktop = () => {
                   type="tel"
                   value={phoneNumber}
                   onChange={handlePhoneChange}
-                  onKeyDown={(e) => e.key === 'Enter' && handlePhoneSubmit()}
-                  placeholder={COUNTRIES.find(c => c.code === selectedCountryCode)?.placeholder || '(555) 123-4567'}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handlePhoneSubmit();
+                    } else {
+                      handlePhoneKeyDown(e);
+                    }
+                  }}
+                  placeholder={getCurrentCountry(selectedCountryId).placeholder}
                   disabled={phoneSubmitting}
                   style={{
                     width: '160px', // Reduced to accommodate country dropdown
