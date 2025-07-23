@@ -1152,6 +1152,12 @@ const FigmaDesktop = () => {
                       src={card.coverImage}
                       alt={`${card.title} event cover`}
                       loading="lazy"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent interference with card interactions
+                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                          window.open(card.ticketsUrl, '_blank');
+                        }
+                      }}
                       style={{
                         position: 'absolute',
                         left: '3px',
@@ -1160,7 +1166,31 @@ const FigmaDesktop = () => {
                         height: '79.04px',
                         borderRadius: '14px',
                         objectFit: 'cover',
-                        backgroundColor: 'lightgray'
+                        backgroundColor: 'lightgray',
+                        cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: 'scale(1) translateY(0px)',
+                        boxShadow: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                          e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                          e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'scale(1) translateY(0px)';
+                        e.target.style.boxShadow = 'none';
+                      }}
+                      onMouseDown={(e) => {
+                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                          e.target.style.transform = 'scale(0.995) translateY(0px)';
+                        }
+                      }}
+                      onMouseUp={(e) => {
+                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                          e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                        }
                       }}
                       onError={(e) => {
                         e.target.style.backgroundColor = 'lightgray';
