@@ -799,7 +799,7 @@ const FigmaDesktop = () => {
 
         {/* Right Hero */}
         <div
-          onClick={() => handleNavClick('Events')}
+          onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
           style={{
             width: `${scaledDimensions.rightHeroWidth}px`,
             height: `${scaledDimensions.rightHeroHeight}px`,
@@ -942,7 +942,6 @@ const FigmaDesktop = () => {
 
             {/* Right - CTA */}
             <div
-              onClick={() => handleNavClick('Events')}
               style={{
                 display: 'flex',
                 width: '90px',
@@ -950,40 +949,55 @@ const FigmaDesktop = () => {
                 padding: '4px',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: '4px',
-                borderRadius: '29px',
-                background: 'rgba(38, 38, 38, 0.80)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                transform: 'scale(1)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'scale(1.05)';
-                e.target.style.background = 'rgba(76, 76, 76, 0.90)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.background = 'rgba(38, 38, 38, 0.80)';
-              }}
-              onMouseDown={(e) => {
-                e.target.style.transform = 'scale(0.95)';
-              }}
-              onMouseUp={(e) => {
-                e.target.style.transform = 'scale(1.05)';
+                gap: '4px'
               }}
             >
-              <span
+              <div
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent card click
+                  window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                }}
                 style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '10px',
-                  fontWeight: '500',
-                  lineHeight: 'normal',
-                  pointerEvents: 'none' // Prevent text from interfering with button events
+                  display: 'flex',
+                  width: '90px',
+                  height: '36px',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px',
+                  borderRadius: '29px',
+                  background: 'rgba(38, 38, 38, 0.80)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'scale(1.05)';
+                  e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.background = 'rgba(38, 38, 38, 0.80)';
+                }}
+                onMouseDown={(e) => {
+                  e.target.style.transform = 'scale(0.95)';
+                }}
+                onMouseUp={(e) => {
+                  e.target.style.transform = 'scale(1.05)';
                 }}
               >
-                Watch now
-              </span>
+                <span
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: `${Math.max(10, Math.min(14, scaledDimensions.rightHeroWidth * 0.028))}px`, // Responsive font size
+                    fontWeight: '400',
+                    lineHeight: 'normal',
+                    pointerEvents: 'none' // Prevent text from interfering with button events
+                  }}
+                >
+                  Watch now
+                </span>
+              </div>
             </div>
           </div>
         </div>
