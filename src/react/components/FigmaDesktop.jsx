@@ -18,6 +18,7 @@ const FigmaDesktop = () => {
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+  const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
     heroHeight: 299,
@@ -289,6 +290,49 @@ const FigmaDesktop = () => {
     }
   }, [phoneNumber, phoneSubmitting, validatePhoneNumber]);
 
+  // Navigation handler
+  const handleNavClick = useCallback((tabName) => {
+    setActiveNavTab(tabName);
+    console.log(`🧭 Navigation: Switched to ${tabName} tab`);
+  }, []);
+
+  // Get navigation pill styles based on active state
+  const getNavPillStyles = useCallback((tabName, leftPosition) => {
+    const isActive = activeNavTab === tabName;
+    return {
+      position: 'absolute',
+      left: leftPosition,
+      top: '3.61px',
+      display: 'flex',
+      width: '71.77px',
+      height: '26.79px',
+      padding: '13px 12px',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: '10px',
+      borderRadius: '10px',
+      background: isActive ? '#000' : 'transparent',
+      boxShadow: isActive ? '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' : 'none',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease', // Smooth animation
+      transform: isActive ? 'scale(1)' : 'scale(0.95)', // Subtle scale effect
+      opacity: isActive ? 1 : 0.8
+    };
+  }, [activeNavTab]);
+
+  // Get navigation text styles based on active state
+  const getNavTextStyles = useCallback((tabName) => {
+    const isActive = activeNavTab === tabName;
+    return {
+      color: '#FFF',
+      fontFamily: 'Inter',
+      fontSize: '12px',
+      fontWeight: isActive ? '300' : '400',
+      lineHeight: 'normal',
+      transition: 'font-weight 0.3s ease' // Smooth font weight transition
+    };
+  }, [activeNavTab]);
+
   // Memoized event cards processing for performance
   const processedEventCards = useMemo(() => {
     const featuredCards = [];
@@ -482,92 +526,32 @@ const FigmaDesktop = () => {
             }}
           />
 
-          {/* Events - Selected */}
+          {/* Events */}
           <div
-            style={{
-              position: 'absolute',
-              left: '3.24px',
-              top: '3.61px',
-              display: 'flex',
-              width: '71.77px',
-              height: '26.79px',
-              padding: '13px 12px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              borderRadius: '10px',
-              background: '#000',
-              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
-              cursor: 'pointer'
-            }}
+            style={getNavPillStyles('Events', '3.24px')}
+            onClick={() => handleNavClick('Events')}
           >
-            <span
-              style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: '300',
-                lineHeight: 'normal'
-              }}
-            >
+            <span style={getNavTextStyles('Events')}>
               Events
             </span>
           </div>
 
           {/* About */}
           <div
-            style={{
-              position: 'absolute',
-              left: '77.03px',
-              top: '3.61px',
-              display: 'flex',
-              width: '71.77px',
-              height: '26.79px',
-              padding: '13px 12px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              cursor: 'pointer'
-            }}
+            style={getNavPillStyles('About', '77.03px')}
+            onClick={() => handleNavClick('About')}
           >
-            <span
-              style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: '400',
-                lineHeight: 'normal'
-              }}
-            >
+            <span style={getNavTextStyles('About')}>
               About
             </span>
           </div>
 
           {/* Contact */}
           <div
-            style={{
-              position: 'absolute',
-              left: '150.82px',
-              top: '3.61px',
-              display: 'flex',
-              width: '71.77px',
-              height: '26.79px',
-              padding: '13px 12px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              cursor: 'pointer'
-            }}
+            style={getNavPillStyles('Contact', '150.82px')}
+            onClick={() => handleNavClick('Contact')}
           >
-            <span
-              style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: '12px',
-                fontWeight: '400',
-                lineHeight: 'normal'
-              }}
-            >
+            <span style={getNavTextStyles('Contact')}>
               Contact
             </span>
           </div>
@@ -580,24 +564,40 @@ const FigmaDesktop = () => {
           position: 'relative',
           display: 'flex',
           width: '100%',
-          height: `${scaledDimensions.heroHeight}px`,
           justifyContent: 'space-between',
           alignItems: 'center',
           margin: '20px 0 0 0',
           padding: '0',
-          flexDirection: 'row',
-          overflow: 'hidden'
+          flexDirection: 'row'
         }}
       >
         {/* Left Hero */}
         <div
+          onClick={() => handleNavClick('Events')}
           style={{
             width: `${scaledDimensions.heroWidth}px`,
             height: `${scaledDimensions.heroHeight}px`,
             position: 'relative',
             flexShrink: 0,
             margin: '0',
-            overflow: 'hidden'
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1)',
+            borderRadius: '24px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
           }}
         >
           <div
@@ -608,7 +608,8 @@ const FigmaDesktop = () => {
               width: `${scaledDimensions.heroWidth}px`,
               height: `${scaledDimensions.heroHeight}px`,
               borderRadius: '24px',
-              background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`
+              background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`,
+              overflow: 'hidden'
             }}
           />
 
@@ -701,7 +702,64 @@ const FigmaDesktop = () => {
               </div>
             </div>
 
-
+            {/* CTA Button */}
+            {scaledDimensions.heroWidth >= 250 && (
+              <div
+                style={{
+                  display: 'flex',
+                  width: '90px',
+                  height: '36px',
+                  padding: '4px',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <div
+                  onClick={() => handleNavClick('Events')}
+                  style={{
+                    display: 'flex',
+                    width: '90px',
+                    height: '36px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '8px',
+                    borderRadius: '29px',
+                    background: 'rgba(56, 56, 56, 0.80)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    transform: 'scale(1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.05)';
+                    e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.background = 'rgba(56, 56, 56, 0.80)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.target.style.transform = 'scale(0.95)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: `${Math.max(10, Math.min(14, scaledDimensions.heroWidth * 0.056))}px`,
+                      fontWeight: '400',
+                      lineHeight: 'normal',
+                      pointerEvents: 'none' // Prevent text from interfering with button events
+                    }}
+                  >
+                    Events
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Event title overlay */}
@@ -709,13 +767,13 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: `${scaledDimensions.heroHeight * 0.65}px`,
+              top: `${scaledDimensions.heroHeight - 95}px`, // Position 95px from bottom (47px for bottom overlay + 48px for title space)
               display: 'flex',
               width: `${scaledDimensions.heroWidth}px`,
-              height: `${Math.min(68, scaledDimensions.heroHeight * 0.25)}px`,
+              height: '48px', // Fixed height for consistent spacing
               padding: '8px 12px',
               justifyContent: 'flex-start',
-              alignItems: 'flex-start',
+              alignItems: 'flex-end', // Align to bottom so text sits closer to date/location
               gap: '10px',
               boxSizing: 'border-box'
             }}
@@ -741,13 +799,31 @@ const FigmaDesktop = () => {
 
         {/* Right Hero */}
         <div
+          onClick={() => handleNavClick('Events')}
           style={{
             width: `${scaledDimensions.rightHeroWidth}px`,
             height: `${scaledDimensions.rightHeroHeight}px`,
             position: 'relative',
             flexShrink: 0,
             margin: '0',
-            overflow: 'hidden'
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1)',
+            borderRadius: '24px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
           }}
         >
           <div
@@ -758,7 +834,8 @@ const FigmaDesktop = () => {
               width: `${scaledDimensions.rightHeroWidth}px`,
               height: `${scaledDimensions.rightHeroHeight}px`,
               borderRadius: '24px',
-              background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray center / cover no-repeat`
+              background: `linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%), url(/images/figma-exact/hero-right-video.png) lightgray center / cover no-repeat`,
+              overflow: 'hidden'
             }}
           />
 
@@ -800,7 +877,7 @@ const FigmaDesktop = () => {
                   maxWidth: `${scaledDimensions.rightHeroWidth - 60}px`
                 }}
               >
-                {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
+                Watch on YouTube
               </div>
 
               {/* Date */}
@@ -813,23 +890,40 @@ const FigmaDesktop = () => {
                   lineHeight: 'normal'
                 }}
               >
-                {formattedDate}
+                Henry Fong full set live on YouTube
               </div>
             </div>
 
             {/* Right - CTA */}
             <div
+              onClick={() => handleNavClick('Events')}
               style={{
                 display: 'flex',
-                width: '72px',
-                height: '26px',
-                padding: '8px 16px',
+                width: '90px',
+                height: '36px',
+                padding: '4px',
                 justifyContent: 'center',
                 alignItems: 'center',
-                gap: '8px',
-                borderRadius: '37px',
+                gap: '4px',
+                borderRadius: '29px',
                 background: 'rgba(38, 38, 38, 0.80)',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                transform: 'scale(1)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'scale(1.05)';
+                e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'scale(1)';
+                e.target.style.background = 'rgba(38, 38, 38, 0.80)';
+              }}
+              onMouseDown={(e) => {
+                e.target.style.transform = 'scale(0.95)';
+              }}
+              onMouseUp={(e) => {
+                e.target.style.transform = 'scale(1.05)';
               }}
             >
               <span
@@ -838,10 +932,11 @@ const FigmaDesktop = () => {
                   fontFamily: 'Inter',
                   fontSize: '10px',
                   fontWeight: '500',
-                  lineHeight: 'normal'
+                  lineHeight: 'normal',
+                  pointerEvents: 'none' // Prevent text from interfering with button events
                 }}
               >
-                Events
+                Watch now
               </span>
             </div>
           </div>
@@ -856,8 +951,8 @@ const FigmaDesktop = () => {
           width: '100%',
           justifyContent: 'flex-start',
           alignItems: 'flex-start',
-          margin: '16px 0 0 0',  // Remove auto margins since parent handles centering
-          padding: '0'  // Remove padding since parent handles it
+          margin: '16px 0 0 0',
+          padding: '0'
         }}
       >
         {/* Event Title */}
@@ -1546,7 +1641,8 @@ const FigmaDesktop = () => {
           display: 'flex',
           justifyContent: 'center',
           width: '100%',
-          margin: '32px auto 0 auto'
+          margin: '32px auto 0 auto',
+          padding: '0'
         }}
       >
         <img
