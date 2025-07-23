@@ -1983,7 +1983,7 @@ const FigmaDesktop = () => {
                     position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
-                    width: '90px', // Increased width to accommodate flag + country code
+                    width: '65px', // Further reduced for tighter spacing
                     height: '100%',
                     flexShrink: 0,
                     backgroundColor: '#303030', // Same as container background for unified look
@@ -1994,12 +1994,12 @@ const FigmaDesktop = () => {
                   <div
                     style={{
                       position: 'absolute',
-                      left: '8px', // Padding from left edge
+                      left: '6px', // Reduced padding from left edge
                       top: '50%',
                       transform: 'translateY(-50%)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px', // Space between flag and country code
+                      gap: '3px', // Minimal gap for very tight spacing
                       pointerEvents: 'none',
                       zIndex: 2
                     }}
@@ -2018,7 +2018,7 @@ const FigmaDesktop = () => {
                       style={{
                         color: '#FFF',
                         fontFamily: 'Inter',
-                        fontSize: '12px',
+                        fontSize: '11px', // Slightly smaller for compact look
                         fontWeight: '500',
                         lineHeight: '1',
                         whiteSpace: 'nowrap'
@@ -2099,7 +2099,7 @@ const FigmaDesktop = () => {
                     fontWeight: '500',
                     lineHeight: 'normal',
                     minHeight: '44px',
-                    paddingLeft: '10px',
+                    paddingLeft: '4px', // Minimal padding for very tight spacing
                     paddingRight: '10px'
                   }}
                 />
