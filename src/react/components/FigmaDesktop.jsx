@@ -513,14 +513,23 @@ const FigmaDesktop = () => {
     const isTestNumber = cleanedTestNumber === '5555555555';
 
     if (isTestNumber) {
-      console.log('🧪 Test number detected - proceeding to verification UI');
-      setPhoneInputState('valid');
-      setVerificationPhone(trimmedPhone);
+      console.log('🧪 Test number detected - showing loading then verification UI');
 
-      // Smooth transition to verification UI
+      // Set loading state immediately
+      setPhoneSubmitting(true);
+      setPhoneInputState('loading');
+
+      // Show loading for a moment, then transition to verification
       setTimeout(() => {
-        setShowVerification(true);
-      }, 500);
+        setPhoneInputState('valid');
+        setVerificationPhone(trimmedPhone);
+        setPhoneSubmitting(false);
+
+        // Small delay before showing verification UI
+        setTimeout(() => {
+          setShowVerification(true);
+        }, 200);
+      }, 800); // Show loading for 800ms
       return;
     }
 
@@ -2604,20 +2613,24 @@ const FigmaDesktop = () => {
                 }}
               >
                 {phoneSubmitting ? (
-                  /* Loading Text */
-                  <span
+                  /* Highly Visible Loading Spinner */
+                  <div
+                    className="button-spinner"
                     style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '9px',
-                      fontWeight: '700',
-                      lineHeight: '1',
-                      whiteSpace: 'nowrap',
-                      animation: 'pulse 1s ease-in-out infinite'
+                      width: '16px',
+                      height: '16px',
+                      border: '3px solid #000000',
+                      borderTop: '3px solid #FFFFFF',
+                      borderRight: '3px solid #FFFFFF',
+                      borderRadius: '50%',
+                      animation: 'spin 0.6s linear infinite',
+                      WebkitAnimation: 'spin 0.6s linear infinite',
+                      MozAnimation: 'spin 0.6s linear infinite',
+                      display: 'inline-block',
+                      boxSizing: 'border-box',
+                      backgroundColor: 'transparent'
                     }}
-                  >
-                    •••
-                  </span>
+                  />
                 ) : (
                   <span
                     style={{
