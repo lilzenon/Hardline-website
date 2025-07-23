@@ -920,7 +920,7 @@ const FigmaDesktop = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: `${scaledDimensions.rightHeroWidth >= 300 ? scaledDimensions.rightHeroWidth - 120 : scaledDimensions.rightHeroWidth - 60}px`
+                  maxWidth: `${scaledDimensions.rightHeroWidth >= 300 ? scaledDimensions.rightHeroWidth - 150 : scaledDimensions.rightHeroWidth - 60}px`
                 }}
               >
                 Watch on YouTube
@@ -943,33 +943,23 @@ const FigmaDesktop = () => {
             {/* Right - CTA */}
             {scaledDimensions.rightHeroWidth >= 300 && (
               <div
-                style={{
-                  display: 'flex',
-                  width: '90px',
-                  height: '36px',
-                  padding: '4px',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}
-              >
-              <div
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent card click
                   window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
                 }}
                 style={{
                   display: 'flex',
-                  width: '90px',
-                  height: '36px',
+                  minWidth: '112px', // Proper width for "Watch now" text with breathing room
+                  height: '44px',    // Minimum touch target height (44px)
+                  padding: '12px 20px', // Proper vertical (12px) and horizontal (20px) padding
                   justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '8px',
-                  borderRadius: '29px',
+                  borderRadius: '22px', // Half of height for pill shape
                   background: 'rgba(38, 38, 38, 0.80)',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  transform: 'scale(1)'
+                  transform: 'scale(1)',
+                  boxSizing: 'border-box' // Ensure padding is included in dimensions
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'scale(1.05)';
@@ -990,16 +980,15 @@ const FigmaDesktop = () => {
                   style={{
                     color: '#FFF',
                     fontFamily: 'Inter',
-                    fontSize: `${Math.max(10, Math.min(14, scaledDimensions.rightHeroWidth * 0.045))}px`, // Improved responsive font size
-                    fontWeight: '400',
-                    lineHeight: 'normal',
+                    fontSize: '14px', // Fixed 14px for better readability in larger button
+                    fontWeight: '500', // Medium weight for better button text
+                    lineHeight: '1.2',
                     pointerEvents: 'none' // Prevent text from interfering with button events
                   }}
                 >
                   Watch now
                 </span>
               </div>
-            </div>
             )}
           </div>
         </div>
@@ -1506,18 +1495,29 @@ const FigmaDesktop = () => {
                           opacity: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
                             ? 1
                             : 0.6,
-                          transition: 'all 0.2s ease-in-out'
+                          transition: 'all 0.3s ease',
+                          transform: 'scale(1)'
                         }}
                         onMouseEnter={(e) => {
                           if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
                             e.currentTarget.style.transform = 'scale(1.05)';
-                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.90)';
+                            e.currentTarget.style.background = 'rgba(76, 76, 76, 0.90)'; // Lighter color similar to watch now button
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
                             e.currentTarget.style.transform = 'scale(1)';
                             e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)';
+                          }
+                        }}
+                        onMouseDown={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.currentTarget.style.transform = 'scale(0.95)';
+                          }
+                        }}
+                        onMouseUp={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.currentTarget.style.transform = 'scale(1.05)';
                           }
                         }}
                       >
