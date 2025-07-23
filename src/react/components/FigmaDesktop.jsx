@@ -508,6 +508,22 @@ const FigmaDesktop = () => {
 
     if (!trimmedPhone || phoneSubmitting) return;
 
+    // Check if this is the test number 5555555555
+    const cleanedTestNumber = trimmedPhone.replace(/\D/g, '');
+    const isTestNumber = cleanedTestNumber === '5555555555';
+
+    if (isTestNumber) {
+      console.log('🧪 Test number detected - proceeding to verification UI');
+      setPhoneInputState('valid');
+      setVerificationPhone(trimmedPhone);
+
+      // Smooth transition to verification UI
+      setTimeout(() => {
+        setShowVerification(true);
+      }, 500);
+      return;
+    }
+
     // Validate phone number format with selected country
     const currentCountry = getCurrentCountry(selectedCountryId);
     if (!isValidPhoneNumber(trimmedPhone, selectedCountryId)) {
@@ -605,6 +621,29 @@ const FigmaDesktop = () => {
     const trimmedCode = verificationCode.trim();
 
     if (!trimmedCode || verificationSubmitting) return;
+
+    // Check if this is the test number with test code
+    const cleanedTestNumber = verificationPhone.replace(/\D/g, '');
+    const isTestNumber = cleanedTestNumber === '5555555555';
+
+    if (isTestNumber) {
+      console.log('🧪 Test verification - accepting any 4-digit code');
+      if (trimmedCode.length === 4) {
+        setPhoneInputState('valid');
+        setPhoneSubmitted(true);
+
+        // Reset to initial state after success
+        setTimeout(() => {
+          setShowVerification(false);
+          setVerificationCode('');
+          setVerificationPhone('');
+          setPhoneNumber('');
+          setPhoneSubmitted(false);
+          setPhoneInputState('normal');
+        }, 3000);
+        return;
+      }
+    }
 
     // Validate code format (4 digits)
     if (!/^\d{4}$/.test(trimmedCode)) {
@@ -2137,83 +2176,122 @@ const FigmaDesktop = () => {
             style={{
               display: 'flex',
               width: '299px',
-              height: showVerification ? '120px' : '36px',
+              height: showVerification ? '200px' : '36px',
               padding: '0px 2px',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
               borderRadius: '31px',
               background: '#232323',
-              transition: 'height 0.5s ease-in-out'
+              transition: 'height 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+              willChange: 'height',
+              overflow: 'hidden'
             }}
           >
             {showVerification ? (
-              /* Verification Code UI */
+              /* Verification UI */
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   width: '100%',
                   height: '100%',
-                  justifyContent: 'center',
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '12px',
-                  position: 'relative'
+                  position: 'relative',
+                  padding: '20px 16px 16px 16px',
+                  opacity: showVerification ? 1 : 0,
+                  transform: showVerification ? 'translateY(0)' : 'translateY(8px)',
+                  transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s',
+                  willChange: 'opacity, transform',
+                  zIndex: 2
                 }}
               >
-                {/* Back Button */}
+                {/* Header Section */}
                 <div
-                  onClick={handleBackToPhone}
                   style={{
-                    position: 'absolute',
-                    top: '8px',
-                    left: '8px',
-                    width: '24px',
-                    height: '24px',
                     display: 'flex',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    transition: 'background 0.2s ease'
+                    width: '100%',
+                    position: 'relative'
                   }}
                 >
-                  <span style={{ color: '#FFF', fontSize: '14px', fontWeight: '600' }}>←</span>
-                </div>
+                  {/* Back Button */}
+                  <div
+                    onClick={handleBackToPhone}
+                    style={{
+                      position: 'absolute',
+                      top: '0px',
+                      left: '0px',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                      fontSize: '16px',
+                      color: '#FFF',
+                      fontWeight: '600',
+                      opacity: showVerification ? 1 : 0,
+                      transform: showVerification ? 'translateX(0)' : 'translateX(-8px)',
+                      transitionDelay: '0.2s',
+                      willChange: 'opacity, transform'
+                    }}
+                  >
+                    ←
+                  </div>
 
-                {/* Verification Title */}
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    textAlign: 'center'
-                  }}
-                >
-                  Enter Verification Code
-                </div>
+                  {/* Title */}
+                  <div
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      textAlign: 'center',
+                      marginBottom: '6px',
+                      opacity: showVerification ? 1 : 0,
+                      transform: showVerification ? 'translateY(0)' : 'translateY(-5px)',
+                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.25s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.25s',
+                      willChange: 'opacity, transform'
+                    }}
+                  >
+                    Enter Verification Code
+                  </div>
 
-                {/* Phone Number Display */}
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '11px',
-                    fontWeight: '400',
-                    textAlign: 'center',
-                    opacity: 0.7
-                  }}
-                >
-                  Sent to {verificationPhone}
+                  {/* Phone Display */}
+                  <div
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '12px',
+                      fontWeight: '400',
+                      textAlign: 'center',
+                      opacity: showVerification ? 0.7 : 0,
+                      transform: showVerification ? 'translateY(0)' : 'translateY(-5px)',
+                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.3s',
+                      willChange: 'opacity, transform',
+                      marginBottom: '20px'
+                    }}
+                  >
+                    Sent to {verificationPhone}
+                  </div>
                 </div>
 
                 {/* 4-Digit Code Input */}
                 <div
                   style={{
                     display: 'flex',
-                    gap: '8px'
+                    gap: '12px',
+                    justifyContent: 'center',
+                    opacity: showVerification ? 1 : 0,
+                    transform: showVerification ? 'scale(1)' : 'scale(0.95)',
+                    transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.35s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.35s',
+                    willChange: 'opacity, transform'
                   }}
                 >
                   {[0, 1, 2, 3].map((index) => (
@@ -2244,63 +2322,89 @@ const FigmaDesktop = () => {
                         }
                       }}
                       style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        border: `1px solid ${
-                          phoneInputState === 'loading' ? '#3B82F6' :
-                          phoneInputState === 'valid' ? '#10B981' :
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        border: `2px solid ${
+                          phoneInputState === 'valid' && verificationCode.length === 4 ? '#10B981' :
                           phoneInputState === 'invalid' ? '#EF4444' :
-                          'rgba(255, 255, 255, 0.2)'
+                          verificationCode[index] ? 'rgba(255, 255, 255, 0.4)' :
+                          'rgba(255, 255, 255, 0.15)'
                         }`,
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: verificationCode[index] ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
                         color: '#FFF',
                         fontFamily: 'Inter',
-                        fontSize: '18px',
+                        fontSize: '20px',
                         fontWeight: '600',
                         textAlign: 'center',
                         outline: 'none',
-                        transition: 'all 0.2s ease'
+                        transition: 'all 0.2s ease',
+                        boxShadow: verificationCode[index] ? '0 0 0 1px rgba(255, 255, 255, 0.1)' : 'none'
                       }}
                     />
                   ))}
                 </div>
 
-                {/* Verify Button */}
+                {/* Bottom Section with Verify Button */}
                 <div
-                  onClick={handleVerificationSubmit}
-                  onMouseDown={handleButtonMouseDown}
-                  onMouseUp={handleButtonMouseUp}
-                  onMouseLeave={handleButtonMouseLeave}
-                  onTouchStart={handleButtonMouseDown}
-                  onTouchEnd={handleButtonMouseUp}
                   style={{
                     display: 'flex',
-                    width: '120px',
-                    height: '32px',
-                    justifyContent: 'center',
+                    flexDirection: 'column',
                     alignItems: 'center',
-                    borderRadius: '16px',
-                    background: phoneSubmitted ? '#00AA00' : (verificationSubmitting ? '#888888' : '#00FF40'),
-                    cursor: verificationSubmitting ? 'not-allowed' : 'pointer',
-                    opacity: verificationSubmitting || verificationCode.length !== 4 ? 0.7 : 1,
-                    transform: isButtonPressed && !verificationSubmitting ? 'scale(0.96)' : 'scale(1)',
-                    transition: 'all 0.1s ease',
-                    touchAction: 'manipulation',
-                    WebkitTapHighlightColor: 'transparent'
+                    width: '100%',
+                    marginTop: 'auto',
+                    paddingTop: '12px'
                   }}
                 >
-                  <span
+                  {/* Verify Button */}
+                  <div
+                    onClick={handleVerificationSubmit}
+                    onMouseDown={handleButtonMouseDown}
+                    onMouseUp={handleButtonMouseUp}
+                    onMouseLeave={handleButtonMouseLeave}
+                    onTouchStart={handleButtonMouseDown}
+                    onTouchEnd={handleButtonMouseUp}
                     style={{
-                      color: '#232323',
-                      fontFamily: 'Inter',
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      lineHeight: '1'
+                      display: 'flex',
+                      width: '120px',
+                      height: '36px',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: '18px',
+                      background: phoneSubmitted ? 'rgba(16, 185, 129, 0.15)' :
+                                 verificationSubmitting ? 'rgba(255, 255, 255, 0.08)' :
+                                 'rgba(255, 255, 255, 0.06)',
+                      border: `1px solid ${
+                        phoneSubmitted ? 'rgba(16, 185, 129, 0.3)' :
+                        verificationSubmitting ? 'rgba(255, 255, 255, 0.15)' :
+                        'rgba(255, 255, 255, 0.12)'
+                      }`,
+                      cursor: verificationSubmitting || verificationCode.length !== 4 ? 'not-allowed' : 'pointer',
+                      opacity: showVerification ?
+                               (verificationSubmitting || verificationCode.length !== 4 ? 0.4 : 1) : 0,
+                      transform: showVerification ?
+                                (isButtonPressed && !verificationSubmitting && verificationCode.length === 4 ? 'scale(0.95)' : 'scale(1)') :
+                                'scale(0.9)',
+                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.4s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.4s',
+                      touchAction: 'manipulation',
+                      WebkitTapHighlightColor: 'transparent',
+                      backdropFilter: 'blur(8px)',
+                      willChange: 'opacity, transform'
                     }}
                   >
-                    {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
-                  </span>
+                    <span
+                      style={{
+                        color: phoneSubmitted ? '#10B981' : '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        lineHeight: '1',
+                        transition: 'color 0.15s ease'
+                      }}
+                    >
+                      {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
+                    </span>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -2311,58 +2415,63 @@ const FigmaDesktop = () => {
                   width: '294px',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  gap: '10px'
+                  gap: '10px',
+                  opacity: showVerification ? 0 : 1,
+                  transform: showVerification ? 'scale(0.95)' : 'scale(1)',
+                  transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  willChange: 'opacity, transform',
+                  zIndex: 1
                 }}
               >
-                {/* Phone number Field */}
-                <div
-                  ref={phoneContainerRef}
-                  className={phoneInputState === 'invalid' ? 'shake' : ''}
-                  style={{
-                    display: 'flex',
-                    width: '243px',
-                    height: '30px',
-                    alignItems: 'center',
-                    borderRadius: '15px',
-                    background: '#303030',
-                    overflow: 'hidden',
-                    border: `1px solid ${
-                      phoneInputState === 'loading' ? '#3B82F6' :
-                      phoneInputState === 'valid' ? '#10B981' :
-                      phoneInputState === 'invalid' ? '#EF4444' :
-                      'transparent'
-                    }`,
-                    boxShadow:
-                      phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
-                      phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
-                      phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
-                      'none',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
+              {/* Phone number Field */}
+              <div
+                ref={phoneContainerRef}
+                className={phoneInputState === 'invalid' ? 'shake' : ''}
+                style={{
+                  display: 'flex',
+                  width: '243px',
+                  height: '30px',
+                  alignItems: 'center',
+                  borderRadius: '15px',
+                  background: '#303030',
+                  overflow: 'hidden',
+                  border: `1px solid ${
+                    phoneInputState === 'loading' ? '#3B82F6' :
+                    phoneInputState === 'valid' ? '#10B981' :
+                    phoneInputState === 'invalid' ? '#EF4444' :
+                    'transparent'
+                  }`,
+                  boxShadow:
+                    phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
+                    phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
+                    phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
+                    'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
                 {/* Country Code Dropdown Section */}
                 <div
                   style={{
                     position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
-                    width: '65px', // Further reduced for tighter spacing
+                    width: '65px',
                     height: '100%',
                     flexShrink: 0,
-                    backgroundColor: '#303030', // Same as container background for unified look
-                    borderRadius: '15px 0 0 15px' // Match container radius
+                    backgroundColor: '#303030',
+                    borderRadius: '15px 0 0 15px'
                   }}
                 >
                   {/* Flag and Country Code Display */}
                   <div
                     style={{
                       position: 'absolute',
-                      left: '6px', // Reduced padding from left edge
+                      left: '6px',
                       top: '50%',
                       transform: 'translateY(-50%)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '3px', // Minimal gap for very tight spacing
+                      gap: '3px',
                       pointerEvents: 'none',
                       zIndex: 2
                     }}
@@ -2381,7 +2490,7 @@ const FigmaDesktop = () => {
                       style={{
                         color: '#FFF',
                         fontFamily: 'Inter',
-                        fontSize: '11px', // Slightly smaller for compact look
+                        fontSize: '11px',
                         fontWeight: '500',
                         lineHeight: '1',
                         whiteSpace: 'nowrap'
@@ -2391,7 +2500,7 @@ const FigmaDesktop = () => {
                     </span>
                   </div>
 
-                  {/* Native Select - Covers entire flag + country code area */}
+                  {/* Native Select */}
                   <select
                     value={selectedCountryId}
                     onChange={handleCountryChange}
@@ -2399,7 +2508,7 @@ const FigmaDesktop = () => {
                       position: 'absolute',
                       top: 0,
                       left: 0,
-                      width: '100%', // Covers the full 90px width
+                      width: '100%',
                       height: '100%',
                       backgroundColor: 'transparent',
                       border: 'none',
@@ -2407,7 +2516,7 @@ const FigmaDesktop = () => {
                       color: 'transparent',
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: '500',
-                      fontSize: '16px', // Prevent iOS zoom
+                      fontSize: '16px',
                       cursor: 'pointer',
                       appearance: 'none',
                       WebkitAppearance: 'none',
@@ -2462,14 +2571,14 @@ const FigmaDesktop = () => {
                     fontWeight: '500',
                     lineHeight: 'normal',
                     minHeight: '44px',
-                    paddingLeft: '4px', // Minimal padding for very tight spacing
+                    paddingLeft: '4px',
                     paddingRight: '10px'
                   }}
                 />
-                </div>
+              </div>
 
-                {/* SEND Button */}
-                <div
+              {/* SEND Button */}
+              <div
                 onClick={handlePhoneSubmit}
                 onMouseDown={handleButtonMouseDown}
                 onMouseUp={handleButtonMouseUp}
@@ -2479,199 +2588,57 @@ const FigmaDesktop = () => {
                 style={{
                   display: 'flex',
                   width: '51px',
-                  height: '30px', // Match the phone field height
+                  height: '30px',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  padding: '6px 8px', // Reduced padding to fit within container
-                  borderRadius: '15px', // Adjusted for smaller height (half of 30px)
+                  padding: '6px 8px',
+                  borderRadius: '15px',
                   background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                   cursor: phoneSubmitting ? 'not-allowed' : 'pointer',
                   opacity: phoneSubmitting ? 0.7 : 1,
-                  boxSizing: 'border-box', // Ensure padding is included in dimensions
+                  boxSizing: 'border-box',
                   transform: isButtonPressed && !phoneSubmitting ? 'scale(0.96)' : 'scale(1)',
                   transition: 'all 0.1s ease',
                   touchAction: 'manipulation',
                   WebkitTapHighlightColor: 'transparent'
                 }}
               >
-                <span
-                  style={{
-                    color: '#232323',
-                    fontFamily: 'Inter',
-                    fontSize: '9px', // Slightly smaller for better fit
-                    fontWeight: '700',
-                    lineHeight: '1',
-                    whiteSpace: 'nowrap' // Prevent text wrapping
-                  }}
-                >
-                  {phoneSubmitted ? '✓' : (phoneSubmitting ? '...' : 'SEND')}
-                </span>
-                </div>
-              </div>
-            ) : (
-              /* Verification Code UI */
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  width: '294px',
-                  height: '100%',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '16px'
-                }}
-              >
-              <>
-                {/* Back Button */}
-                <div
-                  onClick={handleBackToPhone}
-                  style={{
-                    position: 'absolute',
-                    top: '8px',
-                    left: '8px',
-                    width: '24px',
-                    height: '24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    transition: 'background 0.2s ease'
-                  }}
-                >
-                  <span style={{ color: '#FFF', fontSize: '14px', fontWeight: '600' }}>←</span>
-                </div>
-
-                {/* Verification Title */}
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    textAlign: 'center',
-                    marginBottom: '4px'
-                  }}
-                >
-                  Enter Verification Code
-                </div>
-
-                {/* Phone Number Display */}
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '11px',
-                    fontWeight: '400',
-                    textAlign: 'center',
-                    opacity: 0.7,
-                    marginBottom: '8px'
-                  }}
-                >
-                  Sent to {verificationPhone}
-                </div>
-
-                {/* 4-Digit Code Input */}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '8px',
-                    marginBottom: '12px'
-                  }}
-                >
-                  {[0, 1, 2, 3].map((index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      maxLength="1"
-                      value={verificationCode[index] || ''}
-                      onChange={(e) => {
-                        const newCode = verificationCode.split('');
-                        newCode[index] = e.target.value.replace(/\D/g, '');
-                        const updatedCode = newCode.join('');
-                        setVerificationCode(updatedCode);
-
-                        // Auto-focus next input
-                        if (e.target.value && index < 3) {
-                          const nextInput = e.target.parentElement.children[index + 1];
-                          if (nextInput) nextInput.focus();
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
-                          const prevInput = e.target.parentElement.children[index - 1];
-                          if (prevInput) prevInput.focus();
-                        }
-                        if (e.key === 'Enter' && verificationCode.length === 4) {
-                          handleVerificationSubmit();
-                        }
-                      }}
-                      style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        border: `1px solid ${
-                          phoneInputState === 'loading' ? '#3B82F6' :
-                          phoneInputState === 'valid' ? '#10B981' :
-                          phoneInputState === 'invalid' ? '#EF4444' :
-                          'rgba(255, 255, 255, 0.2)'
-                        }`,
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '18px',
-                        fontWeight: '600',
-                        textAlign: 'center',
-                        outline: 'none',
-                        transition: 'all 0.2s ease'
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {/* Verify Button */}
-                <div
-                  onClick={handleVerificationSubmit}
-                  onMouseDown={handleButtonMouseDown}
-                  onMouseUp={handleButtonMouseUp}
-                  onMouseLeave={handleButtonMouseLeave}
-                  onTouchStart={handleButtonMouseDown}
-                  onTouchEnd={handleButtonMouseUp}
-                  style={{
-                    display: 'flex',
-                    width: '120px',
-                    height: '32px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: '16px',
-                    background: phoneSubmitted ? '#00AA00' : (verificationSubmitting ? '#888888' : '#00FF40'),
-                    cursor: verificationSubmitting ? 'not-allowed' : 'pointer',
-                    opacity: verificationSubmitting || verificationCode.length !== 4 ? 0.7 : 1,
-                    transform: isButtonPressed && !verificationSubmitting ? 'scale(0.96)' : 'scale(1)',
-                    transition: 'all 0.1s ease',
-                    touchAction: 'manipulation',
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                >
+                {phoneSubmitting ? (
+                  /* Loading Text */
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '9px',
+                      fontWeight: '700',
+                      lineHeight: '1',
+                      whiteSpace: 'nowrap',
+                      animation: 'pulse 1s ease-in-out infinite'
+                    }}
+                  >
+                    •••
+                  </span>
+                ) : (
                   <span
                     style={{
                       color: '#232323',
                       fontFamily: 'Inter',
-                      fontSize: '12px',
+                      fontSize: '9px',
                       fontWeight: '700',
-                      lineHeight: '1'
+                      lineHeight: '1',
+                      whiteSpace: 'nowrap',
+                      transition: 'opacity 0.15s ease'
                     }}
                   >
-                    {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
+                    {phoneSubmitted ? '✓' : 'SEND'}
                   </span>
-                </div>
-              </>
+                )}
+              </div>
+              </div>
             )}
           </div>
 
-          {/* Disclaimer Text - Only show when not in verification mode */}
+          {/* Disclaimer Text */}
           {!showVerification && (
             <div
               style={{
