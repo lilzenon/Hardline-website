@@ -941,17 +941,18 @@ const FigmaDesktop = () => {
             </div>
 
             {/* Right - CTA */}
-            <div
-              style={{
-                display: 'flex',
-                width: '90px',
-                height: '36px',
-                padding: '4px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
+            {scaledDimensions.rightHeroWidth >= 250 && (
+              <div
+                style={{
+                  display: 'flex',
+                  width: '90px',
+                  height: '36px',
+                  padding: '4px',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
               <div
                 onClick={(e) => {
                   e.stopPropagation(); // Prevent card click
@@ -989,7 +990,7 @@ const FigmaDesktop = () => {
                   style={{
                     color: '#FFF',
                     fontFamily: 'Inter',
-                    fontSize: `${Math.max(10, Math.min(14, scaledDimensions.rightHeroWidth * 0.028))}px`, // Responsive font size
+                    fontSize: `${Math.max(10, Math.min(14, scaledDimensions.rightHeroWidth * 0.045))}px`, // Improved responsive font size
                     fontWeight: '400',
                     lineHeight: 'normal',
                     pointerEvents: 'none' // Prevent text from interfering with button events
@@ -999,6 +1000,7 @@ const FigmaDesktop = () => {
                 </span>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>
