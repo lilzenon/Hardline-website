@@ -2137,7 +2137,7 @@ const FigmaDesktop = () => {
             style={{
               display: 'flex',
               width: '299px',
-              height: showVerification ? '120px' : '36px', // Expand for verification
+              height: showVerification ? '120px' : '36px',
               padding: '0px 2px',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -2147,7 +2147,163 @@ const FigmaDesktop = () => {
               transition: 'height 0.5s ease-in-out'
             }}
           >
-            {!showVerification ? (
+            {showVerification ? (
+              /* Verification Code UI */
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                  height: '100%',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '12px',
+                  position: 'relative'
+                }}
+              >
+                {/* Back Button */}
+                <div
+                  onClick={handleBackToPhone}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '8px',
+                    width: '24px',
+                    height: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    transition: 'background 0.2s ease'
+                  }}
+                >
+                  <span style={{ color: '#FFF', fontSize: '14px', fontWeight: '600' }}>←</span>
+                </div>
+
+                {/* Verification Title */}
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textAlign: 'center'
+                  }}
+                >
+                  Enter Verification Code
+                </div>
+
+                {/* Phone Number Display */}
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '11px',
+                    fontWeight: '400',
+                    textAlign: 'center',
+                    opacity: 0.7
+                  }}
+                >
+                  Sent to {verificationPhone}
+                </div>
+
+                {/* 4-Digit Code Input */}
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '8px'
+                  }}
+                >
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      maxLength="1"
+                      value={verificationCode[index] || ''}
+                      onChange={(e) => {
+                        const newCode = verificationCode.split('');
+                        newCode[index] = e.target.value.replace(/\D/g, '');
+                        const updatedCode = newCode.join('');
+                        setVerificationCode(updatedCode);
+
+                        // Auto-focus next input
+                        if (e.target.value && index < 3) {
+                          const nextInput = e.target.parentElement.children[index + 1];
+                          if (nextInput) nextInput.focus();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
+                          const prevInput = e.target.parentElement.children[index - 1];
+                          if (prevInput) prevInput.focus();
+                        }
+                        if (e.key === 'Enter' && verificationCode.length === 4) {
+                          handleVerificationSubmit();
+                        }
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '8px',
+                        border: `1px solid ${
+                          phoneInputState === 'loading' ? '#3B82F6' :
+                          phoneInputState === 'valid' ? '#10B981' :
+                          phoneInputState === 'invalid' ? '#EF4444' :
+                          'rgba(255, 255, 255, 0.2)'
+                        }`,
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        outline: 'none',
+                        transition: 'all 0.2s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Verify Button */}
+                <div
+                  onClick={handleVerificationSubmit}
+                  onMouseDown={handleButtonMouseDown}
+                  onMouseUp={handleButtonMouseUp}
+                  onMouseLeave={handleButtonMouseLeave}
+                  onTouchStart={handleButtonMouseDown}
+                  onTouchEnd={handleButtonMouseUp}
+                  style={{
+                    display: 'flex',
+                    width: '120px',
+                    height: '32px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: '16px',
+                    background: phoneSubmitted ? '#00AA00' : (verificationSubmitting ? '#888888' : '#00FF40'),
+                    cursor: verificationSubmitting ? 'not-allowed' : 'pointer',
+                    opacity: verificationSubmitting || verificationCode.length !== 4 ? 0.7 : 1,
+                    transform: isButtonPressed && !verificationSubmitting ? 'scale(0.96)' : 'scale(1)',
+                    transition: 'all 0.1s ease',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#232323',
+                      fontFamily: 'Inter',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      lineHeight: '1'
+                    }}
+                  >
+                    {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
+                  </span>
+                </div>
+              </div>
+            ) : (
               /* Phone Input UI */
               <div
                 style={{
@@ -2163,27 +2319,27 @@ const FigmaDesktop = () => {
                   ref={phoneContainerRef}
                   className={phoneInputState === 'invalid' ? 'shake' : ''}
                   style={{
-                  display: 'flex',
-                  width: '243px', // Width accommodates flag + country code + input
-                  height: '30px',
-                  alignItems: 'center',
-                  borderRadius: '15px', // Consistent with send button radius
-                  background: '#303030',
-                  overflow: 'hidden',
-                  border: `1px solid ${
-                    phoneInputState === 'loading' ? '#3B82F6' :
-                    phoneInputState === 'valid' ? '#10B981' :
-                    phoneInputState === 'invalid' ? '#EF4444' :
-                    'transparent'
-                  }`,
-                  boxShadow:
-                    phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
-                    phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
-                    phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
-                    'none',
-                  transition: 'all 0.3s ease'
-                }}
-              >
+                    display: 'flex',
+                    width: '243px',
+                    height: '30px',
+                    alignItems: 'center',
+                    borderRadius: '15px',
+                    background: '#303030',
+                    overflow: 'hidden',
+                    border: `1px solid ${
+                      phoneInputState === 'loading' ? '#3B82F6' :
+                      phoneInputState === 'valid' ? '#10B981' :
+                      phoneInputState === 'invalid' ? '#EF4444' :
+                      'transparent'
+                    }`,
+                    boxShadow:
+                      phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
+                      phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
+                      phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
+                      'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
                 {/* Country Code Dropdown Section */}
                 <div
                   style={{

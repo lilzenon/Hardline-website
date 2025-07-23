@@ -261,7 +261,22 @@ async function submitPhone(req, res) {
             });
         }
 
-        // Start verification process using Twilio Verify API
+        // Check if this is a test phone number
+        const isTestNumber = fullPhoneNumber.replace(/\D/g, '') === '5555555555';
+
+        if (isTestNumber) {
+            console.log(`🧪 Test verification started for ${fullPhoneNumber}`);
+
+            return res.json({
+                success: true,
+                requiresVerification: true,
+                message: 'Test verification code sent! Use code: 1234',
+                phoneNumber: fullPhoneNumber,
+                isTestMode: true
+            });
+        }
+
+        // Start verification process using Twilio Verify API for real numbers
         const verificationResult = await twilioService.startVerification(fullPhoneNumber, 'sms');
 
         if (verificationResult.success) {
@@ -338,7 +353,35 @@ async function verifyPhone(req, res) {
             codeLength: cleanedCode.length
         });
 
-        // Check verification code
+        // Check if this is a test phone number
+        const isTestNumber = cleanedPhone.replace(/\D/g, '') === '5555555555';
+
+        if (isTestNumber) {
+            console.log(`🧪 Test verification for ${cleanedPhone}`);
+
+            if (cleanedCode === '1234') {
+                console.log(`✅ Test phone verification successful for ${cleanedPhone}`);
+
+                // Send test welcome message (just log it)
+                console.log(`🎉 Test welcome message: Phone verified! Thanks for joining our VIP list!`);
+
+                return res.json({
+                    success: true,
+                    verified: true,
+                    message: 'Test phone number verified successfully! Welcome to our VIP list.',
+                    phoneNumber: cleanedPhone,
+                    isTestMode: true
+                });
+            } else {
+                console.error(`❌ Test phone verification failed for ${cleanedPhone}: Invalid code`);
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid verification code. Use 1234 for test number.'
+                });
+            }
+        }
+
+        // Check verification code for real numbers
         const verificationResult = await twilioService.checkVerification(cleanedPhone, cleanedCode);
 
         if (verificationResult.success) {
