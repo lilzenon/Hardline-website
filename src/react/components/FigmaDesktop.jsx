@@ -7,6 +7,47 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Cache for formatted dates to avoid repeated calculations
 const dateFormatCache = new Map();
 
+// Memoized Event Card Component for better performance
+const EventCard = memo(({ card, scaledDimensions }) => {
+  const handleImageClick = useCallback((e) => {
+    e.stopPropagation();
+    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+      window.open(card.ticketsUrl, '_blank');
+    }
+  }, [card.isRealEvent, card.ticketsUrl]);
+
+  const handleTicketClick = useCallback(() => {
+    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+      window.open(card.ticketsUrl, '_blank');
+    }
+  }, [card.isRealEvent, card.ticketsUrl]);
+
+  const imageHandlers = useMemo(() => ({
+    onMouseEnter: (e) => {
+      if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+        e.target.style.transform = 'scale(1.015) translateY(-2px)';
+        e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+      }
+    },
+    onMouseLeave: (e) => {
+      e.target.style.transform = 'scale(1) translateY(0px)';
+      e.target.style.boxShadow = 'none';
+    },
+    onMouseDown: (e) => {
+      if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+        e.target.style.transform = 'scale(0.995) translateY(0px)';
+      }
+    },
+    onMouseUp: (e) => {
+      if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+        e.target.style.transform = 'scale(1.015) translateY(-2px)';
+      }
+    }
+  }), [card.isRealEvent, card.ticketsUrl]);
+
+  return null; // Will be implemented in next chunk
+});
+
 const FigmaDesktop = () => {
   const [homeSettings, setHomeSettings] = useState(null);
   const [featuredEvents, setFeaturedEvents] = useState([]);
@@ -94,11 +135,19 @@ const FigmaDesktop = () => {
     // Initial calculation
     calculateDimensions();
 
-    // Update on resize
-    window.addEventListener('resize', calculateDimensions);
+    // Debounced resize handler for better performance
+    let resizeTimeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(calculateDimensions, 100); // 100ms debounce
+    };
+
+    // Update on resize with debouncing
+    window.addEventListener('resize', debouncedResize);
 
     return () => {
-      window.removeEventListener('resize', calculateDimensions);
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(resizeTimeout);
     };
   }, []);
 
@@ -135,8 +184,8 @@ const FigmaDesktop = () => {
       setLoading(true);
       setError(null);
 
-      // Check cache first
-      const cacheKey = 'homepage-data';
+      // Check cache first with improved cache key
+      const cacheKey = 'homepage-data-v2';
       const cached = apiCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         console.log('📦 Using cached homepage data');
@@ -234,7 +283,13 @@ const FigmaDesktop = () => {
   }, []);
 
   useEffect(() => {
-    fetchHomepageData();
+    // Performance monitoring
+    const startTime = performance.now();
+
+    fetchHomepageData().finally(() => {
+      const endTime = performance.now();
+      console.log(`🚀 Homepage data loaded in ${(endTime - startTime).toFixed(2)}ms`);
+    });
   }, [fetchHomepageData]);
 
   const validatePhoneNumber = useCallback((phone) => {
@@ -496,6 +551,8 @@ const FigmaDesktop = () => {
           src="/images/figma-exact/b2b-logo-nav.svg"
           alt="B2B Logo"
           loading="lazy"
+          decoding="async"
+          fetchpriority="high"
           style={{
             width: '138.41px',
             height: '43px'
@@ -1142,6 +1199,8 @@ const FigmaDesktop = () => {
                       src={card.coverImage}
                       alt={`${card.title} event cover`}
                       loading="lazy"
+                      decoding="async"
+                      fetchpriority="low"
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent interference with card interactions
                         if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
@@ -1740,6 +1799,8 @@ const FigmaDesktop = () => {
           src="/images/figma-exact/b2b-logo-bottom.svg"
           alt="B2B LOGO"
           loading="lazy"
+          decoding="async"
+          fetchpriority="low"
           style={{
             width: '100%',
             maxWidth: '901px',
