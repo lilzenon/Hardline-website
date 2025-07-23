@@ -1,6 +1,9 @@
 const query = require("../queries");
 const path = require("path");
 const fs = require("fs").promises;
+const twilioService = require("../services/sms/twilio.service");
+const phoneUtils = require("../services/contact-book/phone-utils.service");
+const { body, validationResult } = require("express-validator");
 
 // Configure multer for image uploads
 let multer, upload;
@@ -213,10 +216,89 @@ async function getHomepageData(req, res) {
     }
 }
 
+/**
+ * Submit phone number from homepage Text Us section
+ */
+async function submitPhone(req, res) {
+    try {
+        const { phone, countryCode } = req.body;
+
+        console.log('📱 Homepage phone submission:', { phone, countryCode });
+
+        // Validate phone number
+        if (!phone || !phone.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Phone number is required'
+            });
+        }
+
+        // Clean and validate phone number format
+        const cleanedPhone = phoneUtils.normalizePhone(phone);
+        if (!cleanedPhone) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid phone number format'
+            });
+        }
+
+        // Validate international phone number with country code
+        const fullPhoneNumber = cleanedPhone.startsWith('+') ? cleanedPhone : `${countryCode || '+1'}${cleanedPhone.replace(/^\+/, '')}`;
+
+        console.log('📱 Processed phone number:', {
+            original: phone,
+            cleaned: cleanedPhone,
+            final: fullPhoneNumber
+        });
+
+        // Check if phone number is opted out
+        const isOptedOut = await twilioService.isOptedOut(fullPhoneNumber);
+        if (isOptedOut) {
+            console.log(`📱 Phone ${fullPhoneNumber} is opted out - skipping SMS`);
+            return res.status(400).json({
+                success: false,
+                error: 'This phone number has opted out of SMS messages'
+            });
+        }
+
+        // Send welcome SMS
+        const welcomeMessage = `🎉 Thanks for joining our VIP list! You'll be the first to know about exclusive events, contests, and more from B2B.`;
+
+        const smsResult = await twilioService.sendSMS(fullPhoneNumber, welcomeMessage);
+
+        if (smsResult.success) {
+            console.log(`✅ Homepage SMS sent successfully - SID: ${smsResult.messageSid}`);
+
+            // TODO: Store in database for future marketing campaigns
+            // This could be added to a homepage_signups table or similar
+
+            return res.json({
+                success: true,
+                message: 'Phone number submitted successfully! Check your phone for a confirmation message.',
+                messageSid: smsResult.messageSid
+            });
+        } else {
+            console.error(`❌ Homepage SMS failed: ${smsResult.error}`);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to send confirmation message. Please try again.'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error in homepage phone submission:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error. Please try again.'
+        });
+    }
+}
+
 module.exports = {
     getAdmin,
     update,
     get,
     getHomepageData,
+    submitPhone,
     upload
 };

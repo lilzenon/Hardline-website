@@ -50,6 +50,12 @@ router.get(
     asyncHandler(homeSettings.getHomepageData)
 );
 
+// 🚀 HOMEPAGE PHONE SUBMISSION ENDPOINT - For Text Us section
+router.post(
+    "/submit-phone",
+    asyncHandler(homeSettings.submitPhone)
+);
+
 // 🚀 DEBUG ENDPOINT - Check events status
 router.get(
     "/debug-events",

@@ -7,6 +7,49 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 // Cache for formatted dates to avoid repeated calculations
 const dateFormatCache = new Map();
 
+// Country codes and phone patterns for international support
+const COUNTRIES = [
+  { code: '+1', name: 'United States', flag: '🇺🇸', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14 },
+  { code: '+1', name: 'Canada', flag: '🇨🇦', pattern: /^\d{10}$/, placeholder: '(555) 123-4567', maxLength: 14 },
+  { code: '+44', name: 'United Kingdom', flag: '🇬🇧', pattern: /^\d{10,11}$/, placeholder: '20 1234 5678', maxLength: 13 },
+  { code: '+49', name: 'Germany', flag: '🇩🇪', pattern: /^\d{10,12}$/, placeholder: '30 12345678', maxLength: 15 },
+  { code: '+33', name: 'France', flag: '🇫🇷', pattern: /^\d{9,10}$/, placeholder: '1 23 45 67 89', maxLength: 14 },
+  { code: '+61', name: 'Australia', flag: '🇦🇺', pattern: /^\d{9}$/, placeholder: '4 1234 5678', maxLength: 12 },
+  { code: '+91', name: 'India', flag: '🇮🇳', pattern: /^\d{10}$/, placeholder: '98765 43210', maxLength: 13 },
+  { code: '+55', name: 'Brazil', flag: '🇧🇷', pattern: /^\d{10,11}$/, placeholder: '11 99999-9999', maxLength: 15 },
+  { code: '+52', name: 'Mexico', flag: '🇲🇽', pattern: /^\d{10}$/, placeholder: '55 1234 5678', maxLength: 13 },
+  { code: '+81', name: 'Japan', flag: '🇯🇵', pattern: /^\d{10,11}$/, placeholder: '90-1234-5678', maxLength: 13 }
+];
+
+// Phone formatting functions
+const formatPhoneNumber = (value, countryCode) => {
+  const phoneNumber = value.replace(/[^\d]/g, '');
+  if (phoneNumber.length === 0) return '';
+
+  switch (countryCode) {
+    case '+1': // US/Canada
+      if (phoneNumber.length <= 3) return `(${phoneNumber}`;
+      if (phoneNumber.length <= 6) return `(${phoneNumber.slice(0,3)}) ${phoneNumber.slice(3)}`;
+      return `(${phoneNumber.slice(0,3)}) ${phoneNumber.slice(3,6)}-${phoneNumber.slice(6,10)}`;
+
+    case '+44': // UK
+      if (phoneNumber.length <= 2) return phoneNumber;
+      if (phoneNumber.length <= 6) return `${phoneNumber.slice(0,2)} ${phoneNumber.slice(2)}`;
+      if (phoneNumber.length === 10) return `${phoneNumber.slice(0,2)} ${phoneNumber.slice(2,6)} ${phoneNumber.slice(6)}`;
+      return `${phoneNumber.slice(0,3)} ${phoneNumber.slice(3,7)} ${phoneNumber.slice(7)}`;
+
+    default:
+      return phoneNumber;
+  }
+};
+
+const isValidPhoneNumber = (value, countryCode) => {
+  const phoneNumber = value.replace(/[^\d]/g, '');
+  const country = COUNTRIES.find(c => c.code === countryCode);
+  if (!country) return phoneNumber.length >= 10 && phoneNumber.length <= 15;
+  return country.pattern.test(phoneNumber);
+};
+
 // Memoized Event Card Component for better performance
 const EventCard = memo(({ card, scaledDimensions }) => {
   const handleImageClick = useCallback((e) => {
@@ -57,6 +100,7 @@ const FigmaDesktop = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
+  const [selectedCountryCode, setSelectedCountryCode] = useState('+1');
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
@@ -303,31 +347,32 @@ const FigmaDesktop = () => {
 
     if (!trimmedPhone || phoneSubmitting) return;
 
-    // Validate phone number format
-    if (!validatePhoneNumber(trimmedPhone)) {
-      console.warn('Invalid phone number format');
+    // Validate phone number format with selected country
+    if (!isValidPhoneNumber(trimmedPhone, selectedCountryCode)) {
+      console.warn('Invalid phone number format for', selectedCountryCode);
       return;
     }
 
     try {
       setPhoneSubmitting(true);
 
-      console.log('📱 Submitting phone number:', trimmedPhone);
+      console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: selectedCountryCode });
 
-      // Use SMS test endpoint to capture phone numbers
-      const response = await fetch('/api/sms/test', {
+      // Use the new homepage phone submission endpoint
+      const response = await fetch('/api/home-settings/submit-phone', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phoneNumber: trimmedPhone
+          phone: trimmedPhone,
+          countryCode: selectedCountryCode
         })
       });
 
       const result = await response.json();
 
-      if (response.ok && result.success !== false) {
+      if (response.ok && result.success) {
         console.log('✅ Phone number submitted successfully');
         setPhoneSubmitted(true);
         setPhoneNumber('');
@@ -343,7 +388,27 @@ const FigmaDesktop = () => {
     } finally {
       setPhoneSubmitting(false);
     }
-  }, [phoneNumber, phoneSubmitting, validatePhoneNumber]);
+  }, [phoneNumber, phoneSubmitting, selectedCountryCode]);
+
+  // Phone number formatting handler
+  const handlePhoneChange = useCallback((e) => {
+    const value = e.target.value;
+    const formattedValue = formatPhoneNumber(value, selectedCountryCode);
+    setPhoneNumber(formattedValue);
+  }, [selectedCountryCode]);
+
+  // Country code change handler
+  const handleCountryChange = useCallback((e) => {
+    const newCountryCode = e.target.value;
+    setSelectedCountryCode(newCountryCode);
+
+    // Reformat existing phone number for new country
+    if (phoneNumber) {
+      const cleanNumber = phoneNumber.replace(/[^\d]/g, '');
+      const newFormattedValue = formatPhoneNumber(cleanNumber, newCountryCode);
+      setPhoneNumber(newFormattedValue);
+    }
+  }, [phoneNumber]);
 
   // Navigation handler
   const handleNavClick = useCallback((tabName) => {
@@ -1687,37 +1752,68 @@ const FigmaDesktop = () => {
                   background: '#303030'
                 }}
               >
-                {/* flag/US */}
+                {/* Country Code Dropdown */}
                 <div
                   style={{
-                    width: '23px',
-                    height: '15px',
-                    background: '#FFFFFF'
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '50px',
+                    height: '24px'
                   }}
                 >
-                  <svg width="23" height="15" viewBox="0 0 23 15" fill="none">
-                    <rect width="23" height="15" fill="#FFFFFF"/>
-                    <rect width="23" height="1" y="1" fill="#D80027"/>
-                    <rect width="23" height="1" y="3" fill="#D80027"/>
-                    <rect width="23" height="1" y="5" fill="#D80027"/>
-                    <rect width="23" height="1" y="7" fill="#D80027"/>
-                    <rect width="23" height="1" y="9" fill="#D80027"/>
-                    <rect width="23" height="1" y="11" fill="#D80027"/>
-                    <rect width="23" height="1" y="13" fill="#D80027"/>
-                    <rect width="11.5" height="8.07" fill="#2E52B2"/>
-                  </svg>
+                  <select
+                    value={selectedCountryCode}
+                    onChange={handleCountryChange}
+                    style={{
+                      position: 'absolute',
+                      width: '100%',
+                      height: '100%',
+                      opacity: 0,
+                      cursor: 'pointer',
+                      zIndex: 2
+                    }}
+                  >
+                    {COUNTRIES.map((country, index) => (
+                      <option key={`${country.code}-${index}`} value={country.code}>
+                        {country.flag} {country.code}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Visual Display */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      fontSize: '12px',
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      pointerEvents: 'none',
+                      zIndex: 1
+                    }}
+                  >
+                    <span style={{ fontSize: '14px' }}>
+                      {COUNTRIES.find(c => c.code === selectedCountryCode)?.flag || '🇺🇸'}
+                    </span>
+                    <span style={{ fontSize: '10px', opacity: 0.8 }}>
+                      {selectedCountryCode}
+                    </span>
+                    <span style={{ fontSize: '8px', opacity: 0.6 }}>▼</span>
+                  </div>
                 </div>
 
                 {/* Phone Number Input Field */}
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={handlePhoneChange}
                   onKeyDown={(e) => e.key === 'Enter' && handlePhoneSubmit()}
-                  placeholder="(555) 123-4567"
+                  placeholder={COUNTRIES.find(c => c.code === selectedCountryCode)?.placeholder || '(555) 123-4567'}
                   disabled={phoneSubmitting}
                   style={{
-                    width: '190px',
+                    width: '160px', // Reduced to accommodate country dropdown
                     background: 'transparent',
                     border: 'none',
                     outline: 'none',
