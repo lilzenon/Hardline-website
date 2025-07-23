@@ -891,7 +891,7 @@ const FigmaDesktop = () => {
               left: '0px',
               top: `${Math.min(scaledDimensions.rightHeroHeight, 350) - 54}px`,
               display: 'flex',
-              width: `${Math.min(scaledDimensions.rightHeroWidth, 450)}px`,
+              width: '100%', // Fill the full width of the video hero card
               height: '44px',
               padding: '8px 16px',
               justifyContent: 'space-between',
@@ -951,7 +951,6 @@ const FigmaDesktop = () => {
                   display: 'flex',
                   minWidth: '112px', // Proper width for "Watch now" text with breathing room
                   height: '44px',    // Minimum touch target height (44px)
-                  padding: '12px 20px', // Proper vertical (12px) and horizontal (20px) padding
                   justifyContent: 'center',
                   alignItems: 'center',
                   borderRadius: '22px', // Half of height for pill shape
