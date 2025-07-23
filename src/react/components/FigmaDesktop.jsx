@@ -920,7 +920,7 @@ const FigmaDesktop = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: `${scaledDimensions.rightHeroWidth - 60}px`
+                  maxWidth: `${scaledDimensions.rightHeroWidth >= 300 ? scaledDimensions.rightHeroWidth - 120 : scaledDimensions.rightHeroWidth - 60}px`
                 }}
               >
                 Watch on YouTube
@@ -941,7 +941,7 @@ const FigmaDesktop = () => {
             </div>
 
             {/* Right - CTA */}
-            {scaledDimensions.rightHeroWidth >= 250 && (
+            {scaledDimensions.rightHeroWidth >= 300 && (
               <div
                 style={{
                   display: 'flex',
