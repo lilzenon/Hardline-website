@@ -1147,7 +1147,7 @@ const FigmaMobile = () => {
                   {[0, 1, 2, 3].map((index) => (
                     <input
                       key={index}
-                      type="text"
+                      type="tel"
                       inputMode="numeric"
                       pattern="[0-9]*"
                       maxLength="1"
@@ -1161,26 +1161,28 @@ const FigmaMobile = () => {
 
                         // Auto-focus next input if value entered
                         if (value && index < 3) {
-                          setTimeout(() => {
+                          // Use requestAnimationFrame for better timing
+                          requestAnimationFrame(() => {
                             const nextInput = e.target.parentElement.children[index + 1];
                             if (nextInput) {
                               nextInput.focus();
                               nextInput.select();
                             }
-                          }, 10);
+                          });
                         }
                       }}
                       onKeyDown={(e) => {
                         // Handle backspace to go to previous input
                         if (e.key === 'Backspace') {
                           if (!verificationCode[index] && index > 0) {
-                            setTimeout(() => {
+                            // Use requestAnimationFrame for better timing
+                            requestAnimationFrame(() => {
                               const prevInput = e.target.parentElement.children[index - 1];
                               if (prevInput) {
                                 prevInput.focus();
                                 prevInput.select();
                               }
-                            }, 10);
+                            });
                           }
                         }
                         // Handle Enter to submit when all 4 digits entered
@@ -1442,7 +1444,7 @@ const FigmaMobile = () => {
                       fontWeight: '500',
                       lineHeight: 'normal',
                       minHeight: '44px',
-                      paddingLeft: '67px', // Reduced spacing (65px + 2px spacing)
+                      paddingLeft: '65px', // Minimal spacing to get closer to country code
                       paddingRight: '65px' // Make room for inlaid button
                     }}
                   />
