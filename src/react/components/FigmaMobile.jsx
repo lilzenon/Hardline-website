@@ -252,6 +252,11 @@ const FigmaMobile = () => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [drawerFullyClosed, setDrawerFullyClosed] = useState(false);
 
+  // Resend countdown state
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [canResend, setCanResend] = useState(false);
+  const [resendSubmitting, setResendSubmitting] = useState(false);
+
   // State preservation for drawer reopening
   const [previousDrawerState, setPreviousDrawerState] = useState({
     expanded: false,
@@ -276,6 +281,7 @@ const FigmaMobile = () => {
   // Refs
   const phoneContainerRef = useRef(null);
   const flagImageRef = useRef(null);
+  const resendTimerRef = useRef(null);
   const drawerRef = useRef(null);
 
   // Simplified phone number formatting handler without cursor management
@@ -496,6 +502,12 @@ const FigmaMobile = () => {
           setVerificationState('normal');
           setVerificationSubmitting(false);
           setDrawerFullyClosed(false);
+          // Reset resend countdown
+          setResendCountdown(0);
+          setCanResend(false);
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+          }
           // Reset previous drawer state
           setPreviousDrawerState({
             expanded: false,
@@ -563,6 +575,12 @@ const FigmaMobile = () => {
           setVerificationState('normal');
           setVerificationSubmitting(false);
           setDrawerFullyClosed(false);
+          // Reset resend countdown
+          setResendCountdown(0);
+          setCanResend(false);
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+          }
           // Reset previous drawer state
           setPreviousDrawerState({
             expanded: false,
@@ -594,6 +612,83 @@ const FigmaMobile = () => {
       setVerificationSubmitting(false);
     }
   }, [verificationCode, verificationSubmitting, verificationPhone]);
+
+  // Start resend countdown timer
+  const startResendCountdown = useCallback(() => {
+    setResendCountdown(60);
+    setCanResend(false);
+
+    // Clear any existing timer
+    if (resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+    }
+
+    resendTimerRef.current = setInterval(() => {
+      setResendCountdown(prev => {
+        if (prev <= 1) {
+          setCanResend(true);
+          clearInterval(resendTimerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Handle resend verification code
+  const handleResendCode = useCallback(async () => {
+    if (!canResend || resendSubmitting || !verificationPhone) return;
+
+    try {
+      setResendSubmitting(true);
+
+      console.log('🔄 Resending verification code to:', verificationPhone);
+
+      const response = await fetch('/api/home-settings/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: verificationPhone
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Verification code resent successfully');
+        // Start new countdown
+        startResendCountdown();
+      } else {
+        console.error('❌ Failed to resend verification code:', result.error);
+        // Still start countdown to prevent spam
+        startResendCountdown();
+      }
+    } catch (error) {
+      console.error('❌ Error resending verification code:', error);
+      // Still start countdown to prevent spam
+      startResendCountdown();
+    } finally {
+      setResendSubmitting(false);
+    }
+  }, [canResend, resendSubmitting, verificationPhone, startResendCountdown]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resendTimerRef.current) {
+        clearInterval(resendTimerRef.current);
+      }
+    };
+  }, []);
+
+  // Start countdown when verification is shown
+  useEffect(() => {
+    if (showVerification && verificationPhone && resendCountdown === 0) {
+      startResendCountdown();
+    }
+  }, [showVerification, verificationPhone, startResendCountdown, resendCountdown]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -1534,8 +1629,58 @@ const FigmaMobile = () => {
                   </span>
                 </div>
 
-                {/* Spacing below verify button */}
-                <div style={{ height: '12px' }} />
+                {/* Resend Code Countdown */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: '16px',
+                    marginBottom: '8px'
+                  }}
+                >
+                  {resendCountdown > 0 ? (
+                    <div
+                      style={{
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        fontFamily: 'Inter',
+                        fontSize: '12px',
+                        fontWeight: '400',
+                        textAlign: 'center'
+                      }}
+                    >
+                      Resend code in {resendCountdown}s
+                    </div>
+                  ) : canResend ? (
+                    <div
+                      onClick={handleResendCode}
+                      style={{
+                        color: resendSubmitting ? 'rgba(255, 255, 255, 0.4)' : '#3B82F6',
+                        fontFamily: 'Inter',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        textAlign: 'center',
+                        cursor: resendSubmitting ? 'not-allowed' : 'pointer',
+                        textDecoration: 'underline',
+                        transition: 'all 0.2s ease',
+                        opacity: resendSubmitting ? 0.6 : 1
+                      }}
+                      onMouseDown={(e) => {
+                        if (!resendSubmitting) {
+                          e.target.style.transform = 'scale(0.95)';
+                        }
+                      }}
+                      onMouseUp={(e) => {
+                        e.target.style.transform = 'scale(1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.transform = 'scale(1)';
+                      }}
+                    >
+                      {resendSubmitting ? 'Sending...' : 'Resend code'}
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : (
               /* Phone Input UI - Desktop Layout Adapted for Mobile */
