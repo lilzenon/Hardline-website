@@ -804,11 +804,11 @@ const FigmaMobile = () => {
           .mobile-drawer {
             position: fixed;
             bottom: 0;
-            left: 0;
-            right: 0;
+            left: 20px;
+            right: 20px;
             margin: 0 auto;
-            width: 100%;
-            max-width: 430px;
+            width: calc(100% - 40px);
+            max-width: 390px;
             background: rgba(35, 35, 35, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 24px 24px 0px 0px;
@@ -1007,7 +1007,7 @@ const FigmaMobile = () => {
             height: getDrawerHeight(),
             display: 'flex',
             flexDirection: 'column',
-            padding: '8px 24px 16px 24px', // Reduced bottom padding from 24px to 16px
+            padding: '8px 20px 16px 20px', // Adjusted for narrower drawer width
             boxSizing: 'border-box',
             overflow: 'hidden',
             cursor: drawerFullyClosed ? 'pointer' : 'default'
