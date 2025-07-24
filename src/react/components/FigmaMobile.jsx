@@ -778,9 +778,9 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification && drawerExpanded) {
-      return '240px'; // Verification mode expanded - increased to prevent button cutoff
+      return '280px'; // Verification mode expanded - increased to accommodate countdown timer
     } else if (showVerification && !drawerExpanded) {
-      return '80px'; // Verification mode collapsed - show handle + hint
+      return '100px'; // Verification mode collapsed - show handle + hint + countdown peek
     } else if (drawerExpanded) {
       return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
@@ -1646,12 +1646,14 @@ const FigmaMobile = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginTop: '16px',
-                    marginBottom: '8px',
-                    minHeight: '20px' // Ensure space is reserved
+                    marginTop: '12px',
+                    marginBottom: '12px',
+                    minHeight: '20px', // Ensure space is reserved
+                    width: '100%',
+                    position: 'relative',
+                    zIndex: 10 // Ensure it's above other elements
                   }}
                 >
-                  {console.log('🎯 Countdown render:', { resendCountdown, canResend, showVerification })}
                   {resendCountdown > 0 ? (
                     <div
                       style={{
