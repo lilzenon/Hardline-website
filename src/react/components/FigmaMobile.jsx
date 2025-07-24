@@ -158,91 +158,34 @@ const FigmaMobile = () => {
   const flagImageRef = useRef(null);
   const drawerRef = useRef(null);
 
-  // Robust phone number formatting handler with proper cursor management
+  // Simplified phone number formatting handler without cursor management
   const handlePhoneChange = useCallback((e) => {
-    const input = e.target;
-    const rawValue = input.value;
+    const rawValue = e.target.value;
     const currentCountry = getCurrentCountry(selectedCountryId);
-
-    // Store cursor position before any changes
-    const cursorStart = input.selectionStart;
-    const cursorEnd = input.selectionEnd;
 
     // Extract only digits from the input
     const digitsOnly = rawValue.replace(/[^\d]/g, '');
 
     // Prevent typing beyond country's digit limit
     if (digitsOnly.length > currentCountry.digitLength) {
-      // Don't update if trying to exceed limit
-      e.preventDefault();
-      return;
+      return; // Don't update if trying to exceed limit
     }
 
     // Format the phone number
     const formattedValue = formatPhoneNumber(digitsOnly, selectedCountryId);
 
-    // Calculate new cursor position
-    let newCursorPosition = cursorStart;
-    if (cursorStart === cursorEnd) {
-      // Single cursor position - adjust for formatting changes
-      const oldDigitCount = phoneNumber.replace(/[^\d]/g, '').length;
-      const newDigitCount = digitsOnly.length;
-      if (newDigitCount > oldDigitCount) {
-        // Adding digits - move cursor forward accounting for formatting
-        newCursorPosition = cursorStart + (formattedValue.length - rawValue.length) + 1;
-      }
-    }
-
-    // Ensure cursor doesn't go beyond the formatted value length
-    newCursorPosition = Math.min(newCursorPosition, formattedValue.length);
-    newCursorPosition = Math.max(newCursorPosition, 0);
-
     // Update the state
     setPhoneNumber(formattedValue);
-
-    // Set cursor position after React updates the DOM
-    requestAnimationFrame(() => {
-      if (input === document.activeElement) {
-        input.setSelectionRange(newCursorPosition, newCursorPosition);
-      }
-    });
-  }, [selectedCountryId, phoneNumber]);
-
-  // Simplified backspace handling to avoid cursor jumping
-  const handlePhoneKeyDown = useCallback((e) => {
-    if (e.key === 'Backspace') {
-      const input = e.target;
-      const cursorPosition = input.selectionStart;
-      const value = input.value;
-
-      if (cursorPosition > 0) {
-        const charBefore = value[cursorPosition - 1];
-
-        // If backspacing over a formatting character, remove the digit before it instead
-        if ([' ', '(', ')', '-'].includes(charBefore) && cursorPosition > 1) {
-          e.preventDefault();
-
-          // Remove the digit before the formatting character
-          const beforeFormat = value.slice(0, cursorPosition - 2);
-          const afterCursor = value.slice(cursorPosition);
-          const newValue = beforeFormat + afterCursor;
-
-          // Reformat and update
-          const digitsOnly = newValue.replace(/[^\d]/g, '');
-          const formattedValue = formatPhoneNumber(digitsOnly, selectedCountryId);
-          setPhoneNumber(formattedValue);
-
-          // Position cursor appropriately
-          requestAnimationFrame(() => {
-            if (input === document.activeElement) {
-              const newPos = Math.max(0, cursorPosition - 2);
-              input.setSelectionRange(newPos, newPos);
-            }
-          });
-        }
-      }
-    }
   }, [selectedCountryId]);
+
+  // Simplified key handling - let browser handle backspace naturally
+  const handlePhoneKeyDown = useCallback((e) => {
+    // Only handle Enter key for submission
+    if (e.key === 'Enter') {
+      handlePhoneSubmit();
+    }
+    // Let browser handle backspace and other keys naturally
+  }, []);
 
   // Country change handler with flag update
   const handleCountryChange = useCallback((e) => {
@@ -580,24 +523,62 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification) {
-      return showDisclaimer ? '280px' : '220px'; // Verification + disclaimer or just verification
+      return '180px'; // Verification only (no disclaimer, no title) - increased to fit button
     } else if (drawerExpanded) {
-      return showDisclaimer ? '240px' : '180px'; // Phone input + disclaimer or just phone input
+      return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
-      return '160px'; // Collapsed state (peek into disclaimer with gradient)
+      return '140px'; // Collapsed state (peek into disclaimer with gradient) (reduced)
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer]);
+
+  // Set viewport meta tag to prevent zoom
+  useEffect(() => {
+    // Store original viewport
+    const originalViewport = document.querySelector('meta[name="viewport"]');
+    const originalContent = originalViewport ? originalViewport.getAttribute('content') : '';
+
+    // Set mobile-optimized viewport
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (!viewportMeta) {
+      viewportMeta = document.createElement('meta');
+      viewportMeta.name = 'viewport';
+      document.head.appendChild(viewportMeta);
+    }
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+
+    // Cleanup on unmount
+    return () => {
+      if (originalViewport && originalContent) {
+        originalViewport.setAttribute('content', originalContent);
+      }
+    };
+  }, []);
 
   return (
     <>
       {/* Mobile-specific CSS */}
       <style>
         {`
+          /* Prevent iOS Safari zoom on input focus */
+          input[type="tel"], input[type="text"], select {
+            font-size: 16px !important;
+            transform-origin: left top;
+            font-family: 'Inter', sans-serif;
+          }
+
+          /* Prevent zoom and ensure proper viewport */
+          * {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+          }
+
           .mobile-phone-input::placeholder {
             color: rgba(255, 255, 255, 0.7);
           }
           .mobile-phone-input:focus {
             outline: none;
+            font-size: 16px !important;
           }
           .mobile-nav-item:hover {
             opacity: 0.8;
@@ -674,7 +655,7 @@ const FigmaMobile = () => {
             border-radius: 8px;
             color: #FFFFFF;
             font-family: 'Inter', sans-serif;
-            font-size: 18px;
+            font-size: 16px; /* Minimum 16px to prevent iOS zoom */
             font-weight: 600;
             text-align: center;
             outline: none;
@@ -889,7 +870,7 @@ const FigmaMobile = () => {
             height: getDrawerHeight(),
             display: 'flex',
             flexDirection: 'column',
-            padding: '8px 24px 24px 24px',
+            padding: '8px 24px 16px 24px', // Reduced bottom padding from 24px to 16px
             boxSizing: 'border-box',
             overflow: 'hidden'
           }}
@@ -930,8 +911,8 @@ const FigmaMobile = () => {
             }}
           />
 
-          {/* Text Us Group */}
-          {!drawerFullyClosed && (
+          {/* Text Us Group - Hidden during verification */}
+          {!drawerFullyClosed && !showVerification && (
             <div
               style={{
                 display: 'flex',
@@ -989,10 +970,22 @@ const FigmaMobile = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '8px', // Reduced from 10px to 8px
                   width: '100%'
                 }}
               >
+                <div
+                  style={{
+                    color: '#FFFFFF',
+                    fontFamily: 'Inter',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    marginBottom: '2px' // Reduced from 4px to 2px
+                  }}
+                >
+                  Enter Verification Code
+                </div>
                 <div
                   style={{
                     color: '#FFFFFF',
@@ -1041,51 +1034,87 @@ const FigmaMobile = () => {
                         }
                       }}
                       style={{
-                        width: '35px',
-                        height: '35px',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.3)',
-                        borderRadius: '6px',
-                        color: '#FFFFFF',
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        border: `2px solid ${
+                          phoneInputState === 'valid' && verificationCode.length === 4 ? '#10B981' :
+                          phoneInputState === 'invalid' ? '#EF4444' :
+                          verificationCode[index] ? 'rgba(255, 255, 255, 0.4)' :
+                          'rgba(255, 255, 255, 0.15)'
+                        }`,
+                        background: verificationCode[index] ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                        color: '#FFF',
                         fontFamily: 'Inter',
-                        fontSize: '16px',
+                        fontSize: '16px', // Minimum 16px to prevent iOS zoom
                         fontWeight: '600',
                         textAlign: 'center',
-                        outline: 'none'
+                        outline: 'none',
+                        transition: 'all 0.2s ease',
+                        boxShadow: verificationCode[index] ? '0 0 0 1px rgba(255, 255, 255, 0.1)' : 'none'
                       }}
                     />
                   ))}
                 </div>
 
-                <button
+                <div
                   onClick={handleVerificationSubmit}
-                  disabled={verificationSubmitting || verificationCode.length !== 4}
-                  className="mobile-send-button"
                   style={{
-                    width: '100px',
-                    height: '32px',
-                    background: phoneSubmitted ? '#10B981' : '#00FF40',
-                    borderRadius: '16px',
-                    border: 'none',
                     display: 'flex',
+                    width: '120px',
+                    height: '36px',
                     justifyContent: 'center',
                     alignItems: 'center',
+                    borderRadius: '18px',
+                    background: phoneSubmitted ? 'rgba(16, 185, 129, 0.15)' :
+                               verificationSubmitting ? 'rgba(255, 255, 255, 0.08)' :
+                               'rgba(255, 255, 255, 0.06)',
+                    border: `1px solid ${
+                      phoneSubmitted ? 'rgba(16, 185, 129, 0.3)' :
+                      verificationSubmitting ? 'rgba(255, 255, 255, 0.15)' :
+                      'rgba(255, 255, 255, 0.12)'
+                    }`,
                     cursor: verificationSubmitting || verificationCode.length !== 4 ? 'not-allowed' : 'pointer',
-                    opacity: verificationSubmitting || verificationCode.length !== 4 ? 0.5 : 1
+                    opacity: verificationSubmitting || verificationCode.length !== 4 ? 0.4 : 1,
+                    transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    backdropFilter: 'blur(8px)',
+                    transform: 'scale(1)'
+                  }}
+                  onTouchStart={(e) => {
+                    if (!verificationSubmitting && verificationCode.length === 4) {
+                      e.target.style.transform = 'scale(0.95)';
+                    }
+                  }}
+                  onTouchEnd={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                  onMouseDown={(e) => {
+                    if (!verificationSubmitting && verificationCode.length === 4) {
+                      e.target.style.transform = 'scale(0.95)';
+                    }
+                  }}
+                  onMouseUp={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
                   }}
                 >
                   <span
                     style={{
+                      color: phoneSubmitted ? '#10B981' : '#FFF',
                       fontFamily: 'Inter',
-                      fontWeight: '700',
-                      fontSize: '11px',
-                      lineHeight: '1.2em',
-                      color: '#232323'
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      lineHeight: '1',
+                      transition: 'color 0.15s ease'
                     }}
                   >
                     {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
                   </span>
-                </button>
+                </div>
               </div>
             ) : (
               /* Phone Input UI - Desktop Layout Adapted for Mobile */
@@ -1249,7 +1278,7 @@ const FigmaMobile = () => {
                       outline: 'none',
                       color: '#FFF',
                       fontFamily: 'Inter',
-                      fontSize: '15px',
+                      fontSize: '16px', // Minimum 16px to prevent iOS zoom
                       fontWeight: '500',
                       lineHeight: 'normal',
                       minHeight: '44px',
@@ -1296,15 +1325,16 @@ const FigmaMobile = () => {
               </div>
             )}
 
-            {/* Disclaimer Text - Always visible with peek effect */}
-            <div
-              style={{
-                position: 'relative',
-                marginTop: '12px',
-                width: '100%',
-                zIndex: 0 // Behind the card gradient overlay
-              }}
-            >
+            {/* Disclaimer Text - Hidden during verification */}
+            {!showVerification && (
+              <div
+                style={{
+                  position: 'relative',
+                  marginTop: '8px', // Reduced from 12px to 8px
+                  width: '100%',
+                  zIndex: 0 // Behind the card gradient overlay
+                }}
+              >
               <div
                 style={{
                   fontSize: '9px',
@@ -1323,7 +1353,8 @@ const FigmaMobile = () => {
               >
                 By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's Terms of Service, Cookie Policy and Privacy Policy. Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
               </div>
-            </div>
+              </div>
+            )}
           </div>
           )}
         </div>
