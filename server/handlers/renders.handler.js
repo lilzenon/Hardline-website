@@ -524,6 +524,15 @@ async function eventEdit(req, res) {
 // 🚀 REACT HOMEPAGE - Serve React app instead of Handlebars
 async function reactHomepage(req, res) {
     try {
+        // Add aggressive cache-busting headers
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Last-Modified': new Date().toUTCString(),
+            'ETag': Date.now().toString()
+        });
+
         // Serve the React built HTML file
         const path = require('path');
         const reactIndexPath = path.join(__dirname, '../../static/react/index.html');

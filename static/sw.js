@@ -3,9 +3,9 @@
  * Implements caching strategies for performance optimization
  */
 
-const CACHE_NAME = 'bounce2bounce-v3';
-const STATIC_CACHE = 'bounce2bounce-static-v3';
-const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v3';
+const CACHE_NAME = 'bounce2bounce-v4-' + Date.now();
+const STATIC_CACHE = 'bounce2bounce-static-v4-' + Date.now();
+const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v4-' + Date.now();
 
 // Assets to cache immediately
 const STATIC_ASSETS = [

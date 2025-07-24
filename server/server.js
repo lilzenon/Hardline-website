@@ -143,7 +143,16 @@ app.use((req, res, next) => {
 // serve static
 app.use("/images", express.static("custom/images"));
 app.use("/css", express.static("custom/css", { extensions: ["css"] }));
-app.use("/react", express.static("static/react"));
+app.use("/react", express.static("static/react", {
+    setHeaders: (res, path) => {
+        // Add cache-busting headers for React bundle
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+    }
+}));
 app.use(express.static("static"));
 
 // Session security middleware - disabled in development to prevent blocking during testing
