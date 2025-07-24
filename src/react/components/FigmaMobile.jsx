@@ -149,6 +149,7 @@ const FigmaMobile = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationPhone, setVerificationPhone] = useState('');
   const [verificationSubmitting, setVerificationSubmitting] = useState(false);
+  const [verificationState, setVerificationState] = useState('normal'); // normal, filled, valid, invalid
   const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [drawerFullyClosed, setDrawerFullyClosed] = useState(false);
@@ -286,7 +287,7 @@ const FigmaMobile = () => {
         if (result.requiresVerification) {
           // Move to verification step
           console.log('🔐 Moving to verification step');
-          setPhoneInputState('valid');
+          setPhoneInputState('normal'); // Reset to normal for verification
           setVerificationPhone(trimmedPhone);
 
           // Smooth transition to verification UI
@@ -349,8 +350,15 @@ const FigmaMobile = () => {
     if (isTestNumber) {
       console.log('🧪 Test verification - accepting any 4-digit code');
       if (trimmedCode.length === 4) {
-        setPhoneInputState('valid');
-        setPhoneSubmitted(true);
+        setVerificationSubmitting(true);
+        setPhoneInputState('loading');
+
+        // Simulate verification delay
+        setTimeout(() => {
+          setVerificationState('valid');
+          setPhoneSubmitted(true);
+          setVerificationSubmitting(false);
+        }, 1000); // 1 second verification simulation
 
         // First show success state, then fully close drawer
         setTimeout(() => {
@@ -378,14 +386,10 @@ const FigmaMobile = () => {
       console.warn('Invalid verification code format');
 
       // Show invalid state with shake animation
-      setPhoneInputState('invalid');
-      if (phoneContainerRef.current) {
-        phoneContainerRef.current.classList.add('shake');
-        setTimeout(() => {
-          phoneContainerRef.current?.classList.remove('shake');
-          setPhoneInputState('normal');
-        }, 400);
-      }
+      setVerificationState('invalid');
+      setTimeout(() => {
+        setVerificationState('filled');
+      }, 400);
       return;
     }
 
@@ -410,7 +414,7 @@ const FigmaMobile = () => {
 
       if (response.ok && result.success) {
         console.log('✅ Phone verification successful');
-        setPhoneInputState('valid');
+        setVerificationState('valid');
         setPhoneSubmitted(true);
 
         // First show success state, then fully close drawer
@@ -428,34 +432,27 @@ const FigmaMobile = () => {
           setPhoneNumber('');
           setPhoneSubmitted(false);
           setPhoneInputState('normal');
+          setVerificationState('normal');
           setDrawerFullyClosed(false);
         }, 5000);
       } else {
         console.error('❌ Phone verification failed:', result.error || 'Unknown error');
 
         // Show error state with shake animation
-        setPhoneInputState('invalid');
-        if (phoneContainerRef.current) {
-          phoneContainerRef.current.classList.add('shake');
-          setTimeout(() => {
-            phoneContainerRef.current?.classList.remove('shake');
-            setPhoneInputState('normal');
-          }, 400);
-        }
+        setVerificationState('invalid');
+        setTimeout(() => {
+          setVerificationState('filled');
+        }, 400);
       }
 
     } catch (error) {
       console.error('❌ Error submitting verification code:', error);
 
       // Show error state with shake animation
-      setPhoneInputState('invalid');
-      if (phoneContainerRef.current) {
-        phoneContainerRef.current.classList.add('shake');
-        setTimeout(() => {
-          phoneContainerRef.current?.classList.remove('shake');
-          setPhoneInputState('normal');
-        }, 400);
-      }
+      setVerificationState('invalid');
+      setTimeout(() => {
+        setVerificationState('filled');
+      }, 400);
     } finally {
       setVerificationSubmitting(false);
     }
@@ -524,7 +521,7 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification) {
-      return '220px'; // Verification mode - increased for proper button spacing
+      return '240px'; // Verification mode - increased to prevent button cutoff
     } else if (drawerExpanded) {
       return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
@@ -1113,28 +1110,39 @@ const FigmaMobile = () => {
                   padding: '8px 16px 8px 16px' // Reduced padding for mobile
                 }}
               >
+                {/* Text container with tighter spacing */}
                 <div
                   style={{
-                    color: '#FFFFFF',
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    textAlign: 'center'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px', // Tight spacing between text lines
+                    marginBottom: '8px'
                   }}
                 >
-                  Enter Verification Code
-                </div>
-                <div
-                  style={{
-                    color: '#FFFFFF',
-                    fontFamily: 'Inter',
-                    fontSize: '12px',
-                    fontWeight: '400',
-                    textAlign: 'center',
-                    opacity: 0.9
-                  }}
-                >
-                  Code sent to {verificationPhone}
+                  <div
+                    style={{
+                      color: '#FFFFFF',
+                      fontFamily: 'Inter',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }}
+                  >
+                    Enter Verification Code
+                  </div>
+                  <div
+                    style={{
+                      color: '#FFFFFF',
+                      fontFamily: 'Inter',
+                      fontSize: '12px',
+                      fontWeight: '400',
+                      textAlign: 'center',
+                      opacity: 0.9
+                    }}
+                  >
+                    Code sent to {verificationPhone}
+                  </div>
                 </div>
 
                 <div
@@ -1158,6 +1166,13 @@ const FigmaMobile = () => {
                         newCode[index] = value;
                         const updatedCode = newCode.join('');
                         setVerificationCode(updatedCode);
+
+                        // Update verification state based on code length
+                        if (updatedCode.length === 4) {
+                          setVerificationState('filled');
+                        } else {
+                          setVerificationState('normal');
+                        }
 
                         // Auto-focus next input if value entered
                         if (value && index < 3) {
@@ -1198,9 +1213,9 @@ const FigmaMobile = () => {
                         height: '48px',
                         borderRadius: '12px',
                         border: `2px solid ${
-                          phoneInputState === 'valid' ? '#10B981' :
-                          phoneInputState === 'invalid' ? '#EF4444' :
-                          verificationCode.length === 4 ? '#3B82F6' :
+                          verificationState === 'valid' ? '#10B981' :
+                          verificationState === 'invalid' ? '#EF4444' :
+                          verificationState === 'filled' ? '#3B82F6' :
                           verificationCode[index] ? 'rgba(255, 255, 255, 0.4)' :
                           'rgba(255, 255, 255, 0.15)'
                         }`,
@@ -1217,9 +1232,6 @@ const FigmaMobile = () => {
                     />
                   ))}
                 </div>
-
-                {/* Spacing above verify button */}
-                <div style={{ height: '16px' }} />
 
                 <div
                   onClick={handleVerificationSubmit}
