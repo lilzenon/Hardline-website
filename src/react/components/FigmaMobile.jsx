@@ -524,7 +524,7 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification) {
-      return '200px'; // Verification mode - increased to properly contain verify button
+      return '220px'; // Verification mode - increased for proper button spacing
     } else if (drawerExpanded) {
       return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
@@ -1198,8 +1198,9 @@ const FigmaMobile = () => {
                         height: '48px',
                         borderRadius: '12px',
                         border: `2px solid ${
-                          phoneInputState === 'valid' && verificationCode.length === 4 ? '#10B981' :
+                          phoneInputState === 'valid' ? '#10B981' :
                           phoneInputState === 'invalid' ? '#EF4444' :
+                          verificationCode.length === 4 ? '#3B82F6' :
                           verificationCode[index] ? 'rgba(255, 255, 255, 0.4)' :
                           'rgba(255, 255, 255, 0.15)'
                         }`,
@@ -1216,6 +1217,9 @@ const FigmaMobile = () => {
                     />
                   ))}
                 </div>
+
+                {/* Spacing above verify button */}
+                <div style={{ height: '16px' }} />
 
                 <div
                   onClick={handleVerificationSubmit}
@@ -1273,9 +1277,33 @@ const FigmaMobile = () => {
                       transition: 'color 0.15s ease'
                     }}
                   >
-                    {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
+                    {verificationSubmitting ? (
+                      /* Spinning wheel animation like SEND button */
+                      <div
+                        className="mobile-button-spinner"
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          border: '3px solid rgba(255, 255, 255, 0.3)',
+                          borderTop: '3px solid #FFFFFF',
+                          borderRight: '3px solid #FFFFFF',
+                          borderRadius: '50%',
+                          animation: 'spin 0.6s linear infinite',
+                          WebkitAnimation: 'spin 0.6s linear infinite',
+                          MozAnimation: 'spin 0.6s linear infinite',
+                          display: 'inline-block',
+                          boxSizing: 'border-box',
+                          backgroundColor: 'transparent'
+                        }}
+                      />
+                    ) : (
+                      phoneSubmitted ? '✓ Verified' : 'VERIFY'
+                    )}
                   </span>
                 </div>
+
+                {/* Spacing below verify button */}
+                <div style={{ height: '12px' }} />
               </div>
             ) : (
               /* Phone Input UI - Desktop Layout Adapted for Mobile */
@@ -1444,7 +1472,7 @@ const FigmaMobile = () => {
                       fontWeight: '500',
                       lineHeight: 'normal',
                       minHeight: '44px',
-                      paddingLeft: '65px', // Minimal spacing to get closer to country code
+                      paddingLeft: '0px', // No padding - let phone field get close to country code
                       paddingRight: '65px' // Make room for inlaid button
                     }}
                   />
