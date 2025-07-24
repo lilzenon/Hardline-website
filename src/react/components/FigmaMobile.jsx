@@ -778,7 +778,7 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification && drawerExpanded) {
-      return '280px'; // Verification mode expanded - increased to accommodate countdown timer
+      return '260px'; // Verification mode expanded - optimized for tight spacing with countdown
     } else if (showVerification && !drawerExpanded) {
       return '100px'; // Verification mode collapsed - show handle + hint + countdown peek
     } else if (drawerExpanded) {
@@ -1431,9 +1431,12 @@ const FigmaMobile = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '12px', // Reduced gap for mobile
+                  gap: '8px', // Tighter gap for compact layout
                   width: '100%',
-                  padding: '8px 16px 8px 16px' // Reduced padding for mobile
+                  padding: '8px 16px 16px 16px', // Bottom padding to position resend at drawer bottom
+                  justifyContent: 'space-between',
+                  height: '100%',
+                  boxSizing: 'border-box'
                 }}
               >
                 {/* Text container with tighter spacing */}
@@ -1583,7 +1586,7 @@ const FigmaMobile = () => {
                     WebkitTapHighlightColor: 'transparent',
                     backdropFilter: 'blur(8px)',
                     transform: 'scale(1)',
-                    marginBottom: '12px' // Add bottom margin to prevent touching drawer bottom
+                    marginBottom: '0px' // Remove bottom margin for tighter spacing
                   }}
                   onTouchStart={(e) => {
                     if (!verificationSubmitting && verificationCode.length === 4) {
@@ -1646,8 +1649,8 @@ const FigmaMobile = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginTop: '12px',
-                    marginBottom: '12px',
+                    marginTop: '8px',
+                    marginBottom: '0px',
                     minHeight: '20px', // Ensure space is reserved
                     width: '100%',
                     position: 'relative',
@@ -1670,13 +1673,13 @@ const FigmaMobile = () => {
                     <div
                       onClick={handleResendCode}
                       style={{
-                        color: resendSubmitting ? 'rgba(255, 255, 255, 0.4)' : '#3B82F6',
+                        color: resendSubmitting ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.6)',
                         fontFamily: 'Inter',
                         fontSize: '12px',
-                        fontWeight: '500',
+                        fontWeight: '400',
                         textAlign: 'center',
                         cursor: resendSubmitting ? 'not-allowed' : 'pointer',
-                        textDecoration: 'underline',
+                        textDecoration: 'none',
                         transition: 'all 0.2s ease',
                         opacity: resendSubmitting ? 0.6 : 1
                       }}
