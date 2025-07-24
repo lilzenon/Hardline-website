@@ -1,26 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
+import MobileNavigation from './MobileNavigation';
 
 /**
- * Mobile-only Contact page component with animated navigation
+ * Mobile-only Contact page component with shared navigation
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const ContactPageMobile = () => {
-  const [showMenu, setShowMenu] = useState(false);
-
-  // Toggle mobile menu
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
-
-  // Handle navigation
-  const handleNavigation = (path) => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition(path);
-    } else {
-      window.location.href = path;
-    }
-    setShowMenu(false);
-  };
 
   // Handle contact actions
   const handleEmailClick = () => {
@@ -104,92 +89,8 @@ const ContactPageMobile = () => {
             background: '#000000'
           }}
         >
-          {/* Navigation Bar - Mobile Component */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: '430px',
-              height: '97px',
-              background: '#000000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 20px',
-              boxSizing: 'border-box'
-            }}
-          >
-            {/* Menu Button - Left Side */}
-            <div
-              onClick={toggleMenu}
-              className="mobile-menu-button"
-              style={{
-                position: 'absolute',
-                left: '20px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '34px',
-                height: '34px',
-                cursor: 'pointer',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              {/* Animated Menu Lines */}
-              <div 
-                style={{ 
-                  width: '24px', 
-                  height: '2px', 
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
-                  transformOrigin: 'center'
-                }} 
-              />
-              <div 
-                style={{ 
-                  width: '24px', 
-                  height: '2px', 
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: showMenu ? 0 : 1,
-                  transform: showMenu ? 'scale(0)' : 'scale(1)'
-                }} 
-              />
-              <div 
-                style={{ 
-                  width: '24px', 
-                  height: '2px', 
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
-                  transformOrigin: 'center'
-                }} 
-              />
-            </div>
-            
-            {/* B2B Logo - Centered */}
-            <img
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
-              alt="B2B Logo"
-              style={{
-                width: '138.41px',
-                height: '43px',
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)'
-              }}
-            />
-          </div>
+          {/* Shared Mobile Navigation */}
+          <MobileNavigation currentPage="contact" />
 
           {/* Main Content Area - Contact Page */}
           <div
@@ -482,25 +383,7 @@ const ContactPageMobile = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Overlay - Same as About Page */}
-        <div
-          style={{
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0, 0, 0, 0.95)',
-            zIndex: 1000,
-            display: 'flex',
-            flexDirection: 'column',
-            opacity: showMenu ? 1 : 0,
-            visibility: showMenu ? 'visible' : 'hidden',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)'
-          }}
-        >
-          {/* Navigation Bar in Menu */}
+
           <div
             style={{
               width: '430px',

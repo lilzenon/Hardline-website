@@ -1,51 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
+import MobileNavigation from './MobileNavigation';
 
 /**
- * Mobile-only About page component with animated navigation
+ * Mobile-only About page component with shared navigation
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const AboutPageMobile = () => {
-  const [showMenu, setShowMenu] = useState(false);
-
-  // Toggle mobile menu
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
-
-  // Handle navigation
-  const handleNavigation = (path) => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition(path);
-    } else {
-      window.location.href = path;
-    }
-    setShowMenu(false);
-  };
 
   return (
     <>
       {/* Mobile-specific CSS */}
       <style>
         {`
-          .mobile-nav-item:hover {
-            opacity: 0.8;
-            transform: translateX(10px) !important;
-            transition: all 0.3s ease;
-          }
-          .mobile-menu-button:hover {
-            opacity: 0.8;
-            transform: translateY(-50%) scale(1.1);
-            transition: all 0.2s ease;
-          }
-          
-          .mobile-menu-button {
-            transition: transform 0.2s ease;
-          }
-          
           .mobile-content-fade {
             animation: fadeInUp 0.6s ease-out;
           }
-          
+
           @keyframes fadeInUp {
             from {
               opacity: 0;
@@ -58,8 +28,8 @@ const AboutPageMobile = () => {
           }
         `}
       </style>
-      
-      <div 
+
+      <div
         style={{
           width: '100vw',
           height: '100vh',
@@ -81,92 +51,8 @@ const AboutPageMobile = () => {
             background: '#000000'
           }}
         >
-          {/* Navigation Bar - Mobile Component */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: '430px',
-              height: '97px',
-              background: '#000000',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 20px',
-              boxSizing: 'border-box'
-            }}
-          >
-            {/* Menu Button - Left Side */}
-            <div
-              onClick={toggleMenu}
-              className="mobile-menu-button"
-              style={{
-                position: 'absolute',
-                left: '20px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '34px',
-                height: '34px',
-                cursor: 'pointer',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              {/* Animated Menu Lines */}
-              <div 
-                style={{ 
-                  width: '24px', 
-                  height: '2px', 
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
-                  transformOrigin: 'center'
-                }} 
-              />
-              <div 
-                style={{ 
-                  width: '24px', 
-                  height: '2px', 
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: showMenu ? 0 : 1,
-                  transform: showMenu ? 'scale(0)' : 'scale(1)'
-                }} 
-              />
-              <div 
-                style={{ 
-                  width: '24px', 
-                  height: '2px', 
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
-                  transformOrigin: 'center'
-                }} 
-              />
-            </div>
-            
-            {/* B2B Logo - Centered */}
-            <img
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
-              alt="B2B Logo"
-              style={{
-                width: '138.41px',
-                height: '43px',
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)'
-              }}
-            />
-          </div>
+          {/* Shared Mobile Navigation */}
+          <MobileNavigation currentPage="about" />
 
           {/* Main Content Area - About Page */}
           <div
