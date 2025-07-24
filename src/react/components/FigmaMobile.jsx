@@ -153,6 +153,26 @@ const FigmaMobile = () => {
   const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [drawerFullyClosed, setDrawerFullyClosed] = useState(false);
+
+  // State preservation for drawer reopening
+  const [previousDrawerState, setPreviousDrawerState] = useState({
+    expanded: false,
+    showDisclaimer: false,
+    showVerification: false,
+    verificationCode: '',
+    phoneNumber: ''
+  });
+
+  // Helper function to save current drawer state
+  const saveCurrentDrawerState = useCallback(() => {
+    setPreviousDrawerState({
+      expanded: drawerExpanded,
+      showDisclaimer: showDisclaimer,
+      showVerification: showVerification,
+      verificationCode: verificationCode,
+      phoneNumber: phoneNumber
+    });
+  }, [drawerExpanded, showDisclaimer, showVerification, verificationCode, phoneNumber]);
   const [isButtonPressed, setIsButtonPressed] = useState(false);
 
   // Refs
@@ -495,13 +515,27 @@ const FigmaMobile = () => {
   // Handle clicking outside drawer to close it
   const handleOutsideClick = useCallback((e) => {
     if (drawerRef.current && !drawerRef.current.contains(e.target)) {
-      // Only collapse if no phone number and not in verification mode
-      if (!phoneNumber.trim() && !showVerification) {
-        setDrawerExpanded(false);
+      // Save current state before closing
+      saveCurrentDrawerState();
+
+      // Always close drawer visually
+      setDrawerExpanded(false);
+
+      // If in verification mode, keep it minimized but accessible
+      if (showVerification) {
+        // Don't fully close, just collapse so user can tap to reopen
+        setDrawerFullyClosed(false);
+      } else if (!phoneNumber.trim()) {
+        // If no content, fully close
+        setDrawerFullyClosed(true);
+        setShowDisclaimer(false);
+      } else {
+        // If has phone number but not in verification, just collapse
+        setDrawerFullyClosed(false);
         setShowDisclaimer(false);
       }
     }
-  }, [phoneNumber, showVerification]);
+  }, [phoneNumber, showVerification, saveCurrentDrawerState]);
 
   // Add click outside listener
   useEffect(() => {
@@ -520,8 +554,10 @@ const FigmaMobile = () => {
   const getDrawerHeight = useCallback(() => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
-    } else if (showVerification) {
-      return '240px'; // Verification mode - increased to prevent button cutoff
+    } else if (showVerification && drawerExpanded) {
+      return '240px'; // Verification mode expanded - increased to prevent button cutoff
+    } else if (showVerification && !drawerExpanded) {
+      return '80px'; // Verification mode collapsed - show handle + hint
     } else if (drawerExpanded) {
       return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
@@ -529,27 +565,37 @@ const FigmaMobile = () => {
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer]);
 
-  // Handle clicking outside drawer to close it and save state
-  const handleBackgroundClick = useCallback((e) => {
-    if (drawerRef.current && !drawerRef.current.contains(e.target)) {
-      // Close drawer but maintain verification state if in progress
-      setDrawerExpanded(false);
-      setShowDisclaimer(false);
 
-      // If not in verification mode, fully close the drawer
-      if (!showVerification && !phoneSubmitted) {
-        setDrawerFullyClosed(true);
-      }
-    }
-  }, [showVerification, phoneSubmitted]);
 
   // Handle drawer click to fully open when closed
   const handleDrawerClick = useCallback(() => {
     if (drawerFullyClosed) {
+      // Restore previous state when reopening
       setDrawerFullyClosed(false);
+      setDrawerExpanded(previousDrawerState.expanded || true);
+      setShowDisclaimer(previousDrawerState.showDisclaimer);
+      setShowVerification(previousDrawerState.showVerification);
+
+      // Restore verification code if it was in progress
+      if (previousDrawerState.verificationCode) {
+        setVerificationCode(previousDrawerState.verificationCode);
+        if (previousDrawerState.verificationCode.length === 4) {
+          setVerificationState('filled');
+        }
+      }
+
+      // Restore phone number if it was entered
+      if (previousDrawerState.phoneNumber) {
+        setPhoneNumber(previousDrawerState.phoneNumber);
+      }
+    } else if (!drawerExpanded) {
+      // If just collapsed, expand to previous state
       setDrawerExpanded(true);
+      if (previousDrawerState.showDisclaimer && !showVerification) {
+        setShowDisclaimer(true);
+      }
     }
-  }, [drawerFullyClosed]);
+  }, [drawerFullyClosed, drawerExpanded, previousDrawerState, showVerification]);
 
   // Button press handlers for inlaid effect
   const handleButtonMouseDown = useCallback(() => {
@@ -851,7 +897,6 @@ const FigmaMobile = () => {
       </style>
 
       <div
-        onClick={handleBackgroundClick}
         className="mobile-container"
         style={{
           background: '#000000',
@@ -1045,6 +1090,47 @@ const FigmaMobile = () => {
               zIndex: 2
             }}
           />
+
+          {/* Verification Collapsed Indicator */}
+          {showVerification && !drawerExpanded && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '4px',
+                marginBottom: '8px',
+                flexShrink: 0,
+                position: 'relative',
+                zIndex: 2,
+                opacity: 0.8
+              }}
+            >
+              <div
+                style={{
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  textAlign: 'center'
+                }}
+              >
+                Verification Code
+              </div>
+              <div
+                style={{
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontSize: '10px',
+                  fontWeight: '400',
+                  textAlign: 'center',
+                  opacity: 0.7
+                }}
+              >
+                Tap to continue
+              </div>
+            </div>
+          )}
 
           {/* Text Us Group - Hidden during verification */}
           {!drawerFullyClosed && !showVerification && (
