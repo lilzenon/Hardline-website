@@ -16,7 +16,7 @@ const COUNTRIES = [
     id: 'ca',
     code: '+1',
     name: 'Canada',
-    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkYwMDAwIi8+CjxyZWN0IHg9IjE0IiB3aWR0aD0iNyIgaGVpZ2h0PSIxNSIgZmlsbD0iI0ZGMDAwMCIvPgo8L3N2Zz4K',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkZGRkZGIi8+CjxyZWN0IHdpZHRoPSI3IiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkYwMDAwIi8+CjxyZWN0IHg9IjE0IiB3aWR0aD0iNyIgaGVpZ2h0PSIxNSIgZmlsbD0iI0ZGMDAwMCIvPjxwYXRoIGQ9Ik0xMC41IDNMMTIgNUgxNEwxMi41IDdMMTQgOUgxMkwxMC41IDExTDkgOUg3TDguNSA3TDcgNUg5TDEwLjUgM1oiIGZpbGw9IiNGRjAwMDAiLz48L3N2Zz4K',
     pattern: /^\d{10}$/,
     placeholder: '(555) 123-4567',
     maxLength: 14,
@@ -81,6 +81,66 @@ const COUNTRIES = [
     placeholder: '312 345 6789',
     maxLength: 12,
     digitLength: 10
+  },
+  {
+    id: 'jp',
+    code: '+81',
+    name: 'Japan',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkZGRkZGIi8+PGNpcmNsZSBjeD0iMTAuNSIgY3k9IjcuNSIgcj0iNCIgZmlsbD0iI0JDMDAyRCIvPjwvc3ZnPgo=',
+    pattern: /^\d{10,11}$/,
+    placeholder: '90 1234 5678',
+    maxLength: 13,
+    digitLength: 11
+  },
+  {
+    id: 'kr',
+    code: '+82',
+    name: 'South Korea',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjRkZGRkZGIi8+PGNpcmNsZSBjeD0iMTAuNSIgY3k9IjcuNSIgcj0iMyIgZmlsbD0iIzAwNDhCQSIvPjxwYXRoIGQ9Ik0xMC41IDQuNUMxMi40MyA0LjUgMTQgNi4wNyAxNCA3LjVTMTIuNDMgMTAuNSAxMC41IDEwLjVDOC41NyAxMC41IDcgOC45MyA3IDcuNVM4LjU3IDQuNSAxMC41IDQuNVoiIGZpbGw9IiNEQzE0M0MiLz48L3N2Zz4K',
+    pattern: /^\d{10,11}$/,
+    placeholder: '10 1234 5678',
+    maxLength: 13,
+    digitLength: 11
+  },
+  {
+    id: 'cn',
+    code: '+86',
+    name: 'China',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjREUyOTEwIi8+PHBvbHlnb24gcG9pbnRzPSI0LDMgNS41LDUuNSAzLDUuNSA1LDcgMi41LDcgNCwzIiBmaWxsPSIjRkZERTAwIi8+PC9zdmc+',
+    pattern: /^\d{11}$/,
+    placeholder: '138 0013 8000',
+    maxLength: 13,
+    digitLength: 11
+  },
+  {
+    id: 'in',
+    code: '+91',
+    name: 'India',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjUiIGZpbGw9IiNGRjk5MzMiLz48cmVjdCB5PSI1IiB3aWR0aD0iMjEiIGhlaWdodD0iNSIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHk9IjEwIiB3aWR0aD0iMjEiIGhlaWdodD0iNSIgZmlsbD0iIzEzOEEwOCIvPjxjaXJjbGUgY3g9IjEwLjUiIGN5PSI3LjUiIHI9IjIiIHN0cm9rZT0iIzAwMDA4MCIgc3Ryb2tlLXdpZHRoPSIwLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4K',
+    pattern: /^\d{10}$/,
+    placeholder: '98765 43210',
+    maxLength: 12,
+    digitLength: 10
+  },
+  {
+    id: 'br',
+    code: '+55',
+    name: 'Brazil',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjIxIiBoZWlnaHQ9IjE1IiBmaWxsPSIjMDA5NzM5Ii8+PHBhdGggZD0iTTEwLjUgMkwxOCA3LjVMMTAuNSAxM0wzIDcuNUwxMC41IDJaIiBmaWxsPSIjRkVERjAwIi8+PGNpcmNsZSBjeD0iMTAuNSIgY3k9IjcuNSIgcj0iMyIgZmlsbD0iIzAwMjc3NiIvPjwvc3ZnPgo=',
+    pattern: /^\d{10,11}$/,
+    placeholder: '11 91234 5678',
+    maxLength: 14,
+    digitLength: 11
+  },
+  {
+    id: 'mx',
+    code: '+52',
+    name: 'Mexico',
+    flag: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjEiIGhlaWdodD0iMTUiIHZpZXdCb3g9IjAgMCAyMSAxNSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjciIGhlaWdodD0iMTUiIGZpbGw9IiMwMDY4NDciLz48cmVjdCB4PSI3IiB3aWR0aD0iNyIgaGVpZ2h0PSIxNSIgZmlsbD0iI0ZGRkZGRiIvPjxyZWN0IHg9IjE0IiB3aWR0aD0iNyIgaGVpZ2h0PSIxNSIgZmlsbD0iI0NFMTEyNiIvPjwvc3ZnPgo=',
+    pattern: /^\d{10}$/,
+    placeholder: '55 1234 5678',
+    maxLength: 12,
+    digitLength: 10
   }
 ];
 
@@ -111,6 +171,44 @@ const formatPhoneNumber = (value, countryId) => {
         return `${limitedNumber.slice(0,4)} ${limitedNumber.slice(4)}`;
       }
       return `${limitedNumber.slice(0,4)} ${limitedNumber.slice(4,7)} ${limitedNumber.slice(7)}`;
+
+    case 'jp':
+    case 'kr':
+      // Japan/Korea format: XX XXXX XXXX
+      if (limitedNumber.length <= 2) return limitedNumber;
+      if (limitedNumber.length <= 6) {
+        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+      }
+      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
+
+    case 'cn':
+      // China format: XXX XXXX XXXX
+      if (limitedNumber.length <= 3) return limitedNumber;
+      if (limitedNumber.length <= 7) {
+        return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3)}`;
+      }
+      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,7)} ${limitedNumber.slice(7)}`;
+
+    case 'in':
+      // India format: XXXXX XXXXX
+      if (limitedNumber.length <= 5) return limitedNumber;
+      return `${limitedNumber.slice(0,5)} ${limitedNumber.slice(5)}`;
+
+    case 'br':
+      // Brazil format: XX XXXXX XXXX
+      if (limitedNumber.length <= 2) return limitedNumber;
+      if (limitedNumber.length <= 7) {
+        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+      }
+      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,7)} ${limitedNumber.slice(7)}`;
+
+    case 'mx':
+      // Mexico format: XX XXXX XXXX
+      if (limitedNumber.length <= 2) return limitedNumber;
+      if (limitedNumber.length <= 6) {
+        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+      }
+      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
 
     default:
       // Generic formatting for other countries - XXX XXX XXXX
@@ -395,7 +493,17 @@ const FigmaMobile = () => {
           setPhoneNumber('');
           setPhoneSubmitted(false);
           setPhoneInputState('normal');
+          setVerificationState('normal');
+          setVerificationSubmitting(false);
           setDrawerFullyClosed(false);
+          // Reset previous drawer state
+          setPreviousDrawerState({
+            expanded: false,
+            showDisclaimer: false,
+            showVerification: false,
+            verificationCode: '',
+            phoneNumber: ''
+          });
         }, 5000);
         return;
       }
@@ -453,7 +561,16 @@ const FigmaMobile = () => {
           setPhoneSubmitted(false);
           setPhoneInputState('normal');
           setVerificationState('normal');
+          setVerificationSubmitting(false);
           setDrawerFullyClosed(false);
+          // Reset previous drawer state
+          setPreviousDrawerState({
+            expanded: false,
+            showDisclaimer: false,
+            showVerification: false,
+            verificationCode: '',
+            phoneNumber: ''
+          });
         }, 5000);
       } else {
         console.error('❌ Phone verification failed:', result.error || 'Unknown error');
@@ -1463,7 +1580,7 @@ const FigmaMobile = () => {
                     <div
                       style={{
                         position: 'absolute',
-                        left: '6px',
+                        left: '10px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         display: 'flex',
