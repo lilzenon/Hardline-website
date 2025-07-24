@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
+// Add CSS animation for spinning wheel
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // Simple cache for API responses
 const apiCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -258,10 +270,18 @@ const FigmaDesktop = () => {
   const [verificationCode, setVerificationCode] = useState('');
   const [verificationSubmitting, setVerificationSubmitting] = useState(false);
   const [verificationPhone, setVerificationPhone] = useState('');
+  const [verificationState, setVerificationState] = useState('normal'); // normal, filled, valid, invalid
+
+  // Resend countdown state
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [canResend, setCanResend] = useState(false);
+  const [resendSubmitting, setResendSubmitting] = useState(false);
 
   // Refs for animations
   const flagImageRef = useRef(null);
   const phoneContainerRef = useRef(null);
+  const resendTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
@@ -497,6 +517,43 @@ const FigmaDesktop = () => {
     });
   }, [fetchHomepageData]);
 
+  // Cleanup timer on unmount and when verification changes
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (resendTimerRef.current) {
+        clearInterval(resendTimerRef.current);
+        resendTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  // Additional cleanup when showVerification changes
+  useEffect(() => {
+    if (!showVerification && resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+      resendTimerRef.current = null;
+      setResendCountdown(0);
+      setCanResend(false);
+    }
+  }, [showVerification]);
+
+  // Start countdown when verification is shown
+  useEffect(() => {
+    console.log('🔄 Countdown useEffect triggered:', {
+      showVerification,
+      verificationPhone,
+      resendCountdown,
+      canResend
+    });
+
+    if (showVerification && verificationPhone && resendCountdown === 0 && !canResend) {
+      console.log('🚀 Starting resend countdown');
+      startResendCountdown();
+    }
+  }, [showVerification, verificationPhone, startResendCountdown]);
+
   const validatePhoneNumber = useCallback((phone) => {
     // Basic phone number validation (US format)
     const phoneRegex = /^[\+]?[1]?[\s\-\.]?[\(]?[0-9]{3}[\)]?[\s\-\.]?[0-9]{3}[\s\-\.]?[0-9]{4}$/;
@@ -638,6 +695,7 @@ const FigmaDesktop = () => {
     if (isTestNumber) {
       console.log('🧪 Test verification - accepting any 4-digit code');
       if (trimmedCode.length === 4) {
+        setVerificationState('valid');
         setPhoneInputState('valid');
         setPhoneSubmitted(true);
 
@@ -649,6 +707,14 @@ const FigmaDesktop = () => {
           setPhoneNumber('');
           setPhoneSubmitted(false);
           setPhoneInputState('normal');
+          setVerificationState('normal');
+          // Reset resend countdown
+          setResendCountdown(0);
+          setCanResend(false);
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
+          }
         }, 3000);
         return;
       }
@@ -659,6 +725,7 @@ const FigmaDesktop = () => {
       console.warn('Invalid verification code format');
 
       // Show invalid state with shake animation
+      setVerificationState('invalid');
       setPhoneInputState('invalid');
       if (phoneContainerRef.current) {
         phoneContainerRef.current.classList.add('shake');
@@ -691,6 +758,7 @@ const FigmaDesktop = () => {
 
       if (response.ok && result.success) {
         console.log('✅ Phone verification successful');
+        setVerificationState('valid');
         setPhoneInputState('valid');
         setPhoneSubmitted(true);
 
@@ -702,11 +770,20 @@ const FigmaDesktop = () => {
           setPhoneNumber('');
           setPhoneSubmitted(false);
           setPhoneInputState('normal');
+          setVerificationState('normal');
+          // Reset resend countdown
+          setResendCountdown(0);
+          setCanResend(false);
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
+          }
         }, 3000);
       } else {
         console.error('❌ Phone verification failed:', result.error || 'Unknown error');
 
         // Show error state with shake animation
+        setVerificationState('invalid');
         setPhoneInputState('invalid');
         if (phoneContainerRef.current) {
           phoneContainerRef.current.classList.add('shake');
@@ -734,6 +811,85 @@ const FigmaDesktop = () => {
     }
   }, [verificationCode, verificationSubmitting, verificationPhone]);
 
+  // Start resend countdown timer
+  const startResendCountdown = useCallback(() => {
+    console.log('🚀 Starting countdown timer');
+
+    // Clear any existing timer first
+    if (resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+      resendTimerRef.current = null;
+    }
+
+    setResendCountdown(60);
+    setCanResend(false);
+
+    resendTimerRef.current = setInterval(() => {
+      if (!isMountedRef.current) {
+        if (resendTimerRef.current) {
+          clearInterval(resendTimerRef.current);
+          resendTimerRef.current = null;
+        }
+        return;
+      }
+
+      setResendCountdown(prev => {
+        console.log('⏰ Countdown tick:', prev);
+        if (prev <= 1) {
+          console.log('✅ Countdown finished, enabling resend');
+          if (isMountedRef.current) {
+            setCanResend(true);
+          }
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  // Handle resend verification code
+  const handleResendCode = useCallback(async () => {
+    if (!canResend || resendSubmitting || !verificationPhone) return;
+
+    try {
+      setResendSubmitting(true);
+
+      console.log('🔄 Resending verification code to:', verificationPhone);
+
+      const response = await fetch('/api/home-settings/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: verificationPhone
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Verification code resent successfully');
+        // Start new countdown
+        startResendCountdown();
+      } else {
+        console.error('❌ Failed to resend verification code:', result.error);
+        // Still start countdown to prevent spam
+        startResendCountdown();
+      }
+    } catch (error) {
+      console.error('❌ Error resending verification code:', error);
+      // Still start countdown to prevent spam
+      startResendCountdown();
+    } finally {
+      setResendSubmitting(false);
+    }
+  }, [canResend, resendSubmitting, verificationPhone, startResendCountdown]);
+
   // Button press animation handlers
   const handleButtonMouseDown = useCallback(() => {
     setIsButtonPressed(true);
@@ -752,6 +908,13 @@ const FigmaDesktop = () => {
     const value = e.target.value.replace(/\D/g, ''); // Only digits
     if (value.length <= 4) {
       setVerificationCode(value);
+
+      // Update verification state based on code length
+      if (value.length === 4) {
+        setVerificationState('filled');
+      } else {
+        setVerificationState('normal');
+      }
     }
   }, []);
 
@@ -2225,7 +2388,7 @@ const FigmaDesktop = () => {
             style={{
               display: 'flex',
               width: '299px',
-              height: showVerification ? '200px' : '36px',
+              height: showVerification ? '240px' : '36px',
               padding: '0px 2px',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -2375,8 +2538,9 @@ const FigmaDesktop = () => {
                         height: '48px',
                         borderRadius: '12px',
                         border: `2px solid ${
-                          phoneInputState === 'valid' && verificationCode.length === 4 ? '#10B981' :
-                          phoneInputState === 'invalid' ? '#EF4444' :
+                          verificationState === 'valid' ? '#10B981' :
+                          verificationState === 'invalid' ? '#EF4444' :
+                          verificationState === 'filled' ? '#3B82F6' :
                           verificationCode[index] ? 'rgba(255, 255, 255, 0.4)' :
                           'rgba(255, 255, 255, 0.15)'
                         }`,
@@ -2420,11 +2584,15 @@ const FigmaDesktop = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                       borderRadius: '18px',
-                      background: phoneSubmitted ? 'rgba(16, 185, 129, 0.15)' :
+                      background: verificationState === 'valid' ? 'rgba(16, 185, 129, 0.15)' :
+                                 verificationState === 'invalid' ? 'rgba(239, 68, 68, 0.15)' :
+                                 verificationState === 'filled' ? 'rgba(59, 130, 246, 0.15)' :
                                  verificationSubmitting ? 'rgba(255, 255, 255, 0.08)' :
                                  'rgba(255, 255, 255, 0.06)',
                       border: `1px solid ${
-                        phoneSubmitted ? 'rgba(16, 185, 129, 0.3)' :
+                        verificationState === 'valid' ? 'rgba(16, 185, 129, 0.3)' :
+                        verificationState === 'invalid' ? 'rgba(239, 68, 68, 0.3)' :
+                        verificationState === 'filled' ? 'rgba(59, 130, 246, 0.3)' :
                         verificationSubmitting ? 'rgba(255, 255, 255, 0.15)' :
                         'rgba(255, 255, 255, 0.12)'
                       }`,
@@ -2443,16 +2611,91 @@ const FigmaDesktop = () => {
                   >
                     <span
                       style={{
-                        color: phoneSubmitted ? '#10B981' : '#FFF',
+                        color: verificationState === 'valid' ? '#10B981' :
+                               verificationState === 'invalid' ? '#EF4444' :
+                               verificationState === 'filled' ? '#3B82F6' :
+                               '#FFF',
                         fontFamily: 'Inter',
                         fontSize: '13px',
                         fontWeight: '600',
                         lineHeight: '1',
-                        transition: 'color 0.15s ease'
+                        transition: 'color 0.15s ease',
+                        animation: verificationSubmitting ? 'spin 1s linear infinite' : 'none'
                       }}
                     >
-                      {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
+                      {verificationSubmitting ? '⟳' :
+                       verificationState === 'valid' ? '✓ Verified' :
+                       verificationState === 'invalid' ? '✗ Invalid' :
+                       'VERIFY'}
                     </span>
+                  </div>
+
+                  {/* Resend Code Countdown */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginTop: '8px',
+                      marginBottom: '0px',
+                      minHeight: '16px',
+                      width: '100%',
+                      position: 'relative',
+                      zIndex: 10
+                    }}
+                  >
+                    {resendCountdown > 0 ? (
+                      <div
+                        style={{
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontFamily: 'Inter',
+                          fontSize: '12px',
+                          fontWeight: '400',
+                          textAlign: 'center'
+                        }}
+                      >
+                        Resend code in {resendCountdown}s
+                      </div>
+                    ) : canResend ? (
+                      <div
+                        onClick={handleResendCode}
+                        style={{
+                          color: resendSubmitting ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.6)',
+                          fontFamily: 'Inter',
+                          fontSize: '12px',
+                          fontWeight: '400',
+                          textAlign: 'center',
+                          cursor: resendSubmitting ? 'not-allowed' : 'pointer',
+                          textDecoration: 'none',
+                          transition: 'all 0.2s ease',
+                          opacity: resendSubmitting ? 0.6 : 1
+                        }}
+                        onMouseDown={(e) => {
+                          if (!resendSubmitting) {
+                            e.target.style.transform = 'scale(0.95)';
+                          }
+                        }}
+                        onMouseUp={(e) => {
+                          e.target.style.transform = 'scale(1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1)';
+                        }}
+                      >
+                        {resendSubmitting ? 'Sending...' : 'Resend code'}
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          color: 'rgba(255, 255, 255, 0.4)',
+                          fontFamily: 'Inter',
+                          fontSize: '12px',
+                          fontWeight: '400',
+                          textAlign: 'center'
+                        }}
+                      >
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
