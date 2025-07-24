@@ -191,6 +191,33 @@ const AboutPage = () => {
     };
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          width: '100vw',
+          height: '100vh',
+          background: '#000',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#FFF',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '18px'
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  // Serve appropriate component based on device detection
+  if (isMobile) {
+    return <AboutPageMobile />;
+  }
+
+  // Desktop content
   return (
     <div className="homepage-content">
       <div
@@ -323,29 +350,7 @@ const AboutPage = () => {
     </div>
   );
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div
-        style={{
-          width: '100vw',
-          height: '100vh',
-          background: '#000',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          color: '#FFF',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '18px'
-        }}
-      >
-        Loading...
-      </div>
-    );
-  }
 
-  // Serve appropriate component based on device detection
-  return isMobile ? <AboutPageMobile /> : desktopContent;
 };
 
 export default AboutPage;

@@ -176,7 +176,7 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
       >
         {/* Navigation Items */}
         <div
-          onClick={() => handleNavigation('/events')}
+          onClick={() => handleNavigation('/')}
           className="mobile-nav-item"
           style={{
             fontFamily: 'Inter',
