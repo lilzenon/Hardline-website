@@ -282,6 +282,7 @@ const FigmaMobile = () => {
   const phoneContainerRef = useRef(null);
   const flagImageRef = useRef(null);
   const resendTimerRef = useRef(null);
+  const isMountedRef = useRef(true);
   const drawerRef = useRef(null);
 
   // Simplified phone number formatting handler without cursor management
@@ -507,6 +508,7 @@ const FigmaMobile = () => {
           setCanResend(false);
           if (resendTimerRef.current) {
             clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
           }
           // Reset previous drawer state
           setPreviousDrawerState({
@@ -580,6 +582,7 @@ const FigmaMobile = () => {
           setCanResend(false);
           if (resendTimerRef.current) {
             clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
           }
           // Reset previous drawer state
           setPreviousDrawerState({
@@ -616,21 +619,36 @@ const FigmaMobile = () => {
   // Start resend countdown timer
   const startResendCountdown = useCallback(() => {
     console.log('🚀 Starting countdown timer');
+
+    // Clear any existing timer first
+    if (resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+      resendTimerRef.current = null;
+    }
+
     setResendCountdown(60);
     setCanResend(false);
 
-    // Clear any existing timer
-    if (resendTimerRef.current) {
-      clearInterval(resendTimerRef.current);
-    }
-
     resendTimerRef.current = setInterval(() => {
+      if (!isMountedRef.current) {
+        if (resendTimerRef.current) {
+          clearInterval(resendTimerRef.current);
+          resendTimerRef.current = null;
+        }
+        return;
+      }
+
       setResendCountdown(prev => {
         console.log('⏰ Countdown tick:', prev);
         if (prev <= 1) {
           console.log('✅ Countdown finished, enabling resend');
-          setCanResend(true);
-          clearInterval(resendTimerRef.current);
+          if (isMountedRef.current) {
+            setCanResend(true);
+          }
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
+          }
           return 0;
         }
         return prev - 1;
@@ -677,14 +695,27 @@ const FigmaMobile = () => {
     }
   }, [canResend, resendSubmitting, verificationPhone, startResendCountdown]);
 
-  // Cleanup timer on unmount
+  // Cleanup timer on unmount and when verification changes
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
+      isMountedRef.current = false;
       if (resendTimerRef.current) {
         clearInterval(resendTimerRef.current);
+        resendTimerRef.current = null;
       }
     };
   }, []);
+
+  // Additional cleanup when showVerification changes
+  useEffect(() => {
+    if (!showVerification && resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+      resendTimerRef.current = null;
+      setResendCountdown(0);
+      setCanResend(false);
+    }
+  }, [showVerification]);
 
   // Start countdown when verification is shown
   useEffect(() => {
