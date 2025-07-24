@@ -784,6 +784,22 @@ const FigmaMobile = () => {
             box-shadow: 0 0 0 2px rgba(0, 255, 64, 0.2);
           }
 
+          /* Spinner animation for mobile SEND button */
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+
+          @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+          }
+
+          @-moz-keyframes spin {
+            0% { -moz-transform: rotate(0deg); }
+            100% { -moz-transform: rotate(360deg); }
+          }
+
           /* Drawer animations */
           .mobile-drawer {
             position: fixed;
@@ -1132,28 +1148,48 @@ const FigmaMobile = () => {
                     <input
                       key={index}
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       maxLength="1"
                       value={verificationCode[index] || ''}
                       onChange={(e) => {
+                        const value = e.target.value.replace(/[^0-9]/g, ''); // Only allow numbers
                         const newCode = verificationCode.split('');
-                        newCode[index] = e.target.value.replace(/\D/g, '');
+                        newCode[index] = value;
                         const updatedCode = newCode.join('');
                         setVerificationCode(updatedCode);
 
-                        // Auto-focus next input
-                        if (e.target.value && index < 3) {
-                          const nextInput = e.target.parentElement.children[index + 1];
-                          if (nextInput) nextInput.focus();
+                        // Auto-focus next input if value entered
+                        if (value && index < 3) {
+                          setTimeout(() => {
+                            const nextInput = e.target.parentElement.children[index + 1];
+                            if (nextInput) {
+                              nextInput.focus();
+                              nextInput.select();
+                            }
+                          }, 10);
                         }
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
-                          const prevInput = e.target.parentElement.children[index - 1];
-                          if (prevInput) prevInput.focus();
+                        // Handle backspace to go to previous input
+                        if (e.key === 'Backspace') {
+                          if (!verificationCode[index] && index > 0) {
+                            setTimeout(() => {
+                              const prevInput = e.target.parentElement.children[index - 1];
+                              if (prevInput) {
+                                prevInput.focus();
+                                prevInput.select();
+                              }
+                            }, 10);
+                          }
                         }
+                        // Handle Enter to submit when all 4 digits entered
                         if (e.key === 'Enter' && verificationCode.length === 4) {
                           handleVerificationSubmit();
                         }
+                      }}
+                      onFocus={(e) => {
+                        e.target.select(); // Select all text when focused
                       }}
                       style={{
                         width: '48px',
@@ -1178,6 +1214,9 @@ const FigmaMobile = () => {
                     />
                   ))}
                 </div>
+
+                {/* Spacing above verify button */}
+                <div style={{ height: '24px' }} />
 
                 <div
                   onClick={handleVerificationSubmit}
@@ -1238,6 +1277,9 @@ const FigmaMobile = () => {
                     {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
                   </span>
                 </div>
+
+                {/* Spacing below verify button */}
+                <div style={{ height: '24px' }} />
               </div>
             ) : (
               /* Phone Input UI - Desktop Layout Adapted for Mobile */
@@ -1288,7 +1330,7 @@ const FigmaMobile = () => {
                       position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
-                      width: '70px',
+                      width: '75px', // Increased from 70px to accommodate larger flag
                       height: '100%',
                       flexShrink: 0,
                       backgroundColor: '#303030',
@@ -1314,16 +1356,16 @@ const FigmaMobile = () => {
                         alt={getCurrentCountry(selectedCountryId).name}
                         src={getCurrentCountry(selectedCountryId).flag}
                         style={{
-                          width: '18px',
-                          height: '14px',
-                          borderRadius: '1px'
+                          width: '20px', // Scaled up from 18px to match desktop
+                          height: '15px', // Scaled up from 14px to match desktop
+                          borderRadius: '2px' // Increased from 1px proportionally
                         }}
                       />
                       <span
                         style={{
                           color: '#FFF',
                           fontFamily: 'Inter',
-                          fontSize: '12px',
+                          fontSize: '13px', // Increased from 12px for better proportion
                           fontWeight: '500',
                           lineHeight: '1',
                           whiteSpace: 'nowrap'
@@ -1406,7 +1448,7 @@ const FigmaMobile = () => {
                       fontWeight: '500',
                       lineHeight: 'normal',
                       minHeight: '44px',
-                      paddingLeft: '6px',
+                      paddingLeft: '78px', // Adjusted for wider country selector (75px + 3px spacing)
                       paddingRight: '65px' // Make room for inlaid button
                     }}
                   />
@@ -1443,18 +1485,39 @@ const FigmaMobile = () => {
                     marginTop: '-18px' // Half of new button height for perfect centering
                   }}
                 >
-                  <span
-                    style={{
-                      color: '#232323',
-                      fontFamily: 'Inter',
-                      fontSize: '12px', // Increased from 11px to 12px for better proportion
-                      fontWeight: '700',
-                      lineHeight: '1',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {phoneSubmitted ? '✓' : (phoneSubmitting ? '...' : 'SEND')}
-                  </span>
+                  {phoneSubmitting ? (
+                    /* Spinning wheel animation like desktop */
+                    <div
+                      className="mobile-button-spinner"
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '3px solid #000000',
+                        borderTop: '3px solid #FFFFFF',
+                        borderRight: '3px solid #FFFFFF',
+                        borderRadius: '50%',
+                        animation: 'spin 0.6s linear infinite',
+                        WebkitAnimation: 'spin 0.6s linear infinite',
+                        MozAnimation: 'spin 0.6s linear infinite',
+                        display: 'inline-block',
+                        boxSizing: 'border-box',
+                        backgroundColor: 'transparent'
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        color: '#232323',
+                        fontFamily: 'Inter',
+                        fontSize: '12px', // Increased from 11px to 12px for better proportion
+                        fontWeight: '700',
+                        lineHeight: '1',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {phoneSubmitted ? '✓' : 'SEND'}
+                    </span>
+                  )}
                 </div>
               </div>
             )}
