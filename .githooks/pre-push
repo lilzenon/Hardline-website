@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Pre-push hook to ensure critical production files are included
+# This prevents pushing code changes without the corresponding built assets
+
+# Use Node.js version for cross-platform compatibility
+node .githooks/pre-push.js
+exit $?
+
+# Define critical files that must be included in commits
+CRITICAL_FILES=(
+    "static/react/bundle.js"
+    "static/react/index.html"
+    "build-info.json"
+)
+
+# Check if any critical files have uncommitted changes
+UNCOMMITTED_CRITICAL=()
+for file in "${CRITICAL_FILES[@]}"; do
+    if git diff --quiet HEAD -- "$file"; then
+        continue
+    else
+        UNCOMMITTED_CRITICAL+=("$file")
+    fi
+done
+
+# Check if any React source files were changed in recent commits
+RECENT_REACT_CHANGES=$(git diff HEAD~3..HEAD --name-only | grep -E "src/react/.*\.(jsx?|css)$" | wc -l)
+
+# If React source files changed but bundle wasn't updated, warn and offer to build
+if [ "$RECENT_REACT_CHANGES" -gt 0 ] && [ ${#UNCOMMITTED_CRITICAL[@]} -gt 0 ]; then
+    echo "⚠️  WARNING: React source files were changed but production bundle may be outdated!"
+    echo ""
+    echo "📁 Uncommitted critical files:"
+    for file in "${UNCOMMITTED_CRITICAL[@]}"; do
+        echo "   - $file"
+    done
+    echo ""
+    echo "🔧 To fix this, run:"
+    echo "   cd src/react && npm run build"
+    echo "   git add static/react/bundle.js build-info.json"
+    echo "   git commit -m 'build: Update production bundle'"
+    echo ""
+    read -p "❓ Do you want to continue pushing anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "❌ Push cancelled. Please build and commit production files first."
+        exit 1
+    fi
+fi
+
+# Check if bundle.js exists
+if [ ! -f "static/react/bundle.js" ]; then
+    echo "❌ ERROR: static/react/bundle.js is missing!"
+    echo "🔧 Run: cd src/react && npm run build"
+    exit 1
+fi
+
+# Check if bundle.js is older than source files
+BUNDLE_TIME=$(stat -c %Y "static/react/bundle.js" 2>/dev/null || echo 0)
+NEWEST_SOURCE_TIME=0
+
+# Find newest React source file
+while IFS= read -r -d '' file; do
+    FILE_TIME=$(stat -c %Y "$file" 2>/dev/null || echo 0)
+    if [ "$FILE_TIME" -gt "$NEWEST_SOURCE_TIME" ]; then
+        NEWEST_SOURCE_TIME=$FILE_TIME
+    fi
+done < <(find src/react -name "*.jsx" -o -name "*.js" -o -name "*.css" -print0 2>/dev/null)
+
+if [ "$NEWEST_SOURCE_TIME" -gt "$BUNDLE_TIME" ]; then
+    echo "⚠️  WARNING: React source files are newer than bundle.js"
+    echo "🔧 Consider running: cd src/react && npm run build"
+fi
+
+echo "✅ Pre-push checks completed"
+exit 0

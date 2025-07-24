@@ -19,7 +19,9 @@
         "migrate:crm:make": "knex migrate:make --knexfile knexfile.crm.js",
         "setup:crm": "node scripts/setup-crm.js",
         "verify:db": "node scripts/verify-database.js",
-        "docs:build": "cd docs/api && node generate && cd ../.."
+        "docs:build": "cd docs/api && node generate && cd ../..",
+        "build:commit": "node scripts/build-and-commit.js",
+        "deploy:prep": "npm run build && npm run build:commit"
     },
     "repository": {
         "type": "git",
