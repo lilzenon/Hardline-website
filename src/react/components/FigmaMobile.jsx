@@ -524,7 +524,7 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification) {
-      return '180px'; // Verification only (no disclaimer, no title) - increased to fit button
+      return '200px'; // Verification mode - increased to properly contain verify button
     } else if (drawerExpanded) {
       return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
@@ -1108,8 +1108,9 @@ const FigmaMobile = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '4px', // Reduced from 8px to 4px for tighter spacing
-                  width: '100%'
+                  gap: '12px', // Reduced gap for mobile
+                  width: '100%',
+                  padding: '8px 16px 8px 16px' // Reduced padding for mobile
                 }}
               >
                 <div
@@ -1118,8 +1119,7 @@ const FigmaMobile = () => {
                     fontFamily: 'Inter',
                     fontSize: '16px',
                     fontWeight: '600',
-                    textAlign: 'center',
-                    marginBottom: '2px' // Reduced from 4px to 2px
+                    textAlign: 'center'
                   }}
                 >
                   Enter Verification Code
@@ -1140,7 +1140,7 @@ const FigmaMobile = () => {
                 <div
                   style={{
                     display: 'flex',
-                    gap: '6px',
+                    gap: '8px', // Slightly increased for better touch targets
                     justifyContent: 'center'
                   }}
                 >
@@ -1215,9 +1215,6 @@ const FigmaMobile = () => {
                   ))}
                 </div>
 
-                {/* Spacing above verify button */}
-                <div style={{ height: '24px' }} />
-
                 <div
                   onClick={handleVerificationSubmit}
                   style={{
@@ -1277,9 +1274,6 @@ const FigmaMobile = () => {
                     {phoneSubmitted ? '✓ Verified' : (verificationSubmitting ? 'Verifying...' : 'VERIFY')}
                   </span>
                 </div>
-
-                {/* Spacing below verify button */}
-                <div style={{ height: '24px' }} />
               </div>
             ) : (
               /* Phone Input UI - Desktop Layout Adapted for Mobile */
@@ -1330,7 +1324,7 @@ const FigmaMobile = () => {
                       position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
-                      width: '75px', // Increased from 70px to accommodate larger flag
+                      width: '65px', // Reduced from 75px to give phone field more space
                       height: '100%',
                       flexShrink: 0,
                       backgroundColor: '#303030',
@@ -1448,7 +1442,7 @@ const FigmaMobile = () => {
                       fontWeight: '500',
                       lineHeight: 'normal',
                       minHeight: '44px',
-                      paddingLeft: '78px', // Adjusted for wider country selector (75px + 3px spacing)
+                      paddingLeft: '67px', // Reduced spacing (65px + 2px spacing)
                       paddingRight: '65px' // Make room for inlaid button
                     }}
                   />
