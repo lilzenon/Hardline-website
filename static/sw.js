@@ -3,9 +3,9 @@
  * Implements caching strategies for performance optimization
  */
 
-const CACHE_NAME = 'bounce2bounce-v2';
-const STATIC_CACHE = 'bounce2bounce-static-v2';
-const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v2';
+const CACHE_NAME = 'bounce2bounce-v3';
+const STATIC_CACHE = 'bounce2bounce-static-v3';
+const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v3';
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -73,10 +73,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Skip admin and API requests
+    // Skip admin, API, and React bundle requests for fresh content
     if (url.pathname.startsWith('/admin') ||
         url.pathname.startsWith('/api') ||
-        url.pathname.startsWith('/dashboard')) {
+        url.pathname.startsWith('/dashboard') ||
+        url.pathname.includes('bundle.js') ||
+        url.pathname.includes('chunk.js')) {
         return;
     }
 
@@ -99,9 +101,9 @@ async function handleRequest(request) {
             return await networkFirst(request);
         }
 
-        // Strategy 3: Stale While Revalidate for homepage
+        // Strategy 3: Network First for homepage during development
         if (url.pathname === '/' || url.pathname === '/home') {
-            return await staleWhileRevalidate(request);
+            return await networkFirst(request);
         }
 
         // Default: Network First
