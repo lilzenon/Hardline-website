@@ -1423,12 +1423,12 @@ const FigmaMobile = () => {
                   className="mobile-send-button"
                   style={{
                     display: 'flex',
-                    width: '51px',
-                    height: '30px',
+                    width: '55px',
+                    height: '36px', // Increased from 30px to 36px for better proportion
                     justifyContent: 'center',
                     alignItems: 'center',
-                    padding: '6px 8px',
-                    borderRadius: '15px',
+                    padding: '8px 10px', // Increased padding proportionally
+                    borderRadius: '18px', // Increased border radius proportionally
                     background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                     cursor: phoneSubmitting || !phoneNumber.trim() ? 'not-allowed' : 'pointer',
                     opacity: phoneSubmitting || !phoneNumber.trim() ? 0.7 : 1,
@@ -1438,16 +1438,16 @@ const FigmaMobile = () => {
                     touchAction: 'manipulation',
                     WebkitTapHighlightColor: 'transparent',
                     position: 'absolute',
-                    right: '7px',
+                    right: '4px', // Adjusted for better fit with larger button
                     top: '50%',
-                    marginTop: '-15px' // Half of button height for perfect centering
+                    marginTop: '-18px' // Half of new button height for perfect centering
                   }}
                 >
                   <span
                     style={{
                       color: '#232323',
                       fontFamily: 'Inter',
-                      fontSize: '11px',
+                      fontSize: '12px', // Increased from 11px to 12px for better proportion
                       fontWeight: '700',
                       lineHeight: '1',
                       textAlign: 'center'
