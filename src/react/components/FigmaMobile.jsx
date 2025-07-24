@@ -531,6 +531,25 @@ const FigmaMobile = () => {
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer]);
 
+  // Handle clicking outside drawer to close it and save state
+  const handleBackgroundClick = useCallback((e) => {
+    if (drawerRef.current && !drawerRef.current.contains(e.target)) {
+      // Close drawer but maintain verification state if in progress
+      setDrawerExpanded(false);
+      setShowDisclaimer(false);
+
+      // If not in verification mode, fully close the drawer
+      if (!showVerification && !phoneSubmitted) {
+        setDrawerFullyClosed(true);
+
+        // Reopen after a short delay to show the drawer is still available
+        setTimeout(() => {
+          setDrawerFullyClosed(false);
+        }, 1000);
+      }
+    }
+  }, [showVerification, phoneSubmitted]);
+
   // Set viewport meta tag to prevent zoom
   useEffect(() => {
     // Store original viewport
@@ -719,6 +738,7 @@ const FigmaMobile = () => {
       </style>
 
       <div
+        onClick={handleBackgroundClick}
         style={{
           width: '100vw',
           height: '100vh',
@@ -865,6 +885,7 @@ const FigmaMobile = () => {
         {/* Text Us Drawer - Bottom with Dynamic Height */}
         <div
           ref={drawerRef}
+          onClick={(e) => e.stopPropagation()} // Prevent background click when clicking drawer
           className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'}`}
           style={{
             height: getDrawerHeight(),
@@ -970,7 +991,7 @@ const FigmaMobile = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: '8px', // Reduced from 10px to 8px
+                  gap: '4px', // Reduced from 8px to 4px for tighter spacing
                   width: '100%'
                 }}
               >
@@ -1080,7 +1101,8 @@ const FigmaMobile = () => {
                     touchAction: 'manipulation',
                     WebkitTapHighlightColor: 'transparent',
                     backdropFilter: 'blur(8px)',
-                    transform: 'scale(1)'
+                    transform: 'scale(1)',
+                    marginBottom: '12px' // Add bottom margin to prevent touching drawer bottom
                   }}
                   onTouchStart={(e) => {
                     if (!verificationSubmitting && verificationCode.length === 4) {
