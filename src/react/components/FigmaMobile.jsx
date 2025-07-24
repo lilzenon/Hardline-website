@@ -541,35 +541,71 @@ const FigmaMobile = () => {
       // If not in verification mode, fully close the drawer
       if (!showVerification && !phoneSubmitted) {
         setDrawerFullyClosed(true);
-
-        // Reopen after a short delay to show the drawer is still available
-        setTimeout(() => {
-          setDrawerFullyClosed(false);
-        }, 1000);
       }
     }
   }, [showVerification, phoneSubmitted]);
 
-  // Set viewport meta tag to prevent zoom
+  // Handle drawer click to fully open when closed
+  const handleDrawerClick = useCallback(() => {
+    if (drawerFullyClosed) {
+      setDrawerFullyClosed(false);
+      setDrawerExpanded(true);
+    }
+  }, [drawerFullyClosed]);
+
+  // Set comprehensive iOS Safari optimizations
   useEffect(() => {
     // Store original viewport
     const originalViewport = document.querySelector('meta[name="viewport"]');
     const originalContent = originalViewport ? originalViewport.getAttribute('content') : '';
 
-    // Set mobile-optimized viewport
+    // Set mobile-optimized viewport for iOS Safari
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) {
       viewportMeta = document.createElement('meta');
       viewportMeta.name = 'viewport';
       document.head.appendChild(viewportMeta);
     }
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no';
+
+    // Add iOS-specific meta tags
+    const addMetaTag = (name, content) => {
+      let meta = document.querySelector(`meta[name="${name}"]`);
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = name;
+        document.head.appendChild(meta);
+      }
+      meta.content = content;
+    };
+
+    // iOS Safari specific optimizations
+    addMetaTag('apple-mobile-web-app-capable', 'yes');
+    addMetaTag('apple-mobile-web-app-status-bar-style', 'black-translucent');
+    addMetaTag('apple-touch-fullscreen', 'yes');
+    addMetaTag('mobile-web-app-capable', 'yes');
+    addMetaTag('format-detection', 'telephone=no');
+
+    // Prevent iOS Safari from adjusting font sizes
+    document.documentElement.style.webkitTextSizeAdjust = '100%';
+    document.documentElement.style.textSizeAdjust = '100%';
+
+    // Fix iOS Safari height issues
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
 
     // Cleanup on unmount
     return () => {
       if (originalViewport && originalContent) {
         originalViewport.setAttribute('content', originalContent);
       }
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
     };
   }, []);
 
@@ -578,11 +614,16 @@ const FigmaMobile = () => {
       {/* Mobile-specific CSS */}
       <style>
         {`
+          /* Comprehensive Safari iOS WebKit Optimizations */
+
           /* Prevent iOS Safari zoom on input focus */
           input[type="tel"], input[type="text"], select {
             font-size: 16px !important;
             transform-origin: left top;
             font-family: 'Inter', sans-serif;
+            -webkit-appearance: none;
+            -webkit-border-radius: 0;
+            border-radius: 0;
           }
 
           /* Prevent zoom and ensure proper viewport */
@@ -590,6 +631,51 @@ const FigmaMobile = () => {
             -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
             text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+          }
+
+          /* Safari iOS specific fixes */
+          body {
+            -webkit-overflow-scrolling: touch;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+          }
+
+          /* Prevent iOS Safari bounce scroll */
+          html, body {
+            position: fixed;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+          }
+
+          /* Fix iOS Safari viewport issues */
+          .mobile-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: -webkit-fill-available;
+            overflow: hidden;
+          }
+
+          /* Optimize touch interactions for iOS */
+          .mobile-drawer, .mobile-menu-button, button, input {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+          }
+
+          /* Enable hardware acceleration */
+          .mobile-drawer, .mobile-nav-overlay {
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
           }
 
           .mobile-phone-input::placeholder {
@@ -739,12 +825,9 @@ const FigmaMobile = () => {
 
       <div
         onClick={handleBackgroundClick}
+        className="mobile-container"
         style={{
-          width: '100vw',
-          height: '100vh',
           background: '#000000',
-          position: 'relative',
-          overflow: 'hidden',
           fontFamily: 'Inter, sans-serif'
         }}
       >
@@ -885,7 +968,10 @@ const FigmaMobile = () => {
         {/* Text Us Drawer - Bottom with Dynamic Height */}
         <div
           ref={drawerRef}
-          onClick={(e) => e.stopPropagation()} // Prevent background click when clicking drawer
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent background click when clicking drawer
+            handleDrawerClick(); // Handle drawer click to open when closed
+          }}
           className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'}`}
           style={{
             height: getDrawerHeight(),
@@ -893,7 +979,8 @@ const FigmaMobile = () => {
             flexDirection: 'column',
             padding: '8px 24px 16px 24px', // Reduced bottom padding from 24px to 16px
             boxSizing: 'border-box',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            cursor: drawerFullyClosed ? 'pointer' : 'default'
           }}
         >
           {/* Drawer Card Gradient Overlay - Creates hiding effect */}
@@ -1164,14 +1251,15 @@ const FigmaMobile = () => {
                     height: '44px',
                     alignItems: 'center',
                     borderRadius: '22px',
-                    background: '#303030',
+                    background: 'rgba(0, 0, 0, 0.6)', // Darker background for better contrast
                     overflow: 'hidden',
-                    border: `1px solid ${
+                    border: `2px solid ${
                       phoneInputState === 'loading' ? '#3B82F6' :
                       phoneInputState === 'valid' ? '#10B981' :
                       phoneInputState === 'invalid' ? '#EF4444' :
-                      'transparent'
+                      'rgba(255, 255, 255, 0.2)'
                     }`,
+                    backdropFilter: 'blur(8px)', // Add blur for glassmorphism
                     boxShadow:
                       phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
                       phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
