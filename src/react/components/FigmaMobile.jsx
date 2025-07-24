@@ -615,6 +615,7 @@ const FigmaMobile = () => {
 
   // Start resend countdown timer
   const startResendCountdown = useCallback(() => {
+    console.log('🚀 Starting countdown timer');
     setResendCountdown(60);
     setCanResend(false);
 
@@ -625,7 +626,9 @@ const FigmaMobile = () => {
 
     resendTimerRef.current = setInterval(() => {
       setResendCountdown(prev => {
+        console.log('⏰ Countdown tick:', prev);
         if (prev <= 1) {
+          console.log('✅ Countdown finished, enabling resend');
           setCanResend(true);
           clearInterval(resendTimerRef.current);
           return 0;
@@ -685,10 +688,18 @@ const FigmaMobile = () => {
 
   // Start countdown when verification is shown
   useEffect(() => {
-    if (showVerification && verificationPhone && resendCountdown === 0) {
+    console.log('🔄 Countdown useEffect triggered:', {
+      showVerification,
+      verificationPhone,
+      resendCountdown,
+      canResend
+    });
+
+    if (showVerification && verificationPhone && resendCountdown === 0 && !canResend) {
+      console.log('🚀 Starting resend countdown');
       startResendCountdown();
     }
-  }, [showVerification, verificationPhone, startResendCountdown, resendCountdown]);
+  }, [showVerification, verificationPhone, startResendCountdown]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -1636,9 +1647,11 @@ const FigmaMobile = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginTop: '16px',
-                    marginBottom: '8px'
+                    marginBottom: '8px',
+                    minHeight: '20px' // Ensure space is reserved
                   }}
                 >
+                  {console.log('🎯 Countdown render:', { resendCountdown, canResend, showVerification })}
                   {resendCountdown > 0 ? (
                     <div
                       style={{
@@ -1679,7 +1692,19 @@ const FigmaMobile = () => {
                     >
                       {resendSubmitting ? 'Sending...' : 'Resend code'}
                     </div>
-                  ) : null}
+                  ) : (
+                    <div
+                      style={{
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        fontFamily: 'Inter',
+                        fontSize: '12px',
+                        fontWeight: '400',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {/* Debug: countdown={resendCountdown}, canResend={canResend ? 'true' : 'false'} */}
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
