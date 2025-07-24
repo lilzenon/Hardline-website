@@ -38,7 +38,11 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
           .mobile-nav-item:hover {
             opacity: 0.8;
             transform: translateX(10px) !important;
-            transition: all 0.3s ease;
+            transition: all 0.15s ease-out;
+          }
+
+          .mobile-nav-item {
+            transition: all 0.15s ease-out;
           }
           
           .mobile-menu-button:hover {
@@ -317,7 +321,7 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
               textAlign: 'center',
               opacity: currentPage === 'events' ? 0.6 : 1,
               transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
               transitionDelay: showMenu ? '0.3s' : '0s'
             }}
           >
@@ -336,7 +340,7 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
               textAlign: 'center',
               opacity: currentPage === 'about' ? 0.6 : 1,
               transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
               transitionDelay: showMenu ? '0.4s' : '0s'
             }}
           >
@@ -355,7 +359,7 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
               textAlign: 'center',
               opacity: currentPage === 'contact' ? 0.6 : 1,
               transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
               transitionDelay: showMenu ? '0.5s' : '0s'
             }}
           >
