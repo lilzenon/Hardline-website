@@ -70,63 +70,51 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
         `}
       </style>
 
-      {/* Navigation Bar */}
+      {/* Navigation Bar - Mobile Component - EXACT MATCH to FigmaMobile */}
       <div
         style={{
           position: 'absolute',
           left: '0px',
           top: '0px',
-          width: '100%',
-          height: '80px',
+          width: '430px',
+          height: '97px',
+          background: '#000000',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           padding: '0 20px',
-          zIndex: 1000,
-          background: 'transparent'
+          boxSizing: 'border-box'
         }}
       >
-        {/* Logo */}
-        <div
-          onClick={() => handleNavigation('/')}
-          style={{
-            fontFamily: 'Inter',
-            fontWeight: '800',
-            fontSize: '24px',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            userSelect: 'none'
-          }}
-        >
-          B2B
-        </div>
-
-        {/* Menu Button */}
+        {/* Menu Button - Right Side */}
         <div
           onClick={toggleMenu}
           className="mobile-menu-button"
           style={{
-            position: 'relative',
-            width: '32px',
-            height: '32px',
+            position: 'absolute',
+            right: '20px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '34px',
+            height: '34px',
             cursor: 'pointer',
+            zIndex: 10,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
-            gap: '6px',
-            transform: 'translateY(-50%)',
-            top: '50%'
+            gap: '4px'
           }}
         >
-          {/* Hamburger/X Animation */}
+          {/* Animated Menu Lines - EXACT MATCH to FigmaMobile */}
           <div
             style={{
               width: '24px',
               height: '2px',
-              backgroundColor: '#FFFFFF',
-              transition: 'all 0.3s ease',
-              transform: showMenu ? 'rotate(45deg) translateY(8px)' : 'rotate(0deg)',
+              background: '#FFFFFF',
+              borderRadius: '1px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
               transformOrigin: 'center'
             }}
           />
@@ -134,108 +122,245 @@ const MobileNavigation = ({ currentPage = 'home' }) => {
             style={{
               width: '24px',
               height: '2px',
-              backgroundColor: '#FFFFFF',
-              transition: 'all 0.3s ease',
-              opacity: showMenu ? 0 : 1
+              background: '#FFFFFF',
+              borderRadius: '1px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              opacity: showMenu ? 0 : 1,
+              transform: showMenu ? 'scale(0)' : 'scale(1)'
             }}
           />
           <div
             style={{
               width: '24px',
               height: '2px',
-              backgroundColor: '#FFFFFF',
-              transition: 'all 0.3s ease',
-              transform: showMenu ? 'rotate(-45deg) translateY(-8px)' : 'rotate(0deg)',
+              background: '#FFFFFF',
+              borderRadius: '1px',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
               transformOrigin: 'center'
             }}
           />
         </div>
+
+        {/* B2B Logo - Centered - Clickable with Animation */}
+        <img
+          onClick={() => handleNavigation('/')}
+          src="/images/mobile-figma/b2b-logo-mobile.svg"
+          alt="B2B Logo"
+          style={{
+            width: '138.41px',
+            height: '43px',
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            userSelect: 'none'
+          }}
+          onMouseDown={(e) => {
+            e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
+          }}
+          onMouseUp={(e) => {
+            e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+          }}
+        />
       </div>
 
-      {/* Navigation Overlay */}
+      {/* Mobile Menu Overlay - EXACT MATCH to FigmaMobile */}
       <div
-        className={`mobile-nav-overlay ${showMenu ? 'entered' : 'entering'}`}
         style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0, 0, 0, 0.95)',
-          backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)',
-          zIndex: 999,
+          top: '0',
+          left: '0',
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.95)',
+          zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '40px',
           opacity: showMenu ? 1 : 0,
           visibility: showMenu ? 'visible' : 'hidden',
-          pointerEvents: showMenu ? 'auto' : 'none'
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)'
         }}
       >
-        {/* Navigation Items */}
+        {/* Navigation Bar in Menu */}
         <div
-          onClick={() => handleNavigation('/')}
-          className="mobile-nav-item"
           style={{
-            fontFamily: 'Inter',
-            fontWeight: '800',
-            fontSize: '64px',
-            lineHeight: '1.21em',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            userSelect: 'none',
-            textAlign: 'center',
-            opacity: currentPage === 'events' ? 0.6 : 1,
-            transform: showMenu ? 'translateX(0px)' : 'translateX(-50px)',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDelay: showMenu ? '0.1s' : '0s'
+            width: '430px',
+            height: '97px',
+            maxWidth: '100vw',
+            margin: '0 auto',
+            position: 'relative',
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 20px',
+            boxSizing: 'border-box'
           }}
         >
-          Events
+          {/* Close Menu Button (Animated X) - Right Side */}
+          <div
+            onClick={toggleMenu}
+            className="mobile-menu-button"
+            style={{
+              position: 'absolute',
+              right: '20px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '34px',
+              height: '34px',
+              cursor: 'pointer',
+              zIndex: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            {/* Same animated lines as main nav */}
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'rotate(45deg) translateY(6px)',
+                transformOrigin: 'center'
+              }}
+            />
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: 0,
+                transform: 'scale(0)'
+              }}
+            />
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'rotate(-45deg) translateY(-6px)',
+                transformOrigin: 'center'
+              }}
+            />
+          </div>
+
+          {/* B2B Logo - Centered - Clickable */}
+          <img
+            onClick={() => handleNavigation('/')}
+            src="/images/mobile-figma/b2b-logo-mobile.svg"
+            alt="B2B Logo"
+            style={{
+              width: '138.41px',
+              height: '43px',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              userSelect: 'none'
+            }}
+            onMouseDown={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
+            }}
+            onMouseUp={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+            }}
+          />
         </div>
-        
+
+        {/* Navigation Body - Centered Menu Items */}
         <div
-          onClick={() => handleNavigation('/about')}
-          className="mobile-nav-item"
           style={{
-            fontFamily: 'Inter',
-            fontWeight: '800',
-            fontSize: '64px',
-            lineHeight: '1.21em',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            userSelect: 'none',
-            textAlign: 'center',
-            opacity: currentPage === 'about' ? 0.6 : 1,
-            transform: showMenu ? 'translateX(0px)' : 'translateX(-50px)',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDelay: showMenu ? '0.15s' : '0s'
-          }}
-        >
-          About
-        </div>
-        
-        <div
-          onClick={() => handleNavigation('/contact')}
-          className="mobile-nav-item"
-          style={{
-            fontFamily: 'Inter',
-            fontWeight: '800',
-            fontSize: '64px',
-            lineHeight: '1.21em',
-            color: '#FFFFFF',
-            cursor: 'pointer',
-            userSelect: 'none',
-            textAlign: 'center',
-            opacity: currentPage === 'contact' ? 0.6 : 1,
-            transform: showMenu ? 'translateX(0px)' : 'translateX(-50px)',
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+            width: '430px',
+            maxWidth: '100vw',
+            margin: '0 auto',
+            padding: '40px 25px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px',
+            transform: showMenu ? 'translateY(0)' : 'translateY(-20px)',
+            opacity: showMenu ? 1 : 0,
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             transitionDelay: showMenu ? '0.2s' : '0s'
           }}
         >
-          Contact
+          <div
+            onClick={() => handleNavigation('/')}
+            className="mobile-nav-item"
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: '64px',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              opacity: currentPage === 'events' ? 0.6 : 1,
+              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.3s' : '0s'
+            }}
+          >
+            Events
+          </div>
+          <div
+            onClick={() => handleNavigation('/about')}
+            className="mobile-nav-item"
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: '64px',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              opacity: currentPage === 'about' ? 0.6 : 1,
+              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.4s' : '0s'
+            }}
+          >
+            About
+          </div>
+          <div
+            onClick={() => handleNavigation('/contact')}
+            className="mobile-nav-item"
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: '64px',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              opacity: currentPage === 'contact' ? 0.6 : 1,
+              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.5s' : '0s'
+            }}
+          >
+            Contact
+          </div>
         </div>
       </div>
     </>

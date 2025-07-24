@@ -1048,13 +1048,13 @@ const FigmaMobile = () => {
             boxSizing: 'border-box'
           }}
         >
-          {/* Menu Button - Left Side */}
+          {/* Menu Button - Right Side */}
           <div
             onClick={toggleMenu}
             className="mobile-menu-button"
             style={{
               position: 'absolute',
-              left: '20px',
+              right: '20px',
               top: '50%',
               transform: 'translateY(-50%)',
               width: '34px',
@@ -1104,8 +1104,9 @@ const FigmaMobile = () => {
             />
           </div>
 
-          {/* B2B Logo - Centered */}
+          {/* B2B Logo - Centered - Clickable with Animation */}
           <img
+            onClick={() => handleNavigation('/')}
             src="/images/mobile-figma/b2b-logo-mobile.svg"
             alt="B2B Logo"
             style={{
@@ -1114,7 +1115,19 @@ const FigmaMobile = () => {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              transform: 'translate(-50%, -50%)'
+              transform: 'translate(-50%, -50%)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              userSelect: 'none'
+            }}
+            onMouseDown={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
+            }}
+            onMouseUp={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
             }}
           />
         </div>
@@ -1830,13 +1843,13 @@ const FigmaMobile = () => {
               boxSizing: 'border-box'
             }}
           >
-            {/* Close Menu Button (Animated X) */}
+            {/* Close Menu Button (Animated X) - Right Side */}
             <div
               onClick={toggleMenu}
               className="mobile-menu-button"
               style={{
                 position: 'absolute',
-                left: '20px',
+                right: '20px',
                 top: '50%',
                 transform: 'translateY(-50%)',
                 width: '34px',
@@ -1886,8 +1899,9 @@ const FigmaMobile = () => {
               />
             </div>
 
-            {/* B2B Logo - Centered */}
+            {/* B2B Logo - Centered - Clickable */}
             <img
+              onClick={() => handleNavigation('/')}
               src="/images/mobile-figma/b2b-logo-mobile.svg"
               alt="B2B Logo"
               style={{
@@ -1896,7 +1910,19 @@ const FigmaMobile = () => {
                 position: 'absolute',
                 left: '50%',
                 top: '50%',
-                transform: 'translate(-50%, -50%)'
+                transform: 'translate(-50%, -50%)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                userSelect: 'none'
+              }}
+              onMouseDown={(e) => {
+                e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
+              }}
+              onMouseUp={(e) => {
+                e.target.style.transform = 'translate(-50%, -50%) scale(1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translate(-50%, -50%) scale(1)';
               }}
             />
           </div>
@@ -1918,7 +1944,7 @@ const FigmaMobile = () => {
             }}
           >
             <div
-              onClick={() => handleNavigation('/events')}
+              onClick={() => handleNavigation('/')}
               className="mobile-nav-item"
               style={{
                 fontFamily: 'Inter',
@@ -1927,7 +1953,7 @@ const FigmaMobile = () => {
                 lineHeight: '1.21em',
                 color: '#FFFFFF',
                 cursor: 'pointer',
-                textAlign: 'left',
+                textAlign: 'center',
                 transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
                 opacity: showMenu ? 1 : 0,
                 transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1946,7 +1972,7 @@ const FigmaMobile = () => {
                 lineHeight: '1.21em',
                 color: '#FFFFFF',
                 cursor: 'pointer',
-                textAlign: 'left',
+                textAlign: 'center',
                 transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
                 opacity: showMenu ? 1 : 0,
                 transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1965,7 +1991,7 @@ const FigmaMobile = () => {
                 lineHeight: '1.21em',
                 color: '#FFFFFF',
                 cursor: 'pointer',
-                textAlign: 'left',
+                textAlign: 'center',
                 transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
                 opacity: showMenu ? 1 : 0,
                 transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
