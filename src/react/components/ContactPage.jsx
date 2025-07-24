@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import ContactPageMobile from './ContactPageMobile';
 
 const ContactPage = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Contact');
   const [scaledDimensions, setScaledDimensions] = useState({
@@ -16,6 +19,46 @@ const ContactPage = () => {
     eventsWidth: 440,
     textUsWidth: 299
   });
+
+  // Mobile detection effect
+  useEffect(() => {
+    const detectDevice = () => {
+      // Check viewport width (mobile-first approach)
+      const viewportWidth = window.innerWidth;
+      const isMobileByWidth = viewportWidth <= 768;
+
+      // Check user agent for mobile devices
+      const userAgent = navigator.userAgent || '';
+      const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+
+      // Device is mobile if either condition is true
+      const deviceIsMobile = isMobileByWidth || isMobileByUA;
+
+      setIsMobile(deviceIsMobile);
+      setIsLoading(false);
+
+      console.log('📱 Contact Page Device Detection:', {
+        viewportWidth,
+        isMobileByWidth,
+        isMobileByUA,
+        finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
+      });
+    };
+
+    // Initial detection
+    detectDevice();
+
+    // Listen for viewport changes
+    const handleResize = () => {
+      detectDevice();
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Calculate responsive dimensions based on viewport - EXACT MATCH to FigmaDesktop
   useEffect(() => {
@@ -80,7 +123,7 @@ const ContactPage = () => {
     };
 
     window.addEventListener('resize', debouncedResize);
-    return () => {
+    const desktopContent = () => {
       clearTimeout(resizeTimeout);
       window.removeEventListener('resize', debouncedResize);
     };
@@ -279,6 +322,30 @@ const ContactPage = () => {
       </div>
     </div>
   );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          width: '100vw',
+          height: '100vh',
+          background: '#000',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: '#FFF',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '18px'
+        }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
+  // Serve appropriate component based on device detection
+  return isMobile ? <ContactPageMobile /> : desktopContent;
 };
 
 export default ContactPage;
