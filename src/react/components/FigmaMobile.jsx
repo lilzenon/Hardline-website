@@ -778,9 +778,9 @@ const FigmaMobile = () => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (showVerification && drawerExpanded) {
-      return '260px'; // Verification mode expanded - optimized for tight spacing with countdown
+      return '240px'; // Verification mode expanded - tight layout without extra space
     } else if (showVerification && !drawerExpanded) {
-      return '100px'; // Verification mode collapsed - show handle + hint + countdown peek
+      return '60px'; // Verification mode collapsed - show handle only, no content peek
     } else if (drawerExpanded) {
       return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
     } else {
@@ -1433,9 +1433,8 @@ const FigmaMobile = () => {
                   alignItems: 'center',
                   gap: '8px', // Tighter gap for compact layout
                   width: '100%',
-                  padding: '8px 16px 16px 16px', // Bottom padding to position resend at drawer bottom
-                  justifyContent: 'space-between',
-                  height: '100%',
+                  padding: '8px 16px 8px 16px', // Minimal padding for tight layout
+                  justifyContent: 'flex-start',
                   boxSizing: 'border-box'
                 }}
               >
@@ -1649,9 +1648,9 @@ const FigmaMobile = () => {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    marginTop: '8px',
+                    marginTop: '4px',
                     marginBottom: '0px',
-                    minHeight: '20px', // Ensure space is reserved
+                    minHeight: '16px', // Minimal space reserved
                     width: '100%',
                     position: 'relative',
                     zIndex: 10 // Ensure it's above other elements
