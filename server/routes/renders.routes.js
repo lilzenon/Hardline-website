@@ -32,6 +32,24 @@ router.get(
     asyncHandler(renders.reactHomepage)
 );
 
+// About page - React version
+router.get(
+    "/about",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
+// Contact page - React version
+router.get(
+    "/contact",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
 // 🚀 BACKUP: Handlebars homepage fallback
 router.get(
     "/home-handlebars",

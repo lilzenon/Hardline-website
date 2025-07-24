@@ -7,8 +7,21 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'static/react'),
         filename: 'bundle.js',
+        chunkFilename: '[name].chunk.js',
         publicPath: '/react/',
         clean: true
+    },
+    optimization: {
+        splitChunks: {
+            chunks: 'async',
+            cacheGroups: {
+                default: false,
+                vendors: false
+            }
+        }
+    },
+    performance: {
+        hints: false
     },
     module: {
         rules: [{

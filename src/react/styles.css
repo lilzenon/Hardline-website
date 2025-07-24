@@ -1,5 +1,106 @@
 /* React Homepage Styles - Figma-Exact Implementation */
 
+
+/* ========================================
+   MODERN PAGE TRANSITIONS 2024-2025
+   ======================================== */
+
+
+/* View Transitions API Support (Chrome 111+, Safari 18+) */
+
+@view-transition {
+    navigation: auto;
+}
+
+
+/* Customize the default view transition */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* Smooth fade transition for browsers with View Transitions API */
+
+::view-transition-old(root) {
+    animation-name: fade-out;
+}
+
+::view-transition-new(root) {
+    animation-name: fade-in;
+}
+
+
+/* CSS Fallback Transitions for older browsers */
+
+.app-container {
+    transition: opacity var(--transition-duration, 300ms) cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+}
+
+.app-container.transitioning {
+    opacity: 0.7;
+}
+
+
+/* Modern fade animations */
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* Respect user motion preferences - 2024 accessibility standard */
+
+@media (prefers-reduced-motion: reduce) {
+     ::view-transition-old(root),
+     ::view-transition-new(root) {
+        animation-duration: 1ms !important;
+    }
+    .app-container {
+        transition: none !important;
+    }
+    * {
+        animation-duration: 1ms !important;
+        animation-delay: 1ms !important;
+        transition-duration: 1ms !important;
+        transition-delay: 1ms !important;
+    }
+}
+
+
+/* Enhanced loading states for modern UX */
+
+.page-loading {
+    animation: subtle-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
 .scalable-homepage-wrapper {
     width: 100%;
     min-height: 100vh;

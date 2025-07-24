@@ -875,10 +875,26 @@ const FigmaDesktop = () => {
     console.log(`🌍 Country changed to: ${newCountry.code} (${newCountry.name})`);
   }, [phoneNumber]);
 
-  // Navigation handler
+  // Navigation handler with modern transitions
   const handleNavClick = useCallback((tabName) => {
     setActiveNavTab(tabName);
     console.log(`🧭 Navigation: Switched to ${tabName} tab`);
+
+    // Navigate to different pages with smooth transitions
+    if (tabName === 'About') {
+      if (window.navigateWithTransition) {
+        window.navigateWithTransition('/about');
+      } else {
+        window.location.href = '/about';
+      }
+    } else if (tabName === 'Contact') {
+      if (window.navigateWithTransition) {
+        window.navigateWithTransition('/contact');
+      } else {
+        window.location.href = '/contact';
+      }
+    }
+    // Events tab stays on current page (homepage)
   }, []);
 
   // Get navigation pill styles based on active state
@@ -1693,6 +1709,14 @@ const FigmaDesktop = () => {
               processedEventCards.map((card) => (
               <div
                 key={card.id}
+                onClick={(e) => {
+                  // Only trigger if clicking on the card itself, not child elements
+                  if (e.target === e.currentTarget || e.target.closest('.card-clickable-area')) {
+                    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                      window.open(card.ticketsUrl, '_blank');
+                    }
+                  }
+                }}
                 style={{
                   display: 'flex',
                   width: '220px',
@@ -1703,7 +1727,19 @@ const FigmaDesktop = () => {
                   background: '#232323',
                   position: 'relative',
                   margin: '0',
-                  padding: '0'
+                  padding: '0',
+                  cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
                 }}
               >
                 {/* Group 1 - Complete Event Card Content */}
@@ -1848,6 +1884,7 @@ const FigmaDesktop = () => {
 
                   {/* Frame 4 - Text Content Section */}
                   <div
+                    className="card-clickable-area"
                     style={{
                       position: 'absolute',
                       left: '94px',
@@ -1859,7 +1896,8 @@ const FigmaDesktop = () => {
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       alignItems: 'flex-start',  // Justify content to the left
-                      gap: '12px'
+                      gap: '12px',
+                      cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default'
                     }}
                   >
                     {/* Frame 3 - Event Information */}
@@ -2139,8 +2177,10 @@ const FigmaDesktop = () => {
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'stretch',
-            gap: '16px',
-            flexShrink: 0
+            gap: '8px',
+            flexShrink: 0,
+            paddingTop: '8px',
+            paddingBottom: '8px'
           }}
         >
           {/* Text us Title */}
@@ -2156,7 +2196,7 @@ const FigmaDesktop = () => {
               fontSize: '24px',
               fontWeight: '800',
               lineHeight: 'normal',
-              marginBottom: '4px'
+              marginBottom: '0px'
             }}
           >
             Text us
@@ -2175,7 +2215,7 @@ const FigmaDesktop = () => {
               fontSize: '10px',
               fontWeight: '300',
               lineHeight: 'normal',
-              marginBottom: '8px'
+              marginBottom: '0px'
             }}
           >
             Exclusive events, contests, and more
@@ -2663,11 +2703,43 @@ const FigmaDesktop = () => {
                 fontWeight: '500',
                 lineHeight: 'normal',
                 letterSpacing: '-0.48px',
-                opacity: '0.46',
-                textDecoration: 'underline'
+                opacity: '0.46'
               }}
             >
-              By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's Terms of Service, Cookie Policy and Privacy Policy. Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
+              By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's{' '}
+              <span
+                onClick={() => window.open('#', '_blank')}
+                style={{
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  color: '#FFF'
+                }}
+              >
+                Terms of Service
+              </span>
+              ,{' '}
+              <span
+                onClick={() => window.open('#', '_blank')}
+                style={{
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  color: '#FFF'
+                }}
+              >
+                Cookie Policy
+              </span>
+              {' '}and{' '}
+              <span
+                onClick={() => window.open('#', '_blank')}
+                style={{
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  color: '#FFF'
+                }}
+              >
+                Privacy Policy
+              </span>
+              . Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
             </div>
           )}
         </div>
