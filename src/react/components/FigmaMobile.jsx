@@ -152,6 +152,7 @@ const FigmaMobile = () => {
   const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [drawerFullyClosed, setDrawerFullyClosed] = useState(false);
+  const [isButtonPressed, setIsButtonPressed] = useState(false);
 
   // Refs
   const phoneContainerRef = useRef(null);
@@ -552,6 +553,19 @@ const FigmaMobile = () => {
       setDrawerExpanded(true);
     }
   }, [drawerFullyClosed]);
+
+  // Button press handlers for inlaid effect
+  const handleButtonMouseDown = useCallback(() => {
+    setIsButtonPressed(true);
+  }, []);
+
+  const handleButtonMouseUp = useCallback(() => {
+    setIsButtonPressed(false);
+  }, []);
+
+  const handleButtonMouseLeave = useCallback(() => {
+    setIsButtonPressed(false);
+  }, []);
 
   // Set comprehensive iOS Safari optimizations
   useEffect(() => {
@@ -1251,15 +1265,15 @@ const FigmaMobile = () => {
                     height: '44px',
                     alignItems: 'center',
                     borderRadius: '22px',
-                    background: 'rgba(0, 0, 0, 0.6)', // Darker background for better contrast
+                    background: '#303030', // Match desktop background color
                     overflow: 'hidden',
-                    border: `2px solid ${
+                    position: 'relative', // For absolute positioned button
+                    border: `1px solid ${
                       phoneInputState === 'loading' ? '#3B82F6' :
                       phoneInputState === 'valid' ? '#10B981' :
                       phoneInputState === 'invalid' ? '#EF4444' :
-                      'rgba(255, 255, 255, 0.2)'
+                      'transparent'
                     }`,
-                    backdropFilter: 'blur(8px)', // Add blur for glassmorphism
                     boxShadow:
                       phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
                       phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
@@ -1393,30 +1407,40 @@ const FigmaMobile = () => {
                       lineHeight: 'normal',
                       minHeight: '44px',
                       paddingLeft: '6px',
-                      paddingRight: '10px'
+                      paddingRight: '65px' // Make room for inlaid button
                     }}
                   />
                 </div>
 
-                {/* SEND Button - Exact Desktop Structure */}
-                <button
+                {/* SEND Button - Inlaid Desktop Style */}
+                <div
                   onClick={handlePhoneSubmit}
-                  disabled={phoneSubmitting || !phoneNumber.trim()}
+                  onMouseDown={handleButtonMouseDown}
+                  onMouseUp={handleButtonMouseUp}
+                  onMouseLeave={handleButtonMouseLeave}
+                  onTouchStart={handleButtonMouseDown}
+                  onTouchEnd={handleButtonMouseUp}
                   className="mobile-send-button"
                   style={{
                     display: 'flex',
-                    width: '55px',
-                    height: '44px',
+                    width: '51px',
+                    height: '30px',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    padding: '8px 10px',
-                    borderRadius: '22px',
+                    padding: '6px 8px',
+                    borderRadius: '15px',
                     background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                     cursor: phoneSubmitting || !phoneNumber.trim() ? 'not-allowed' : 'pointer',
                     opacity: phoneSubmitting || !phoneNumber.trim() ? 0.7 : 1,
                     boxSizing: 'border-box',
-                    border: 'none',
-                    transition: 'all 0.1s ease'
+                    transform: isButtonPressed && !phoneSubmitting ? 'scale(0.96)' : 'scale(1)',
+                    transition: 'all 0.1s ease',
+                    touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    position: 'absolute',
+                    right: '7px',
+                    top: '50%',
+                    marginTop: '-15px' // Half of button height for perfect centering
                   }}
                 >
                   <span
@@ -1431,7 +1455,7 @@ const FigmaMobile = () => {
                   >
                     {phoneSubmitted ? '✓' : (phoneSubmitting ? '...' : 'SEND')}
                   </span>
-                </button>
+                </div>
               </div>
             )}
 
