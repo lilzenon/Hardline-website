@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+
+// Simple cache for API responses
+const apiCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Cache for formatted dates to avoid repeated calculations
+const dateFormatCache = new Map();
 
 // Country codes and phone patterns for international support with flag SVGs
 const COUNTRIES = [
@@ -256,6 +263,11 @@ const FigmaMobile = () => {
   const [resendCountdown, setResendCountdown] = useState(0);
   const [canResend, setCanResend] = useState(false);
   const [resendSubmitting, setResendSubmitting] = useState(false);
+
+  // Events data state
+  const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [homeSettings, setHomeSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // State preservation for drawer reopening
   const [previousDrawerState, setPreviousDrawerState] = useState({
@@ -616,6 +628,79 @@ const FigmaMobile = () => {
     }
   }, [verificationCode, verificationSubmitting, verificationPhone]);
 
+  // Fetch homepage data including events
+  const fetchHomepageData = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Check cache first
+      const cacheKey = 'homepage-data-v2';
+      const cached = apiCache.get(cacheKey);
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('📦 Using cached homepage data');
+        setHomeSettings(cached.data.homeSettings);
+        setFeaturedEvents(cached.data.featuredEvents || []);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/home-settings/homepage-data');
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
+      }
+
+      const data = await response.json();
+
+      // Validate API response structure
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid API response format');
+      }
+
+      // Validate home settings
+      const homeSettings = data.homeSettings || {};
+
+      // Validate featured events
+      const featuredEvents = Array.isArray(data.featuredEvents) ? data.featuredEvents : [];
+
+      // Validate each event has required fields
+      const validatedEvents = featuredEvents.filter(event => {
+        if (!event || typeof event !== 'object') return false;
+        if (!event.id || !event.title) {
+          console.warn('Event missing required fields:', event);
+          return false;
+        }
+        return true;
+      });
+
+      console.log(`✅ Mobile homepage data loaded: ${validatedEvents.length} featured events`);
+
+      // Cache the successful response
+      apiCache.set(cacheKey, {
+        data: data,
+        timestamp: Date.now()
+      });
+
+      setHomeSettings(homeSettings);
+      setFeaturedEvents(validatedEvents);
+
+    } catch (err) {
+      console.error('❌ Error fetching mobile homepage data:', err);
+
+      // Fallback to default values
+      setHomeSettings({
+        event_title: "EVENT TITLE",
+        artist_name: "Artist Name",
+        event_address: "101 Address Drive, Asbury Park, NJ",
+        event_image: null,
+        tickets_url: null
+      });
+      setFeaturedEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Start resend countdown timer
   const startResendCountdown = useCallback(() => {
     console.log('🚀 Starting countdown timer');
@@ -731,6 +816,95 @@ const FigmaMobile = () => {
       startResendCountdown();
     }
   }, [showVerification, verificationPhone, startResendCountdown]);
+
+  // Fetch homepage data on component mount
+  useEffect(() => {
+    const startTime = performance.now();
+
+    fetchHomepageData().finally(() => {
+      const endTime = performance.now();
+      console.log(`🚀 Mobile homepage data loaded in ${(endTime - startTime).toFixed(2)}ms`);
+    });
+  }, [fetchHomepageData]);
+
+  // Memoized event cards processing for mobile
+  const processedEventCards = useMemo(() => {
+    const featuredCards = [];
+
+    // Process only featured events from API
+    featuredEvents.forEach((event, index) => {
+      try {
+        // Validate and parse event date
+        let eventDate = new Date();
+        let formattedDate = 'Tue, Sep 02 @ 10:00PM';
+        let day = '02';
+        let month = 'SEP';
+
+        if (event.event_date) {
+          const cacheKey = event.event_date;
+          let cachedFormat = dateFormatCache.get(cacheKey);
+
+          if (!cachedFormat) {
+            const parsedDate = new Date(event.event_date);
+            if (!isNaN(parsedDate.getTime())) {
+              eventDate = parsedDate;
+              formattedDate = eventDate.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: '2-digit'
+              }).replace(',', ' @') + ' 10:00PM';
+              day = eventDate.getDate().toString().padStart(2, '0');
+              month = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+
+              cachedFormat = { formattedDate, day, month, eventDate };
+              dateFormatCache.set(cacheKey, cachedFormat);
+            }
+          } else {
+            ({ formattedDate, day, month, eventDate } = cachedFormat);
+          }
+        }
+
+        // Validate and process event data
+        const title = event.title || event.artist_name || `Event ${index + 1}`;
+
+        // Process location to show only venue name and city
+        let location = 'Venue Address';
+        if (event.event_address) {
+          const addressParts = event.event_address.split(',').map(part => part.trim());
+          if (addressParts.length >= 2) {
+            location = `${addressParts[0]}, ${addressParts[1]}`;
+            if (location.length > 25 && addressParts.length >= 3) {
+              location = `${addressParts[1]}, ${addressParts[2]}`;
+            }
+          } else {
+            location = event.event_address;
+          }
+        }
+
+        const coverImage = event.cover_image || '/images/figma-exact/event-card-bg.png';
+        const ticketsUrl = event.posh_embed_url || '#';
+
+        featuredCards.push({
+          id: `event-${event.id}`,
+          title: title,
+          date: formattedDate,
+          day: day,
+          month: month,
+          location: location,
+          coverImage: coverImage,
+          ticketsUrl: ticketsUrl,
+          isRealEvent: true,
+          showOnHomepage: event.show_on_homepage,
+          eventData: event
+        });
+      } catch (error) {
+        console.warn(`Error processing mobile event ${event.id}:`, error);
+      }
+    });
+
+    console.log(`🎯 Mobile rendering ${featuredCards.length} featured event cards`);
+    return featuredCards;
+  }, [featuredEvents]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -1284,27 +1458,516 @@ const FigmaMobile = () => {
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '20px'
+            padding: '20px 20px 40px 20px', // Extra bottom padding for drawer overlap
+            boxSizing: 'border-box',
+            overflowY: 'auto'
           }}
         >
-          {/* Placeholder for main content - can be customized later */}
+          {/* Events Section Title */}
           <div
             style={{
-              color: '#FFFFFF',
+              width: '100%',
+              color: '#FFF',
               fontFamily: 'Inter',
-              fontWeight: '300',
-              fontSize: '16px',
-              textAlign: 'center',
-              opacity: 0.7
+              fontSize: '28px', // Scaled up from 24px for mobile
+              fontWeight: '800',
+              lineHeight: 'normal',
+              marginBottom: '20px', // Scaled up from 8px
+              textAlign: 'left'
             }}
           >
-            Mobile Homepage Content
-            <br />
-            <span style={{ fontSize: '12px', opacity: 0.5 }}>
-              Main content area ready for customization
-            </span>
+            Events
+          </div>
+
+          {/* Events List - Vertical Stack */}
+          <div
+            style={{
+              display: 'flex',
+              width: '100%',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              alignItems: 'stretch',
+              gap: '16px', // Scaled up from 12px
+              flexShrink: 0
+            }}
+          >
+            {/* Show featured events or empty state */}
+            {featuredEvents.length === 0 ? (
+              /* Empty State - No Featured Events */
+              <div
+                style={{
+                  display: 'flex',
+                  width: '100%',
+                  height: '200px',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '16px',
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  textAlign: 'center'
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: 0.8
+                  }}
+                >
+                  No upcoming events
+                </div>
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    opacity: 0.6
+                  }}
+                >
+                  Check back soon for exciting events!
+                </div>
+              </div>
+            ) : (
+              /* Mobile Event Cards - Vertical Stack */
+              processedEventCards.map((card) => (
+                <div
+                  key={card.id}
+                  onClick={(e) => {
+                    // Only trigger if clicking on the card itself, not child elements
+                    if (e.target === e.currentTarget || e.target.closest('.card-clickable-area')) {
+                      if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                        window.open(card.ticketsUrl, '_blank');
+                      }
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    width: '100%',
+                    height: '120px', // Scaled up from 85px
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    borderRadius: '20px', // Scaled up from 16px
+                    background: '#232323',
+                    position: 'relative',
+                    margin: '0',
+                    padding: '0',
+                    cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                      e.currentTarget.style.transform = 'scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  {/* Mobile Event Card Content */}
+                  <div
+                    style={{
+                      width: '100%',
+                      height: '120px',
+                      position: 'relative'
+                    }}
+                  >
+                    {/* Image Section - Scaled for Mobile */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: '118px', // Scaled up from 84px
+                        height: '118px', // Scaled up from 84px
+                        left: '0px',
+                        top: '1px'
+                      }}
+                    >
+                      {/* Event Background Image */}
+                      <img
+                        src={card.coverImage}
+                        alt={`${card.title} event cover`}
+                        loading="lazy"
+                        decoding="async"
+                        fetchpriority="low"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            window.open(card.ticketsUrl, '_blank');
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          left: '4px', // Scaled up from 3px
+                          top: '3px', // Scaled up from 2px
+                          width: '111px', // Scaled up from 79.04px
+                          height: '111px', // Scaled up from 79.04px
+                          borderRadius: '18px', // Scaled up from 14px
+                          objectFit: 'cover',
+                          backgroundColor: 'lightgray',
+                          cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: 'scale(1) translateY(0px)',
+                          boxShadow: 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                            e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1) translateY(0px)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                        onMouseDown={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.target.style.transform = 'scale(0.995) translateY(0px)';
+                          }
+                        }}
+                        onMouseUp={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                          }
+                        }}
+                        onError={(e) => {
+                          e.target.style.backgroundColor = 'lightgray';
+                          e.target.style.display = 'block';
+                        }}
+                      />
+
+                      {/* Date Badge Container - Scaled for Mobile */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: '76px', // Scaled up from 54px
+                          top: '7px', // Scaled up from 5px
+                          width: '34px', // Scaled up from 24px
+                          height: '34px' // Scaled up from 24px
+                        }}
+                      >
+                        {/* White Badge Background */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            top: '-1px',
+                            width: '34px', // Scaled up from 24px
+                            height: '34px', // Scaled up from 24px
+                            borderRadius: '6px', // Scaled up from 4px
+                            background: '#FFF'
+                          }}
+                        />
+
+                        {/* Date Badge Content */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '3px', // Scaled up from 2px
+                            top: '3px', // Scaled up from 2px
+                            display: 'flex',
+                            width: '28px', // Scaled up from 20px
+                            height: '25px', // Scaled up from 18px
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '1px'
+                          }}
+                        >
+                          {/* DAY Number */}
+                          <span
+                            style={{
+                              color: '#000',
+                              textAlign: 'center',
+                              fontFamily: 'Inter',
+                              fontSize: '14px', // Scaled up from 10px
+                              fontWeight: '600',
+                              lineHeight: 'normal'
+                            }}
+                          >
+                            {card.day}
+                          </span>
+
+                          {/* MONTH Abbreviation */}
+                          <span
+                            style={{
+                              color: '#000',
+                              textAlign: 'center',
+                              fontFamily: 'Inter',
+                              fontSize: '8px', // Scaled up from 6px
+                              fontWeight: '600',
+                              lineHeight: 'normal'
+                            }}
+                          >
+                            {card.month}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Text Content Section - Scaled for Mobile */}
+                    <div
+                      className="card-clickable-area"
+                      style={{
+                        position: 'absolute',
+                        left: '132px', // Scaled up from 94px
+                        top: '0px',
+                        display: 'flex',
+                        width: '258px', // Scaled up from 126px (390-132=258)
+                        height: '120px', // Scaled up from 85px
+                        padding: '4px 0px', // Scaled up from 3px
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: '16px', // Scaled up from 12px
+                        cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default'
+                      }}
+                    >
+                      {/* Event Information */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          height: '70px', // Scaled up from 50px
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
+                          alignSelf: 'stretch',
+                          gap: '2px', // Scaled up from 1px
+                          justifyContent: 'space-between'
+                        }}
+                      >
+                        {/* Event Title */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            width: '240px', // Scaled up from 150px
+                            height: '22px', // Scaled up from 16px
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            color: '#FFF',
+                            fontFamily: 'Inter',
+                            fontSize: '18px', // Scaled up from 14px
+                            fontWeight: '600',
+                            lineHeight: '1.0',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {card.title}
+                        </div>
+
+                        {/* DATE Information Row */}
+                        <div
+                          onClick={() => {
+                            // Create calendar event
+                            const eventTitle = encodeURIComponent(card.title);
+                            const eventLocation = encodeURIComponent(card.location);
+                            const eventDate = card.date;
+
+                            // Parse date string to create proper calendar format
+                            const now = new Date();
+                            const currentYear = now.getFullYear();
+
+                            // Extract date parts
+                            const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                            if (dateMatch) {
+                              const [, , month, day, hour, minute, ampm] = dateMatch;
+                              const monthMap = {
+                                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                              };
+
+                              let hour24 = parseInt(hour);
+                              if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                              if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                              const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                              const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+
+                              // Format for calendar URL
+                              const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                              const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                              // Try different calendar methods
+                              const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+
+                              window.open(calendarUrl, '_blank');
+                            }
+                          }}
+                          style={{
+                            display: 'flex',
+                            height: '16px', // Scaled up from 12px
+                            paddingLeft: '1px',
+                            alignItems: 'center',
+                            gap: '4px', // Scaled up from 3px
+                            alignSelf: 'stretch',
+                            cursor: 'pointer',
+                            transition: 'opacity 0.2s ease-in-out'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = '0.7';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                          }}
+                        >
+                          {/* Calendar Icon SVG - Scaled */}
+                          <svg width="14" height="14" viewBox="0 0 10 10" fill="none">
+                            <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
+                          </svg>
+
+                          {/* Date Text */}
+                          <span
+                            style={{
+                              display: 'flex',
+                              width: '200px', // Scaled up from 140px
+                              height: '14px', // Scaled up from 10px
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              color: '#FFF',
+                              fontFamily: 'Inter',
+                              fontSize: '12px', // Scaled up from 9px
+                              fontWeight: '100',
+                              lineHeight: '1.0',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {card.date}
+                          </span>
+                        </div>
+
+                        {/* LOCATION Information Row */}
+                        <div
+                          onClick={() => {
+                            const address = encodeURIComponent(card.location);
+                            const userAgent = navigator.userAgent || '';
+
+                            // Detect iOS
+                            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                              window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                            }
+                            // Detect Android
+                            else if (/android/i.test(userAgent)) {
+                              window.open(`geo:0,0?q=${address}`, '_blank');
+                            }
+                            // Default to Google Maps for web browsers
+                            else {
+                              window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                            }
+                          }}
+                          style={{
+                            display: 'flex',
+                            height: '16px', // Scaled up from 12px
+                            padding: '0px 1px',
+                            marginTop: '3px', // Scaled up from 2px
+                            alignItems: 'center',
+                            gap: '4px', // Scaled up from 3px
+                            alignSelf: 'stretch',
+                            cursor: 'pointer',
+                            transition: 'opacity 0.2s ease-in-out'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = '0.7';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                          }}
+                        >
+                          {/* Location Icon SVG - Scaled */}
+                          <svg width="14" height="14" viewBox="0 0 10 10" fill="none">
+                            <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
+                            <circle cx="5" cy="4" r="1" fill="#FFF"/>
+                          </svg>
+
+                          {/* Location Text */}
+                          <span
+                            style={{
+                              display: 'flex',
+                              width: '200px', // Scaled up from 140px
+                              height: '14px', // Scaled up from 10px
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              color: '#FFF',
+                              fontFamily: 'Inter',
+                              fontSize: '12px', // Scaled up from 9px
+                              fontWeight: '100',
+                              lineHeight: '1.0',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {card.location}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Button Section - Scaled for Mobile */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          width: '100%',
+                          height: '32px', // Scaled up from 24px
+                          justifyContent: 'flex-end',
+                          alignItems: 'center',
+                          gap: '8px' // Scaled up from 6px
+                        }}
+                      >
+                        {/* Get Tickets Button */}
+                        {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(card.ticketsUrl, '_blank');
+                            }}
+                            style={{
+                              display: 'flex',
+                              height: '32px', // Scaled up from 24px
+                              padding: '0 16px', // Scaled up from 0 12px
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              gap: '8px', // Scaled up from 6px
+                              borderRadius: '16px', // Scaled up from 12px
+                              background: 'rgba(255, 255, 255, 0.1)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px', // Scaled up from 9px
+                                fontWeight: '500',
+                                lineHeight: 'normal'
+                              }}
+                            >
+                              Get Tickets
+                            </span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
