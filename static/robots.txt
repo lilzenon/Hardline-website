@@ -7,10 +7,14 @@ Allow: /
 Allow: /event/
 Allow: /drop/
 Allow: /home
+Allow: /about
+Allow: /contact
+Allow: /events
 Allow: /static/
 Allow: /images/
 Allow: /css/
 Allow: /js/
+Allow: /react/
 
 # Disallow admin and private areas
 Disallow: /admin/
@@ -37,5 +41,34 @@ Allow: /manifest.webmanifest
 # Sitemap location
 Sitemap: https://b2b.click/sitemap.xml
 
-# Crawl delay for respectful crawling
+# Specific bot permissions
+User-agent: Googlebot
+Allow: /
 Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# Default crawl delay for respectful crawling
+Crawl-delay: 1
+
+# Host directive for canonical domain
+Host: https://b2b.click

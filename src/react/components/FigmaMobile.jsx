@@ -1561,9 +1561,11 @@ const FigmaMobile = () => {
           background: '#000000',
           fontFamily: 'Inter, sans-serif'
         }}
+        role="main"
+        aria-label="BOUNCE2BOUNCE Mobile Experience"
       >
       {/* Main Mobile Device Frame - 430x932 */}
-      <div
+      <main
         style={{
           width: '430px',
           height: '932px',
@@ -1573,9 +1575,11 @@ const FigmaMobile = () => {
           position: 'relative',
           background: '#000000'
         }}
+        aria-label="Mobile homepage content"
       >
         {/* Navigation Bar - Dynamic Scroll-Responsive */}
-        <div
+        <header
+          role="banner"
           style={{
             position: 'fixed',
             left: '0px',
@@ -1593,6 +1597,7 @@ const FigmaMobile = () => {
             zIndex: 100, // Ensure it stays on top
             borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none' // Subtle border when scrolled
           }}
+          aria-label="Main navigation"
         >
           {/* Menu Button - Right Side */}
           <div
@@ -1676,7 +1681,7 @@ const FigmaMobile = () => {
               e.target.style.transform = 'translate(-50%, -50%) scale(1)';
             }}
           />
-        </div>
+        </header>
 
         {/* Main Content Area - Dynamic with Scroll-Responsive Navigation */}
         <div
@@ -1704,21 +1709,41 @@ const FigmaMobile = () => {
             minHeight: '100%' // Ensure minimum height fills viewport
           }}
         >
-          {/* Mobile Video Card */}
-          <div
-            onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
-            style={{
-              width: '350px', // Mobile-optimized width
-              height: '200px', // Mobile-optimized height
-              position: 'relative',
-              flexShrink: 0,
-              margin: '0 0 32px 0', // Bottom margin for spacing
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)',
-              borderRadius: '20px', // Slightly smaller radius for mobile
-              overflow: 'hidden'
-            }}
+          {/* Hero Video Section */}
+          <section
+            aria-labelledby="hero-video-title"
+            style={{ width: '100%', marginBottom: '32px' }}
+          >
+            <h1
+              id="hero-video-title"
+              style={{
+                position: 'absolute',
+                left: '-9999px',
+                width: '1px',
+                height: '1px',
+                overflow: 'hidden'
+              }}
+            >
+              BOUNCE2BOUNCE - Exclusive Live Music Events and Artist Performances
+            </h1>
+
+            <article
+              onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
+              style={{
+                width: '350px', // Mobile-optimized width
+                height: '200px', // Mobile-optimized height
+                position: 'relative',
+                flexShrink: 0,
+                margin: '0 auto', // Center the video
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'scale(1)',
+                borderRadius: '20px', // Slightly smaller radius for mobile
+                overflow: 'hidden'
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="Watch Henry Fong live performance on YouTube"
             onTouchStart={(e) => {
               e.currentTarget.style.transform = 'scale(0.98)';
             }}
@@ -1880,27 +1905,35 @@ const FigmaMobile = () => {
                 </span>
               </div>
             </div>
-          </div>
+          </article>
+          </section>
 
-          {/* Events Section Title */}
-          <div
-            style={{
-              width: '100%',
-              color: '#FFF',
-              fontFamily: 'Inter',
-              fontSize: '28px', // Scaled up from 24px for mobile
-              fontWeight: '800',
-              lineHeight: 'normal',
-              marginBottom: '20px', // Scaled up from 8px
-              textAlign: 'left',
+          {/* Events Section */}
+          <section
+            aria-labelledby="events-section-title"
+            style={{ width: '100%' }}
+          >
+            <h2
+              id="events-section-title"
+              style={{
+                width: '100%',
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: '28px', // Scaled up from 24px for mobile
+                fontWeight: '800',
+                lineHeight: 'normal',
+                marginBottom: '20px', // Scaled up from 8px
+                textAlign: 'left',
               padding: '0 20px' // Add padding to title for proper spacing
             }}
           >
             Events
-          </div>
+          </h2>
 
           {/* Events List - Vertical Stack */}
           <div
+            role="list"
+            aria-label="Upcoming live music events"
             style={{
               display: 'flex',
               width: '100%',
@@ -1953,9 +1986,11 @@ const FigmaMobile = () => {
             ) : (
               /* Mobile Event Cards - Vertical Stack with Spring Animation */
               processedEventCards.map((card, index) => (
-                <div
+                <article
                   key={card.id}
                   className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
+                  role="listitem"
+                  aria-labelledby={`event-title-${card.id}`}
                   style={{
                     display: 'flex',
                     width: '100%',
@@ -2180,7 +2215,8 @@ const FigmaMobile = () => {
                         }}
                       >
                         {/* Event Title */}
-                        <div
+                        <h3
+                          id={`event-title-${card.id}`}
                           style={{
                             display: 'flex',
                             width: '240px', // Scaled up from 150px
@@ -2194,11 +2230,12 @@ const FigmaMobile = () => {
                             lineHeight: '1.0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            margin: 0 // Reset default heading margins
                           }}
                         >
                           {card.title}
-                        </div>
+                        </h3>
 
                         {/* DATE Information Row - Smaller clickable area */}
                         <div
@@ -2569,11 +2606,13 @@ const FigmaMobile = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </article>
               ))
             )}
           </div>
+          </section>
         </div>
+        </main>
 
         {/* Dynamic Gradient Overlay Behind Drawer - Only visible when drawer is open */}
         {!drawerFullyClosed && (
@@ -3507,7 +3546,6 @@ const FigmaMobile = () => {
             </div>
           </div>
         </div>
-      </div>
     </>
   );
 };
