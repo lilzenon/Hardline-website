@@ -1,17 +1,17 @@
 {
-  "buildDate": "2025-07-25T07:41:21.263Z",
+  "buildDate": "2025-07-25T07:48:01.534Z",
   "nodeVersion": "v18.12.1",
   "platform": "win32",
   "arch": "x64",
-  "commitHash": "c49086f623b8b3c04a5c84907f403dec5802985b",
-  "commitHashShort": "c49086f",
+  "commitHash": "400b4161081027513d31c76a6af6b507744b39e7",
+  "commitHashShort": "400b416",
   "branch": "main",
-  "commitDate": "2025-07-25T07:21:52.000Z",
+  "commitDate": "2025-07-25T07:41:22.000Z",
   "commitMessage": "build: Update production bundle and assets",
   "isDirty": true,
   "repoUrl": "https://github.com/lilzenon/kutt.git",
   "githubUrl": "https://github.com/lilzenon/kutt",
-  "commitUrl": "https://github.com/lilzenon/kutt/commit/c49086f623b8b3c04a5c84907f403dec5802985b",
-  "displayText": "main@c49086f*",
+  "commitUrl": "https://github.com/lilzenon/kutt/commit/400b4161081027513d31c76a6af6b507744b39e7",
+  "displayText": "main@400b416*",
   "environment": "development"
 }
