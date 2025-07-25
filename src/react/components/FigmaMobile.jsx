@@ -1325,6 +1325,21 @@ const FigmaMobile = () => {
           .drawer-content.verification-mode {
             transform: scale(1.02);
           }
+
+          /* Event card button animations */
+          .mobile-event-card:hover .button-shine {
+            left: 100%;
+          }
+
+          /* Mobile event card hover effects */
+          .mobile-event-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+
+          .mobile-event-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+          }
         `}
       </style>
 
@@ -1534,6 +1549,7 @@ const FigmaMobile = () => {
               processedEventCards.map((card) => (
                 <div
                   key={card.id}
+                  className="mobile-event-card"
                   onClick={(e) => {
                     // Only trigger if clicking on the card itself, not child elements
                     if (e.target === e.currentTarget || e.target.closest('.card-clickable-area')) {
@@ -1927,39 +1943,67 @@ const FigmaMobile = () => {
                             }}
                             style={{
                               display: 'flex',
-                              height: '32px', // Scaled up from 24px
-                              padding: '0 16px', // Scaled up from 0 12px
+                              height: '36px', // Increased height for better touch target
+                              padding: '0 20px', // More padding for better appearance
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '8px', // Scaled up from 6px
-                              borderRadius: '16px', // Scaled up from 12px
-                              background: 'rgba(255, 255, 255, 0.1)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              gap: '8px',
+                              borderRadius: '18px', // More rounded for modern look
+                              background: 'linear-gradient(135deg, #00FF40 0%, #00CC33 100%)', // Green gradient
+                              border: 'none', // Remove border for cleaner look
                               cursor: 'pointer',
-                              transition: 'all 0.2s ease'
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              boxShadow: '0 4px 12px rgba(0, 255, 64, 0.25)', // Green glow
+                              backdropFilter: 'blur(8px)',
+                              position: 'relative',
+                              overflow: 'hidden'
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                              e.currentTarget.style.transform = 'scale(1.05)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #00FF40 0%, #00DD44 100%)';
+                              e.currentTarget.style.transform = 'scale(1.05) translateY(-1px)';
+                              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 255, 64, 0.4)';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.background = 'linear-gradient(135deg, #00FF40 0%, #00CC33 100%)';
+                              e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 64, 0.25)';
+                            }}
+                            onMouseDown={(e) => {
+                              e.currentTarget.style.transform = 'scale(0.98) translateY(0px)';
+                            }}
+                            onMouseUp={(e) => {
+                              e.currentTarget.style.transform = 'scale(1.05) translateY(-1px)';
                             }}
                           >
                             <span
                               style={{
-                                color: '#FFF',
+                                color: '#000', // Black text on green background for contrast
                                 fontFamily: 'Inter',
-                                fontSize: '12px', // Scaled up from 9px
-                                fontWeight: '500',
-                                lineHeight: 'normal'
+                                fontSize: '13px', // Slightly larger for better readability
+                                fontWeight: '600', // Bolder for better visibility
+                                lineHeight: 'normal',
+                                textShadow: 'none',
+                                position: 'relative',
+                                zIndex: 2
                               }}
                             >
                               Get Tickets
                             </span>
+
+                            {/* Subtle shine effect */}
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: '-100%',
+                                width: '100%',
+                                height: '100%',
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                                transition: 'left 0.6s ease',
+                                zIndex: 1
+                              }}
+                              className="button-shine"
+                            />
                           </div>
                         ) : null}
                       </div>
