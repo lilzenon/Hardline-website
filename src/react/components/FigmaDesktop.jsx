@@ -2269,14 +2269,14 @@ const FigmaDesktop = () => {
                         style={{
                           display: 'flex',
                           width: '120px',
-                          height: '24px', // Slightly taller
-                          padding: '6px 12px', // Better padding
+                          height: '20px',
+                          padding: '8px 10px',
                           justifyContent: 'center',
                           alignItems: 'center',
                           gap: '6px',
-                          borderRadius: '12px', // More rounded
+                          borderRadius: '20px',
                           background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? 'linear-gradient(135deg, #00FF40 0%, #00CC33 100%)' // Green gradient like mobile
+                            ? 'rgba(23, 23, 23, 0.80)'
                             : 'rgba(23, 23, 23, 0.40)',
                           cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
                             ? 'pointer'
@@ -2284,24 +2284,19 @@ const FigmaDesktop = () => {
                           opacity: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
                             ? 1
                             : 0.6,
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          transform: 'scale(1)',
-                          boxShadow: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? '0 2px 8px rgba(0, 255, 64, 0.25)'
-                            : 'none'
+                          transition: 'all 0.3s ease',
+                          transform: 'scale(1)'
                         }}
                         onMouseEnter={(e) => {
                           if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.currentTarget.style.transform = 'scale(1.05) translateY(-1px)';
-                            e.currentTarget.style.background = 'linear-gradient(135deg, #00FF40 0%, #00DD44 100%)';
-                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 64, 0.4)';
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                            e.currentTarget.style.background = 'rgba(76, 76, 76, 0.90)'; // Lighter color similar to watch now button
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.currentTarget.style.transform = 'scale(1) translateY(0px)';
-                            e.currentTarget.style.background = 'linear-gradient(135deg, #00FF40 0%, #00CC33 100%)';
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 255, 64, 0.25)';
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)';
                           }
                         }}
                         onMouseDown={(e) => {
@@ -2317,12 +2312,10 @@ const FigmaDesktop = () => {
                       >
                         <span
                           style={{
-                            color: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                              ? '#000' // Black text on green background for contrast
-                              : '#FFF',
+                            color: '#FFF',
                             fontFamily: 'Inter',
                             fontSize: '10px',
-                            fontWeight: '600', // Bolder for better visibility
+                            fontWeight: '300',
                             lineHeight: 'normal',
                             pointerEvents: 'none'
                           }}

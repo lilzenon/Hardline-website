@@ -421,6 +421,107 @@ async function verifyPhone(req, res) {
     }
 }
 
+/**
+ * Resend verification code with rate limiting protection
+ */
+async function resendVerification(req, res) {
+    try {
+        const { phoneNumber } = req.body;
+
+        console.log('🔄 Homepage resend verification request:', { phoneNumber });
+
+        // Validate phone number
+        if (!phoneNumber || !phoneNumber.trim()) {
+            return res.status(400).json({
+                success: false,
+                error: 'Phone number is required'
+            });
+        }
+
+        // Clean and validate phone number format
+        const cleanedPhone = phoneUtils.normalizePhone(phoneNumber);
+        if (!cleanedPhone) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid phone number format'
+            });
+        }
+
+        // Rate limiting: Check if we've sent a verification recently
+        const rateLimitKey = `resend_verification:${cleanedPhone}`;
+        const lastSentTime = global.resendRateLimit?.get(rateLimitKey);
+        const now = Date.now();
+        const cooldownPeriod = 60000; // 60 seconds
+
+        if (lastSentTime && (now - lastSentTime) < cooldownPeriod) {
+            const remainingTime = Math.ceil((cooldownPeriod - (now - lastSentTime)) / 1000);
+            console.log(`⏰ Rate limit hit for ${cleanedPhone}, ${remainingTime}s remaining`);
+
+            return res.status(429).json({
+                success: false,
+                error: `Please wait ${remainingTime} seconds before requesting another code`,
+                remainingTime: remainingTime
+            });
+        }
+
+        // Initialize rate limit storage if not exists
+        if (!global.resendRateLimit) {
+            global.resendRateLimit = new Map();
+        }
+
+        // Set rate limit
+        global.resendRateLimit.set(rateLimitKey, now);
+
+        // Clean up old entries (older than 5 minutes)
+        for (const [key, timestamp] of global.resendRateLimit.entries()) {
+            if (now - timestamp > 300000) { // 5 minutes
+                global.resendRateLimit.delete(key);
+            }
+        }
+
+        // Check if this is a test phone number
+        const isTestNumber = cleanedPhone.replace(/\D/g, '') === '5555555555';
+
+        if (isTestNumber) {
+            console.log(`🧪 Test resend verification for ${cleanedPhone}`);
+
+            return res.json({
+                success: true,
+                message: 'Test verification code resent! Use code: 1234',
+                phoneNumber: cleanedPhone,
+                isTestMode: true
+            });
+        }
+
+        // Resend verification code using Twilio Verify API for real numbers
+        const verificationResult = await twilioService.startVerification(cleanedPhone, 'sms');
+
+        if (verificationResult.success) {
+            console.log(`✅ Verification code resent for ${cleanedPhone} - SID: ${verificationResult.verificationSid}`);
+
+            return res.json({
+                success: true,
+                message: 'Verification code resent! Please check your phone.',
+                phoneNumber: cleanedPhone,
+                verificationSid: verificationResult.verificationSid
+            });
+        } else {
+            console.error(`❌ Failed to resend verification: ${verificationResult.error}`);
+            return res.status(500).json({
+                success: false,
+                error: 'Failed to resend verification code. Please try again.'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error in resend verification:', error);
+        return res.status(500).json({
+            success: false,
+            error: 'Internal server error. Please try again.'
+        });
+    }
+}
+
 module.exports = {
     getAdmin,
     update,
@@ -428,5 +529,6 @@ module.exports = {
     getHomepageData,
     submitPhone,
     verifyPhone,
+    resendVerification,
     upload
 };

@@ -37,65 +37,6 @@
     <!-- Modern Navigation Styles -->
     <link rel="stylesheet" href="/css/modern-navigation.css">
 
-
-
-        /* Modern Toggle Switch */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            min-width: 48px;
-            min-height: 24px;
-            cursor: pointer;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .toggle-dot {
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.2s ease-in-out;
-        }
-
-        /* Ensure 44px minimum touch target for mobile */
-        .toggle-switch::before {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            min-width: 44px;
-            min-height: 44px;
-        }
-
-        /* Focus states for accessibility */
-        .toggle-switch:focus {
-            outline: 2px solid #3b82f6;
-            outline-offset: 2px;
-            border-radius: 9999px;
-        }
-
-        /* Hover effects for desktop */
-        @media (hover: hover) {
-            .toggle-switch:hover {
-                transform: scale(1.05);
-                transition: transform 0.1s ease-in-out;
-            }
-        }
-
-        /* Active state feedback */
-        .toggle-switch:active {
-            transform: scale(0.98);
-        }
-
-
-
-
-
-
-    </style>
-
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 

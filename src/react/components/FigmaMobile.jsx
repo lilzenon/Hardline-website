@@ -257,7 +257,7 @@ const FigmaMobile = () => {
   const [verificationState, setVerificationState] = useState('normal'); // normal, filled, valid, invalid
   const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [drawerFullyClosed, setDrawerFullyClosed] = useState(false);
+  const [drawerFullyClosed, setDrawerFullyClosed] = useState(true); // Start fully closed
 
   // Resend countdown state
   const [resendCountdown, setResendCountdown] = useState(0);
@@ -268,6 +268,17 @@ const FigmaMobile = () => {
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [homeSettings, setHomeSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Animation state for cards
+  const [cardsAnimated, setCardsAnimated] = useState(false);
+
+  // Scroll state for dynamic navigation
+  const [scrollY, setScrollY] = useState(0);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Video quality state for adaptive streaming
+  const [videoQuality, setVideoQuality] = useState('hd720'); // Start with HD
+  const [connectionSpeed, setConnectionSpeed] = useState('fast'); // fast, medium, slow
 
   // State preservation for drawer reopening
   const [previousDrawerState, setPreviousDrawerState] = useState({
@@ -296,6 +307,7 @@ const FigmaMobile = () => {
   const resendTimerRef = useRef(null);
   const isMountedRef = useRef(true);
   const drawerRef = useRef(null);
+  const contentRef = useRef(null);
 
   // Simplified phone number formatting handler without cursor management
   const handlePhoneChange = useCallback((e) => {
@@ -824,8 +836,118 @@ const FigmaMobile = () => {
     fetchHomepageData().finally(() => {
       const endTime = performance.now();
       console.log(`🚀 Mobile homepage data loaded in ${(endTime - startTime).toFixed(2)}ms`);
+
+      // Trigger card animations after data loads
+      setTimeout(() => {
+        setCardsAnimated(true);
+      }, 200); // Small delay for smooth transition
     });
   }, [fetchHomepageData]);
+
+  // Animate drawer open after component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDrawerFullyClosed(false);
+      setDrawerExpanded(true);
+    }, 500); // Wait 500ms then animate open
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Detect connection speed for adaptive video quality
+  useEffect(() => {
+    const detectConnectionSpeed = () => {
+      // Use Network Information API if available
+      if ('connection' in navigator) {
+        const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+
+        if (connection) {
+          const effectiveType = connection.effectiveType;
+          const downlink = connection.downlink; // Mbps
+
+          console.log('🌐 Connection detected:', { effectiveType, downlink });
+
+          // Determine quality based on connection
+          if (effectiveType === '4g' && downlink > 5) {
+            setVideoQuality('hd1080');
+            setConnectionSpeed('fast');
+          } else if (effectiveType === '4g' || (effectiveType === '3g' && downlink > 2)) {
+            setVideoQuality('hd720');
+            setConnectionSpeed('medium');
+          } else {
+            setVideoQuality('large'); // 480p
+            setConnectionSpeed('slow');
+          }
+
+          return;
+        }
+      }
+
+      // Fallback: Test download speed with a small image
+      const startTime = performance.now();
+      const testImage = new Image();
+
+      testImage.onload = () => {
+        const endTime = performance.now();
+        const duration = endTime - startTime;
+
+        console.log('🚀 Speed test completed in:', duration + 'ms');
+
+        // Estimate connection speed based on load time
+        if (duration < 200) {
+          setVideoQuality('hd1080');
+          setConnectionSpeed('fast');
+        } else if (duration < 500) {
+          setVideoQuality('hd720');
+          setConnectionSpeed('medium');
+        } else {
+          setVideoQuality('large');
+          setConnectionSpeed('slow');
+        }
+      };
+
+      testImage.onerror = () => {
+        console.log('⚠️ Speed test failed, using default HD quality');
+        setVideoQuality('hd720');
+        setConnectionSpeed('medium');
+      };
+
+      // Use a small test image (1KB)
+      testImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    };
+
+    // Run detection after component mounts
+    const timer = setTimeout(detectConnectionSpeed, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Scroll event listener for dynamic navigation
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = (e) => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const currentScrollY = e.target.scrollTop;
+          setScrollY(currentScrollY);
+          setIsScrolled(currentScrollY > 20); // Threshold for shrinking
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const contentElement = contentRef.current;
+    if (contentElement) {
+      // Passive listener for better performance
+      contentElement.addEventListener('scroll', handleScroll, { passive: true });
+
+      return () => {
+        contentElement.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, []);
 
   // Memoized event cards processing for mobile
   const processedEventCards = useMemo(() => {
@@ -895,14 +1017,22 @@ const FigmaMobile = () => {
           ticketsUrl: ticketsUrl,
           isRealEvent: true,
           showOnHomepage: event.show_on_homepage,
-          eventData: event
+          eventData: event,
+          eventDate: eventDate // Add the actual Date object for proper sorting
         });
       } catch (error) {
         console.warn(`Error processing mobile event ${event.id}:`, error);
       }
     });
 
-    console.log(`🎯 Mobile rendering ${featuredCards.length} featured event cards`);
+    // Sort events by date in reverse chronological order (most recent first)
+    featuredCards.sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+    });
+
+    console.log(`🎯 Mobile rendering ${featuredCards.length} featured event cards (sorted by date desc)`);
     return featuredCards;
   }, [featuredEvents]);
 
@@ -923,11 +1053,9 @@ const FigmaMobile = () => {
 
   // Handle phone input focus - expand drawer and show disclaimer
   const handlePhoneInputFocus = useCallback(() => {
-    if (!drawerExpanded) {
-      setDrawerExpanded(true);
-      setShowDisclaimer(true);
-    }
-  }, [drawerExpanded]);
+    setDrawerExpanded(true);
+    setShowDisclaimer(true);
+  }, []);
 
   // Handle phone input blur - collapse drawer if no content
   const handlePhoneInputBlur = useCallback(() => {
@@ -987,9 +1115,9 @@ const FigmaMobile = () => {
     } else if (showVerification && !drawerExpanded) {
       return '60px'; // Verification mode collapsed - show handle only, no content peek
     } else if (drawerExpanded) {
-      return showDisclaimer ? '200px' : '140px'; // Phone input + disclaimer or just phone input (reduced)
+      return showDisclaimer ? '200px' : '120px'; // Phone input + disclaimer or just phone input (further reduced)
     } else {
-      return '140px'; // Collapsed state (peek into disclaimer with gradient) (reduced)
+      return '130px'; // Collapsed state - increased for more space between phone field and bottom
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer]);
 
@@ -1094,6 +1222,42 @@ const FigmaMobile = () => {
     };
   }, []);
 
+  // Build YouTube URL with adaptive quality parameters
+  const buildYouTubeURL = useMemo(() => {
+    const baseURL = 'https://www.youtube.com/embed/vEHTO3gf1jk';
+    const baseParams = {
+      autoplay: '1',
+      mute: '1',
+      controls: '0',
+      showinfo: '0',
+      rel: '0',
+      loop: '1',
+      playlist: 'vEHTO3gf1jk',
+      modestbranding: '1',
+      iv_load_policy: '3',
+      fs: '0',
+      disablekb: '1',
+      hd: '1' // Force HD when available
+    };
+
+    // Add quality-specific parameters
+    const qualityParams = {
+      vq: videoQuality, // Video quality preference
+      quality: videoQuality // Alternative quality parameter
+    };
+
+    // Combine all parameters
+    const allParams = { ...baseParams, ...qualityParams };
+    const paramString = Object.entries(allParams)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('&');
+
+    const finalURL = `${baseURL}?${paramString}`;
+    console.log('🎥 YouTube URL built:', { videoQuality, connectionSpeed, finalURL });
+
+    return finalURL;
+  }, [videoQuality, connectionSpeed]);
+
   return (
     <>
       {/* Mobile-specific CSS */}
@@ -1161,6 +1325,43 @@ const FigmaMobile = () => {
             transform: translateZ(0);
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
+          }
+
+          /* Modern iOS-style scrollbar - hidden by default, appears on scroll */
+          .mobile-content-container {
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+          }
+
+          .mobile-content-container::-webkit-scrollbar {
+            width: 0px; /* Hide scrollbar by default */
+            background: transparent;
+          }
+
+          /* Show thin scrollbar only when actively scrolling */
+          .mobile-content-container:hover::-webkit-scrollbar,
+          .mobile-content-container:active::-webkit-scrollbar {
+            width: 3px;
+          }
+
+          .mobile-content-container::-webkit-scrollbar-track {
+            background: transparent;
+          }
+
+          .mobile-content-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            transition: background 0.2s ease;
+          }
+
+          .mobile-content-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+          }
+
+          /* iOS-style momentum scrolling */
+          .mobile-content-container {
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
           }
 
           .mobile-phone-input::placeholder {
@@ -1284,7 +1485,7 @@ const FigmaMobile = () => {
             margin: 0 auto;
             width: calc(100% - 40px);
             max-width: 390px;
-            background: rgba(35, 35, 35, 0.95);
+            background: rgb(21 21 21 / 80%);
             backdrop-filter: blur(10px);
             border-radius: 24px 24px 0px 0px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1326,19 +1527,30 @@ const FigmaMobile = () => {
             transform: scale(1.02);
           }
 
-          /* Event card button animations */
-          .mobile-event-card:hover .button-shine {
-            left: 100%;
+          /* Optimized fade-in animation - prevents black frames */
+          @keyframes optimizedFadeIn {
+            0% {
+              opacity: 0;
+              transform: translate3d(0, 12px, 0) scale(0.96);
+            }
+            100% {
+              opacity: 1;
+              transform: translate3d(0, 0, 0) scale(1);
+            }
           }
 
-          /* Mobile event card hover effects */
-          .mobile-event-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          .event-card-spring {
+            animation: optimizedFadeIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+            will-change: transform, opacity;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+            -webkit-font-smoothing: antialiased;
           }
 
-          .mobile-event-card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+          .event-card-hidden {
+            opacity: 0;
+            transform: translate3d(0, 12px, 0) scale(0.96);
+            backface-visibility: hidden;
           }
         `}
       </style>
@@ -1362,20 +1574,24 @@ const FigmaMobile = () => {
           background: '#000000'
         }}
       >
-        {/* Navigation Bar - Mobile Component */}
+        {/* Navigation Bar - Dynamic Scroll-Responsive */}
         <div
           style={{
-            position: 'absolute',
+            position: 'fixed',
             left: '0px',
             top: '0px',
-            width: '430px',
-            height: '97px',
-            background: '#000000',
+            width: '100vw', // Full viewport width
+            height: isScrolled ? '70px' : '97px', // Dynamic height based on scroll
+            background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000', // Slight transparency when scrolled
+            backdropFilter: isScrolled ? 'blur(10px)' : 'none', // Blur effect when scrolled
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '0 20px',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
+            zIndex: 100, // Ensure it stays on top
+            borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none' // Subtle border when scrolled
           }}
         >
           {/* Menu Button - Right Side */}
@@ -1434,20 +1650,20 @@ const FigmaMobile = () => {
             />
           </div>
 
-          {/* B2B Logo - Centered - Clickable with Animation */}
+          {/* B2B Logo - Dynamic Scroll-Responsive */}
           <img
             onClick={() => handleNavigation('/')}
             src="/images/mobile-figma/b2b-logo-mobile.svg"
             alt="B2B Logo"
             style={{
-              width: '138.41px',
-              height: '43px',
+              width: isScrolled ? '110px' : '138.41px', // Shrink when scrolled
+              height: isScrolled ? '34px' : '43px', // Proportional height
               position: 'absolute',
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
               userSelect: 'none'
             }}
             onMouseDown={(e) => {
@@ -1462,24 +1678,210 @@ const FigmaMobile = () => {
           />
         </div>
 
-        {/* Main Content Area - Between Navigation and Drawer */}
+        {/* Main Content Area - Dynamic with Scroll-Responsive Navigation */}
         <div
+          ref={contentRef}
+          className="mobile-content-container"
           style={{
             position: 'absolute',
             left: '0px',
-            top: '97px',
+            top: isScrolled ? '70px' : '97px', // Dynamic top position
+            bottom: '0px', // Use bottom instead of fixed height to allow content expansion
             width: '430px',
-            height: '722px', // 819 - 97 = 722px
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '20px 20px 40px 20px', // Extra bottom padding for drawer overlap
+            padding: '20px 0px 40px 0px', // Remove horizontal padding to prevent overflow
+            paddingBottom: `calc(${getDrawerHeight()} + 60px)`, // Dynamic bottom padding to account for drawer
             boxSizing: 'border-box',
-            overflowY: 'auto'
+            overflow: 'auto', // Enable scrolling
+            overflowX: 'hidden', // Prevent horizontal scroll
+            WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
+            zIndex: 45, // Ensure content appears above gradient overlay (zIndex: 40)
+            minHeight: '100%' // Ensure minimum height fills viewport
           }}
         >
+          {/* Mobile Video Card */}
+          <div
+            onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
+            style={{
+              width: '350px', // Mobile-optimized width
+              height: '200px', // Mobile-optimized height
+              position: 'relative',
+              flexShrink: 0,
+              margin: '0 0 32px 0', // Bottom margin for spacing
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)',
+              borderRadius: '20px', // Slightly smaller radius for mobile
+              overflow: 'hidden'
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.transform = 'scale(0.98)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            {/* Video background container */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '0px',
+                top: '0px',
+                width: '100%',
+                height: '100%',
+                borderRadius: '20px',
+                overflow: 'hidden'
+              }}
+            >
+              {/* YouTube iframe wrapper */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden'
+                }}
+              >
+                <iframe
+                  src={buildYouTubeURL}
+                  title="Henry Fong YouTube Video - Adaptive Quality"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: '100%',
+                    height: '100%',
+                    transform: 'translate(-50%, -50%) scale(1.5)',
+                    pointerEvents: 'none',
+                    border: 'none'
+                  }}
+                />
+              </div>
+
+              {/* Gradient overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
+                  borderRadius: '20px',
+                  zIndex: 1
+                }}
+              />
+            </div>
+
+            {/* Video text overlay */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '0px',
+                bottom: '16px', // Position from bottom
+                display: 'flex',
+                width: '100%',
+                height: '40px',
+                padding: '8px 16px',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                gap: '12px',
+                zIndex: 2,
+                boxSizing: 'border-box'
+              }}
+            >
+              {/* Left - Title and subtitle */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  gap: '2px',
+                  flex: '1'
+                }}
+              >
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '18px', // Mobile-optimized size
+                    fontWeight: '800',
+                    lineHeight: '1.1',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Watch on YouTube
+                </div>
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '9px', // Mobile-optimized size
+                    fontWeight: '200',
+                    lineHeight: 'normal'
+                  }}
+                >
+                  Henry Fong full set live
+                </div>
+              </div>
+
+              {/* Right - CTA Button */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                }}
+                style={{
+                  display: 'flex',
+                  minWidth: '90px', // Mobile-optimized width
+                  height: '36px', // Mobile-optimized height
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  borderRadius: '18px',
+                  background: 'rgba(38, 38, 38, 0.80)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  boxSizing: 'border-box'
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                  e.currentTarget.style.background = 'rgba(58, 58, 58, 0.90)';
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
+                }}
+              >
+                <span
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '11px', // Mobile-optimized size
+                    fontWeight: '600',
+                    lineHeight: 'normal'
+                  }}
+                >
+                  Watch now
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* Events Section Title */}
           <div
             style={{
@@ -1490,7 +1892,8 @@ const FigmaMobile = () => {
               fontWeight: '800',
               lineHeight: 'normal',
               marginBottom: '20px', // Scaled up from 8px
-              textAlign: 'left'
+              textAlign: 'left',
+              padding: '0 20px' // Add padding to title for proper spacing
             }}
           >
             Events
@@ -1505,7 +1908,10 @@ const FigmaMobile = () => {
               justifyContent: 'flex-start',
               alignItems: 'stretch',
               gap: '16px', // Scaled up from 12px
-              flexShrink: 0
+              flexShrink: 0,
+              padding: '0 40px', // Add 40px left/right padding to event cards container
+              boxSizing: 'border-box', // Ensure padding doesn't cause overflow
+              maxWidth: '430px' // Ensure it doesn't exceed container width
             }}
           >
             {/* Show featured events or empty state */}
@@ -1545,19 +1951,11 @@ const FigmaMobile = () => {
                 </div>
               </div>
             ) : (
-              /* Mobile Event Cards - Vertical Stack */
-              processedEventCards.map((card) => (
+              /* Mobile Event Cards - Vertical Stack with Spring Animation */
+              processedEventCards.map((card, index) => (
                 <div
                   key={card.id}
-                  className="mobile-event-card"
-                  onClick={(e) => {
-                    // Only trigger if clicking on the card itself, not child elements
-                    if (e.target === e.currentTarget || e.target.closest('.card-clickable-area')) {
-                      if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                        window.open(card.ticketsUrl, '_blank');
-                      }
-                    }
-                  }}
+                  className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
                   style={{
                     display: 'flex',
                     width: '100%',
@@ -1569,18 +1967,7 @@ const FigmaMobile = () => {
                     position: 'relative',
                     margin: '0',
                     padding: '0',
-                    cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                      e.currentTarget.style.transform = 'scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = 'none';
+                    animationDelay: cardsAnimated ? `${index * 0.05}s` : '0s' // Smoother stagger animation
                   }}
                 >
                   {/* Mobile Event Card Content */}
@@ -1591,6 +1978,44 @@ const FigmaMobile = () => {
                       position: 'relative'
                     }}
                   >
+                    {/* Dark Frosty Glass Overlay - Closer to Drawer Color */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: `
+                          linear-gradient(135deg,
+                            rgba(21, 21, 21, 0.4) 0%,
+                            rgba(21, 21, 21, 0.2) 25%,
+                            rgba(21, 21, 21, 0.1) 50%,
+                            rgba(21, 21, 21, 0.2) 75%,
+                            rgba(21, 21, 21, 0.3) 100%
+                          ),
+                          linear-gradient(45deg,
+                            rgba(255, 255, 255, 0.08) 0%,
+                            rgba(255, 255, 255, 0.04) 25%,
+                            rgba(255, 255, 255, 0.02) 50%,
+                            rgba(255, 255, 255, 0.04) 75%,
+                            rgba(255, 255, 255, 0.06) 100%
+                          )
+                        `,
+                        backdropFilter: 'blur(12px) saturate(150%)',
+                        WebkitBackdropFilter: 'blur(12px) saturate(150%)',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                        boxShadow: `
+                          inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                          inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+                          0 4px 16px rgba(0, 0, 0, 0.4),
+                          0 1px 4px rgba(0, 0, 0, 0.3)
+                        `,
+                        zIndex: 1,
+                        pointerEvents: 'none'
+                      }}
+                    />
                     {/* Image Section - Scaled for Mobile */}
                     <div
                       style={{
@@ -1598,7 +2023,8 @@ const FigmaMobile = () => {
                         width: '118px', // Scaled up from 84px
                         height: '118px', // Scaled up from 84px
                         left: '0px',
-                        top: '1px'
+                        top: '1px',
+                        zIndex: 2 // Above gradient overlay
                       }}
                     >
                       {/* Event Background Image */}
@@ -1738,7 +2164,7 @@ const FigmaMobile = () => {
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         gap: '16px', // Scaled up from 12px
-                        cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default'
+                        zIndex: 2 // Above gradient overlay
                       }}
                     >
                       {/* Event Information */}
@@ -1749,7 +2175,7 @@ const FigmaMobile = () => {
                           flexDirection: 'column',
                           alignItems: 'flex-start',
                           alignSelf: 'stretch',
-                          gap: '2px', // Scaled up from 1px
+                          gap: '6px', // Increased space between title and date/location
                           justifyContent: 'space-between'
                         }}
                       >
@@ -1774,167 +2200,307 @@ const FigmaMobile = () => {
                           {card.title}
                         </div>
 
-                        {/* DATE Information Row */}
+                        {/* DATE Information Row - Smaller clickable area */}
                         <div
-                          onClick={() => {
-                            // Create calendar event
-                            const eventTitle = encodeURIComponent(card.title);
-                            const eventLocation = encodeURIComponent(card.location);
-                            const eventDate = card.date;
-
-                            // Parse date string to create proper calendar format
-                            const now = new Date();
-                            const currentYear = now.getFullYear();
-
-                            // Extract date parts
-                            const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                            if (dateMatch) {
-                              const [, , month, day, hour, minute, ampm] = dateMatch;
-                              const monthMap = {
-                                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                              };
-
-                              let hour24 = parseInt(hour);
-                              if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                              if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                              const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                              const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
-
-                              // Format for calendar URL
-                              const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                              const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                              // Try different calendar methods
-                              const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-
-                              window.open(calendarUrl, '_blank');
-                            }
-                          }}
                           style={{
                             display: 'flex',
-                            height: '16px', // Scaled up from 12px
+                            height: '20px', // Fixed height for consistent spacing
                             paddingLeft: '1px',
+                            marginBottom: '2px', // Further reduced space between date and location
                             alignItems: 'center',
                             gap: '4px', // Scaled up from 3px
                             alignSelf: 'stretch',
-                            cursor: 'pointer',
-                            transition: 'opacity 0.2s ease-in-out'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.opacity = '0.7';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.opacity = '1';
+                            position: 'relative' // For positioning the clickable area
                           }}
                         >
-                          {/* Calendar Icon SVG - Scaled */}
-                          <svg width="14" height="14" viewBox="0 0 10 10" fill="none">
+                          {/* Calendar Icon - Clickable */}
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 10 10"
+                            fill="none"
+                            onClick={() => {
+                              // Create calendar event
+                              const eventTitle = encodeURIComponent(card.title);
+                              const eventLocation = encodeURIComponent(card.location);
+                              const eventDate = card.date;
+
+                              // Parse date string to create proper calendar format
+                              const now = new Date();
+                              const currentYear = now.getFullYear();
+
+                              // Extract date parts
+                              const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                              if (dateMatch) {
+                                const [, , month, day, hour, minute, ampm] = dateMatch;
+                                const monthMap = {
+                                  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                                };
+
+                                let hour24 = parseInt(hour);
+                                if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                                if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                                const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                                const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+
+                                // Format for calendar URL
+                                const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                                const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                                // Try different calendar methods
+                                const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+
+                                window.open(calendarUrl, '_blank');
+                              }
+                            }}
+                            style={{
+                              cursor: 'pointer',
+                              padding: '2px',
+                              borderRadius: '4px',
+                              transition: 'all 0.2s ease-in-out'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
                             <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
                           </svg>
 
-                          {/* Date Text */}
-                          <span
+                          {/* Date text container - no gap between parts */}
+                          <div
                             style={{
                               display: 'flex',
-                              width: '200px', // Scaled up from 140px
-                              height: '14px', // Scaled up from 10px
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              color: '#FFF',
-                              fontFamily: 'Inter',
-                              fontSize: '12px', // Scaled up from 9px
-                              fontWeight: '100',
-                              lineHeight: '1.0',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
+                              alignItems: 'center',
+                              gap: '0px', // No gap between text parts
+                              flex: 1
                             }}
                           >
-                            {card.date}
-                          </span>
+                            {/* First part of date - clickable with proper touch target */}
+                            <span
+                              onClick={() => {
+                                // Same calendar event logic as icon
+                                const eventTitle = encodeURIComponent(card.title);
+                                const eventLocation = encodeURIComponent(card.location);
+                                const eventDate = card.date;
+
+                                const now = new Date();
+                                const currentYear = now.getFullYear();
+                                const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                                if (dateMatch) {
+                                  const [, , month, day, hour, minute, ampm] = dateMatch;
+                                  const monthMap = {
+                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                                  };
+
+                                  let hour24 = parseInt(hour);
+                                  if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                                  if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                                  const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                                  const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000);
+
+                                  const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                                  const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                                  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+                                  window.open(calendarUrl, '_blank');
+                                }
+                              }}
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px',
+                                fontWeight: '100',
+                                lineHeight: '1.0',
+                                whiteSpace: 'nowrap',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                display: 'inline-block',
+                                // Enhanced touch target using pseudo-element approach
+                                minHeight: '24px', // WCAG minimum
+                                padding: '6px 8px', // Comfortable padding for touch
+                                margin: '-6px -8px', // Negative margin to maintain visual position
+                                borderRadius: '6px',
+                                transition: 'all 0.2s ease-in-out'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              {(() => {
+                                const parts = card.date.split(' @');
+                                return parts[0] + ' @'; // "Fri @"
+                              })()}
+                            </span>
+
+                            {/* Remaining date text - not clickable, no gap */}
+                            <span
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px',
+                                fontWeight: '100',
+                                lineHeight: '1.0',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: 1
+                              }}
+                            >
+                              {(() => {
+                                const parts = card.date.split(' @');
+                                return parts.length > 1 ? ' ' + parts[1] : ''; // " Aug 01 10:00PM"
+                              })()}
+                            </span>
+                          </div>
                         </div>
 
-                        {/* LOCATION Information Row */}
+                        {/* LOCATION Information Row - Fixed spacing and touch areas */}
                         <div
-                          onClick={() => {
-                            const address = encodeURIComponent(card.location);
-                            const userAgent = navigator.userAgent || '';
-
-                            // Detect iOS
-                            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                              window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                            }
-                            // Detect Android
-                            else if (/android/i.test(userAgent)) {
-                              window.open(`geo:0,0?q=${address}`, '_blank');
-                            }
-                            // Default to Google Maps for web browsers
-                            else {
-                              window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                            }
-                          }}
                           style={{
                             display: 'flex',
-                            height: '16px', // Scaled up from 12px
+                            height: '20px', // Fixed height for consistent spacing
                             padding: '0px 1px',
-                            marginTop: '3px', // Scaled up from 2px
                             alignItems: 'center',
-                            gap: '4px', // Scaled up from 3px
-                            alignSelf: 'stretch',
-                            cursor: 'pointer',
-                            transition: 'opacity 0.2s ease-in-out'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.opacity = '0.7';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.opacity = '1';
+                            gap: '4px', // Gap between icon and text container
+                            alignSelf: 'stretch'
                           }}
                         >
-                          {/* Location Icon SVG - Scaled */}
-                          <svg width="14" height="14" viewBox="0 0 10 10" fill="none">
+                          {/* Location Icon - Clickable */}
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 10 10"
+                            fill="none"
+                            onClick={() => {
+                              const address = encodeURIComponent(card.location);
+                              const userAgent = navigator.userAgent || '';
+
+                              // Detect iOS
+                              if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                                window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                              }
+                              // Detect Android
+                              else if (/android/i.test(userAgent)) {
+                                window.open(`geo:0,0?q=${address}`, '_blank');
+                              }
+                              // Default to Google Maps for web browsers
+                              else {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                              }
+                            }}
+                            style={{
+                              cursor: 'pointer',
+                              padding: '2px',
+                              borderRadius: '4px',
+                              transition: 'all 0.2s ease-in-out'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
                             <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
                             <circle cx="5" cy="4" r="1" fill="#FFF"/>
                           </svg>
 
-                          {/* Location Text */}
-                          <span
+                          {/* Location text container - no gap between parts */}
+                          <div
                             style={{
                               display: 'flex',
-                              width: '200px', // Scaled up from 140px
-                              height: '14px', // Scaled up from 10px
-                              flexDirection: 'column',
-                              justifyContent: 'center',
-                              color: '#FFF',
-                              fontFamily: 'Inter',
-                              fontSize: '12px', // Scaled up from 9px
-                              fontWeight: '100',
-                              lineHeight: '1.0',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
+                              alignItems: 'center',
+                              gap: '0px', // No gap between text parts
+                              flex: 1
                             }}
                           >
-                            {card.location}
-                          </span>
+                            {/* First part of location - clickable with proper touch target */}
+                            <span
+                              onClick={() => {
+                                const address = encodeURIComponent(card.location);
+                                const userAgent = navigator.userAgent || '';
+
+                                if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                                  window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                                } else if (/android/i.test(userAgent)) {
+                                  window.open(`geo:0,0?q=${address}`, '_blank');
+                                } else {
+                                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                                }
+                              }}
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px',
+                                fontWeight: '100',
+                                lineHeight: '1.0',
+                                whiteSpace: 'nowrap',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                display: 'inline-block',
+                                // Enhanced touch target using proper padding
+                                minHeight: '24px', // WCAG minimum
+                                padding: '6px 8px', // Comfortable padding for touch
+                                margin: '-6px -8px', // Negative margin to maintain visual position
+                                borderRadius: '6px',
+                                transition: 'all 0.2s ease-in-out'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              {card.location.split(',')[0]} {/* Only show first part like "Los Angeles" */}
+                            </span>
+
+                            {/* Remaining location text - not clickable, no gap */}
+                            <span
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px',
+                                fontWeight: '100',
+                                lineHeight: '1.0',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: 1
+                              }}
+                            >
+                              {card.location.includes(',') ? ',' + card.location.split(',').slice(1).join(',') : ''} {/* Show rest like ", CA" */}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Action Button Section - Scaled for Mobile */}
+                      {/* Action Button Section - Aligned with Image Bottom */}
                       <div
                         style={{
+                          position: 'absolute',
+                          bottom: '6px', // Position from bottom to align with image bottom (120px card - 114px image bottom = 6px)
+                          left: '0px',
                           display: 'flex',
                           width: '100%',
-                          height: '32px', // Scaled up from 24px
-                          justifyContent: 'flex-end',
-                          alignItems: 'center',
-                          gap: '8px' // Scaled up from 6px
+                          height: '28px', // Button height
+                          justifyContent: 'flex-start', // Match desktop alignment
+                          alignItems: 'center'
                         }}
                       >
-                        {/* Get Tickets Button */}
+                        {/* Get Tickets Button - Extended to right side */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <div
                             onClick={(e) => {
@@ -1943,67 +2509,61 @@ const FigmaMobile = () => {
                             }}
                             style={{
                               display: 'flex',
-                              height: '36px', // Increased height for better touch target
-                              padding: '0 20px', // More padding for better appearance
+                              width: '200px', // Extended button width closer to right edge
+                              height: '28px', // Scaled up from 20px (desktop)
+                              padding: '11px 14px', // Scaled up from 8px 10px (desktop)
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '8px',
-                              borderRadius: '18px', // More rounded for modern look
-                              background: 'linear-gradient(135deg, #00FF40 0%, #00CC33 100%)', // Green gradient
-                              border: 'none', // Remove border for cleaner look
-                              cursor: 'pointer',
-                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                              boxShadow: '0 4px 12px rgba(0, 255, 64, 0.25)', // Green glow
-                              backdropFilter: 'blur(8px)',
-                              position: 'relative',
-                              overflow: 'hidden'
+                              gap: '8px', // Scaled up from 6px (desktop)
+                              borderRadius: '28px', // Scaled up from 20px (desktop)
+                              background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                                ? 'rgba(23, 23, 23, 0.80)' // Match desktop grey
+                                : 'rgba(23, 23, 23, 0.40)',
+                              cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                                ? 'pointer'
+                                : 'default',
+                              opacity: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                                ? 1
+                                : 0.6,
+                              transition: 'all 0.3s ease', // Match desktop transition
+                              transform: 'scale(1)',
+                              marginRight: '8px' // Small margin from right edge
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, #00FF40 0%, #00DD44 100%)';
-                              e.currentTarget.style.transform = 'scale(1.05) translateY(-1px)';
-                              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 255, 64, 0.4)';
+                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.background = 'rgba(76, 76, 76, 0.90)'; // Match desktop hover
+                              }
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'linear-gradient(135deg, #00FF40 0%, #00CC33 100%)';
-                              e.currentTarget.style.transform = 'scale(1) translateY(0px)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 255, 64, 0.25)';
+                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)';
+                              }
                             }}
                             onMouseDown={(e) => {
-                              e.currentTarget.style.transform = 'scale(0.98) translateY(0px)';
+                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                                e.currentTarget.style.transform = 'scale(0.95)';
+                              }
                             }}
                             onMouseUp={(e) => {
-                              e.currentTarget.style.transform = 'scale(1.05) translateY(-1px)';
+                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                              }
                             }}
                           >
                             <span
                               style={{
-                                color: '#000', // Black text on green background for contrast
+                                color: '#FFF', // White text like desktop
                                 fontFamily: 'Inter',
-                                fontSize: '13px', // Slightly larger for better readability
-                                fontWeight: '600', // Bolder for better visibility
+                                fontSize: '14px', // Scaled up from 10px (desktop)
+                                fontWeight: '300', // Match desktop weight
                                 lineHeight: 'normal',
-                                textShadow: 'none',
-                                position: 'relative',
-                                zIndex: 2
+                                pointerEvents: 'none'
                               }}
                             >
                               Get Tickets
                             </span>
-
-                            {/* Subtle shine effect */}
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: 0,
-                                left: '-100%',
-                                width: '100%',
-                                height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-                                transition: 'left 0.6s ease',
-                                zIndex: 1
-                              }}
-                              className="button-shine"
-                            />
                           </div>
                         ) : null}
                       </div>
@@ -2014,6 +2574,34 @@ const FigmaMobile = () => {
             )}
           </div>
         </div>
+
+        {/* Dynamic Gradient Overlay Behind Drawer - Only visible when drawer is open */}
+        {!drawerFullyClosed && (
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: `calc(${getDrawerHeight()} + 80px)`, // Reduced height for less blocking
+              background: `linear-gradient(
+                to top,
+                rgba(0, 0, 0, 0.6) 0%,
+                rgba(0, 0, 0, 0.4) 20%,
+                rgba(0, 0, 0, 0.2) 40%,
+                rgba(0, 0, 0, 0.1) 60%,
+                rgba(0, 0, 0, 0.05) 80%,
+                rgba(0, 0, 0, 0) 100%
+              )`,
+              opacity: 1,
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Same timing as drawer
+              zIndex: 40, // Lower z-index to ensure content visibility
+              pointerEvents: 'none', // Don't interfere with interactions
+              transform: 'translateY(0%)',
+              transformOrigin: 'bottom'
+            }}
+          />
+        )}
 
         {/* Text Us Drawer - Bottom with Dynamic Height */}
         <div
@@ -2027,7 +2615,7 @@ const FigmaMobile = () => {
             height: getDrawerHeight(),
             display: 'flex',
             flexDirection: 'column',
-            padding: '8px 20px 16px 20px', // Adjusted for narrower drawer width
+            padding: '8px 20px 40px 20px', // Further increased bottom padding for more phone field breathing room
             boxSizing: 'border-box',
             overflow: 'hidden',
             cursor: drawerFullyClosed ? 'pointer' : 'default'
@@ -2060,7 +2648,6 @@ const FigmaMobile = () => {
               height: '4px',
               background: '#D9D9D9',
               borderRadius: '100px',
-              marginBottom: '8px',
               opacity: 0.8,
               marginTop: '6px',
               flexShrink: 0,
@@ -2077,7 +2664,6 @@ const FigmaMobile = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '4px',
-                marginBottom: '8px',
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 2,
@@ -2455,14 +3041,15 @@ const FigmaMobile = () => {
                 style={{
                   display: 'flex',
                   width: '100%',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '8px',
                   opacity: showVerification ? 0 : 1,
                   transform: showVerification ? 'scale(0.95)' : 'scale(1)',
                   transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   willChange: 'opacity, transform',
-                  zIndex: 1
+                  zIndex: 1,
+                  padding: '0 8px 16px 8px', // Add horizontal padding to compensate for reduced margin
+                  boxSizing: 'border-box'
                 }}
               >
                 {/* Phone number Field - Exact Desktop Structure */}
@@ -2489,7 +3076,8 @@ const FigmaMobile = () => {
                       phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
                       phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
                       'none',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    // No margin - send button is positioned inside this container
                   }}
                 >
                   {/* Country Code Dropdown Section - Exact Desktop Structure */}
@@ -2620,9 +3208,8 @@ const FigmaMobile = () => {
                       paddingRight: '65px' // Make room for inlaid button
                     }}
                   />
-                </div>
 
-                {/* SEND Button - Inlaid Desktop Style */}
+                  {/* SEND Button - Inlaid Inside Phone Container */}
                 <div
                   onClick={handlePhoneSubmit}
                   onMouseDown={handleButtonMouseDown}
@@ -2633,12 +3220,12 @@ const FigmaMobile = () => {
                   className="mobile-send-button"
                   style={{
                     display: 'flex',
-                    width: '55px',
-                    height: '36px', // Increased from 30px to 36px for better proportion
+                    width: '55px', // Original width
+                    height: '36px', // Original height
                     justifyContent: 'center',
                     alignItems: 'center',
-                    padding: '8px 10px', // Increased padding proportionally
-                    borderRadius: '18px', // Increased border radius proportionally
+                    padding: '8px 10px', // Original padding
+                    borderRadius: '18px', // Original border radius
                     background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
                     cursor: phoneSubmitting || !phoneNumber.trim() ? 'not-allowed' : 'pointer',
                     opacity: phoneSubmitting || !phoneNumber.trim() ? 0.7 : 1,
@@ -2650,7 +3237,7 @@ const FigmaMobile = () => {
                     position: 'absolute',
                     right: '4px', // Adjusted for better fit with larger button
                     top: '50%',
-                    marginTop: '-18px' // Half of new button height for perfect centering
+                    marginTop: '-18px' // Half of button height (36px) for perfect centering
                   }}
                 >
                   {phoneSubmitting ? (
@@ -2687,6 +3274,7 @@ const FigmaMobile = () => {
                     </span>
                   )}
                 </div>
+                </div>
               </div>
             )}
 
@@ -2695,7 +3283,8 @@ const FigmaMobile = () => {
               <div
                 style={{
                   position: 'relative',
-                  marginTop: '8px', // Reduced from 12px to 8px
+                  marginTop: '2px', // Minimal space above disclaimer
+                  marginBottom: '0px', // Remove bottom margin - no space below disclaimer
                   width: '100%',
                   zIndex: 0 // Behind the card gradient overlay
                 }}
@@ -2712,7 +3301,7 @@ const FigmaMobile = () => {
                   width: '100%',
                   textJustify: 'inter-word',
                   overflow: 'hidden',
-                  maxHeight: showDisclaimer ? '120px' : '32px', // Show more lines when collapsed for better peek
+                  maxHeight: showDisclaimer ? '120px' : '20px', // Reduced to prevent peek-through
                   transition: 'max-height 0.4s ease'
                 }}
               >

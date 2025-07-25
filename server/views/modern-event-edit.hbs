@@ -9059,23 +9059,7 @@ body.modal-open {
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex justify-between pt-4 border-t border-gray-200">
-                <button id="test-preview-btn" class="px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                    <svg class="w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-2M7 7l10 10M17 7l-10 10" />
-                    </svg>
-                    Test in iMessage
-                </button>
-                <div class="flex space-x-3">
-                    <button id="cancel-social-preview" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-                        Cancel
-                    </button>
-                    <button id="save-social-preview" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        Save Changes
-                    </button>
-                </div>
-            </div>
+
         </div>
     </div>
 </div>
@@ -9766,31 +9750,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copy-url-btn')?.addEventListener('click', copyEventLinkEnhanced);
     document.getElementById('mobile-share-btn')?.addEventListener('click', shareNatively);
 
-    // iMessage testing function
-    window.testIMessagePreview = function() {
-        const url = document.getElementById('qr-url-display-main')?.textContent;
-        if (url && url !== 'Loading...') {
-            // Create a temporary text area with the URL for easy copying
-            const textArea = document.createElement('textarea');
-            textArea.value = url;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
 
-            try {
-                document.execCommand('copy');
-                showToast('📱 URL copied! Paste in iMessage to test preview', 'success', 5000);
-            } catch (err) {
-                showToast('❌ Failed to copy URL for testing', 'error', 3000);
-            }
-
-            document.body.removeChild(textArea);
-        } else {
-            showToast('❌ Event URL not ready', 'error', 3000);
-        }
-    };
 
     // Enhanced WhatsApp sharing
     window.shareToWhatsApp = function() {
@@ -9822,10 +9782,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Test preview button
-    document.getElementById('test-preview-btn')?.addEventListener('click', function() {
-        testIMessagePreview();
-    });
+
 
     // Update generation time
     function updateGenerationTime() {

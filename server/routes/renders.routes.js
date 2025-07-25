@@ -532,7 +532,7 @@ router.get(
 
         res.render("dashboard", {
             title: "Dashboard - BOUNCE2BOUNCE",
-            layout: "layouts/dashboard",
+            layout: "layouts/modern-dashboard",
             currentPage: "dashboard",
             stats: {
                 totalEvents: 2,
@@ -885,7 +885,7 @@ router.get(
 
         res.render("messages", {
             title: "Messages - BOUNCE2BOUNCE",
-            layout: "layouts/dashboard",
+            layout: "layouts/modern-dashboard",
             currentPage: "messages",
             stats: {
                 totalMessages: 12,
@@ -939,7 +939,7 @@ router.get(
 
         res.render("fans", {
             title: "Fans - BOUNCE2BOUNCE",
-            layout: "layouts/dashboard",
+            layout: "layouts/modern-dashboard",
             currentPage: "fans",
             stats: {
                 totalFans: 1247,

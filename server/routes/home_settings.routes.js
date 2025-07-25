@@ -62,6 +62,12 @@ router.post(
     asyncHandler(homeSettings.verifyPhone)
 );
 
+// 🚀 HOMEPAGE RESEND VERIFICATION ENDPOINT - For resending verification code
+router.post(
+    "/resend-verification",
+    asyncHandler(homeSettings.resendVerification)
+);
+
 // 🚀 DEBUG ENDPOINT - Check events status
 router.get(
     "/debug-events",
