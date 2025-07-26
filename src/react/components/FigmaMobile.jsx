@@ -1940,7 +1940,7 @@ const FigmaMobile = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '20px',
-                padding: '0 20px',
+                padding: '0 40px',
                 boxSizing: 'border-box'
               }}
             >
