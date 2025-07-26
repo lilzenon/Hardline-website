@@ -269,6 +269,9 @@ const FigmaMobile = () => {
   const [homeSettings, setHomeSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Event Filter Toggle State
+  const [showAllEvents, setShowAllEvents] = useState(true); // true = "All", false = "Past"
+
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
 
@@ -949,9 +952,11 @@ const FigmaMobile = () => {
     }
   }, []);
 
-  // Memoized event cards processing for mobile
+  // Memoized event cards processing for mobile with filtering
   const processedEventCards = useMemo(() => {
     const featuredCards = [];
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
 
     // Process only featured events from API
     featuredEvents.forEach((event, index) => {
@@ -1032,9 +1037,23 @@ const FigmaMobile = () => {
       return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
     });
 
-    console.log(`🎯 Mobile rendering ${featuredCards.length} featured event cards (sorted by date desc)`);
-    return featuredCards;
-  }, [featuredEvents]);
+    // Filter events based on toggle state
+    const filteredCards = featuredCards.filter(card => {
+      const eventDate = new Date(card.eventDate);
+      eventDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+
+      if (showAllEvents) {
+        // Show all events (both upcoming and past)
+        return true;
+      } else {
+        // Show only past events
+        return eventDate < currentDate;
+      }
+    });
+
+    console.log(`🎯 Mobile rendering ${filteredCards.length} of ${featuredCards.length} featured event cards (${showAllEvents ? 'All' : 'Past'} events)`);
+    return filteredCards;
+  }, [featuredEvents, showAllEvents]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -1913,22 +1932,168 @@ const FigmaMobile = () => {
             aria-labelledby="events-section-title"
             style={{ width: '100%' }}
           >
-            <h2
-              id="events-section-title"
+            {/* Events Title with Filter Toggle */}
+            <div
               style={{
+                display: 'flex',
                 width: '100%',
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: '28px', // Scaled up from 24px for mobile
-                fontWeight: '800',
-                lineHeight: 'normal',
-                marginBottom: '20px', // Scaled up from 8px
-                textAlign: 'left',
-              padding: '0 20px' // Add padding to title for proper spacing
-            }}
-          >
-            Events
-          </h2>
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '20px',
+                padding: '0 20px',
+                boxSizing: 'border-box'
+              }}
+            >
+              <h2
+                id="events-section-title"
+                style={{
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: '28px', // Scaled up from 24px for mobile
+                  fontWeight: '800',
+                  lineHeight: 'normal',
+                  margin: 0,
+                  textAlign: 'left'
+                }}
+              >
+                Events
+              </h2>
+
+              {/* Event Filter Toggle */}
+              <div
+                style={{
+                  display: 'flex',
+                  width: '118px',
+                  height: '34px',
+                  padding: '2px',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flexShrink: 0,
+                  borderRadius: '9px',
+                  background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
+                onClick={() => setShowAllEvents(!showAllEvents)}
+                role="switch"
+                aria-checked={showAllEvents}
+                aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowAllEvents(!showAllEvents);
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.98)';
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                {/* Sliding Button Background */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: '57px',
+                    height: '30px',
+                    borderRadius: '7px',
+                    border: '0.5px solid rgba(0, 0, 0, 0.04)',
+                    background: '#FFF',
+                    boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+                    left: showAllEvents ? '2px' : '59px',
+                    top: '2px',
+                    transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    zIndex: 1
+                  }}
+                />
+
+                {/* All Button */}
+                <div
+                  style={{
+                    display: 'flex',
+                    padding: '3px 10px',
+                    alignItems: 'center',
+                    flex: '1 0 0',
+                    alignSelf: 'stretch',
+                    borderRadius: '7px',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                >
+                  <span
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 1,
+                      flex: '1 0 0',
+                      overflow: 'hidden',
+                      color: showAllEvents ? '#000' : '#FFF',
+                      textAlign: 'center',
+                      fontFeatureSettings: "'liga' off, 'clig' off",
+                      textOverflow: 'ellipsis',
+                      fontFamily: 'Inter',
+                      fontSize: '13px',
+                      fontStyle: 'normal',
+                      fontWeight: showAllEvents ? '590' : '400',
+                      lineHeight: '18px',
+                      letterSpacing: '-0.08px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    All
+                  </span>
+                </div>
+
+                {/* Past Button */}
+                <div
+                  style={{
+                    display: 'flex',
+                    padding: '3px 10px',
+                    alignItems: 'center',
+                    flex: '1 0 0',
+                    alignSelf: 'stretch',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                >
+                  <span
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 1,
+                      flex: '1 0 0',
+                      overflow: 'hidden',
+                      color: !showAllEvents ? '#000' : '#FFF',
+                      textAlign: 'center',
+                      fontFeatureSettings: "'liga' off, 'clig' off",
+                      textOverflow: 'ellipsis',
+                      fontFamily: 'Inter',
+                      fontSize: '13px',
+                      fontStyle: 'normal',
+                      fontWeight: !showAllEvents ? '590' : '400',
+                      lineHeight: '18px',
+                      letterSpacing: '-0.08px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    Past
+                  </span>
+                </div>
+              </div>
+            </div>
 
           {/* Events List - Vertical Stack */}
           <div
