@@ -104,21 +104,41 @@ router.post(
 );
 
 /**
- * Admin TOTP Setup Endpoint
- * Complete TOTP setup for admin users
+ * Generate TOTP Setup Data (for authenticated admins)
+ * Returns QR code and setup instructions
+ */
+router.get(
+    "/admin/totp/generate",
+    // Authentication required
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    asyncHandler(adminAuth.validateAdminRole),
+
+    // Generate TOTP setup
+    asyncHandler(adminAuth.generateTOTPSetup)
+);
+
+/**
+ * Complete TOTP Setup (for authenticated admins)
+ * Verify setup code and enable TOTP
  */
 router.post(
-    "/admin/setup-totp",
-    // Security middleware stack
+    "/admin/totp/complete",
+    // Authentication required
+    asyncHandler(auth.apikey),
+    asyncHandler(auth.jwt),
+    asyncHandler(adminAuth.validateAdminRole),
+
+    // Security middleware
     suspiciousActivityLimiter,
     adminLoginLimiter,
 
     // Request processing
-    validators.adminLogin, // Reuse admin login validator
+    validators.adminLogin, // Reuse admin login validator for TOTP code
     asyncHandler(helpers.verify),
 
-    // TOTP setup
-    asyncHandler(adminAuth.setupTOTP)
+    // Complete TOTP setup
+    asyncHandler(adminAuth.completeTOTPSetup)
 );
 
 /**

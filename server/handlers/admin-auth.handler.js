@@ -229,35 +229,15 @@ async function adminLogin(req, res) {
     const { auditData } = req;
 
     try {
-        // Check if TOTP is required for admin users
-        if (TOTPService.isTOTPRequired()) {
-            // Check if user has TOTP enabled
-            if (!user.totp_enabled || !user.totp_secret) {
-                // User needs to set up TOTP
-                console.log(`🔐 Admin ${user.email} needs to set up TOTP`);
+        // Check if TOTP is required and user has it enabled
+        if (TOTPService.isTOTPRequired() && user.totp_enabled && user.totp_secret) {
+            // User has TOTP enabled, require TOTP verification
+            console.log(`🔐 Admin ${user.email} requires TOTP verification`);
 
-                // Generate TOTP setup data
-                const totpSetup = await TOTPService.setupTOTP(user.email);
-
-                // Store temporary secret in session
-                req.session.tempTotpSecret = totpSetup.secret;
-
-                return res.json({
-                    setupTotp: true,
-                    qrCode: totpSetup.qrCode,
-                    manualEntryKey: totpSetup.manualEntryKey,
-                    instructions: totpSetup.instructions,
-                    message: "Please set up Google Authenticator to complete login"
-                });
-            } else {
-                // User has TOTP enabled, require TOTP verification
-                console.log(`🔐 Admin ${user.email} requires TOTP verification`);
-
-                return res.json({
-                    requireTotp: true,
-                    message: "Please enter your Google Authenticator code"
-                });
-            }
+            return res.json({
+                requireTotp: true,
+                message: "Please enter your Google Authenticator code"
+            });
         }
 
         // No TOTP required or TOTP already verified, proceed with login
@@ -294,12 +274,19 @@ async function adminLogin(req, res) {
 
         console.log(`✅ Admin login successful: ${user.email} (ID: ${user.id})`);
 
+        // Check if user needs to set up TOTP after successful login
+        const needsTotpSetup = TOTPService.isTOTPRequired() && (!user.totp_enabled || !user.totp_secret);
+
         // Return success response
         const returnTo = req.body.returnTo || req.session.returnTo || '/dashboard';
         delete req.session.returnTo;
 
         if (req.isHTML) {
-            res.redirect(returnTo);
+            if (needsTotpSetup) {
+                res.redirect('/admin/setup-totp');
+            } else {
+                res.redirect(returnTo);
+            }
         } else {
             res.json({
                 success: true,
@@ -309,7 +296,8 @@ async function adminLogin(req, res) {
                     email: user.email,
                     role: user.role
                 },
-                redirectTo: returnTo
+                redirectTo: returnTo,
+                needsTotpSetup: needsTotpSetup
             });
         }
 
@@ -674,27 +662,77 @@ async function verifyTOTP(req, res) {
 }
 
 /**
- * Setup TOTP for admin user
+ * Generate TOTP setup data for authenticated admin
  */
-async function setupTOTP(req, res) {
-    const { email, totpCode } = req.body;
-
+async function generateTOTPSetup(req, res) {
     try {
-        if (!email || !totpCode) {
-            return res.status(400).json({
-                error: "Email and TOTP code are required"
-            });
-        }
-
-        // Find user
-        const user = await query.user.find({ email });
-        if (!user || !utils.isAdmin(user)) {
+        if (!req.user || !utils.isAdmin(req.user)) {
             return res.status(403).json({
                 error: "Access denied. Admin privileges required."
             });
         }
 
-        // Get the temporary secret from session or generate new one
+        const user = req.user;
+
+        // Check if TOTP is already enabled
+        if (user.totp_enabled && user.totp_secret) {
+            return res.status(400).json({
+                error: "TOTP is already enabled for this account"
+            });
+        }
+
+        // Generate TOTP setup data
+        const totpSetup = await TOTPService.setupTOTP(user.email);
+
+        // Store temporary secret in session
+        req.session.tempTotpSecret = totpSetup.secret;
+
+        console.log(`🔐 Generated TOTP setup for admin ${user.email}`);
+
+        res.json({
+            success: true,
+            qrCode: totpSetup.qrCode,
+            manualEntryKey: totpSetup.manualEntryKey,
+            instructions: totpSetup.instructions,
+            message: "Scan the QR code with Google Authenticator and enter the code to complete setup"
+        });
+
+    } catch (error) {
+        console.error(`❌ TOTP setup generation error:`, error);
+        res.status(500).json({
+            error: "Failed to generate TOTP setup. Please try again."
+        });
+    }
+}
+
+/**
+ * Complete TOTP setup for authenticated admin
+ */
+async function completeTOTPSetup(req, res) {
+    const { totpCode } = req.body;
+
+    try {
+        if (!req.user || !utils.isAdmin(req.user)) {
+            return res.status(403).json({
+                error: "Access denied. Admin privileges required."
+            });
+        }
+
+        if (!totpCode) {
+            return res.status(400).json({
+                error: "TOTP code is required"
+            });
+        }
+
+        if (!TOTPService.isValidTokenFormat(totpCode)) {
+            return res.status(400).json({
+                error: "Invalid TOTP code format. Please enter a 6-digit code."
+            });
+        }
+
+        const user = req.user;
+
+        // Get the temporary secret from session
         let tempSecret = req.session.tempTotpSecret;
         if (!tempSecret) {
             return res.status(400).json({
@@ -720,15 +758,15 @@ async function setupTOTP(req, res) {
         // Clear temporary secret from session
         delete req.session.tempTotpSecret;
 
-        console.log(`✅ TOTP setup completed for admin ${email}`);
+        console.log(`✅ TOTP setup completed for admin ${user.email}`);
 
         res.json({
             success: true,
-            message: "TOTP setup completed successfully"
+            message: "TOTP setup completed successfully. Two-factor authentication is now enabled."
         });
 
     } catch (error) {
-        console.error(`❌ TOTP setup error for ${email}:`, error);
+        console.error(`❌ TOTP setup completion error:`, error);
         res.status(500).json({
             error: "TOTP setup failed. Please try again."
         });
@@ -750,5 +788,6 @@ module.exports = {
     checkLockStatus,
     emergencyUnlock,
     verifyTOTP,
-    setupTOTP
+    generateTOTPSetup,
+    completeTOTPSetup
 };

@@ -13,42 +13,39 @@ const AdminLogin = () => {
   const [step, setStep] = useState('login'); // 'login', 'totp', 'setup-totp'
   const [qrCodeUrl, setQrCodeUrl] = useState('');
 
-  // Exact Figma positioning and styling
+  // Exact Figma specifications - pixel perfect
   const styles = {
-    // Main login frame (428px × 926px)
+    // FRAME: login (428px × 926px)
     loginFrame: {
       width: '428px',
       height: '926px',
-      background: '#FFFFFF',
+      background: '#FFF',
       position: 'relative',
       margin: '0 auto',
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center'
+      minHeight: '100vh'
     },
-    
-    // B2B Logo positioned at top (138.406px × 43px)
+
+    // VECTOR: B2B LOGO (138.406px × 43px) - positioned at x:143, y:47
     logoContainer: {
       position: 'absolute',
-      top: '80px',
-      left: '50%',
-      transform: 'translateX(-50%)',
+      left: '143px',
+      top: '47px',
       width: '138.406px',
       height: '43px'
     },
-    
+
     logo: {
       width: '138.406px',
       height: '43px',
-      fill: '#000000'
+      flexShrink: 0,
+      fill: '#000'
     },
-    
-    // Login title positioned below logo
+
+    // TEXT: Login (Hamon, 30px, #2A2A2A) - positioned below logo
     loginTitle: {
       position: 'absolute',
-      top: '180px',
       left: '50%',
+      top: '120px', // Positioned below logo
       transform: 'translateX(-50%)',
       color: '#2A2A2A',
       textAlign: 'center',
@@ -59,33 +56,36 @@ const AdminLogin = () => {
       letterSpacing: '0.9px',
       margin: '0'
     },
-    
-    // Main body container (352px × 450.037px) positioned in center
+
+    // GROUP: Main Body (352px × 450.037px) - centered horizontally
     mainBody: {
       position: 'absolute',
-      top: '260px',
       left: '50%',
+      top: '200px', // Positioned below title
       transform: 'translateX(-50%)',
       width: '352px',
       height: '450.037px',
+      flexShrink: 0,
       display: 'flex',
       flexDirection: 'column'
     },
     
-    // Social login section (352px × 131.424px)
+    // GROUP: Signup_Sociallogins (352px × 131.424px)
     socialSection: {
       width: '352px',
       height: '131.424px',
+      flexShrink: 0,
       marginBottom: '18px'
     },
-    
-    // Social buttons (352px × 56.325px each)
+
+    // RECTANGLE: Rectangle 9 (352px × 56.325px) - Google/Apple buttons
     socialButton: {
       width: '352px',
       height: '56.325px',
+      flexShrink: 0,
       borderRadius: '17.601px',
-      border: '1.173px solid #D1D1D1',
-      background: '#FDFDFD',
+      border: '1.173px solid #D1D1D1', // var(--Unseected, #D1D1D1)
+      background: '#FDFDFD', // var(--Body, #FDFDFD)
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -95,59 +95,65 @@ const AdminLogin = () => {
       fontWeight: '400',
       color: '#2A2A2A',
       cursor: 'pointer',
-      marginBottom: '18.774px',
-      transition: 'all 0.2s ease'
+      marginBottom: '18.774px', // Gap between Google and Apple buttons
+      transition: 'all 0.2s ease',
+      boxSizing: 'border-box'
     },
     
-    // Login form section (352px × 301.938px)
+    // GROUP: LogIn (352px × 301.938px)
     loginForm: {
       width: '352px',
       height: '301.938px',
+      flexShrink: 0,
       display: 'flex',
       flexDirection: 'column'
     },
-    
-    // Username section (352px × 91.527px)
+
+    // GROUP: Username (352px × 91.527px)
     usernameSection: {
       width: '352px',
       height: '91.527px',
+      flexShrink: 0,
       marginBottom: '16px',
       position: 'relative'
     },
-    
-    // Input field (352px × 56.325px)
+
+    // RECTANGLE: Usernamefield (352px × 56.325px)
     inputField: {
       width: '352px',
       height: '56.325px',
+      flexShrink: 0,
       borderRadius: '17.601px',
-      border: '1.173px solid #D1D1D1',
-      background: '#FDFDFD',
+      border: '1.173px solid #D1D1D1', // var(--Unseected, #D1D1D1)
+      background: '#FDFDFD', // var(--Body, #FDFDFD)
       fontFamily: 'Inter, sans-serif',
       fontSize: '16.427px',
       fontWeight: '400',
-      color: '#2A2A2A',
+      color: '#2A2A2A', // var(--BGray, #2A2A2A)
       letterSpacing: '0.821px',
+      lineHeight: '25.814px',
       padding: '0 20px',
       outline: 'none',
       boxSizing: 'border-box'
     },
-    
-    // Password section (352px × 127px)
+
+    // GROUP: Password (352px × 127px)
     passwordSection: {
       width: '352px',
       height: '127px',
+      flexShrink: 0,
       marginBottom: '16px',
       position: 'relative'
     },
-    
-    // Password container
+
+    // GROUP: EnterPasswordGroup_field (352px × 56.325px)
     passwordContainer: {
       position: 'relative',
       width: '352px',
       height: '56.325px'
     },
     
-    // Eye toggle button
+    // Eye toggle button (19.947px × 12.908px)
     eyeToggle: {
       position: 'absolute',
       right: '20px',
@@ -160,10 +166,10 @@ const AdminLogin = () => {
       height: '12.908px',
       color: '#C4C4C4'
     },
-    
-    // Forgot password link
+
+    // TEXT: forgot password? (Hamon, 16.427px, #2A2A2A)
     forgotPassword: {
-      color: '#2A2A2A',
+      color: '#2A2A2A', // var(--BGray, #2A2A2A)
       fontFamily: 'Hamon, Inter, sans-serif',
       fontSize: '16.427px',
       fontWeight: '400',
@@ -174,15 +180,16 @@ const AdminLogin = () => {
       marginTop: '8px',
       cursor: 'pointer'
     },
-    
-    // Login button (352px × 56.325px)
+
+    // GROUP: LogInButton (352px × 56.325px)
     loginButton: {
       width: '352px',
       height: '56.325px',
+      flexShrink: 0,
       borderRadius: '17.601px',
-      background: '#151515',
+      background: '#151515', // var(--main-black, #151515)
       border: 'none',
-      color: '#FFFFFF',
+      color: '#FFF',
       textAlign: 'center',
       fontFamily: 'Hamon, Inter, sans-serif',
       fontSize: '18.774px',
@@ -224,33 +231,81 @@ const AdminLogin = () => {
       fontFamily: 'Inter, sans-serif'
     },
     
-    // TOTP section
+    // TOTP Modal/Section (352px width, centered)
     totpSection: {
       width: '352px',
       textAlign: 'center',
-      marginTop: '20px'
+      marginTop: '20px',
+      padding: '24px',
+      backgroundColor: '#FDFDFD',
+      borderRadius: '17.601px',
+      border: '1.173px solid #D1D1D1',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
     },
-    
+
     totpTitle: {
       fontFamily: 'Hamon, Inter, sans-serif',
       fontSize: '24px',
       fontWeight: '700',
       color: '#2A2A2A',
-      marginBottom: '16px'
+      marginBottom: '16px',
+      margin: '0 0 16px 0'
     },
-    
+
     totpDescription: {
       fontFamily: 'Inter, sans-serif',
       fontSize: '14px',
       color: '#666',
       marginBottom: '20px',
-      lineHeight: '1.4'
+      lineHeight: '1.4',
+      textAlign: 'left'
     },
-    
+
     qrCodeContainer: {
       display: 'flex',
       justifyContent: 'center',
-      marginBottom: '20px'
+      marginBottom: '20px',
+      padding: '16px',
+      backgroundColor: '#FFF',
+      borderRadius: '12px',
+      border: '1px solid #E0E0E0'
+    },
+
+    totpInputField: {
+      width: '100%',
+      height: '56.325px',
+      borderRadius: '17.601px',
+      border: '1.173px solid #D1D1D1',
+      background: '#FFF',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '18px',
+      fontWeight: '600',
+      color: '#2A2A2A',
+      textAlign: 'center',
+      letterSpacing: '4px',
+      padding: '0 20px',
+      outline: 'none',
+      boxSizing: 'border-box',
+      marginBottom: '16px'
+    },
+
+    totpButton: {
+      width: '100%',
+      height: '56.325px',
+      borderRadius: '17.601px',
+      background: '#151515',
+      border: 'none',
+      color: '#FFF',
+      textAlign: 'center',
+      fontFamily: 'Hamon, Inter, sans-serif',
+      fontSize: '16px',
+      fontWeight: '700',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
+      transition: 'all 0.2s ease'
     }
   };
 
@@ -286,7 +341,7 @@ const AdminLogin = () => {
       } else if (step === 'totp') {
         endpoint = '/api/auth/admin/verify-totp';
       } else if (step === 'setup-totp') {
-        endpoint = '/api/auth/admin/setup-totp';
+        endpoint = '/api/auth/admin/totp/complete';
       }
 
       const response = await fetch(endpoint, {
@@ -294,7 +349,8 @@ const AdminLogin = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        credentials: 'include', // Include cookies for authenticated requests
+        body: JSON.stringify(step === 'setup-totp' ? { totpCode: formData.totpCode } : formData)
       });
 
       const data = await response.json();
@@ -302,15 +358,35 @@ const AdminLogin = () => {
       if (response.ok) {
         if (data.requireTotp) {
           setStep('totp');
-        } else if (data.setupTotp) {
-          setQrCodeUrl(data.qrCode);
-          setStep('setup-totp');
         } else if (data.success) {
-          const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
-          window.location.href = returnTo;
-        } else {
-          const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
-          window.location.href = returnTo;
+          // Check if user needs TOTP setup after successful login
+          if (data.needsTotpSetup) {
+            // Generate TOTP setup data
+            try {
+              const setupResponse = await fetch('/api/auth/admin/totp/generate', {
+                method: 'GET',
+                credentials: 'include'
+              });
+
+              if (setupResponse.ok) {
+                const setupData = await setupResponse.json();
+                setQrCodeUrl(setupData.qrCode);
+                setStep('setup-totp');
+              } else {
+                // If setup fails, redirect to dashboard anyway
+                const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+                window.location.href = returnTo;
+              }
+            } catch (error) {
+              console.error('TOTP setup error:', error);
+              const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+              window.location.href = returnTo;
+            }
+          } else {
+            // Normal login success, redirect to dashboard
+            const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+            window.location.href = returnTo;
+          }
         }
       } else {
         // Ensure error message is always a string
@@ -333,23 +409,24 @@ const AdminLogin = () => {
 
   return (
     <div style={styles.loginFrame}>
-      {/* B2B Logo */}
+      {/* VECTOR: B2B LOGO (138.406px × 43px) - positioned at x:143, y:47 */}
       <div style={styles.logoContainer}>
         <svg style={styles.logo} viewBox="0 0 138.406 43" fill="none">
           <rect width="138.406" height="43" fill="#000"/>
-          <text x="69.203" y="30" textAnchor="middle" fill="#FFF" fontSize="20" fontFamily="Hamon, Inter, sans-serif" fontWeight="700">B2B</text>
+          <text x="69.203" y="30" textAnchor="middle" fill="#FFF" fontSize="16" fontFamily="Hamon, Inter, sans-serif" fontWeight="700">B2B</text>
         </svg>
       </div>
 
-      {/* Login Title */}
+      {/* TEXT: Login (Hamon, 30px, #2A2A2A) */}
       <h1 style={styles.loginTitle}>Login</h1>
 
-      {/* Main Body */}
+      {/* GROUP: Main Body (352px × 450.037px) */}
       <div style={styles.mainBody}>
         {step === 'login' && (
           <>
-            {/* Social Login Section */}
+            {/* GROUP: Signup_Sociallogins (352px × 131.424px) */}
             <div style={styles.socialSection}>
+              {/* GROUP: Google (352px × 56.325px) */}
               <button
                 type="button"
                 onClick={() => handleSocialLogin('google')}
@@ -365,6 +442,7 @@ const AdminLogin = () => {
                 <span>Continue with Google</span>
               </button>
 
+              {/* GROUP: Apple (352px × 56.325px) */}
               <button
                 type="button"
                 onClick={() => handleSocialLogin('apple')}
@@ -378,7 +456,7 @@ const AdminLogin = () => {
               </button>
             </div>
 
-            {/* Login Form */}
+            {/* GROUP: LogIn (352px × 301.938px) */}
             <form onSubmit={handleSubmit} style={styles.loginForm}>
               {errors.general && (
                 <div style={styles.errorAlert}>
@@ -386,8 +464,9 @@ const AdminLogin = () => {
                 </div>
               )}
 
-              {/* Username Section */}
+              {/* GROUP: Username (352px × 91.527px) */}
               <div style={styles.usernameSection}>
+                {/* RECTANGLE: Usernamefield (352px × 56.325px) */}
                 <input
                   type="email"
                   name="email"
@@ -408,7 +487,7 @@ const AdminLogin = () => {
                 )}
               </div>
 
-              {/* Password Section */}
+              {/* GROUP: Password (352px × 127px) */}
               <div style={styles.passwordSection}>
                 <div style={styles.passwordContainer}>
                   <input
@@ -487,7 +566,7 @@ const AdminLogin = () => {
                 name="totpCode"
                 value={formData.totpCode}
                 onChange={handleInputChange}
-                style={styles.inputField}
+                style={styles.totpInputField}
                 placeholder="000000"
                 maxLength="6"
                 pattern="[0-9]{6}"
@@ -495,10 +574,10 @@ const AdminLogin = () => {
                 autoComplete="one-time-code"
                 required
               />
-              
+
               <button
                 type="submit"
-                style={styles.loginButton}
+                style={styles.totpButton}
                 disabled={isLoading || formData.totpCode.length !== 6}
               >
                 {isLoading ? 'Verifying...' : 'Verify Code'}
@@ -532,7 +611,7 @@ const AdminLogin = () => {
                 name="totpCode"
                 value={formData.totpCode}
                 onChange={handleInputChange}
-                style={styles.inputField}
+                style={styles.totpInputField}
                 placeholder="000000"
                 maxLength="6"
                 pattern="[0-9]{6}"
@@ -540,10 +619,10 @@ const AdminLogin = () => {
                 autoComplete="one-time-code"
                 required
               />
-              
+
               <button
                 type="submit"
-                style={styles.loginButton}
+                style={styles.totpButton}
                 disabled={isLoading || formData.totpCode.length !== 6}
               >
                 {isLoading ? 'Setting up...' : 'Complete Setup'}
