@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Secure Admin Login - BOUNCE2BOUNCE</title>
+    <link rel="stylesheet" href="/css/tailwind.css">
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #FFFFFF; }
+    </style>
+</head>
+<body>
+    <div id="admin-login-root" class="loading">Loading...</div>
+    <script src="/react/bundle.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.React && window.ReactDOM && window.AdminLogin) {
+                const container = document.getElementById('admin-login-root');
+
+                // Try modern createRoot first, fallback to legacy render
+                try {
+                    if (window.ReactDOM.createRoot) {
+                        const root = window.ReactDOM.createRoot(container);
+                        root.render(React.createElement(window.AdminLogin));
+                    } else {
+                        // Fallback to legacy ReactDOM.render
+                        window.ReactDOM.render(React.createElement(window.AdminLogin), container);
+                    }
+                } catch (error) {
+                    console.error('React rendering error:', error);
+                    // Final fallback to legacy render
+                    window.ReactDOM.render(React.createElement(window.AdminLogin), container);
+                }
+            } else {
+                console.error('React components not loaded:', {
+                    React: !!window.React,
+                    ReactDOM: !!window.ReactDOM,
+                    AdminLogin: !!window.AdminLogin
+                });
+                // Show fallback content
+                document.getElementById('admin-login-root').innerHTML =
+                    '<div style="text-align:center;padding:40px;font-family:Arial;">Loading admin login...</div>';
+            }
+        });
+    </script>
+</body>
+</html>

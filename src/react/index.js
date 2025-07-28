@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import HomePage from './components/HomePage';
-import AdminLogin from './components/AdminLogin';
+import AdminLogin from './components/AdminLoginSimple';
 
 // Lazy load About and Contact pages for better performance
 const AboutPage = lazy(() =>
