@@ -10,7 +10,7 @@ const env = require("../env");
 
 async function homepage(req, res) {
     if (env.DISALLOW_ANONYMOUS_LINKS && !req.user) {
-        res.redirect("/login");
+        res.redirect("/admin/login");
         return;
     }
 
@@ -68,28 +68,7 @@ async function modernHomepage(req, res) {
     }
 }
 
-async function login(req, res) {
-    if (req.user) {
-        res.redirect("/");
-        return;
-    }
-
-    res.render("login", {
-        title: "Log in or sign up"
-    });
-}
-
-async function adminLogin(req, res) {
-    if (req.user && req.user.role === 'admin') {
-        res.redirect("/dashboard");
-        return;
-    }
-
-    res.render("admin-login", {
-        title: "Admin Login - BOUNCE2BOUNCE",
-        layout: false // Use no layout for standalone admin login page
-    });
-}
+// Old login functions removed - now using React-based admin login
 
 function logout(req, res) {
     console.log(`🚪 User logging out: ${req.user?.email || 'unknown'}`);
@@ -123,7 +102,7 @@ function logout(req, res) {
 async function createAdmin(req, res) {
     const isThereAUser = await query.user.findAny();
     if (isThereAUser) {
-        res.redirect("/login");
+        res.redirect("/admin/login");
         return;
     }
     res.render("create_admin", {
@@ -548,7 +527,6 @@ module.exports = {
     addDomainAdmin,
     addDomainForm,
     admin,
-    adminLogin,
     banned,
     confirmDomainBan,
     confirmDomainDelete,
@@ -567,7 +545,6 @@ module.exports = {
     modernHomepage,
     linkEdit,
     linkEditAdmin,
-    login,
     logout,
     notFound,
     reactHomepage,

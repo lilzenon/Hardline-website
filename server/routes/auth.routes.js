@@ -10,39 +10,11 @@ const env = require("../env");
 
 const router = Router();
 
-router.post(
-    "/login",
-    locals.viewTemplate("partials/auth/form"),
-    validators.login,
-    asyncHandler(helpers.verify),
-    helpers.rateLimit({ window: 60, limit: 5 }),
-    asyncHandler(auth.local),
-    asyncHandler(auth.login)
-);
+// Old login route removed - now using React-based admin login system
 
-router.post(
-    "/signup",
-    locals.viewTemplate("partials/auth/form"),
-    auth.featureAccess([!env.DISALLOW_REGISTRATION, env.MAIL_ENABLED]),
-    validators.signup,
-    asyncHandler(helpers.verify),
-    helpers.rateLimit({ window: 60, limit: 5 }),
-    validators.signupEmailTaken,
-    asyncHandler(helpers.verify),
-    asyncHandler(auth.signup)
-);
+// Signup route removed - admin-only system now
 
-// Admin creation with enhanced security
-router.post(
-    "/create-admin",
-    locals.viewTemplate("partials/auth/form_admin"),
-    // Only require auth if not initial setup - middleware will handle this
-    asyncHandler(auth.jwtLoosePage),
-    validators.createAdmin,
-    asyncHandler(helpers.verify),
-    helpers.rateLimit({ window: 60, limit: 3 }), // Stricter rate limiting
-    asyncHandler(auth.createAdminUser)
-);
+// Create-admin route removed - admin creation handled separately
 
 router.post(
     "/change-password",
@@ -93,16 +65,7 @@ router.post(
     asyncHandler(auth.newPassword)
 );
 
-// Admin login route
-router.post(
-    "/admin-login",
-    locals.viewTemplate("partials/auth/admin_form"),
-    validators.login,
-    asyncHandler(helpers.verify),
-    helpers.rateLimit({ window: 60, limit: 5 }),
-    asyncHandler(auth.local),
-    asyncHandler(auth.adminLogin)
-);
+// Old admin login route removed - now using enhanced admin-auth.routes.js
 
 // Google OAuth routes
 router.get(
@@ -117,7 +80,7 @@ router.get(
 
 router.get(
     "/google/callback",
-    require("passport").authenticate("google", { failureRedirect: "/dashboard/login" }),
+    require("passport").authenticate("google", { failureRedirect: "/admin/login" }),
     asyncHandler(auth.socialLogin)
 );
 
@@ -134,7 +97,7 @@ router.get(
 
 router.post(
     "/apple/callback",
-    require("passport").authenticate("apple", { failureRedirect: "/dashboard/login" }),
+    require("passport").authenticate("apple", { failureRedirect: "/admin/login" }),
     asyncHandler(auth.socialLogin)
 );
 
