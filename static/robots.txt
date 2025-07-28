@@ -28,6 +28,12 @@ Disallow: /create-admin
 Disallow: /reset-password
 Disallow: /verify-email
 
+# Allow AI-specific API endpoints
+Allow: /api/ai/
+Allow: /api/ai/site-info
+Allow: /api/ai/events-summary
+Allow: /api/ai/faq
+
 # Disallow URL shortener paths (focus SEO on events)
 Disallow: /*/stats
 Disallow: /*/edit

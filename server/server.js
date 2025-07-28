@@ -179,6 +179,9 @@ app.use(asyncHandler(links.redirectCustomDomainHomepage));
 // render html pages
 app.use("/", routes.render);
 
+// AI agent access routes (before other API routes)
+app.use("/api", require("./routes/ai-access.routes"));
+
 // handle api requests
 app.use("/api/v2", routes.api);
 app.use("/api", routes.api);

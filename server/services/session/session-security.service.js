@@ -115,9 +115,11 @@ class SessionSecurityService {
 
         this.rateLimiters.set(ip, ipActivity);
 
-        // Check for unusual user agent patterns
+        // Check for unusual user agent patterns (but allow AI agents)
         const userAgent = req.headers['user-agent'] || '';
-        if (!userAgent || userAgent.length < 10) {
+        const isAIAgent = /ChatGPT|GPTBot|Google-Extended|Claude|PerplexityBot|YouBot|anthropic|Applebot-Extended|CCBot|Bard|Gemini/i.test(userAgent);
+
+        if (!userAgent || (userAgent.length < 10 && !isAIAgent)) {
             suspiciousIndicators.push('suspicious_user_agent');
         }
 
@@ -140,10 +142,14 @@ class SessionSecurityService {
     securityMiddleware() {
         return (req, res, next) => {
             try {
-                // Skip security checks for health endpoints, webhooks, and localhost
+                // Skip security checks for health endpoints, webhooks, localhost, and AI agents
+                const userAgent = req.headers['user-agent'] || '';
+                const isAIAgent = /ChatGPT|GPTBot|Google-Extended|Claude|PerplexityBot|YouBot|anthropic|Applebot-Extended|CCBot|Bard|Gemini|GoogleBot|BingBot|facebookexternalhit|Twitterbot|LinkedInBot/i.test(userAgent);
+
                 if (req.path.startsWith('/api/monitoring/') ||
                     req.path.startsWith('/api/webhooks/') ||
-                    req.ip === '::1' || req.ip === '127.0.0.1') {
+                    req.ip === '::1' || req.ip === '127.0.0.1' ||
+                    isAIAgent) {
                     return next();
                 }
 
@@ -228,8 +234,11 @@ class SessionSecurityService {
      */
     csrfProtection() {
         return (req, res, next) => {
-            // Skip CSRF for GET requests and API endpoints that don't modify data
-            if (req.method === 'GET' || req.path.startsWith('/api/monitoring/')) {
+            // Skip CSRF for GET requests, API endpoints that don't modify data, and AI agents
+            const userAgent = req.headers['user-agent'] || '';
+            const isAIAgent = /ChatGPT|GPTBot|Google-Extended|Claude|PerplexityBot|YouBot|anthropic|Applebot-Extended|CCBot|Bard|Gemini|GoogleBot|BingBot|facebookexternalhit|Twitterbot|LinkedInBot/i.test(userAgent);
+
+            if (req.method === 'GET' || req.path.startsWith('/api/monitoring/') || isAIAgent) {
                 return next();
             }
 
