@@ -73,8 +73,30 @@ async function renderAdminLogin(req, res) {
         document.addEventListener('DOMContentLoaded', function() {
             if (window.React && window.ReactDOM && window.AdminLogin) {
                 const container = document.getElementById('admin-login-root');
-                const root = window.ReactDOM.createRoot(container);
-                root.render(React.createElement(window.AdminLogin));
+
+                // Try modern createRoot first, fallback to legacy render
+                try {
+                    if (window.ReactDOM.createRoot) {
+                        const root = window.ReactDOM.createRoot(container);
+                        root.render(React.createElement(window.AdminLogin));
+                    } else {
+                        // Fallback to legacy ReactDOM.render
+                        window.ReactDOM.render(React.createElement(window.AdminLogin), container);
+                    }
+                } catch (error) {
+                    console.error('React rendering error:', error);
+                    // Final fallback to legacy render
+                    window.ReactDOM.render(React.createElement(window.AdminLogin), container);
+                }
+            } else {
+                console.error('React components not loaded:', {
+                    React: !!window.React,
+                    ReactDOM: !!window.ReactDOM,
+                    AdminLogin: !!window.AdminLogin
+                });
+                // Show fallback content
+                document.getElementById('admin-login-root').innerHTML =
+                    '<div style="text-align:center;padding:40px;font-family:Arial;">Loading admin login...</div>';
             }
         });
     </script>

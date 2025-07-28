@@ -109,7 +109,15 @@ const root = createRoot(container);
 // Make AdminLogin available globally for admin login page
 window.AdminLogin = AdminLogin;
 window.React = React;
-window.ReactDOM = { render: root.render.bind(root), createRoot };
+window.ReactDOM = {
+    createRoot: createRoot,
+    render: (element, container) => {
+        // Legacy render method for compatibility
+        const root = createRoot(container);
+        root.render(element);
+        return root;
+    }
+};
 
 // Render the app
 root.render( < App / > );
