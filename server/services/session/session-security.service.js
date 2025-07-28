@@ -70,6 +70,11 @@ class SessionSecurityService {
      * Check if IP is from known webhook providers
      */
     isKnownWebhookProvider(ip) {
+        // Handle undefined or null IP addresses
+        if (!ip || typeof ip !== 'string') {
+            return false;
+        }
+
         // Meta/Facebook IP ranges (common ones)
         const metaIPRanges = [
             '31.13.', '66.220.', '69.63.', '69.171.', '74.119.', '173.252.',
@@ -146,9 +151,13 @@ class SessionSecurityService {
                 const userAgent = req.headers['user-agent'] || '';
                 const isAIAgent = /ChatGPT|GPTBot|Google-Extended|Claude|PerplexityBot|YouBot|anthropic|Applebot-Extended|CCBot|Bard|Gemini|GoogleBot|BingBot|facebookexternalhit|Twitterbot|LinkedInBot/i.test(userAgent);
 
-                if (req.path.startsWith('/api/monitoring/') ||
-                    req.path.startsWith('/api/webhooks/') ||
-                    req.ip === '::1' || req.ip === '127.0.0.1' ||
+                // Ensure req.path exists and is a string
+                const requestPath = req.path || '';
+                const requestIP = req.ip || '';
+
+                if (requestPath.startsWith('/api/monitoring/') ||
+                    requestPath.startsWith('/api/webhooks/') ||
+                    requestIP === '::1' || requestIP === '127.0.0.1' ||
                     isAIAgent) {
                     return next();
                 }
@@ -180,11 +189,20 @@ class SessionSecurityService {
                     });
                 }
 
-                // Detect suspicious activity
-                const suspiciousIndicators = this.detectSuspiciousActivity(req);
+                // Detect suspicious activity with error handling
+                let suspiciousIndicators = [];
+                try {
+                    suspiciousIndicators = this.detectSuspiciousActivity(req);
+                } catch (error) {
+                    console.error('🚨 Error in suspicious activity detection:', error);
+                    // Continue with empty indicators to avoid blocking legitimate requests
+                    suspiciousIndicators = [];
+                }
+
                 if (suspiciousIndicators.length >= 2) {
                     // Block IP for 15 minutes
-                    this.blockedIPs.set(req.ip, {
+                    const requestIP = req.ip || 'unknown';
+                    this.blockedIPs.set(requestIP, {
                         until: Date.now() + 15 * 60 * 1000,
                         reason: suspiciousIndicators.join(', ')
                     });
