@@ -375,6 +375,150 @@ async function refreshAdminSession(req, res) {
     });
 }
 
+/**
+ * Change admin password
+ */
+async function changeAdminPassword(req, res) {
+    const { currentPassword, newPassword } = req.body;
+    const user = req.user;
+
+    try {
+        // Verify current password
+        const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!isValidPassword) {
+            throw new CustomError("Current password is incorrect.", 400);
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update password in database
+        await query.user.update({ id: user.id }, { password: hashedPassword });
+
+        console.log(`🔐 Admin password changed: ${user.email}`);
+
+        res.json({
+            success: true,
+            message: "Password changed successfully"
+        });
+
+    } catch (error) {
+        console.error(`❌ Admin password change error for ${user.email}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Get security audit log
+ */
+async function getSecurityLog(req, res) {
+    const user = req.user;
+    const { limit = 50, offset = 0 } = req.query;
+
+    try {
+        // Get events for this user
+        const userEvents = [];
+        for (const [key, events] of securityEvents.entries()) {
+            const userSpecificEvents = events.filter(event =>
+                event.email === user.email || event.userId === user.id
+            );
+            userEvents.push(...userSpecificEvents);
+        }
+
+        // Sort by timestamp (newest first)
+        userEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        // Apply pagination
+        const paginatedEvents = userEvents.slice(offset, offset + parseInt(limit));
+
+        res.json({
+            success: true,
+            data: {
+                events: paginatedEvents,
+                total: userEvents.length,
+                limit: parseInt(limit),
+                offset: parseInt(offset)
+            }
+        });
+
+    } catch (error) {
+        console.error(`❌ Security log error for ${user.email}:`, error);
+        throw new CustomError("Failed to retrieve security log.", 500);
+    }
+}
+
+/**
+ * Check account lock status
+ */
+async function checkLockStatus(req, res) {
+    const { email } = req.query;
+
+    if (!email) {
+        throw new CustomError("Email parameter is required.", 400);
+    }
+
+    try {
+        // Find user by email
+        const user = await query.user.find({ email });
+        if (!user) {
+            throw new CustomError("User not found.", 404);
+        }
+
+        // Check if account is locked
+        const lockInfo = lockedAccounts.get(user.id);
+        const isLocked = lockInfo && lockInfo.until > Date.now();
+
+        res.json({
+            success: true,
+            data: {
+                isLocked,
+                lockedUntil: isLocked ? new Date(lockInfo.until).toISOString() : null,
+                reason: isLocked ? lockInfo.reason : null
+            }
+        });
+
+    } catch (error) {
+        console.error(`❌ Lock status check error for ${email}:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Emergency unlock admin account
+ */
+async function emergencyUnlock(req, res) {
+    const { token, email } = req.body;
+
+    try {
+        // Verify emergency token
+        const validToken = emergencyTokens.get(email);
+        if (!validToken || validToken.token !== token || validToken.expires < Date.now()) {
+            throw new CustomError("Invalid or expired emergency token.", 401);
+        }
+
+        // Find user
+        const user = await query.user.find({ email });
+        if (!user) {
+            throw new CustomError("User not found.", 404);
+        }
+
+        // Remove lock
+        lockedAccounts.delete(user.id);
+        emergencyTokens.delete(email);
+
+        console.log(`🔓 Emergency unlock performed for admin: ${email}`);
+
+        res.json({
+            success: true,
+            message: "Account unlocked successfully"
+        });
+
+    } catch (error) {
+        console.error(`❌ Emergency unlock error for ${email}:`, error);
+        throw error;
+    }
+}
+
 module.exports = {
     checkExistingAuth,
     renderAdminLogin,
@@ -384,5 +528,9 @@ module.exports = {
     checkAdminStatus,
     auditLogout,
     adminLogout,
-    refreshAdminSession
+    refreshAdminSession,
+    changeAdminPassword,
+    getSecurityLog,
+    checkLockStatus,
+    emergencyUnlock
 };

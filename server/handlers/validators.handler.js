@@ -773,9 +773,36 @@ const updateHomeSettings = [
     })
 ];
 
+// Admin login validator (same as login but with enhanced security)
+const adminLogin = [
+    body("email", "Email is not valid.")
+    .exists({ checkFalsy: true, checkNull: true })
+    .isEmail()
+    .normalizeEmail()
+    .trim(),
+    body("password", "Password is required.")
+    .exists({ checkFalsy: true, checkNull: true })
+    .isLength({ min: 1 })
+    .trim()
+];
+
+// Emergency unlock validator
+const emergencyUnlock = [
+    body("token", "Emergency token is required.")
+    .exists({ checkFalsy: true, checkNull: true })
+    .isLength({ min: 32, max: 128 })
+    .trim(),
+    body("email", "Email is required.")
+    .exists({ checkFalsy: true, checkNull: true })
+    .isEmail()
+    .normalizeEmail()
+    .trim()
+];
+
 module.exports = {
     addDomain,
     addDomainAdmin,
+    adminLogin,
     banDomain,
     banLink,
     banUser,
@@ -791,6 +818,7 @@ module.exports = {
     deleteUser,
     deleteUserByAdmin,
     editLink,
+    emergencyUnlock,
     getStats,
     login,
     newPassword,
