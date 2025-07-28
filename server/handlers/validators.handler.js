@@ -786,6 +786,16 @@ const adminLogin = [
     .trim()
 ];
 
+// TOTP code validator
+const totpCode = [
+    body("totpCode", "TOTP code is required.")
+    .exists({ checkFalsy: true, checkNull: true })
+    .isLength({ min: 6, max: 6 })
+    .isNumeric()
+    .withMessage("TOTP code must be a 6-digit number.")
+    .trim()
+];
+
 // Emergency unlock validator
 const emergencyUnlock = [
     body("token", "Emergency token is required.")
@@ -828,6 +838,7 @@ module.exports = {
     resetPassword,
     signup,
     signupEmailTaken,
+    totpCode,
     updateProfile,
     updateProfilePassword,
     updateHomeSettings,

@@ -116,6 +116,15 @@ class SessionStoreService {
     }
 
     initializeFallbackStore() {
+        // For development/localhost, use memory store to avoid Windows file permission issues
+        const isLocalDevelopment = !env.NODE_ENV || env.NODE_ENV !== 'production' || process.env.NODE_ENV !== 'production';
+
+        if (isLocalDevelopment) {
+            console.log('✅ Using memory session store for development (avoiding file permission issues)');
+            this.storeType = 'memory';
+            this.store = null; // Express will use default MemoryStore
+            return;
+        }
 
         // Fallback to file store for production without Redis
         if (FileStore && env.NODE_ENV === 'production') {
@@ -146,7 +155,7 @@ class SessionStoreService {
             }
         }
 
-        // Final fallback to memory store (development only)
+        // Final fallback to memory store
         console.warn('⚠️ Using memory session store - NOT suitable for production');
         this.storeType = 'memory';
         this.store = null; // Express will use default MemoryStore

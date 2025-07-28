@@ -13,181 +13,129 @@ const AdminLogin = () => {
   const [step, setStep] = useState('login'); // 'login', 'totp', 'setup-totp'
   const [qrCodeUrl, setQrCodeUrl] = useState('');
 
-  // Exact Figma specifications - pixel perfect
+  // Exact Figma design specifications
   const styles = {
     // FRAME: login (428px × 926px)
     loginFrame: {
       width: '428px',
       height: '926px',
       background: '#FFF',
-      position: 'relative',
-      margin: '0 auto',
-      minHeight: '100vh'
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '60px 38px 40px 38px',
+      boxSizing: 'border-box',
+      margin: '0 auto'
     },
 
-    // VECTOR: B2B LOGO (138.406px × 43px) - positioned at x:143, y:47
+    // B2B Logo container
     logoContainer: {
-      position: 'absolute',
-      left: '143px',
-      top: '47px',
+      marginBottom: '80px',
+      display: 'flex',
+      justifyContent: 'center'
+    },
+
+    // VECTOR: B2B LOGO (138.406px × 43px)
+    logo: {
       width: '138.406px',
       height: '43px'
     },
 
-    logo: {
-      width: '138.406px',
-      height: '43px',
-      flexShrink: 0,
-      fill: '#000'
+    // Main body container (352px width from Figma)
+    mainBody: {
+      width: '352px',
+      display: 'flex',
+      flexDirection: 'column'
     },
 
-    // TEXT: Login (Hamon, 30px, #2A2A2A) - positioned below logo
+    // TEXT: Login (30px Hamon font) - LEFT ALIGNED per Figma
     loginTitle: {
-      position: 'absolute',
-      left: '50%',
-      top: '120px', // Positioned below logo
-      transform: 'translateX(-50%)',
       color: '#2A2A2A',
-      textAlign: 'center',
+      textAlign: 'left', // LEFT ALIGNED as per Figma design
       fontFamily: 'Hamon, Inter, sans-serif',
       fontSize: '30px',
       fontWeight: '700',
       lineHeight: '28px',
       letterSpacing: '0.9px',
-      margin: '0'
+      marginBottom: '8px',
+      margin: '0 0 8px 0'
     },
 
-    // GROUP: Main Body (352px × 450.037px) - centered horizontally
-    mainBody: {
-      position: 'absolute',
-      left: '50%',
-      top: '200px', // Positioned below title
-      transform: 'translateX(-50%)',
-      width: '352px',
-      height: '450.037px',
-      flexShrink: 0,
-      display: 'flex',
-      flexDirection: 'column'
-    },
-    
-    // GROUP: Signup_Sociallogins (352px × 131.424px)
-    socialSection: {
-      width: '352px',
-      height: '131.424px',
-      flexShrink: 0,
-      marginBottom: '18px'
+    // Login subtitle (missing from original design)
+    loginSubtitle: {
+      color: '#666',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '16px',
+      fontWeight: '400',
+      lineHeight: '24px',
+      textAlign: 'left',
+      marginBottom: '32px'
     },
 
-    // RECTANGLE: Rectangle 9 (352px × 56.325px) - Google/Apple buttons
-    socialButton: {
-      width: '352px',
-      height: '56.325px',
-      flexShrink: 0,
-      borderRadius: '17.601px',
-      border: '1.173px solid #D1D1D1', // var(--Unseected, #D1D1D1)
-      background: '#FDFDFD', // var(--Body, #FDFDFD)
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '12px',
+    // Username field label
+    fieldLabel: {
+      color: '#2A2A2A',
       fontFamily: 'Hamon, Inter, sans-serif',
       fontSize: '16.427px',
       fontWeight: '400',
-      color: '#2A2A2A',
-      cursor: 'pointer',
-      marginBottom: '18.774px', // Gap between Google and Apple buttons
-      transition: 'all 0.2s ease',
-      boxSizing: 'border-box'
+      lineHeight: '25.814px',
+      letterSpacing: '0.821px',
+      marginBottom: '8px',
+      textAlign: 'left'
     },
-    
-    // GROUP: LogIn (352px × 301.938px)
-    loginForm: {
+
+    // Form section container
+    formSection: {
       width: '352px',
-      height: '301.938px',
-      flexShrink: 0,
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      marginBottom: '32px'
     },
 
-    // GROUP: Username (352px × 91.527px)
-    usernameSection: {
-      width: '352px',
-      height: '91.527px',
-      flexShrink: 0,
-      marginBottom: '16px',
-      position: 'relative'
-    },
-
-    // RECTANGLE: Usernamefield (352px × 56.325px)
+    // RECTANGLE: Input fields (352px × 56.325px from Figma)
     inputField: {
       width: '352px',
       height: '56.325px',
-      flexShrink: 0,
       borderRadius: '17.601px',
-      border: '1.173px solid #D1D1D1', // var(--Unseected, #D1D1D1)
-      background: '#FDFDFD', // var(--Body, #FDFDFD)
+      border: '1.173px solid #D1D1D1',
+      background: '#FDFDFD',
       fontFamily: 'Inter, sans-serif',
       fontSize: '16.427px',
       fontWeight: '400',
-      color: '#2A2A2A', // var(--BGray, #2A2A2A)
-      letterSpacing: '0.821px',
-      lineHeight: '25.814px',
+      color: '#2A2A2A',
       padding: '0 20px',
       outline: 'none',
-      boxSizing: 'border-box'
-    },
-
-    // GROUP: Password (352px × 127px)
-    passwordSection: {
-      width: '352px',
-      height: '127px',
-      flexShrink: 0,
+      boxSizing: 'border-box',
       marginBottom: '16px',
-      position: 'relative'
+      letterSpacing: '0.821px'
     },
 
-    // GROUP: EnterPasswordGroup_field (352px × 56.325px)
+    // Password field container
     passwordContainer: {
       position: 'relative',
-      width: '352px',
-      height: '56.325px'
-    },
-    
-    // Eye toggle button (19.947px × 12.908px)
-    eyeToggle: {
-      position: 'absolute',
-      right: '20px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      background: 'none',
-      border: 'none',
-      cursor: 'pointer',
-      width: '19.947px',
-      height: '12.908px',
-      color: '#C4C4C4'
+      marginBottom: '16px'
     },
 
-    // TEXT: forgot password? (Hamon, 16.427px, #2A2A2A)
+    // Forgot password link
     forgotPassword: {
-      color: '#2A2A2A', // var(--BGray, #2A2A2A)
+      color: '#2A2A2A',
       fontFamily: 'Hamon, Inter, sans-serif',
       fontSize: '16.427px',
       fontWeight: '400',
       lineHeight: '25.814px',
       letterSpacing: '0.821px',
-      textAlign: 'right',
+      textAlign: 'left',
       textDecoration: 'none',
-      marginTop: '8px',
-      cursor: 'pointer'
+      marginBottom: '24px',
+      display: 'block'
     },
 
-    // GROUP: LogInButton (352px × 56.325px)
+    // RECTANGLE: Login button (352px × 56.325px)
     loginButton: {
       width: '352px',
       height: '56.325px',
-      flexShrink: 0,
       borderRadius: '17.601px',
-      background: '#151515', // var(--main-black, #151515)
+      background: '#151515',
       border: 'none',
       color: '#FFF',
       textAlign: 'center',
@@ -200,37 +148,60 @@ const AdminLogin = () => {
       alignItems: 'center',
       justifyContent: 'center',
       gap: '8px',
-      marginTop: '16px'
+      transition: 'all 0.2s ease',
+      marginBottom: '32px'
     },
-    
-    // Email validation icon
-    validationIcon: {
-      position: 'absolute',
-      right: '20px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: '16.427px',
-      height: '16.428px',
-      backgroundColor: '#4CAF50',
-      borderRadius: '50%',
+
+    // Social login section (positioned AFTER login form per Figma)
+    socialSection: {
+      width: '352px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '18.774px'
+    },
+
+    // RECTANGLE: Social buttons (352px × 56.325px)
+    socialButton: {
+      width: '352px',
+      height: '56.325px',
+      borderRadius: '17.601px',
+      border: '1.173px solid #D1D1D1',
+      background: '#FDFDFD',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      gap: '12px',
+      fontFamily: 'Hamon, Inter, sans-serif',
+      fontSize: '16.427px',
+      fontWeight: '400',
+      color: '#2A2A2A',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxSizing: 'border-box'
     },
-    
-    // Error alert
+
+    // Error alert styling
     errorAlert: {
+      backgroundColor: '#FEF2F2',
+      border: '1px solid #FECACA',
+      borderRadius: '8px',
       padding: '12px 16px',
-      backgroundColor: 'rgba(234, 67, 92, 0.1)',
-      border: '1px solid rgba(234, 67, 92, 0.3)',
-      borderRadius: '12px',
-      color: '#EA435C',
-      fontSize: '14px',
       marginBottom: '16px',
-      textAlign: 'center',
+      color: '#DC2626',
+      fontSize: '14px',
       fontFamily: 'Inter, sans-serif'
     },
-    
+
+    // Loading spinner
+    spinner: {
+      width: '16px',
+      height: '16px',
+      border: '2px solid #ffffff40',
+      borderTop: '2px solid #ffffff',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
+    },
+
     // TOTP Modal/Section (352px width, centered)
     totpSection: {
       width: '352px',
@@ -316,11 +287,7 @@ const AdminLogin = () => {
       [name]: value
     }));
     
-    if (name === 'email') {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      setEmailValidated(emailRegex.test(value));
-    }
-    
+    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -329,16 +296,20 @@ const AdminLogin = () => {
     }
   };
 
+  const handleSocialLogin = (provider) => {
+    console.log(`Social login with ${provider}`);
+    // Implement social login logic here
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setErrors({});
 
     try {
-      let endpoint;
-      if (step === 'login') {
-        endpoint = '/api/auth/admin/login';
-      } else if (step === 'totp') {
+      let endpoint = '/api/auth/admin/login';
+      
+      if (step === 'totp') {
         endpoint = '/api/auth/admin/verify-totp';
       } else if (step === 'setup-totp') {
         endpoint = '/api/auth/admin/totp/complete';
@@ -354,26 +325,34 @@ const AdminLogin = () => {
       });
 
       const data = await response.json();
+      console.log('Login response:', { status: response.status, data });
 
       if (response.ok) {
         if (data.requireTotp) {
+          console.log('TOTP verification required');
           setStep('totp');
         } else if (data.success) {
+          console.log('Login successful, checking TOTP setup need:', data.needsTotpSetup);
+          
           // Check if user needs TOTP setup after successful login
           if (data.needsTotpSetup) {
+            console.log('TOTP setup required, generating QR code...');
             // Generate TOTP setup data
             try {
               const setupResponse = await fetch('/api/auth/admin/totp/generate', {
                 method: 'GET',
                 credentials: 'include'
               });
-
+              
+              console.log('TOTP setup response:', setupResponse.status);
+              
               if (setupResponse.ok) {
                 const setupData = await setupResponse.json();
+                console.log('TOTP setup data received:', setupData);
                 setQrCodeUrl(setupData.qrCode);
                 setStep('setup-totp');
               } else {
-                // If setup fails, redirect to dashboard anyway
+                console.error('TOTP setup failed, redirecting to dashboard');
                 const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
                 window.location.href = returnTo;
               }
@@ -383,15 +362,28 @@ const AdminLogin = () => {
               window.location.href = returnTo;
             }
           } else {
+            console.log('No TOTP setup needed, redirecting to dashboard');
             // Normal login success, redirect to dashboard
             const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
             window.location.href = returnTo;
           }
+        } else if (step === 'setup-totp' && data.success) {
+          console.log('TOTP setup completed successfully, redirecting to dashboard');
+          const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+          window.location.href = returnTo;
+        } else if (step === 'totp' && data.success) {
+          console.log('TOTP verification successful, redirecting to dashboard');
+          const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+          window.location.href = returnTo;
+        } else {
+          console.log('Login response success but no success flag, redirecting anyway');
+          const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+          window.location.href = returnTo;
         }
       } else {
         // Ensure error message is always a string
-        const errorMessage = typeof data.error === 'string' ? data.error :
-                           typeof data.message === 'string' ? data.message :
+        const errorMessage = typeof data.error === 'string' ? data.error : 
+                           typeof data.message === 'string' ? data.message : 
                            'Login failed';
         setErrors({ general: errorMessage });
       }
@@ -403,30 +395,94 @@ const AdminLogin = () => {
     }
   };
 
-  const handleSocialLogin = (provider) => {
-    window.location.href = `/api/auth/${provider}`;
-  };
-
   return (
     <div style={styles.loginFrame}>
-      {/* VECTOR: B2B LOGO (138.406px × 43px) - positioned at x:143, y:47 */}
+      {/* VECTOR: B2B LOGO (138.406px × 43px) */}
       <div style={styles.logoContainer}>
-        <svg style={styles.logo} viewBox="0 0 138.406 43" fill="none">
-          <rect width="138.406" height="43" fill="#000"/>
-          <text x="69.203" y="30" textAnchor="middle" fill="#FFF" fontSize="16" fontFamily="Hamon, Inter, sans-serif" fontWeight="700">B2B</text>
-        </svg>
+        <img 
+          src="/images/b2b-logo.svg" 
+          alt="B2B Logo" 
+          style={styles.logo}
+        />
       </div>
 
-      {/* TEXT: Login (Hamon, 30px, #2A2A2A) */}
-      <h1 style={styles.loginTitle}>Login</h1>
-
-      {/* GROUP: Main Body (352px × 450.037px) */}
+      {/* Main Body Container (352px width) */}
       <div style={styles.mainBody}>
+        {/* TEXT: Login (30px Hamon font) - LEFT ALIGNED */}
+        <h1 style={styles.loginTitle}>Login</h1>
+        
+        {/* Login subtitle */}
+        <p style={styles.loginSubtitle}>
+          Welcome back! Please enter your details.
+        </p>
+
         {step === 'login' && (
           <>
-            {/* GROUP: Signup_Sociallogins (352px × 131.424px) */}
+            {/* Login Form Section - FIRST per Figma design */}
+            <div style={styles.formSection}>
+              <form onSubmit={handleSubmit}>
+                {errors.general && (
+                  <div style={styles.errorAlert}>
+                    {String(errors.general)}
+                  </div>
+                )}
+
+                {/* Username field */}
+                <div>
+                  <label style={styles.fieldLabel}>Enter your username</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    style={styles.inputField}
+                    placeholder="Enter your email"
+                    disabled={isLoading}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+
+                {/* Password field */}
+                <div style={styles.passwordContainer}>
+                  <label style={styles.fieldLabel}>Enter your password</label>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    style={styles.inputField}
+                    placeholder="Enter your password"
+                    disabled={isLoading}
+                    autoComplete="current-password"
+                    required
+                  />
+                </div>
+
+                {/* Forgot password link */}
+                <a href="#" style={styles.forgotPassword}>forgot password?</a>
+
+                {/* Login button */}
+                <button
+                  type="submit"
+                  style={styles.loginButton}
+                  disabled={isLoading || !emailValidated}
+                >
+                  {isLoading ? (
+                    <>
+                      <div style={styles.spinner}></div>
+                      <span>Signing in...</span>
+                    </>
+                  ) : (
+                    'Login'
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Social Login Section - AFTER login form per Figma */}
             <div style={styles.socialSection}>
-              {/* GROUP: Google (352px × 56.325px) */}
+              {/* Google button */}
               <button
                 type="button"
                 onClick={() => handleSocialLogin('google')}
@@ -442,7 +498,7 @@ const AdminLogin = () => {
                 <span>Continue with Google</span>
               </button>
 
-              {/* GROUP: Apple (352px × 56.325px) */}
+              {/* Apple button */}
               <button
                 type="button"
                 onClick={() => handleSocialLogin('apple')}
@@ -455,95 +511,6 @@ const AdminLogin = () => {
                 <span>Continue with Apple</span>
               </button>
             </div>
-
-            {/* GROUP: LogIn (352px × 301.938px) */}
-            <form onSubmit={handleSubmit} style={styles.loginForm}>
-              {errors.general && (
-                <div style={styles.errorAlert}>
-                  {String(errors.general)}
-                </div>
-              )}
-
-              {/* GROUP: Username (352px × 91.527px) */}
-              <div style={styles.usernameSection}>
-                {/* RECTANGLE: Usernamefield (352px × 56.325px) */}
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  style={styles.inputField}
-                  placeholder="Enter your email"
-                  disabled={isLoading}
-                  autoComplete="email"
-                  required
-                />
-                {emailValidated && formData.email && (
-                  <div style={styles.validationIcon}>
-                    <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                      <path d="M1 3.5L3.5 6L8 1" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                )}
-              </div>
-
-              {/* GROUP: Password (352px × 127px) */}
-              <div style={styles.passwordSection}>
-                <div style={styles.passwordContainer}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    style={styles.inputField}
-                    placeholder="Enter your password"
-                    disabled={isLoading}
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    style={styles.eyeToggle}
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    <svg width="19.947" height="12.908" viewBox="0 0 24 24" fill="currentColor">
-                      {showPassword ? (
-                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                      ) : (
-                        <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
-                      )}
-                    </svg>
-                  </button>
-                </div>
-                
-                <a href="#" style={styles.forgotPassword} onClick={(e) => { e.preventDefault(); alert('Contact admin for password reset'); }}>
-                  forgot password?
-                </a>
-              </div>
-
-              {/* Login Button */}
-              <button
-                type="submit"
-                style={styles.loginButton}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <div style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid rgba(255, 255, 255, 0.3)',
-                      borderTop: '2px solid #FFFFFF',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }}></div>
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  'Login'
-                )}
-              </button>
-            </form>
           </>
         )}
 
@@ -574,7 +541,7 @@ const AdminLogin = () => {
                 autoComplete="one-time-code"
                 required
               />
-
+              
               <button
                 type="submit"
                 style={styles.totpButton}
@@ -590,12 +557,12 @@ const AdminLogin = () => {
           <div style={styles.totpSection}>
             <h2 style={styles.totpTitle}>Setup Two-Factor Authentication</h2>
             <p style={styles.totpDescription}>
-              Scan this QR code with Google Authenticator, then enter the 6-digit code to complete setup
+              Scan this QR code with your Google Authenticator app, then enter the 6-digit code to complete setup.
             </p>
             
             {qrCodeUrl && (
               <div style={styles.qrCodeContainer}>
-                <img src={qrCodeUrl} alt="QR Code for Google Authenticator" style={{ maxWidth: '200px' }} />
+                <img src={qrCodeUrl} alt="QR Code for TOTP setup" />
               </div>
             )}
             
@@ -619,7 +586,7 @@ const AdminLogin = () => {
                 autoComplete="one-time-code"
                 required
               />
-
+              
               <button
                 type="submit"
                 style={styles.totpButton}

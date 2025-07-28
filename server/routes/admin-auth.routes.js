@@ -96,7 +96,7 @@ router.post(
     adminLoginLimiter,
 
     // Request processing
-    validators.adminLogin, // Reuse admin login validator
+    validators.totpCode, // Use TOTP-specific validator
     asyncHandler(helpers.verify),
 
     // TOTP verification
@@ -134,7 +134,7 @@ router.post(
     adminLoginLimiter,
 
     // Request processing
-    validators.adminLogin, // Reuse admin login validator for TOTP code
+    validators.totpCode, // Use TOTP-specific validator
     asyncHandler(helpers.verify),
 
     // Complete TOTP setup
