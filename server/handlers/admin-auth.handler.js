@@ -60,7 +60,7 @@ async function renderAdminLogin(req, res) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title>Secure Admin Login - BOUNCE2BOUNCE</title>
-    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link rel="stylesheet" href="/css/tailwind.css">
     <style>
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #FFFFFF; }
@@ -68,7 +68,7 @@ async function renderAdminLogin(req, res) {
 </head>
 <body>
     <div id="admin-login-root" class="loading">Loading...</div>
-    <script src="/static/react/bundle.js"></script>
+    <script src="/react/bundle.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             if (window.React && window.ReactDOM && window.AdminLogin) {
