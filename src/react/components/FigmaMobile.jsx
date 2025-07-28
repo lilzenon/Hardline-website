@@ -1253,10 +1253,15 @@ const FigmaMobile = () => {
       loop: '1',
       playlist: 'vEHTO3gf1jk',
       modestbranding: '1',
-      iv_load_policy: '3',
+      iv_load_policy: '3', // Hide video annotations
       fs: '0',
       disablekb: '1',
-      hd: '1' // Force HD when available
+      hd: '1', // Force HD when available
+      cc_load_policy: '0', // Hide closed captions
+      autohide: '1', // Auto-hide controls
+      wmode: 'transparent', // Transparent background
+      enablejsapi: '1', // Enable JavaScript API for better control
+      origin: window.location.origin // Set origin for security
     };
 
     // Add quality-specific parameters
@@ -1747,29 +1752,19 @@ const FigmaMobile = () => {
             </h1>
 
             <article
-              onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
               style={{
                 width: '350px', // Mobile-optimized width
                 height: '200px', // Mobile-optimized height
                 position: 'relative',
                 flexShrink: 0,
                 margin: '0 auto', // Center the video
-                cursor: 'pointer',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 transform: 'scale(1)',
                 borderRadius: '20px', // Slightly smaller radius for mobile
                 overflow: 'hidden'
               }}
-              role="button"
-              tabIndex={0}
-              aria-label="Watch Henry Fong live performance on YouTube"
-            onTouchStart={(e) => {
-              e.currentTarget.style.transform = 'scale(0.98)';
-            }}
-            onTouchEnd={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
+              aria-label="Henry Fong live performance video"
+            >
             {/* Video background container */}
             <div
               style={{
@@ -1827,7 +1822,7 @@ const FigmaMobile = () => {
               />
             </div>
 
-            {/* Video text overlay */}
+            {/* Video text overlay - Non-intrusive */}
             <div
               style={{
                 position: 'absolute',
@@ -1841,7 +1836,8 @@ const FigmaMobile = () => {
                 alignItems: 'flex-end',
                 gap: '12px',
                 zIndex: 2,
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                pointerEvents: 'none' // Allow clicks to pass through to video
               }}
             >
               {/* Left - Title and subtitle */}
@@ -1893,6 +1889,7 @@ const FigmaMobile = () => {
                   height: '36px', // Mobile-optimized height
                   justifyContent: 'center',
                   alignItems: 'center',
+                  pointerEvents: 'auto', // Re-enable clicks for the button only
                   borderRadius: '18px',
                   background: 'rgba(38, 38, 38, 0.80)',
                   cursor: 'pointer',
@@ -2642,7 +2639,7 @@ const FigmaMobile = () => {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
-                            margin: 0 // Reset default heading margins
+                            margin: '0 0 8px 0' // Add space between title and date/location
                           }}
                         >
                           {card.title}
