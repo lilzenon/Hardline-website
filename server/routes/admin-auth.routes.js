@@ -86,6 +86,42 @@ router.post(
 );
 
 /**
+ * Admin TOTP Verification Endpoint
+ * Verify Google Authenticator code for admin login
+ */
+router.post(
+    "/admin/verify-totp",
+    // Security middleware stack
+    suspiciousActivityLimiter,
+    adminLoginLimiter,
+
+    // Request processing
+    validators.adminLogin, // Reuse admin login validator
+    asyncHandler(helpers.verify),
+
+    // TOTP verification
+    asyncHandler(adminAuth.verifyTOTP)
+);
+
+/**
+ * Admin TOTP Setup Endpoint
+ * Complete TOTP setup for admin users
+ */
+router.post(
+    "/admin/setup-totp",
+    // Security middleware stack
+    suspiciousActivityLimiter,
+    adminLoginLimiter,
+
+    // Request processing
+    validators.adminLogin, // Reuse admin login validator
+    asyncHandler(helpers.verify),
+
+    // TOTP setup
+    asyncHandler(adminAuth.setupTOTP)
+);
+
+/**
  * Check Admin Authentication Status
  * Used by React component to verify existing authentication
  */

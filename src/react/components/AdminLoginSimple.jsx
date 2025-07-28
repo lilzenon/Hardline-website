@@ -3,12 +3,15 @@ import React, { useState } from 'react';
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
     email: 'info@bounce2bounce.com', // Default admin email
-    password: ''
+    password: '',
+    totpCode: ''
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [emailValidated, setEmailValidated] = useState(true); // Start validated since we have default email
+  const [step, setStep] = useState('login'); // 'login', 'totp', 'setup-totp'
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   // Inline styles based on exact Figma design (428px × 926px frame)
   const styles = {
