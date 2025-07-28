@@ -98,7 +98,8 @@ class TOTPService {
      * @returns {boolean} - True if TOTP is required
      */
     static isTOTPRequired() {
-        return env.REQUIRE_ADMIN_TOTP !== false; // Default to true for security
+        // Default to true for security, but allow disabling via env var
+        return process.env.REQUIRE_ADMIN_TOTP !== 'false';
     }
 
     /**
