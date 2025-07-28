@@ -100,7 +100,7 @@ async function renderAdminLogin(req, res) {
       <head><title>Admin Login</title></head>
       <body>
         <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Arial;">
-          <form action="/api/auth/admin-login" method="POST" style="padding:40px;border:1px solid #ccc;border-radius:8px;">
+          <form action="/api/auth/admin/login" method="POST" style="padding:40px;border:1px solid #ccc;border-radius:8px;">
             <h2>Admin Login</h2>
             <div style="margin:20px 0;">
               <input type="email" name="email" placeholder="Email" required style="width:100%;padding:10px;margin:5px 0;">

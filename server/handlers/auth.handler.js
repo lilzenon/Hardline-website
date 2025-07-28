@@ -167,7 +167,7 @@ function adminAuth(req, res, next) {
         req.session.returnTo = originalUrl;
 
         // Redirect to admin login
-        return res.redirect('/dashboard/login');
+        return res.redirect('/admin/login');
     }
 
     // Check if user is admin
