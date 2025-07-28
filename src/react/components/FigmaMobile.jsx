@@ -2095,6 +2095,248 @@ const FigmaMobile = () => {
               </div>
             </div>
 
+          {/* Mobile Square Hero */}
+          <div
+            style={{
+              width: '100%',
+              padding: '0 40px',
+              marginBottom: '20px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div
+              onClick={() => {
+                // Navigate to events or handle click
+                console.log('Hero clicked - navigate to events');
+              }}
+              style={{
+                width: '350px', // Mobile-optimized width
+                height: '350px', // Square aspect ratio
+                position: 'relative',
+                margin: '0 auto', // Center the hero
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'scale(1)',
+                borderRadius: '20px', // Slightly smaller radius for mobile
+                overflow: 'hidden'
+              }}
+              onTouchStart={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="View featured event details"
+            >
+              {/* Background Image with Gradient Overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  width: '350px',
+                  height: '350px',
+                  borderRadius: '20px',
+                  background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`,
+                  overflow: 'hidden'
+                }}
+              />
+
+              {/* Bottom overlay with date and location */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '303px', // 350px - 47px
+                  display: 'flex',
+                  width: '350px',
+                  justifyContent: 'space-between',
+                  padding: '0px 16px', // Slightly more padding for mobile
+                  gap: '16px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    width: '200px', // Adjusted for mobile
+                    height: '36px',
+                    padding: '4px 0px',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    minWidth: 0
+                  }}
+                >
+                  {/* Date row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignSelf: 'stretch',
+                      alignItems: 'center',
+                      gap: '4px',
+                      minWidth: 0
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
+                    </svg>
+                    <span
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '12px', // Fixed size for mobile
+                        fontWeight: '200',
+                        lineHeight: 'normal',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: 1,
+                        minWidth: 0
+                      }}
+                    >
+                      {processedEventCards.length > 0 && processedEventCards[0].eventDate
+                        ? new Date(processedEventCards[0].eventDate).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          }).replace(',', 'th,')
+                        : "March 29th, 9:00 P.M."
+                      }
+                    </span>
+                  </div>
+
+                  {/* Location row */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignSelf: 'stretch',
+                      alignItems: 'center',
+                      gap: '4px',
+                      minWidth: 0
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
+                      <circle cx="5" cy="4" r="1" fill="#FFF"/>
+                    </svg>
+                    <span
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '12px', // Fixed size for mobile
+                        fontWeight: '200',
+                        lineHeight: 'normal',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: 1,
+                        minWidth: 0
+                      }}
+                    >
+                      {processedEventCards.length > 0 && processedEventCards[0].location
+                        ? processedEventCards[0].location
+                        : "Asbury Park, NJ"
+                      }
+                    </span>
+                  </div>
+                </div>
+
+                {/* CTA Button */}
+                <div
+                  style={{
+                    display: 'flex',
+                    width: '90px',
+                    height: '36px',
+                    padding: '4px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      width: '90px',
+                      height: '36px',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: '8px',
+                      borderRadius: '29px',
+                      background: 'rgba(56, 56, 56, 0.80)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      transform: 'scale(1)',
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                      e.target.style.transform = 'scale(0.95)';
+                      e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.background = 'rgba(56, 56, 56, 0.80)';
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '14px', // Fixed size for mobile
+                        fontWeight: '400',
+                        lineHeight: 'normal',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      Events
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Event title overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '255px', // 350px - 95px
+                  display: 'flex',
+                  width: '350px',
+                  height: '48px',
+                  padding: '8px 16px', // Slightly more padding for mobile
+                  justifyContent: 'flex-start',
+                  alignItems: 'flex-end',
+                  gap: '10px',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '24px', // Fixed size for mobile
+                    fontWeight: '800',
+                    lineHeight: '1.1',
+                    flex: '1',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: '318px' // 350px - 32px padding
+                  }}
+                >
+                  {processedEventCards.length > 0 && (processedEventCards[0].title || processedEventCards[0].artist_name)
+                    ? (processedEventCards[0].title || processedEventCards[0].artist_name)
+                    : "FEATURED EVENT"
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Events List - Vertical Stack */}
           <div
             role="list"
@@ -2105,7 +2347,7 @@ const FigmaMobile = () => {
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'stretch',
-              gap: '16px', // Scaled up from 12px
+              gap: '8px', // Reduced from 16px to 8px
               flexShrink: 0,
               padding: '0 40px', // Add 40px left/right padding to event cards container
               boxSizing: 'border-box', // Ensure padding doesn't cause overflow
