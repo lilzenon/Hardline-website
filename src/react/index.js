@@ -102,11 +102,7 @@ const App = () => {
     );
 };
 
-// Get the root element
-const container = document.getElementById('root');
-const root = createRoot(container);
-
-// Make AdminLogin available globally for admin login page
+// Make AdminLogin available globally for admin login page FIRST
 window.AdminLogin = AdminLogin;
 window.React = React;
 window.ReactDOM = {
@@ -119,5 +115,11 @@ window.ReactDOM = {
     }
 };
 
-// Render the app
-root.render( < App / > );
+// Only render the main app if the root element exists (homepage)
+const container = document.getElementById('root');
+if (container) {
+    const root = createRoot(container);
+    root.render( < App / > );
+} else {
+    console.log('No root element found - likely on admin login page, globals exported successfully');
+}
