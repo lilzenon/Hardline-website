@@ -2619,11 +2619,9 @@ const FigmaMobile = () => {
                       <div
                         style={{
                           display: 'flex',
-                          height: '70px', // Scaled up from 50px
                           flexDirection: 'column',
                           alignItems: 'flex-start',
                           alignSelf: 'stretch',
-                          gap: '6px', // Increased space between title and date/location
                           justifyContent: 'space-between'
                         }}
                       >
@@ -2654,7 +2652,6 @@ const FigmaMobile = () => {
                         <div
                           style={{
                             display: 'flex',
-                            height: '20px', // Fixed height for consistent spacing
                             paddingLeft: '1px',
                             marginBottom: '2px', // Further reduced space between date and location
                             alignItems: 'center',
@@ -2820,7 +2817,6 @@ const FigmaMobile = () => {
                         <div
                           style={{
                             display: 'flex',
-                            height: '20px', // Fixed height for consistent spacing
                             padding: '0px 1px',
                             alignItems: 'center',
                             gap: '4px', // Gap between icon and text container
