@@ -83,11 +83,13 @@ router.get(
     asyncHandler(renders.homeEditor)
 );
 
+// Redirect old login to new admin login
 router.get(
     "/login",
-    asyncHandler(auth.jwtLoosePage),
-    asyncHandler(helpers.adminSetup),
-    asyncHandler(renders.login)
+    (req, res) => {
+        const returnTo = req.query.returnTo || '/dashboard';
+        res.redirect(`/admin/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
 );
 
 router.get(
@@ -402,11 +404,13 @@ router.get(
     asyncHandler(renders.eventEdit)
 );
 
-// Admin Login page - separate from public login
+// Redirect old dashboard login to new admin login
 router.get(
     "/dashboard/login",
-    asyncHandler(auth.jwtLoosePage),
-    asyncHandler(renders.adminLogin)
+    (req, res) => {
+        const returnTo = req.query.returnTo || '/dashboard';
+        res.redirect(`/admin/login?returnTo=${encodeURIComponent(returnTo)}`);
+    }
 );
 
 router.get(

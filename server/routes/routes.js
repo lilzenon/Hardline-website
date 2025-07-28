@@ -8,6 +8,7 @@ const health = require("./health.routes");
 const link = require("./link.routes");
 const user = require("./user.routes");
 const auth = require("./auth.routes");
+const adminAuth = require("./admin-auth.routes");
 const events = require("./events.routes");
 const publicEvents = require("./public_events.routes");
 const qrRoutes = require("./qr.routes");
@@ -23,6 +24,7 @@ const webhooks = require("./webhooks.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
+renderRouter.use(adminAuth);
 renderRouter.use("/event", publicEvents);
 
 // QR code redirect route - dedicated router for /qr/:identifier URLs
@@ -35,6 +37,7 @@ apiRouter.use("/health", health);
 apiRouter.use("/links", link);
 apiRouter.use("/users", user);
 apiRouter.use("/auth", auth);
+apiRouter.use("/auth", adminAuth);
 apiRouter.use("/events", events);
 apiRouter.use("/sms", sms);
 apiRouter.use("/analytics", analytics);

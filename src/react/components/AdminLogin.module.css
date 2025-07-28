@@ -1,0 +1,375 @@
+/* AdminLogin.module.css - Exact Figma Design Implementation */
+
+
+/* Login Frame - Main Container (428x926px) */
+
+.loginFrame {
+    width: 428px;
+    height: 926px;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    margin: 0 auto;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    position: relative;
+}
+
+
+/* B2B Logo Container */
+
+.logoContainer {
+    width: 138.41px;
+    height: 43px;
+    margin-top: 60px;
+    margin-bottom: 40px;
+}
+
+.logo {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* Login Title - Hamon 30px #2A2A2A */
+
+.loginTitle {
+    font-family: 'Hamon', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    line-height: 1.2;
+    color: #2A2A2A;
+    margin: 0 0 40px 0;
+    text-align: center;
+}
+
+
+/* Main Body Container */
+
+.mainBody {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 0 24px;
+}
+
+
+/* Social Login Section */
+
+.socialLoginSection {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.socialButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    height: 56px;
+    background: #FFFFFF;
+    border: 1px solid #D1D1D1;
+    border-radius: 17.6px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: #2A2A2A;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.socialButton:hover:not(:disabled) {
+    background: #F8F8F8;
+    border-color: #B8B8B8;
+}
+
+.socialButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.googleIcon,
+.appleIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+
+/* Login Form */
+
+.loginForm {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+
+/* Input Sections */
+
+.inputSection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.inputLabel {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #2A2A2A;
+    margin: 0;
+}
+
+.passwordHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.forgotPassword {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #2A2A2A;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.inputContainer {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.inputField {
+    width: 100%;
+    height: 56px;
+    background: #FDFDFD;
+    border: 1px solid #D1D1D1;
+    border-radius: 17.6px;
+    padding: 0 16px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    color: #2A2A2A;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.inputField:focus {
+    border-color: #2A2A2A;
+    background: #FFFFFF;
+}
+
+.inputField::placeholder {
+    color: #C4C4C4;
+}
+
+
+/* Validation Icon */
+
+.validationIcon {
+    position: absolute;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+}
+
+.validationCircle {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: #2A2A2A;
+    border-radius: 50%;
+}
+
+.checkIcon {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* Eye Button for Password */
+
+.eyeButton {
+    position: absolute;
+    right: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* Login Button */
+
+.loginButton {
+    width: 100%;
+    height: 56px;
+    background: #151515;
+    border: none;
+    border-radius: 17.6px;
+    font-family: 'Hamon', 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.loginButton:hover:not(:disabled) {
+    background: #2a2a2a;
+}
+
+.loginButton:disabled,
+.buttonDisabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* Spinner Animation */
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #FFFFFF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* Error Alerts */
+
+.errorAlert,
+.blockAlert {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.errorAlert {
+    background: rgba(234, 67, 92, 0.1);
+    border: 1px solid rgba(234, 67, 92, 0.3);
+    color: #EA435C;
+}
+
+.blockAlert {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    color: #FFC107;
+}
+
+.errorText {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #EA435C;
+    margin: 0;
+}
+
+
+/* Security Footer */
+
+.securityFooter {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.attemptsWarning {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: #FFC107;
+    font-weight: 500;
+}
+
+
+/* Responsive Design */
+
+@media (max-width: 480px) {
+    .loginFrame {
+        width: 100%;
+        max-width: 100vw;
+        padding: 0 16px;
+        box-sizing: border-box;
+    }
+    .logoContainer {
+        margin-top: 40px;
+        margin-bottom: 30px;
+    }
+    .loginTitle {
+        font-size: 26px;
+        margin-bottom: 30px;
+    }
+    .mainBody {
+        max-width: 100%;
+        padding: 0;
+    }
+    .socialButton,
+    .inputField,
+    .loginButton {
+        height: 52px;
+        font-size: 15px;
+    }
+}
+
+
+/* High contrast mode support */
+
+@media (prefers-contrast: high) {
+    .inputField {
+        border: 2px solid #2A2A2A;
+    }
+    .socialButton {
+        border: 2px solid #D1D1D1;
+    }
+}
+
+
+/* Reduced motion support */
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation: none;
+    }
+    * {
+        transition: none !important;
+    }
+}
