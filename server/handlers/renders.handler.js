@@ -503,14 +503,29 @@ async function eventEdit(req, res) {
 // 🚀 REACT HOMEPAGE - Serve React app instead of Handlebars
 async function reactHomepage(req, res) {
     try {
-        // Add aggressive cache-busting headers
-        res.set({
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'Last-Modified': new Date().toUTCString(),
-            'ETag': Date.now().toString()
-        });
+        const env = require('../env');
+
+        if (env.NODE_ENV === 'production') {
+            // Production: Cache for 5 minutes to balance freshness and performance
+            const fiveMinutes = 5 * 60; // 5 minutes in seconds
+            const expiresDate = new Date(Date.now() + fiveMinutes * 1000).toUTCString();
+
+            res.set({
+                'Cache-Control': 'public, max-age=' + fiveMinutes + ', must-revalidate',
+                'Expires': expiresDate,
+                'Last-Modified': new Date().toUTCString(),
+                'ETag': '"homepage-' + Date.now() + '"'
+            });
+        } else {
+            // Development: No cache for easier development
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+                'Last-Modified': new Date().toUTCString(),
+                'ETag': Date.now().toString()
+            });
+        }
 
         // Serve the React built HTML file
         const path = require('path');

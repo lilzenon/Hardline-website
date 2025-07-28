@@ -5,6 +5,7 @@ const session = require("express-session");
 const passport = require("passport");
 const express = require("express");
 const helmet = require("helmet");
+const compression = require("compression");
 const path = require("node:path");
 const hbs = require("hbs");
 
@@ -20,6 +21,7 @@ const links = require("./handlers/links.handler");
 const routes = require("./routes");
 const utils = require("./utils");
 const { initializePrivacySystem } = require("./middleware/privacy.middleware");
+const performance = require("./middleware/performance.middleware");
 
 
 // run the cron jobs
@@ -45,6 +47,34 @@ app.use(helmet({
     contentSecurityPolicy: false,
     frameguard: false // Disable frameguard to allow custom X-Frame-Options handling
 }));
+
+// Enable gzip compression for all responses
+app.use(compression({
+    // Compress all responses
+    filter: (req, res) => {
+        // Don't compress responses with this request header
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        // Use compression filter function
+        return compression.filter(req, res);
+    },
+    // Compression level (1-9, 6 is default)
+    level: 6,
+    // Minimum response size to compress (in bytes)
+    threshold: 1024,
+    // Compression window size
+    windowBits: 15,
+    // Memory level (1-9, 8 is default)
+    memLevel: 8
+}));
+
+// Add performance optimization middleware
+app.use(performance.performanceHeaders());
+app.use(performance.compressionOptimization());
+app.use(performance.resourceHints());
+app.use(performance.coreWebVitalsOptimization());
+
 app.use(cookieParser());
 
 // Production-ready session configuration with Redis store
@@ -140,20 +170,91 @@ app.use((req, res, next) => {
     express.urlencoded({ extended: true })(req, res, next);
 });
 
-// serve static
-app.use("/images", express.static("custom/images"));
-app.use("/css", express.static("custom/css", { extensions: ["css"] }));
-app.use("/react", express.static("static/react", {
+// serve static files with optimized caching headers
+app.use("/images", express.static("custom/images", {
     setHeaders: (res, path) => {
-        // Add cache-busting headers for React bundle
+        // Images: Cache for 1 year with immutable flag
+        const oneYear = 365 * 24 * 60 * 60; // 1 year in seconds
+        const expiresDate = new Date(Date.now() + oneYear * 1000).toUTCString();
+
         res.set({
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-            'Pragma': 'no-cache',
-            'Expires': '0'
+            'Cache-Control': 'public, max-age=' + oneYear + ', immutable',
+            'Expires': expiresDate,
+            'Last-Modified': new Date().toUTCString()
         });
     }
 }));
-app.use(express.static("static"));
+
+app.use("/css", express.static("custom/css", {
+    extensions: ["css"],
+    setHeaders: (res, path) => {
+        // CSS: Cache for 1 month
+        const oneMonth = 30 * 24 * 60 * 60; // 1 month in seconds
+        const expiresDate = new Date(Date.now() + oneMonth * 1000).toUTCString();
+
+        res.set({
+            'Cache-Control': 'public, max-age=' + oneMonth,
+            'Expires': expiresDate,
+            'Last-Modified': new Date().toUTCString()
+        });
+    }
+}));
+
+app.use("/react", express.static("static/react", {
+    setHeaders: (res, path) => {
+        // React bundle: No cache for development, short cache for production
+        if (env.NODE_ENV === 'production') {
+            const oneHour = 60 * 60; // 1 hour in seconds
+            const expiresDate = new Date(Date.now() + oneHour * 1000).toUTCString();
+
+            res.set({
+                'Cache-Control': 'public, max-age=' + oneHour,
+                'Expires': expiresDate,
+                'Last-Modified': new Date().toUTCString()
+            });
+        } else {
+            // Development: No cache
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }
+}));
+
+app.use(express.static("static", {
+    setHeaders: (res, path) => {
+        // Static assets: Different cache times based on file type
+        const ext = path.split('.').pop().toLowerCase();
+        let maxAge, expiresDate;
+
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico'].includes(ext)) {
+            // Images: Cache for 1 year
+            maxAge = 365 * 24 * 60 * 60;
+        } else if (['css', 'js'].includes(ext)) {
+            // CSS/JS: Cache for 1 month
+            maxAge = 30 * 24 * 60 * 60;
+        } else if (['woff', 'woff2', 'ttf', 'eot'].includes(ext)) {
+            // Fonts: Cache for 1 year
+            maxAge = 365 * 24 * 60 * 60;
+        } else if (['pdf', 'doc', 'docx'].includes(ext)) {
+            // Documents: Cache for 1 week
+            maxAge = 7 * 24 * 60 * 60;
+        } else {
+            // Other files: Cache for 1 day
+            maxAge = 24 * 60 * 60;
+        }
+
+        expiresDate = new Date(Date.now() + maxAge * 1000).toUTCString();
+
+        res.set({
+            'Cache-Control': 'public, max-age=' + maxAge,
+            'Expires': expiresDate,
+            'Last-Modified': new Date().toUTCString()
+        });
+    }
+}));
 
 // Session security middleware - disabled in development to prevent blocking during testing
 if (env.NODE_ENV === 'production') {
