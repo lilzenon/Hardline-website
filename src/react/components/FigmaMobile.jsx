@@ -2095,15 +2095,16 @@ const FigmaMobile = () => {
               </div>
             </div>
 
-          {/* Mobile Square Hero */}
-          <div
-            style={{
-              width: '100%',
-              padding: '0 40px',
-              marginBottom: '20px',
-              boxSizing: 'border-box'
-            }}
-          >
+          {/* Mobile Square Hero - Only show when "All" events is selected */}
+          {showAllEvents && (
+            <div
+              style={{
+                width: '100%',
+                padding: '0 40px',
+                marginBottom: '20px',
+                boxSizing: 'border-box'
+              }}
+            >
             <div
               onClick={() => {
                 // Navigate to events or handle click
@@ -2336,6 +2337,7 @@ const FigmaMobile = () => {
               </div>
             </div>
           </div>
+          )}
 
           {/* Events List - Vertical Stack */}
           <div
@@ -2405,11 +2407,16 @@ const FigmaMobile = () => {
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     borderRadius: '20px', // Scaled up from 16px
-                    background: '#232323',
+                    background: 'rgba(15, 15, 15, 0.85)', // Much darker with transparency
+                    backdropFilter: 'blur(20px) saturate(180%)', // Frostier blur effect
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)', // Safari support
+                    border: '1px solid rgba(255, 255, 255, 0.08)', // Subtle border for glassmorphism
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)', // Enhanced shadow with inner highlight
                     position: 'relative',
                     margin: '0',
                     padding: '0',
-                    animationDelay: cardsAnimated ? `${index * 0.05}s` : '0s' // Smoother stagger animation
+                    animationDelay: cardsAnimated ? `${index * 0.05}s` : '0s', // Smoother stagger animation
+                    overflow: 'hidden' // Ensure backdrop filter works properly
                   }}
                 >
                   {/* Mobile Event Card Content */}
