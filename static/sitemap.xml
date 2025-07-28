@@ -9,7 +9,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://b2b.click/</loc>
-    <lastmod>2024-12-19</lastmod>
+    <lastmod>2025-01-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <mobile:mobile/>
@@ -24,16 +24,24 @@
       <video:description>Watch Henry Fong's exclusive live performance at BOUNCE2BOUNCE events</video:description>
       <video:content_loc>https://youtu.be/vEHTO3gf1jk</video:content_loc>
       <video:duration>180</video:duration>
-      <video:publication_date>2024-12-19</video:publication_date>
+      <video:publication_date>2025-01-28</video:publication_date>
       <video:family_friendly>yes</video:family_friendly>
       <video:live>no</video:live>
     </video:video>
   </url>
 
+  <!-- AI-Specific Resources -->
+  <url>
+    <loc>https://b2b.click/llms.txt</loc>
+    <lastmod>2025-01-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- About Page -->
   <url>
     <loc>https://b2b.click/about</loc>
-    <lastmod>2024-12-19</lastmod>
+    <lastmod>2025-01-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <mobile:mobile/>
@@ -42,7 +50,7 @@
   <!-- Contact Page -->
   <url>
     <loc>https://b2b.click/contact</loc>
-    <lastmod>2024-12-19</lastmod>
+    <lastmod>2025-01-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <mobile:mobile/>
@@ -51,8 +59,8 @@
   <!-- Events Listing -->
   <url>
     <loc>https://b2b.click/events</loc>
-    <lastmod>2024-12-19</lastmod>
-    <changefreq>weekly</changefreq>
+    <lastmod>2025-01-28</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.9</priority>
     <mobile:mobile/>
   </url>
@@ -60,10 +68,18 @@
   <!-- Dashboard (for authenticated users) -->
   <url>
     <loc>https://b2b.click/dashboard</loc>
-    <lastmod>2024-12-19</lastmod>
+    <lastmod>2025-01-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
     <mobile:mobile/>
+  </url>
+
+  <!-- API Documentation for AI Agents -->
+  <url>
+    <loc>https://b2b.click/api/events</loc>
+    <lastmod>2025-01-28</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
   </url>
 
 </urlset>

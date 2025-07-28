@@ -67,6 +67,53 @@ Allow: /
 User-agent: LinkedInBot
 Allow: /
 
+# AI Agent Crawlers (2024-2025)
+User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 1
+
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Google-Extended
+Allow: /
+Crawl-delay: 1
+
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 1
+
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: YouBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: anthropic-ai
+Allow: /
+Crawl-delay: 1
+
+User-agent: Applebot-Extended
+Allow: /
+Crawl-delay: 1
+
+# AI Training Data Crawlers
+User-agent: CCBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: ChatGPT-User
+Allow: /llms.txt
+Allow: /sitemap.xml
+Allow: /
+
+User-agent: Bard
+Allow: /
+Crawl-delay: 1
+
 # Default crawl delay for respectful crawling
 Crawl-delay: 1
 
