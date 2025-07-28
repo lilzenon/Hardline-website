@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const query = require("../queries");
 const utils = require("../utils");
 const env = require("../env");
-const CustomError = require("../utils/CustomError");
+const { CustomError } = require("../utils");
 
 // In-memory store for security events (in production, use Redis or database)
 const securityEvents = new Map();
