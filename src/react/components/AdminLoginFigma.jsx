@@ -280,7 +280,15 @@ const AdminLogin = () => {
     setErrors({});
 
     try {
-      const endpoint = step === 'login' ? '/api/auth/admin/login' : '/api/auth/admin/verify-totp';
+      let endpoint;
+      if (step === 'login') {
+        endpoint = '/api/auth/admin/login';
+      } else if (step === 'totp') {
+        endpoint = '/api/auth/admin/verify-totp';
+      } else if (step === 'setup-totp') {
+        endpoint = '/api/auth/admin/setup-totp';
+      }
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -297,12 +305,19 @@ const AdminLogin = () => {
         } else if (data.setupTotp) {
           setQrCodeUrl(data.qrCode);
           setStep('setup-totp');
+        } else if (data.success) {
+          const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
+          window.location.href = returnTo;
         } else {
           const returnTo = new URLSearchParams(window.location.search).get('returnTo') || '/dashboard';
           window.location.href = returnTo;
         }
       } else {
-        setErrors({ general: data.error || data.message || 'Login failed' });
+        // Ensure error message is always a string
+        const errorMessage = typeof data.error === 'string' ? data.error :
+                           typeof data.message === 'string' ? data.message :
+                           'Login failed';
+        setErrors({ general: errorMessage });
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -367,7 +382,7 @@ const AdminLogin = () => {
             <form onSubmit={handleSubmit} style={styles.loginForm}>
               {errors.general && (
                 <div style={styles.errorAlert}>
-                  {errors.general}
+                  {String(errors.general)}
                 </div>
               )}
 
@@ -463,7 +478,7 @@ const AdminLogin = () => {
             <form onSubmit={handleSubmit}>
               {errors.general && (
                 <div style={styles.errorAlert}>
-                  {errors.general}
+                  {String(errors.general)}
                 </div>
               )}
               
@@ -508,7 +523,7 @@ const AdminLogin = () => {
             <form onSubmit={handleSubmit}>
               {errors.general && (
                 <div style={styles.errorAlert}>
-                  {errors.general}
+                  {String(errors.general)}
                 </div>
               )}
               
