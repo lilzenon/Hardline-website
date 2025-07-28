@@ -2163,10 +2163,8 @@ const FigmaMobile = () => {
                   style={{
                     display: 'flex',
                     width: '200px', // Adjusted for mobile
-                    height: '36px',
                     padding: '4px 0px',
                     flexDirection: 'column',
-                    gap: '2px',
                     minWidth: 0
                   }}
                 >
@@ -2181,7 +2179,7 @@ const FigmaMobile = () => {
                     }}
                   >
                     <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
+                      <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
                     </svg>
                     <span
                       style={{
@@ -2221,7 +2219,7 @@ const FigmaMobile = () => {
                     }}
                   >
                     <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
+                      <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
                       <circle cx="5" cy="4" r="1" fill="#FFF"/>
                     </svg>
                     <span
@@ -2326,7 +2324,8 @@ const FigmaMobile = () => {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    maxWidth: '318px' // 350px - 32px padding
+                    maxWidth: '318px', // 350px - 32px padding
+                    margin: '0px 0px 8px 0px' // Added margin as requested
                   }}
                 >
                   {processedEventCards.length > 0 && (processedEventCards[0].title || processedEventCards[0].artist_name)
