@@ -2226,6 +2226,8 @@ const FigmaMobile = () => {
                   loading="eager"
                   decoding="async"
                   fetchpriority="high"
+                  onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY')}
+                  onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
                   style={{
                     position: 'absolute',
                     left: '0px',

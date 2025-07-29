@@ -213,13 +213,13 @@ app.use("/css", express.static("custom/css", {
 
 app.use("/react", express.static("static/react", {
     setHeaders: (res, path) => {
-        // React bundle: No cache for development, short cache for production
+        // React bundle: Longer cache for production performance
         if (env.NODE_ENV === 'production') {
-            const oneHour = 60 * 60; // 1 hour in seconds
-            const expiresDate = new Date(Date.now() + oneHour * 1000).toUTCString();
+            const oneDay = 24 * 60 * 60; // 1 day in seconds (increased from 1 hour)
+            const expiresDate = new Date(Date.now() + oneDay * 1000).toUTCString();
 
             res.set({
-                'Cache-Control': 'public, max-age=' + oneHour,
+                'Cache-Control': 'public, max-age=' + oneDay + ', stale-while-revalidate=86400',
                 'Expires': expiresDate,
                 'Last-Modified': new Date().toUTCString()
             });

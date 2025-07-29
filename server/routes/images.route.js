@@ -59,7 +59,7 @@ router.get('/optimized/:imageName', async(req, res) => {
         const possiblePaths = [];
 
         if (width && bestFormat !== 'original') {
-            // Responsive optimized image
+            // Responsive optimized image with specific width
             possiblePaths.push(
                 path.join(__dirname, '../../static/images/optimized', `${baseName}-${width}w.${bestFormat}`)
             );
@@ -74,9 +74,35 @@ router.get('/optimized/:imageName', async(req, res) => {
 
         // Fallback to original (use original extension if available)
         const originalName = hasExtension ? imageName : `${baseName}.png`;
-        possiblePaths.push(
-            path.join(__dirname, '../../static/images/figma-exact', originalName)
-        );
+        const originalPath = path.join(__dirname, '../../static/images/figma-exact', originalName);
+        possiblePaths.push(originalPath);
+
+        // If width is specified but no optimized version exists, create it on-the-fly
+        if (width && !fs.existsSync(possiblePaths[0]) && fs.existsSync(originalPath)) {
+            try {
+                const outputPath = path.join(__dirname, '../../static/images/optimized', `${baseName}-${width}w.${bestFormat}`);
+
+                // Create optimized directory if it doesn't exist
+                const optimizedDir = path.dirname(outputPath);
+                if (!fs.existsSync(optimizedDir)) {
+                    fs.mkdirSync(optimizedDir, { recursive: true });
+                }
+
+                // Generate responsive image using Sharp
+                await sharp(originalPath)
+                    .resize(width, width, {
+                        fit: 'cover',
+                        position: 'center'
+                    })
+                    .webp({ quality: 85 })
+                    .toFile(outputPath);
+
+                // Add the newly created file to the front of possible paths
+                possiblePaths.unshift(outputPath);
+            } catch (sharpError) {
+                console.error(`⚠️ Failed to generate responsive image: ${sharpError.message}`);
+            }
+        }
 
         // Try each path until we find an existing file
         for (const imagePath of possiblePaths) {

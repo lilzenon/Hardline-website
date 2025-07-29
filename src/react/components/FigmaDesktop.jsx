@@ -1428,6 +1428,8 @@ const FigmaDesktop = () => {
               loading="eager"
               decoding="async"
               fetchpriority="high"
+              onLoad={() => console.log('✅ HERO IMAGE LOADED SUCCESSFULLY')}
+              onError={(e) => console.error('❌ HERO IMAGE FAILED TO LOAD:', e.target.src)}
               style={{
                 position: 'absolute',
                 left: '0px',
@@ -1688,35 +1690,9 @@ const FigmaDesktop = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* Calculate dimensions to cover the container while maintaining aspect ratio */}
-              {/* YouTube Video Placeholder */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  width: '100%',
-                  height: '100%',
-                  transform: 'translate(-50%, -50%) scale(1.5)',
-                  background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: 0.8
-                }}
-              >
-                <div style={{
-                  color: '#666',
-                  fontSize: '14px',
-                  textAlign: 'center',
-                  fontFamily: 'Inter, sans-serif'
-                }}>
-                  Video Loading...
-                </div>
-              </div>
-
+              {/* YouTube Video - Auto-playing, No Controls */}
               <iframe
-                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720"
+                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0"
                 title="Henry Fong YouTube Video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -1727,16 +1703,10 @@ const FigmaDesktop = () => {
                   left: '50%',
                   width: '100%',
                   height: '100%',
-                  transform: 'translate(-50%, -50%) scale(1.5)', // Scale up to ensure coverage
-                  pointerEvents: 'none', // Disable user interaction with the video
-                  border: 'none', // Modern replacement for frameBorder="0"
-                  opacity: 0 // Hidden until loaded
-                }}
-                onLoad={(e) => {
-                  // Show iframe and hide placeholder when loaded
-                  e.target.style.opacity = 1;
-                  const placeholder = e.target.previousElementSibling;
-                  if (placeholder) placeholder.style.display = 'none';
+                  transform: 'translate(-50%, -50%) scale(1.5)',
+                  border: 'none',
+                  pointerEvents: 'none', // Disable all user interaction
+                  opacity: 1
                 }}
               />
             </div>
