@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-// Helper function to get optimized image URL
+// Helper function to get optimized image URL - FORCES ALL IMAGES THROUGH OPTIMIZATION
 const getOptimizedImageUrl = (originalUrl) => {
-  if (!originalUrl || !originalUrl.includes('/images/figma-exact/')) {
+  if (!originalUrl) {
     return originalUrl;
   }
 
-  const filename = originalUrl.split('/').pop();
-  return `/images/optimized/${filename}`;
+  // For local figma-exact images, use optimization route
+  if (originalUrl.includes('/images/figma-exact/')) {
+    const filename = originalUrl.split('/').pop();
+    return `/images/optimized/${filename}`;
+  }
+
+  // For external URLs (event covers, etc.), proxy through optimization route
+  if (originalUrl.startsWith('http')) {
+    // Encode the external URL to pass through our optimization proxy
+    const encodedUrl = encodeURIComponent(originalUrl);
+    return `/images/proxy-optimized?url=${encodedUrl}`;
+  }
+
+  return originalUrl;
 };
 
 // Simple cache for API responses
@@ -2220,24 +2232,30 @@ const FigmaMobile = () => {
                   overflow: 'hidden'
                 }}
               >
-                <img
-                  src="/images/figma-exact/hero-left-image.png"
-                  alt="Hero background"
-                  loading="eager"
-                  decoding="async"
-                  fetchpriority="high"
-                  onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY')}
-                  onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
-                  style={{
-                    position: 'absolute',
-                    left: '0px',
-                    top: '0px',
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center'
-                  }}
-                />
+                <picture>
+                  <source
+                    srcSet="/images/optimized/hero-left-image.png"
+                    type="image/webp"
+                  />
+                  <img
+                    src="/images/optimized/hero-left-image.png"
+                    alt="Hero background"
+                    loading="eager"
+                    decoding="async"
+                    fetchpriority="high"
+                    onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY')}
+                    onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
+                    style={{
+                      position: 'absolute',
+                      left: '0px',
+                      top: '0px',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center'
+                    }}
+                  />
+                </picture>
                 <div
                   style={{
                     position: 'absolute',

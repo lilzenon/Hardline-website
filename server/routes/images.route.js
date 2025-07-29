@@ -221,4 +221,70 @@ router.get('/stats', async(req, res) => {
     }
 });
 
+// Proxy optimization route for external images (event covers, etc.)
+router.get('/proxy-optimized', async(req, res) => {
+    try {
+        const { url } = req.query;
+
+        if (!url) {
+            return res.status(400).json({ error: 'URL parameter is required' });
+        }
+
+        const decodedUrl = decodeURIComponent(url);
+        console.log(`🔄 Proxying and optimizing external image: ${decodedUrl}`);
+
+        // Fetch the external image
+        const fetch = (await
+            import ('node-fetch')).default;
+        const response = await fetch(decodedUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; ImageOptimizer/1.0)'
+            },
+            timeout: 10000
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.status}`);
+        }
+
+        const imageBuffer = await response.buffer();
+        const bestFormat = getBestFormat(req);
+
+        // Set aggressive caching headers
+        res.set({
+            'Cache-Control': 'public, max-age=31536000, immutable', // 1 year
+            'Content-Type': bestFormat === 'webp' ? 'image/webp' : 'image/jpeg',
+            'Vary': 'Accept'
+        });
+
+        // Optimize the image using Sharp
+        if (bestFormat === 'webp') {
+            const optimizedBuffer = await sharp(imageBuffer)
+                .webp({ quality: 85, effort: 4 })
+                .toBuffer();
+
+            console.log(`✅ External image optimized: ${decodedUrl} (${imageBuffer.length} → ${optimizedBuffer.length} bytes)`);
+            res.send(optimizedBuffer);
+        } else {
+            const optimizedBuffer = await sharp(imageBuffer)
+                .jpeg({ quality: 85, progressive: true })
+                .toBuffer();
+
+            console.log(`✅ External image optimized: ${decodedUrl} (${imageBuffer.length} → ${optimizedBuffer.length} bytes)`);
+            res.send(optimizedBuffer);
+        }
+
+    } catch (error) {
+        console.error('❌ Proxy optimization error:', error);
+
+        // Fallback: redirect to original URL
+        const { url } = req.query;
+        if (url) {
+            res.redirect(decodeURIComponent(url));
+        } else {
+            res.status(500).json({ error: 'Image optimization failed' });
+        }
+    }
+});
+
 module.exports = router;

@@ -1,13 +1,25 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
-// Helper function to get optimized image URL
+// Helper function to get optimized image URL - FORCES ALL IMAGES THROUGH OPTIMIZATION
 const getOptimizedImageUrl = (originalUrl) => {
-  if (!originalUrl || !originalUrl.includes('/images/figma-exact/')) {
+  if (!originalUrl) {
     return originalUrl;
   }
 
-  const filename = originalUrl.split('/').pop();
-  return `/images/optimized/${filename}`;
+  // For local figma-exact images, use optimization route
+  if (originalUrl.includes('/images/figma-exact/')) {
+    const filename = originalUrl.split('/').pop();
+    return `/images/optimized/${filename}`;
+  }
+
+  // For external URLs (event covers, etc.), proxy through optimization route
+  if (originalUrl.startsWith('http')) {
+    // Encode the external URL to pass through our optimization proxy
+    const encodedUrl = encodeURIComponent(originalUrl);
+    return `/images/proxy-optimized?url=${encodedUrl}`;
+  }
+
+  return originalUrl;
 };
 
 // Add CSS animation for spinning wheel
@@ -1303,7 +1315,7 @@ const FigmaDesktop = () => {
       >
         {/* Group 4 - B2B Logo Nav */}
         <img
-          src="/images/figma-exact/b2b-logo-nav.svg"
+          src="/images/optimized/b2b-logo-nav.svg"
           alt="B2B Logo"
           loading="lazy"
           decoding="async"
@@ -1423,24 +1435,30 @@ const FigmaDesktop = () => {
               overflow: 'hidden'
             }}
           >
-            <img
-              src="/images/figma-exact/hero-left-image.png"
-              alt="Hero background"
-              loading="eager"
-              decoding="async"
-              fetchpriority="high"
-              onLoad={() => console.log('✅ HERO IMAGE LOADED SUCCESSFULLY')}
-              onError={(e) => console.error('❌ HERO IMAGE FAILED TO LOAD:', e.target.src)}
-              style={{
-                position: 'absolute',
-                left: '0px',
-                top: '0px',
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                objectPosition: 'center'
-              }}
-            />
+            <picture>
+              <source
+                srcSet="/images/optimized/hero-left-image.png"
+                type="image/webp"
+              />
+              <img
+                src="/images/optimized/hero-left-image.png"
+                alt="Hero background"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+                onLoad={() => console.log('✅ HERO IMAGE LOADED SUCCESSFULLY')}
+                onError={(e) => console.error('❌ HERO IMAGE FAILED TO LOAD:', e.target.src)}
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center'
+                }}
+              />
+            </picture>
             <div
               style={{
                 position: 'absolute',
@@ -1691,65 +1709,23 @@ const FigmaDesktop = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* Instant Video Loading - Thumbnail + Background Iframe */}
-              <div
+              {/* Direct YouTube Video - No Loading Delay */}
+              <iframe
+                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
+                title="Henry Fong YouTube Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="eager"
                 style={{
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
                   width: '100%',
                   height: '100%',
-                  transform: 'translate(-50%, -50%) scale(1.5)'
-                }}
-                ref={(container) => {
-                  if (container && !container.dataset.initialized) {
-                    container.dataset.initialized = 'true';
-
-                    // Create instant thumbnail
-                    const thumbnail = document.createElement('div');
-                    thumbnail.style.cssText = `
-                      position: absolute;
-                      top: 0;
-                      left: 0;
-                      width: 100%;
-                      height: 100%;
-                      background-image: url(https://i.ytimg.com/vi/vEHTO3gf1jk/maxresdefault.jpg);
-                      background-size: cover;
-                      background-position: center;
-                      z-index: 2;
-                      transition: opacity 0.3s ease;
-                    `;
-
-                    // Create background iframe (hidden initially)
-                    const iframe = document.createElement('iframe');
-                    iframe.src = 'https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1';
-                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-                    iframe.allowFullscreen = true;
-                    iframe.style.cssText = `
-                      position: absolute;
-                      top: 0;
-                      left: 0;
-                      width: 100%;
-                      height: 100%;
-                      border: none;
-                      pointer-events: none;
-                      z-index: 1;
-                    `;
-
-                    // Add elements to container
-                    container.appendChild(iframe);
-                    container.appendChild(thumbnail);
-
-                    // Transition from thumbnail to video after short delay
-                    setTimeout(() => {
-                      thumbnail.style.opacity = '0';
-                      setTimeout(() => {
-                        if (thumbnail.parentNode) {
-                          thumbnail.parentNode.removeChild(thumbnail);
-                        }
-                      }, 300);
-                    }, 1500); // Show thumbnail for 1.5 seconds while video loads
-                  }
+                  transform: 'translate(-50%, -50%) scale(1.5)',
+                  border: 'none',
+                  pointerEvents: 'none',
+                  opacity: 1
                 }}
               />
             </div>
