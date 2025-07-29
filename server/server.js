@@ -22,6 +22,7 @@ const routes = require("./routes");
 const utils = require("./utils");
 const { initializePrivacySystem } = require("./middleware/privacy.middleware");
 const performance = require("./middleware/performance.middleware");
+const imageOptimization = require("./middleware/image-optimization.middleware");
 
 
 // run the cron jobs
@@ -74,6 +75,10 @@ app.use(performance.performanceHeaders());
 app.use(performance.compressionOptimization());
 app.use(performance.resourceHints());
 app.use(performance.coreWebVitalsOptimization());
+
+// Add image optimization middleware
+app.use(imageOptimization.imageStatsMiddleware());
+app.use(imageOptimization.enhanceLazyLoading());
 
 app.use(cookieParser());
 
@@ -171,6 +176,12 @@ app.use((req, res, next) => {
 });
 
 // serve static files with optimized caching headers
+// Add image optimization routes
+const imageRoutes = require('./routes/images.route');
+app.use('/images', imageRoutes);
+
+// Add image optimization middleware for /images route
+app.use("/images", imageOptimization.optimizedImageMiddleware());
 app.use("/images", express.static("custom/images", {
     setHeaders: (res, path) => {
         // Images: Cache for 1 year with immutable flag
@@ -223,6 +234,8 @@ app.use("/react", express.static("static/react", {
     }
 }));
 
+// Add image optimization for static images
+app.use(imageOptimization.optimizedImageMiddleware());
 app.use(express.static("static", {
     setHeaders: (res, path) => {
         // Static assets: Different cache times based on file type

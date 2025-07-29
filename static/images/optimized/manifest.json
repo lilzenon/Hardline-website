@@ -1,0 +1,45 @@
+{
+  "generated": "2025-07-29T02:22:46.603Z",
+  "images": {
+    "hero-left-image-1024w.webp": {
+      "size": 129400,
+      "format": "webp",
+      "lastModified": "2025-07-29T02:22:45.077Z"
+    },
+    "hero-left-image-1280w.webp": {
+      "size": 173382,
+      "format": "webp",
+      "lastModified": "2025-07-29T02:22:45.328Z"
+    },
+    "hero-left-image-640w.webp": {
+      "size": 60646,
+      "format": "webp",
+      "lastModified": "2025-07-29T02:22:44.716Z"
+    },
+    "hero-left-image-768w.webp": {
+      "size": 80366,
+      "format": "webp",
+      "lastModified": "2025-07-29T02:22:44.869Z"
+    },
+    "hero-left-image.avif": {
+      "size": 2008076,
+      "format": "avif",
+      "lastModified": "2025-07-29T02:22:44.542Z"
+    },
+    "hero-left-image.webp": {
+      "size": 1095872,
+      "format": "webp",
+      "lastModified": "2025-07-29T02:22:46.387Z"
+    },
+    "hero-right-video.webp": {
+      "size": 184722,
+      "format": "webp",
+      "lastModified": "2025-07-29T02:22:46.599Z"
+    },
+    "README.md": {
+      "size": 2343,
+      "format": "md",
+      "lastModified": "2025-07-29T02:09:13.929Z"
+    }
+  }
+}
