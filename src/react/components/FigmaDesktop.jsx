@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
+// Helper function to get optimized image URL
+const getOptimizedImageUrl = (originalUrl) => {
+  if (!originalUrl || !originalUrl.includes('/images/figma-exact/')) {
+    return originalUrl;
+  }
+
+  const filename = originalUrl.split('/').pop();
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+  return `/images/optimized/${nameWithoutExt}.webp`;
+};
+
 // Add CSS animation for spinning wheel
 if (typeof document !== 'undefined') {
   const style = document.createElement('style');
@@ -1409,7 +1420,10 @@ const FigmaDesktop = () => {
               width: `${scaledDimensions.heroWidth}px`,
               height: `${scaledDimensions.heroHeight}px`,
               borderRadius: '24px',
-              background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/optimized/hero-left-image.webp) lightgray 50% / cover no-repeat, url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`,
+              background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/optimized/hero-left-image.webp), url(/images/figma-exact/hero-left-image.png)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
               overflow: 'hidden'
             }}
           />
@@ -1994,32 +2008,39 @@ const FigmaDesktop = () => {
                     }}
                   >
                     {/* Rectangle 2 - Event Background Image */}
-                    <img
-                      src={card.coverImage}
-                      alt={`${card.title} event cover`}
-                      loading="lazy"
-                      decoding="async"
-                      fetchpriority="low"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent interference with card interactions
-                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                          window.open(card.ticketsUrl, '_blank');
-                        }
-                      }}
-                      style={{
-                        position: 'absolute',
-                        left: '3px',
-                        top: '2px',
-                        width: '79.04px',
-                        height: '79.04px',
-                        borderRadius: '14px',
-                        objectFit: 'cover',
-                        backgroundColor: 'lightgray',
-                        cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: 'scale(1) translateY(0px)',
-                        boxShadow: 'none'
-                      }}
+                    <picture>
+                      <source
+                        srcSet={getOptimizedImageUrl(card.coverImage)}
+                        type="image/webp"
+                      />
+                      <img
+                        src={card.coverImage}
+                        alt={`${card.title} event cover`}
+                        loading="lazy"
+                        decoding="async"
+                        fetchpriority="low"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent interference with card interactions
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            window.open(card.ticketsUrl, '_blank');
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          left: '3px',
+                          top: '2px',
+                          width: '79.04px',
+                          height: '79.04px',
+                          borderRadius: '14px',
+                          objectFit: 'cover',
+                          backgroundColor: 'lightgray',
+                          cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: 'scale(1) translateY(0px)',
+                          boxShadow: 'none'
+                        }}
+                      />
+                    </picture>
                       onMouseEnter={(e) => {
                         if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
                           e.target.style.transform = 'scale(1.015) translateY(-2px)';

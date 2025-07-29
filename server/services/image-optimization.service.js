@@ -3,7 +3,7 @@
  * Handles automatic image conversion to WebP/AVIF and responsive sizing
  */
 
-// const sharp = require('sharp'); // Disabled due to Node.js version compatibility
+const sharp = require('sharp');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');

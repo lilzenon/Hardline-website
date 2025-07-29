@@ -98,6 +98,14 @@ async function optimizeAllCriticalImages() {
         {
             input: 'static/images/figma-exact/hero-right-video.png',
             name: 'hero-right-video'
+        },
+        {
+            input: 'static/images/figma-exact/event-card-bg.png',
+            name: 'event-card-bg'
+        },
+        {
+            input: 'static/images/figma-exact/desktop-full.png',
+            name: 'desktop-full'
         }
     ];
 

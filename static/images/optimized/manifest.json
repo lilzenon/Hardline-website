@@ -1,40 +1,50 @@
 {
-  "generated": "2025-07-29T02:22:46.603Z",
+  "generated": "2025-07-29T03:10:04.445Z",
   "images": {
+    "desktop-full.webp": {
+      "size": 228872,
+      "format": "webp",
+      "lastModified": "2025-07-29T03:10:04.441Z"
+    },
+    "event-card-bg.webp": {
+      "size": 396,
+      "format": "webp",
+      "lastModified": "2025-07-29T03:10:03.582Z"
+    },
     "hero-left-image-1024w.webp": {
       "size": 129400,
       "format": "webp",
-      "lastModified": "2025-07-29T02:22:45.077Z"
+      "lastModified": "2025-07-29T03:10:02.213Z"
     },
     "hero-left-image-1280w.webp": {
       "size": 173382,
       "format": "webp",
-      "lastModified": "2025-07-29T02:22:45.328Z"
+      "lastModified": "2025-07-29T03:10:02.427Z"
     },
     "hero-left-image-640w.webp": {
       "size": 60646,
       "format": "webp",
-      "lastModified": "2025-07-29T02:22:44.716Z"
+      "lastModified": "2025-07-29T03:10:01.817Z"
     },
     "hero-left-image-768w.webp": {
       "size": 80366,
       "format": "webp",
-      "lastModified": "2025-07-29T02:22:44.869Z"
+      "lastModified": "2025-07-29T03:10:02.042Z"
     },
     "hero-left-image.avif": {
       "size": 2008076,
       "format": "avif",
-      "lastModified": "2025-07-29T02:22:44.542Z"
+      "lastModified": "2025-07-29T03:10:01.657Z"
     },
     "hero-left-image.webp": {
       "size": 1095872,
       "format": "webp",
-      "lastModified": "2025-07-29T02:22:46.387Z"
+      "lastModified": "2025-07-29T03:10:03.364Z"
     },
     "hero-right-video.webp": {
       "size": 184722,
       "format": "webp",
-      "lastModified": "2025-07-29T02:22:46.599Z"
+      "lastModified": "2025-07-29T03:10:03.570Z"
     },
     "README.md": {
       "size": 2343,

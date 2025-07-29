@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
+// Helper function to get optimized image URL
+const getOptimizedImageUrl = (originalUrl) => {
+  if (!originalUrl || !originalUrl.includes('/images/figma-exact/')) {
+    return originalUrl;
+  }
+
+  const filename = originalUrl.split('/').pop();
+  const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+  return `/images/optimized/${nameWithoutExt}.webp`;
+};
+
 // Simple cache for API responses
 const apiCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -2543,57 +2554,63 @@ const FigmaMobile = () => {
                       }}
                     >
                       {/* Event Background Image */}
-                      <img
-                        src={card.coverImage}
-                        alt={`${card.title} event cover`}
-                        loading="lazy"
-                        decoding="async"
-                        fetchpriority="low"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            window.open(card.ticketsUrl, '_blank');
-                          }
-                        }}
-                        style={{
-                          position: 'absolute',
-                          left: '4px', // Scaled up from 3px
-                          top: '3px', // Scaled up from 2px
-                          width: '111px', // Scaled up from 79.04px
-                          height: '111px', // Scaled up from 79.04px
-                          borderRadius: '18px', // Scaled up from 14px
-                          objectFit: 'cover',
-                          backgroundColor: 'lightgray',
-                          cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          transform: 'scale(1) translateY(0px)',
-                          boxShadow: 'none'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
-                            e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'scale(1) translateY(0px)';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                        onMouseDown={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.target.style.transform = 'scale(0.995) translateY(0px)';
-                          }
-                        }}
-                        onMouseUp={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
-                          }
-                        }}
-                        onError={(e) => {
-                          e.target.style.backgroundColor = 'lightgray';
-                          e.target.style.display = 'block';
-                        }}
-                      />
+                      <picture>
+                        <source
+                          srcSet={getOptimizedImageUrl(card.coverImage)}
+                          type="image/webp"
+                        />
+                        <img
+                          src={card.coverImage}
+                          alt={`${card.title} event cover`}
+                          loading="lazy"
+                          decoding="async"
+                          fetchpriority="low"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                              window.open(card.ticketsUrl, '_blank');
+                            }
+                          }}
+                          style={{
+                            position: 'absolute',
+                            left: '4px', // Scaled up from 3px
+                            top: '3px', // Scaled up from 2px
+                            width: '111px', // Scaled up from 79.04px
+                            height: '111px', // Scaled up from 79.04px
+                            borderRadius: '18px', // Scaled up from 14px
+                            objectFit: 'cover',
+                            backgroundColor: 'lightgray',
+                            cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            transform: 'scale(1) translateY(0px)',
+                            boxShadow: 'none'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                              e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                              e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.transform = 'scale(1) translateY(0px)';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                          onMouseDown={(e) => {
+                            if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                              e.target.style.transform = 'scale(0.995) translateY(0px)';
+                            }
+                          }}
+                          onMouseUp={(e) => {
+                            if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                              e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                            }
+                          }}
+                          onError={(e) => {
+                            e.target.style.backgroundColor = 'lightgray';
+                            e.target.style.display = 'block';
+                          }}
+                        />
+                      </picture>
 
                       {/* Date Badge Container - Scaled for Mobile */}
                       <div
