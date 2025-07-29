@@ -2025,6 +2025,30 @@ const FigmaDesktop = () => {
                             window.open(card.ticketsUrl, '_blank');
                           }
                         }}
+                        onMouseEnter={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                            e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'scale(1) translateY(0px)';
+                          e.target.style.boxShadow = 'none';
+                        }}
+                        onMouseDown={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.target.style.transform = 'scale(0.995) translateY(0px)';
+                          }
+                        }}
+                        onMouseUp={(e) => {
+                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
+                          }
+                        }}
+                        onError={(e) => {
+                          e.target.style.backgroundColor = 'lightgray';
+                          e.target.style.display = 'block';
+                        }}
                         style={{
                           position: 'absolute',
                           left: '3px',
@@ -2041,31 +2065,6 @@ const FigmaDesktop = () => {
                         }}
                       />
                     </picture>
-                      onMouseEnter={(e) => {
-                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                          e.target.style.transform = 'scale(1.015) translateY(-2px)';
-                          e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'scale(1) translateY(0px)';
-                        e.target.style.boxShadow = 'none';
-                      }}
-                      onMouseDown={(e) => {
-                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                          e.target.style.transform = 'scale(0.995) translateY(0px)';
-                        }
-                      }}
-                      onMouseUp={(e) => {
-                        if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                          e.target.style.transform = 'scale(1.015) translateY(-2px)';
-                        }
-                      }}
-                      onError={(e) => {
-                        e.target.style.backgroundColor = 'lightgray';
-                        e.target.style.display = 'block';
-                      }}
-                    />
 
                     {/* Frame 7 - Date Badge Container */}
                     <div

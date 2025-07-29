@@ -3,7 +3,15 @@
  * Handles automatic image conversion to WebP/AVIF and responsive sizing
  */
 
-const sharp = require('sharp');
+let sharp;
+try {
+    sharp = require('sharp');
+    console.log('✅ Sharp module loaded successfully');
+} catch (error) {
+    console.error('❌ Failed to load Sharp module:', error.message);
+    sharp = null;
+}
+
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
@@ -74,6 +82,16 @@ class ImageOptimizationService {
         } = options;
 
         try {
+            // Check if Sharp is available
+            if (!sharp) {
+                console.warn('⚠️ Sharp not available, skipping image optimization');
+                return {
+                    success: false,
+                    error: 'Sharp module not available',
+                    fallback: true
+                };
+            }
+
             let pipeline = sharp(inputPath);
 
             // Resize if dimensions specified
@@ -192,6 +210,28 @@ class ImageOptimizationService {
     }
 
     /**
+     * Get pre-optimized image path from static/images/optimized directory
+     */
+    getPreOptimizedPath(imagePath, format) {
+        try {
+            // Extract filename from path
+            const filename = path.basename(imagePath);
+            const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+
+            // Check if this is a figma-exact image that we have pre-optimized
+            if (imagePath.includes('figma-exact')) {
+                const preOptimizedPath = path.join(this.cacheDir, `${nameWithoutExt}.${format}`);
+                return preOptimizedPath;
+            }
+
+            return null;
+        } catch (error) {
+            console.warn('⚠️ Error getting pre-optimized path:', error);
+            return null;
+        }
+    }
+
+    /**
      * Serve optimized image
      */
     async serveOptimizedImage(req, res, imagePath) {
@@ -219,6 +259,25 @@ class ImageOptimizationService {
 
                 return res.sendFile(optimizedPath);
             } catch {
+                // Check if we have pre-optimized images available
+                const preOptimizedPath = this.getPreOptimizedPath(imagePath, bestFormat);
+
+                if (preOptimizedPath) {
+                    try {
+                        await fs.access(preOptimizedPath);
+
+                        res.set({
+                            'Content-Type': `image/${bestFormat}`,
+                            'Cache-Control': 'public, max-age=31536000, immutable',
+                            'Vary': 'Accept'
+                        });
+
+                        return res.sendFile(preOptimizedPath);
+                    } catch {
+                        // Pre-optimized file doesn't exist, continue to dynamic optimization
+                    }
+                }
+
                 // Generate optimized version
                 const result = await this.optimizeImage(imagePath, optimizedPath, {
                     format: bestFormat,
@@ -236,6 +295,7 @@ class ImageOptimizationService {
                     return res.sendFile(optimizedPath);
                 } else {
                     // Fall back to original image
+                    console.warn(`⚠️ Image optimization failed for ${imagePath}, serving original`);
                     return res.sendFile(imagePath);
                 }
             }
