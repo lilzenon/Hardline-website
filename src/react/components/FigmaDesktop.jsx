@@ -244,6 +244,7 @@ const EventCard = memo(({ card, scaledDimensions }) => {
 });
 
 const FigmaDesktop = () => {
+  console.log('🖥️ FIGMA DESKTOP COMPONENT RENDERING');
   // Lazy load YouTube iframes after LCP to avoid critical chain requests
   useEffect(() => {
     const lazyLoadYouTube = () => {
@@ -1690,23 +1691,65 @@ const FigmaDesktop = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* YouTube Video - Auto-playing, No Controls */}
-              <iframe
-                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0"
-                title="Henry Fong YouTube Video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                loading="eager"
+              {/* Instant Video Loading - Thumbnail + Background Iframe */}
+              <div
                 style={{
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
                   width: '100%',
                   height: '100%',
-                  transform: 'translate(-50%, -50%) scale(1.5)',
-                  border: 'none',
-                  pointerEvents: 'none', // Disable all user interaction
-                  opacity: 1
+                  transform: 'translate(-50%, -50%) scale(1.5)'
+                }}
+                ref={(container) => {
+                  if (container && !container.dataset.initialized) {
+                    container.dataset.initialized = 'true';
+
+                    // Create instant thumbnail
+                    const thumbnail = document.createElement('div');
+                    thumbnail.style.cssText = `
+                      position: absolute;
+                      top: 0;
+                      left: 0;
+                      width: 100%;
+                      height: 100%;
+                      background-image: url(https://i.ytimg.com/vi/vEHTO3gf1jk/maxresdefault.jpg);
+                      background-size: cover;
+                      background-position: center;
+                      z-index: 2;
+                      transition: opacity 0.3s ease;
+                    `;
+
+                    // Create background iframe (hidden initially)
+                    const iframe = document.createElement('iframe');
+                    iframe.src = 'https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                    iframe.allowFullscreen = true;
+                    iframe.style.cssText = `
+                      position: absolute;
+                      top: 0;
+                      left: 0;
+                      width: 100%;
+                      height: 100%;
+                      border: none;
+                      pointer-events: none;
+                      z-index: 1;
+                    `;
+
+                    // Add elements to container
+                    container.appendChild(iframe);
+                    container.appendChild(thumbnail);
+
+                    // Transition from thumbnail to video after short delay
+                    setTimeout(() => {
+                      thumbnail.style.opacity = '0';
+                      setTimeout(() => {
+                        if (thumbnail.parentNode) {
+                          thumbnail.parentNode.removeChild(thumbnail);
+                        }
+                      }, 300);
+                    }, 1500); // Show thumbnail for 1.5 seconds while video loads
+                  }
                 }}
               />
             </div>

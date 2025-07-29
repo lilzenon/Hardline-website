@@ -32,8 +32,10 @@ const PageLoader = () => ( <
 );
 
 const App = () => {
+    console.log('⚛️ REACT APP COMPONENT RENDERING');
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [currentPath, setCurrentPath] = useState(window.location.pathname);
+    console.log('📍 CURRENT PATH:', currentPath);
 
     // Modern page transition handler
     const handlePageTransition = useCallback((newPath) => {
@@ -116,10 +118,19 @@ window.ReactDOM = {
 };
 
 // Only render the main app if the root element exists (homepage)
+console.log('🔍 LOOKING FOR ROOT ELEMENT...');
 const container = document.getElementById('root');
+console.log('📦 ROOT CONTAINER:', container);
+
 if (container) {
-    const root = createRoot(container);
-    root.render( < App / > );
+    console.log('✅ ROOT FOUND - MOUNTING REACT APP');
+    try {
+        const root = createRoot(container);
+        root.render(React.createElement(App));
+        console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
+    } catch (error) {
+        console.error('❌ REACT MOUNTING ERROR:', error);
+    }
 } else {
     console.log('No root element found - likely on admin login page, globals exported successfully');
 }

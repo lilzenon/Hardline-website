@@ -16,17 +16,20 @@
     <link rel="dns-prefetch" href="https://b2b.click">
     <link rel="dns-prefetch" href="https://api.b2b.click">
 
-    <!-- YouTube Resource Hints (for optimized video loading) -->
-    <link rel="preconnect" href="https://www.youtube.com">
-    <link rel="preconnect" href="https://i.ytimg.com">
-    <link rel="dns-prefetch" href="https://jnn-pa.googleapis.com">
+    <!-- Aggressive YouTube Optimization for Instant Loading -->
+    <link rel="dns-prefetch" href="//www.youtube.com">
+    <link rel="dns-prefetch" href="//i.ytimg.com">
+    <link rel="dns-prefetch" href="//www.gstatic.com">
+    <link rel="dns-prefetch" href="//jnn-pa.googleapis.com">
+    <link rel="preconnect" href="https://www.youtube.com" crossorigin>
+    <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 
     <!-- Preload Critical Resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"></noscript>
 
-    <!-- Preload YouTube Thumbnail for Instant Display -->
-    <link rel="preload" href="https://i.ytimg.com/vi/vEHTO3gf1jk/maxresdefault.jpg" as="image">
+
 
     <!-- Preload Critical CSS -->
     <link rel="preload" href="/css/tailwind.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -267,6 +270,9 @@
 
 <body>
     <div id="root"></div>
+
+    <!-- Load React Bundle -->
+    <script src="/react/bundle.js"></script>
 </body>
 
 </html>
