@@ -166,22 +166,20 @@ function etagOptimization() {
  */
 function coreWebVitalsOptimization() {
     return (req, res, next) => {
-        // Add headers to improve Core Web Vitals
-        res.set({
-            // Reduce layout shift
-            'Critical-CH': 'DPR, Viewport-Width',
+        // Only set preload links for the main homepage, not for every request
+        if (req.path === '/' && req.method === 'GET') {
+            // Add headers to improve Core Web Vitals
+            res.set({
+                // Reduce layout shift
+                'Critical-CH': 'DPR, Viewport-Width',
 
-            // Improve LCP - preload optimized hero image with cache busting
-            'Link': `</images/optimized/hero-left-image.png?v=${Date.now()}>; rel=preload; as=image; fetchpriority=high`,
+                // Improve LCP - preload optimized hero image (only for homepage)
+                'Link': '</images/optimized/hero-left-image.png>; rel=preload; as=image; fetchpriority=high',
 
-            // Improve FID
-            'X-Robots-Tag': 'index, follow',
-
-            // Force cache refresh for hero image fix
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-        });
+                // Improve FID
+                'X-Robots-Tag': 'index, follow'
+            });
+        }
 
         next();
     };

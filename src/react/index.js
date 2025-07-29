@@ -122,15 +122,19 @@ console.log('🔍 LOOKING FOR ROOT ELEMENT...');
 const container = document.getElementById('root');
 console.log('📦 ROOT CONTAINER:', container);
 
-if (container) {
+// Prevent double mounting by checking if already mounted
+if (container && !container.hasAttribute('data-react-mounted')) {
     console.log('✅ ROOT FOUND - MOUNTING REACT APP');
     try {
         const root = createRoot(container);
         root.render(React.createElement(App));
+        container.setAttribute('data-react-mounted', 'true');
         console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
     } catch (error) {
         console.error('❌ REACT MOUNTING ERROR:', error);
     }
+} else if (container && container.hasAttribute('data-react-mounted')) {
+    console.log('⚠️ REACT APP ALREADY MOUNTED - SKIPPING DUPLICATE MOUNT');
 } else {
     console.log('No root element found - likely on admin login page, globals exported successfully');
 }
