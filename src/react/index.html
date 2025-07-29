@@ -205,10 +205,11 @@
         }
     </script>
 
-    <!-- Performance Optimizations -->
+    <!-- Performance Optimizations - Fixed preload strategy -->
     <link rel="preload" href="/react/bundle.js" as="script">
-    <link rel="prefetch" href="/images/mobile-figma/b2b-logo-mobile.svg">
-    <link rel="prefetch" href="/images/desktop-figma/b2b-logo-desktop.svg">
+
+    <!-- Preload Optimizer - Prevents infinite warning loops -->
+    <script src="/js/preload-optimizer.js" defer></script>
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">

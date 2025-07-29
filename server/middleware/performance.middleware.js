@@ -100,7 +100,7 @@ function compressionOptimization() {
 }
 
 /**
- * Resource hints for better loading performance
+ * Resource hints for better loading performance - Fixed to prevent duplicate preloads
  */
 function resourceHints() {
     return (req, res, next) => {
@@ -114,11 +114,7 @@ function resourceHints() {
                     // Preload critical JavaScript
                     '</react/bundle.js>; rel=preload; as=script',
 
-                    // Preload critical images
-                    '</images/desktop-figma/b2b-logo-desktop.svg>; rel=preload; as=image',
-                    '</images/mobile-figma/b2b-logo-mobile.svg>; rel=preload; as=image',
-
-                    // DNS prefetch for external resources
+                    // DNS prefetch for external resources (no image preloads here to prevent conflicts)
                     '//fonts.googleapis.com; rel=dns-prefetch',
                     '//fonts.gstatic.com; rel=dns-prefetch',
 
