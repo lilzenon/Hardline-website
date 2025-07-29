@@ -117,31 +117,20 @@ window.ReactDOM = {
     }
 };
 
-// Prevent infinite loop by ensuring single execution
-if (typeof window.reactAppInitialized === 'undefined') {
-    window.reactAppInitialized = true;
+// Only render the main app if the root element exists (homepage)
+console.log('🔍 LOOKING FOR ROOT ELEMENT...');
+const container = document.getElementById('root');
+console.log('📦 ROOT CONTAINER:', container);
 
-    // Only render the main app if the root element exists (homepage)
-    console.log('🔍 LOOKING FOR ROOT ELEMENT...');
-    const container = document.getElementById('root');
-    console.log('📦 ROOT CONTAINER:', container);
-
-    // Prevent double mounting by checking if already mounted
-    if (container && !container.hasAttribute('data-react-mounted')) {
-        console.log('✅ ROOT FOUND - MOUNTING REACT APP');
-        try {
-            const root = createRoot(container);
-            root.render(React.createElement(App));
-            container.setAttribute('data-react-mounted', 'true');
-            console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
-        } catch (error) {
-            console.error('❌ REACT MOUNTING ERROR:', error);
-        }
-    } else if (container && container.hasAttribute('data-react-mounted')) {
-        console.log('⚠️ REACT APP ALREADY MOUNTED - SKIPPING DUPLICATE MOUNT');
-    } else {
-        console.log('No root element found - likely on admin login page, globals exported successfully');
+if (container) {
+    console.log('✅ ROOT FOUND - MOUNTING REACT APP');
+    try {
+        const root = createRoot(container);
+        root.render(React.createElement(App));
+        console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
+    } catch (error) {
+        console.error('❌ REACT MOUNTING ERROR:', error);
     }
 } else {
-    console.log('🛑 REACT APP INITIALIZATION ALREADY COMPLETED - PREVENTING INFINITE LOOP');
+    console.log('No root element found - likely on admin login page, globals exported successfully');
 }

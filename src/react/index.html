@@ -205,11 +205,38 @@
         }
     </script>
 
-    <!-- Performance Optimizations - Fixed preload strategy -->
+    <!-- Performance Optimizations -->
     <link rel="preload" href="/react/bundle.js" as="script">
 
-    <!-- Preload Optimizer - Prevents infinite warning loops -->
-    <script src="/js/preload-optimizer.js" defer></script>
+    <!-- Device-specific preloading -->
+    <script>
+        // Conditional preload based on device type
+        (function() {
+            const isMobile = window.innerWidth <= 768 || /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Only preload the logo that will actually be used
+            const logoPath = isMobile ? '/images/mobile-figma/b2b-logo-mobile.svg' : '/images/desktop-figma/b2b-logo-desktop.svg';
+
+            const logoPreload = document.createElement('link');
+            logoPreload.rel = 'preload';
+            logoPreload.as = 'image';
+            logoPreload.type = 'image/svg+xml';
+            logoPreload.href = logoPath;
+            logoPreload.fetchpriority = 'high';
+            document.head.appendChild(logoPreload);
+
+            // Preload optimized hero image variants based on device
+            const heroPath = isMobile ? '/images/optimized/hero-left-image-350w.webp' : '/images/optimized/hero-left-image-299w.webp';
+
+            const heroPreload = document.createElement('link');
+            heroPreload.rel = 'preload';
+            heroPreload.as = 'image';
+            heroPreload.type = 'image/webp';
+            heroPreload.href = heroPath;
+            heroPreload.fetchpriority = 'high';
+            document.head.appendChild(heroPreload);
+        })();
+    </script>
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -272,8 +299,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Load React Bundle -->
-    <script src="/react/bundle.js"></script>
+    <!-- React Bundle is automatically injected by HtmlWebpackPlugin -->
 </body>
 
 </html>

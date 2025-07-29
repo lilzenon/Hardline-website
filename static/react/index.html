@@ -83,7 +83,32 @@
             "email": "info@bounce2bounce.com",
             "openingHours": "Mo-Su 00:00-23:59",
             "priceRange": "$$"
-        }</script><link rel="preload" href="/react/bundle.js" as="script"><script src="/js/preload-optimizer.js" defer="defer"></script><meta http-equiv="X-Content-Type-Options" content="nosniff"><meta http-equiv="X-XSS-Protection" content="1; mode=block"><meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin"><meta name="rating" content="general"><meta name="distribution" content="global"><meta name="revisit-after" content="7 days"><meta name="expires" content="never"><link rel="alternate" hreflang="en" href="https://b2b.click/"><link rel="alternate" hreflang="x-default" href="https://b2b.click/"><style>/* Critical CSS for above-the-fold content */
+        }</script><link rel="preload" href="/react/bundle.js" as="script"><script>// Conditional preload based on device type
+        (function() {
+            const isMobile = window.innerWidth <= 768 || /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            // Only preload the logo that will actually be used
+            const logoPath = isMobile ? '/images/mobile-figma/b2b-logo-mobile.svg' : '/images/desktop-figma/b2b-logo-desktop.svg';
+
+            const logoPreload = document.createElement('link');
+            logoPreload.rel = 'preload';
+            logoPreload.as = 'image';
+            logoPreload.type = 'image/svg+xml';
+            logoPreload.href = logoPath;
+            logoPreload.fetchpriority = 'high';
+            document.head.appendChild(logoPreload);
+
+            // Preload optimized hero image variants based on device
+            const heroPath = isMobile ? '/images/optimized/hero-left-image-350w.webp' : '/images/optimized/hero-left-image-299w.webp';
+
+            const heroPreload = document.createElement('link');
+            heroPreload.rel = 'preload';
+            heroPreload.as = 'image';
+            heroPreload.type = 'image/webp';
+            heroPreload.href = heroPath;
+            heroPreload.fetchpriority = 'high';
+            document.head.appendChild(heroPreload);
+        })();</script><meta http-equiv="X-Content-Type-Options" content="nosniff"><meta http-equiv="X-XSS-Protection" content="1; mode=block"><meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin"><meta name="rating" content="general"><meta name="distribution" content="global"><meta name="revisit-after" content="7 days"><meta name="expires" content="never"><link rel="alternate" hreflang="en" href="https://b2b.click/"><link rel="alternate" hreflang="x-default" href="https://b2b.click/"><style>/* Critical CSS for above-the-fold content */
         
         body {
             font-family: 'Inter', sans-serif;
@@ -121,4 +146,4 @@
         
         * {
             box-sizing: border-box;
-        }</style><script defer="defer" src="/react/bundle.js"></script></head><body><div id="root"></div><script src="/react/bundle.js"></script></body></html>
+        }</style><script defer="defer" src="/react/bundle.js"></script></head><body><div id="root"></div></body></html>
