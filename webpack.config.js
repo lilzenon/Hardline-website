@@ -65,7 +65,9 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/react/index.html',
-            filename: 'index.html'
+            filename: 'index.html',
+            inject: 'body', // Inject scripts at end of body, not as preloads
+            scriptLoading: 'defer' // Use defer instead of preload for scripts
         })
     ],
     devServer: {

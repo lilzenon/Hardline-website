@@ -311,10 +311,12 @@ class ImageOptimizationService {
      */
     async preoptimizeCriticalImages() {
         const criticalImages = [
-            'static/images/figma-exact/hero-left-image.png',
-            'static/images/figma-exact/hero-right-video.png',
-            'static/images/desktop-figma/b2b-logo-desktop.svg',
-            'static/images/mobile-figma/b2b-logo-mobile.svg'
+            // Use optimized WebP variants instead of PNG
+            'static/images/optimized/hero-left-image-350w.webp',
+            'static/images/optimized/hero-left-image-299w.webp',
+            // Use device-specific logos
+            'static/images/mobile-figma/b2b-logo-mobile.svg',
+            'static/images/figma-exact/b2b-logo-nav.svg'
         ];
 
         console.log('🖼️ Pre-optimizing critical images...');

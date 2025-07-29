@@ -15,10 +15,7 @@ function performanceHeaders() {
             // Enable browser caching
             'Vary': 'Accept-Encoding, User-Agent',
 
-            // Preload critical resources (React handles its own preloads)
-            'Link': [
-                '</css/tailwind.css>; rel=preload; as=style'
-            ].join(', '),
+            // React handles all preloads - no server-side preloads to avoid conflicts
 
             // Performance hints
             'X-Content-Type-Options': 'nosniff',
