@@ -153,15 +153,12 @@ function etagOptimization() {
  */
 function coreWebVitalsOptimization() {
     return (req, res, next) => {
-        // Only set preload links for the main homepage, not for every request
+        // Only set headers for the main homepage, not for every request
         if (req.path === '/' && req.method === 'GET') {
-            // Add headers to improve Core Web Vitals
+            // Add headers to improve Core Web Vitals (React handles its own preloads)
             res.set({
                 // Reduce layout shift
                 'Critical-CH': 'DPR, Viewport-Width',
-
-                // Improve LCP - preload optimized hero image (only for homepage)
-                'Link': '</images/optimized/hero-left-image.png>; rel=preload; as=image; fetchpriority=high',
 
                 // Improve FID
                 'X-Robots-Tag': 'index, follow'
