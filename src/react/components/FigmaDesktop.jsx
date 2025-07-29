@@ -1745,17 +1745,9 @@ const FigmaDesktop = () => {
                     height: '100%',
                     transform: 'translate(-50%, -50%)',
                     background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    fontSize: '16px',
-                    fontFamily: 'Inter',
                     border: 'none'
                   }}
-                >
-                  🎥 Loading video...
-                </div>
+                />
               )}
             </div>
 
