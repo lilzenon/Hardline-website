@@ -16,14 +16,45 @@
     <link rel="dns-prefetch" href="https://b2b.click">
     <link rel="dns-prefetch" href="https://api.b2b.click">
 
-    <!-- Aggressive YouTube Optimization for Instant Loading -->
-    <link rel="dns-prefetch" href="//www.youtube.com">
-    <link rel="dns-prefetch" href="//i.ytimg.com">
-    <link rel="dns-prefetch" href="//www.gstatic.com">
-    <link rel="dns-prefetch" href="//jnn-pa.googleapis.com">
-    <link rel="preconnect" href="https://www.youtube.com" crossorigin>
-    <link rel="preconnect" href="https://i.ytimg.com" crossorigin>
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <!-- Deferred YouTube Optimization - Don't Block Critical Resources -->
+    <script>
+        // Defer YouTube connections until after LCP
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                // Add YouTube DNS prefetch after page load
+                const ytDomains = [
+                    '//www.youtube.com',
+                    '//i.ytimg.com',
+                    '//www.gstatic.com',
+                    '//jnn-pa.googleapis.com'
+                ];
+
+                ytDomains.forEach(domain => {
+                    const link = document.createElement('link');
+                    link.rel = 'dns-prefetch';
+                    link.href = domain;
+                    document.head.appendChild(link);
+                });
+
+                // Add preconnect for YouTube after DNS prefetch
+                setTimeout(() => {
+                    const preconnectDomains = [
+                        'https://www.youtube.com',
+                        'https://i.ytimg.com',
+                        'https://www.gstatic.com'
+                    ];
+
+                    preconnectDomains.forEach(domain => {
+                        const link = document.createElement('link');
+                        link.rel = 'preconnect';
+                        link.href = domain;
+                        link.crossOrigin = 'anonymous';
+                        document.head.appendChild(link);
+                    });
+                }, 100);
+            }, 500); // Delay YouTube connections by 500ms after page load
+        });
+    </script>
 
     <!-- Preload Critical Resources -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -208,35 +239,13 @@
     <!-- Performance Optimizations -->
     <!-- Bundle.js is automatically preloaded by webpack HtmlWebpackPlugin -->
 
-    <!-- Device-specific resource preloading -->
-    <script>
-        // Preload resources that will actually be used based on device type
-        (function() {
-            const isMobile = window.innerWidth <= 768 || /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    <!-- LCP Hero Image - Discoverable in Initial Document -->
+    <link rel="preload" href="/images/optimized/hero-left-image-350w.webp" as="image" type="image/webp" fetchpriority="high" media="(max-width: 768px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-299w.webp" as="image" type="image/webp" fetchpriority="high" media="(min-width: 769px)">
 
-            // Preload the correct logo based on device type
-            const logoPath = isMobile ? '/images/mobile-figma/b2b-logo-mobile.svg' : '/images/figma-exact/b2b-logo-nav.svg';
-
-            const logoPreload = document.createElement('link');
-            logoPreload.rel = 'preload';
-            logoPreload.as = 'image';
-            logoPreload.type = 'image/svg+xml';
-            logoPreload.href = logoPath;
-            logoPreload.fetchpriority = 'high';
-            document.head.appendChild(logoPreload);
-
-            // Preload optimized hero image variants based on device
-            const heroPath = isMobile ? '/images/optimized/hero-left-image-350w.webp' : '/images/optimized/hero-left-image-299w.webp';
-
-            const heroPreload = document.createElement('link');
-            heroPreload.rel = 'preload';
-            heroPreload.as = 'image';
-            heroPreload.type = 'image/webp';
-            heroPreload.href = heroPath;
-            heroPreload.fetchpriority = 'high';
-            document.head.appendChild(heroPreload);
-        })();
-    </script>
+    <!-- Device-specific logo preloading -->
+    <link rel="preload" href="/images/mobile-figma/b2b-logo-mobile.svg" as="image" type="image/svg+xml" fetchpriority="high" media="(max-width: 768px)">
+    <link rel="preload" href="/images/figma-exact/b2b-logo-nav.svg" as="image" type="image/svg+xml" fetchpriority="high" media="(min-width: 769px)">
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">

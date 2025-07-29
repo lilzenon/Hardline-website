@@ -287,29 +287,32 @@ const getCurrentCountry = (countryId) => {
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const FigmaMobile = () => {
-  // Load YouTube iframes immediately for better performance
+  // Lazy load YouTube to avoid blocking LCP
+  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
+
   useEffect(() => {
-    const lazyLoadYouTube = () => {
-      const iframes = document.querySelectorAll('iframe[data-src]');
-      iframes.forEach(iframe => {
-        if (iframe.dataset.src && iframe.src === 'about:blank') {
-          iframe.src = iframe.dataset.src;
-          iframe.removeAttribute('data-src');
-        }
-      });
+    // Delay YouTube loading until after LCP
+    const loadYouTubeAfterLCP = () => {
+      // Wait for LCP to complete, then load YouTube
+      setTimeout(() => {
+        setShouldLoadYoutube(true);
+        console.log('🎥 YouTube loading enabled after LCP delay');
+      }, 1500); // 1.5 second delay to ensure LCP completes first
     };
 
-    // Load YouTube immediately without delay
-    lazyLoadYouTube();
-
-    // Also load on user interaction as fallback
+    // Load on user interaction for immediate engagement
     const loadOnInteraction = () => {
-      lazyLoadYouTube();
+      setShouldLoadYoutube(true);
+      console.log('🎥 YouTube loading enabled by user interaction');
       document.removeEventListener('click', loadOnInteraction);
       document.removeEventListener('scroll', loadOnInteraction);
       document.removeEventListener('touchstart', loadOnInteraction);
     };
 
+    // Set up delayed loading
+    loadYouTubeAfterLCP();
+
+    // Also enable immediate loading on user interaction
     document.addEventListener('click', loadOnInteraction);
     document.addEventListener('scroll', loadOnInteraction);
     document.addEventListener('touchstart', loadOnInteraction);
@@ -1861,24 +1864,47 @@ const FigmaMobile = () => {
               >
 
 
-                <iframe
-                  src={buildYouTubeURL}
-                  title="Henry Fong YouTube Video - Adaptive Quality"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="eager"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '100%',
-                    height: '100%',
-                    transform: 'translate(-50%, -50%) scale(1.5)',
-                    pointerEvents: 'none',
-                    border: 'none',
-                    opacity: 1 // Show immediately
-                  }}
-                />
+                {shouldLoadYoutube ? (
+                  <iframe
+                    src={buildYouTubeURL}
+                    title="Henry Fong YouTube Video - Adaptive Quality"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    loading="lazy"
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '100%',
+                      height: '100%',
+                      transform: 'translate(-50%, -50%) scale(1.5)',
+                      pointerEvents: 'none',
+                      border: 'none',
+                      opacity: 1
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '100%',
+                      height: '100%',
+                      transform: 'translate(-50%, -50%)',
+                      background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: '14px',
+                      fontFamily: 'Inter',
+                      border: 'none'
+                    }}
+                  >
+                    🎥 Loading video...
+                  </div>
+                )}
               </div>
 
               {/* Gradient overlay */}
