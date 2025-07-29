@@ -56,13 +56,65 @@
         });
     </script>
 
-    <!-- Preload Critical Resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"></noscript>
+    <!-- Optimized Font Loading - Only Critical Weights with font-display: optional -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=optional"></noscript>
+
+    <!-- Preload Critical Font Files Directly -->
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hiA.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Font Metric Overrides to Prevent Layout Shifts -->
+    <style>
+        @font-face {
+            font-family: 'Inter-fallback';
+            font-style: normal;
+            font-weight: 400;
+            font-display: swap;
+            src: local('Arial'), local('Helvetica'), local('sans-serif');
+            ascent-override: 90.20%;
+            descent-override: 22.48%;
+            line-gap-override: 0.00%;
+            size-adjust: 107.40%;
+        }
+        
+        @font-face {
+            font-family: 'Inter-fallback';
+            font-style: normal;
+            font-weight: 700;
+            font-display: swap;
+            src: local('Arial Bold'), local('Helvetica Bold'), local('sans-serif');
+            ascent-override: 90.20%;
+            descent-override: 22.48%;
+            line-gap-override: 0.00%;
+            size-adjust: 107.40%;
+        }
+        
+        @font-face {
+            font-family: 'Inter-fallback';
+            font-style: normal;
+            font-weight: 800;
+            font-display: swap;
+            src: local('Arial Black'), local('Helvetica Bold'), local('sans-serif');
+            ascent-override: 90.20%;
+            descent-override: 22.48%;
+            line-gap-override: 0.00%;
+            size-adjust: 107.40%;
+        }
+        /* Apply fallback font with metrics matching Inter */
+        
+        body,
+        html {
+            font-family: 'Inter', 'Inter-fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+    </style>
 
 
 
     <!-- Preload Critical CSS -->
+    <link rel="preload" href="/css/font-optimization.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/css/font-optimization.css"></noscript>
+
     <link rel="preload" href="/css/tailwind.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="/css/tailwind.css"></noscript>
 
@@ -246,6 +298,9 @@
     <!-- Device-specific logo preloading -->
     <link rel="preload" href="/images/mobile-figma/b2b-logo-mobile.svg" as="image" type="image/svg+xml" fetchpriority="high" media="(max-width: 768px)">
     <link rel="preload" href="/images/figma-exact/b2b-logo-nav.svg" as="image" type="image/svg+xml" fetchpriority="high" media="(min-width: 769px)">
+
+    <!-- Font Optimization Script - Improves FCP -->
+    <script src="/js/font-optimization.js" defer></script>
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
