@@ -1315,7 +1315,7 @@ const FigmaDesktop = () => {
       >
         {/* Group 4 - B2B Logo Nav */}
         <img
-          src="/images/optimized/b2b-logo-nav.svg"
+          src="/images/figma-exact/b2b-logo-nav.svg"
           alt="B2B Logo"
           loading="lazy"
           decoding="async"
