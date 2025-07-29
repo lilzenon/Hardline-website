@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
-// Helper function to get optimized image URL - FORCES ALL IMAGES THROUGH OPTIMIZATION
-const getOptimizedImageUrl = (originalUrl) => {
+// Helper function to get optimized image URL with responsive sizing - FORCES ALL IMAGES THROUGH OPTIMIZATION
+const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) {
     return originalUrl;
   }
@@ -16,10 +16,19 @@ const getOptimizedImageUrl = (originalUrl) => {
   if (originalUrl.startsWith('http')) {
     // Encode the external URL to pass through our optimization proxy
     const encodedUrl = encodeURIComponent(originalUrl);
-    return `/images/proxy-optimized?url=${encodedUrl}`;
+    const baseUrl = `/images/proxy-optimized?url=${encodedUrl}`;
+    return width ? `${baseUrl}&w=${width}` : baseUrl;
   }
 
   return originalUrl;
+};
+
+// Helper function to generate responsive srcSet for event images
+const getResponsiveSrcSet = (originalUrl) => {
+  if (!originalUrl) return '';
+
+  const sizes = [150, 300, 600]; // Appropriate sizes for event cards
+  return sizes.map(size => `${getOptimizedImageUrl(originalUrl, size)} ${size}w`).join(', ');
 };
 
 // Add CSS animation for spinning wheel
@@ -1437,17 +1446,22 @@ const FigmaDesktop = () => {
           >
             <picture>
               <source
-                srcSet="/images/optimized/hero-left-image.png"
+                srcSet="/images/optimized/hero-left-image-768w.webp 768w, /images/optimized/hero-left-image-1024w.webp 1024w, /images/optimized/hero-left-image-1280w.webp 1280w"
+                sizes="(max-width: 768px) 768px, (max-width: 1024px) 1024px, 1280px"
                 type="image/webp"
               />
+              <source
+                srcSet="/images/optimized/hero-left-image.avif"
+                type="image/avif"
+              />
               <img
-                src="/images/optimized/hero-left-image.png"
+                src="/images/optimized/hero-left-image-1024w.webp"
                 alt="Hero background"
                 loading="eager"
                 decoding="async"
                 fetchpriority="high"
-                onLoad={() => console.log('✅ HERO IMAGE LOADED SUCCESSFULLY')}
-                onError={(e) => console.error('❌ HERO IMAGE FAILED TO LOAD:', e.target.src)}
+                onLoad={() => console.log('✅ DESKTOP HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
+                onError={(e) => console.error('❌ DESKTOP HERO IMAGE FAILED TO LOAD:', e.target.src)}
                 style={{
                   position: 'absolute',
                   left: '0px',
@@ -2021,11 +2035,12 @@ const FigmaDesktop = () => {
                     {/* Rectangle 2 - Event Background Image */}
                     <picture>
                       <source
-                        srcSet={getOptimizedImageUrl(card.coverImage)}
+                        srcSet={getResponsiveSrcSet(card.coverImage)}
+                        sizes="(max-width: 768px) 150px, (max-width: 1024px) 200px, 300px"
                         type="image/webp"
                       />
                       <img
-                        src={card.coverImage}
+                        src={getOptimizedImageUrl(card.coverImage, 200)}
                         alt={`${card.title} event cover`}
                         loading="lazy"
                         decoding="async"

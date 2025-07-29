@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-// Helper function to get optimized image URL - FORCES ALL IMAGES THROUGH OPTIMIZATION
-const getOptimizedImageUrl = (originalUrl) => {
+// Helper function to get optimized image URL with responsive sizing - FORCES ALL IMAGES THROUGH OPTIMIZATION
+const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) {
     return originalUrl;
   }
@@ -16,10 +16,19 @@ const getOptimizedImageUrl = (originalUrl) => {
   if (originalUrl.startsWith('http')) {
     // Encode the external URL to pass through our optimization proxy
     const encodedUrl = encodeURIComponent(originalUrl);
-    return `/images/proxy-optimized?url=${encodedUrl}`;
+    const baseUrl = `/images/proxy-optimized?url=${encodedUrl}`;
+    return width ? `${baseUrl}&w=${width}` : baseUrl;
   }
 
   return originalUrl;
+};
+
+// Helper function to generate responsive srcSet for event images
+const getResponsiveSrcSet = (originalUrl) => {
+  if (!originalUrl) return '';
+
+  const sizes = [150, 300, 600]; // Appropriate sizes for event cards
+  return sizes.map(size => `${getOptimizedImageUrl(originalUrl, size)} ${size}w`).join(', ');
 };
 
 // Simple cache for API responses
@@ -2202,16 +2211,21 @@ const FigmaMobile = () => {
               >
                 <picture>
                   <source
-                    srcSet="/images/optimized/hero-left-image.png"
+                    srcSet="/images/optimized/hero-left-image-640w.webp 640w, /images/optimized/hero-left-image-768w.webp 768w, /images/optimized/hero-left-image-1024w.webp 1024w"
+                    sizes="(max-width: 640px) 640px, (max-width: 768px) 768px, 1024px"
                     type="image/webp"
                   />
+                  <source
+                    srcSet="/images/optimized/hero-left-image.avif"
+                    type="image/avif"
+                  />
                   <img
-                    src="/images/optimized/hero-left-image.png"
+                    src="/images/optimized/hero-left-image-640w.webp"
                     alt="Hero background"
                     loading="eager"
                     decoding="async"
                     fetchpriority="high"
-                    onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY')}
+                    onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
                     onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
                     style={{
                       position: 'absolute',
@@ -2570,11 +2584,12 @@ const FigmaMobile = () => {
                       {/* Event Background Image */}
                       <picture>
                         <source
-                          srcSet={getOptimizedImageUrl(card.coverImage)}
+                          srcSet={getResponsiveSrcSet(card.coverImage)}
+                          sizes="(max-width: 640px) 150px, 300px"
                           type="image/webp"
                         />
                         <img
-                          src={card.coverImage}
+                          src={getOptimizedImageUrl(card.coverImage, 150)}
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           decoding="async"
