@@ -244,6 +244,41 @@ const getCurrentCountry = (countryId) => {
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const FigmaMobile = () => {
+  // Lazy load YouTube iframes after LCP to avoid critical chain requests
+  useEffect(() => {
+    const lazyLoadYouTube = () => {
+      const iframes = document.querySelectorAll('iframe[data-src]');
+      iframes.forEach(iframe => {
+        if (iframe.dataset.src && iframe.src === 'about:blank') {
+          iframe.src = iframe.dataset.src;
+          iframe.removeAttribute('data-src');
+        }
+      });
+    };
+
+    // Wait for LCP and page load before loading YouTube
+    const timer = setTimeout(lazyLoadYouTube, 2000); // 2 second delay
+
+    // Also load on user interaction
+    const loadOnInteraction = () => {
+      lazyLoadYouTube();
+      document.removeEventListener('click', loadOnInteraction);
+      document.removeEventListener('scroll', loadOnInteraction);
+      document.removeEventListener('touchstart', loadOnInteraction);
+    };
+
+    document.addEventListener('click', loadOnInteraction);
+    document.addEventListener('scroll', loadOnInteraction);
+    document.addEventListener('touchstart', loadOnInteraction);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', loadOnInteraction);
+      document.removeEventListener('scroll', loadOnInteraction);
+      document.removeEventListener('touchstart', loadOnInteraction);
+    };
+  }, []);
+
   const [showMenu, setShowMenu] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
@@ -1789,11 +1824,39 @@ const FigmaMobile = () => {
                   overflow: 'hidden'
                 }}
               >
+                {/* YouTube Video Placeholder */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: '100%',
+                    height: '100%',
+                    transform: 'translate(-50%, -50%) scale(1.5)',
+                    background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.8
+                  }}
+                >
+                  <div style={{
+                    color: '#666',
+                    fontSize: '12px',
+                    textAlign: 'center',
+                    fontFamily: 'Inter, sans-serif'
+                  }}>
+                    Video Loading...
+                  </div>
+                </div>
+
                 <iframe
-                  src={buildYouTubeURL}
+                  src="about:blank"
+                  data-src={buildYouTubeURL}
                   title="Henry Fong YouTube Video - Adaptive Quality"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  loading="lazy"
                   style={{
                     position: 'absolute',
                     top: '50%',
@@ -1802,7 +1865,14 @@ const FigmaMobile = () => {
                     height: '100%',
                     transform: 'translate(-50%, -50%) scale(1.5)',
                     pointerEvents: 'none',
-                    border: 'none'
+                    border: 'none',
+                    opacity: 0 // Hidden until loaded
+                  }}
+                  onLoad={(e) => {
+                    // Show iframe and hide placeholder when loaded
+                    e.target.style.opacity = 1;
+                    const placeholder = e.target.previousElementSibling;
+                    if (placeholder) placeholder.style.display = 'none';
                   }}
                 />
               </div>
