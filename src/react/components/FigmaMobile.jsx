@@ -25,10 +25,21 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
 };
 
 // Helper function to generate responsive srcSet for event images
-const getResponsiveSrcSet = (originalUrl) => {
+const getResponsiveSrcSet = (originalUrl, context = 'event') => {
   if (!originalUrl) return '';
 
-  const sizes = [150, 300, 600]; // Appropriate sizes for event cards
+  let sizes;
+  if (context === 'event') {
+    // Optimized for actual event card display sizes (111px base)
+    sizes = [111, 222, 333]; // 1x, 2x, 3x for 111px display
+  } else if (context === 'hero') {
+    // Optimized for hero image display sizes (350px mobile)
+    sizes = [350, 700, 1050]; // 1x, 2x, 3x for 350px display
+  } else {
+    // Default fallback
+    sizes = [150, 300, 600];
+  }
+
   return sizes.map(size => `${getOptimizedImageUrl(originalUrl, size)} ${size}w`).join(', ');
 };
 
@@ -2205,8 +2216,8 @@ const FigmaMobile = () => {
               >
                 <picture>
                   <source
-                    srcSet="/images/optimized/hero-left-image-640w.webp 640w, /images/optimized/hero-left-image-768w.webp 768w, /images/optimized/hero-left-image-1024w.webp 1024w"
-                    sizes="(max-width: 640px) 640px, (max-width: 768px) 768px, 1024px"
+                    srcSet="/images/optimized/hero-left-image-350w.webp 350w, /images/optimized/hero-left-image-700w.webp 700w, /images/optimized/hero-left-image-1050w.webp 1050w"
+                    sizes="350px"
                     type="image/webp"
                   />
                   <source
@@ -2214,7 +2225,7 @@ const FigmaMobile = () => {
                     type="image/avif"
                   />
                   <img
-                    src="/images/optimized/hero-left-image-640w.webp"
+                    src="/images/optimized/hero-left-image-350w.webp"
                     alt="Hero background"
                     loading="eager"
                     decoding="async"
@@ -2578,12 +2589,12 @@ const FigmaMobile = () => {
                       {/* Event Background Image */}
                       <picture>
                         <source
-                          srcSet={getResponsiveSrcSet(card.coverImage)}
-                          sizes="(max-width: 640px) 150px, 300px"
+                          srcSet={getResponsiveSrcSet(card.coverImage, 'event')}
+                          sizes="111px"
                           type="image/webp"
                         />
                         <img
-                          src={getOptimizedImageUrl(card.coverImage, 150)}
+                          src={getOptimizedImageUrl(card.coverImage, 111)}
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           decoding="async"

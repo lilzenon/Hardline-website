@@ -353,13 +353,24 @@ async function optimizeImageWithRetry(imageBuffer, format, requestId, maxRetries
             try {
                 sharpInstance = sharp(imageBuffer);
 
+                // Apply optimized compression settings
                 if (format === 'webp') {
                     optimizedBuffer = await sharpInstance
-                        .webp({ quality: 85, effort: 4 })
+                        .webp({
+                            quality: 80, // Reduced from 85 for better compression
+                            effort: 6, // Increased effort for better compression
+                            smartSubsample: true,
+                            nearLossless: false
+                        })
                         .toBuffer();
                 } else {
                     optimizedBuffer = await sharpInstance
-                        .jpeg({ quality: 85, progressive: true })
+                        .jpeg({
+                            quality: 80, // Reduced from 85 for better compression
+                            progressive: true,
+                            mozjpeg: true,
+                            optimiseScans: true
+                        })
                         .toBuffer();
                 }
 
@@ -487,18 +498,44 @@ async function optimizeImageWithRetryAndResize(imageBuffer, format, width, reque
                     console.log(`📐 [${requestId}] Resizing to max width: ${width}px`);
                 }
 
-                // Apply format-specific optimization
+                // Apply format-specific optimization with context-aware compression
+                const isHeroImage = width && (width === 299 || width === 350 || width === 598 || width === 700 || width === 897 || width === 1050);
+                const isEventCard = width && (width === 111 || width === 222 || width === 333);
+
+                let quality;
+                if (isHeroImage) {
+                    quality = format === 'webp' ? 82 : format === 'avif' ? 78 : 82; // Slightly higher quality for hero images
+                } else if (isEventCard) {
+                    quality = format === 'webp' ? 78 : format === 'avif' ? 75 : 78; // More aggressive compression for small event cards
+                } else {
+                    quality = format === 'webp' ? 80 : format === 'avif' ? 77 : 80; // Default compression
+                }
+
                 if (format === 'webp') {
                     optimizedBuffer = await sharpInstance
-                        .webp({ quality: 85, effort: 4, smartSubsample: true })
+                        .webp({
+                            quality: quality,
+                            effort: 6, // Increased effort for better compression
+                            smartSubsample: true,
+                            nearLossless: false // Ensure lossy compression for better file sizes
+                        })
                         .toBuffer();
                 } else if (format === 'avif') {
                     optimizedBuffer = await sharpInstance
-                        .avif({ quality: 80, effort: 4 })
+                        .avif({
+                            quality: quality,
+                            effort: 6, // Increased effort for better compression
+                            chromaSubsampling: '4:2:0' // Better compression
+                        })
                         .toBuffer();
                 } else {
                     optimizedBuffer = await sharpInstance
-                        .jpeg({ quality: 85, progressive: true, mozjpeg: true })
+                        .jpeg({
+                            quality: quality,
+                            progressive: true,
+                            mozjpeg: true,
+                            optimiseScans: true // Additional JPEG optimization
+                        })
                         .toBuffer();
                 }
 
