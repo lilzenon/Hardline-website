@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { usePerformantResize } from '../hooks/usePerformantResize';
 
 // Helper function to get optimized image URL with responsive sizing - FORCES ALL IMAGES THROUGH OPTIMIZATION
 const getOptimizedImageUrl = (originalUrl, width = null) => {
@@ -350,7 +351,6 @@ const FigmaDesktop = () => {
   const resendTimerRef = useRef(null);
   const isMountedRef = useRef(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
@@ -366,82 +366,61 @@ const FigmaDesktop = () => {
     scale: 1
   });
 
-  // Calculate responsive dimensions based on viewport
-  useEffect(() => {
-    const calculateDimensions = () => {
-      const currentViewportWidth = window.innerWidth;
-      setViewportWidth(currentViewportWidth);
-      const padding = currentViewportWidth <= 360 ? 16 : currentViewportWidth <= 480 ? 24 : 32;
-      const availableWidth = currentViewportWidth - padding;
+  // Use performant resize hook for responsive calculations
+  const { width: viewportWidth } = usePerformantResize((dimensions) => {
+    const { width: currentViewportWidth } = dimensions;
+    const padding = currentViewportWidth <= 360 ? 16 : currentViewportWidth <= 480 ? 24 : 32;
+    const availableWidth = currentViewportWidth - padding;
 
-      // Base dimensions from Figma design
-      const baseHeroWidth = 299;
-      const baseHeroHeight = 299;
-      const baseRightHeroWidth = 498;
-      const baseRightHeroHeight = 299;
-      const baseGap = 32;
-      const baseContainerWidth = 825; // Fixed container width for alignment
-      const containerPadding = 32; // 16px on each side
-      const availableContainerWidth = baseContainerWidth - containerPadding; // 793px
+    // Base dimensions from Figma design
+    const baseHeroWidth = 299;
+    const baseHeroHeight = 299;
+    const baseRightHeroWidth = 498;
+    const baseRightHeroHeight = 299;
+    const baseGap = 32;
+    const baseContainerWidth = 825; // Fixed container width for alignment
+    const containerPadding = 32; // 16px on each side
+    const availableContainerWidth = baseContainerWidth - containerPadding; // 793px
 
-      // Calculate scale factor to fit both hero sections and events/text sections
-      const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
-      const baseEventsWidth = 440;  // Reduced from 507px to 440px as requested
-      const baseTextUsWidth = 299;
-      const baseEventsTextGap = 50;  // Increased gap for visible separation
-      const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 789px
+    // Calculate scale factor to fit both hero sections and events/text sections
+    const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
+    const baseEventsWidth = 440;  // Reduced from 507px to 440px as requested
+    const baseTextUsWidth = 299;
+    const baseEventsTextGap = 50;  // Increased gap for visible separation
+    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 789px
 
-      // Use the more restrictive constraint to ensure both sections fit
-      const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
-      let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
+    // Use the more restrictive constraint to ensure both sections fit
+    const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
+    let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
 
-      // Apply constraints - keep minimum but add reasonable maximum for desktop
-      if (scale < 0.25) scale = 0.25;  // Minimum for small screens
-      if (scale > 1.25) scale = 1.25;    // Maximum for desktop (prevents oversized content)
+    // Apply constraints - keep minimum but add reasonable maximum for desktop
+    if (scale < 0.25) scale = 0.25;  // Minimum for small screens
+    if (scale > 1.25) scale = 1.25;    // Maximum for desktop (prevents oversized content)
 
-      const scaledDimensions = {
-        heroWidth: Math.round(baseHeroWidth * scale),
-        heroHeight: Math.round(baseHeroHeight * scale),
-        rightHeroWidth: Math.round(baseRightHeroWidth * scale),
-        rightHeroHeight: Math.round(baseRightHeroHeight * scale),
-        gap: Math.round(baseGap * scale),
-        // Container width stays fixed for alignment
-        containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
-        // Scale events and text sections to match hero scaling
-        eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
-        textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
-        eventsTextGap: Math.round(baseEventsTextGap * scale),  // Scale gap between Events and Text us
-        eventCardWidth: 220,  // Set to 220px as requested
-        eventCardHeight: 85,   // Always 85px event card height
-        scale: scale
-      };
-
-      // Update mobile state based on whether events list can fit alongside text us section
-      // Events list needs ~440px + Text us needs ~299px + gap ~50px = ~789px minimum
-      setIsMobile(currentViewportWidth <= 850);
-
-      setScaledDimensions(scaledDimensions);
-      console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${viewportWidth}px (max 1.25x)`, scaledDimensions);
+    const scaledDimensions = {
+      heroWidth: Math.round(baseHeroWidth * scale),
+      heroHeight: Math.round(baseHeroHeight * scale),
+      rightHeroWidth: Math.round(baseRightHeroWidth * scale),
+      rightHeroHeight: Math.round(baseRightHeroHeight * scale),
+      gap: Math.round(baseGap * scale),
+      // Container width stays fixed for alignment
+      containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
+      // Scale events and text sections to match hero scaling
+      eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
+      textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
+      eventsTextGap: Math.round(baseEventsTextGap * scale),  // Scale gap between Events and Text us
+      eventCardWidth: 220,  // Set to 220px as requested
+      eventCardHeight: 85,   // Always 85px event card height
+      scale: scale
     };
 
-    // Initial calculation
-    calculateDimensions();
+    // Update mobile state based on whether events list can fit alongside text us section
+    // Events list needs ~440px + Text us needs ~299px + gap ~50px = ~789px minimum
+    setIsMobile(currentViewportWidth <= 850);
 
-    // Debounced resize handler for better performance
-    let resizeTimeout;
-    const debouncedResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(calculateDimensions, 100); // 100ms debounce
-    };
-
-    // Update on resize with debouncing
-    window.addEventListener('resize', debouncedResize);
-
-    return () => {
-      window.removeEventListener('resize', debouncedResize);
-      clearTimeout(resizeTimeout);
-    };
-  }, []);
+    setScaledDimensions(scaledDimensions);
+    console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.25x)`, scaledDimensions);
+  });
 
   // Get the most recent event for hero sections
   const mostRecentEvent = useMemo(() => {

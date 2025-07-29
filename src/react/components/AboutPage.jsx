@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import AboutPageMobile from './AboutPageMobile';
+import { usePerformantResize } from '../hooks/usePerformantResize';
 
 const AboutPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+  // Use performant resize hook instead of direct window.innerWidth access
   const [activeNavTab, setActiveNavTab] = useState('About');
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
@@ -60,11 +61,9 @@ const AboutPage = () => {
     };
   }, []);
 
-  // Calculate responsive dimensions based on viewport - EXACT MATCH to FigmaDesktop
-  useEffect(() => {
-    const calculateDimensions = () => {
-      const currentViewportWidth = window.innerWidth;
-      setViewportWidth(currentViewportWidth);
+  // Use performant resize hook for responsive calculations
+  const { width: viewportWidth } = usePerformantResize((dimensions) => {
+    const { width: currentViewportWidth } = dimensions;
 
       // Base dimensions for scaling calculations
       const availableWidth = currentViewportWidth - 32; // Account for 16px padding on each side
@@ -108,26 +107,9 @@ const AboutPage = () => {
         eventCardHeight: 85   // Always 85px event card height
       };
 
-      setScaledDimensions(scaledDimensions);
-      console.log(`🎯 About page scaling: ${scale.toFixed(3)} for viewport ${viewportWidth}px (max 1.25x)`, scaledDimensions);
-    };
-
-    // Initial calculation
-    calculateDimensions();
-
-    // Debounced resize handler for better performance
-    let resizeTimeout;
-    const debouncedResize = () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(calculateDimensions, 100); // 100ms debounce
-    };
-
-    window.addEventListener('resize', debouncedResize);
-    const desktopContent = () => {
-      clearTimeout(resizeTimeout);
-      window.removeEventListener('resize', debouncedResize);
-    };
-  }, []);
+    setScaledDimensions(scaledDimensions);
+    console.log(`🎯 About page scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.25x)`, scaledDimensions);
+  });
 
   const handleNavClick = (tab) => {
     setActiveNavTab(tab);

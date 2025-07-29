@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 
 // Helper function to get optimized image URL with responsive sizing - FORCES ALL IMAGES THROUGH OPTIMIZATION
 const getOptimizedImageUrl = (originalUrl, width = null) => {
@@ -340,9 +341,7 @@ const FigmaMobile = () => {
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
 
-  // Scroll state for dynamic navigation
-  const [scrollY, setScrollY] = useState(0);
-  const [isScrolled, setIsScrolled] = useState(false);
+  // Optimized scroll state for dynamic navigation (contentRef defined below)
 
   // Video quality state for adaptive streaming
   const [videoQuality, setVideoQuality] = useState('hd720'); // Start with HD
@@ -376,6 +375,12 @@ const FigmaMobile = () => {
   const isMountedRef = useRef(true);
   const drawerRef = useRef(null);
   const contentRef = useRef(null);
+
+  // Optimized scroll state for dynamic navigation
+  const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
+    threshold: 20,
+    throttleMs: 16 // 60fps for smooth navigation
+  });
 
   // Simplified phone number formatting handler without cursor management
   const handlePhoneChange = useCallback((e) => {
@@ -990,32 +995,7 @@ const FigmaMobile = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll event listener for dynamic navigation
-  useEffect(() => {
-    let ticking = false;
-
-    const handleScroll = (e) => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const currentScrollY = e.target.scrollTop;
-          setScrollY(currentScrollY);
-          setIsScrolled(currentScrollY > 20); // Threshold for shrinking
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    const contentElement = contentRef.current;
-    if (contentElement) {
-      // Passive listener for better performance
-      contentElement.addEventListener('scroll', handleScroll, { passive: true });
-
-      return () => {
-        contentElement.removeEventListener('scroll', handleScroll);
-      };
-    }
-  }, []);
+  // Scroll handling now optimized with useOptimizedScroll hook
 
   // Memoized event cards processing for mobile with filtering
   const processedEventCards = useMemo(() => {
@@ -1287,14 +1267,26 @@ const FigmaMobile = () => {
     document.documentElement.style.webkitTextSizeAdjust = '100%';
     document.documentElement.style.textSizeAdjust = '100%';
 
-    // Fix iOS Safari height issues
+    // Fix iOS Safari height issues with optimized viewport handling
+    let rafId = null;
+    let timeoutId = null;
+
     const setVH = () => {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Debounce viewport changes to prevent excessive reflows
+      timeoutId = setTimeout(() => {
+        rafId = requestAnimationFrame(() => {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', `${vh}px`);
+        });
+      }, 100);
     };
+
     setVH();
-    window.addEventListener('resize', setVH);
-    window.addEventListener('orientationchange', setVH);
+    window.addEventListener('resize', setVH, { passive: true });
+    window.addEventListener('orientationchange', setVH, { passive: true });
 
     // Cleanup on unmount
     return () => {
@@ -1303,6 +1295,8 @@ const FigmaMobile = () => {
       }
       window.removeEventListener('resize', setVH);
       window.removeEventListener('orientationchange', setVH);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 
