@@ -1422,28 +1422,22 @@ const FigmaDesktop = () => {
               overflow: 'hidden'
             }}
           >
-            <picture>
-              <source
-                srcSet={getOptimizedImageUrl('/images/figma-exact/hero-left-image.png')}
-                type="image/webp"
-              />
-              <img
-                src="/images/figma-exact/hero-left-image.png"
-                alt="Hero background"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center'
-                }}
-              />
-            </picture>
+            <img
+              src="/images/figma-exact/hero-left-image.png"
+              alt="Hero background"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              style={{
+                position: 'absolute',
+                left: '0px',
+                top: '0px',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center'
+              }}
+            />
             <div
               style={{
                 position: 'absolute',
@@ -1722,12 +1716,11 @@ const FigmaDesktop = () => {
               </div>
 
               <iframe
-                src="about:blank"
-                data-src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1"
+                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720"
                 title="Henry Fong YouTube Video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-                loading="lazy"
+                loading="eager"
                 style={{
                   position: 'absolute',
                   top: '50%',

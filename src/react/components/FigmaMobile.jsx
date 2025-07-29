@@ -2220,28 +2220,22 @@ const FigmaMobile = () => {
                   overflow: 'hidden'
                 }}
               >
-                <picture>
-                  <source
-                    srcSet={getOptimizedImageUrl('/images/figma-exact/hero-left-image.png')}
-                    type="image/webp"
-                  />
-                  <img
-                    src="/images/figma-exact/hero-left-image.png"
-                    alt="Hero background"
-                    loading="eager"
-                    decoding="async"
-                    fetchpriority="high"
-                    style={{
-                      position: 'absolute',
-                      left: '0px',
-                      top: '0px',
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center'
-                    }}
-                  />
-                </picture>
+                <img
+                  src="/images/figma-exact/hero-left-image.png"
+                  alt="Hero background"
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center'
+                  }}
+                />
                 <div
                   style={{
                     position: 'absolute',
