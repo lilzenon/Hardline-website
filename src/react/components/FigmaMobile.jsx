@@ -7,8 +7,7 @@ const getOptimizedImageUrl = (originalUrl) => {
   }
 
   const filename = originalUrl.split('/').pop();
-  const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
-  return `/images/optimized/${nameWithoutExt}.webp`;
+  return `/images/optimized/${filename}`;
 };
 
 // Simple cache for API responses
@@ -2218,10 +2217,43 @@ const FigmaMobile = () => {
                   width: '350px',
                   height: '350px',
                   borderRadius: '20px',
-                  background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%), url(/images/optimized/hero-left-image.webp) lightgray 50% / cover no-repeat, url(/images/figma-exact/hero-left-image.png) lightgray 50% / cover no-repeat`,
                   overflow: 'hidden'
                 }}
-              />
+              >
+                <picture>
+                  <source
+                    srcSet={getOptimizedImageUrl('/images/figma-exact/hero-left-image.png')}
+                    type="image/webp"
+                  />
+                  <img
+                    src="/images/figma-exact/hero-left-image.png"
+                    alt="Hero background"
+                    loading="eager"
+                    decoding="async"
+                    fetchpriority="high"
+                    style={{
+                      position: 'absolute',
+                      left: '0px',
+                      top: '0px',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center'
+                    }}
+                  />
+                </picture>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%)`,
+                    pointerEvents: 'none'
+                  }}
+                />
+              </div>
 
               {/* Bottom overlay with date and location */}
               <div
