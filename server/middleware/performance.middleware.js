@@ -15,12 +15,9 @@ function performanceHeaders() {
             // Enable browser caching
             'Vary': 'Accept-Encoding, User-Agent',
 
-            // Preload critical resources
+            // Preload critical resources (React handles its own preloads)
             'Link': [
-                '</css/tailwind.css>; rel=preload; as=style',
-                '</react/bundle.js>; rel=preload; as=script',
-                '</images/desktop-figma/b2b-logo-desktop.svg>; rel=preload; as=image',
-                '</images/mobile-figma/b2b-logo-mobile.svg>; rel=preload; as=image'
+                '</css/tailwind.css>; rel=preload; as=style'
             ].join(', '),
 
             // Performance hints
@@ -100,7 +97,7 @@ function compressionOptimization() {
 }
 
 /**
- * Resource hints for better loading performance - Fixed to prevent duplicate preloads
+ * Resource hints for better loading performance - Minimal to prevent conflicts with React preloads
  */
 function resourceHints() {
     return (req, res, next) => {
@@ -108,13 +105,7 @@ function resourceHints() {
         if (req.path === '/' || req.path === '/home') {
             res.set({
                 'Link': [
-                    // Preload critical CSS
-                    '</css/tailwind.css>; rel=preload; as=style',
-
-                    // Preload critical JavaScript
-                    '</react/bundle.js>; rel=preload; as=script',
-
-                    // DNS prefetch for external resources (no image preloads here to prevent conflicts)
+                    // DNS prefetch for external resources only
                     '//fonts.googleapis.com; rel=dns-prefetch',
                     '//fonts.gstatic.com; rel=dns-prefetch',
 

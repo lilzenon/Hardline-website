@@ -83,20 +83,9 @@
             "email": "info@bounce2bounce.com",
             "openingHours": "Mo-Su 00:00-23:59",
             "priceRange": "$$"
-        }</script><link rel="preload" href="/react/bundle.js" as="script"><script>// Conditional preload based on device type
+        }</script><link rel="preload" href="/images/figma-exact/b2b-logo-nav.svg" as="image" type="image/svg+xml" fetchpriority="high"><script>// Conditional preload for hero image only (logo is always the same)
         (function() {
             const isMobile = window.innerWidth <= 768 || /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            // Only preload the logo that will actually be used
-            const logoPath = isMobile ? '/images/mobile-figma/b2b-logo-mobile.svg' : '/images/desktop-figma/b2b-logo-desktop.svg';
-
-            const logoPreload = document.createElement('link');
-            logoPreload.rel = 'preload';
-            logoPreload.as = 'image';
-            logoPreload.type = 'image/svg+xml';
-            logoPreload.href = logoPath;
-            logoPreload.fetchpriority = 'high';
-            document.head.appendChild(logoPreload);
 
             // Preload optimized hero image variants based on device
             const heroPath = isMobile ? '/images/optimized/hero-left-image-350w.webp' : '/images/optimized/hero-left-image-299w.webp';
