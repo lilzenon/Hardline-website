@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { sanitizeUserInput, sanitizeFormData } from '../utils/sanitizer';
+import { secureApiRequest } from '../utils/security';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
@@ -282,11 +284,15 @@ const AdminLogin = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Sanitize input to prevent XSS attacks
+    const sanitizedValue = sanitizeUserInput(value);
+
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: sanitizedValue
     }));
-    
+
     // Clear errors when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -308,20 +314,22 @@ const AdminLogin = () => {
 
     try {
       let endpoint = '/api/auth/admin/login';
-      
+
       if (step === 'totp') {
         endpoint = '/api/auth/admin/verify-totp';
       } else if (step === 'setup-totp') {
         endpoint = '/api/auth/admin/totp/complete';
       }
 
-      const response = await fetch(endpoint, {
+      // Sanitize form data before sending
+      const sanitizedFormData = sanitizeFormData(formData);
+      const requestBody = step === 'setup-totp'
+        ? { totpCode: sanitizedFormData.totpCode }
+        : sanitizedFormData;
+
+      const response = await secureApiRequest(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for authenticated requests
-        body: JSON.stringify(step === 'setup-totp' ? { totpCode: formData.totpCode } : formData)
+        body: JSON.stringify(requestBody)
       });
 
       const data = await response.json();

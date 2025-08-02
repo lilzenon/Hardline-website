@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
+import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 
 // Helper function to get optimized image URL with responsive sizing - FORCES ALL IMAGES THROUGH OPTIMIZATION
 const getOptimizedImageUrl = (originalUrl, width = null) => {
@@ -989,14 +990,17 @@ const FigmaDesktop = () => {
   const handlePhoneChange = useCallback((e) => {
     const input = e.target;
     const rawValue = input.value;
+
+    // Sanitize input to prevent XSS attacks
+    const sanitizedValue = sanitizeUserInput(rawValue);
     const currentCountry = getCurrentCountry(selectedCountryId);
 
     // Store cursor position before any changes
     const cursorStart = input.selectionStart;
     const cursorEnd = input.selectionEnd;
 
-    // Extract only digits from the input
-    const digitsOnly = rawValue.replace(/[^\d]/g, '');
+    // Extract only digits from the sanitized input
+    const digitsOnly = sanitizedValue.replace(/[^\d]/g, '');
 
     // Prevent typing beyond country's digit limit
     if (digitsOnly.length > currentCountry.digitLength) {
@@ -2636,8 +2640,9 @@ const FigmaDesktop = () => {
                       maxLength="1"
                       value={verificationCode[index] || ''}
                       onChange={(e) => {
+                        const sanitizedValue = sanitizeUserInput(e.target.value);
                         const newCode = verificationCode.split('');
-                        newCode[index] = e.target.value.replace(/\D/g, '');
+                        newCode[index] = sanitizedValue.replace(/\D/g, '');
                         const updatedCode = newCode.join('');
                         setVerificationCode(updatedCode);
 

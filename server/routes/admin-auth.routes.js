@@ -10,6 +10,10 @@ const adminAuth = require("../handlers/admin-auth.handler");
 const utils = require("../utils");
 const env = require("../env");
 
+// Zod validation
+const { validateBody } = require("../middleware/zod-validation.middleware");
+const { adminLoginSchema, totpVerificationSchema } = require("../validation/zod-schemas");
+
 const router = Router();
 
 // Enhanced rate limiting for admin login
@@ -74,9 +78,8 @@ router.post(
     adminLoginLimiter,
     strictAdminLimiter,
 
-    // Request processing
-    validators.adminLogin,
-    asyncHandler(helpers.verify),
+    // Enhanced Zod validation
+    validateBody(adminLoginSchema),
 
     // Enhanced authentication
     asyncHandler(adminAuth.auditLoginAttempt),
@@ -95,9 +98,8 @@ router.post(
     suspiciousActivityLimiter,
     adminLoginLimiter,
 
-    // Request processing
-    validators.totpCode, // Use TOTP-specific validator
-    asyncHandler(helpers.verify),
+    // Enhanced Zod validation
+    validateBody(totpVerificationSchema),
 
     // TOTP verification
     asyncHandler(adminAuth.verifyTOTP)

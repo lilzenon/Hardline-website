@@ -8,6 +8,7 @@ const env = require("../env");
 const { CustomError } = require("../utils");
 const { ROLES } = require("../consts");
 const TOTPService = require("../services/totp.service");
+const { securityMonitor } = require("../middleware/security-monitoring.middleware");
 
 // In-memory store for security events (in production, use Redis or database)
 const securityEvents = new Map();
@@ -273,6 +274,14 @@ async function adminLogin(req, res) {
         }
 
         console.log(`✅ Admin login successful: ${user.email} (ID: ${user.id})`);
+
+        // Log successful admin login for security monitoring
+        await securityMonitor.logSecurityEvent('successful_login', {
+            message: 'Admin login successful',
+            email: user.email,
+            userId: user.id,
+            userAgent: req.headers['user-agent']
+        }, req);
 
         // Check if user needs to set up TOTP after successful login
         const needsTotpSetup = TOTPService.isTOTPRequired() && (!user.totp_enabled || !user.totp_secret);

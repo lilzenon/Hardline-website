@@ -13,6 +13,12 @@ const hbs = require("hbs");
 const sessionStore = require("./services/session/session-store.service");
 const sessionSecurity = require("./services/session/session-security.service");
 
+// Security middleware
+const securityHeaders = require("./middleware/security-headers.middleware");
+const secureErrorHandler = require("./middleware/secure-error-handler.middleware");
+const databaseSecurity = require("./middleware/database-security.middleware");
+const { securityMonitor } = require("./middleware/security-monitoring.middleware");
+
 const helpers = require("./handlers/helpers.handler");
 const renders = require("./handlers/renders.handler");
 const asyncHandler = require("./utils/asyncHandler");
@@ -44,10 +50,14 @@ if (env.TRUST_PROXY) {
     app.set("trust proxy", true);
 }
 
-app.use(helmet({
-    contentSecurityPolicy: false,
-    frameguard: false // Disable frameguard to allow custom X-Frame-Options handling
-}));
+// Apply comprehensive security headers
+app.use(securityHeaders.createSecurityMiddleware());
+app.use(securityHeaders.developmentSecurityAdjustments());
+app.use(securityHeaders.staticAssetHeaders());
+app.use(securityHeaders.apiSecurityHeaders());
+
+// Apply database security
+app.use(databaseSecurity.sqlInjectionProtection());
 
 // Enable gzip compression for all responses
 app.use(compression({
@@ -305,14 +315,24 @@ app.get("/:id", asyncHandler(links.redirect));
 
 
 
-// 404 pages that don't exist
-app.get("*", renders.notFound);
+// Database error handling
+app.use(secureErrorHandler.handleDatabaseError);
+app.use(secureErrorHandler.handleRateLimitError);
 
-// handle errors coming from above routes
-app.use(helpers.error);
+// 404 pages that don't exist
+app.use(secureErrorHandler.notFoundHandler);
+
+// Secure error handling (replaces helpers.error)
+app.use(secureErrorHandler.secureErrorHandler);
 
 // Initialize privacy-compliant tracking system
 initializePrivacySystem();
+
+// Initialize secure error handling
+secureErrorHandler.initializeSecureErrorHandling();
+
+// Initialize database security
+databaseSecurity.initializeDatabaseSecurity();
 
 app.listen(env.PORT, () => {
     console.log(`> Ready on http://localhost:${env.PORT}`);
