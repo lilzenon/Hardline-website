@@ -288,7 +288,11 @@
 /* Global font family */
 
 .font-inter {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.font-clash {
+    font-family: 'ClashGrotesk-Variable', 'Clash Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 

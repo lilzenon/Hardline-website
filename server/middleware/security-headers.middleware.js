@@ -36,6 +36,7 @@ function getCSPDirectives() {
             "'self'",
             "'unsafe-inline'", // Required for styled-components and inline styles
             "https://fonts.googleapis.com",
+            "https://api.fontshare.com", // Allow Fontshare CSS for Clash Grotesk
             "https://cdn.jsdelivr.net",
             "https://cdnjs.cloudflare.com"
         ],
@@ -57,6 +58,7 @@ function getCSPDirectives() {
             "'self'",
             "data:",
             "https://fonts.gstatic.com",
+            "https://api.fontshare.com", // Allow Fontshare fonts for Clash Grotesk
             "https://cdn.jsdelivr.net"
         ],
 
