@@ -1,9 +1,8 @@
 /* Figma Home Page - Exact Pixel Perfect Implementation */
 
 
-/* Import Inter Font */
+/* Inter Font loaded via HTML preload for maximum performance */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* Reset and Base Styles */
 

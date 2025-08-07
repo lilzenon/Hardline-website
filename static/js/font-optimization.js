@@ -18,8 +18,8 @@
     const FONT_CONFIG = {
         family: 'Inter',
         weights: [400, 700, 800],
-        display: 'optional',
-        timeout: 3000, // 3 seconds timeout for font loading
+        display: 'swap', // Changed to swap for instant rendering
+        timeout: 1000, // Reduced timeout for faster fallback
         fallbackFamily: 'Inter-fallback'
     };
 
@@ -94,8 +94,8 @@
     function monitorFontLoading() {
         if (!document.fonts || !document.fonts.ready) {
             console.warn('Font Loading API not supported, using fallback detection');
-            // Fallback to periodic checking
-            const fallbackInterval = setInterval(checkGoogleFontsLoading, 500);
+            // Fallback to fast periodic checking
+            const fallbackInterval = setInterval(checkGoogleFontsLoading, 100); // Much faster polling
             setTimeout(() => {
                 clearInterval(fallbackInterval);
                 console.log('⏰ Fallback font detection timeout');
@@ -109,7 +109,7 @@
             checkGoogleFontsLoading();
         });
 
-        // Also check periodically in case fonts load individually
+        // Also check periodically in case fonts load individually (faster polling)
         const fontCheckInterval = setInterval(() => {
             checkGoogleFontsLoading();
 
@@ -119,7 +119,7 @@
                 clearInterval(fontCheckInterval);
                 console.log('✅ All fonts loaded, stopping periodic checks');
             }
-        }, 500);
+        }, 50); // Much faster polling for instant detection
 
         // Set timeout for font loading
         setTimeout(() => {
@@ -208,8 +208,13 @@
         // Set initial loading state
         document.body.classList.add('font-loading');
 
-        // Check if fonts are already loaded
+        // Immediate font check for instant detection
         checkGoogleFontsLoading();
+
+        // Quick follow-up checks for fast loading
+        setTimeout(checkGoogleFontsLoading, 10);
+        setTimeout(checkGoogleFontsLoading, 50);
+        setTimeout(checkGoogleFontsLoading, 100);
 
         // Monitor font loading
         monitorFontLoading();
