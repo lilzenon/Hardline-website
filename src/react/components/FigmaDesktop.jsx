@@ -201,7 +201,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       style={{
         ...style,
         opacity: contentLoaded ? 1 : 0.8,
-        transition: 'opacity 0.3s ease',
+        transition: 'opacity 0.15s ease-out',
         minHeight: '60px'
       }}
       src={layloUrl}

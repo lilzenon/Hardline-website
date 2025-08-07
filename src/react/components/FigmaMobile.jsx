@@ -200,7 +200,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       style={{
         ...style,
         opacity: contentLoaded ? 1 : 0.8,
-        transition: 'opacity 0.3s ease',
+        transition: 'opacity 0.15s ease-out',
         minHeight: '60px'
       }}
       src={layloUrl}
@@ -1223,8 +1223,8 @@ const FigmaMobile = () => {
       testImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
     };
 
-    // Run detection after component mounts
-    const timer = setTimeout(detectConnectionSpeed, 1000);
+    // Run detection after component mounts (faster)
+    const timer = setTimeout(detectConnectionSpeed, 200);
 
     return () => clearTimeout(timer);
   }, []);
@@ -1822,9 +1822,10 @@ const FigmaMobile = () => {
             background: rgb(21 21 21 / 80%);
             backdrop-filter: blur(10px);
             border-radius: 24px 24px 0px 0px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: height 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-origin: bottom;
             z-index: 100;
+            will-change: height;
           }
 
           .mobile-drawer.collapsed {
@@ -1854,7 +1855,8 @@ const FigmaMobile = () => {
 
           /* Content fade animations */
           .drawer-content {
-            transition: all 0.3s ease;
+            transition: opacity 0.15s ease-out;
+            will-change: opacity;
           }
 
           .drawer-content.verification-mode {
@@ -3415,7 +3417,7 @@ const FigmaMobile = () => {
                 rgba(0, 0, 0, 0) 100%
               )`,
               opacity: 1,
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Same timing as drawer
+              transition: 'opacity 0.2s ease-out', // Faster transition
               zIndex: 40, // Lower z-index to ensure content visibility
               pointerEvents: 'none', // Don't interfere with interactions
               transform: 'translateY(0%)',
@@ -3585,7 +3587,7 @@ const FigmaMobile = () => {
                   borderRadius: '8px',
                   background: 'transparent',
                   display: 'block',
-                  transition: 'opacity 0.3s ease, height 0.3s ease',
+                  transition: 'opacity 0.15s ease-out, height 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                   pointerEvents: 'auto' // Ensure iframe can receive clicks
                 }}
               />
