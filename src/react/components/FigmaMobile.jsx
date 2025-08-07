@@ -3438,7 +3438,7 @@ const FigmaMobile = () => {
             height: getDrawerHeight(),
             display: 'flex',
             flexDirection: 'column',
-            padding: '8px 20px 20px 20px', // Reduced bottom padding to give more space for iframe
+            padding: '8px 0px 20px 0px', // Remove left/right padding, keep top/bottom
             boxSizing: 'border-box',
             overflow: drawerExpanded ? 'visible' : 'hidden', // Allow content to be visible when expanded
             cursor: drawerFullyClosed ? 'pointer' : 'default'
@@ -3526,7 +3526,7 @@ const FigmaMobile = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '2px',
-                marginBottom: '12px',
+                marginLeft: '20px', // Add left margin for text positioning
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 2
@@ -3565,7 +3565,7 @@ const FigmaMobile = () => {
               style={{
                 width: '100%',
                 maxWidth: '1000px',
-                margin: '8px auto 0 auto', // Reduced top margin, removed bottom margin
+                margin: '0 auto', // Remove all margins for tight spacing
                 cursor: 'pointer',
                 borderRadius: '8px',
                 overflow: 'visible', // Allow iframe content to be fully visible
