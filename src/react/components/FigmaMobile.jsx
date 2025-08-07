@@ -558,6 +558,7 @@ const FigmaMobile = () => {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [drawerFullyClosed, setDrawerFullyClosed] = useState(false); // Start in collapsed state showing "Text us"
   const [iframeExpanded, setIframeExpanded] = useState(false); // Track iframe interaction
+  const [iframeHasLoadedOnce, setIframeHasLoadedOnce] = useState(false); // Track if iframe has been loaded to persist state
 
   // Resend countdown state
   const [resendCountdown, setResendCountdown] = useState(0);
@@ -1822,18 +1823,20 @@ const FigmaMobile = () => {
             background: rgb(21 21 21 / 80%);
             backdrop-filter: blur(10px);
             border-radius: 24px 24px 0px 0px;
-            transition: height 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            transform-origin: bottom;
+            transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transform-origin: bottom center;
             z-index: 100;
-            will-change: height;
+            will-change: transform;
+            backface-visibility: hidden;
+            perspective: 1000px;
           }
 
           .mobile-drawer.collapsed {
-            transform: translateY(0);
+            transform: translate3d(0, calc(100% - 80px), 0);
           }
 
           .mobile-drawer.expanded {
-            transform: translateY(0);
+            transform: translate3d(0, 0, 0);
           }
 
           /* Disclaimer peek effect */
@@ -1855,7 +1858,7 @@ const FigmaMobile = () => {
 
           /* Content fade animations */
           .drawer-content {
-            transition: opacity 0.15s ease-out;
+            transition: opacity 0.1s ease-out;
             will-change: opacity;
           }
 
@@ -3417,7 +3420,7 @@ const FigmaMobile = () => {
                 rgba(0, 0, 0, 0) 100%
               )`,
               opacity: 1,
-              transition: 'opacity 0.2s ease-out', // Faster transition
+              transition: 'opacity 0.1s ease-out', // Ultra-fast transition
               zIndex: 40, // Lower z-index to ensure content visibility
               pointerEvents: 'none', // Don't interfere with interactions
               transform: 'translateY(0%)',
@@ -3435,7 +3438,7 @@ const FigmaMobile = () => {
           }}
           className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'}`}
           style={{
-            height: getDrawerHeight(),
+            height: '280px', // Fixed height for consistent transform animations
             display: 'flex',
             flexDirection: 'column',
             padding: '8px 0px 20px 0px', // Remove left/right padding, keep top/bottom
@@ -3558,41 +3561,43 @@ const FigmaMobile = () => {
           </div>
           )}
 
-          {/* Laylo Iframe - Official SDK Mobile Integration - Only Visible When Drawer Expanded */}
-          {drawerExpanded && !drawerFullyClosed && (
-            <div
-              onClick={handleIframeClick}
+          {/* Laylo Iframe - Persistent in DOM for state preservation */}
+          <div
+            onClick={handleIframeClick}
+            style={{
+              width: '100%',
+              maxWidth: '1000px',
+              margin: '0 auto', // Remove all margins for tight spacing
+              cursor: 'pointer',
+              borderRadius: '8px',
+              overflow: 'visible', // Allow iframe content to be fully visible
+              flexShrink: 0, // Prevent container from shrinking
+              visibility: (drawerExpanded && !drawerFullyClosed) ? 'visible' : 'hidden',
+              opacity: (drawerExpanded && !drawerFullyClosed) ? 1 : 0,
+              transform: (drawerExpanded && !drawerFullyClosed) ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'opacity 0.1s ease-out, transform 0.1s ease-out, visibility 0.1s ease-out'
+            }}
+          >
+            <LayloIframe
+              dropId="1nTsX"
+              color="ff0409"
+              theme="dark"
+              background="solid"
+              minimal={true}
               style={{
-                width: '100%',
+                width: '1px',
+                minWidth: '100%',
                 maxWidth: '1000px',
-                margin: '0 auto', // Remove all margins for tight spacing
-                cursor: 'pointer',
+                height: iframeExpanded ? '200px' : '160px', // Much larger height for phone form content
+                border: 'none',
                 borderRadius: '8px',
-                overflow: 'visible', // Allow iframe content to be fully visible
-                flexShrink: 0 // Prevent container from shrinking
+                background: 'transparent',
+                display: 'block',
+                transition: 'height 0.1s ease-out',
+                pointerEvents: 'auto' // Ensure iframe can receive clicks
               }}
-            >
-              <LayloIframe
-                dropId="1nTsX"
-                color="ff0409"
-                theme="dark"
-                background="solid"
-                minimal={true}
-                style={{
-                  width: '1px',
-                  minWidth: '100%',
-                  maxWidth: '1000px',
-                  height: iframeExpanded ? '200px' : '160px', // Much larger height for phone form content
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: 'transparent',
-                  display: 'block',
-                  transition: 'opacity 0.15s ease-out, height 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                  pointerEvents: 'auto' // Ensure iframe can receive clicks
-                }}
-              />
-            </div>
-          )}
+            />
+          </div>
 
           {/* Disclaimer Text - Removed, replaced by Laylo iframe */}
 
