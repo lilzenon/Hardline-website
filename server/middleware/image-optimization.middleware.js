@@ -11,7 +11,7 @@ const fs = require('fs').promises;
  * Image optimization middleware for static images
  */
 function optimizedImageMiddleware() {
-    return async (req, res, next) => {
+    return async(req, res, next) => {
         // Only handle image requests
         const isImageRequest = /\.(png|jpg|jpeg|webp|avif)$/i.test(req.path);
         if (!isImageRequest) {
@@ -26,7 +26,7 @@ function optimizedImageMiddleware() {
         try {
             // Construct full image path
             const imagePath = path.join(__dirname, '../../static', req.path);
-            
+
             // Check if original image exists
             try {
                 await fs.access(imagePath);
@@ -49,7 +49,7 @@ function optimizedImageMiddleware() {
 function generateSrcSet(imagePath, sizes = [320, 640, 768, 1024, 1280, 1920]) {
     const basePath = imagePath.replace(/\.[^/.]+$/, ''); // Remove extension
     const ext = path.extname(imagePath);
-    
+
     return sizes.map(size => {
         return `/images/optimized/${basePath}_${size}w.webp ${size}w`;
     }).join(', ');
@@ -60,7 +60,7 @@ function generateSrcSet(imagePath, sizes = [320, 640, 768, 1024, 1280, 1920]) {
  */
 function generatePictureElement(imagePath, alt, className = '', sizes = '100vw') {
     const basePath = imagePath.replace(/\.[^/.]+$/, '');
-    
+
     return `
         <picture class="${className}">
             <source 
@@ -89,7 +89,7 @@ function generatePictureElement(imagePath, alt, className = '', sizes = '100vw')
  */
 function generatePreloadLinks(criticalImages) {
     return criticalImages.map(img => {
-        return `<link rel="preload" as="image" href="${img.src}" ${img.media ? `media="${img.media}"` : ''}>`;
+                return `<link rel="preload" as="image" href="${img.src}" ${img.media ? `media="${img.media}"` : ''}>`;
     }).join('\n');
 }
 
@@ -131,26 +131,32 @@ function enhanceLazyLoading() {
                 // Add intersection observer for lazy loading
                 const lazyLoadScript = `
                     <script>
-                        // Enhanced lazy loading with intersection observer
+                        // Lightning-fast lazy loading with optimized intersection observer
                         if ('IntersectionObserver' in window) {
                             const imageObserver = new IntersectionObserver((entries, observer) => {
                                 entries.forEach(entry => {
                                     if (entry.isIntersecting) {
                                         const img = entry.target;
-                                        if (img.dataset.src) {
-                                            img.src = img.dataset.src;
-                                            img.removeAttribute('data-src');
-                                        }
-                                        if (img.dataset.srcset) {
-                                            img.srcset = img.dataset.srcset;
-                                            img.removeAttribute('data-srcset');
-                                        }
-                                        img.classList.remove('lazy');
+
+                                        // Batch DOM updates for better performance
+                                        requestAnimationFrame(() => {
+                                            if (img.dataset.src) {
+                                                img.src = img.dataset.src;
+                                                img.removeAttribute('data-src');
+                                            }
+                                            if (img.dataset.srcset) {
+                                                img.srcset = img.dataset.srcset;
+                                                img.removeAttribute('data-srcset');
+                                            }
+                                            img.classList.remove('lazy');
+                                            img.style.opacity = '1'; // Fade in effect
+                                        });
+
                                         observer.unobserve(img);
                                     }
                                 });
                             }, {
-                                rootMargin: '50px 0px',
+                                rootMargin: '100px 0px', // Increased for earlier loading
                                 threshold: 0.01
                             });
                             

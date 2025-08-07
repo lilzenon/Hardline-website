@@ -64,12 +64,21 @@ function supportsAVIF(req) {
 }
 
 /**
- * Get best image format for browser
+ * Get best image format for browser with format override support
  */
 function getBestFormat(req) {
+    // Check for explicit format request in query parameter
+    const requestedFormat = req.query.format;
+    if (requestedFormat) {
+        if (requestedFormat === 'avif' && supportsAVIF(req)) return 'avif';
+        if (requestedFormat === 'webp' && supportsWebP(req)) return 'webp';
+        if (requestedFormat === 'jpeg') return 'jpeg';
+    }
+
+    // Default browser capability detection
     if (supportsAVIF(req)) return 'avif';
     if (supportsWebP(req)) return 'webp';
-    return 'original';
+    return 'jpeg'; // Changed from 'original' to 'jpeg' for better optimization
 }
 
 /**
@@ -573,14 +582,15 @@ router.get('/proxy-optimized', async(req, res) => {
             const startTime = Date.now();
 
             try {
-                const { url } = req.query;
+                const { url, format } = req.query;
 
                 if (!url) {
                     return res.status(400).json({ error: 'URL parameter is required' });
                 }
 
                 const decodedUrl = decodeURIComponent(url);
-                console.log(`🔄 [${requestId}] Starting proxy optimization: ${decodedUrl}`);
+                const requestedFormat = format || 'webp'; // Default to WebP, support AVIF
+                console.log(`🔄 [${requestId}] Starting proxy optimization: ${decodedUrl} (format: ${requestedFormat})`);
 
                 // Enhanced Sharp availability check with per-request logging
                 if (!checkSharpAvailability(requestId)) {

@@ -250,6 +250,48 @@ const getResponsiveSrcSet = (originalUrl, context = 'event') => {
   return sizes.map(size => `${getOptimizedImageUrl(originalUrl, size)} ${size}w`).join(', ');
 };
 
+// Helper function to get AVIF srcSet for modern browsers
+const getAVIFSrcSet = (originalUrl, context = 'event') => {
+  if (!originalUrl) return '';
+
+  let sizes;
+  if (context === 'event') {
+    sizes = [111, 222, 333];
+  } else if (context === 'hero') {
+    sizes = [350, 700, 1050];
+  } else {
+    sizes = [150, 300, 600];
+  }
+
+  return sizes.map(size => {
+    const encodedUrl = encodeURIComponent(originalUrl);
+    return `/images/proxy-optimized?url=${encodedUrl}&w=${size}&format=avif ${size}w`;
+  }).join(', ');
+};
+
+// Helper function to determine if image should be preloaded (above-the-fold)
+const shouldPreloadImage = (index, isMobile = true) => {
+  // Preload first 2 images on mobile, first 4 on desktop for immediate loading
+  return index < (isMobile ? 2 : 4);
+};
+
+// Helper function to get smart loading strategy
+const getImageLoadingStrategy = (index, isMobile = true) => {
+  if (shouldPreloadImage(index, isMobile)) {
+    return {
+      loading: 'eager',
+      fetchPriority: 'high',
+      decoding: 'async'
+    };
+  } else {
+    return {
+      loading: 'lazy',
+      fetchPriority: 'auto', // Changed from 'low' to 'auto' for better performance
+      decoding: 'async'
+    };
+  }
+};
+
 // Simple cache for API responses
 const apiCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
@@ -1229,6 +1271,36 @@ const FigmaMobile = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Preload critical above-the-fold images for instant loading
+  useEffect(() => {
+    if (featuredEvents && featuredEvents.length > 0) {
+      console.log('🚀 Preloading critical event images for instant display...');
+
+      // Preload first 2 event images (above-the-fold on mobile)
+      featuredEvents.slice(0, 2).forEach((event, index) => {
+        if (event.coverImage) {
+          // Preload AVIF version for modern browsers
+          const avifLink = document.createElement('link');
+          avifLink.rel = 'preload';
+          avifLink.as = 'image';
+          avifLink.type = 'image/avif';
+          avifLink.href = `/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
+          document.head.appendChild(avifLink);
+
+          // Preload WebP fallback
+          const webpLink = document.createElement('link');
+          webpLink.rel = 'preload';
+          webpLink.as = 'image';
+          webpLink.type = 'image/webp';
+          webpLink.href = getOptimizedImageUrl(event.coverImage, 111);
+          document.head.appendChild(webpLink);
+
+          console.log(`✅ Preloaded event image ${index + 1}: ${event.title}`);
+        }
+      });
+    }
+  }, [featuredEvents]);
 
   // Scroll handling now optimized with useOptimizedScroll hook
 
@@ -2846,8 +2918,13 @@ const FigmaMobile = () => {
                         zIndex: 2 // Above gradient overlay
                       }}
                     >
-                      {/* Event Background Image */}
+                      {/* Event Background Image - Progressive Loading with AVIF/WebP/JPEG */}
                       <picture>
+                        <source
+                          srcSet={getAVIFSrcSet(card.coverImage, 'event')}
+                          sizes="111px"
+                          type="image/avif"
+                        />
                         <source
                           srcSet={getResponsiveSrcSet(card.coverImage, 'event')}
                           sizes="111px"
@@ -2856,9 +2933,7 @@ const FigmaMobile = () => {
                         <img
                           src={getOptimizedImageUrl(card.coverImage, 111)}
                           alt={`${card.title} event cover`}
-                          loading="lazy"
-                          decoding="async"
-                          fetchPriority="low"
+                          {...getImageLoadingStrategy(index, true)}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
