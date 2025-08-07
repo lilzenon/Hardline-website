@@ -28,7 +28,20 @@ function getCSPDirectives() {
             "https://cdnjs.cloudflare.com",
             "https://www.googletagmanager.com",
             "https://www.google-analytics.com",
+            "https://laylo.com", // Allow Laylo main domain scripts
+            "https://*.laylo.com", // Allow all Laylo subdomain scripts
+            "https://embed.laylo.com", // Allow Laylo embed scripts and SDK
+            "https://api.laylo.com", // Allow Laylo API scripts
+            "https://cdn.laylo.com", // Allow Laylo CDN scripts
+            "https://www.google.com", // Allow Google reCAPTCHA for Laylo
+            "https://www.gstatic.com", // Allow Google static resources
+            "https://recaptcha.google.com", // Allow reCAPTCHA scripts
             ...(isProduction ? [] : ["'unsafe-eval'"]) // Allow eval in development only
+        ],
+
+        // Script attributes: Allow inline event handlers for React components
+        scriptSrcAttr: [
+            "'unsafe-inline'" // Required for React inline event handlers
         ],
 
         // Styles: Allow self, inline styles, and trusted CDNs
@@ -38,7 +51,12 @@ function getCSPDirectives() {
             "https://fonts.googleapis.com",
             "https://api.fontshare.com", // Allow Fontshare CSS for Clash Grotesk
             "https://cdn.jsdelivr.net",
-            "https://cdnjs.cloudflare.com"
+            "https://cdnjs.cloudflare.com",
+            "https://laylo.com", // Allow Laylo CSS
+            "https://*.laylo.com", // Allow all Laylo subdomain CSS
+            "https://embed.laylo.com", // Allow Laylo embed CSS
+            "https://api.laylo.com", // Allow Laylo API CSS
+            "https://cdn.laylo.com" // Allow Laylo CDN CSS
         ],
 
         // Images: Allow self, data URLs, and trusted domains
@@ -59,6 +77,7 @@ function getCSPDirectives() {
             "data:",
             "https://fonts.gstatic.com",
             "https://api.fontshare.com", // Allow Fontshare fonts for Clash Grotesk
+            "https://cdn.fontshare.com", // Allow Fontshare CDN fonts
             "https://cdn.jsdelivr.net"
         ],
 
@@ -69,6 +88,17 @@ function getCSPDirectives() {
             "https://api.twilio.com",
             "https://www.google-analytics.com",
             "https://analytics.google.com",
+            "https://laylo.com", // Allow Laylo main domain
+            "https://*.laylo.com", // Allow all Laylo subdomains
+            "https://embed.laylo.com", // Allow Laylo embed connections
+            "https://api.laylo.com", // Allow Laylo API subdomain
+            "https://app.laylo.com", // Allow Laylo app subdomain
+            "https://cdn.laylo.com", // Allow Laylo CDN
+            "https://d21i0hc4hl3bvt.cloudfront.net", // Allow Laylo CloudFront
+            "https://d3oyaxbt9vo0fg.cloudfront.net", // Allow Laylo CloudFront
+            "https://www.google.com", // Allow Google reCAPTCHA for Laylo
+            "https://www.gstatic.com", // Allow Google static resources for reCAPTCHA
+            "https://recaptcha.google.com", // Allow reCAPTCHA API
             ...(isProduction ? [] : ["ws://localhost:*", "http://localhost:*"])
         ],
 
@@ -94,14 +124,22 @@ function getCSPDirectives() {
         ],
 
         // Frame ancestors: Allow same origin for preview functionality
-        frameAncestors: ["'self'"],
+        frameAncestors: [
+            "'self'",
+            "https://embed.laylo.com", // Allow Laylo embed frames
+            "https://laylo.com", // Allow Laylo frames
+            "https://*.laylo.com" // Allow all Laylo subdomains
+        ],
 
         // Frame sources: Allow self and trusted iframe sources
         frameSrc: [
             "'self'",
             "https://www.youtube.com",
             "https://player.vimeo.com",
-            "https://www.google.com" // For reCAPTCHA if used
+            "https://www.google.com", // For reCAPTCHA if used
+            "https://embed.laylo.com", // Allow Laylo embed iframes
+            "https://laylo.com", // Allow Laylo iframes
+            "https://*.laylo.com" // Allow all Laylo subdomains
         ],
 
         // Worker sources: Allow self and blob for web workers
@@ -226,6 +264,19 @@ function staticAssetHeaders() {
 }
 
 /**
+ * Permissions Policy middleware for iframe features
+ */
+function permissionsPolicyHeaders() {
+    return (req, res, next) => {
+        // Set Permissions Policy - Allow encrypted-media and web-share for Laylo
+        res.setHeader('Permissions-Policy',
+            'camera=(), microphone=(), geolocation=(), encrypted-media=*, web-share=*'
+        );
+        next();
+    };
+}
+
+/**
  * Development-specific security adjustments
  */
 function developmentSecurityAdjustments() {
@@ -244,5 +295,6 @@ module.exports = {
     apiSecurityHeaders,
     staticAssetHeaders,
     developmentSecurityAdjustments,
+    permissionsPolicyHeaders,
     getCSPDirectives
 };

@@ -2,6 +2,213 @@ import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from '
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 
+// Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
+const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
+  const [layloReady, setLayloReady] = useState(false);
+  const [iframeReady, setIframeReady] = useState(false);
+  const [contentLoaded, setContentLoaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const iframeRef = useRef(null);
+  const contentCheckInterval = useRef(null);
+  const maxRetries = 2;
+  const contentCheckTimeout = 2000; // 2 seconds to detect content (faster)
+
+  // Build Laylo URL with parameters
+  const layloUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      dropId,
+      color,
+      theme,
+      background: background,
+      ...(minimal && { minimal: 'true' })
+    });
+    return `https://embed.laylo.com/?${params.toString()}`;
+  }, [dropId, color, theme, background, minimal]);
+
+  // Check if Laylo SDK is ready (simplified and faster)
+  const checkLayloSDKReady = useCallback(() => {
+    // Check for Laylo SDK script - if it exists, we're good to go
+    const sdkScript = document.querySelector('script[src*="laylo-sdk.js"]');
+    if (sdkScript) {
+      console.log('✅ Laylo SDK script found, proceeding with iframe');
+      return true;
+    }
+
+    return false;
+  }, []);
+
+  // Check if iframe content has loaded (phone form is visible)
+  const checkIframeContent = useCallback(() => {
+    if (!iframeRef.current) return false;
+
+    try {
+      // Try to access iframe content (may fail due to CORS)
+      const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+
+      if (iframeDoc) {
+        // Look for Laylo-specific elements
+        const hasPhoneInput = iframeDoc.querySelector('input[type="tel"]') ||
+                             iframeDoc.querySelector('input[placeholder*="phone"]') ||
+                             iframeDoc.querySelector('.phone-input') ||
+                             iframeDoc.querySelector('[data-testid*="phone"]');
+
+        const hasSubmitButton = iframeDoc.querySelector('button[type="submit"]') ||
+                               iframeDoc.querySelector('button:contains("RSVP")') ||
+                               iframeDoc.querySelector('.submit-button');
+
+        if (hasPhoneInput || hasSubmitButton) {
+          console.log('✅ Laylo iframe content detected (phone form visible)');
+          return true;
+        }
+
+        // Check for any meaningful content (not just empty body)
+        const bodyContent = iframeDoc.body?.innerHTML || '';
+        if (bodyContent.length > 100 && !bodyContent.includes('loading')) {
+          console.log('✅ Laylo iframe has meaningful content');
+          return true;
+        }
+      }
+    } catch (e) {
+      // CORS error is expected, but iframe might still be working
+      // Check iframe dimensions as a proxy for content
+      const iframe = iframeRef.current;
+      if (iframe && iframe.offsetHeight > 50) {
+        console.log('✅ Laylo iframe appears to have content (height check)');
+        return true;
+      }
+    }
+
+    return false;
+  }, []);
+
+  // Start content detection polling
+  const startContentDetection = useCallback(() => {
+    console.log('🔍 Starting Laylo content detection...');
+
+    const checkContent = () => {
+      if (checkIframeContent()) {
+        setContentLoaded(true);
+        if (contentCheckInterval.current) {
+          clearInterval(contentCheckInterval.current);
+          contentCheckInterval.current = null;
+        }
+        return;
+      }
+    };
+
+    // Check immediately
+    checkContent();
+
+    // Then check every 100ms (faster polling)
+    contentCheckInterval.current = setInterval(checkContent, 100);
+
+    // Timeout after 2 seconds (faster timeout)
+    setTimeout(() => {
+      if (contentCheckInterval.current && !contentLoaded) {
+        console.warn('⚠️ Laylo content detection timeout');
+        clearInterval(contentCheckInterval.current);
+        contentCheckInterval.current = null;
+
+        // Retry if we haven't exceeded max retries
+        if (retryCount < maxRetries) {
+          console.log(`🔄 Retrying Laylo iframe (${retryCount + 1}/${maxRetries})`);
+          setRetryCount(prev => prev + 1);
+          setIframeReady(false);
+          setContentLoaded(false);
+
+          // Recreate iframe after a shorter delay
+          setTimeout(() => {
+            if (iframeRef.current) {
+              iframeRef.current.src = layloUrl + '&_retry=' + Date.now();
+            }
+          }, 500);
+        }
+      }
+    }, contentCheckTimeout);
+  }, [checkIframeContent, contentLoaded, retryCount, maxRetries, layloUrl]);
+
+  // Handle iframe load
+  const handleIframeLoad = useCallback(() => {
+    console.log('📦 Laylo iframe element loaded');
+    setIframeReady(true);
+
+    // Start checking for content immediately (no delay)
+    startContentDetection();
+  }, [startContentDetection]);
+
+  // Wait for Laylo SDK to be fully ready
+  useEffect(() => {
+    if (layloReady) return;
+
+    const checkSDK = () => {
+      if (checkLayloSDKReady()) {
+        setLayloReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    // Check immediately
+    if (checkSDK()) return;
+
+    // Poll every 50ms until SDK is ready (faster polling)
+    const interval = setInterval(() => {
+      if (checkSDK()) {
+        clearInterval(interval);
+      }
+    }, 50);
+
+    // Timeout after 3 seconds (much faster)
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      console.warn('⚠️ Laylo SDK initialization timeout, proceeding anyway');
+      setLayloReady(true);
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [layloReady, checkLayloSDKReady]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (contentCheckInterval.current) {
+        clearInterval(contentCheckInterval.current);
+      }
+    };
+  }, []);
+
+  // Only render iframe when Laylo SDK is ready
+  if (!layloReady) {
+    return (
+      <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', opacity: 0.7 }}>
+        <span style={{ fontSize: '12px', color: '#666' }}>Loading Laylo...</span>
+      </div>
+    );
+  }
+
+  return (
+    <iframe
+      ref={iframeRef}
+      id={`laylo-drop-${dropId}`}
+      frameBorder="0"
+      scrolling="no"
+      allow="web-share"
+      allowTransparency="true"
+      onLoad={handleIframeLoad}
+      style={{
+        ...style,
+        opacity: contentLoaded ? 1 : 0.8,
+        transition: 'opacity 0.3s ease',
+        minHeight: '60px'
+      }}
+      src={layloUrl}
+    />
+  );
+});
+
 // Helper function to get optimized image URL with responsive sizing - FORCES ALL IMAGES THROUGH OPTIMIZATION
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) {
@@ -435,6 +642,18 @@ const FigmaDesktop = () => {
     setScaledDimensions(scaledDimensions);
     console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.25x)`, scaledDimensions);
   });
+
+  // Add useEffect for Laylo SDK initialization
+  useEffect(() => {
+    // Load Laylo SDK script only once
+    if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
+      const layloScript = document.createElement('script');
+      layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
+      layloScript.async = true;
+      document.head.appendChild(layloScript);
+      console.log('✅ Laylo SDK script loaded');
+    }
+  }, []);
 
   // Get the most recent event for hero sections
   const mostRecentEvent = useMemo(() => {
@@ -1324,7 +1543,7 @@ const FigmaDesktop = () => {
           alt="B2B Logo"
           loading="lazy"
           decoding="async"
-          fetchpriority="high"
+          fetchPriority="high"
           style={{
             width: '138.41px',
             height: '43px'
@@ -1455,7 +1674,7 @@ const FigmaDesktop = () => {
                 alt="Hero background"
                 loading="eager"
                 decoding="async"
-                fetchpriority="high"
+                fetchPriority="high"
                 onLoad={() => console.log('✅ DESKTOP HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
                 onError={(e) => console.error('❌ DESKTOP HERO IMAGE FAILED TO LOAD:', e.target.src)}
                 style={{
@@ -2055,7 +2274,7 @@ const FigmaDesktop = () => {
                         alt={`${card.title} event cover`}
                         loading="lazy"
                         decoding="async"
-                        fetchpriority="low"
+                        fetchPriority="low"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent interference with card interactions
                           if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
@@ -2510,609 +2729,24 @@ const FigmaDesktop = () => {
           >
             Exclusive events, contests, and more
           </div>
-          {/* Phone Number Input */}
-          <div
+          {/* Laylo Iframe - Official SDK Integration with Robust Loading */}
+          <LayloIframe
+            dropId="1nTsX"
+            color="ff0409"
+            theme="dark"
+            background="solid"
+            minimal={true}
             style={{
-              display: 'flex',
-              width: '299px',
-              height: showVerification ? '240px' : '36px',
-              padding: '0px 2px',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRadius: '31px',
-              background: '#232323',
-              transition: 'height 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              willChange: 'height',
-              overflow: 'hidden'
+              width: '1px',
+              minWidth: '100%',
+              maxWidth: '1000px',
+              border: 'none',
+              borderRadius: '8px',
+              background: 'transparent'
             }}
-          >
-            {showVerification ? (
-              /* Verification UI */
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  width: '100%',
-                  height: '100%',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  position: 'relative',
-                  padding: '20px 16px 16px 16px',
-                  opacity: showVerification ? 1 : 0,
-                  transform: showVerification ? 'translateY(0)' : 'translateY(8px)',
-                  transition: 'opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) 0.15s',
-                  willChange: 'opacity, transform',
-                  zIndex: 2
-                }}
-              >
-                {/* Header Section */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    width: '100%',
-                    position: 'relative'
-                  }}
-                >
-                  {/* Back Button */}
-                  <div
-                    onClick={handleBackToPhone}
-                    style={{
-                      position: 'absolute',
-                      top: '0px',
-                      left: '0px',
-                      width: '32px',
-                      height: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.1)',
-                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                      fontSize: '16px',
-                      color: '#FFF',
-                      fontWeight: '600',
-                      opacity: showVerification ? 1 : 0,
-                      transform: showVerification ? 'translateX(0)' : 'translateX(-8px)',
-                      transitionDelay: '0.2s',
-                      willChange: 'opacity, transform'
-                    }}
-                  >
-                    ←
-                  </div>
+          />
 
-                  {/* Title */}
-                  <div
-                    style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      textAlign: 'center',
-                      marginBottom: '6px',
-                      opacity: showVerification ? 1 : 0,
-                      transform: showVerification ? 'translateY(0)' : 'translateY(-5px)',
-                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.25s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.25s',
-                      willChange: 'opacity, transform'
-                    }}
-                  >
-                    Enter Verification Code
-                  </div>
-
-                  {/* Phone Display */}
-                  <div
-                    style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '12px',
-                      fontWeight: '400',
-                      textAlign: 'center',
-                      opacity: showVerification ? 0.7 : 0,
-                      transform: showVerification ? 'translateY(0)' : 'translateY(-5px)',
-                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.3s',
-                      willChange: 'opacity, transform',
-                      marginBottom: '20px'
-                    }}
-                  >
-                    Sent to {verificationPhone}
-                  </div>
-                </div>
-
-                {/* 4-Digit Code Input */}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '12px',
-                    justifyContent: 'center',
-                    opacity: showVerification ? 1 : 0,
-                    transform: showVerification ? 'scale(1)' : 'scale(0.95)',
-                    transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.35s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.35s',
-                    willChange: 'opacity, transform'
-                  }}
-                >
-                  {[0, 1, 2, 3].map((index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      maxLength="1"
-                      value={verificationCode[index] || ''}
-                      onChange={(e) => {
-                        const sanitizedValue = sanitizeUserInput(e.target.value);
-                        const newCode = verificationCode.split('');
-                        newCode[index] = sanitizedValue.replace(/\D/g, '');
-                        const updatedCode = newCode.join('');
-                        setVerificationCode(updatedCode);
-
-                        // Auto-focus next input
-                        if (e.target.value && index < 3) {
-                          const nextInput = e.target.parentElement.children[index + 1];
-                          if (nextInput) nextInput.focus();
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
-                          const prevInput = e.target.parentElement.children[index - 1];
-                          if (prevInput) prevInput.focus();
-                        }
-                        if (e.key === 'Enter' && verificationCode.length === 4) {
-                          handleVerificationSubmit();
-                        }
-                      }}
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '12px',
-                        border: `2px solid ${
-                          verificationState === 'valid' ? '#10B981' :
-                          verificationState === 'invalid' ? '#EF4444' :
-                          verificationState === 'filled' ? '#3B82F6' :
-                          verificationCode[index] ? 'rgba(255, 255, 255, 0.4)' :
-                          'rgba(255, 255, 255, 0.15)'
-                        }`,
-                        background: verificationCode[index] ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '20px',
-                        fontWeight: '600',
-                        textAlign: 'center',
-                        outline: 'none',
-                        transition: 'all 0.2s ease',
-                        boxShadow: verificationCode[index] ? '0 0 0 1px rgba(255, 255, 255, 0.1)' : 'none'
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {/* Bottom Section with Verify Button */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    width: '100%',
-                    marginTop: 'auto',
-                    paddingTop: '12px'
-                  }}
-                >
-                  {/* Verify Button */}
-                  <div
-                    onClick={handleVerificationSubmit}
-                    onMouseDown={handleButtonMouseDown}
-                    onMouseUp={handleButtonMouseUp}
-                    onMouseLeave={handleButtonMouseLeave}
-                    onTouchStart={handleButtonMouseDown}
-                    onTouchEnd={handleButtonMouseUp}
-                    style={{
-                      display: 'flex',
-                      width: '120px',
-                      height: '36px',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderRadius: '18px',
-                      background: verificationState === 'valid' ? 'rgba(16, 185, 129, 0.15)' :
-                                 verificationState === 'invalid' ? 'rgba(239, 68, 68, 0.15)' :
-                                 verificationState === 'filled' ? 'rgba(59, 130, 246, 0.15)' :
-                                 verificationSubmitting ? 'rgba(255, 255, 255, 0.08)' :
-                                 'rgba(255, 255, 255, 0.06)',
-                      border: `1px solid ${
-                        verificationState === 'valid' ? 'rgba(16, 185, 129, 0.3)' :
-                        verificationState === 'invalid' ? 'rgba(239, 68, 68, 0.3)' :
-                        verificationState === 'filled' ? 'rgba(59, 130, 246, 0.3)' :
-                        verificationSubmitting ? 'rgba(255, 255, 255, 0.15)' :
-                        'rgba(255, 255, 255, 0.12)'
-                      }`,
-                      cursor: verificationSubmitting || verificationCode.length !== 4 ? 'not-allowed' : 'pointer',
-                      opacity: showVerification ?
-                               (verificationSubmitting || verificationCode.length !== 4 ? 0.4 : 1) : 0,
-                      transform: showVerification ?
-                                (isButtonPressed && !verificationSubmitting && verificationCode.length === 4 ? 'scale(0.95)' : 'scale(1)') :
-                                'scale(0.9)',
-                      transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.4s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1) 0.4s',
-                      touchAction: 'manipulation',
-                      WebkitTapHighlightColor: 'transparent',
-                      backdropFilter: 'blur(8px)',
-                      willChange: 'opacity, transform'
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: verificationState === 'valid' ? '#10B981' :
-                               verificationState === 'invalid' ? '#EF4444' :
-                               verificationState === 'filled' ? '#3B82F6' :
-                               '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        lineHeight: '1',
-                        transition: 'color 0.15s ease',
-                        animation: verificationSubmitting ? 'spin 1s linear infinite' : 'none'
-                      }}
-                    >
-                      {verificationSubmitting ? '⟳' :
-                       verificationState === 'valid' ? '✓ Verified' :
-                       verificationState === 'invalid' ? '✗ Invalid' :
-                       'VERIFY'}
-                    </span>
-                  </div>
-
-                  {/* Resend Code Countdown */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      marginTop: '8px',
-                      marginBottom: '0px',
-                      minHeight: '16px',
-                      width: '100%',
-                      position: 'relative',
-                      zIndex: 10
-                    }}
-                  >
-                    {resendCountdown > 0 ? (
-                      <div
-                        style={{
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          fontFamily: 'Inter',
-                          fontSize: '12px',
-                          fontWeight: '400',
-                          textAlign: 'center'
-                        }}
-                      >
-                        Resend code in {resendCountdown}s
-                      </div>
-                    ) : canResend ? (
-                      <div
-                        onClick={handleResendCode}
-                        style={{
-                          color: resendSubmitting ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.6)',
-                          fontFamily: 'Inter',
-                          fontSize: '12px',
-                          fontWeight: '400',
-                          textAlign: 'center',
-                          cursor: resendSubmitting ? 'not-allowed' : 'pointer',
-                          textDecoration: 'none',
-                          transition: 'all 0.2s ease',
-                          opacity: resendSubmitting ? 0.6 : 1
-                        }}
-                        onMouseDown={(e) => {
-                          if (!resendSubmitting) {
-                            e.target.style.transform = 'scale(0.95)';
-                          }
-                        }}
-                        onMouseUp={(e) => {
-                          e.target.style.transform = 'scale(1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'scale(1)';
-                        }}
-                      >
-                        {resendSubmitting ? 'Sending...' : 'Resend code'}
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          color: 'rgba(255, 255, 255, 0.4)',
-                          fontFamily: 'Inter',
-                          fontSize: '12px',
-                          fontWeight: '400',
-                          textAlign: 'center'
-                        }}
-                      >
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Phone Input UI */
-              <div
-                style={{
-                  display: 'flex',
-                  width: '294px',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: '10px',
-                  opacity: showVerification ? 0 : 1,
-                  transform: showVerification ? 'scale(0.95)' : 'scale(1)',
-                  transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                  willChange: 'opacity, transform',
-                  zIndex: 1
-                }}
-              >
-              {/* Phone number Field */}
-              <div
-                ref={phoneContainerRef}
-                className={phoneInputState === 'invalid' ? 'shake' : ''}
-                style={{
-                  display: 'flex',
-                  width: '243px',
-                  height: '30px',
-                  alignItems: 'center',
-                  borderRadius: '15px',
-                  background: '#303030',
-                  overflow: 'hidden',
-                  border: `1px solid ${
-                    phoneInputState === 'loading' ? '#3B82F6' :
-                    phoneInputState === 'valid' ? '#10B981' :
-                    phoneInputState === 'invalid' ? '#EF4444' :
-                    'transparent'
-                  }`,
-                  boxShadow:
-                    phoneInputState === 'loading' ? '0 0 0 1px #3B82F6, 0 0 0 3px rgba(59, 130, 246, 0.1)' :
-                    phoneInputState === 'valid' ? '0 0 0 1px #10B981, 0 0 0 3px rgba(16, 185, 129, 0.1)' :
-                    phoneInputState === 'invalid' ? '0 0 0 1px #EF4444, 0 0 0 3px rgba(239, 68, 68, 0.1)' :
-                    'none',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {/* Country Code Dropdown Section */}
-                <div
-                  style={{
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '65px',
-                    height: '100%',
-                    flexShrink: 0,
-                    backgroundColor: '#303030',
-                    borderRadius: '15px 0 0 15px'
-                  }}
-                >
-                  {/* Flag and Country Code Display */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '6px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '3px',
-                      pointerEvents: 'none',
-                      zIndex: 2
-                    }}
-                  >
-                    <img
-                      ref={flagImageRef}
-                      alt={getCurrentCountry(selectedCountryId).name}
-                      src={getCurrentCountry(selectedCountryId).flag}
-                      style={{
-                        width: '20px',
-                        height: '15px',
-                        borderRadius: '2px'
-                      }}
-                    />
-                    <span
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '11px',
-                        fontWeight: '500',
-                        lineHeight: '1',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {getCurrentCountry(selectedCountryId).code}
-                    </span>
-                  </div>
-
-                  {/* Native Select */}
-                  <select
-                    value={selectedCountryId}
-                    onChange={handleCountryChange}
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      color: 'transparent',
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: '500',
-                      fontSize: '16px',
-                      cursor: 'pointer',
-                      appearance: 'none',
-                      WebkitAppearance: 'none',
-                      MozAppearance: 'none',
-                      zIndex: 3
-                    }}
-                    aria-label="Select country code"
-                  >
-                    {COUNTRIES.map((country) => (
-                      <option
-                        key={country.id}
-                        value={country.id}
-                        data-country={country.id.toUpperCase()}
-                        data-name={country.name}
-                        style={{
-                          backgroundColor: '#ffffff',
-                          color: '#000000',
-                          padding: '8px 12px',
-                          fontSize: '14px',
-                          fontFamily: 'Inter, sans-serif',
-                          fontWeight: '400'
-                        }}
-                      >
-                        {country.id.toUpperCase()} {country.code} {country.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Phone Number Input Field */}
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handlePhoneSubmit();
-                    } else {
-                      handlePhoneKeyDown(e);
-                    }
-                  }}
-                  placeholder={getCurrentCountry(selectedCountryId).placeholder}
-                  disabled={phoneSubmitting}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    lineHeight: 'normal',
-                    minHeight: '44px',
-                    paddingLeft: '4px',
-                    paddingRight: '10px'
-                  }}
-                />
-              </div>
-
-              {/* SEND Button */}
-              <div
-                onClick={handlePhoneSubmit}
-                onMouseDown={handleButtonMouseDown}
-                onMouseUp={handleButtonMouseUp}
-                onMouseLeave={handleButtonMouseLeave}
-                onTouchStart={handleButtonMouseDown}
-                onTouchEnd={handleButtonMouseUp}
-                style={{
-                  display: 'flex',
-                  width: '51px',
-                  height: '30px',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  padding: '6px 8px',
-                  borderRadius: '15px',
-                  background: phoneSubmitted ? '#00AA00' : (phoneSubmitting ? '#888888' : '#00FF40'),
-                  cursor: phoneSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: phoneSubmitting ? 0.7 : 1,
-                  boxSizing: 'border-box',
-                  transform: isButtonPressed && !phoneSubmitting ? 'scale(0.96)' : 'scale(1)',
-                  transition: 'all 0.1s ease',
-                  touchAction: 'manipulation',
-                  WebkitTapHighlightColor: 'transparent'
-                }}
-              >
-                {phoneSubmitting ? (
-                  /* Highly Visible Loading Spinner */
-                  <div
-                    className="button-spinner"
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      border: '3px solid #000000',
-                      borderTop: '3px solid #FFFFFF',
-                      borderRight: '3px solid #FFFFFF',
-                      borderRadius: '50%',
-                      animation: 'spin 0.6s linear infinite',
-                      WebkitAnimation: 'spin 0.6s linear infinite',
-                      MozAnimation: 'spin 0.6s linear infinite',
-                      display: 'inline-block',
-                      boxSizing: 'border-box',
-                      backgroundColor: 'transparent'
-                    }}
-                  />
-                ) : (
-                  <span
-                    style={{
-                      color: '#232323',
-                      fontFamily: 'Inter',
-                      fontSize: '9px',
-                      fontWeight: '700',
-                      lineHeight: '1',
-                      whiteSpace: 'nowrap',
-                      transition: 'opacity 0.15s ease'
-                    }}
-                  >
-                    {phoneSubmitted ? '✓' : 'SEND'}
-                  </span>
-                )}
-              </div>
-              </div>
-            )}
-          </div>
-
-          {/* Disclaimer Text */}
-          {!showVerification && (
-            <div
-              style={{
-                width: '299.66px',
-                color: '#FFF',
-                textAlign: 'justify',
-                fontFamily: 'Inter',
-                fontSize: '8px',
-                fontWeight: '500',
-                lineHeight: 'normal',
-                letterSpacing: '-0.48px',
-                opacity: '0.46'
-              }}
-            >
-              By submitting my information, I agree to receive recurring automated messages to the contact information provided and to Bounce2Bounce's{' '}
-              <span
-                onClick={() => window.open('#', '_blank')}
-                style={{
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  color: '#FFF'
-                }}
-              >
-                Terms of Service
-              </span>
-              ,{' '}
-              <span
-                onClick={() => window.open('#', '_blank')}
-                style={{
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  color: '#FFF'
-                }}
-              >
-                Cookie Policy
-              </span>
-              {' '}and{' '}
-              <span
-                onClick={() => window.open('#', '_blank')}
-                style={{
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  color: '#FFF'
-                }}
-              >
-                Privacy Policy
-              </span>
-              . Msg & Data Rates may apply. Reply STOP to cancel, HELP for help.
-            </div>
-          )}
+          {/* Disclaimer Text - Removed, replaced by Laylo iframe */}
         </div>
       </div>
 

@@ -52,6 +52,7 @@ if (env.TRUST_PROXY) {
 
 // Apply comprehensive security headers
 app.use(securityHeaders.createSecurityMiddleware());
+app.use(securityHeaders.permissionsPolicyHeaders());
 app.use(securityHeaders.developmentSecurityAdjustments());
 app.use(securityHeaders.staticAssetHeaders());
 app.use(securityHeaders.apiSecurityHeaders());
