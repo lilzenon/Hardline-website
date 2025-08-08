@@ -244,27 +244,7 @@ app.use(express.static("dist", {
     }
 }));
 
-// Legacy React bundle static (kept during transition) - safe fallback for admin login
-app.use("/react", express.static("static/react", {
-    setHeaders: (res, path) => {
-        if (env.NODE_ENV === 'production') {
-            const oneDay = 24 * 60 * 60; // 1 day in seconds
-            const expiresDate = new Date(Date.now() + oneDay * 1000).toUTCString();
-
-            res.set({
-                'Cache-Control': 'public, max-age=' + oneDay + ', stale-while-revalidate=86400',
-                'Expires': expiresDate,
-                'Last-Modified': new Date().toUTCString()
-            });
-        } else {
-            res.set({
-                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            });
-        }
-    }
-}));
+// Legacy /react static removed: Vite-only serving
 
 
 // Add image optimization for static images

@@ -496,41 +496,11 @@ const getCurrentCountry = (countryId) => {
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const FigmaMobile = () => {
-  // Lazy load YouTube to avoid blocking LCP
-  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
+  // Autoplay YouTube on load per requirements (muted for autoplay policy)
+  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
 
   useEffect(() => {
-    // Delay YouTube loading until after LCP
-    const loadYouTubeAfterLCP = () => {
-      // Wait for LCP to complete, then load YouTube
-      setTimeout(() => {
-        setShouldLoadYoutube(true);
-        console.log('🎥 YouTube loading enabled after LCP delay');
-      }, 1500); // 1.5 second delay to ensure LCP completes first
-    };
-
-    // Load on user interaction for immediate engagement
-    const loadOnInteraction = () => {
-      setShouldLoadYoutube(true);
-      console.log('🎥 YouTube loading enabled by user interaction');
-      document.removeEventListener('click', loadOnInteraction);
-      document.removeEventListener('scroll', loadOnInteraction);
-      document.removeEventListener('touchstart', loadOnInteraction);
-    };
-
-    // Set up delayed loading
-    loadYouTubeAfterLCP();
-
-    // Also enable immediate loading on user interaction
-    document.addEventListener('click', loadOnInteraction);
-    document.addEventListener('scroll', loadOnInteraction);
-    document.addEventListener('touchstart', loadOnInteraction);
-
-    return () => {
-      document.removeEventListener('click', loadOnInteraction);
-      document.removeEventListener('scroll', loadOnInteraction);
-      document.removeEventListener('touchstart', loadOnInteraction);
-    };
+    setShouldLoadYoutube(true);
   }, []);
 
   // Add useEffect for Laylo SDK initialization

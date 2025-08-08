@@ -48,7 +48,7 @@ async function renderAdminLogin(req, res) {
             });
         }
 
-        // Prefer serving the Vite-built SPA for admin login
+        // Serve the Vite-built SPA for admin login only
         const path = require('path');
         const fs = require('fs');
 
@@ -57,72 +57,10 @@ async function renderAdminLogin(req, res) {
             return res.sendFile(viteIndexPath);
         }
 
-        // Fallback: legacy static React admin login page if Vite build not available
-        const reactIndexPath = path.join(__dirname, '../../static/react/admin-login.html');
+        // If Vite build is missing, fall back to server-rendered home
+        return res.redirect('/');
 
-        // Check if React admin login file exists, otherwise create it
-        if (!fs.existsSync(reactIndexPath)) {
-            // Create the legacy admin login HTML file
-            const adminLoginHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Secure Admin Login - BOUNCE2BOUNCE</title>
-    <link rel="stylesheet" href="/css/tailwind.css">
-    <style>
-        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        .loading { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #FFFFFF; }
-    </style>
-</head>
-<body>
-    <div id="admin-login-root" class="loading">Loading...</div>
-    <script src="/react/bundle.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.React && window.ReactDOM && window.AdminLogin) {
-                const container = document.getElementById('admin-login-root');
 
-                // Try modern createRoot first, fallback to legacy render
-                try {
-                    if (window.ReactDOM.createRoot) {
-                        const root = window.ReactDOM.createRoot(container);
-                        root.render(React.createElement(window.AdminLogin));
-                    } else {
-                        // Fallback to legacy ReactDOM.render
-                        window.ReactDOM.render(React.createElement(window.AdminLogin), container);
-                    }
-                } catch (error) {
-                    console.error('React rendering error:', error);
-                    // Final fallback to legacy render
-                    window.ReactDOM.render(React.createElement(window.AdminLogin), container);
-                }
-            } else {
-                console.error('React components not loaded:', {
-                    React: !!window.React,
-                    ReactDOM: !!window.ReactDOM,
-                    AdminLogin: !!window.AdminLogin
-                });
-                // Show fallback content
-                document.getElementById('admin-login-root').innerHTML =
-                    '<div style="text-align:center;padding:40px;font-family:Arial;">Loading admin login...</div>';
-            }
-        });
-    </script>
-</body>
-</html>`;
-
-            // Ensure directory exists
-            const dir = path.dirname(reactIndexPath);
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-
-            fs.writeFileSync(reactIndexPath, adminLoginHTML);
-        }
-
-        res.sendFile(reactIndexPath);
     } catch (error) {
         console.error('❌ React admin login error:', error);
         // Fallback to basic HTML

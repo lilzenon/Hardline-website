@@ -488,41 +488,11 @@ const EventCard = memo(({ card, scaledDimensions }) => {
 
 const FigmaDesktop = () => {
   console.log('🖥️ FIGMA DESKTOP COMPONENT RENDERING');
-  // Lazy load YouTube to avoid blocking LCP
-  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
+  // Autoplay YouTube on load per requirements (keep muted for autoplay policy)
+  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
 
   useEffect(() => {
-    // Delay YouTube loading until after LCP
-    const loadYouTubeAfterLCP = () => {
-      // Wait for LCP to complete, then load YouTube
-      setTimeout(() => {
-        setShouldLoadYoutube(true);
-        console.log('🎥 Desktop YouTube loading enabled after LCP delay');
-      }, 1500); // 1.5 second delay to ensure LCP completes first
-    };
-
-    // Load on user interaction for immediate engagement
-    const loadOnInteraction = () => {
-      setShouldLoadYoutube(true);
-      console.log('🎥 Desktop YouTube loading enabled by user interaction');
-      document.removeEventListener('click', loadOnInteraction);
-      document.removeEventListener('scroll', loadOnInteraction);
-      document.removeEventListener('touchstart', loadOnInteraction);
-    };
-
-    // Set up delayed loading
-    loadYouTubeAfterLCP();
-
-    // Also enable immediate loading on user interaction
-    document.addEventListener('click', loadOnInteraction);
-    document.addEventListener('scroll', loadOnInteraction);
-    document.addEventListener('touchstart', loadOnInteraction);
-
-    return () => {
-      document.removeEventListener('click', loadOnInteraction);
-      document.removeEventListener('scroll', loadOnInteraction);
-      document.removeEventListener('touchstart', loadOnInteraction);
-    };
+    setShouldLoadYoutube(true);
   }, []);
 
   // Add shake animation styles
@@ -1970,40 +1940,25 @@ const FigmaDesktop = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* Lazy YouTube Video - Loads after LCP */}
-              {shouldLoadYoutube ? (
-                <iframe
-                  src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
-                  title="Henry Fong YouTube Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '100%',
-                    height: '100%',
-                    transform: 'translate(-50%, -50%) scale(1.5)',
-                    border: 'none',
-                    pointerEvents: 'none',
-                    opacity: 1
-                  }}
-                />
-              ) : (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    width: '100%',
-                    height: '100%',
-                    transform: 'translate(-50%, -50%)',
-                    background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                    border: 'none'
-                  }}
-                />
-              )}
+              {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
+              <iframe
+                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
+                title="Henry Fong YouTube Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="eager"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  width: '100%',
+                  height: '100%',
+                  transform: 'translate(-50%, -50%) scale(1.5)',
+                  border: 'none',
+                  pointerEvents: 'none',
+                  opacity: 1
+                }}
+              />
             </div>
 
             {/* Gradient overlay to match original design */}

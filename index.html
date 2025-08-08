@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#000000" />
+    <title>BOUNCE2BOUNCE</title>
+
+    <!-- Preconnects (safe early) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Defer YouTube preconnect until after LCP to reduce contention -->
+    <script>
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          ['https://www.youtube.com','https://i.ytimg.com','https://www.gstatic.com'].forEach((d) => {
+            const l = document.createElement('link'); l.rel='preconnect'; l.href=d; l.crossOrigin='anonymous'; document.head.appendChild(l);
+          });
+        }, 400);
+      });
+    </script>
+
+    <!-- Fonts (swap) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" /></noscript>
+
+    <!-- Splash styles to avoid CLS -->
+    <style>
+      html,body{margin:0;padding:0;background:#000;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif}
+      #root{min-height:100vh}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
