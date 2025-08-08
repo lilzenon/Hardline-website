@@ -222,8 +222,10 @@ app.use("/css", express.static("custom/css", {
     }
 }));
 
-// Serve Vite build assets (dist) under root; Vite emits hashed assets under /assets
+// Serve Vite build assets (dist) under root; DO NOT auto-serve dist/index.html at "/"
+// We want routing to decide the homepage (HBS by default, SPA opt-in)
 app.use(express.static("dist", {
+    index: false,
     setHeaders: (res, filePath) => {
         const isAsset = /\\\/(assets|images)\\\//.test(filePath) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(filePath);
         if (env.NODE_ENV === 'production') {

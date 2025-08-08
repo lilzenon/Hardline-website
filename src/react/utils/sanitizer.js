@@ -1,3 +1,4 @@
+import React from 'react';
 import DOMPurify from 'dompurify';
 
 /**
@@ -78,7 +79,7 @@ export function sanitizeHtml(dirty, config = DEFAULT_CONFIG) {
     if (!dirty || typeof dirty !== 'string') {
         return '';
     }
-    
+
     try {
         return DOMPurify.sanitize(dirty, config);
     } catch (error) {
@@ -123,22 +124,22 @@ export function sanitizeUrl(url) {
     if (!url || typeof url !== 'string') {
         return '';
     }
-    
+
     // Remove any whitespace
     const cleanUrl = url.trim();
-    
+
     // Check for dangerous protocols
     const dangerousProtocols = /^(javascript|data|vbscript|file|about):/i;
     if (dangerousProtocols.test(cleanUrl)) {
         return '';
     }
-    
+
     // Allow relative URLs, http, https, mailto, tel
     const allowedProtocols = /^(https?|mailto|tel|\/)/i;
     if (!allowedProtocols.test(cleanUrl) && !cleanUrl.startsWith('/')) {
         return '';
     }
-    
+
     return cleanUrl;
 }
 
@@ -151,7 +152,7 @@ export function sanitizeCss(css) {
     if (!css || typeof css !== 'string') {
         return '';
     }
-    
+
     // Remove dangerous CSS properties and values
     const dangerousPatterns = [
         /expression\s*\(/gi,
@@ -163,12 +164,12 @@ export function sanitizeCss(css) {
         /binding\s*:/gi,
         /behavior\s*:/gi
     ];
-    
+
     let sanitized = css;
     dangerousPatterns.forEach(pattern => {
         sanitized = sanitized.replace(pattern, '');
     });
-    
+
     return sanitized;
 }
 
@@ -182,14 +183,12 @@ export function sanitizeCss(css) {
  */
 export function SafeHtml({ html, config = DEFAULT_CONFIG, className = '', ...props }) {
     const sanitizedHtml = sanitizeHtml(html, config);
-    
-    return (
-        <div
-            className={className}
-            dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-            {...props}
-        />
-    );
+
+    return React.createElement('div', {
+        className,
+        dangerouslySetInnerHTML: { __html: sanitizedHtml },
+        ...props
+    });
 }
 
 /**
@@ -203,12 +202,12 @@ export function useSanitizedInput(initialValue = '', config = STRICT_CONFIG) {
     const [sanitizedValue, setSanitizedValue] = React.useState(
         sanitizeHtml(initialValue, config)
     );
-    
+
     const updateValue = React.useCallback((newValue) => {
         setRawValue(newValue);
         setSanitizedValue(sanitizeHtml(newValue, config));
     }, [config]);
-    
+
     return [sanitizedValue, updateValue, rawValue, setRawValue];
 }
 
@@ -220,22 +219,22 @@ export function useSanitizedInput(initialValue = '', config = STRICT_CONFIG) {
  */
 export function sanitizeFormData(formData, fieldConfigs = {}) {
     const sanitized = {};
-    
+
     Object.keys(formData).forEach(key => {
         const value = formData[key];
         const config = fieldConfigs[key] || STRICT_CONFIG;
-        
+
         if (typeof value === 'string') {
             sanitized[key] = sanitizeHtml(value, config);
         } else if (Array.isArray(value)) {
-            sanitized[key] = value.map(item => 
+            sanitized[key] = value.map(item =>
                 typeof item === 'string' ? sanitizeHtml(item, config) : item
             );
         } else {
             sanitized[key] = value;
         }
     });
-    
+
     return sanitized;
 }
 
@@ -248,7 +247,7 @@ export function sanitizeSearchQuery(query) {
     if (!query || typeof query !== 'string') {
         return '';
     }
-    
+
     // Remove special characters that could be used for injection
     return query
         .replace(/[<>'"&]/g, '') // Remove HTML/XML chars

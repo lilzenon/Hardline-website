@@ -5,12 +5,12 @@
     "main": "./server/server.js",
     "scripts": {
         "dev": "concurrently \"vite\" \"node --watch-path=./server --watch-path=./custom server/server.js\"",
-        "start": "node server/server.js --production",
+        "start": "node server/server.js",
         "build": "npm run build:css && vite build && node scripts/generate-build-info.js",
         "build:css": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --minify",
         "build:css:dev": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --watch",
-        "prebuild": "npm run build:css && vite build && node scripts/generate-build-info.js",
-        "prestart": "npm run build:css && vite build && node scripts/generate-build-info.js",
+
+
         "migrate": "knex migrate:latest",
         "migrate:make": "knex migrate:make",
         "migrate:crm": "knex migrate:latest --knexfile knexfile.crm.js",

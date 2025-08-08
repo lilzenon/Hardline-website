@@ -268,9 +268,9 @@ function staticAssetHeaders() {
  */
 function permissionsPolicyHeaders() {
     return (req, res, next) => {
-        // Set Permissions Policy - Allow encrypted-media and web-share for Laylo
+        // Set Permissions Policy - Allow encrypted-media and web-share for third-party services
         res.setHeader('Permissions-Policy',
-            'camera=(), microphone=(), geolocation=(), encrypted-media=*, web-share=*'
+            'encrypted-media=(self "https://www.youtube.com" "https://js-cdn.music.apple.com"), web-share=(self "https://laylo.com" "https://www.laylo.com"), camera=(), microphone=(), geolocation=()'
         );
         next();
     };

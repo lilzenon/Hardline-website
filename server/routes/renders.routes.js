@@ -14,7 +14,7 @@ const env = require("../env");
 
 const router = Router();
 
-// pages - 🚀 NEW: Use React homepage for root route
+// pages - Serve React SPA homepage by default
 router.get(
     "/",
     asyncHandler(auth.jwtLoosePage),
@@ -22,6 +22,8 @@ router.get(
     asyncHandler(locals.user),
     asyncHandler(renders.reactHomepage)
 );
+
+
 
 // Home page with modern navigation - React version
 router.get(

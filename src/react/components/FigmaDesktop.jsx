@@ -196,7 +196,6 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       frameBorder="0"
       scrolling="no"
       allow="web-share"
-      allowTransparency="true"
       onLoad={handleIframeLoad}
       style={{
         ...style,
@@ -248,9 +247,9 @@ const shouldPreloadImage = (index, isMobile = true) => index < (isMobile ? 2 : 4
 
 const getImageLoadingStrategy = (index, isMobile = true) => {
   if (shouldPreloadImage(index, isMobile)) {
-    return { loading: 'eager', fetchPriority: 'high', decoding: 'async' };
+    return { loading: 'eager', decoding: 'async', fetchpriority: 'high' };
   }
-  return { loading: 'lazy', fetchPriority: 'auto', decoding: 'async' };
+  return { loading: 'lazy', decoding: 'async', fetchpriority: 'low' };
 };
 
 // Add CSS animation for spinning wheel
@@ -1545,7 +1544,7 @@ const FigmaDesktop = () => {
           alt="B2B Logo"
           loading="lazy"
           decoding="async"
-          fetchPriority="high"
+          fetchpriority="high"
           style={{
             width: '138.41px',
             height: '43px'
@@ -1676,7 +1675,7 @@ const FigmaDesktop = () => {
                 alt="Hero background"
                 loading="eager"
                 decoding="async"
-                fetchPriority="high"
+                fetchpriority="high"
                 onLoad={() => console.log('✅ DESKTOP HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
                 onError={(e) => console.error('❌ DESKTOP HERO IMAGE FAILED TO LOAD:', e.target.src)}
                 style={{
@@ -1944,7 +1943,7 @@ const FigmaDesktop = () => {
               <iframe
                 src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
                 title="Henry Fong YouTube Video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture"
                 allowFullScreen
                 loading="eager"
                 style={{

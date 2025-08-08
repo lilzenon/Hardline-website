@@ -195,7 +195,6 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       frameBorder="0"
       scrolling="no"
       allow="web-share"
-      allowTransparency="true"
       onLoad={handleIframeLoad}
       style={{
         ...style,
@@ -247,9 +246,9 @@ const shouldPreloadImage = (index, isMobile = true) => index < (isMobile ? 2 : 4
 
 const getImageLoadingStrategy = (index, isMobile = true) => {
   if (shouldPreloadImage(index, isMobile)) {
-    return { loading: 'eager', fetchPriority: 'high', decoding: 'async' };
+    return { loading: 'eager', decoding: 'async', fetchpriority: 'high' };
   }
-  return { loading: 'lazy', fetchPriority: 'auto', decoding: 'async' };
+  return { loading: 'lazy', decoding: 'async', fetchpriority: 'low' };
 };
 
 // Simple cache for API responses
@@ -2112,7 +2111,7 @@ const FigmaMobile = () => {
                   <iframe
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture"
                     allowFullScreen
                     loading="lazy"
                     style={{
@@ -2491,7 +2490,7 @@ const FigmaMobile = () => {
                     alt="Hero background"
                     loading="eager"
                     decoding="async"
-                    fetchPriority="high"
+                    fetchpriority="high"
                     onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
                     onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
                     style={{
