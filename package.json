@@ -9,8 +9,6 @@
         "build": "npm run build:css && vite build && node scripts/generate-build-info.js",
         "build:css": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --minify",
         "build:css:dev": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --watch",
-
-
         "migrate": "knex migrate:latest",
         "migrate:make": "knex migrate:make",
         "migrate:crm": "knex migrate:latest --knexfile knexfile.crm.js",
@@ -65,7 +63,7 @@
         "jsonwebtoken": "9.0.2",
         "knex": "3.1.0",
         "libphonenumber-js": "1.12.10",
-        "lucide-react": "^0.537.0",
+        "lucide-react": "^0.539.0",
         "ms": "2.1.3",
         "multer": "^2.0.2",
         "nanoid": "5.1.5",

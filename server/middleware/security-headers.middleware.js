@@ -88,6 +88,7 @@ function getCSPDirectives() {
             "https://api.twilio.com",
             "https://www.google-analytics.com",
             "https://analytics.google.com",
+            "https://fonts.googleapis.com", // Allow Google Fonts CSS loading
             "https://laylo.com", // Allow Laylo main domain
             "https://*.laylo.com", // Allow all Laylo subdomains
             "https://embed.laylo.com", // Allow Laylo embed connections
