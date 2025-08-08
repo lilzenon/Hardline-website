@@ -527,10 +527,15 @@ async function reactHomepage(req, res) {
             });
         }
 
-        // Serve the React built HTML file
+        // Serve the Vite-built SPA index.html when available, otherwise legacy
         const path = require('path');
-        const reactIndexPath = path.join(__dirname, '../../static/react/index.html');
-        res.sendFile(reactIndexPath);
+        const fs = require('fs');
+        const viteIndexPath = path.join(__dirname, '../../dist/index.html');
+        if (fs.existsSync(viteIndexPath)) {
+            return res.sendFile(viteIndexPath);
+        }
+        const legacyReactIndexPath = path.join(__dirname, '../../static/react/index.html');
+        return res.sendFile(legacyReactIndexPath);
     } catch (error) {
         console.error('❌ React homepage error:', error);
         // Fallback to Handlebars homepage

@@ -48,14 +48,21 @@ async function renderAdminLogin(req, res) {
             });
         }
 
-        // Serve the React admin login page (similar to homepage)
+        // Prefer serving the Vite-built SPA for admin login
         const path = require('path');
+        const fs = require('fs');
+
+        const viteIndexPath = path.join(__dirname, '../../dist/index.html');
+        if (fs.existsSync(viteIndexPath)) {
+            return res.sendFile(viteIndexPath);
+        }
+
+        // Fallback: legacy static React admin login page if Vite build not available
         const reactIndexPath = path.join(__dirname, '../../static/react/admin-login.html');
 
         // Check if React admin login file exists, otherwise create it
-        const fs = require('fs');
         if (!fs.existsSync(reactIndexPath)) {
-            // Create the admin login HTML file
+            // Create the legacy admin login HTML file
             const adminLoginHTML = `<!DOCTYPE html>
 <html lang="en">
 <head>

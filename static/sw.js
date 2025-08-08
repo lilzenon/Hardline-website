@@ -73,12 +73,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // Skip admin, API, and React bundle requests for fresh content
+    // Skip admin, API, dashboard, and Vite assets for fresh content
     if (url.pathname.startsWith('/admin') ||
         url.pathname.startsWith('/api') ||
         url.pathname.startsWith('/dashboard') ||
-        url.pathname.includes('bundle.js') ||
-        url.pathname.includes('chunk.js')) {
+        url.pathname.startsWith('/assets/') ||
+        /\.(js|css|map)$/.test(url.pathname)) {
         return;
     }
 

@@ -14,7 +14,7 @@ Allow: /static/
 Allow: /images/
 Allow: /css/
 Allow: /js/
-Allow: /react/
+# Legacy React bundle path removed
 
 # Disallow admin and private areas
 Disallow: /admin/

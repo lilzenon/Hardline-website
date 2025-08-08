@@ -222,20 +222,19 @@ app.use("/css", express.static("custom/css", {
     }
 }));
 
-app.use("/react", express.static("static/react", {
-    setHeaders: (res, path) => {
-        // React bundle: Longer cache for production performance
+// Serve Vite build assets (dist) under root; Vite emits hashed assets under /assets
+app.use(express.static("dist", {
+    setHeaders: (res, filePath) => {
+        const isAsset = /\\\/(assets|images)\\\//.test(filePath) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(filePath);
         if (env.NODE_ENV === 'production') {
-            const oneDay = 24 * 60 * 60; // 1 day in seconds (increased from 1 hour)
-            const expiresDate = new Date(Date.now() + oneDay * 1000).toUTCString();
-
+            const maxAge = isAsset ? (365 * 24 * 60 * 60) : (24 * 60 * 60);
+            const expiresDate = new Date(Date.now() + maxAge * 1000).toUTCString();
             res.set({
-                'Cache-Control': 'public, max-age=' + oneDay + ', stale-while-revalidate=86400',
+                'Cache-Control': 'public, max-age=' + maxAge + (isAsset ? ', immutable' : ''),
                 'Expires': expiresDate,
                 'Last-Modified': new Date().toUTCString()
             });
         } else {
-            // Development: No cache
             res.set({
                 'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
                 'Pragma': 'no-cache',
@@ -244,6 +243,29 @@ app.use("/react", express.static("static/react", {
         }
     }
 }));
+
+// Legacy React bundle static (kept during transition) - safe fallback for admin login
+app.use("/react", express.static("static/react", {
+    setHeaders: (res, path) => {
+        if (env.NODE_ENV === 'production') {
+            const oneDay = 24 * 60 * 60; // 1 day in seconds
+            const expiresDate = new Date(Date.now() + oneDay * 1000).toUTCString();
+
+            res.set({
+                'Cache-Control': 'public, max-age=' + oneDay + ', stale-while-revalidate=86400',
+                'Expires': expiresDate,
+                'Last-Modified': new Date().toUTCString()
+            });
+        } else {
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }
+}));
+
 
 // Add image optimization for static images
 app.use(imageOptimization.optimizedImageMiddleware());
