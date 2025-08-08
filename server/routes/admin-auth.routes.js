@@ -26,11 +26,8 @@ const adminLoginLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     // Skip successful requests
-    skipSuccessfulRequests: true,
-    // Custom key generator to include user agent for better tracking
-    keyGenerator: (req) => {
-        return `${req.ip}-${req.get('User-Agent')}`;
-    }
+    skipSuccessfulRequests: true
+        // Removed custom keyGenerator to use default IPv6-compatible implementation
 });
 
 // Enhanced rate limiting with stricter controls
