@@ -208,9 +208,49 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   );
 });
 
-import { getOptimizedImageUrl, getResponsiveSrcSet, getAVIFSrcSet } from '../../lib/images';
+// Image helpers inlined to avoid external dependency during build
+const getOptimizedImageUrl = (originalUrl, width = null) => {
+  if (!originalUrl) return originalUrl;
+  if (typeof originalUrl === 'string' && originalUrl.includes('/images/figma-exact/')) {
+    const filename = originalUrl.split('/').pop();
+    return `/images/optimized/${filename}`;
+  }
+  if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
+    const encodedUrl = encodeURIComponent(originalUrl);
+    const baseUrl = `/images/proxy-optimized?url=${encodedUrl}`;
+    return width ? `${baseUrl}&w=${width}` : baseUrl;
+  }
+  return originalUrl;
+};
 
-import { shouldPreloadImage, getImageLoadingStrategy } from '../../lib/images';
+const responsiveSizes = (context) => {
+  if (context === 'event') return [111, 222, 333];
+  if (context === 'hero') return [350, 700, 1050];
+  return [150, 300, 600];
+};
+
+const getResponsiveSrcSet = (originalUrl, context = 'event') => {
+  if (!originalUrl) return '';
+  return responsiveSizes(context)
+    .map((size) => `${getOptimizedImageUrl(originalUrl, size)} ${size}w`)
+    .join(', ');
+};
+
+const getAVIFSrcSet = (originalUrl, context = 'event') => {
+  if (!originalUrl) return '';
+  return responsiveSizes(context)
+    .map((size) => `/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
+    .join(', ');
+};
+
+const shouldPreloadImage = (index, isMobile = true) => index < (isMobile ? 2 : 4);
+
+const getImageLoadingStrategy = (index, isMobile = true) => {
+  if (shouldPreloadImage(index, isMobile)) {
+    return { loading: 'eager', fetchPriority: 'high', decoding: 'async' };
+  }
+  return { loading: 'lazy', fetchPriority: 'auto', decoding: 'async' };
+};
 
 // Simple cache for API responses
 const apiCache = new Map();
@@ -3797,3 +3837,4 @@ const FigmaMobile = () => {
 };
 
 export default FigmaMobile;
+
