@@ -1010,7 +1010,9 @@ router.get("/llms.txt", (req, res) => {
 
 // SEO Monitoring and Testing Routes
 router.get("/seo/report", asyncHandler(seoMonitoring.generateSEOReport));
-router.get("/seo/test/:element?", asyncHandler(seoMonitoring.testSEOElements));
+// Express 5.x compatible routes - separate routes for optional parameter
+router.get("/seo/test", asyncHandler(seoMonitoring.testSEOElements));
+router.get("/seo/test/:element", asyncHandler(seoMonitoring.testSEOElements));
 router.get("/seo/analytics", asyncHandler(seoMonitoring.getSEOAnalytics));
 
 module.exports = router;

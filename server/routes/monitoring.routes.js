@@ -17,7 +17,7 @@ router.get('/database', async(req, res) => {
         const startTime = Date.now();
 
         // Test database connection and get pool stats
-        const poolStats = await knex.client.pool ? {
+        const poolStats = (await knex.client.pool) ? {
             used: knex.client.pool.numUsed(),
             free: knex.client.pool.numFree(),
             pending: knex.client.pool.numPendingAcquires(),

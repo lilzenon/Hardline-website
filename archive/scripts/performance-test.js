@@ -211,7 +211,7 @@ class PerformanceTester {
             const getTime = Date.now() - getStart;
 
             // Clean up
-            await redis.client.del('test:performance');
+            await redis.client.delete('test:performance');
 
             this.results.redis = {
                 ping: `${pingTime}ms`,

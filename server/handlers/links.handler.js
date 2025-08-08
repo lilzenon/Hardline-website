@@ -575,14 +575,12 @@ async function redirect(req, res, next) {
     // Enhanced iMessage detection - more specific to actual iMessage previews
     const isIMessagePreview = (
         // CFNetwork is used by iOS system for link previews
-        /cfnetwork/i.test(userAgent) ||
+        (// iOS devices without Safari/Version (likely system requests)
+        (/cfnetwork/i.test(userAgent) ||
         // Darwin requests are often system-level
-        (/darwin/i.test(userAgent) && !/safari|chrome|firefox/i.test(userAgent)) ||
-        // iOS devices without Safari/Version (likely system requests)
-        (/iphone|ipad|ipod/i.test(userAgent) &&
+        (/darwin/i.test(userAgent) && !/safari|chrome|firefox/i.test(userAgent)) || (/iphone|ipad|ipod/i.test(userAgent) &&
             !/safari|version|chrome|firefox|opera/i.test(userAgent) &&
-            /mobile/i.test(userAgent) &&
-            /webkit/i.test(userAgent))
+            /mobile/i.test(userAgent) && /webkit/i.test(userAgent))))
     );
 
     // Check for specific preview tools and social media apps
