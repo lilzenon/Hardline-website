@@ -7,16 +7,22 @@ ENV NODE_ENV=production
 # set working directory.
 WORKDIR /kutt
 
-# download dependencies while using Docker's caching
+# download ALL dependencies first (including dev dependencies for build)
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev
+    npm ci
 
 RUN mkdir -p /var/lib/kutt
 
 # copy the rest of source files into the image
 COPY . .
+
+# build the frontend (requires dev dependencies)
+RUN npm run build
+
+# remove dev dependencies after build to reduce image size
+RUN npm prune --omit=dev
 
 # expose the port that the app listens on
 EXPOSE 3000
