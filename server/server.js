@@ -247,6 +247,28 @@ app.use(express.static("dist", {
 // Legacy /react static removed: Vite-only serving
 
 
+// Restore legacy /react static route as secondary fallback during transition
+app.use("/react", express.static("static/react", {
+    setHeaders: (res, filePath) => {
+        if (env.NODE_ENV === 'production') {
+            const oneDay = 24 * 60 * 60;
+            const expiresDate = new Date(Date.now() + oneDay * 1000).toUTCString();
+            res.set({
+                'Cache-Control': 'public, max-age=' + oneDay + ', stale-while-revalidate=86400',
+                'Expires': expiresDate,
+                'Last-Modified': new Date().toUTCString()
+            });
+        } else {
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    }
+}));
+
+
 // Add image optimization for static images
 app.use(imageOptimization.optimizedImageMiddleware());
 app.use(express.static("static", {

@@ -57,7 +57,13 @@ async function renderAdminLogin(req, res) {
             return res.sendFile(viteIndexPath);
         }
 
-        // If Vite build is missing, fall back to server-rendered home
+        // Fallback to legacy React admin login if present
+        const legacyAdmin = path.join(__dirname, '../../static/react/admin-login.html');
+        if (fs.existsSync(legacyAdmin)) {
+            return res.sendFile(legacyAdmin);
+        }
+
+        // Last resort: redirect to home
         return res.redirect('/');
 
 
