@@ -1663,7 +1663,7 @@ router.get(
 
 // Catch-all route for any unmatched webhook requests
 router.all(
-    "*",
+    "/*splat",
     webhookLoggingMiddleware,
     asyncHandler((req, res) => {
         console.log('🚨 ===== UNMATCHED WEBHOOK REQUEST =====');
