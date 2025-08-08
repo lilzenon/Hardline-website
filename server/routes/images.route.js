@@ -576,100 +576,73 @@ async function optimizeImageWithRetryAndResize(imageBuffer, format, width, reque
     throw lastError;
 }
 
-// Proxy optimization route for external images (event covers, etc.)
+// Proxy optimization route for external images (event covers, etc.) with persistent disk cache
 router.get('/proxy-optimized', async(req, res) => {
-            const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-            const startTime = Date.now();
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const startTime = Date.now();
 
-            try {
-                const { url, format } = req.query;
+    // Lazy import cache helper to avoid circulars on cold start
+    const cache = require('../services/proxy-image-cache.service.js');
 
-                if (!url) {
-                    return res.status(400).json({ error: 'URL parameter is required' });
-                }
+    try {
+        const { url, format } = req.query;
+        if (!url) return res.status(400).json({ error: 'URL parameter is required' });
 
-                const decodedUrl = decodeURIComponent(url);
-                const requestedFormat = format || 'webp'; // Default to WebP, support AVIF
-                console.log(`🔄 [${requestId}] Starting proxy optimization: ${decodedUrl} (format: ${requestedFormat})`);
+        const decodedUrl = decodeURIComponent(url);
+        const width = req.query.w ? parseInt(req.query.w) : null;
+        const bestFormat = getBestFormat(req);
+        const contentType = bestFormat === 'webp' ? 'image/webp' : bestFormat === 'avif' ? 'image/avif' : 'image/jpeg';
 
-                // Enhanced Sharp availability check with per-request logging
-                if (!checkSharpAvailability(requestId)) {
-                    console.warn(`⚠️ [${requestId}] Sharp not available, redirecting to original: ${decodedUrl}`);
-                    return res.redirect(decodedUrl);
-                }
+        // First: check disk cache
+        const cachePath = cache.getCachePath(decodedUrl, width, bestFormat);
+        const served = await cache.tryServeFromCache(res, req, cachePath, contentType);
+        if (served) {
+            console.log(`📦 [${requestId}] Cache HIT for ${decodedUrl} (${bestFormat}${width ? ','+width+'w' : ''})`);
+            return;
+        }
 
-                // Fetch the external image
-                const fetch = (await
-                    import ('node-fetch')).default;
-                const fetchStart = Date.now();
+        console.log(`🔄 [${requestId}] Cache MISS; fetching ${decodedUrl}`);
 
-                const response = await fetch(decodedUrl, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (compatible; ImageOptimizer/1.0)'
-                    },
-                    timeout: 10000
-                });
-
-                const fetchTime = Date.now() - fetchStart;
-                console.log(`📥 [${requestId}] Image fetch completed in ${fetchTime}ms (Status: ${response.status})`);
-
-                if (!response.ok) {
-                    console.warn(`⚠️ [${requestId}] Failed to fetch image (${response.status}), redirecting to original: ${decodedUrl}`);
-                    return res.redirect(decodedUrl);
-                }
-
-                const imageBuffer = Buffer.from(await response.arrayBuffer());
-
-                // Validate image buffer
-                if (!imageBuffer || imageBuffer.length === 0) {
-                    console.warn(`⚠️ [${requestId}] Empty image buffer, redirecting to original: ${decodedUrl}`);
-                    return res.redirect(decodedUrl);
-                }
-
-                console.log(`📊 [${requestId}] Image buffer size: ${Math.round(imageBuffer.length / 1024)}KB`);
-
-                const bestFormat = getBestFormat(req);
-                const width = req.query.w ? parseInt(req.query.w) : null;
-
-                // Set aggressive caching headers
-                res.set({
-                    'Cache-Control': 'public, max-age=31536000, immutable', // 1 year
-                    'Content-Type': bestFormat === 'webp' ? 'image/webp' : bestFormat === 'avif' ? 'image/avif' : 'image/jpeg',
-                    'Vary': 'Accept'
-                });
-
-                // Optimize the image using enhanced queue system with responsive sizing
-                try {
-                    const optimizedBuffer = await queueOptimizationWithResize(imageBuffer, bestFormat, width, requestId);
-
-                    const totalTime = Date.now() - startTime;
-                    const compressionRatio = ((imageBuffer.length - optimizedBuffer.length) / imageBuffer.length * 100).toFixed(1);
-
-                    console.log(`✅ [${requestId}] External image optimized (${bestFormat.toUpperCase()}${width ? `, ${width}px` : ''}): ${decodedUrl}`);
-            console.log(`📈 [${requestId}] Size: ${Math.round(imageBuffer.length / 1024)}KB → ${Math.round(optimizedBuffer.length / 1024)}KB (${compressionRatio}% reduction)`);
-            console.log(`⏱️ [${requestId}] Total processing time: ${totalTime}ms`);
-
-            res.send(optimizedBuffer);
-
-        } catch (sharpError) {
-            const totalTime = Date.now() - startTime;
-            console.error(`❌ [${requestId}] All Sharp optimization attempts failed after ${totalTime}ms:`, sharpError.message);
-            console.warn(`⚠️ [${requestId}] Falling back to original image: ${decodedUrl}`);
+        if (!checkSharpAvailability(requestId)) {
+            console.warn(`⚠️ [${requestId}] Sharp not available, redirecting to original: ${decodedUrl}`);
             return res.redirect(decodedUrl);
         }
 
-    } catch (error) {
-        const totalTime = Date.now() - startTime;
-        console.error(`❌ [${requestId}] Proxy optimization error after ${totalTime}ms:`, error.message);
+        const fetch = (await
+            import ('node-fetch')).default;
+        const fetchStart = Date.now();
+        const response = await fetch(decodedUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ImageOptimizer/1.0)' },
+            timeout: 10000,
+        });
+        const fetchTime = Date.now() - fetchStart;
+        console.log(`📥 [${requestId}] Fetched in ${fetchTime}ms (Status: ${response.status})`);
 
-        // Fallback: redirect to original URL
-        const { url } = req.query;
-        if (url) {
-            console.warn(`⚠️ [${requestId}] General error, redirecting to original: ${decodeURIComponent(url)}`);
-            res.redirect(decodeURIComponent(url));
-        } else {
-            res.status(500).json({ error: 'Image optimization failed' });
+        if (!response.ok) return res.redirect(decodedUrl);
+
+        const imageBuffer = Buffer.from(await response.arrayBuffer());
+        if (!imageBuffer || imageBuffer.length === 0) return res.redirect(decodedUrl);
+
+        res.set({ 'Cache-Control': 'public, max-age=31536000, immutable', 'Vary': 'Accept' });
+
+        // Optimize with queue + resize
+        try {
+            const optimizedBuffer = await queueOptimizationWithResize(imageBuffer, bestFormat, width, requestId);
+            // Write to cache, respond with ETag
+            await cache.writeCacheAtomic(cachePath, optimizedBuffer);
+            const etag = cache.computeETagFromBuffer(optimizedBuffer);
+            res.set({ 'Content-Type': contentType, 'ETag': etag });
+            console.log(`✅ [${requestId}] Optimized & cached ${decodedUrl} in ${Date.now() - startTime}ms`);
+            return res.send(optimizedBuffer);
+        } catch (err) {
+            console.error(`❌ [${requestId}] Optimization failed:`, err.message);
+            return res.redirect(decodedUrl);
         }
+    } catch (error) {
+        console.error(`❌ [${requestId}] Proxy optimization error:`, error.message);
+        const { url } = req.query;
+        if (url) return res.redirect(decodeURIComponent(url));
+        return res.status(500).json({ error: 'Image optimization failed' });
     }
 });
 
