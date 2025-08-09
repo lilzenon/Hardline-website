@@ -2039,7 +2039,7 @@ const FigmaMobile = () => {
             justifyContent: 'flex-start',
             alignItems: 'center',
             padding: '20px 0px 40px 0px', // Remove horizontal padding to prevent overflow
-            paddingBottom: `calc(${getDrawerHeight()} + 60px)`, // Dynamic bottom padding to account for drawer
+            paddingBottom: `calc(${getDrawerHeight()} + 120px)`, // Increased bottom padding for better clearance above drawer
             boxSizing: 'border-box',
             overflow: 'auto', // Enable scrolling
             overflowX: 'hidden', // Prevent horizontal scroll
@@ -2723,6 +2723,7 @@ const FigmaMobile = () => {
               gap: '8px', // Reduced from 16px to 8px
               flexShrink: 0,
               padding: '0 40px', // Add 40px left/right padding to event cards container
+              marginBottom: '40px', // Additional bottom margin to ensure last event card is fully visible
               boxSizing: 'border-box', // Ensure padding doesn't cause overflow
               maxWidth: '430px' // Ensure it doesn't exceed container width
             }}
