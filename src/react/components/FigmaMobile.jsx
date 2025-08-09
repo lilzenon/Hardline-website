@@ -2649,11 +2649,13 @@ const FigmaMobile = () => {
           {/* Mobile Square Hero - Only show when "All" events is selected */}
           {showAllEvents && (
             <div
+              className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
               style={{
                 width: '100%',
                 padding: '0 40px',
                 marginBottom: '20px',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                animationDelay: cardsAnimated ? '0s' : '0s' // Hero animates first (no delay)
               }}
             >
             <div
@@ -3006,7 +3008,7 @@ const FigmaMobile = () => {
                     position: 'relative',
                     margin: '0',
                     padding: '0',
-                    animationDelay: cardsAnimated ? `${index * 0.05}s` : '0s', // Smoother stagger animation
+                    animationDelay: cardsAnimated ? `${0.1 + (index * 0.05)}s` : '0s', // Start after hero (0.1s base delay + stagger)
                     overflow: 'hidden' // Ensure backdrop filter works properly
                   }}
                 >
@@ -3149,7 +3151,8 @@ const FigmaMobile = () => {
                             width: '34px', // Scaled up from 24px
                             height: '34px', // Scaled up from 24px
                             borderRadius: '6px', // Scaled up from 4px
-                            background: '#FFF'
+                            background: '#FFF',
+                            opacity: 0.7 // Reduced transparency for more subtle appearance
                           }}
                         />
 
@@ -3565,7 +3568,7 @@ const FigmaMobile = () => {
                               gap: '8px', // Scaled up from 6px (desktop)
                               borderRadius: '28px', // Scaled up from 20px (desktop)
                               background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? 'rgba(35, 35, 35, 0.95)' // Enhanced contrast with reduced transparency
+                                ? 'rgba(23, 23, 23, 0.80)' // Normal state - not hover state
                                 : 'rgba(23, 23, 23, 0.40)',
                               border: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
                                 ? '1px solid rgba(255, 255, 255, 0.15)' // Subtle border for better definition
@@ -3592,7 +3595,7 @@ const FigmaMobile = () => {
                             onMouseLeave={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
                                 e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)';
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)'; // Reset to normal state
                               }
                             }}
                             onMouseDown={(e) => {
