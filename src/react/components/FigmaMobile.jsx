@@ -2779,11 +2779,11 @@ const FigmaMobile = () => {
                     justifyContent: 'flex-start',
                     alignItems: 'center',
                     borderRadius: '20px', // Scaled up from 16px
-                    background: 'rgba(15, 15, 15, 0.85)', // Much darker with transparency
+                    background: 'rgba(15, 15, 15, 0.95)', // Reduced transparency for better visual separation
                     backdropFilter: 'blur(20px) saturate(180%)', // Frostier blur effect
                     WebkitBackdropFilter: 'blur(20px) saturate(180%)', // Safari support
-                    border: '1px solid rgba(255, 255, 255, 0.08)', // Subtle border for glassmorphism
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)', // Enhanced shadow with inner highlight
+                    border: '1px solid rgba(255, 255, 255, 0.12)', // Enhanced border for better definition
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)', // Enhanced shadow with stronger inner highlight
                     position: 'relative',
                     margin: '0',
                     padding: '0',
@@ -3346,8 +3346,14 @@ const FigmaMobile = () => {
                               gap: '8px', // Scaled up from 6px (desktop)
                               borderRadius: '28px', // Scaled up from 20px (desktop)
                               background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? 'rgba(23, 23, 23, 0.80)' // Match desktop grey
+                                ? 'rgba(35, 35, 35, 0.95)' // Enhanced contrast with reduced transparency
                                 : 'rgba(23, 23, 23, 0.40)',
+                              border: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                                ? '1px solid rgba(255, 255, 255, 0.15)' // Subtle border for better definition
+                                : '1px solid rgba(255, 255, 255, 0.05)',
+                              boxShadow: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                                ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow and inner highlight
+                                : 'none',
                               cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
                                 ? 'pointer'
                                 : 'default',

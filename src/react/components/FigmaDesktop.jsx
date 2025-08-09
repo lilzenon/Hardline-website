@@ -2400,7 +2400,9 @@ const FigmaDesktop = () => {
                   justifyContent: 'flex-start',  // Justify content to the left
                   alignItems: 'center',
                   borderRadius: '16px',
-                  background: '#232323',
+                  background: 'rgba(35, 35, 35, 0.95)', // Enhanced background with reduced transparency for better visual separation
+                  border: '1px solid rgba(255, 255, 255, 0.08)', // Subtle border for glassmorphism effect
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)', // Enhanced shadow with inner highlight
                   position: 'relative',
                   margin: '0',
                   padding: '0',
@@ -2799,8 +2801,14 @@ const FigmaDesktop = () => {
                           gap: '6px',
                           borderRadius: '20px',
                           background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? 'rgba(23, 23, 23, 0.80)'
+                            ? 'rgba(35, 35, 35, 0.95)' // Enhanced contrast with reduced transparency
                             : 'rgba(23, 23, 23, 0.40)',
+                          border: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                            ? '1px solid rgba(255, 255, 255, 0.15)' // Subtle border for better definition
+                            : '1px solid rgba(255, 255, 255, 0.05)',
+                          boxShadow: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
+                            ? '0 3px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow and inner highlight
+                            : 'none',
                           cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
                             ? 'pointer'
                             : 'default',
