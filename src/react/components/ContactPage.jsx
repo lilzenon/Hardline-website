@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import ContactPageMobile from './ContactPageMobile';
-import { usePerformantResize } from '../hooks/usePerformantResize';
+import { useViewportDimensions } from '../hooks/usePerformantResize';
 
 const ContactPage = () => {
+  // FIXED: Use useViewportDimensions to avoid circular dependency
+  const { isMobile: isMobileByWidth, width: viewportWidth } = useViewportDimensions();
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  // Use performant resize hook instead of direct window.innerWidth access
   const [activeNavTab, setActiveNavTab] = useState('Contact');
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
@@ -24,9 +25,7 @@ const ContactPage = () => {
   // Mobile detection effect
   useEffect(() => {
     const detectDevice = () => {
-      // Check viewport width (mobile-first approach)
-      const viewportWidth = window.innerWidth;
-      const isMobileByWidth = viewportWidth <= 768;
+      // FIXED: Use viewport dimensions from hook instead of direct window access
 
       // Check user agent for mobile devices
       const userAgent = navigator.userAgent || '';
@@ -61,12 +60,11 @@ const ContactPage = () => {
     };
   }, []);
 
-  // Use performant resize hook for responsive calculations
-  const { width: viewportWidth } = usePerformantResize((dimensions) => {
-    const { width: currentViewportWidth } = dimensions;
-
+  // FIXED: Use viewport dimensions from useViewportDimensions hook for responsive calculations
+  useEffect(() => {
+    const updateScaling = () => {
       // Base dimensions for scaling calculations
-      const availableWidth = currentViewportWidth - 32; // Account for 16px padding on each side
+      const availableWidth = viewportWidth - 32; // Account for 16px padding on each side
       const baseHeroWidth = 299;
       const baseHeroHeight = 299;
       const baseRightHeroWidth = 498;
@@ -108,8 +106,11 @@ const ContactPage = () => {
       };
 
     setScaledDimensions(scaledDimensions);
-    console.log(`🎯 Contact page scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.25x)`, scaledDimensions);
-  });
+    console.log(`🎯 Contact page scaling: ${scale.toFixed(3)} for viewport ${viewportWidth}px (max 1.25x)`, scaledDimensions);
+    };
+
+    updateScaling();
+  }, [viewportWidth]); // Depend on viewportWidth from useViewportDimensions
 
   const handleNavClick = (tab) => {
     setActiveNavTab(tab);
