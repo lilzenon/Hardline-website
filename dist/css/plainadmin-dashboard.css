@@ -1,0 +1,1499 @@
+/**
+ * 🎨 LAYLO-STYLE DASHBOARD
+ *
+ * Replicating the exact Laylo dashboard design
+ * Clean, modern, professional
+ */
+
+
+/* Laylo Layout Container */
+
+.laylo-layout {
+    display: flex;
+    background: #f8fafc;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+
+/* Laylo Sidebar */
+
+.laylo-sidebar {
+    width: 280px;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+
+/* Laylo Logo */
+
+.laylo-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 8px 12px;
+}
+
+.laylo-logo-icon {
+    width: 32px;
+    height: 32px;
+    background: #6366f1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.laylo-logo-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.laylo-logo-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+
+/* Create Drop Button */
+
+.laylo-create-btn {
+    background: #06b6d4;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    transition: all 0.2s ease;
+}
+
+.laylo-create-btn:hover {
+    background: #0891b2;
+    color: white;
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.laylo-create-icon {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+
+/* Navigation Menu */
+
+.laylo-nav-menu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.laylo-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.laylo-nav-item:hover {
+    background: #f3f4f6;
+    color: #374151;
+    text-decoration: none;
+}
+
+.laylo-nav-item.active {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.laylo-nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.laylo-nav-text {
+    font-weight: 500;
+}
+
+
+/* Sidebar Bottom */
+
+.laylo-sidebar-bottom {
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+}
+
+
+/* User Info */
+
+.laylo-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin: 16px 0;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.laylo-user-avatar {
+    width: 40px;
+    height: 40px;
+    background: #6366f1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.laylo-user-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.laylo-user-initials {
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.laylo-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.laylo-avatar-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0 auto;
+    background: #6366f1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.laylo-avatar-large .laylo-avatar-initials {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+
+/* Main Header Layout */
+
+.laylo-main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+@media (max-width: 768px) {
+    .laylo-main-header {
+        padding: 12px 16px;
+    }
+}
+
+
+/* Notification Toast Styles */
+
+.laylo-notification-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 16px;
+    max-width: 400px;
+    z-index: 9999;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.laylo-notification-toast.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.laylo-toast-content strong {
+    display: block;
+    color: #111827;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.laylo-toast-content p {
+    color: #6b7280;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+
+/* Notification Error and Empty States */
+
+.laylo-notification-error,
+.laylo-notification-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.laylo-notification-error button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.laylo-notification-error button:hover {
+    background: #5856eb;
+}
+
+.laylo-user-details {
+    flex: 1;
+}
+
+.laylo-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.laylo-user-url {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+
+/* Credits Info */
+
+.laylo-credits {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.laylo-credits-icon {
+    width: 20px;
+    height: 20px;
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.laylo-credits-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.laylo-credits-text {
+    flex: 1;
+}
+
+.laylo-credits-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: #92400e;
+    margin-bottom: 4px;
+}
+
+.laylo-credits-info {
+    font-size: 11px;
+    color: #a16207;
+    line-height: 1.4;
+}
+
+
+/* Main Content */
+
+.laylo-main {
+    flex: 1;
+    margin-left: 280px;
+    padding: 0;
+    background: #f8fafc;
+}
+
+
+/* Page Components */
+
+.laylo-page {
+    padding: 24px 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.laylo-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.laylo-page-title h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.laylo-page-subtitle {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.laylo-page-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.laylo-page-content {
+    /* Content styling */
+}
+
+
+/* Cards */
+
+.laylo-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.laylo-card-header {
+    padding: 24px 24px 16px 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.laylo-card-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
+
+.laylo-card-header p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+}
+
+.laylo-card-body {
+    padding: 24px;
+}
+
+.laylo-card-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+
+/* Buttons */
+
+.laylo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.laylo-btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.laylo-btn-primary:hover {
+    background: #1d4ed8;
+    color: white;
+    text-decoration: none;
+}
+
+.laylo-btn-outline {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.laylo-btn-outline:hover {
+    background: #f9fafb;
+    color: #374151;
+    text-decoration: none;
+}
+
+.laylo-btn-text {
+    background: transparent;
+    color: #6b7280;
+    padding: 8px 12px;
+}
+
+.laylo-btn-text:hover {
+    background: #f3f4f6;
+    color: #374151;
+    text-decoration: none;
+}
+
+.laylo-btn-sm {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.laylo-btn-icon {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* Forms */
+
+.laylo-form {
+    /* Form container */
+}
+
+.laylo-form-group {
+    margin-bottom: 20px;
+}
+
+.laylo-form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.laylo-form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    background: white;
+    transition: border-color 0.2s ease;
+}
+
+.laylo-form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.laylo-form-text {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    display: block;
+}
+
+.laylo-form-actions {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+
+/* Stat Cards */
+
+.laylo-stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.laylo-stat-icon {
+    width: 48px;
+    height: 48px;
+    background: #eff6ff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+}
+
+.laylo-stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.laylo-stat-content {
+    flex: 1;
+}
+
+.laylo-stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.laylo-stat-label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+
+/* Badges */
+
+.laylo-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.laylo-badge-success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.laylo-badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.laylo-badge-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.laylo-badge-info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+
+/* Alerts */
+
+.laylo-alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+.laylo-alert-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.laylo-alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+
+/* Settings Navigation */
+
+.laylo-settings-nav {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px;
+    margin-bottom: 24px;
+}
+
+.laylo-settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.laylo-settings-nav-item:hover {
+    background: #f3f4f6;
+    color: #374151;
+    text-decoration: none;
+}
+
+.laylo-settings-nav-item.active {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.laylo-settings-nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.laylo-settings-section {
+    display: none;
+}
+
+.laylo-settings-section.active {
+    display: block;
+}
+
+
+/* Tables */
+
+.laylo-table-responsive {
+    overflow-x: auto;
+}
+
+.laylo-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.laylo-table th {
+    background: #f9fafb;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.laylo-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.laylo-table-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+
+/* Fan Components */
+
+.laylo-fan-contact {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.laylo-fan-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.laylo-fan-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.laylo-fan-initials {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.laylo-fan-info {
+    flex: 1;
+}
+
+.laylo-fan-name {
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.laylo-fan-email {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.laylo-fan-phone {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+
+/* Empty States */
+
+.laylo-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+}
+
+.laylo-empty-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    color: #d1d5db;
+}
+
+.laylo-empty-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.laylo-empty-state h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.laylo-empty-state p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+
+/* Search Box */
+
+.laylo-search-box {
+    position: relative;
+    display: inline-block;
+}
+
+.laylo-search-box input {
+    padding-right: 40px;
+}
+
+.laylo-search-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+}
+
+
+/* Pagination */
+
+.laylo-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.laylo-pagination-info {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.laylo-pagination-controls {
+    display: flex;
+    gap: 8px;
+}
+
+
+/* Checkboxes and Radios */
+
+.laylo-checkbox,
+.laylo-radio {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+}
+
+.laylo-checkbox input,
+.laylo-radio input {
+    margin: 0;
+}
+
+.laylo-checkbox-mark,
+.laylo-radio-mark {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.laylo-radio-mark {
+    border-radius: 50%;
+}
+
+
+/* Progress Bar */
+
+.laylo-progress {
+    width: 100%;
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.laylo-progress-bar {
+    height: 100%;
+    background: #2563eb;
+    transition: width 0.3s ease;
+}
+
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+    .laylo-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    .laylo-main {
+        margin-left: 0;
+    }
+    .laylo-page {
+        padding: 16px 20px;
+    }
+    .laylo-page-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+    .laylo-page-actions {
+        justify-content: flex-start;
+    }
+    .laylo-stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    .laylo-table-responsive {
+        font-size: 12px;
+    }
+    .laylo-fan-contact {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
+
+/* Laylo-Style Dashboard */
+
+.laylo-dashboard {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    background: #f8fafc;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+
+/* Header Section */
+
+.dashboard-header {
+    margin-bottom: 32px;
+}
+
+.greeting {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 24px;
+    margin-top: 0;
+}
+
+
+/* Shortcuts */
+
+.shortcuts {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.shortcuts-label {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-right: 8px;
+}
+
+.shortcut-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #475569;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.shortcut-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #475569;
+    text-decoration: none;
+}
+
+.shortcut-icon {
+    font-size: 1rem;
+}
+
+
+/* Email Domain Setup Card */
+
+.setup-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.setup-icon {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.icon-gradient {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    border-radius: 12px;
+    position: relative;
+}
+
+.icon-gradient::after {
+    content: '📧';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+}
+
+.setup-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+}
+
+.setup-content p {
+    color: #475569;
+    font-size: 0.875rem;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+}
+
+.setup-link {
+    color: #0ea5e9;
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 0.875rem;
+}
+
+.setup-link:hover {
+    color: #0284c7;
+    text-decoration: underline;
+}
+
+
+/* Dropping Soon Section */
+
+.dropping-soon {
+    margin-bottom: 32px;
+}
+
+.dropping-soon h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+}
+
+.section-subtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0 0 24px 0;
+}
+
+
+/* Empty Drops State */
+
+.empty-drops {
+    background: white;
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.create-drop-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #0ea5e9;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.create-drop-btn:hover {
+    background: #0284c7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.plus-icon {
+    font-size: 1.125rem;
+    font-weight: bold;
+}
+
+
+/* Drops Grid */
+
+.drops-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.drop-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.drop-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.drop-image {
+    width: 100%;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f1f5f9;
+}
+
+.drop-image.placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+}
+
+.drop-image.placeholder::after {
+    content: '🎵';
+}
+
+.drop-info {
+    padding: 16px;
+}
+
+.drop-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0 0 8px 0;
+}
+
+.drop-date {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+
+/* Your Drops Section */
+
+.drops-section {
+    margin-bottom: 32px;
+}
+
+.drops-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0 0 24px 0;
+}
+
+
+/* Empty State */
+
+.empty-state {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 48px 24px;
+    text-align: center;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin: 0;
+}
+
+.empty-state a {
+    color: #0ea5e9;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.empty-state a:hover {
+    color: #0284c7;
+    text-decoration: underline;
+}
+
+
+/* ===== MOBILE-FIRST LAYLO DESIGN ===== */
+
+@media (max-width: 768px) {
+    /* Hide desktop elements on mobile */
+    .laylo-sidebar {
+        display: none !important;
+    }
+    /* Mobile main container */
+    .laylo-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 0 !important;
+        background: #f8fafc;
+        min-height: 100vh;
+    }
+    /* Mobile dashboard container */
+    .laylo-dashboard {
+        padding: 20px 16px 100px 16px;
+        /* Bottom padding for mobile nav */
+        margin: 0;
+        max-width: none;
+        background: #f8fafc;
+        min-height: calc(100vh - 100px);
+    }
+    /* Mobile header styling */
+    .dashboard-header {
+        margin-bottom: 24px;
+        padding-top: 60px;
+        /* Space for mobile trigger button */
+    }
+    .greeting {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 20px;
+        line-height: 1.2;
+    }
+    /* Mobile shortcuts redesign */
+    .shortcuts {
+        display: block;
+        margin-bottom: 24px;
+    }
+    .shortcuts-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: block;
+    }
+    .shortcut-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        text-decoration: none;
+        color: #374151;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .shortcut-btn:hover,
+    .shortcut-btn:active {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #374151;
+        text-decoration: none;
+        transform: none;
+        /* Remove desktop hover effects */
+    }
+    .shortcut-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    /* Mobile setup card */
+    .setup-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        display: block;
+    }
+    .setup-icon {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 16px auto;
+    }
+    .setup-content {
+        text-align: center;
+    }
+    .setup-content h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    .setup-content p {
+        font-size: 0.875rem;
+        line-height: 1.4;
+        margin-bottom: 12px;
+    }
+    /* Mobile sections */
+    .dropping-soon,
+    .drops-section {
+        margin-bottom: 24px;
+    }
+    .dropping-soon h2,
+    .drops-section h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 12px;
+    }
+    .section-subtitle {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 16px;
+        line-height: 1.4;
+    }
+    /* Mobile drops grid */
+    .drops-grid {
+        display: block;
+        gap: 0;
+    }
+    .drop-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        max-width: none;
+    }
+    .drop-card:hover {
+        transform: none;
+        /* Remove desktop hover effects */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .drop-image {
+        height: 120px;
+        background-size: cover;
+        background-position: center;
+    }
+    .drop-info {
+        padding: 12px 16px;
+    }
+    .drop-info h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .drop-date {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    /* Mobile empty states */
+    .empty-drops,
+    .empty-state {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 32px 20px;
+        text-align: center;
+        margin-bottom: 16px;
+    }
+    .create-drop-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #3b82f6;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    .create-drop-btn:hover,
+    .create-drop-btn:active {
+        background: #2563eb;
+        color: white;
+        text-decoration: none;
+        transform: none;
+    }
+    /* Mobile trigger button positioning with enhanced touch support */
+    .laylo-mobile-trigger {
+        position: fixed !important;
+        top: 16px !important;
+        left: 16px !important;
+        width: 44px !important;
+        height: 44px !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        z-index: 1000 !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        /* Enhanced touch support */
+        -webkit-tap-highlight-color: transparent !important;
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        -moz-user-select: none !important;
+        -ms-user-select: none !important;
+        user-select: none !important;
+        touch-action: manipulation !important;
+        /* Ensure proper touch target size (minimum 44px) */
+        min-width: 44px !important;
+        min-height: 44px !important;
+        /* Transition for visual feedback */
+        transition: all 0.2s ease !important;
+    }
+    /* Active/pressed state for visual feedback */
+    .laylo-mobile-trigger:active {
+        transform: scale(0.95) !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+    /* Hover state for devices that support it */
+    @media (hover: hover) {
+        .laylo-mobile-trigger:hover {
+            background: rgba(255, 255, 255, 1) !important;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+        }
+    }
+    .laylo-mobile-trigger svg {
+        width: 20px !important;
+        height: 20px !important;
+        color: #374151 !important;
+        stroke-width: 2.5 !important;
+        pointer-events: none !important;
+        /* Prevent SVG from interfering with touch events */
+    }
+}

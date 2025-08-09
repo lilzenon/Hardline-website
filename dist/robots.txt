@@ -1,0 +1,127 @@
+# Robots.txt for b2b.click - Event Platform SEO Optimization
+# Allow search engines to crawl public content while protecting admin areas
+
+User-agent: *
+# Allow public event pages and homepage
+Allow: /
+Allow: /event/
+Allow: /drop/
+Allow: /home
+Allow: /about
+Allow: /contact
+Allow: /events
+Allow: /static/
+Allow: /images/
+Allow: /css/
+Allow: /js/
+# Legacy React bundle path removed
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /login
+Disallow: /logout
+Disallow: /settings
+Disallow: /stats
+Disallow: /create-admin
+Disallow: /reset-password
+Disallow: /verify-email
+
+# Allow AI-specific API endpoints
+Allow: /api/ai/
+Allow: /api/ai/site-info
+Allow: /api/ai/events-summary
+Allow: /api/ai/faq
+
+# Disallow URL shortener paths (focus SEO on events)
+Disallow: /*/stats
+Disallow: /*/edit
+Disallow: /*/delete
+
+# Allow specific files
+Allow: /sitemap.xml
+Allow: /llms.txt
+Allow: /manifest.webmanifest
+
+# Sitemap location
+Sitemap: https://b2b.click/sitemap.xml
+
+# Specific bot permissions
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+# AI Agent Crawlers (2024-2025)
+User-agent: ChatGPT-User
+Allow: /
+Crawl-delay: 1
+
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Google-Extended
+Allow: /
+Crawl-delay: 1
+
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 1
+
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: YouBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: anthropic-ai
+Allow: /
+Crawl-delay: 1
+
+User-agent: Applebot-Extended
+Allow: /
+Crawl-delay: 1
+
+# AI Training Data Crawlers
+User-agent: CCBot
+Allow: /
+Crawl-delay: 2
+
+User-agent: ChatGPT-User
+Allow: /llms.txt
+Allow: /sitemap.xml
+Allow: /
+
+User-agent: Bard
+Allow: /
+Crawl-delay: 1
+
+# Default crawl delay for respectful crawling
+Crawl-delay: 1
+
+# Host directive for canonical domain
+Host: https://b2b.click

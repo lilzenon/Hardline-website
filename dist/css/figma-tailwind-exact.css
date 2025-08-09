@@ -1,0 +1,325 @@
+/* ===== EXACT FIGMA TAILWIND EXPORT CSS ===== */
+/* Based on the exported HTML with exact Tailwind classes */
+
+/* Import Tailwind base styles */
+@import url('/css/tailwind.css');
+
+/* Desktop Container - Exact Figma Export */
+.Desktop {
+    width: 1456px;
+    height: 982px;
+    position: relative;
+    background: #000;
+    margin: 0 auto;
+    font-family: Inter, sans-serif;
+}
+
+/* Rectangle 3 - Background */
+.Rectangle3 {
+    width: 1456px;
+    height: 982px;
+    left: 0;
+    top: 0;
+    position: absolute;
+    background: black;
+}
+
+/* B2B Logo */
+.B2bLogo {
+    left: 277px;
+    top: 749px;
+    position: absolute;
+}
+
+/* Phone Number Form */
+.PhoneNumberForm {
+    height: 453px;
+    left: 838px;
+    top: 448px;
+    position: absolute;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+}
+
+.PhoneNumber {
+    width: 288px;
+    height: 36px;
+    padding: 0 2px;
+    background: #262626;
+    border-radius: 31px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.Frame19 {
+    width: 288px;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.PhoneNumberField {
+    width: 240px;
+    height: 28px;
+    padding-left: 10px;
+    background: #27272a;
+    border-radius: 100px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+
+.FlagUs {
+    position: relative;
+}
+
+.Item {
+    width: 48px;
+    padding: 12px;
+    background: #22c55e;
+    border-radius: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.Te {
+    justify-content: flex-start;
+    color: #262626;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: Inter;
+}
+
+.DisclaimerText {
+    width: 288px;
+    opacity: 0.5;
+    text-align: justify;
+    justify-content: flex-start;
+    color: white;
+    font-size: 8px;
+    font-weight: 500;
+    font-family: Inter;
+}
+
+/* Frame 18 - Main Content Area */
+.Frame18 {
+    left: 313px;
+    top: 448px;
+    position: absolute;
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+/* Event List */
+.EventList {
+    width: 507px;
+    height: 453px;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* Event Card Small */
+.EventcardSmall {
+    width: 256px;
+    height: 80px;
+    position: relative;
+    background: #262626;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.Frame6 {
+    width: 80px;
+    height: 80px;
+    left: 0;
+    top: 1px;
+    position: absolute;
+}
+
+.Rectangle2 {
+    width: 80px;
+    height: 80px;
+    left: 3px;
+    top: 2px;
+    position: absolute;
+    border-radius: 16px;
+}
+
+.Frame7 {
+    width: 20px;
+    height: 20px;
+    left: 55.64px;
+    top: 6px;
+    position: absolute;
+    overflow: hidden;
+}
+
+.Rectangle1 {
+    left: 0.15px;
+    top: -0.86px;
+    position: absolute;
+}
+
+.Date {
+    width: 14px;
+    height: 14px;
+    left: 3.36px;
+    top: 3px;
+    position: absolute;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+}
+
+.Day {
+    text-align: center;
+    justify-content: center;
+    color: black;
+    font-size: 10px;
+    font-weight: 800;
+    font-family: Inter;
+}
+
+.Month {
+    text-align: center;
+    justify-content: center;
+    color: black;
+    font-size: 6px;
+    font-weight: 800;
+    font-family: Inter;
+}
+
+.Frame4 {
+    width: 160px;
+    height: 80px;
+    padding: 3px 0;
+    left: 94px;
+    top: 0;
+    position: absolute;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.Frame3 {
+    align-self: stretch;
+    height: 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.EventTitle {
+    width: 128px;
+    height: 20px;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: Inter;
+}
+
+.Frame9 {
+    align-self: stretch;
+    height: 24px;
+    position: relative;
+}
+
+.CardButtons {
+    width: 160px;
+    height: 24px;
+    padding-right: 4px;
+    left: 0;
+    top: 0;
+    position: absolute;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    overflow: hidden;
+}
+
+.GetTickets {
+    width: 160px;
+    height: 24px;
+    padding: 12px;
+    background: rgba(23, 23, 23, 0.8);
+    border-radius: 37px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: Inter;
+}
+
+.Share {
+    position: relative;
+}
+
+/* Date and Location Info */
+.Date.info {
+    align-self: stretch;
+    height: 14px;
+    padding-left: 1px;
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+}
+
+.Location {
+    align-self: stretch;
+    height: 14px;
+    padding: 0 1px;
+    display: inline-flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+}
+
+.Vector {
+    position: relative;
+}
+
+.Date.text {
+    width: 112px;
+    height: 12px;
+    justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 200;
+    font-family: Inter;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1456px) {
+    .Desktop {
+        width: 100%;
+        max-width: 1456px;
+    }
+    
+    .Rectangle3 {
+        width: 100%;
+    }
+}

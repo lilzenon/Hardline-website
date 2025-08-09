@@ -1,0 +1,77 @@
+{
+    "name": "BOUNCE2BOUNCE - Live Music Events",
+    "short_name": "BOUNCE2BOUNCE",
+    "theme_color": "#000000",
+    "background_color": "#000000",
+    "display": "standalone",
+    "description": "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. BOUNCE2BOUNCE brings you unforgettable music experiences.",
+    "scope": "/",
+    "start_url": "/",
+    "orientation": "portrait-primary",
+    "categories": ["music", "entertainment", "events", "tickets"],
+    "lang": "en-US",
+    "icons": [{
+            "src": "images/favicon-48x48.png",
+            "sizes": "48x48",
+            "type": "image/png"
+        },
+        {
+            "src": "images/apple-touch-icon-72x72.png",
+            "sizes": "72x72",
+            "type": "image/png"
+        },
+        {
+            "src": "images/apple-touch-icon-114x114.png",
+            "sizes": "114x114",
+            "type": "image/png"
+        },
+        {
+            "src": "images/apple-touch-icon-144x144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        },
+        {
+            "src": "images/apple-touch-icon-152x152.png",
+            "sizes": "152x152",
+            "type": "image/png"
+        },
+        {
+            "src": "images/favicon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "images/favicon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "shortcuts": [{
+            "name": "Browse Events",
+            "short_name": "Events",
+            "description": "Browse upcoming live music events",
+            "url": "/events",
+            "icons": [{
+                "src": "images/favicon-192x192.png",
+                "sizes": "192x192"
+            }]
+        },
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "Access your event dashboard",
+            "url": "/dashboard",
+            "icons": [{
+                "src": "images/favicon-192x192.png",
+                "sizes": "192x192"
+            }]
+        }
+    ],
+    "screenshots": [{
+        "src": "images/bounce-logo.svg",
+        "sizes": "1280x720",
+        "type": "image/svg+xml",
+        "platform": "wide",
+        "label": "BOUNCE2BOUNCE Homepage"
+    }]
+}

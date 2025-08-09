@@ -1,0 +1,64 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import path from 'path'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [react()],
+  publicDir: 'static',
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    port: 3001,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true,
+    // FIXED: Use terser for more conservative minification to prevent hoisting issues
+    minify: 'terser',
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        // FIXED: Remove manualChunks to prevent React initialization order issues
+        // The vendor chunk splitting was causing 'Cannot access before initialization' errors
+        // when lazy-loaded components tried to access React before it was fully loaded
+        format: 'es',
+        // FIXED: Add conservative code generation settings
+        generatedCode: {
+          constBindings: false,
+          objectShorthand: false,
+          reservedNamesAsProps: false
+        }
+      },
+    },
+    // FIXED: Add terser options for safer minification
+    terserOptions: {
+      compress: {
+        // Disable aggressive optimizations that can cause hoisting issues
+        hoist_funs: false,
+        hoist_vars: false,
+        reduce_vars: false,
+        collapse_vars: false,
+        // Keep function names for better debugging
+        keep_fnames: true
+      },
+      mangle: {
+        // Keep function names to prevent initialization issues
+        keep_fnames: true
+      }
+    }
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+  },
+})
