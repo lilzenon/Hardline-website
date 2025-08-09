@@ -544,6 +544,9 @@ const FigmaDesktop = () => {
   const isMountedRef = useRef(true);
   const [isMobile, setIsMobile] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
+
+  // Event Filter Toggle State - identical to mobile version
+  const [showAllEvents, setShowAllEvents] = useState(true); // true = "All", false = "Past"
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
     heroHeight: 299,
@@ -1452,7 +1455,8 @@ const FigmaDesktop = () => {
           ticketsUrl: ticketsUrl,
           isRealEvent: true,
           showOnHomepage: event.show_on_homepage,
-          eventData: event // Store original event data for debugging
+          eventData: event, // Store original event data for debugging
+          eventDate: eventDate // Add the actual Date object for proper sorting and filtering
         });
       } catch (error) {
         console.warn(`Error processing featured event ${event.id}:`, error);
@@ -1460,9 +1464,33 @@ const FigmaDesktop = () => {
       }
     });
 
-    console.log(`🎯 Rendering ${featuredCards.length} featured event cards (no placeholders)`);
-    return featuredCards;
-  }, [featuredEvents]);
+    // Sort events by date in reverse chronological order (most recent first) - identical to mobile
+    featuredCards.sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+    });
+
+    // Filter events based on toggle state - identical to mobile
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+
+    const filteredCards = featuredCards.filter(card => {
+      const eventDate = new Date(card.eventDate);
+      eventDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+
+      if (showAllEvents) {
+        // Show all events (both upcoming and past)
+        return true;
+      } else {
+        // Show only past events
+        return eventDate < currentDate;
+      }
+    });
+
+    console.log(`🎯 Desktop rendering ${filteredCards.length} of ${featuredCards.length} featured event cards (${showAllEvents ? 'All' : 'Past'} events)`);
+    return filteredCards;
+  }, [featuredEvents, showAllEvents]);
 
   // Show loading state while maintaining Figma layout
   if (loading) {
@@ -2086,14 +2114,14 @@ const FigmaDesktop = () => {
         </div>
       </div>
 
-      {/* Frame 13 - Title Section */}
+      {/* Frame 13 - Title Section with Toggle */}
       <div
         style={{
           position: 'relative',
           display: 'flex',
           width: '100%',
-          justifyContent: 'flex-start',
-          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           margin: '16px 0 0 0',
           padding: '0'
         }}
@@ -2101,7 +2129,6 @@ const FigmaDesktop = () => {
         {/* Event Title */}
         <div
           style={{
-            width: '504px',
             color: '#FFF',
             fontFamily: 'Inter',
             fontSize: '24px',
@@ -2110,6 +2137,141 @@ const FigmaDesktop = () => {
           }}
         >
           Events
+        </div>
+
+        {/* Event Filter Toggle - Identical to Mobile */}
+        <div
+          style={{
+            display: 'flex',
+            width: '118px',
+            height: '34px',
+            padding: '2px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexShrink: 0,
+            borderRadius: '9px',
+            background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            WebkitTapHighlightColor: 'transparent'
+          }}
+          onClick={() => setShowAllEvents(!showAllEvents)}
+          role="switch"
+          aria-checked={showAllEvents}
+          aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setShowAllEvents(!showAllEvents);
+            }
+          }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = 'scale(0.98)';
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'scale(0.98)';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          {/* Sliding Button Background */}
+          <div
+            style={{
+              position: 'absolute',
+              width: '57px',
+              height: '30px',
+              borderRadius: '7px',
+              border: '0.5px solid rgba(0, 0, 0, 0.04)',
+              background: '#FFF',
+              boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+              left: showAllEvents ? '2px' : '59px',
+              top: '2px',
+              transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              zIndex: 1
+            }}
+          />
+
+          {/* All Button */}
+          <div
+            style={{
+              display: 'flex',
+              padding: '3px 10px',
+              alignItems: 'center',
+              flex: '1 0 0',
+              alignSelf: 'stretch',
+              borderRadius: '7px',
+              position: 'relative',
+              zIndex: 2
+            }}
+          >
+            <span
+              style={{
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: 1,
+                flex: '1 0 0',
+                overflow: 'hidden',
+                color: showAllEvents ? '#000' : '#FFF',
+                textAlign: 'center',
+                fontFeatureSettings: "'liga' off, 'clig' off",
+                textOverflow: 'ellipsis',
+                fontFamily: 'Inter',
+                fontSize: '13px',
+                fontStyle: 'normal',
+                fontWeight: showAllEvents ? '590' : '400',
+                lineHeight: '18px',
+                letterSpacing: '-0.08px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              All
+            </span>
+          </div>
+
+          {/* Past Button */}
+          <div
+            style={{
+              display: 'flex',
+              padding: '3px 10px',
+              alignItems: 'center',
+              flex: '1 0 0',
+              alignSelf: 'stretch',
+              position: 'relative',
+              zIndex: 2
+            }}
+          >
+            <span
+              style={{
+                display: '-webkit-box',
+                WebkitBoxOrient: 'vertical',
+                WebkitLineClamp: 1,
+                flex: '1 0 0',
+                overflow: 'hidden',
+                color: !showAllEvents ? '#000' : '#FFF',
+                textAlign: 'center',
+                fontFeatureSettings: "'liga' off, 'clig' off",
+                textOverflow: 'ellipsis',
+                fontFamily: 'Inter',
+                fontSize: '13px',
+                fontStyle: 'normal',
+                fontWeight: !showAllEvents ? '590' : '400',
+                lineHeight: '18px',
+                letterSpacing: '-0.08px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+              }}
+            >
+              Past
+            </span>
+          </div>
         </div>
       </div>
 
