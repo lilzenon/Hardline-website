@@ -547,6 +547,16 @@ const FigmaMobile = () => {
   // Viewport context state for dynamic spacing
   const [viewportContext, setViewportContext] = useState(0); // Force re-render when viewport context changes
 
+  // Touch gesture state for swipe controls
+  const [touchState, setTouchState] = useState({
+    isActive: false,
+    startY: 0,
+    currentY: 0,
+    startTime: 0,
+    isDragging: false,
+    initialDrawerState: false
+  });
+
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
 
@@ -1483,6 +1493,139 @@ const FigmaMobile = () => {
     };
   }, []);
 
+  // Touch gesture handlers for swipe controls
+  const handleTouchStart = useCallback((e) => {
+    // Don't interfere with form interactions
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('iframe')) {
+      return;
+    }
+
+    const touch = e.touches[0];
+    const now = Date.now();
+
+    setTouchState({
+      isActive: true,
+      startY: touch.clientY,
+      currentY: touch.clientY,
+      startTime: now,
+      isDragging: false,
+      initialDrawerState: drawerExpanded
+    });
+  }, [drawerExpanded]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!touchState.isActive) return;
+
+    // Don't interfere with form interactions
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('iframe')) {
+      return;
+    }
+
+    const touch = e.touches[0];
+    const deltaY = touchState.startY - touch.clientY; // Positive = swipe up, Negative = swipe down
+    const absDeltaY = Math.abs(deltaY);
+
+    // Start dragging if moved more than 10px
+    if (!touchState.isDragging && absDeltaY > 10) {
+      setTouchState(prev => ({ ...prev, isDragging: true }));
+      e.preventDefault(); // Prevent scrolling when dragging
+    }
+
+    if (touchState.isDragging) {
+      setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
+      e.preventDefault();
+    }
+  }, [touchState]);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!touchState.isActive) return;
+
+    // Don't interfere with form interactions
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('iframe')) {
+      setTouchState({
+        isActive: false,
+        startY: 0,
+        currentY: 0,
+        startTime: 0,
+        isDragging: false,
+        initialDrawerState: false
+      });
+      return;
+    }
+
+    const deltaY = touchState.startY - touchState.currentY; // Positive = swipe up, Negative = swipe down
+    const absDeltaY = Math.abs(deltaY);
+    const duration = Date.now() - touchState.startTime;
+    const velocity = absDeltaY / duration; // pixels per millisecond
+
+    // Gesture thresholds
+    const minSwipeDistance = 30; // Minimum distance for a swipe
+    const minFlickVelocity = 0.5; // Minimum velocity for a flick gesture
+    const snapThreshold = 50; // Distance threshold for snap-to-position
+
+    let shouldToggleDrawer = false;
+
+    if (touchState.isDragging) {
+      // Determine action based on swipe direction, distance, and velocity
+      if (velocity > minFlickVelocity) {
+        // Fast flick gesture
+        shouldToggleDrawer = true;
+      } else if (absDeltaY > minSwipeDistance) {
+        // Regular swipe gesture
+        shouldToggleDrawer = true;
+      } else if (absDeltaY > snapThreshold) {
+        // Snap-to-position based on distance
+        shouldToggleDrawer = true;
+      }
+
+      if (shouldToggleDrawer) {
+        // Apply momentum-based animation class
+        const drawerElement = drawerRef.current;
+        if (drawerElement) {
+          // Remove existing momentum classes
+          drawerElement.classList.remove('momentum-fast', 'momentum-slow');
+
+          // Apply appropriate momentum class based on velocity
+          if (velocity > minFlickVelocity) {
+            drawerElement.classList.add('momentum-fast');
+          } else {
+            drawerElement.classList.add('momentum-slow');
+          }
+
+          // Remove momentum class after animation completes
+          setTimeout(() => {
+            if (drawerElement) {
+              drawerElement.classList.remove('momentum-fast', 'momentum-slow');
+            }
+          }, 250);
+        }
+
+        if (deltaY > 0) {
+          // Swipe up - open/expand drawer
+          if (!drawerExpanded) {
+            setDrawerExpanded(true);
+            setDrawerFullyClosed(false);
+          }
+        } else {
+          // Swipe down - close/collapse drawer
+          if (drawerExpanded) {
+            setDrawerExpanded(false);
+          }
+        }
+      }
+    }
+
+    // Reset touch state
+    setTouchState({
+      isActive: false,
+      startY: 0,
+      currentY: 0,
+      startTime: 0,
+      isDragging: false,
+      initialDrawerState: false
+    });
+  }, [touchState, drawerExpanded]);
+
   // Handle drawer click to fully open when closed
   const handleDrawerClick = useCallback(() => {
     if (drawerFullyClosed) {
@@ -1874,7 +2017,7 @@ const FigmaMobile = () => {
             100% { -moz-transform: rotate(360deg); }
           }
 
-          /* Drawer animations */
+          /* Enhanced drawer animations with momentum support */
           .mobile-drawer {
             position: fixed;
             bottom: 0;
@@ -1892,6 +2035,20 @@ const FigmaMobile = () => {
             will-change: transform;
             backface-visibility: hidden;
             perspective: 1000px;
+            /* Enhanced touch interaction */
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+          }
+
+          /* Fast momentum animation for flick gestures */
+          .mobile-drawer.momentum-fast {
+            transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          }
+
+          /* Slow momentum animation for gentle swipes */
+          .mobile-drawer.momentum-slow {
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
           }
 
           .mobile-drawer.collapsed {
@@ -3502,13 +3659,16 @@ const FigmaMobile = () => {
           />
         )}
 
-        {/* Text Us Drawer - Bottom with Dynamic Height */}
+        {/* Text Us Drawer - Bottom with Dynamic Height and Swipe Gestures */}
         <div
           ref={drawerRef}
           onClick={(e) => {
             e.stopPropagation(); // Prevent background click when clicking drawer
             handleDrawerClick(); // Handle drawer click to open when closed
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'}`}
           style={{
             height: '280px', // Fixed height for consistent transform animations
@@ -3517,7 +3677,10 @@ const FigmaMobile = () => {
             padding: '8px 0px 20px 0px', // Remove left/right padding, keep top/bottom
             boxSizing: 'border-box',
             overflow: drawerExpanded ? 'visible' : 'hidden', // Allow content to be visible when expanded
-            cursor: drawerFullyClosed ? 'pointer' : 'default'
+            cursor: drawerFullyClosed ? 'pointer' : 'default',
+            touchAction: 'pan-y', // Allow vertical panning for swipe gestures
+            userSelect: 'none', // Prevent text selection during swipe
+            WebkitUserSelect: 'none' // Safari support
           }}
         >
           {/* Drawer Card Gradient Overlay - Creates hiding effect */}
@@ -3539,21 +3702,38 @@ const FigmaMobile = () => {
               transition: 'opacity 0.4s ease'
             }}
           />
-          {/* Drawer Handle */}
+          {/* Drawer Handle with Enhanced Touch Area */}
           <div
             style={{
               alignSelf: 'center',
-              width: '60px',
-              height: '4px',
-              background: '#D9D9D9',
-              borderRadius: '100px',
-              opacity: 0.8,
+              width: '80px', // Larger touch area
+              height: '20px', // Larger touch area
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
               marginTop: '6px',
               flexShrink: 0,
               position: 'relative',
-              zIndex: 2
+              zIndex: 2,
+              cursor: 'grab',
+              touchAction: 'pan-y' // Allow vertical panning
             }}
-          />
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Visual Handle */}
+            <div
+              style={{
+                width: '60px',
+                height: '4px',
+                background: '#D9D9D9',
+                borderRadius: '100px',
+                opacity: 0.8,
+                transition: 'opacity 0.2s ease'
+              }}
+            />
+          </div>
 
           {/* Verification Collapsed Indicator */}
           {showVerification && !drawerExpanded && (
