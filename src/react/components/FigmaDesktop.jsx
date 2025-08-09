@@ -1568,16 +1568,40 @@ const FigmaDesktop = () => {
           margin: '35px 0 0 0'
         }}
       >
-        {/* Group 4 - B2B Logo Nav */}
+        {/* Group 4 - B2B Logo Nav - CLICKABLE */}
         <img
           src="/images/figma-exact/b2b-logo-nav.svg"
           alt="B2B Logo"
           loading="lazy"
           decoding="async"
           fetchpriority="high"
+          onClick={() => {
+            if (window.navigateWithTransition) {
+              window.navigateWithTransition('/');
+            } else {
+              window.location.href = '/';
+            }
+          }}
           style={{
             width: '138.41px',
-            height: '43px'
+            height: '43px',
+            cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1)'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.filter = 'brightness(1.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.filter = 'brightness(1)';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = 'scale(0.98)';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
           }}
         />
 
@@ -2114,166 +2138,7 @@ const FigmaDesktop = () => {
         </div>
       </div>
 
-      {/* Frame 13 - Title Section with Toggle */}
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          width: '100%',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          margin: '16px 0 0 0',
-          padding: '0'
-        }}
-      >
-        {/* Event Title */}
-        <div
-          style={{
-            color: '#FFF',
-            fontFamily: 'Inter',
-            fontSize: '24px',
-            fontWeight: '800',
-            lineHeight: 'normal'
-          }}
-        >
-          Events
-        </div>
 
-        {/* Event Filter Toggle - Identical to Mobile */}
-        <div
-          style={{
-            display: 'flex',
-            width: '118px',
-            height: '34px',
-            padding: '2px',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexShrink: 0,
-            borderRadius: '9px',
-            background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
-            position: 'relative',
-            cursor: 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            WebkitTapHighlightColor: 'transparent'
-          }}
-          onClick={() => setShowAllEvents(!showAllEvents)}
-          role="switch"
-          aria-checked={showAllEvents}
-          aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setShowAllEvents(!showAllEvents);
-            }
-          }}
-          onTouchStart={(e) => {
-            e.currentTarget.style.transform = 'scale(0.98)';
-          }}
-          onTouchEnd={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onMouseDown={(e) => {
-            e.currentTarget.style.transform = 'scale(0.98)';
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-          }}
-        >
-          {/* Sliding Button Background */}
-          <div
-            style={{
-              position: 'absolute',
-              width: '57px',
-              height: '30px',
-              borderRadius: '7px',
-              border: '0.5px solid rgba(0, 0, 0, 0.04)',
-              background: '#FFF',
-              boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
-              left: showAllEvents ? '2px' : '59px',
-              top: '2px',
-              transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              zIndex: 1
-            }}
-          />
-
-          {/* All Button */}
-          <div
-            style={{
-              display: 'flex',
-              padding: '3px 10px',
-              alignItems: 'center',
-              flex: '1 0 0',
-              alignSelf: 'stretch',
-              borderRadius: '7px',
-              position: 'relative',
-              zIndex: 2
-            }}
-          >
-            <span
-              style={{
-                display: '-webkit-box',
-                WebkitBoxOrient: 'vertical',
-                WebkitLineClamp: 1,
-                flex: '1 0 0',
-                overflow: 'hidden',
-                color: showAllEvents ? '#000' : '#FFF',
-                textAlign: 'center',
-                fontFeatureSettings: "'liga' off, 'clig' off",
-                textOverflow: 'ellipsis',
-                fontFamily: 'Inter',
-                fontSize: '13px',
-                fontStyle: 'normal',
-                fontWeight: showAllEvents ? '590' : '400',
-                lineHeight: '18px',
-                letterSpacing: '-0.08px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              All
-            </span>
-          </div>
-
-          {/* Past Button */}
-          <div
-            style={{
-              display: 'flex',
-              padding: '3px 10px',
-              alignItems: 'center',
-              flex: '1 0 0',
-              alignSelf: 'stretch',
-              position: 'relative',
-              zIndex: 2
-            }}
-          >
-            <span
-              style={{
-                display: '-webkit-box',
-                WebkitBoxOrient: 'vertical',
-                WebkitLineClamp: 1,
-                flex: '1 0 0',
-                overflow: 'hidden',
-                color: !showAllEvents ? '#000' : '#FFF',
-                textAlign: 'center',
-                fontFeatureSettings: "'liga' off, 'clig' off",
-                textOverflow: 'ellipsis',
-                fontFamily: 'Inter',
-                fontSize: '13px',
-                fontStyle: 'normal',
-                fontWeight: !showAllEvents ? '590' : '400',
-                lineHeight: '18px',
-                letterSpacing: '-0.08px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-              }}
-            >
-              Past
-            </span>
-          </div>
-        </div>
-      </div>
 
 
       
@@ -2306,6 +2171,165 @@ const FigmaDesktop = () => {
             flexShrink: 0
           }}
         >
+          {/* Events Title and Toggle - Scoped to Events Section Only */}
+          <div
+            style={{
+              display: 'flex',
+              width: '100%',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              margin: '8px 0 0 0',
+              padding: '0'
+            }}
+          >
+            {/* Event Title */}
+            <div
+              style={{
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: '24px',
+                fontWeight: '800',
+                lineHeight: 'normal'
+              }}
+            >
+              Events
+            </div>
+
+            {/* Event Filter Toggle - Identical to Mobile */}
+            <div
+              style={{
+                display: 'flex',
+                width: '118px',
+                height: '34px',
+                padding: '2px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0,
+                borderRadius: '9px',
+                background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+                position: 'relative',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                WebkitTapHighlightColor: 'transparent'
+              }}
+              onClick={() => setShowAllEvents(!showAllEvents)}
+              role="switch"
+              aria-checked={showAllEvents}
+              aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setShowAllEvents(!showAllEvents);
+                }
+              }}
+              onTouchStart={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              onMouseDown={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+              }}
+              onMouseUp={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              {/* Sliding Button Background */}
+              <div
+                style={{
+                  position: 'absolute',
+                  width: '57px',
+                  height: '30px',
+                  borderRadius: '7px',
+                  border: '0.5px solid rgba(0, 0, 0, 0.04)',
+                  background: '#FFF',
+                  boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+                  left: showAllEvents ? '2px' : '59px',
+                  top: '2px',
+                  transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  zIndex: 1
+                }}
+              />
+
+              {/* All Button */}
+              <div
+                style={{
+                  display: 'flex',
+                  padding: '3px 10px',
+                  alignItems: 'center',
+                  flex: '1 0 0',
+                  alignSelf: 'stretch',
+                  borderRadius: '7px',
+                  position: 'relative',
+                  zIndex: 2
+                }}
+              >
+                <span
+                  style={{
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    WebkitLineClamp: 1,
+                    flex: '1 0 0',
+                    overflow: 'hidden',
+                    color: showAllEvents ? '#000' : '#FFF',
+                    textAlign: 'center',
+                    fontFeatureSettings: "'liga' off, 'clig' off",
+                    textOverflow: 'ellipsis',
+                    fontFamily: 'Inter',
+                    fontSize: '13px',
+                    fontStyle: 'normal',
+                    fontWeight: showAllEvents ? '590' : '400',
+                    lineHeight: '18px',
+                    letterSpacing: '-0.08px',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  All
+                </span>
+              </div>
+
+              {/* Past Button */}
+              <div
+                style={{
+                  display: 'flex',
+                  padding: '3px 10px',
+                  alignItems: 'center',
+                  flex: '1 0 0',
+                  alignSelf: 'stretch',
+                  position: 'relative',
+                  zIndex: 2
+                }}
+              >
+                <span
+                  style={{
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    WebkitLineClamp: 1,
+                    flex: '1 0 0',
+                    overflow: 'hidden',
+                    color: !showAllEvents ? '#000' : '#FFF',
+                    textAlign: 'center',
+                    fontFeatureSettings: "'liga' off, 'clig' off",
+                    textOverflow: 'ellipsis',
+                    fontFamily: 'Inter',
+                    fontSize: '13px',
+                    fontStyle: 'normal',
+                    fontWeight: !showAllEvents ? '590' : '400',
+                    lineHeight: '18px',
+                    letterSpacing: '-0.08px',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                >
+                  Past
+                </span>
+              </div>
+            </div>
+          </div>
           {/* EVENT LIST Grid */}
           <div
             style={{
