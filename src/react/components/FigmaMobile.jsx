@@ -544,6 +544,9 @@ const FigmaMobile = () => {
   // Event Filter Toggle State
   const [showAllEvents, setShowAllEvents] = useState(true); // true = "All", false = "Past"
 
+  // Viewport context state for dynamic spacing
+  const [viewportContext, setViewportContext] = useState(0); // Force re-render when viewport context changes
+
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
 
@@ -1419,7 +1422,66 @@ const FigmaMobile = () => {
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer, iframeExpanded]);
 
+  // Dynamic bottom spacing calculation based on viewport context
+  const getDynamicBottomSpacing = useCallback(() => {
+    const drawerHeight = getDrawerHeight();
 
+    // Detect if we're on a real mobile device vs desktop browser mobile simulation
+    const isRealMobileDevice = (() => {
+      // Check for touch capability and mobile user agent
+      const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isMobileUserAgent = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      // Check viewport characteristics
+      const viewportWidth = window.innerWidth;
+      const screenWidth = window.screen.width;
+      const devicePixelRatio = window.devicePixelRatio || 1;
+
+      // Real mobile devices typically have:
+      // - Touch capability
+      // - Mobile user agent
+      // - Viewport width close to screen width
+      // - Device pixel ratio > 1
+      const isLikelyRealMobile = hasTouchScreen &&
+                                isMobileUserAgent &&
+                                Math.abs(viewportWidth - screenWidth) < 50 &&
+                                devicePixelRatio > 1;
+
+      return isLikelyRealMobile;
+    })();
+
+    // Calculate base spacing from drawer height
+    const baseSpacing = parseInt(drawerHeight.replace('px', ''));
+
+    if (isRealMobileDevice) {
+      // Real mobile device: Use full spacing for proper drawer clearance
+      return `calc(${drawerHeight} + 120px)`;
+    } else {
+      // Desktop browser mobile simulation: Use reduced spacing to prevent excessive empty space
+      const reducedSpacing = Math.max(60, baseSpacing * 0.7); // Minimum 60px, or 70% of drawer height
+      return `calc(${drawerHeight} + ${reducedSpacing}px)`;
+    }
+  }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
+
+  // Handle viewport changes for dynamic spacing
+  useEffect(() => {
+    const handleViewportChange = () => {
+      // Force re-calculation of dynamic spacing when viewport changes
+      setViewportContext(prev => prev + 1);
+    };
+
+    // Listen for resize events that might indicate viewport context changes
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('orientationchange', handleViewportChange);
+
+    // Initial calculation
+    handleViewportChange();
+
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('orientationchange', handleViewportChange);
+    };
+  }, []);
 
   // Handle drawer click to fully open when closed
   const handleDrawerClick = useCallback(() => {
@@ -2039,7 +2101,7 @@ const FigmaMobile = () => {
             justifyContent: 'flex-start',
             alignItems: 'center',
             padding: '20px 0px 40px 0px', // Remove horizontal padding to prevent overflow
-            paddingBottom: `calc(${getDrawerHeight()} + 120px)`, // Increased bottom padding for better clearance above drawer
+            paddingBottom: getDynamicBottomSpacing(), // Dynamic bottom padding based on viewport context
             boxSizing: 'border-box',
             overflow: 'auto', // Enable scrolling
             overflowX: 'hidden', // Prevent horizontal scroll
