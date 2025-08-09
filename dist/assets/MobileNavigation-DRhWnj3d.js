@@ -1,4 +1,4 @@
-import{r as s,R as t}from"./index-Dy4cu9_h.js";const c=({currentPage:n="home"})=>{const[e,r]=s.useState(!1),o=()=>{r(!e)},i=a=>{window.navigateWithTransition?window.navigateWithTransition(a):window.location.href=a,r(!1)};return t.createElement(t.Fragment,null,t.createElement("style",null,`
+import{r as s,R as t}from"./index-LehSfUKu.js";const c=({currentPage:n="home"})=>{const[e,r]=s.useState(!1),o=()=>{r(!e)},i=a=>{window.navigateWithTransition?window.navigateWithTransition(a):window.location.href=a,r(!1)};return t.createElement(t.Fragment,null,t.createElement("style",null,`
           /* Enable hardware acceleration */
           .mobile-nav-overlay {
             -webkit-transform: translateZ(0);
