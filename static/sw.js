@@ -3,9 +3,9 @@
  * Implements caching strategies for performance optimization
  */
 
-const CACHE_NAME = 'bounce2bounce-v4-' + Date.now();
-const STATIC_CACHE = 'bounce2bounce-static-v4-' + Date.now();
-const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v4-' + Date.now();
+const CACHE_NAME = 'bounce2bounce-v5-' + Date.now();
+const STATIC_CACHE = 'bounce2bounce-static-v5-' + Date.now();
+const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v5-' + Date.now();
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -20,33 +20,46 @@ const STATIC_ASSETS = [
     '/manifest.webmanifest'
 ];
 
-// Install event - cache static assets
+// Install event - cache static assets and force immediate activation
 self.addEventListener('install', event => {
-    console.log('Service Worker: Installing...');
+    console.log('Service Worker: Installing v5 - Force clearing old caches...');
 
     event.waitUntil(
-        caches.open(STATIC_CACHE)
-        .then(cache => {
-            console.log('Service Worker: Caching static assets');
-            return cache.addAll(STATIC_ASSETS);
-        })
-        .then(() => {
-            console.log('Service Worker: Static assets cached');
+        Promise.all([
+            // Clear ALL old caches first
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName.includes('bounce2bounce') && !cacheName.includes('v5')) {
+                            console.log('Service Worker: Deleting old cache:', cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            }),
+            // Then cache new static assets
+            caches.open(STATIC_CACHE)
+            .then(cache => {
+                console.log('Service Worker: Caching static assets');
+                return cache.addAll(STATIC_ASSETS);
+            })
+        ]).then(() => {
+            console.log('Service Worker: Force taking control immediately');
             return self.skipWaiting();
-        })
-        .catch(error => {
-            console.error('Service Worker: Error caching static assets', error);
+        }).catch(error => {
+            console.error('Service Worker: Error during install', error);
         })
     );
 });
 
-// Activate event - clean up old caches
+// Activate event - aggressively clean up old caches and take control
 self.addEventListener('activate', event => {
-    console.log('Service Worker: Activating...');
+    console.log('Service Worker: Activating v5 - Aggressive cache cleanup...');
 
     event.waitUntil(
         caches.keys()
         .then(cacheNames => {
+            console.log('Service Worker: Found caches:', cacheNames);
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
@@ -57,8 +70,18 @@ self.addEventListener('activate', event => {
             );
         })
         .then(() => {
-            console.log('Service Worker: Activated');
+            console.log('Service Worker: v5 Activated - Taking control of all clients');
+            // Force immediate control of all clients (including existing ones)
             return self.clients.claim();
+        })
+        .then(() => {
+            // Force reload all clients to get fresh content
+            return self.clients.matchAll().then(clients => {
+                clients.forEach(client => {
+                    console.log('Service Worker: Sending reload message to client');
+                    client.postMessage({ type: 'CACHE_UPDATED', version: 'v5' });
+                });
+            });
         })
     );
 });
