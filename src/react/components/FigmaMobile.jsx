@@ -2140,6 +2140,21 @@ const FigmaMobile = () => {
               width: calc(100% - 10px) !important;
             }
           }
+
+          /* Responsive adjustments for event card content on small screens */
+          @media (max-width: 375px) {
+            .card-clickable-area {
+              left: 120px !important; /* Reduce left margin for more text space */
+              right: 4px !important; /* Reduce right margin */
+            }
+          }
+
+          @media (max-width: 320px) {
+            .card-clickable-area {
+              left: 110px !important; /* Further reduce left margin */
+              right: 2px !important; /* Minimal right margin */
+            }
+          }
         `}
       </style>
 
@@ -2770,14 +2785,14 @@ const FigmaMobile = () => {
                 />
               </div>
 
-              {/* Bottom overlay with date and location */}
+              {/* Bottom overlay with date and location - Responsive */}
               <div
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  top: '303px', // 350px - 47px
+                  bottom: '47px', // Use bottom positioning instead of fixed top
                   display: 'flex',
-                  width: '350px',
+                  width: '100%', // Use full width of responsive hero card
                   justifyContent: 'space-between',
                   padding: '0px 16px', // Slightly more padding for mobile
                   gap: '16px',
@@ -2787,10 +2802,11 @@ const FigmaMobile = () => {
                 <div
                   style={{
                     display: 'flex',
-                    width: '200px', // Adjusted for mobile
+                    flex: '1', // Use flex to take available space
                     padding: '4px 0px',
                     flexDirection: 'column',
-                    minWidth: 0
+                    minWidth: 0,
+                    maxWidth: 'calc(100% - 106px)' // Reserve space for button (90px + 16px gap)
                   }}
                 >
                   {/* Date row */}
@@ -2922,14 +2938,14 @@ const FigmaMobile = () => {
                 </div>
               </div>
 
-              {/* Event title overlay */}
+              {/* Event title overlay - Responsive */}
               <div
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  top: '255px', // 350px - 95px
+                  bottom: '95px', // Use bottom positioning for consistency
                   display: 'flex',
-                  width: '350px',
+                  width: '100%', // Use full width of responsive hero card
                   height: '48px',
                   padding: '8px 16px', // Slightly more padding for mobile
                   justifyContent: 'flex-start',
@@ -2949,7 +2965,7 @@ const FigmaMobile = () => {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
-                    maxWidth: '318px', // 350px - 32px padding
+                    maxWidth: '100%', // Use full available width within padding
                     margin: '0px 0px 8px 0px' // Added margin as requested
                   }}
                 >
@@ -3239,17 +3255,18 @@ const FigmaMobile = () => {
                       className="card-clickable-area"
                       style={{
                         position: 'absolute',
-                        left: '132px', // Scaled up from 94px
+                        left: '132px', // Keep fixed left position for image space
+                        right: '8px', // Use right positioning instead of fixed width
                         top: '0px',
                         display: 'flex',
-                        width: '258px', // Scaled up from 126px (390-132=258)
                         height: '120px', // Scaled up from 85px
                         padding: '4px 0px', // Scaled up from 3px
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         gap: '16px', // Scaled up from 12px
-                        zIndex: 2 // Above gradient overlay
+                        zIndex: 2, // Above gradient overlay
+                        boxSizing: 'border-box' // Ensure padding is included in width calculation
                       }}
                     >
                       {/* Event Information */}
@@ -3592,7 +3609,9 @@ const FigmaMobile = () => {
                             }}
                             style={{
                               display: 'flex',
-                              width: '200px', // Extended button width closer to right edge
+                              width: 'auto', // Auto width to fit content
+                              minWidth: '120px', // Minimum width for button
+                              maxWidth: '100%', // Don't exceed container width
                               height: '28px', // Scaled up from 20px (desktop)
                               padding: '11px 14px', // Scaled up from 8px 10px (desktop)
                               justifyContent: 'center',
