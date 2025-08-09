@@ -2111,6 +2111,35 @@ const FigmaMobile = () => {
             transform: translate3d(0, 12px, 0) scale(0.96);
             backface-visibility: hidden;
           }
+
+          /* Responsive adjustments for small mobile devices */
+          @media (max-width: 375px) {
+            .mobile-content-container {
+              left: 10px !important;
+              right: 10px !important;
+              width: calc(100% - 20px) !important;
+            }
+
+            .mobile-drawer {
+              left: 10px !important;
+              right: 10px !important;
+              width: calc(100% - 20px) !important;
+            }
+          }
+
+          @media (max-width: 320px) {
+            .mobile-content-container {
+              left: 5px !important;
+              right: 5px !important;
+              width: calc(100% - 10px) !important;
+            }
+
+            .mobile-drawer {
+              left: 5px !important;
+              right: 5px !important;
+              width: calc(100% - 10px) !important;
+            }
+          }
         `}
       </style>
 
@@ -2248,10 +2277,13 @@ const FigmaMobile = () => {
           className="mobile-content-container"
           style={{
             position: 'absolute',
-            left: '0px',
+            left: '20px', // Match drawer centering approach
+            right: '20px', // Match drawer centering approach
             top: isScrolled ? '70px' : '97px', // Dynamic top position
             bottom: '0px', // Use bottom instead of fixed height to allow content expansion
-            width: '430px',
+            width: 'calc(100% - 40px)', // Match drawer width calculation
+            maxWidth: '430px', // Maximum width constraint
+            margin: '0 auto', // Center the container like the drawer
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
@@ -2652,7 +2684,7 @@ const FigmaMobile = () => {
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
               style={{
                 width: '100%',
-                padding: '0 40px',
+                padding: '0 20px', // Reduced padding to match main container
                 marginBottom: '20px',
                 boxSizing: 'border-box',
                 animationDelay: cardsAnimated ? '0s' : '0s' // Hero animates first (no delay)
@@ -2664,8 +2696,8 @@ const FigmaMobile = () => {
                 console.log('Hero clicked - navigate to events');
               }}
               style={{
-                width: '350px', // Mobile-optimized width
-                height: '350px', // Square aspect ratio
+                width: 'min(350px, calc(100vw - 80px))', // Responsive width that scales on small devices
+                height: 'min(350px, calc(100vw - 80px))', // Maintain square aspect ratio
                 position: 'relative',
                 margin: '0 auto', // Center the hero
                 cursor: 'pointer',
@@ -2943,10 +2975,10 @@ const FigmaMobile = () => {
               alignItems: 'stretch',
               gap: '8px', // Reduced from 16px to 8px
               flexShrink: 0,
-              padding: '0 40px', // Add 40px left/right padding to event cards container
+              padding: '0 20px', // Reduced padding to match main container and drawer approach
               marginBottom: '40px', // Additional bottom margin to ensure last event card is fully visible
               boxSizing: 'border-box', // Ensure padding doesn't cause overflow
-              maxWidth: '430px' // Ensure it doesn't exceed container width
+              maxWidth: '100%' // Use full width of centered parent container
             }}
           >
             {/* Show featured events or empty state */}
