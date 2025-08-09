@@ -819,6 +819,46 @@ const FigmaDesktop = () => {
     }
   }, [showVerification]);
 
+  // Start resend countdown timer - MOVED HERE to fix initialization order
+  const startResendCountdown = useCallback(() => {
+    console.log('🚀 Starting countdown timer');
+
+    // Clear any existing timer first
+    if (resendTimerRef.current) {
+      clearInterval(resendTimerRef.current);
+      resendTimerRef.current = null;
+    }
+
+    setResendCountdown(60);
+    setCanResend(false);
+
+    resendTimerRef.current = setInterval(() => {
+      if (!isMountedRef.current) {
+        if (resendTimerRef.current) {
+          clearInterval(resendTimerRef.current);
+          resendTimerRef.current = null;
+        }
+        return;
+      }
+
+      setResendCountdown(prev => {
+        console.log('⏰ Countdown tick:', prev);
+        if (prev <= 1) {
+          console.log('✅ Countdown finished, enabling resend');
+          if (isMountedRef.current) {
+            setCanResend(true);
+          }
+          if (resendTimerRef.current) {
+            clearInterval(resendTimerRef.current);
+            resendTimerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
   // Start countdown when verification is shown
   useEffect(() => {
     console.log('🔄 Countdown useEffect triggered:', {
@@ -832,7 +872,7 @@ const FigmaDesktop = () => {
       console.log('🚀 Starting resend countdown');
       startResendCountdown();
     }
-  }, [showVerification, verificationPhone, startResendCountdown]);
+  }, [showVerification, verificationPhone]); // FIXED: Removed startResendCountdown to break circular dependency
 
   const validatePhoneNumber = useCallback((phone) => {
     // Basic phone number validation (US format)
@@ -1091,45 +1131,7 @@ const FigmaDesktop = () => {
     }
   }, [verificationCode, verificationSubmitting, verificationPhone]);
 
-  // Start resend countdown timer
-  const startResendCountdown = useCallback(() => {
-    console.log('🚀 Starting countdown timer');
 
-    // Clear any existing timer first
-    if (resendTimerRef.current) {
-      clearInterval(resendTimerRef.current);
-      resendTimerRef.current = null;
-    }
-
-    setResendCountdown(60);
-    setCanResend(false);
-
-    resendTimerRef.current = setInterval(() => {
-      if (!isMountedRef.current) {
-        if (resendTimerRef.current) {
-          clearInterval(resendTimerRef.current);
-          resendTimerRef.current = null;
-        }
-        return;
-      }
-
-      setResendCountdown(prev => {
-        console.log('⏰ Countdown tick:', prev);
-        if (prev <= 1) {
-          console.log('✅ Countdown finished, enabling resend');
-          if (isMountedRef.current) {
-            setCanResend(true);
-          }
-          if (resendTimerRef.current) {
-            clearInterval(resendTimerRef.current);
-            resendTimerRef.current = null;
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
 
   // Handle resend verification code
   const handleResendCode = useCallback(async () => {
@@ -1168,7 +1170,7 @@ const FigmaDesktop = () => {
     } finally {
       setResendSubmitting(false);
     }
-  }, [canResend, resendSubmitting, verificationPhone, startResendCountdown]);
+  }, [canResend, resendSubmitting, verificationPhone]); // FIXED: Removed startResendCountdown to break circular dependency
 
   // Button press animation handlers
   const handleButtonMouseDown = useCallback(() => {
