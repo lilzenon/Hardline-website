@@ -2175,11 +2175,11 @@ const FigmaDesktop = () => {
           <div
             style={{
               display: 'flex',
-              width: '100%',
               justifyContent: 'space-between',
               alignItems: 'center',
               margin: '8px 0 0 0',
-              padding: '0'
+              padding: '0',
+              alignSelf: 'stretch' // Match the event cards grid alignment
             }}
           >
             {/* Event Title */}
