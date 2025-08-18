@@ -39,6 +39,54 @@ const App = () => {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   console.log('📍 CURRENT PATH:', currentPath);
 
+  // Initialize analytics tracking
+  useEffect(() => {
+    // Load analytics scripts
+    const loadAnalyticsScript = () => {
+      const script1 = document.createElement('script');
+      script1.src = '/static/js/analytics-tracker.js';
+      script1.async = true;
+      document.head.appendChild(script1);
+
+      const script2 = document.createElement('script');
+      script2.src = '/static/js/gdpr-consent.js';
+      script2.async = true;
+      document.head.appendChild(script2);
+
+      script1.onload = () => {
+        // Initialize analytics after script loads
+        if (window.initializeAnalytics) {
+          window.initializeAnalytics({
+            apiEndpoint: '/api',
+            trackingId: 'kutt-homepage',
+            enableGDPR: true,
+            enableRealTime: true,
+            sessionTimeout: 30
+          });
+        }
+      };
+    };
+
+    loadAnalyticsScript();
+  }, []);
+
+  // Track page views on route changes
+  useEffect(() => {
+    if (window.getAnalyticsTracker) {
+      const tracker = window.getAnalyticsTracker();
+      if (tracker) {
+        tracker.trackPageView({
+          page: currentPath,
+          title: document.title,
+          referrer: document.referrer,
+          utm_source: new URLSearchParams(window.location.search).get('utm_source') || undefined,
+          utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
+          utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined
+        });
+      }
+    }
+  }, [currentPath]);
+
   // Enhanced navigation with smooth transitions
   const navigateWithTransition = useCallback((path) => {
     console.log(`🔄 NAVIGATING TO: ${path}`);
