@@ -56,11 +56,30 @@ const App = () => {
       script1.onload = () => {
         // Initialize analytics after script loads
         if (window.initializeAnalytics) {
-          // Determine API endpoint based on environment
-          const isDevelopment = window.location.hostname === 'localhost';
-          const apiEndpoint = isDevelopment
-            ? '/api'  // Local development - same domain
-            : 'https://admin.b2b.click/api';  // Production - cross-domain to dashboard
+          // Determine API endpoint based on environment and domain
+          const hostname = window.location.hostname;
+          const isDevelopment = hostname === 'localhost';
+
+          let apiEndpoint;
+          if (isDevelopment) {
+            // Local development - send to dashboard dev server
+            apiEndpoint = 'http://localhost:3004/api';
+          } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
+            // Current temporary setup - b2b.click homepage sends to admin.b2b.click
+            apiEndpoint = 'https://admin.b2b.click/api';
+          } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
+            // Future production setup - bounce2bounce.com sends to admin.b2b.click
+            apiEndpoint = 'https://admin.b2b.click/api';
+          } else {
+            // Fallback to same domain
+            apiEndpoint = '/api';
+          }
+
+          console.log('📊 Analytics Configuration:', {
+            hostname: hostname,
+            apiEndpoint: apiEndpoint,
+            isDevelopment: isDevelopment
+          });
 
           window.initializeAnalytics({
             apiEndpoint: apiEndpoint,

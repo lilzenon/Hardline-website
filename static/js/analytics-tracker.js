@@ -42,6 +42,9 @@ class AnalyticsTracker {
                 this.startHeartbeat()
             }
 
+            // Track initial page view
+            await this.trackPageView()
+
             // Process any queued events
             this.processEventQueue()
 
