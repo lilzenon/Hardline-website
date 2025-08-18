@@ -56,8 +56,14 @@ const App = () => {
       script1.onload = () => {
         // Initialize analytics after script loads
         if (window.initializeAnalytics) {
+          // Determine API endpoint based on environment
+          const isDevelopment = window.location.hostname === 'localhost';
+          const apiEndpoint = isDevelopment
+            ? '/api'  // Local development - same domain
+            : 'https://admin.b2b.click/api';  // Production - cross-domain to dashboard
+
           window.initializeAnalytics({
-            apiEndpoint: '/api',
+            apiEndpoint: apiEndpoint,
             trackingId: 'kutt-homepage',
             enableGDPR: true,
             enableRealTime: true,

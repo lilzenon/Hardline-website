@@ -415,159 +415,45 @@ router.get(
     }
 );
 
+// Redirect legacy dashboard to new React dashboard
 router.get(
     "/dashboard",
-    asyncHandler(auth.jwtAdminPage),
-    asyncHandler(locals.user),
-    async(req, res) => {
-        try {
-            // Try optimized analytics service first
-            const analyticsService = require("../services/analytics/analytics.service");
-            const dashboardData = await analyticsService.getDashboardAnalytics(req.user.id);
+    (req, res) => {
+        // Redirect to the new React dashboard domain
+        const dashboardUrl = process.env.NODE_ENV === 'production' ?
+            'https://admin.b2b.click/dashboard' :
+            'http://localhost:3002/dashboard';
 
-            console.log(`📊 Dashboard loaded for user ${req.user.id}:`, {
-                totalEvents: dashboardData.stats.totalEvents,
-                activeEvents: dashboardData.stats.activeEvents,
-                totalLinks: dashboardData.stats.totalLinks,
-                totalFans: dashboardData.stats.totalFans,
-                cached: dashboardData.lastUpdated
-            });
-
-            res.render("modern-dashboard", {
-                title: "Dashboard",
-                pageTitle: "Dashboard",
-                layout: "layouts/modern-dashboard",
-                currentPage: "dashboard",
-                user: req.user,
-                domain: env.DEFAULT_DOMAIN,
-                stats: dashboardData.stats,
-                recentEvents: dashboardData.recentEvents,
-                recentLinks: dashboardData.recentLinks,
-                lastUpdated: dashboardData.lastUpdated
-            });
-        } catch (analyticsError) {
-            console.error('❌ Analytics service error, falling back to direct queries:', analyticsError);
-
-            try {
-                // Fallback to direct database queries
-                const query = require("../queries");
-
-                // Get user's events with stats
-                const userEvents = await query.event.findByUserWithStats(req.user.id, { limit: 5 });
-
-                // Get user's links using existing function
-                const userLinks = await query.link.get({ "links.user_id": req.user.id }, { skip: 0, limit: 5 });
-
-                // Calculate stats from actual data
-                const totalEvents = userEvents.length;
-                const activeEvents = userEvents.filter(event => event.is_active).length;
-                const totalLinks = userLinks.length;
-                const totalFans = userEvents.reduce((sum, event) => sum + (event.signup_count || 0), 0);
-
-                console.log(`📊 Dashboard fallback loaded for user ${req.user.id}:`, {
-                    totalEvents,
-                    activeEvents,
-                    totalLinks,
-                    totalFans
-                });
-
-                res.render("modern-dashboard", {
-                    title: "Dashboard",
-                    pageTitle: "Dashboard",
-                    layout: "layouts/modern-dashboard",
-                    currentPage: "dashboard",
-                    user: req.user,
-                    domain: env.DEFAULT_DOMAIN,
-                    stats: {
-                        totalEvents: totalEvents || 0,
-                        activeEvents: activeEvents || 0,
-                        totalLinks: totalLinks || 0,
-                        totalFans: totalFans || 0,
-                        totalClicks: 0
-                    },
-                    recentEvents: userEvents || [],
-                    recentLinks: userLinks || []
-                });
-            } catch (fallbackError) {
-                console.error('❌ Fallback dashboard error:', fallbackError);
-
-                // Final fallback with empty data
-                res.render("modern-dashboard", {
-                    title: "Dashboard",
-                    pageTitle: "Dashboard",
-                    layout: "layouts/modern-dashboard",
-                    currentPage: "dashboard",
-                    user: req.user,
-                    domain: env.DEFAULT_DOMAIN,
-                    stats: {
-                        totalEvents: 0,
-                        activeEvents: 0,
-                        totalLinks: 0,
-                        totalFans: 0,
-                        totalClicks: 0
-                    },
-                    recentEvents: [],
-                    recentLinks: [],
-                    error: "Failed to load dashboard data"
-                });
-            }
-        }
+        console.log(`🔄 Redirecting legacy dashboard to React dashboard: ${dashboardUrl}`);
+        res.redirect(301, dashboardUrl);
     }
 );
 
-// Legacy dashboard route for backup
+// Legacy dashboard routes now redirect to React dashboard
 router.get(
     "/dashboard-old",
-    asyncHandler(auth.jwtAdminPage),
-    asyncHandler(locals.user),
     (req, res) => {
-        // Sample data to match Laylo design
-        const upcomingDrops = [{
-                id: 1,
-                title: "JERSEY LOVES BASS PRESALE",
-                image: "/images/jersey-bass.jpg",
-                scheduledDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 1 week from now
-            },
-            {
-                id: 2,
-                title: "JULY 4TH PRESALE",
-                image: "/images/july4th.jpg",
-                scheduledDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 2 weeks from now
-            }
-        ];
+        // Redirect to the new React dashboard domain
+        const dashboardUrl = process.env.NODE_ENV === 'production' ?
+            'https://admin.b2b.click/dashboard' :
+            'http://localhost:3002/dashboard';
 
-        res.render("dashboard", {
-            title: "Dashboard - BOUNCE2BOUNCE",
-            layout: "layouts/modern-dashboard",
-            currentPage: "dashboard",
-            stats: {
-                totalEvents: 2,
-                totalFans: 1247,
-                totalSMS: 3891,
-                activeEvents: 1
-            },
-            recentActivity: [{
-                    title: "New fan signup",
-                    description: "Someone joined your JERSEY LOVES BASS event",
-                    timeAgo: "2 hours ago"
-                },
-                {
-                    title: "Event published",
-                    description: "JULY 4TH PRESALE is now live",
-                    timeAgo: "1 day ago"
-                }
-            ],
-            upcomingEvents: upcomingEvents
-        });
+        console.log(`🔄 Redirecting legacy dashboard-old to React dashboard: ${dashboardUrl}`);
+        res.redirect(301, dashboardUrl);
     }
 );
 
+// SMS dashboard redirect to React dashboard
 router.get(
     "/sms",
-    asyncHandler(auth.jwtAdminPage),
-    asyncHandler(locals.user),
     (req, res) => {
-        res.render("sms_dashboard", { title: "SMS Dashboard - BOUNCE2BOUNCE" });
+        // Redirect to the new React dashboard domain
+        const dashboardUrl = process.env.NODE_ENV === 'production' ?
+            'https://admin.b2b.click/sms' :
+            'http://localhost:3002/sms';
+
+        console.log(`🔄 Redirecting SMS dashboard to React dashboard: ${dashboardUrl}`);
+        res.redirect(301, dashboardUrl);
     }
 );
 

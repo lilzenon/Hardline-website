@@ -57,6 +57,9 @@ app.use(securityHeaders.developmentSecurityAdjustments());
 app.use(securityHeaders.staticAssetHeaders());
 app.use(securityHeaders.apiSecurityHeaders());
 
+// Apply origin validation and CORS
+app.use(require('./middleware/origin-validation.middleware').corsWithOriginValidation());
+
 // Apply database security
 app.use(databaseSecurity.sqlInjectionProtection());
 
