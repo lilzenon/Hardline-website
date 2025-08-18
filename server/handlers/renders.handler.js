@@ -527,15 +527,21 @@ async function reactHomepage(req, res) {
             });
         }
 
-        // Serve SPA with robust fallbacks: dist -> legacy static/react -> HBS home
+        // Serve React homepage SPA with proper fallbacks: dist/react -> static/react -> HBS home
         const path = require('path');
         const fs = require('fs');
-        const viteIndexPath = path.join(__dirname, '../../dist/index.html');
-        if (fs.existsSync(viteIndexPath)) {
-            return res.sendFile(viteIndexPath);
+
+        // First try the built React homepage (dist/react/index.html)
+        const reactHomepageIndexPath = path.join(__dirname, '../../dist/react/index.html');
+        if (fs.existsSync(reactHomepageIndexPath)) {
+            console.log('📱 Serving React homepage from dist/react/index.html');
+            return res.sendFile(reactHomepageIndexPath);
         }
+
+        // Fallback to legacy React homepage (static/react/index.html)
         const legacyReactIndexPath = path.join(__dirname, '../../static/react/index.html');
         if (fs.existsSync(legacyReactIndexPath)) {
+            console.log('📱 Serving React homepage from static/react/index.html (legacy)');
             return res.sendFile(legacyReactIndexPath);
         }
         // Final fallback: server-rendered home

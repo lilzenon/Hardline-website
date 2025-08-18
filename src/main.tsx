@@ -194,6 +194,91 @@ if (container) {
 // Initialize frontend security measures
 initializeFrontendSecurity();
 
+// Initialize analytics tracking for homepage
+const loadAnalyticsScript = () => {
+  // Check if scripts are already loaded to prevent duplicates
+  const existingAnalyticsScript = document.querySelector('script[src="/static/js/analytics-tracker.js"]');
+  const existingGDPRScript = document.querySelector('script[src="/static/js/gdpr-consent.js"]');
+
+  if (existingAnalyticsScript && existingGDPRScript) {
+    console.log('📊 Analytics scripts already loaded, skipping...');
+    return;
+  }
+
+  if (!existingAnalyticsScript) {
+    const script1 = document.createElement('script');
+    script1.src = '/static/js/analytics-tracker.js';
+    script1.async = true;
+    document.head.appendChild(script1);
+  }
+
+  if (!existingGDPRScript) {
+    const script2 = document.createElement('script');
+    script2.src = '/static/js/gdpr-consent.js';
+    script2.async = true;
+    document.head.appendChild(script2);
+  }
+
+  const initializeAnalyticsWhenReady = () => {
+    // Initialize analytics after script loads
+    if (window.initializeAnalytics) {
+      // Determine API endpoint based on environment and domain
+      const hostname = window.location.hostname;
+      const isDevelopment = hostname === 'localhost';
+
+      let apiEndpoint;
+      if (isDevelopment) {
+        // Local development - send to dashboard dev server
+        apiEndpoint = 'http://localhost:3004/api';
+      } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
+        // Current temporary setup - b2b.click homepage sends to admin.b2b.click
+        apiEndpoint = 'https://admin.b2b.click/api';
+      } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
+        // Future production setup - bounce2bounce.com sends to admin.b2b.click
+        apiEndpoint = 'https://admin.b2b.click/api';
+      } else {
+        // Fallback to same domain
+        apiEndpoint = '/api';
+      }
+
+      console.log('📊 Analytics Configuration:', {
+        hostname: hostname,
+        apiEndpoint: apiEndpoint,
+        isDevelopment: isDevelopment
+      });
+
+      window.initializeAnalytics({
+        apiEndpoint: apiEndpoint,
+        trackingId: 'kutt-homepage',
+        enableGDPR: true,
+        enableRealTime: true,
+        sessionTimeout: 30
+      });
+    } else {
+      console.log('📊 Analytics tracker not ready yet, will retry...');
+      // Retry after a short delay
+      setTimeout(initializeAnalyticsWhenReady, 100);
+    }
+  };
+
+  // Set up script loading handlers
+  if (!existingAnalyticsScript) {
+    const script1 = document.querySelector('script[src="/static/js/analytics-tracker.js"]');
+    if (script1) {
+      script1.onload = initializeAnalyticsWhenReady;
+      script1.onerror = () => {
+        console.error('❌ Failed to load analytics tracker script');
+      };
+    }
+  } else {
+    // Script already exists, try to initialize immediately
+    initializeAnalyticsWhenReady();
+  }
+};
+
+// Load analytics scripts
+loadAnalyticsScript();
+
 // Export for global access if needed
 window.React = React;
 window.ReactApp = App;
