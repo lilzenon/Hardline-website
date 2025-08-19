@@ -32,13 +32,13 @@ class AnalyticsBeacon {
 
     constructor() {
         // Get configuration from environment
-        const dashboardUrl = import.meta.env.VITE_DASHBOARD_API_URL || 
-                           process.env.DASHBOARD_API_URL || 
-                           'http://localhost:3000';
-        
-        const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT || 
-                        process.env.ANALYTICS_ENDPOINT || 
-                        '/a/pv';
+        const dashboardUrl = import.meta.env.VITE_DASHBOARD_API_URL ||
+                           process.env.DASHBOARD_API_URL ||
+                           'https://admin.b2b.click';
+
+        const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT ||
+                        process.env.ANALYTICS_ENDPOINT ||
+                        '/api/analytics/track';
 
         this.config = {
             endpoint: `${dashboardUrl}${endpoint}`,
