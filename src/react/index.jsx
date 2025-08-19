@@ -134,9 +134,8 @@ if (container) {
 // Initialize frontend security measures
 initializeFrontendSecurity();
 
-// Initialize analytics tracking for homepage (ONLY for homepage domains)
+// Initialize analytics tracking for homepage
 const loadAnalyticsScript = () => {
-  console.log('📊 Loading analytics scripts for homepage...');
   const script1 = document.createElement('script');
   script1.src = '/static/js/analytics-tracker.js';
   script1.async = true;
@@ -165,8 +164,7 @@ const loadAnalyticsScript = () => {
         // Future production setup - bounce2bounce.com sends to admin.b2b.click
         apiEndpoint = 'https://admin.b2b.click/api';
       } else {
-        // This should not happen since we filter domains above, but fallback just in case
-        console.warn('⚠️ Analytics: Unexpected domain for analytics initialization:', hostname);
+        // Fallback to same domain
         apiEndpoint = '/api';
       }
 
@@ -191,44 +189,6 @@ const loadAnalyticsScript = () => {
   };
 };
 
-// Load analytics scripts ONLY on homepage domains (NOT on admin dashboard)
-const shouldLoadAnalytics = () => {
-  const hostname = window.location.hostname;
-
-  // Only load analytics on homepage domains
-  const homepageHosts = [
-    'b2b.click',
-    'www.b2b.click',
-    'bounce2bounce.com',
-    'www.bounce2bounce.com',
-    'localhost' // For development testing
-  ];
-
-  // Do NOT load analytics on admin dashboard
-  const dashboardHosts = [
-    'admin.b2b.click',
-    'admin.bounce2bounce.com'
-  ];
-
-  if (dashboardHosts.includes(hostname)) {
-    console.log('🚫 Analytics: Skipping analytics load on admin dashboard:', hostname);
-    return false;
-  }
-
-  if (homepageHosts.includes(hostname)) {
-    console.log('✅ Analytics: Loading analytics on homepage domain:', hostname);
-    return true;
-  }
-
-  // Default: don't load analytics on unknown domains
-  console.log('⚠️ Analytics: Unknown domain, skipping analytics:', hostname);
-  return false;
-};
-
-// Only load analytics if we're on a homepage domain
-if (shouldLoadAnalytics()) {
-  loadAnalyticsScript();
-} else {
-  console.log('📊 Analytics: Analytics loading skipped for this domain');
-}
+// Load analytics scripts
+loadAnalyticsScript();
 
