@@ -165,12 +165,21 @@ class AnalyticsBeacon {
         }
 
         const pageInfo = this.getPageInfo();
-        const success = await this.sendData(pageInfo);
-        
+
+        // Format data for dashboard API
+        const eventData = {
+            event: 'page_view',
+            sessionId: this.getSessionId(),
+            timestamp: Date.now(),
+            properties: pageInfo
+        };
+
+        const success = await this.sendData(eventData);
+
         if (success) {
             this.hasTrackedPageView = true;
         }
-        
+
         return success;
     }
 
