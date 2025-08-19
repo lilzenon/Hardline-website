@@ -531,18 +531,25 @@ async function reactHomepage(req, res) {
         const path = require('path');
         const fs = require('fs');
 
-        // First try the built React homepage (dist/react/index.html)
-        const reactHomepageIndexPath = path.join(__dirname, '../../dist/react/index.html');
-        if (fs.existsSync(reactHomepageIndexPath)) {
-            console.log('📱 Serving React homepage from dist/react/index.html');
-            return res.sendFile(reactHomepageIndexPath);
+        // First try the Vite-built React homepage (dist/index.html) - contains analytics
+        const viteHomepageIndexPath = path.join(__dirname, '../../dist/index.html');
+        if (fs.existsSync(viteHomepageIndexPath)) {
+            console.log('📱 Serving React homepage from dist/index.html (Vite build with analytics)');
+            return res.sendFile(viteHomepageIndexPath);
         }
 
-        // Fallback to legacy React homepage (static/react/index.html)
-        const legacyReactIndexPath = path.join(__dirname, '../../static/react/index.html');
+        // Fallback to legacy React homepage (dist/react/index.html) - without analytics
+        const legacyReactIndexPath = path.join(__dirname, '../../dist/react/index.html');
         if (fs.existsSync(legacyReactIndexPath)) {
-            console.log('📱 Serving React homepage from static/react/index.html (legacy)');
+            console.log('📱 Serving React homepage from dist/react/index.html (legacy build without analytics)');
             return res.sendFile(legacyReactIndexPath);
+        }
+
+        // Final fallback to static React homepage (static/react/index.html)
+        const staticReactIndexPath = path.join(__dirname, '../../static/react/index.html');
+        if (fs.existsSync(staticReactIndexPath)) {
+            console.log('📱 Serving React homepage from static/react/index.html (static fallback)');
+            return res.sendFile(staticReactIndexPath);
         }
         // Final fallback: server-rendered home
         return home(req, res);

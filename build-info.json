@@ -1,17 +1,17 @@
 {
-  "buildDate": "2025-08-19T21:19:34.779Z",
+  "buildDate": "2025-08-19T22:35:43.081Z",
   "nodeVersion": "v24.4.1",
   "platform": "win32",
   "arch": "x64",
-  "commitHash": "1b5d7eaebb92b1bb8b59d0dbfedab236a2f60755",
-  "commitHashShort": "1b5d7ea",
+  "commitHash": "b70848589229ac178acd0041df3bb2915045f0bb",
+  "commitHashShort": "b708485",
   "branch": "main",
-  "commitDate": "2025-08-19T21:18:23.000Z",
+  "commitDate": "2025-08-19T21:41:18.000Z",
   "commitMessage": "🔧 Fix homepage IPv6 rate limiting compatibility",
   "isDirty": true,
   "repoUrl": "https://github.com/lilzenon/kutt.git",
   "githubUrl": "https://github.com/lilzenon/kutt",
-  "commitUrl": "https://github.com/lilzenon/kutt/commit/1b5d7eaebb92b1bb8b59d0dbfedab236a2f60755",
-  "displayText": "main@1b5d7ea*",
+  "commitUrl": "https://github.com/lilzenon/kutt/commit/b70848589229ac178acd0041df3bb2915045f0bb",
+  "displayText": "main@b708485*",
   "environment": "development"
 }

@@ -100,6 +100,8 @@ function getCSPDirectives() {
             "https://www.google.com", // Allow Google reCAPTCHA for Laylo
             "https://www.gstatic.com", // Allow Google static resources for reCAPTCHA
             "https://recaptcha.google.com", // Allow reCAPTCHA API
+            "https://admin.b2b.click", // Allow analytics dashboard connections
+            "https://ipapi.co", // Allow location API for analytics
             ...(isProduction ? [] : ["ws://localhost:*", "http://localhost:*"])
         ],
 

@@ -42,8 +42,12 @@ class AnalyticsTracker {
                 this.startHeartbeat()
             }
 
-            // Track initial page view
-            await this.trackPageView()
+            // Track initial page view with current page data
+            await this.trackPageView({
+                page_url: window.location.href,
+                page_title: document.title,
+                referrer: document.referrer
+            })
 
             // Process any queued events
             this.processEventQueue()
@@ -285,13 +289,13 @@ class AnalyticsTracker {
             event: 'page_view',
             properties: {
                 ...pageData,
-                sessionId: this.session?.sessionId,
-                deviceInfo: this.session?.deviceInfo,
-                locationInfo: this.session?.locationInfo
+                sessionId: this.session ? .sessionId,
+                deviceInfo: this.session ? .deviceInfo,
+                locationInfo: this.session ? .locationInfo
             },
             timestamp: Date.now(),
-            sessionId: this.session?.sessionId,
-            userId: this.session?.userId
+            sessionId: this.session ? .sessionId,
+            userId: this.session ? .userId
         }
 
         await this.sendEvent(event)
@@ -308,11 +312,11 @@ class AnalyticsTracker {
             event: eventName,
             properties: {
                 ...properties,
-                sessionId: this.session?.sessionId
+                sessionId: this.session ? .sessionId
             },
             timestamp: Date.now(),
-            sessionId: this.session?.sessionId,
-            userId: this.session?.userId
+            sessionId: this.session ? .sessionId,
+            userId: this.session ? .userId
         }
 
         await this.sendEvent(event)

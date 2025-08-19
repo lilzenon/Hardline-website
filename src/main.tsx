@@ -142,9 +142,16 @@ initializeFrontendSecurity();
 
 // Initialize analytics tracking for homepage
 const loadAnalyticsScript = () => {
+  console.log('📊 Starting analytics script loading...');
+
   // Check if scripts are already loaded to prevent duplicates
-  const existingAnalyticsScript = document.querySelector('script[src="/static/js/analytics-tracker.js"]');
-  const existingGDPRScript = document.querySelector('script[src="/static/js/gdpr-consent.js"]');
+  const existingAnalyticsScript = document.querySelector('script[src="/js/analytics-tracker.js"]');
+  const existingGDPRScript = document.querySelector('script[src="/js/gdpr-consent.js"]');
+
+  console.log('📊 Script check:', {
+    analyticsExists: !!existingAnalyticsScript,
+    gdprExists: !!existingGDPRScript
+  });
 
   if (existingAnalyticsScript && existingGDPRScript) {
     console.log('📊 Analytics scripts already loaded, skipping...');
@@ -152,16 +159,22 @@ const loadAnalyticsScript = () => {
   }
 
   if (!existingAnalyticsScript) {
+    console.log('📊 Loading analytics tracker script...');
     const script1 = document.createElement('script');
-    script1.src = '/static/js/analytics-tracker.js';
+    script1.src = '/js/analytics-tracker.js';
     script1.async = true;
+    script1.onload = () => console.log('✅ Analytics tracker script loaded successfully');
+    script1.onerror = (error) => console.error('❌ Failed to load analytics tracker script:', error);
     document.head.appendChild(script1);
   }
 
   if (!existingGDPRScript) {
+    console.log('📊 Loading GDPR consent script...');
     const script2 = document.createElement('script');
-    script2.src = '/static/js/gdpr-consent.js';
+    script2.src = '/js/gdpr-consent.js';
     script2.async = true;
+    script2.onload = () => console.log('✅ GDPR consent script loaded successfully');
+    script2.onerror = (error) => console.error('❌ Failed to load GDPR consent script:', error);
     document.head.appendChild(script2);
   }
 
@@ -175,7 +188,7 @@ const loadAnalyticsScript = () => {
       let apiEndpoint;
       if (isDevelopment) {
         // Local development - send to dashboard dev server
-        apiEndpoint = 'http://localhost:3004/api';
+        apiEndpoint = 'http://localhost:3000/api';
       } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
         // Current temporary setup - b2b.click homepage sends to admin.b2b.click
         apiEndpoint = 'https://admin.b2b.click/api';
@@ -209,7 +222,7 @@ const loadAnalyticsScript = () => {
 
   // Set up script loading handlers
   if (!existingAnalyticsScript) {
-    const script1 = document.querySelector('script[src="/static/js/analytics-tracker.js"]');
+    const script1 = document.querySelector('script[src="/js/analytics-tracker.js"]');
     if (script1) {
       script1.onload = initializeAnalyticsWhenReady;
       script1.onerror = () => {
@@ -223,7 +236,9 @@ const loadAnalyticsScript = () => {
 };
 
 // Load analytics scripts
+console.log('🚀 MAIN.TSX: About to call loadAnalyticsScript()');
 loadAnalyticsScript();
+console.log('🚀 MAIN.TSX: loadAnalyticsScript() called');
 
 // Export for global access if needed
 window.React = React;
