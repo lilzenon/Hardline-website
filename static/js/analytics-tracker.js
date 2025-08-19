@@ -42,8 +42,10 @@ class AnalyticsTracker {
                 this.startHeartbeat()
             }
 
-            // Track initial page view
-            await this.trackPageView()
+            // Track initial page view only for new sessions (not on refresh)
+            if (this.session && this.session.pageViews === 0) {
+                await this.trackPageView()
+            }
 
             // Process any queued events
             this.processEventQueue()
@@ -59,6 +61,7 @@ class AnalyticsTracker {
     async initializeSession() {
         const existingSessionId = localStorage.getItem('analytics_session_id')
         const sessionExpiry = localStorage.getItem('analytics_session_expiry')
+        const lastPageView = localStorage.getItem('analytics_last_page_view')
 
         const now = Date.now()
         const isSessionValid = existingSessionId && sessionExpiry && now < parseInt(sessionExpiry)
@@ -71,10 +74,14 @@ class AnalyticsTracker {
                 startTime: parseInt(localStorage.getItem('analytics_session_start') || '0'),
                 lastActivity: now,
                 pageViews: parseInt(localStorage.getItem('analytics_page_views') || '0'),
+                lastPageView: lastPageView ? parseInt(lastPageView) : 0,
                 events: [],
                 deviceInfo: await this.getDeviceInfo(),
                 locationInfo: await this.getLocationInfo()
             }
+
+            // Track session continuation (not a new session)
+            await this.trackSessionContinuation()
         } else {
             // Create new session
             const sessionId = this.generateSessionId()
@@ -84,6 +91,7 @@ class AnalyticsTracker {
                 startTime: now,
                 lastActivity: now,
                 pageViews: 0,
+                lastPageView: 0,
                 events: [],
                 deviceInfo: await this.getDeviceInfo(),
                 locationInfo: await this.getLocationInfo()
@@ -92,6 +100,9 @@ class AnalyticsTracker {
             // Store session data
             localStorage.setItem('analytics_session_id', sessionId)
             localStorage.setItem('analytics_session_start', now.toString())
+
+            // Track new session start
+            await this.trackSessionStart()
         }
 
         // Update session expiry
@@ -264,7 +275,7 @@ class AnalyticsTracker {
         }
     }
 
-    // Track page view
+    // Track page view (with duplicate prevention)
     async trackPageView(pageData) {
         if (!this.consentGiven) {
             this.eventQueue.push({ event: 'page_view', properties: pageData })
@@ -275,26 +286,76 @@ class AnalyticsTracker {
             await this.initializeSession()
         }
 
+        // Prevent duplicate page views on refresh
+        const now = Date.now()
+        const timeSinceLastPageView = now - (this.session ? .lastPageView || 0)
+        const currentUrl = window.location.href
+        const lastTrackedUrl = localStorage.getItem('analytics_last_url')
+
+        // Only track if:
+        // 1. More than 30 seconds since last page view, OR
+        // 2. URL has changed (navigation to different page)
+        if (timeSinceLastPageView < 30000 && currentUrl === lastTrackedUrl) {
+            console.log('📊 Analytics: Skipping duplicate page view (refresh detected)')
+            return
+        }
+
         if (this.session) {
             this.session.pageViews++
-                this.session.lastActivity = Date.now()
+                this.session.lastActivity = now
+            this.session.lastPageView = now
             localStorage.setItem('analytics_page_views', this.session.pageViews.toString())
+            localStorage.setItem('analytics_last_page_view', now.toString())
+            localStorage.setItem('analytics_last_url', currentUrl)
         }
 
         const event = {
             event: 'page_view',
             properties: {
                 ...pageData,
-                sessionId: this.session?.sessionId,
-                deviceInfo: this.session?.deviceInfo,
-                locationInfo: this.session?.locationInfo
+                pageUrl: currentUrl,
+                pageTitle: document.title,
+                sessionId: this.session ? .sessionId,
+                deviceInfo: this.session ? .deviceInfo,
+                locationInfo: this.session ? .locationInfo
             },
-            timestamp: Date.now(),
-            sessionId: this.session?.sessionId,
-            userId: this.session?.userId
+            timestamp: now,
+            sessionId: this.session ? .sessionId,
+            userId: this.session ? .userId
         }
 
         await this.sendEvent(event)
+    }
+
+    // Track session start (new session)
+    async trackSessionStart() {
+        if (!this.session) return
+
+        const event = {
+            event: 'session_start',
+            properties: {
+                sessionId: this.session.sessionId,
+                deviceInfo: this.session.deviceInfo,
+                locationInfo: this.session.locationInfo,
+                userAgent: navigator.userAgent,
+                referrer: document.referrer || null
+            },
+            timestamp: this.session.startTime,
+            sessionId: this.session.sessionId,
+            userId: this.session.userId
+        }
+
+        await this.sendEvent(event)
+        console.log('📊 Analytics: New session started:', this.session.sessionId)
+    }
+
+    // Track session continuation (existing session)
+    async trackSessionContinuation() {
+        if (!this.session) return
+
+        // Just update last activity, don't send an event for continuation
+        this.session.lastActivity = Date.now()
+        console.log('📊 Analytics: Session continued:', this.session.sessionId)
     }
 
     // Track custom event
@@ -308,25 +369,36 @@ class AnalyticsTracker {
             event: eventName,
             properties: {
                 ...properties,
-                sessionId: this.session?.sessionId
+                sessionId: this.session ? .sessionId
             },
             timestamp: Date.now(),
-            sessionId: this.session?.sessionId,
-            userId: this.session?.userId
+            sessionId: this.session ? .sessionId,
+            userId: this.session ? .userId
         }
 
         await this.sendEvent(event)
     }
 
-    // Send event to server
+    // Send event to server with enhanced tracking
     async sendEvent(event) {
         try {
+            // Enhanced event data with performance metrics
+            const enhancedEvent = {
+                ...event,
+                // Add performance timing data
+                performanceMetrics: this.getPerformanceMetrics(),
+                // Add user engagement data
+                engagementMetrics: this.getEngagementMetrics(),
+                // Add technical context
+                technicalContext: this.getTechnicalContext()
+            };
+
             const fetchOptions = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(event)
+                body: JSON.stringify(enhancedEvent)
             };
 
             // Add credentials for cross-domain requests
@@ -334,12 +406,77 @@ class AnalyticsTracker {
                 fetchOptions.credentials = 'include';
             }
 
-            await fetch(`${this.config.apiEndpoint}/analytics/track`, fetchOptions)
+            const response = await fetch(`${this.config.apiEndpoint}/analytics/track`, fetchOptions);
+
+            if (!response.ok) {
+                throw new Error(`Analytics API error: ${response.status}`);
+            }
+
+            console.log('📊 Analytics: Event sent successfully', event.event);
         } catch (error) {
-            console.warn('📊 Analytics: Failed to send event:', error)
-                // Add to queue for retry
-            this.eventQueue.push(event)
+            console.warn('📊 Analytics: Failed to send event:', error);
+            // Add to queue for retry
+            this.eventQueue.push(event);
         }
+    }
+
+    // Get performance metrics for current page
+    getPerformanceMetrics() {
+        if (!window.performance) return {};
+
+        const navigation = performance.getEntriesByType('navigation')[0];
+        const paint = performance.getEntriesByType('paint');
+
+        return {
+            // Core Web Vitals approximation
+            loadTime: navigation ? navigation.loadEventEnd - navigation.loadEventStart : 0,
+            domContentLoaded: navigation ? navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart : 0,
+            firstPaint: paint.find(p => p.name === 'first-paint') ? .startTime || 0,
+            firstContentfulPaint: paint.find(p => p.name === 'first-contentful-paint') ? .startTime || 0,
+            // Connection info
+            connectionType: navigator.connection ? .effectiveType || 'unknown',
+            downlink: navigator.connection ? .downlink || 0,
+            rtt: navigator.connection ? .rtt || 0
+        };
+    }
+
+    // Get user engagement metrics
+    getEngagementMetrics() {
+        return {
+            timeOnPage: Date.now() - this.session.startTime,
+            scrollDepth: this.getScrollDepth(),
+            clickCount: this.session.clickCount || 0,
+            keyboardActivity: this.session.keyboardActivity || 0,
+            mouseMovements: this.session.mouseMovements || 0
+        };
+    }
+
+    // Get technical context
+    getTechnicalContext() {
+        return {
+            viewport: {
+                width: window.innerWidth,
+                height: window.innerHeight
+            },
+            screen: {
+                width: screen.width,
+                height: screen.height,
+                colorDepth: screen.colorDepth
+            },
+            memory: navigator.deviceMemory || 0,
+            hardwareConcurrency: navigator.hardwareConcurrency || 0,
+            language: navigator.language,
+            languages: navigator.languages,
+            cookieEnabled: navigator.cookieEnabled,
+            onLine: navigator.onLine
+        };
+    }
+
+    // Calculate scroll depth percentage
+    getScrollDepth() {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+        return documentHeight > 0 ? Math.round((scrollTop / documentHeight) * 100) : 0;
     }
 
     // Process queued events
