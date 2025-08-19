@@ -15,7 +15,7 @@ function error(error, req, res, _next) {
     }
 
     const message = error instanceof CustomError ? error.message : "An error occurred.";
-    const statusCode = error.statusCode ? ? 500;
+    const statusCode = error.statusCode ?? 500;
 
     if (req.isHTML && req.viewTemplate) {
         res.locals.error = message;
