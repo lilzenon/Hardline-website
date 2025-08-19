@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 // Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
@@ -495,12 +496,21 @@ const getCurrentCountry = (countryId) => {
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const FigmaMobile = () => {
+  // Initialize analytics
+  const { trackEvent, trackLinkClick } = useAnalytics();
+
   // Autoplay YouTube on load per requirements (muted for autoplay policy)
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
 
   useEffect(() => {
     setShouldLoadYoutube(true);
-  }, []);
+
+    // Track mobile component load
+    trackEvent('component_load', {
+      component: 'FigmaMobile',
+      viewport_type: 'mobile'
+    });
+  }, [trackEvent]);
 
   // Add useEffect for Laylo SDK initialization
   useEffect(() => {

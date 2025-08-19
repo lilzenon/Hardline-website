@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import FigmaDesktop from './FigmaDesktop';
 import FigmaMobile from './FigmaMobile';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 /**
  * Homepage component that automatically serves mobile or desktop version
@@ -13,6 +14,9 @@ const HomePage = () => {
 
   // Use performant viewport detection
   const { width: viewportWidth, isMobile: isMobileByWidth } = useViewportDimensions();
+
+  // Initialize analytics tracking
+  const { trackEvent, isTrackingEnabled } = useAnalytics();
 
   useEffect(() => {
     // Check user agent for mobile devices
@@ -31,6 +35,16 @@ const HomePage = () => {
       isMobileByUA,
       finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
     });
+
+    // Track device type for analytics
+    if (isTrackingEnabled) {
+      trackEvent('device_detection', {
+        device_type: deviceIsMobile ? 'mobile' : 'desktop',
+        viewport_width: viewportWidth,
+        user_agent_mobile: isMobileByUA,
+        viewport_mobile: isMobileByWidth
+      });
+    }
   }, [viewportWidth, isMobileByWidth]);
 
   // Loading state

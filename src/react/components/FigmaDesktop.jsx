@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 // Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
@@ -487,12 +488,22 @@ const EventCard = memo(({ card, scaledDimensions }) => {
 
 const FigmaDesktop = () => {
   console.log('🖥️ FIGMA DESKTOP COMPONENT RENDERING');
+
+  // Initialize analytics
+  const { trackEvent, trackLinkClick } = useAnalytics();
+
   // Autoplay YouTube on load per requirements (keep muted for autoplay policy)
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
 
   useEffect(() => {
     setShouldLoadYoutube(true);
-  }, []);
+
+    // Track desktop component load
+    trackEvent('component_load', {
+      component: 'FigmaDesktop',
+      viewport_type: 'desktop'
+    });
+  }, [trackEvent]);
 
   // Add shake animation styles
   useEffect(() => {
