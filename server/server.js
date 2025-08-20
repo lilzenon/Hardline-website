@@ -327,6 +327,11 @@ app.set("views", [
 ]);
 utils.registerHandlebarsHelpers();
 
+// Chrome DevTools well-known route (prevents false security alerts)
+app.get("/.well-known/appspecific/com.chrome.devtools.json", (req, res) => {
+    res.status(404).json({ error: 'DevTools configuration not available' });
+});
+
 // if is custom domain, redirect to the set homepage
 app.use(asyncHandler(links.redirectCustomDomainHomepage));
 
