@@ -141,103 +141,54 @@ if (container) {
 initializeFrontendSecurity();
 
 // Initialize analytics tracking for homepage
-const loadAnalyticsScript = () => {
-  console.log('📊 Starting analytics script loading...');
+// Scripts are loaded via HTML template with cache-busting, no need to load dynamically
+const initializeAnalyticsWhenReady = () => {
+  console.log('📊 Initializing analytics (scripts loaded via HTML)...');
 
-  // Check if scripts are already loaded to prevent duplicates
-  const existingAnalyticsScript = document.querySelector('script[src="/js/analytics-tracker.js"]');
-  const existingGDPRScript = document.querySelector('script[src="/js/gdpr-consent.js"]');
+  // Wait for analytics tracker to be available (loaded via HTML script tags)
+  if (window.initializeAnalytics) {
+    // Determine API endpoint based on environment and domain
+    const hostname = window.location.hostname;
+    const isDevelopment = hostname === 'localhost';
 
-  console.log('📊 Script check:', {
-    analyticsExists: !!existingAnalyticsScript,
-    gdprExists: !!existingGDPRScript
-  });
-
-  if (existingAnalyticsScript && existingGDPRScript) {
-    console.log('📊 Analytics scripts already loaded, skipping...');
-    return;
-  }
-
-  if (!existingAnalyticsScript) {
-    console.log('📊 Loading analytics tracker script...');
-    const script1 = document.createElement('script');
-    script1.src = '/js/analytics-tracker.js';
-    script1.async = true;
-    script1.onload = () => console.log('✅ Analytics tracker script loaded successfully');
-    script1.onerror = (error) => console.error('❌ Failed to load analytics tracker script:', error);
-    document.head.appendChild(script1);
-  }
-
-  if (!existingGDPRScript) {
-    console.log('📊 Loading GDPR consent script...');
-    const script2 = document.createElement('script');
-    script2.src = '/js/gdpr-consent.js';
-    script2.async = true;
-    script2.onload = () => console.log('✅ GDPR consent script loaded successfully');
-    script2.onerror = (error) => console.error('❌ Failed to load GDPR consent script:', error);
-    document.head.appendChild(script2);
-  }
-
-  const initializeAnalyticsWhenReady = () => {
-    // Initialize analytics after script loads
-    if (window.initializeAnalytics) {
-      // Determine API endpoint based on environment and domain
-      const hostname = window.location.hostname;
-      const isDevelopment = hostname === 'localhost';
-
-      let apiEndpoint;
-      if (isDevelopment) {
-        // Local development - send to dashboard dev server
-        apiEndpoint = 'http://localhost:3000/api';
-      } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
-        // Current temporary setup - b2b.click homepage sends to admin.b2b.click
-        apiEndpoint = 'https://admin.b2b.click/api';
-      } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
-        // Future production setup - bounce2bounce.com sends to admin.b2b.click
-        apiEndpoint = 'https://admin.b2b.click/api';
-      } else {
-        // Fallback to same domain
-        apiEndpoint = '/api';
-      }
-
-      console.log('📊 Analytics Configuration:', {
-        hostname: hostname,
-        apiEndpoint: apiEndpoint,
-        isDevelopment: isDevelopment
-      });
-
-      window.initializeAnalytics({
-        apiEndpoint: apiEndpoint,
-        trackingId: 'kutt-homepage',
-        enableGDPR: true,
-        enableRealTime: true,
-        sessionTimeout: 30
-      });
+    let apiEndpoint;
+    if (isDevelopment) {
+      // Local development - send to dashboard dev server
+      apiEndpoint = 'http://localhost:3000/api';
+    } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
+      // Current temporary setup - b2b.click homepage sends to admin.b2b.click
+      apiEndpoint = 'https://admin.b2b.click/api';
+    } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
+      // Future production setup - bounce2bounce.com sends to admin.b2b.click
+      apiEndpoint = 'https://admin.b2b.click/api';
     } else {
-      console.log('📊 Analytics tracker not ready yet, will retry...');
-      // Retry after a short delay
-      setTimeout(initializeAnalyticsWhenReady, 100);
+      // Fallback to same domain
+      apiEndpoint = '/api';
     }
-  };
 
-  // Set up script loading handlers
-  if (!existingAnalyticsScript) {
-    const script1 = document.querySelector('script[src="/js/analytics-tracker.js"]');
-    if (script1) {
-      script1.onload = initializeAnalyticsWhenReady;
-      script1.onerror = () => {
-        console.error('❌ Failed to load analytics tracker script');
-      };
-    }
+    console.log('📊 Analytics Configuration:', {
+      hostname: hostname,
+      apiEndpoint: apiEndpoint,
+      isDevelopment: isDevelopment
+    });
+
+    window.initializeAnalytics({
+      apiEndpoint: apiEndpoint,
+      trackingId: 'kutt-homepage',
+      enableGDPR: true,
+      enableRealTime: true,
+      sessionTimeout: 30
+    });
   } else {
-    // Script already exists, try to initialize immediately
-    initializeAnalyticsWhenReady();
+    console.log('📊 Analytics tracker not ready yet, will retry...');
+    // Retry after a short delay
+    setTimeout(initializeAnalyticsWhenReady, 100);
   }
 };
 
-// Load analytics scripts
-console.log('🚀 MAIN.TSX: About to call loadAnalyticsScript()');
-loadAnalyticsScript();
+// Initialize analytics (scripts loaded via HTML template)
+console.log('🚀 MAIN.TSX: About to initialize analytics...');
+initializeAnalyticsWhenReady();
 console.log('🚀 MAIN.TSX: loadAnalyticsScript() called');
 
 // Export for global access if needed
