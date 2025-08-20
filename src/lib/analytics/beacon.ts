@@ -78,6 +78,31 @@ class AnalyticsBeacon {
     }
 
     /**
+     * Get or generate session ID
+     */
+    private getSessionId(): string {
+        const existingSessionId = localStorage.getItem('analytics_session_id');
+        const sessionExpiry = localStorage.getItem('analytics_session_expiry');
+
+        const now = Date.now();
+        const isSessionValid = existingSessionId && sessionExpiry && now < parseInt(sessionExpiry);
+
+        if (isSessionValid) {
+            return existingSessionId;
+        }
+
+        // Generate new session ID
+        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        // Store session data
+        localStorage.setItem('analytics_session_id', sessionId);
+        const expiryTime = now + (30 * 60 * 1000); // 30 minutes
+        localStorage.setItem('analytics_session_expiry', expiryTime.toString());
+
+        return sessionId;
+    }
+
+    /**
      * Get current page information
      */
     private getPageInfo(): AnalyticsEvent {
