@@ -34,10 +34,8 @@ const PageLoader = () => (
 );
 
 const App = () => {
-  console.log('⚛️ REACT APP COMPONENT RENDERING');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
-  console.log('📍 CURRENT PATH:', currentPath);
 
   // Analytics tracking is initialized at the bottom of this file to prevent duplicates
 
@@ -60,7 +58,6 @@ const App = () => {
 
   // Enhanced navigation with smooth transitions
   const navigateWithTransition = useCallback((path) => {
-    console.log(`🔄 NAVIGATING TO: ${path}`);
     setIsTransitioning(true);
 
     // Small delay for smooth transition
@@ -120,21 +117,15 @@ const App = () => {
 };
 
 // Only render the main app if the root element exists (homepage)
-console.log('🔍 LOOKING FOR ROOT ELEMENT...');
 const container = document.getElementById('root');
-console.log('📦 ROOT CONTAINER:', container);
 
 if (container) {
-  console.log('✅ ROOT FOUND - MOUNTING REACT APP');
   try {
     const root = createRoot(container);
     root.render(React.createElement(App));
-    console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
   } catch (error) {
-    console.error('❌ REACT MOUNTING ERROR:', error);
+    console.error('React mounting error:', error);
   }
-} else {
-  console.log('No root element found - likely on admin login page, globals exported successfully');
 }
 
 // Initialize frontend security measures
@@ -143,8 +134,6 @@ initializeFrontendSecurity();
 // Initialize analytics tracking for homepage
 // Scripts are loaded via HTML template with cache-busting, no need to load dynamically
 const initializeAnalyticsWhenReady = () => {
-  console.log('📊 Initializing analytics (scripts loaded via HTML)...');
-
   // Wait for analytics tracker to be available (loaded via HTML script tags)
   if (window.initializeAnalytics) {
     // Determine API endpoint based on environment and domain
@@ -154,7 +143,7 @@ const initializeAnalyticsWhenReady = () => {
     let apiEndpoint;
     if (isDevelopment) {
       // Local development - send to dashboard dev server
-      apiEndpoint = 'http://localhost:3000/api';
+      apiEndpoint = 'http://localhost:3002/api';
     } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
       // Current temporary setup - b2b.click homepage sends to admin.b2b.click
       apiEndpoint = 'https://admin.b2b.click/api';
@@ -166,12 +155,6 @@ const initializeAnalyticsWhenReady = () => {
       apiEndpoint = '/api';
     }
 
-    console.log('📊 Analytics Configuration:', {
-      hostname: hostname,
-      apiEndpoint: apiEndpoint,
-      isDevelopment: isDevelopment
-    });
-
     window.initializeAnalytics({
       apiEndpoint: apiEndpoint,
       trackingId: 'kutt-homepage',
@@ -180,16 +163,13 @@ const initializeAnalyticsWhenReady = () => {
       sessionTimeout: 30
     });
   } else {
-    console.log('📊 Analytics tracker not ready yet, will retry...');
     // Retry after a short delay
     setTimeout(initializeAnalyticsWhenReady, 100);
   }
 };
 
 // Initialize analytics (scripts loaded via HTML template)
-console.log('🚀 MAIN.TSX: About to initialize analytics...');
 initializeAnalyticsWhenReady();
-console.log('🚀 MAIN.TSX: loadAnalyticsScript() called');
 
 // Export for global access if needed
 window.React = React;

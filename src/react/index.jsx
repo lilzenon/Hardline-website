@@ -156,7 +156,7 @@ const loadAnalyticsScript = () => {
       let apiEndpoint;
       if (isDevelopment) {
         // Local development - send to dashboard dev server
-        apiEndpoint = 'http://localhost:3004/api';
+        apiEndpoint = 'http://localhost:3002/api';
       } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
         // Current temporary setup - b2b.click homepage sends to admin.b2b.click
         apiEndpoint = 'https://admin.b2b.click/api';
@@ -168,11 +168,7 @@ const loadAnalyticsScript = () => {
         apiEndpoint = '/api';
       }
 
-      console.log('📊 Analytics Configuration:', {
-        hostname: hostname,
-        apiEndpoint: apiEndpoint,
-        isDevelopment: isDevelopment
-      });
+      // Analytics configuration set for production
 
       window.initializeAnalytics({
         apiEndpoint: apiEndpoint,
