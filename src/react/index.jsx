@@ -134,57 +134,6 @@ if (container) {
 // Initialize frontend security measures
 initializeFrontendSecurity();
 
-// Initialize analytics tracking for homepage
-const loadAnalyticsScript = () => {
-  const script1 = document.createElement('script');
-  script1.src = '/static/js/analytics-tracker.js';
-  script1.async = true;
-  document.head.appendChild(script1);
-
-  const script2 = document.createElement('script');
-  script2.src = '/static/js/gdpr-consent.js';
-  script2.async = true;
-  document.head.appendChild(script2);
-
-  script1.onload = () => {
-    // Initialize analytics after script loads
-    if (window.initializeAnalytics) {
-      // Determine API endpoint based on environment and domain
-      const hostname = window.location.hostname;
-      const isDevelopment = hostname === 'localhost';
-
-      let apiEndpoint;
-      if (isDevelopment) {
-        // Local development - send to dashboard dev server
-        apiEndpoint = 'http://localhost:3002/api';
-      } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
-        // Current temporary setup - b2b.click homepage sends to admin.b2b.click
-        apiEndpoint = 'https://admin.b2b.click/api';
-      } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
-        // Future production setup - bounce2bounce.com sends to admin.b2b.click
-        apiEndpoint = 'https://admin.b2b.click/api';
-      } else {
-        // Fallback to same domain
-        apiEndpoint = '/api';
-      }
-
-      // Analytics configuration set for production
-
-      window.initializeAnalytics({
-        apiEndpoint: apiEndpoint,
-        trackingId: 'kutt-homepage',
-        enableGDPR: true,
-        enableRealTime: true,
-        sessionTimeout: 30
-      });
-    }
-  };
-
-  script1.onerror = () => {
-    console.error('❌ Failed to load analytics tracker script');
-  };
-};
-
-// Load analytics scripts
-loadAnalyticsScript();
+// Analytics now handled by consolidated TypeScript beacon in main.tsx
+// No need for separate script loading
 

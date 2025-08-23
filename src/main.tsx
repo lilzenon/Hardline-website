@@ -131,45 +131,17 @@ if (container) {
 // Initialize frontend security measures
 initializeFrontendSecurity();
 
-// Initialize analytics tracking for homepage
-// Scripts are loaded via HTML template with cache-busting, no need to load dynamically
-const initializeAnalyticsWhenReady = () => {
-  // Wait for analytics tracker to be available (loaded via HTML script tags)
-  if (window.initializeAnalytics) {
-    // Determine API endpoint based on environment and domain
-    const hostname = window.location.hostname;
-    const isDevelopment = hostname === 'localhost';
+// Initialize consolidated analytics system
+import { initializeAnalytics } from './lib/analytics/beacon';
 
-    let apiEndpoint;
-    if (isDevelopment) {
-      // Local development - send to dashboard dev server
-      apiEndpoint = 'http://localhost:3002/api';
-    } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
-      // Current temporary setup - b2b.click homepage sends to admin.b2b.click
-      apiEndpoint = 'https://admin.b2b.click/api';
-    } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
-      // Future production setup - bounce2bounce.com sends to admin.b2b.click
-      apiEndpoint = 'https://admin.b2b.click/api';
-    } else {
-      // Fallback to same domain
-      apiEndpoint = '/api';
-    }
-
-    window.initializeAnalytics({
-      apiEndpoint: apiEndpoint,
-      trackingId: 'kutt-homepage',
-      enableGDPR: true,
-      enableRealTime: true,
-      sessionTimeout: 30
-    });
-  } else {
-    // Retry after a short delay
-    setTimeout(initializeAnalyticsWhenReady, 100);
-  }
-};
-
-// Initialize analytics (scripts loaded via HTML template)
-initializeAnalyticsWhenReady();
+// Initialize analytics with proper configuration
+initializeAnalytics({
+  trackingId: 'kutt-homepage',
+  enableGDPR: true,
+  enableRealTime: true,
+  sessionTimeout: 30,
+  debug: import.meta.env.DEV
+});
 
 // Export for global access if needed
 window.React = React;

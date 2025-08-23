@@ -1,7 +1,7 @@
 /**
- * Analytics Beacon for BOUNCE2BOUNCE Homepage
- * Sends pageview data to dashboard API using sendBeacon/fetch
- * ENV CONTRACT compliant implementation
+ * Consolidated Analytics System for BOUNCE2BOUNCE Homepage
+ * Primary analytics implementation using sendBeacon/fetch
+ * Sends all data to admin.b2b.click/api/analytics/track
  */
 
 interface AnalyticsEvent {
@@ -12,12 +12,26 @@ interface AnalyticsEvent {
     utm_source?: string;
     utm_medium?: string;
     utm_campaign?: string;
+    utm_content?: string;
+    utm_term?: string;
     viewport_width?: number;
     viewport_height?: number;
     screen_width?: number;
     screen_height?: number;
     timezone?: string;
     language?: string;
+    session_id?: string;
+    user_id?: string;
+    event_type?: string;
+}
+
+interface AnalyticsConfig {
+    apiEndpoint?: string;
+    trackingId?: string;
+    enableGDPR?: boolean;
+    enableRealTime?: boolean;
+    sessionTimeout?: number;
+    debug?: boolean;
 }
 
 interface BeaconConfig {
@@ -29,25 +43,45 @@ interface BeaconConfig {
 class AnalyticsBeacon {
     private config: BeaconConfig;
     private hasTrackedPageView = false;
+    private sessionId: string | null = null;
 
-    constructor() {
-        // Get configuration from environment
-        const dashboardUrl = import.meta.env.VITE_DASHBOARD_API_URL ||
-                           process.env.DASHBOARD_API_URL ||
-                           'https://admin.b2b.click';
+    constructor(userConfig: AnalyticsConfig = {}) {
+        // Determine API endpoint based on environment and domain
+        const hostname = window.location.hostname;
+        const isDevelopment = hostname === 'localhost';
 
-        const endpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT ||
-                        process.env.ANALYTICS_ENDPOINT ||
-                        '/api/analytics/track';
+        let apiEndpoint;
+        if (userConfig.apiEndpoint) {
+            apiEndpoint = userConfig.apiEndpoint;
+        } else if (isDevelopment) {
+            // Local development - send to dashboard dev server
+            apiEndpoint = 'http://localhost:3002/api';
+        } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
+            // Current temporary setup - b2b.click homepage sends to admin.b2b.click
+            apiEndpoint = 'https://admin.b2b.click/api';
+        } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
+            // Future production setup - bounce2bounce.com sends to admin.b2b.click
+            apiEndpoint = 'https://admin.b2b.click/api';
+        } else {
+            // Fallback to same domain
+            apiEndpoint = '/api';
+        }
+
+        // STANDARDIZED ENDPOINT: Always use /api/analytics/track
+        const endpoint = '/analytics/track';
 
         this.config = {
-            endpoint: `${dashboardUrl}${endpoint}`,
-            enabled: this.shouldTrack(),
-            debug: import.meta.env.DEV || process.env.NODE_ENV === 'development'
+            endpoint: `${apiEndpoint}${endpoint}`,
+            enabled: userConfig.enableGDPR !== false ? this.shouldTrack() : true,
+            debug: userConfig.debug || import.meta.env.DEV || process.env.NODE_ENV === 'development'
         };
 
+        // Initialize session
+        this.sessionId = this.getSessionId();
+
         if (this.config.debug) {
-            console.log('📊 Analytics beacon initialized:', this.config);
+            console.log('📊 Consolidated Analytics initialized:', this.config);
+            console.log('📊 Session ID:', this.sessionId);
         }
     }
 
@@ -258,7 +292,56 @@ class AnalyticsBeacon {
     }
 }
 
-// Export singleton instance
+// Global analytics instance
+let globalAnalyticsInstance: AnalyticsBeacon | null = null;
+
+/**
+ * Initialize analytics with configuration
+ * This replaces the old window.initializeAnalytics function
+ */
+export function initializeAnalytics(config: AnalyticsConfig = {}): AnalyticsBeacon {
+    if (!globalAnalyticsInstance) {
+        globalAnalyticsInstance = new AnalyticsBeacon(config);
+
+        // Make available globally for compatibility
+        (window as any).analyticsBeacon = globalAnalyticsInstance;
+        (window as any).getAnalyticsTracker = () => globalAnalyticsInstance;
+
+        // Auto-track initial page view
+        if (config.enableRealTime !== false) {
+            globalAnalyticsInstance.sendPageView();
+        }
+    }
+
+    return globalAnalyticsInstance;
+}
+
+/**
+ * Get the global analytics instance
+ */
+export function getAnalyticsInstance(): AnalyticsBeacon | null {
+    return globalAnalyticsInstance;
+}
+
+/**
+ * Track page view (global function)
+ */
+export function trackPageView(pageData?: Partial<AnalyticsEvent>): void {
+    if (globalAnalyticsInstance) {
+        globalAnalyticsInstance.sendPageView();
+    }
+}
+
+/**
+ * Track custom event (global function)
+ */
+export function trackEvent(eventData: Partial<AnalyticsEvent>): void {
+    if (globalAnalyticsInstance) {
+        globalAnalyticsInstance.sendEvent(eventData);
+    }
+}
+
+// Export singleton instance for direct use
 export const analyticsBeacon = new AnalyticsBeacon();
 
 // Export class for testing

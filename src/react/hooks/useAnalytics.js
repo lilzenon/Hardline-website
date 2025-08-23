@@ -1,37 +1,38 @@
 /**
  * React Analytics Hook for BOUNCE2BOUNCE
- * Uses TypeScript analytics beacon for tracking
+ * Uses consolidated analytics system
  */
 
 import { useEffect, useRef, useCallback } from 'react';
-import { analyticsBeacon } from '../../lib/analytics/beacon.ts';
+import { getAnalyticsInstance, trackEvent as globalTrackEvent } from '../../lib/analytics/beacon';
 
 /**
- * Simplified analytics hook using TypeScript beacon
+ * Simplified analytics hook using consolidated analytics system
  */
 export const useAnalytics = () => {
     const hasTrackedPageView = useRef(false);
 
-    // Track page view on mount
+    // Track page view on mount (only if not already tracked globally)
     useEffect(() => {
-        if (!hasTrackedPageView.current && analyticsBeacon.isEnabled()) {
-            analyticsBeacon.sendPageView();
+        const analytics = getAnalyticsInstance();
+        if (!hasTrackedPageView.current && analytics && analytics.isEnabled()) {
+            // Page view is already tracked by global initialization
+            // This just marks it as tracked for this component
             hasTrackedPageView.current = true;
-            console.debug('📊 Analytics page view tracked');
+            console.debug('📊 Analytics page view tracked via React hook');
         }
     }, []);
 
     // Manual tracking function
     const track = useCallback((eventData) => {
-        if (analyticsBeacon.isEnabled()) {
-            analyticsBeacon.sendEvent(eventData);
-        }
+        globalTrackEvent(eventData);
     }, []);
 
     // Track external link clicks
     const trackLinkClick = useCallback((url, linkText = '') => {
-        if (analyticsBeacon.isEnabled()) {
-            analyticsBeacon.trackLinkClick(url, linkText);
+        const analytics = getAnalyticsInstance();
+        if (analytics && analytics.isEnabled()) {
+            analytics.trackLinkClick(url, linkText);
         }
     }, []);
 
@@ -39,15 +40,17 @@ export const useAnalytics = () => {
     const trackEvent = useCallback((eventName, eventData = {}) => {
         track({
             page_title: `Event: ${eventName}`,
+            event_type: eventName,
             ...eventData
         });
     }, [track]);
 
+    const analytics = getAnalyticsInstance();
     return {
         track,
         trackLinkClick,
         trackEvent,
-        isTrackingEnabled: analyticsBeacon.isEnabled()
+        isTrackingEnabled: analytics ? analytics.isEnabled() : false
     };
 };
 
