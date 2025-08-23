@@ -1,7 +1,7 @@
 ---
 type: "always_apply"
+description: "Example description"
 ---
-
 # KUTT B2B Development Constitution
 ## Comprehensive Rules for AI-Driven Development
 

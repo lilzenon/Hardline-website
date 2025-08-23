@@ -332,6 +332,75 @@ app.get("/.well-known/appspecific/com.chrome.devtools.json", (req, res) => {
     res.status(404).json({ error: 'DevTools configuration not available' });
 });
 
+// Debug routes (development only, before SPA catch-all)
+if (process.env.NODE_ENV === 'development') {
+    const totpSetupStore = require('./services/totp-setup-store.service');
+
+    app.get('/debug/session-test', (req, res) => {
+        req.session.testData = req.session.testData || 0;
+        req.session.testData++;
+
+        res.json({
+            success: true,
+            sessionId: req.sessionID,
+            testData: req.session.testData,
+            timestamp: new Date().toISOString()
+        });
+    });
+
+    app.get('/debug/totp-store/:userId/:secret', async (req, res) => {
+        try {
+            const { userId, secret } = req.params;
+
+            await totpSetupStore.setTempSecret(req, userId, secret);
+
+            res.json({
+                success: true,
+                action: 'stored',
+                userId,
+                secret,
+                sessionId: req.sessionID,
+                sessionData: {
+                    tempTotpSecret: req.session?.tempTotpSecret,
+                    tempTotpSecretUserId: req.session?.tempTotpSecretUserId,
+                    tempTotpSecretExpiresAt: req.session?.tempTotpSecretExpiresAt
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                error: error.message,
+                sessionId: req.sessionID
+            });
+        }
+    });
+
+    app.get('/debug/totp-consume/:userId', async (req, res) => {
+        try {
+            const { userId } = req.params;
+
+            const retrievedSecret = await totpSetupStore.consumeTempSecret(req, userId);
+
+            res.json({
+                success: true,
+                action: 'consumed',
+                userId,
+                retrievedSecret,
+                sessionId: req.sessionID,
+                sessionData: {
+                    tempTotpSecret: req.session?.tempTotpSecret,
+                    tempTotpSecretUserId: req.session?.tempTotpSecretUserId,
+                    tempTotpSecretExpiresAt: req.session?.tempTotpSecretExpiresAt
+                }
+            });
+        } catch (error) {
+            res.status(500).json({
+                error: error.message,
+                sessionId: req.sessionID
+            });
+        }
+    });
+}
+
 // if is custom domain, redirect to the set homepage
 app.use(asyncHandler(links.redirectCustomDomainHomepage));
 

@@ -8,6 +8,7 @@ const env = require("../env");
 const { CustomError } = require("../utils");
 const { ROLES } = require("../consts");
 const TOTPService = require("../services/totp.service");
+const totpSetupStore = require("../services/totp-setup-store.service");
 const { securityMonitor } = require("../middleware/security-monitoring.middleware");
 
 // In-memory store for security events (in production, use Redis or database)
@@ -644,8 +645,9 @@ async function generateTOTPSetup(req, res) {
         // Generate TOTP setup data
         const totpSetup = await TOTPService.setupTOTP(user.email);
 
-        // Store temporary secret in session
-        req.session.tempTotpSecret = totpSetup.secret;
+        // Store temporary secret (Redis if available, fallback to session)
+        console.log(`🔐 TOTP Setup: Storing secret for user ID: ${user.id} (type: ${typeof user.id}), session: ${req.sessionID}`);
+        await totpSetupStore.setTempSecret(req, user.id, totpSetup.secret);
 
         console.log(`🔐 Generated TOTP setup for admin ${user.email}`);
 
@@ -692,13 +694,17 @@ async function completeTOTPSetup(req, res) {
 
         const user = req.user;
 
-        // Get the temporary secret from session
-        let tempSecret = req.session.tempTotpSecret;
+        // Get the temporary secret (consume single-use)
+        console.log(`🔐 TOTP Completion: Attempting to complete setup for user ${user.id} (type: ${typeof user.id}), session: ${req.sessionID}`);
+        const tempSecret = await totpSetupStore.consumeTempSecret(req, user.id);
         if (!tempSecret) {
+            console.log(`❌ TOTP Completion: No temp secret found for user ${user.id}`);
             return res.status(400).json({
                 error: "TOTP setup session expired. Please restart setup."
             });
         }
+        console.log(`✅ TOTP Completion: Retrieved temp secret for user ${user.id}`);
+
 
         // Verify the setup code
         const isValidToken = TOTPService.verifyToken(totpCode, tempSecret);
@@ -715,8 +721,8 @@ async function completeTOTPSetup(req, res) {
             totp_setup_at: utils.dateToUTC(new Date())
         });
 
-        // Clear temporary secret from session
-        delete req.session.tempTotpSecret;
+        // Clear temporary secret from session (already consumed by store)
+        // delete req.session.tempTotpSecret;
 
         console.log(`✅ TOTP setup completed for admin ${user.email}`);
 

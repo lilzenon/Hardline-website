@@ -182,7 +182,7 @@ class SessionStoreService {
                 secure: env.NODE_ENV === 'production' && env.CUSTOM_DOMAIN_USE_HTTPS,
                 httpOnly: true,
                 maxAge: this.getSessionTTL() * 1000, // Convert to milliseconds
-                sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax'
+                sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax' // Allow cross-site for admin dashboard
             },
             proxy: env.TRUST_PROXY || false
         };
