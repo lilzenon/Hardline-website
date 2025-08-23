@@ -221,23 +221,41 @@ class AnalyticsBeacon {
      */
     async sendPageView(): Promise<boolean> {
         if (this.hasTrackedPageView) {
+            if (this.config.debug) {
+                console.log('📊 Analytics: Page view already tracked for this session');
+            }
             return false; // Only track once per page load
         }
 
         const pageInfo = this.getPageInfo();
 
-        // Format data for dashboard API
+        // Format data for dashboard API - send directly without nested properties
         const eventData = {
-            event: 'page_view',
             sessionId: this.getSessionId(),
-            timestamp: Date.now(),
-            properties: pageInfo
+            ts: Date.now(),
+            page_url: pageInfo.page_url,
+            page_title: pageInfo.page_title,
+            referrer: pageInfo.referrer,
+            utm_source: pageInfo.utm_source,
+            utm_medium: pageInfo.utm_medium,
+            utm_campaign: pageInfo.utm_campaign,
+            utm_content: pageInfo.utm_content,
+            utm_term: pageInfo.utm_term,
+            viewport_width: pageInfo.viewport_width,
+            viewport_height: pageInfo.viewport_height,
+            screen_width: pageInfo.screen_width,
+            screen_height: pageInfo.screen_height,
+            timezone: pageInfo.timezone,
+            language: pageInfo.language
         };
 
         const success = await this.sendData(eventData);
 
         if (success) {
             this.hasTrackedPageView = true;
+            if (this.config.debug) {
+                console.log('📊 Analytics: Page view tracked successfully');
+            }
         }
 
         return success;
@@ -339,10 +357,19 @@ export function initializeAnalytics(config: AnalyticsConfig = {}): AnalyticsBeac
         (window as any).analyticsBeacon = globalAnalyticsInstance;
         (window as any).getAnalyticsTracker = () => globalAnalyticsInstance;
 
-        // Auto-track initial page view
+        // Auto-track initial page view only once
         if (config.enableRealTime !== false) {
-            globalAnalyticsInstance.sendPageView();
+            // Use setTimeout to ensure DOM is ready and prevent multiple calls
+            setTimeout(() => {
+                globalAnalyticsInstance?.sendPageView();
+            }, 100);
         }
+
+        if (config.debug) {
+            console.log('📊 Analytics: Global instance initialized');
+        }
+    } else if (config.debug) {
+        console.log('📊 Analytics: Using existing global instance');
     }
 
     return globalAnalyticsInstance;
@@ -373,8 +400,8 @@ export function trackEvent(eventData: Partial<AnalyticsEvent>): void {
     }
 }
 
-// Export singleton instance for direct use
-export const analyticsBeacon = new AnalyticsBeacon();
+// Note: Use initializeAnalytics() instead of creating direct instances
+// to prevent multiple analytics instances
 
 // Export class for testing
 export { AnalyticsBeacon };
