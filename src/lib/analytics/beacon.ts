@@ -53,10 +53,14 @@ class AnalyticsBeacon {
         let apiEndpoint;
         if (userConfig.apiEndpoint) {
             apiEndpoint = userConfig.apiEndpoint;
-        } else if (isDevelopment || import.meta.env.DEV) {
-            // Local development - send to dashboard dev server
+        } else if (isDevelopment || import.meta.env.DEV || window.location.port ||
+                   window.location.hostname.includes('localhost') ||
+                   window.location.port === '3001' ||
+                   window.location.href.includes('localhost')) {
+            // Local development - send to dashboard dev server (includes any port-based development)
             apiEndpoint = 'http://localhost:3002/api';
             console.log('🔧 Development mode detected, using local dashboard:', apiEndpoint);
+            console.log('🔧 Current location:', window.location.href);
         } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
             // Current temporary setup - b2b.click homepage sends to admin.b2b.click
             apiEndpoint = 'https://admin.b2b.click/api';
@@ -202,16 +206,25 @@ class AnalyticsBeacon {
                 }
                 return true;
             } else {
-                if (this.config.debug) {
-                    console.warn('📊 Analytics response:', response.status);
+                console.error('📊 Analytics response error:', response.status, response.statusText);
+                console.error('📊 Analytics endpoint:', this.config.endpoint);
+                console.error('📊 Analytics data:', data);
+
+                // Try to get error details
+                try {
+                    const errorText = await response.text();
+                    console.error('📊 Analytics error details:', errorText);
+                } catch (e) {
+                    console.error('📊 Could not read error response');
                 }
+
                 return false;
             }
 
         } catch (error) {
-            if (this.config.debug) {
-                console.error('📊 Analytics error:', error);
-            }
+            console.error('📊 Analytics error:', error);
+            console.error('📊 Analytics endpoint:', this.config.endpoint);
+            console.error('📊 Analytics data:', data);
             return false;
         }
     }
