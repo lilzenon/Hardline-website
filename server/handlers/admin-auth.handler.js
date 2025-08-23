@@ -8,7 +8,6 @@ const env = require("../env");
 const { CustomError } = require("../utils");
 const { ROLES } = require("../consts");
 const TOTPService = require("../services/totp.service");
-const totpSetupStore = require("../services/totp-setup-store.service");
 const { securityMonitor } = require("../middleware/security-monitoring.middleware");
 
 // In-memory store for security events (in production, use Redis or database)
@@ -645,8 +644,8 @@ async function generateTOTPSetup(req, res) {
         // Generate TOTP setup data
         const totpSetup = await TOTPService.setupTOTP(user.email);
 
-        // Store temporary secret (Redis if available, fallback to session)
-        await totpSetupStore.setTempSecret(req, user.id, totpSetup.secret);
+        // Store temporary secret in session
+        req.session.tempTotpSecret = totpSetup.secret;
 
         console.log(`🔐 Generated TOTP setup for admin ${user.email}`);
 
@@ -693,8 +692,8 @@ async function completeTOTPSetup(req, res) {
 
         const user = req.user;
 
-        // Get the temporary secret (consume single-use)
-        const tempSecret = await totpSetupStore.consumeTempSecret(req, user.id);
+        // Get the temporary secret from session
+        let tempSecret = req.session.tempTotpSecret;
         if (!tempSecret) {
             return res.status(400).json({
                 error: "TOTP setup session expired. Please restart setup."

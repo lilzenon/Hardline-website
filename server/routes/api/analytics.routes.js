@@ -4,100 +4,10 @@ const auth = require("../../handlers/auth.handler");
 const analyticsService = require("../../services/analytics/analytics.service");
 const performanceMonitor = require("../../services/analytics/performance.service");
 const searchService = require("../../services/analytics/search.service");
-const knex = require("../../knex");
+
+
 
 const router = Router();
-
-// Ingestion endpoint: POST /api/analytics/track (dashboard receives from homepage)
-const { analyticsAuth, trackingLimiter, analyticsSecurityHeaders, analyticsRequestLogger } = require("../../middleware/analytics-auth");
-const geoip = require("../../services/geoip.service");
-
-router.post(
-    "/track",
-    analyticsSecurityHeaders,
-    analyticsRequestLogger,
-    trackingLimiter, // Redis-optional (memory fallback in middleware)
-    analyticsAuth, // x-api-key required
-    asyncHandler(async(req, res) => {
-        const started = Date.now();
-        try {
-            const {
-                sessionId,
-                pageUrl,
-                pageTitle,
-                referrer,
-                userAgent,
-                deviceType,
-                browserName,
-                osName,
-                userId,
-            } = req.body || {};
-
-            if (!sessionId || typeof sessionId !== "string" || sessionId.length < 8) {
-                return res.status(400).json({ error: "Invalid sessionId" });
-            }
-            if (!pageUrl || typeof pageUrl !== "string") {
-                return res.status(400).json({ error: "Invalid pageUrl" });
-            }
-
-            // Normalize referrer to hostname
-            let refHost = null;
-            try {
-                if (referrer) {
-                    const hasProto = /^https?:\/\//i.test(referrer);
-                    const u = new URL(hasProto ? referrer : `https://${referrer}`);
-                    refHost = (u.hostname || "").replace(/^www\./i, "");
-                }
-            } catch (_) {
-                refHost = null;
-            }
-
-            // GeoIP: MaxMind optional, fallback CF header; never store raw IP
-            const ipHeader = req.headers["x-forwarded-for"] || "";
-            const ip = (Array.isArray(ipHeader) ? ipHeader[0] : ipHeader).split(",")[0].trim() || req.ip || "";
-            const cfCountry = req.headers["cf-ipcountry"] || null;
-            const geo = await geoip.resolve(ip, cfCountry);
-
-            // Upsert session
-            await knex("homepage_sessions")
-                .insert({
-                    session_id: sessionId,
-                    first_visit: knex.fn.now(),
-                    last_activity: knex.fn.now(),
-                    page_views: 1,
-                    origin: req.get("Origin") || req.get("Referer") || null,
-                    user_id: userId || null,
-                })
-                .onConflict("session_id")
-                .merge({ last_activity: knex.fn.now(), page_views: knex.raw("page_views + 1") });
-
-            // Insert page view
-            await knex("homepage_page_views").insert({
-                session_id: sessionId,
-                user_id: userId || null,
-                page_url: pageUrl,
-                page_title: pageTitle || null,
-                ip_address: null,
-                user_agent: userAgent || req.headers["user-agent"] || null,
-                referrer: refHost,
-                device_type: deviceType || null,
-                browser_name: browserName || null,
-                os_name: osName || null,
-                country_code: geo.countryCode || null,
-                city: null,
-                view_timestamp: knex.fn.now(),
-                created_at: knex.fn.now(),
-            });
-
-            const duration = Date.now() - started;
-            return res.json({ success: true, durationMs: duration });
-        } catch (error) {
-            console.error("❌ Analytics track error:", error);
-            return res.status(500).json({ error: "Tracking failed" });
-        }
-    })
-);
-
 
 /**
  * GET /api/analytics/dashboard
