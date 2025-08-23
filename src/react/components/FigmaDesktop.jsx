@@ -498,7 +498,7 @@ const FigmaDesktop = () => {
   useEffect(() => {
     setShouldLoadYoutube(true);
 
-    // Track desktop component load
+    // Track desktop component load - IMPORTANT for understanding user experience
     trackEvent('component_load', {
       component: 'FigmaDesktop',
       viewport_type: 'desktop'

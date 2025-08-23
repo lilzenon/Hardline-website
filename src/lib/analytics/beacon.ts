@@ -229,12 +229,12 @@ class AnalyticsBeacon {
 
         const pageInfo = this.getPageInfo();
 
-        // Format data for dashboard API - send directly without nested properties
+        // Format data for dashboard API - ensure page_url is never null
         const eventData = {
             sessionId: this.getSessionId(),
             ts: Date.now(),
-            page_url: pageInfo.page_url,
-            page_title: pageInfo.page_title,
+            page_url: pageInfo.page_url || window.location.href,
+            page_title: pageInfo.page_title || document.title || 'Homepage',
             referrer: pageInfo.referrer,
             utm_source: pageInfo.utm_source,
             utm_medium: pageInfo.utm_medium,
@@ -262,13 +262,29 @@ class AnalyticsBeacon {
     }
 
     /**
-     * Send custom event
+     * Send custom event (without creating a page view)
      */
     async sendEvent(eventData: Partial<AnalyticsEvent>): Promise<boolean> {
-        const pageInfo = this.getPageInfo();
-        const combinedData = { ...pageInfo, ...eventData };
-        
-        return await this.sendData(combinedData);
+        if (!this.config.enabled) {
+            return false;
+        }
+
+        // Create custom event data - FIXED: Use proper format for dashboard API
+        const customEventData = {
+            sessionId: this.getSessionId(),
+            ts: Date.now(),
+            event_type: eventData.event || 'custom_event',
+            event: eventData.event || 'custom_event', // Add event field for backend processing
+            properties: eventData.properties || {},
+            // Don't include page_url for custom events to distinguish from page views
+            ...eventData
+        };
+
+        if (this.config.debug) {
+            console.log('📊 Analytics: Sending custom event:', customEventData);
+        }
+
+        return await this.sendData(customEventData);
     }
 
     /**

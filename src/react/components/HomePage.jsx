@@ -36,7 +36,7 @@ const HomePage = () => {
       finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
     });
 
-    // Track device type for analytics
+    // Track device type for analytics - IMPORTANT for serving correct content
     if (isTrackingEnabled) {
       trackEvent('device_detection', {
         device_type: deviceIsMobile ? 'mobile' : 'desktop',

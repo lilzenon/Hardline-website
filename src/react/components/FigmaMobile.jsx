@@ -505,7 +505,7 @@ const FigmaMobile = () => {
   useEffect(() => {
     setShouldLoadYoutube(true);
 
-    // Track mobile component load
+    // Track mobile component load - IMPORTANT for understanding user experience
     trackEvent('component_load', {
       component: 'FigmaMobile',
       viewport_type: 'mobile'

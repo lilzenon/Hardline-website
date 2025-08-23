@@ -36,14 +36,19 @@ export const useAnalytics = () => {
         }
     }, []);
 
-    // Track custom events
+    // Track custom events - FIXED to use proper analytics beacon
     const trackEvent = useCallback((eventName, eventData = {}) => {
-        track({
-            page_title: `Event: ${eventName}`,
-            event_type: eventName,
-            ...eventData
-        });
-    }, [track]);
+        const analytics = getAnalyticsInstance();
+        if (analytics && analytics.isEnabled()) {
+            // Use the analytics beacon's sendEvent method instead of creating duplicate page views
+            analytics.sendEvent({
+                event: eventName,
+                properties: eventData,
+                timestamp: Date.now()
+            });
+            console.debug('📊 Custom event tracked via analytics beacon:', eventName, eventData);
+        }
+    }, []);
 
     const analytics = getAnalyticsInstance();
     return {
