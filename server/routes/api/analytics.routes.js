@@ -16,7 +16,8 @@ router.get(
     asyncHandler(auth.jwt),
     asyncHandler(async(req, res) => {
         try {
-            const analytics = await analyticsService.getDashboardAnalytics(req.user.id);
+            const { period = 'month' } = req.query;
+            const analytics = await analyticsService.getDashboardStats(req.user.id, String(period));
 
             res.json({
                 success: true,
@@ -28,6 +29,63 @@ router.get(
                 success: false,
                 error: error.message
             });
+        }
+    })
+);
+
+/**
+ * GET /api/analytics/visitors/countries
+ * Return visitors aggregated by country for selected period
+ */
+router.get(
+    "/visitors/countries",
+    asyncHandler(auth.jwt),
+    asyncHandler(async(req, res) => {
+        try {
+            const { period = 'month' } = req.query;
+            const data = await analyticsService.getVisitorsByCountry(req.user.id, String(period));
+            res.json({ success: true, data });
+        } catch (error) {
+            console.error('❌ Visitors by country API error:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    })
+);
+
+/**
+ * GET /api/analytics/visitors/channels
+ * Return visitor channels (referrers) for selected period
+ */
+router.get(
+    "/visitors/channels",
+    asyncHandler(auth.jwt),
+    asyncHandler(async(req, res) => {
+        try {
+            const { period = 'month' } = req.query;
+            const data = await analyticsService.getVisitorChannels(req.user.id, String(period));
+            res.json({ success: true, data });
+        } catch (error) {
+            console.error('❌ Visitor channels API error:', error);
+            res.status(500).json({ success: false, error: error.message });
+        }
+    })
+);
+
+/**
+ * GET /api/analytics/social/channels
+ * Return social channels for selected period
+ */
+router.get(
+    "/social/channels",
+    asyncHandler(auth.jwt),
+    asyncHandler(async(req, res) => {
+        try {
+            const { period = 'month' } = req.query;
+            const data = await analyticsService.getSocialChannels(req.user.id, String(period));
+            res.json({ success: true, data });
+        } catch (error) {
+            console.error('❌ Social channels API error:', error);
+            res.status(500).json({ success: false, error: error.message });
         }
     })
 );

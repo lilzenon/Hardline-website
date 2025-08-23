@@ -1,6 +1,7 @@
 const query = require("../../queries");
 const cache = require("./cache.service");
 const knex = require("../../knex");
+const homepageAnalytics = require("./homepage-analytics.service");
 
 class AnalyticsService {
     /**
@@ -314,7 +315,26 @@ class AnalyticsService {
                 error: error.message
             };
         }
+
+        // Delegated Homepage Analytics methods are assigned on the prototype below to avoid class-body parsing issues
     }
 }
+
+// Attach delegated methods outside of class body to avoid parser quirks
+AnalyticsService.prototype.getDashboardStats = function(userId, period = 'month') {
+    return homepageAnalytics.getDashboardStats(userId, period);
+};
+
+AnalyticsService.prototype.getVisitorsByCountry = function(userId, period = 'month') {
+    return homepageAnalytics.getVisitorsByCountry(userId, period);
+};
+
+AnalyticsService.prototype.getVisitorChannels = function(userId, period = 'month') {
+    return homepageAnalytics.getVisitorChannels(userId, period);
+};
+
+AnalyticsService.prototype.getSocialChannels = function(userId, period = 'month') {
+    return homepageAnalytics.getSocialChannels(userId, period);
+};
 
 module.exports = new AnalyticsService();
