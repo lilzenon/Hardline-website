@@ -7,6 +7,18 @@ import HomePage from './react/components/HomePage';
 import AdminLogin from './react/components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './react/utils/security';
 
+// Initialize consolidated analytics system FIRST
+import { initializeAnalytics } from './lib/analytics/beacon';
+
+// Initialize analytics with proper configuration
+initializeAnalytics({
+  trackingId: 'kutt-homepage',
+  enableGDPR: true,
+  enableRealTime: true,
+  sessionTimeout: 30,
+  debug: import.meta.env.DEV
+});
+
 // Lazy load About and Contact pages for better performance
 const AboutPage = lazy(() => import('./react/components/AboutPage'));
 const ContactPage = lazy(() => import('./react/components/ContactPage'));
@@ -39,21 +51,11 @@ const App = () => {
 
   // Analytics tracking is initialized at the bottom of this file to prevent duplicates
 
-  // Track page views on route changes
+  // Track page views on route changes using consolidated analytics
   useEffect(() => {
-    if (window.getAnalyticsTracker) {
-      const tracker = window.getAnalyticsTracker();
-      if (tracker) {
-        tracker.trackPageView({
-          page: currentPath,
-          title: document.title,
-          referrer: document.referrer,
-          utm_source: new URLSearchParams(window.location.search).get('utm_source') || undefined,
-          utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || undefined,
-          utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || undefined
-        });
-      }
-    }
+    // Analytics page view is automatically tracked by the beacon system
+    // No need for manual tracking here as it's handled by the global initialization
+    console.debug('📊 Route changed to:', currentPath);
   }, [currentPath]);
 
   // Enhanced navigation with smooth transitions
@@ -130,18 +132,6 @@ if (container) {
 
 // Initialize frontend security measures
 initializeFrontendSecurity();
-
-// Initialize consolidated analytics system
-import { initializeAnalytics } from './lib/analytics/beacon';
-
-// Initialize analytics with proper configuration
-initializeAnalytics({
-  trackingId: 'kutt-homepage',
-  enableGDPR: true,
-  enableRealTime: true,
-  sessionTimeout: 30,
-  debug: import.meta.env.DEV
-});
 
 // Export for global access if needed
 window.React = React;
