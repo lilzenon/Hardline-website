@@ -53,9 +53,10 @@ class AnalyticsBeacon {
         let apiEndpoint;
         if (userConfig.apiEndpoint) {
             apiEndpoint = userConfig.apiEndpoint;
-        } else if (isDevelopment) {
+        } else if (isDevelopment || import.meta.env.DEV) {
             // Local development - send to dashboard dev server
             apiEndpoint = 'http://localhost:3002/api';
+            console.log('🔧 Development mode detected, using local dashboard:', apiEndpoint);
         } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
             // Current temporary setup - b2b.click homepage sends to admin.b2b.click
             apiEndpoint = 'https://admin.b2b.click/api';
@@ -289,6 +290,37 @@ class AnalyticsBeacon {
      */
     isEnabled(): boolean {
         return this.config.enabled;
+    }
+
+    /**
+     * Grant GDPR consent and start tracking
+     */
+    public grantGDPRConsent(): void {
+        localStorage.setItem('analytics_gdpr_consent', 'granted');
+        console.log('📊 Analytics: GDPR consent granted');
+
+        // Send any queued page view
+        this.sendPageView();
+    }
+
+    /**
+     * Revoke GDPR consent and stop tracking
+     */
+    public revokeGDPRConsent(): void {
+        localStorage.setItem('analytics_gdpr_consent', 'denied');
+        console.log('📊 Analytics: GDPR consent revoked');
+
+        // Clear any stored session data
+        this.clearSessionData();
+    }
+
+    /**
+     * Clear session data
+     */
+    private clearSessionData(): void {
+        localStorage.removeItem('analytics_session_id');
+        localStorage.removeItem('analytics_session_start');
+        this.sessionId = null;
     }
 }
 
