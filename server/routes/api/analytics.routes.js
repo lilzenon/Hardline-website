@@ -5,27 +5,19 @@ const analyticsService = require("../../services/analytics/analytics.service");
 const performanceMonitor = require("../../services/analytics/performance.service");
 const searchService = require("../../services/analytics/search.service");
 const knex = require("../../knex");
-const { analyticsAuth, trackingLimiter, analyticsSecurityHeaders, analyticsRequestLogger } = require("../../middleware/analytics-auth");
-const geoip = require("../../services/geoip.service");
 
 const router = Router();
 
-/**
- * POST /api/analytics/track
- * Receive tracking beacons from homepage (b2b.click or bounce2bounce.com)
- * Requirements:
- * - Works without Redis (in-memory fallback for rate limiting)
- * - Enforces x-api-key (configurable via env)
- * - Validates and sanitizes input
- * - Upserts session into homepage_sessions (unique session_id)
- * - Inserts page view into homepage_page_views
- */
+// Ingestion endpoint: POST /api/analytics/track (dashboard receives from homepage)
+const { analyticsAuth, trackingLimiter, analyticsSecurityHeaders, analyticsRequestLogger } = require("../../middleware/analytics-auth");
+const geoip = require("../../services/geoip.service");
+
 router.post(
     "/track",
     analyticsSecurityHeaders,
     analyticsRequestLogger,
-    trackingLimiter,
-    analyticsAuth,
+    trackingLimiter, // Redis-optional (memory fallback in middleware)
+    analyticsAuth, // x-api-key required
     asyncHandler(async(req, res) => {
         const started = Date.now();
         try {
@@ -41,7 +33,6 @@ router.post(
                 userId,
             } = req.body || {};
 
-            // Basic validation
             if (!sessionId || typeof sessionId !== "string" || sessionId.length < 8) {
                 return res.status(400).json({ error: "Invalid sessionId" });
             }
@@ -49,7 +40,7 @@ router.post(
                 return res.status(400).json({ error: "Invalid pageUrl" });
             }
 
-            // Sanitize referrer to hostname form
+            // Normalize referrer to hostname
             let refHost = null;
             try {
                 if (referrer) {
@@ -61,13 +52,13 @@ router.post(
                 refHost = null;
             }
 
-            // Geolocation: prefer MaxMind when configured, fallback to CF country header
+            // GeoIP: MaxMind optional, fallback CF header; never store raw IP
             const ipHeader = req.headers["x-forwarded-for"] || "";
             const ip = (Array.isArray(ipHeader) ? ipHeader[0] : ipHeader).split(",")[0].trim() || req.ip || "";
             const cfCountry = req.headers["cf-ipcountry"] || null;
             const geo = await geoip.resolve(ip, cfCountry);
 
-            // Upsert session (idempotent)
+            // Upsert session
             await knex("homepage_sessions")
                 .insert({
                     session_id: sessionId,
@@ -86,7 +77,7 @@ router.post(
                 user_id: userId || null,
                 page_url: pageUrl,
                 page_title: pageTitle || null,
-                ip_address: null, // Do not store raw IPs
+                ip_address: null,
                 user_agent: userAgent || req.headers["user-agent"] || null,
                 referrer: refHost,
                 device_type: deviceType || null,
