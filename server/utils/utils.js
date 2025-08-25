@@ -183,6 +183,8 @@ const preservedURLs = [
     "confirm-link-ban",
     "confirm-user-delete",
     "confirm-user-ban",
+    "assets",
+    "js",
     "create-user",
     "confirm-domain-delete-admin",
     "confirm-domain-ban",

@@ -497,8 +497,9 @@ async function ban(req, res) {
 };
 
 async function redirect(req, res, next) {
+    const pathWithoutSlash = req.path.replace("/", "");
     const isPreservedUrl = utils.preservedURLs.some(
-        item => item === req.path.replace("/", "")
+        item => item === pathWithoutSlash || pathWithoutSlash.startsWith(item + "/")
     );
 
     if (isPreservedUrl) return next();
@@ -575,12 +576,12 @@ async function redirect(req, res, next) {
     // Enhanced iMessage detection - more specific to actual iMessage previews
     const isIMessagePreview = (
         // CFNetwork is used by iOS system for link previews
-        (// iOS devices without Safari/Version (likely system requests)
-        (/cfnetwork/i.test(userAgent) ||
-        // Darwin requests are often system-level
-        (/darwin/i.test(userAgent) && !/safari|chrome|firefox/i.test(userAgent)) || (/iphone|ipad|ipod/i.test(userAgent) &&
-            !/safari|version|chrome|firefox|opera/i.test(userAgent) &&
-            /mobile/i.test(userAgent) && /webkit/i.test(userAgent))))
+        ( // iOS devices without Safari/Version (likely system requests)
+            (/cfnetwork/i.test(userAgent) ||
+                // Darwin requests are often system-level
+                (/darwin/i.test(userAgent) && !/safari|chrome|firefox/i.test(userAgent)) || (/iphone|ipad|ipod/i.test(userAgent) &&
+                    !/safari|version|chrome|firefox|opera/i.test(userAgent) &&
+                    /mobile/i.test(userAgent) && /webkit/i.test(userAgent))))
     );
 
     // Check for specific preview tools and social media apps
