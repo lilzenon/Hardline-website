@@ -82,15 +82,8 @@ router.get(
         // Get signup count for display
         const signupCount = await query.event.getSignupCount(foundEvent.id);
 
-        // Store event in res.locals for analytics middleware
+        // Store event in res.locals for potential future use
         res.locals.event = foundEvent;
-
-        // Track page view with comprehensive analytics
-        try {
-            await trackPageView(req, res, () => {});
-        } catch (analyticsError) {
-            console.warn('⚠️ Analytics tracking failed:', analyticsError.message);
-        }
 
         // Detect mobile vs desktop for optimized experience
         const userAgent = req.headers['user-agent'] || '';
@@ -217,7 +210,6 @@ router.get(
 // POST /signup/:slug - Public signup endpoint with dynamic validation
 router.post(
     "/signup/:slug",
-    extractSessionForConversion,
     asyncHandler(events.createSignupValidation),
     validateRequest,
     asyncHandler(events.createSignup)

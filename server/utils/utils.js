@@ -85,27 +85,11 @@ function addProtocol(url) {
     return hasProtocol ? url : "http://" + url;
 }
 
-// Generate unique QR code identifier with collision checking
-async function generateQRId(analyticsQueries) {
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (attempts < maxAttempts) {
-        const qrId = qrNanoid();
-
-        // Check if this identifier already exists
-        const existing = await analyticsQueries.getQRCodeByIdentifier(qrId);
-        if (!existing) {
-            return qrId;
-        }
-
-        attempts++;
-    }
-
-    // Fallback to longer identifier if we can't find a unique 4-character one
-    console.warn('⚠️ Could not generate unique 4-character QR ID, falling back to 6-character');
-    const fallbackNanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 6);
-    return fallbackNanoid();
+// Generate unique QR code identifier (simplified for homepage)
+async function generateQRId() {
+    // For homepage, just generate a unique ID without collision checking
+    // Analytics collision checking moved to dashboard repository
+    return qrNanoid();
 }
 
 function getShortURL(address, domain) {

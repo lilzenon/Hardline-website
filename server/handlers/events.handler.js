@@ -497,7 +497,7 @@ async function createEvent(req, res) {
     const userId = req.user.id;
 
     // Generate unique 4-character QR code identifier for new events
-    const qrIdentifier = await generateQRId(analyticsQueries);
+    const qrIdentifier = await generateQRId();
 
     const eventData = {
         ...req.body,
