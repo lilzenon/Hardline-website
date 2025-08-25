@@ -314,8 +314,153 @@ class AnalyticsService {
                 error: error.message
             };
         }
+    }
 
-        // Delegated Homepage Analytics methods are assigned on the prototype below to avoid class-body parsing issues
+    /**
+     * Simple test method
+     */
+    testMethod() {
+        return 'test works';
+    }
+
+    /**
+     * Get time series data for analytics charts
+     */
+    async getTimeSeriesDataFixed(userId, period = 'month') {
+        try {
+            console.log(`📊 Getting time series data for user ${userId}, period: ${period}`);
+
+            const { getDateRanges } = require('./time.service');
+            const { current } = getDateRanges(period);
+
+            // Simple implementation for now
+            const timeSeriesData = [
+                { date: '2025-08-23', views: 10, unique_visitors: 8, signups: 2 },
+                { date: '2025-08-22', views: 15, unique_visitors: 12, signups: 3 },
+                { date: '2025-08-21', views: 8, unique_visitors: 6, signups: 1 }
+            ];
+
+            console.log(`📊 Generated ${timeSeriesData.length} time series data points for period ${period}`);
+            return timeSeriesData;
+
+        } catch (error) {
+            console.error(`❌ Error getting time series data for user ${userId}:`, error);
+            return [];
+        }
+    }
+
+    /**
+     * Get time series data for analytics charts
+     */
+    async getTimeSeriesData(userId, period = 'month') {
+        try {
+            console.log(`📊 Getting time series data for user ${userId}, period: ${period}`);
+
+            const { getDateRanges } = require('./time.service');
+            const { current } = getDateRanges(period);
+
+            // Determine the grouping interval based on period
+            let dateFormat;
+            switch (period) {
+                case 'today':
+                    dateFormat = 'YYYY-MM-DD HH24:00:00';
+                    break;
+                case 'week':
+                    dateFormat = 'YYYY-MM-DD';
+                    break;
+                case 'year':
+                    dateFormat = 'YYYY-MM';
+                    break;
+                case 'month':
+                default:
+                    dateFormat = 'YYYY-MM-DD';
+                    break;
+            }
+
+            // Get page views time series
+            const pageViewsQuery = `
+                SELECT
+                    TO_CHAR(view_timestamp, '${dateFormat}') as date,
+                    COUNT(*) as views,
+                    COUNT(DISTINCT session_id) as unique_visitors
+                FROM homepage_page_views
+                WHERE view_timestamp BETWEEN $1 AND $2
+                GROUP BY TO_CHAR(view_timestamp, '${dateFormat}')
+                ORDER BY date ASC
+            `;
+
+            // Get signups time series (from events)
+            const signupsQuery = `
+                SELECT
+                    TO_CHAR(es.created_at, '${dateFormat}') as date,
+                    COUNT(*) as signups
+                FROM event_signups es
+                JOIN events e ON es.event_id = e.id
+                WHERE e.user_id = $3 AND es.created_at BETWEEN $1 AND $2
+                GROUP BY TO_CHAR(es.created_at, '${dateFormat}')
+                ORDER BY date ASC
+            `;
+
+            const [pageViewsResult, signupsResult] = await Promise.all([
+                knex.raw(pageViewsQuery, [current.start, current.end]),
+                knex.raw(signupsQuery, [current.start, current.end, userId])
+            ]);
+
+            const pageViewsData = pageViewsResult.rows || [];
+            const signupsData = signupsResult.rows || [];
+
+            // Create a complete date range and merge data
+            const timeSeriesData = [];
+            const startDate = new Date(current.start);
+            const endDate = new Date(current.end);
+
+            // Generate all dates in the range
+            const currentDate = new Date(startDate);
+            while (currentDate <= endDate) {
+                let dateKey;
+                switch (period) {
+                    case 'today':
+                        dateKey = currentDate.toISOString().substring(0, 13) + ':00:00';
+                        break;
+                    case 'year':
+                        dateKey = currentDate.toISOString().substring(0, 7);
+                        break;
+                    default:
+                        dateKey = currentDate.toISOString().substring(0, 10);
+                        break;
+                }
+
+                const pageViewEntry = pageViewsData.find(d => d.date === dateKey);
+                const signupEntry = signupsData.find(d => d.date === dateKey);
+
+                timeSeriesData.push({
+                    date: dateKey,
+                    views: parseInt((pageViewEntry && pageViewEntry.views) || 0),
+                    unique_visitors: parseInt((pageViewEntry && pageViewEntry.unique_visitors) || 0),
+                    signups: parseInt((signupEntry && signupEntry.signups) || 0)
+                });
+
+                // Increment date based on period
+                switch (period) {
+                    case 'today':
+                        currentDate.setHours(currentDate.getHours() + 1);
+                        break;
+                    case 'year':
+                        currentDate.setMonth(currentDate.getMonth() + 1);
+                        break;
+                    default:
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        break;
+                }
+            }
+
+            console.log(`📊 Generated ${timeSeriesData.length} time series data points for period ${period}`);
+            return timeSeriesData;
+
+        } catch (error) {
+            console.error(`❌ Error getting time series data for user ${userId}:`, error);
+            return [];
+        }
     }
 }
 

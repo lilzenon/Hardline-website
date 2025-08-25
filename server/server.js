@@ -24,7 +24,19 @@ const renders = require("./handlers/renders.handler");
 const asyncHandler = require("./utils/asyncHandler");
 const locals = require("./handlers/locals.handler");
 const links = require("./handlers/links.handler");
+// Force clear all route-related module cache
+console.log('🔄 Clearing route module cache...');
+Object.keys(require.cache).forEach(key => {
+    if (key.includes('routes') || key.includes('analytics')) {
+        delete require.cache[key];
+        console.log('🗑️ Cleared cache for:', key);
+    }
+});
+
+console.log('🔥🔥🔥 ABOUT TO LOAD ROUTES FROM SERVER.JS!');
 const routes = require("./routes");
+console.log('🔥🔥🔥 ROUTES LOADED! Type:', typeof routes);
+console.log('✅ Routes loaded fresh at:', new Date().toISOString());
 const utils = require("./utils");
 const { initializePrivacySystem } = require("./middleware/privacy.middleware");
 const performance = require("./middleware/performance.middleware");
@@ -446,4 +458,5 @@ app.listen(env.PORT, () => {
     console.log(`🔍 Optimized logging active | Level: ${process.env.LOG_LEVEL || 'NORMAL'}`);
     console.log(`🔍 Webhook requests will be logged with essential debugging info`);
     console.log(`🔍 Set LOG_LEVEL=VERBOSE for detailed logs, LOG_LEVEL=MINIMAL for webhook-only logs`);
+    // Force reload for analytics service fix
 });

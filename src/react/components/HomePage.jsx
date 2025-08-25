@@ -3,6 +3,7 @@ import FigmaDesktop from './FigmaDesktop';
 import FigmaMobile from './FigmaMobile';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useSEO } from '../hooks/useSEO';
 
 /**
  * Homepage component that automatically serves mobile or desktop version
@@ -17,6 +18,9 @@ const HomePage = () => {
 
   // Initialize analytics tracking
   const { trackEvent, isTrackingEnabled } = useAnalytics();
+
+  // Initialize SEO management
+  const { seoSettings, isMaintenanceMode, refreshSEOSettings } = useSEO();
 
   useEffect(() => {
     // Check user agent for mobile devices
@@ -45,6 +49,14 @@ const HomePage = () => {
         viewport_mobile: isMobileByWidth
       });
     }
+
+    // Log SEO settings for debugging
+    console.log('🔍 Homepage SEO Settings:', {
+      title: seoSettings.default_title,
+      description: seoSettings.default_description?.substring(0, 50) + '...',
+      og_image: seoSettings.default_og_image,
+      maintenance_mode: isMaintenanceMode()
+    });
   }, [viewportWidth, isMobileByWidth]);
 
   // Loading state

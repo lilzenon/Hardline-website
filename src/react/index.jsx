@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import HomePage from './components/HomePage';
 import AdminLogin from './components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './utils/security';
+import { SEOProvider, MaintenanceMode, SEODebug } from './contexts/SEOContext';
 
 // Lazy load About and Contact pages for better performance
 const AboutPage = lazy(() => import('./components/AboutPage'));
@@ -91,12 +92,16 @@ const App = () => {
   };
 
   return (
-    <div
-      className={`app-container ${isTransitioning ? 'transitioning' : ''}`}
-      style={{ '--transition-duration': '300ms' }}
-    >
-      {renderPage()}
-    </div>
+    <SEOProvider>
+      <MaintenanceMode />
+      <div
+        className={`app-container ${isTransitioning ? 'transitioning' : ''}`}
+        style={{ '--transition-duration': '300ms' }}
+      >
+        {renderPage()}
+      </div>
+      <SEODebug />
+    </SEOProvider>
   );
 };
 

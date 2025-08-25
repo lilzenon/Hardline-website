@@ -1,0 +1,214 @@
+/**
+ * SEO Service - Fetches SEO settings from dashboard API
+ * Handles dynamic meta tag updates for the homepage
+ */
+
+// API endpoints configuration
+const API_CONFIG = {
+    // Dashboard API endpoint for SEO settings
+    DASHBOARD_API: process.env.NODE_ENV === 'production' ?
+        'https://admin.b2b.click/api/settings/seo' : 'http://localhost:3003/api/settings/seo',
+
+    // Maintenance status endpoint (public)
+    MAINTENANCE_API: process.env.NODE_ENV === 'production' ?
+        'https://admin.b2b.click/api/settings/maintenance-status' : 'http://localhost:3003/api/settings/maintenance-status'
+};
+
+// Default SEO settings fallback
+export const DEFAULT_SEO_SETTINGS = {
+    default_title: 'BOUNCE2BOUNCE - Premium Event Platform',
+    default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
+    default_keywords: 'events, tickets, entertainment, concerts, festivals',
+    default_author: 'BOUNCE2BOUNCE',
+    default_og_image: '/images/og-image.jpg',
+    twitter_handle: '@bounce2bounce',
+    google_analytics_id: '',
+    google_search_console_id: ''
+};
+
+/**
+ * Fetch SEO settings from dashboard API
+ * @returns {Promise<Object>} SEO settings object
+ */
+export const fetchSEOSettings = async() => {
+    try {
+        console.log('🔍 Fetching SEO settings from dashboard API...');
+
+        const response = await fetch(API_CONFIG.DASHBOARD_API, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            // Don't include credentials for cross-origin requests
+            mode: 'cors'
+        });
+
+        if (!response.ok) {
+            console.warn(`⚠️ SEO API returned ${response.status}: ${response.statusText}`);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success && data.settings) {
+            console.log('✅ SEO settings fetched successfully:', data.settings);
+            return {
+                ...DEFAULT_SEO_SETTINGS,
+                ...data.settings
+            };
+        } else {
+            console.warn('⚠️ Invalid SEO API response format:', data);
+            throw new Error('Invalid API response format');
+        }
+
+    } catch (error) {
+        console.error('❌ Failed to fetch SEO settings:', error);
+        console.log('🔄 Using default SEO settings as fallback');
+        return DEFAULT_SEO_SETTINGS;
+    }
+};
+
+/**
+ * Fetch maintenance mode status
+ * @returns {Promise<Object>} Maintenance status object
+ */
+export const fetchMaintenanceStatus = async() => {
+    try {
+        console.log('🔍 Checking maintenance mode status...');
+
+        const response = await fetch(API_CONFIG.MAINTENANCE_API, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            mode: 'cors'
+        });
+
+        if (!response.ok) {
+            console.warn(`⚠️ Maintenance API returned ${response.status}: ${response.statusText}`);
+            return { maintenance_mode: false };
+        }
+
+        const data = await response.json();
+
+        if (data.success !== undefined) {
+            console.log('✅ Maintenance status fetched:', { maintenance_mode: data.maintenance_mode });
+            return {
+                maintenance_mode: data.maintenance_mode || false,
+                maintenance_message: data.maintenance_message || 'We are currently performing scheduled maintenance.',
+                estimated_downtime: data.estimated_downtime || '2 hours',
+                contact_information: data.contact_information || 'support@bounce2bounce.com'
+            };
+        } else {
+            console.warn('⚠️ Invalid maintenance API response format:', data);
+            return { maintenance_mode: false };
+        }
+
+    } catch (error) {
+        console.error('❌ Failed to fetch maintenance status:', error);
+        return { maintenance_mode: false };
+    }
+};
+
+/**
+ * Generate complete meta tags object from SEO settings
+ * @param {Object} seoSettings - SEO settings from API
+ * @returns {Object} Complete meta tags configuration
+ */
+export const generateMetaTags = (seoSettings) => {
+    const settings = {...DEFAULT_SEO_SETTINGS, ...seoSettings };
+
+    // Ensure URLs are absolute for Open Graph
+    const ogImage = settings.default_og_image && settings.default_og_image.startsWith('http') ?
+        settings.default_og_image :
+        `https://b2b.click${settings.default_og_image || '/images/og-image.jpg'}`;
+
+    return {
+        title: settings.default_title,
+        meta: [
+            // Basic meta tags
+            { name: 'description', content: settings.default_description },
+            { name: 'keywords', content: settings.default_keywords },
+            { name: 'author', content: settings.default_author },
+            { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
+            { name: 'googlebot', content: 'index, follow' },
+
+            // Open Graph / Facebook
+            { property: 'og:type', content: 'website' },
+            { property: 'og:url', content: 'https://b2b.click/' },
+            { property: 'og:title', content: settings.default_title },
+            { property: 'og:description', content: settings.default_description },
+            { property: 'og:image', content: ogImage },
+            { property: 'og:image:width', content: '1200' },
+            { property: 'og:image:height', content: '630' },
+            { property: 'og:image:alt', content: `${settings.default_title} - Preview Image` },
+            { property: 'og:site_name', content: 'BOUNCE2BOUNCE' },
+            { property: 'og:locale', content: 'en_US' },
+
+            // Twitter Cards
+            { name: 'twitter:card', content: 'summary_large_image' },
+            { name: 'twitter:site', content: settings.twitter_handle },
+            { name: 'twitter:creator', content: settings.twitter_handle },
+            { name: 'twitter:url', content: 'https://b2b.click/' },
+            { name: 'twitter:title', content: settings.default_title },
+            { name: 'twitter:description', content: settings.default_description },
+            { name: 'twitter:image', content: ogImage },
+            { name: 'twitter:image:alt', content: `${settings.default_title} - Preview Image` },
+
+            // Additional SEO
+            { name: 'theme-color', content: '#000000' },
+            { name: 'mobile-web-app-capable', content: 'yes' },
+            { name: 'apple-mobile-web-app-capable', content: 'yes' },
+            { name: 'apple-mobile-web-app-title', content: 'BOUNCE2BOUNCE' },
+            { name: 'application-name', content: 'BOUNCE2BOUNCE' }
+        ],
+        link: [
+            { rel: 'canonical', href: 'https://b2b.click/' }
+        ]
+    };
+};
+
+/**
+ * Cache management for SEO settings
+ */
+const CACHE_KEY = 'seo_settings_cache';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+export const getCachedSEOSettings = () => {
+    try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+            const { data, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < CACHE_DURATION) {
+                console.log('📦 Using cached SEO settings');
+                return data;
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Failed to read SEO cache:', error);
+    }
+    return null;
+};
+
+export const setCachedSEOSettings = (settings) => {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            data: settings,
+            timestamp: Date.now()
+        }));
+        console.log('💾 SEO settings cached successfully');
+    } catch (error) {
+        console.warn('⚠️ Failed to cache SEO settings:', error);
+    }
+};
+
+export default {
+    fetchSEOSettings,
+    fetchMaintenanceStatus,
+    generateMetaTags,
+    getCachedSEOSettings,
+    setCachedSEOSettings,
+    DEFAULT_SEO_SETTINGS
+};

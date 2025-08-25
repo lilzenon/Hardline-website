@@ -13,15 +13,62 @@ async function getSEOSettings() {
         const settings = await knex("seo_settings")
             .orderBy("created_at", "desc")
             .first();
-            
+
         if (!settings) {
-            throw new Error("No SEO settings found");
+            console.log("No SEO settings found, creating default settings...");
+            return await createDefaultSEOSettings();
         }
-        
+
         return settings;
     } catch (error) {
         console.error("Error getting SEO settings:", error);
+        // If table doesn't exist, return default settings
+        if (error.message.includes('does not exist') || error.message.includes('no such table')) {
+            console.log("SEO settings table doesn't exist, returning default settings");
+            return getDefaultSEOSettings();
+        }
         throw error;
+    }
+}
+
+/**
+ * Get default SEO settings without database interaction
+ */
+function getDefaultSEOSettings() {
+    return {
+        default_title: 'BOUNCE2BOUNCE - Premium Event Platform',
+        default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
+        default_keywords: 'events, tickets, entertainment, concerts, festivals',
+        default_author: 'BOUNCE2BOUNCE',
+        default_og_image: '',
+        twitter_handle: '@bounce2bounce',
+        google_analytics_id: '',
+        google_search_console_id: ''
+    };
+}
+
+/**
+ * Create default SEO settings in database
+ */
+async function createDefaultSEOSettings() {
+    try {
+        const defaultSettings = {
+            ...getDefaultSEOSettings(),
+            created_at: new Date(),
+            updated_at: new Date(),
+            version: 1
+        };
+
+        const [newSettings] = await knex("seo_settings")
+            .insert(defaultSettings)
+            .returning("*");
+
+        console.log("✅ Default SEO settings created successfully");
+        return newSettings;
+    } catch (error) {
+        console.error("❌ Error creating default SEO settings:", error);
+        // Return default settings if database operation fails
+        return getDefaultSEOSettings();
     }
 }
 
@@ -35,20 +82,20 @@ async function updateSEOSettings(settingsData, userId = null) {
         if (currentSettings) {
             await createSettingsBackup(currentSettings, userId, "pre_update");
         }
-        
+
         // Update settings
         const updatedData = {
             ...settingsData,
             updated_by_id: userId,
-            version: (currentSettings?.version || 0) + 1,
+            version: (currentSettings ? .version || 0) + 1,
             updated_at: new Date()
         };
-        
+
         const [updatedSettings] = await knex("seo_settings")
             .where("id", currentSettings.id)
             .update(updatedData)
             .returning("*");
-            
+
         console.log(`✅ SEO settings updated (version ${updatedSettings.version})`);
         return updatedSettings;
     } catch (error) {
@@ -68,11 +115,11 @@ async function createSettingsBackup(settings, userId = null, backupType = "manua
             last_backup_at: new Date(),
             version: settings.version
         };
-        
+
         await knex("seo_settings")
             .where("id", settings.id)
             .update(backupData);
-            
+
         console.log(`📦 SEO settings backup created (${backupType})`);
         return true;
     } catch (error) {
@@ -89,16 +136,16 @@ async function restoreSettingsFromBackup(settingsId, userId = null) {
         const settings = await knex("seo_settings")
             .where("id", settingsId)
             .first();
-            
+
         if (!settings || !settings.backup_data) {
             throw new Error("No backup data found");
         }
-        
+
         const backupData = JSON.parse(settings.backup_data);
-        
+
         // Create current backup before restore
         await createSettingsBackup(settings, userId, "pre_restore");
-        
+
         // Restore from backup
         const restoredData = {
             ...backupData,
@@ -106,15 +153,15 @@ async function restoreSettingsFromBackup(settingsId, userId = null) {
             version: settings.version + 1,
             updated_at: new Date()
         };
-        
+
         delete restoredData.id; // Don't overwrite ID
         delete restoredData.created_at; // Don't overwrite creation date
-        
+
         const [restored] = await knex("seo_settings")
             .where("id", settingsId)
             .update(restoredData)
             .returning("*");
-            
+
         console.log(`🔄 SEO settings restored from backup`);
         return restored;
     } catch (error) {
@@ -163,7 +210,7 @@ async function createFileBackup(fileName, content, userId = null, backupType = "
             .where("file_name", fileName)
             .where("is_active", true)
             .update({ is_active: false });
-        
+
         // Create new backup
         const backupData = {
             uuid: nanoid(),
@@ -176,11 +223,11 @@ async function createFileBackup(fileName, content, userId = null, backupType = "
             content_hash: require("crypto").createHash("sha256").update(content).digest("hex"),
             created_by_id: userId
         };
-        
+
         const [backup] = await knex("seo_file_backups")
             .insert(backupData)
             .returning("*");
-            
+
         console.log(`📦 File backup created for ${fileName}`);
         return backup;
     } catch (error) {
@@ -197,37 +244,37 @@ async function restoreFileFromBackup(backupId, userId = null) {
         const backup = await knex("seo_file_backups")
             .where("id", backupId)
             .first();
-            
+
         if (!backup) {
             throw new Error("Backup not found");
         }
-        
+
         // Create backup of current active version
         const currentActive = await knex("seo_file_backups")
             .where("file_name", backup.file_name)
             .where("is_active", true)
             .first();
-            
+
         if (currentActive) {
             await createFileBackup(
-                backup.file_name, 
-                currentActive.file_content, 
-                userId, 
-                "pre_restore", 
+                backup.file_name,
+                currentActive.file_content,
+                userId,
+                "pre_restore",
                 "Backup before restore"
             );
         }
-        
+
         // Deactivate all versions
         await knex("seo_file_backups")
             .where("file_name", backup.file_name)
             .update({ is_active: false });
-        
+
         // Activate restored version
         await knex("seo_file_backups")
             .where("id", backupId)
             .update({ is_active: true });
-            
+
         console.log(`🔄 File restored from backup: ${backup.file_name}`);
         return backup;
     } catch (error) {
@@ -244,15 +291,15 @@ async function cleanupOldBackups(fileName, keepCount = 10) {
         const backups = await knex("seo_file_backups")
             .where("file_name", fileName)
             .orderBy("created_at", "desc");
-            
+
         if (backups.length > keepCount) {
             const toDelete = backups.slice(keepCount);
             const idsToDelete = toDelete.map(b => b.id);
-            
+
             await knex("seo_file_backups")
                 .whereIn("id", idsToDelete)
                 .del();
-                
+
             console.log(`🧹 Cleaned up ${toDelete.length} old backups for ${fileName}`);
         }
     } catch (error) {

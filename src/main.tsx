@@ -6,9 +6,14 @@ import { createRoot } from 'react-dom/client';
 import HomePage from './react/components/HomePage';
 import AdminLogin from './react/components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './react/utils/security';
+import { SEOProvider, MaintenanceMode, SEODebug } from './react/contexts/SEOContext';
 
 // Initialize consolidated analytics system FIRST
 import { initializeAnalytics } from './lib/analytics/beacon';
+import { initializeCleanup } from './utils/cleanup';
+
+// Initialize cleanup utilities to remove old blob URLs
+initializeCleanup();
 
 // Initialize analytics with proper configuration
 initializeAnalytics({
@@ -115,7 +120,13 @@ const App = () => {
     }
   };
 
-  return renderCurrentPage();
+  return (
+    <SEOProvider>
+      <MaintenanceMode />
+      {renderCurrentPage()}
+      <SEODebug />
+    </SEOProvider>
+  );
 };
 
 // Only render the main app if the root element exists (homepage)

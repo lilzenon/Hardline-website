@@ -25,12 +25,12 @@ const db = knex({
         }),
         pool: {
             min: env.DB_POOL_MIN || 1,
-            max: env.DB_POOL_MAX || 8, // Reduced for Basic tier
+            max: env.DB_POOL_MAX || 3, // Further reduced for connection limit issues
             // Connection pool timeouts optimized for Render Basic tier
             acquireTimeoutMillis: 15000, // 15 seconds to acquire connection
             createTimeoutMillis: 10000, // 10 seconds to create connection
             destroyTimeoutMillis: 5000, // 5 seconds to destroy connection
-            idleTimeoutMillis: 30000, // 30 seconds idle timeout
+            idleTimeoutMillis: 20000, // 20 seconds idle timeout (reduced)
             reapIntervalMillis: 1000, // Check for idle connections every second
             createRetryIntervalMillis: 200, // Retry connection creation every 200ms
             // Validation and error handling

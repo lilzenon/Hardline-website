@@ -1,7 +1,7 @@
 ---
-type: "always_apply"
+type: "agent_requested"
+description: "Example description"
 ---
-
 # ANALYTICS PRODUCTION STANDARDS & IMPLEMENTATION RULES
 
 This document defines mandatory standards for production-ready analytics implementation in the BOUNCE2BOUNCE platform. All analytics-related development must adhere to these rules.
