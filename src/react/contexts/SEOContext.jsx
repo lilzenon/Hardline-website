@@ -231,52 +231,148 @@ export const SEODebug = () => {
 };
 
 /**
- * Maintenance Mode Component
+ * Maintenance Mode Component - Responsive for Mobile and Desktop
  */
 export const MaintenanceMode = () => {
   const { maintenanceStatus } = useSEO();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      const userAgent = navigator.userAgent || '';
+      const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      setIsMobile(width <= 768 || isMobileByUA);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!maintenanceStatus.maintenance_mode) {
     return null;
   }
 
+  // Responsive styles based on device type
+  const containerStyle = {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: isMobile
+      ? 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)'
+      : 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
+    color: 'white',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10000,
+    fontFamily: 'Inter, sans-serif',
+    textAlign: 'center',
+    padding: isMobile ? '20px' : '40px',
+    overflow: 'hidden'
+  };
+
+  const iconStyle = {
+    fontSize: isMobile ? '64px' : '96px',
+    marginBottom: isMobile ? '24px' : '32px',
+    filter: 'drop-shadow(0 4px 8px rgba(255, 255, 255, 0.1))'
+  };
+
+  const titleStyle = {
+    fontSize: isMobile ? '28px' : '48px',
+    marginBottom: isMobile ? '16px' : '24px',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #ffffff 0%, #cccccc 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    letterSpacing: '-0.02em'
+  };
+
+  const messageStyle = {
+    fontSize: isMobile ? '16px' : '20px',
+    marginBottom: isMobile ? '24px' : '32px',
+    maxWidth: isMobile ? '320px' : '600px',
+    lineHeight: 1.6,
+    opacity: 0.9
+  };
+
+  const downtimeStyle = {
+    fontSize: isMobile ? '14px' : '18px',
+    marginBottom: isMobile ? '20px' : '24px',
+    opacity: 0.8,
+    padding: isMobile ? '8px 16px' : '12px 24px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: isMobile ? '20px' : '30px',
+    backdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.1)'
+  };
+
+  const contactStyle = {
+    fontSize: isMobile ? '12px' : '16px',
+    opacity: 0.6,
+    marginTop: isMobile ? '20px' : '32px'
+  };
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: '#000000',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 10000,
-        fontFamily: 'Inter, sans-serif',
-        textAlign: 'center',
-        padding: '20px'
-      }}
-    >
-      <div style={{ fontSize: '48px', marginBottom: '20px' }}>🔧</div>
-      <h1 style={{ fontSize: '32px', marginBottom: '16px', fontWeight: 'bold' }}>
-        Maintenance Mode
+    <div style={containerStyle}>
+      <div style={iconStyle}>🔧</div>
+
+      <h1 style={titleStyle}>
+        {maintenanceStatus.maintenance_title || 'Site Under Maintenance'}
       </h1>
-      <p style={{ fontSize: '18px', marginBottom: '20px', maxWidth: '600px', lineHeight: 1.6 }}>
-        {maintenanceStatus.maintenance_message}
+
+      <p style={messageStyle}>
+        {maintenanceStatus.maintenance_message || 'We are currently performing scheduled maintenance. Please check back soon.'}
       </p>
+
       {maintenanceStatus.estimated_downtime && (
-        <p style={{ fontSize: '16px', marginBottom: '20px', opacity: 0.8 }}>
+        <div style={downtimeStyle}>
           Estimated downtime: {maintenanceStatus.estimated_downtime}
-        </p>
+        </div>
       )}
+
       {maintenanceStatus.contact_information && (
-        <p style={{ fontSize: '14px', opacity: 0.6 }}>
+        <p style={contactStyle}>
           Questions? Contact us: {maintenanceStatus.contact_information}
         </p>
       )}
+
+      {/* Glassmorphism decoration elements */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '10%',
+          width: isMobile ? '80px' : '120px',
+          height: isMobile ? '80px' : '120px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '50%',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          zIndex: -1
+        }}
+      />
+
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '15%',
+          right: '15%',
+          width: isMobile ? '60px' : '100px',
+          height: isMobile ? '60px' : '100px',
+          background: 'rgba(255, 255, 255, 0.03)',
+          borderRadius: '50%',
+          backdropFilter: 'blur(15px)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          zIndex: -1
+        }}
+      />
     </div>
   );
 };
