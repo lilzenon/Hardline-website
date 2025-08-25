@@ -1,5 +1,16 @@
 const knex = require("../../knex");
-const cache = require("../analytics/cache.service");
+// Analytics cache service moved to dashboard repository
+// Simple cache replacement for homepage (no caching needed)
+const cache = {
+    async getOrCompute(key, computeFn) {
+        // For homepage, just compute directly without caching
+        return await computeFn();
+    },
+    async batchInvalidate(patterns) {
+        // No-op for homepage
+        return;
+    }
+};
 const phoneUtils = require("./phone-utils.service");
 
 class ContactGroupsService {
