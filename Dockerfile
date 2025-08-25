@@ -1,16 +1,16 @@
 # ============================================================================
 # KUTT URL SHORTENER - OPTIMIZED PRODUCTION DOCKERFILE
 # ============================================================================
-# Multi-stage build for faster builds and smaller final image
+# Single-stage build with npm 11.5.2+ and all fixes applied
 # Compatible with Express 5.x, Sharp module, and Vite build process
-# Optimized for CI/CD pipelines with layer caching
+# Fixes Tailwind CSS and Rollup issues in Alpine Linux
 # ============================================================================
 
-# Build stage
-FROM node:22-alpine AS builder
+FROM node:22-alpine
 
 # Install system dependencies required for native modules (Sharp, etc.)
-# Combined into single RUN command to reduce layers
+# Also install git for build info generation
+# Using --no-cache to avoid storing package cache in the layer
 RUN apk add --no-cache \
     python3 \
     make \
@@ -24,8 +24,10 @@ RUN apk add --no-cache \
     pixman-dev \
     pangomm-dev \
     libjpeg-turbo-dev \
-    freetype-dev && \
-    npm install -g npm@latest
+    freetype-dev
+
+# Update npm to latest version (11.5.2 or newer)
+RUN npm install -g npm@latest
 
 # Set working directory
 WORKDIR /kutt
@@ -34,54 +36,27 @@ WORKDIR /kutt
 # This layer will be cached unless package files change
 COPY package*.json ./
 
-# Install dependencies with npm ci for faster, reproducible builds
-# Use npm ci instead of npm install for production builds
-RUN npm ci --include=dev
+# Install ALL dependencies (including dev dependencies for build)
+# This is the key fix - we need dev dependencies for Tailwind CSS
+RUN npm install
 
-# Copy source code (excluding files in .dockerignore)
+# Copy source code
+# This layer will be invalidated when source code changes
 COPY . .
 
-# Build the frontend (Vite + Tailwind CSS) in a single optimized step
-# Set NODE_ENV to production for optimized builds
-ENV NODE_ENV=production
-RUN npm run build && \
-    npm prune --omit=dev && \
-    npm cache clean --force
+# Fix Rollup optional dependencies issue in Alpine Linux
+# This is a known npm bug with optional dependencies
+RUN rm -rf node_modules package-lock.json && npm install
 
-# Production stage
-FROM node:22-alpine AS production
+# Build the frontend (Vite + Tailwind CSS)
+# This requires dev dependencies to be available
+RUN npm run build
 
-# Install only runtime dependencies
-RUN apk add --no-cache \
-    cairo \
-    jpeg \
-    pango \
-    giflib \
-    pixman \
-    libjpeg-turbo \
-    freetype
+# Remove dev dependencies to reduce image size
+RUN npm prune --omit=dev
 
-# Create app user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S kutt -u 1001
-
-# Set working directory
-WORKDIR /kutt
-
-# Copy built application from builder stage
-COPY --from=builder --chown=kutt:nodejs /kutt/dist ./dist
-COPY --from=builder --chown=kutt:nodejs /kutt/static ./static
-COPY --from=builder --chown=kutt:nodejs /kutt/server ./server
-COPY --from=builder --chown=kutt:nodejs /kutt/node_modules ./node_modules
-COPY --from=builder --chown=kutt:nodejs /kutt/package*.json ./
-COPY --from=builder --chown=kutt:nodejs /kutt/custom ./custom
-
-# Create necessary directories with proper permissions
-RUN mkdir -p /var/lib/kutt uploads/og-images && \
-    chown -R kutt:nodejs /var/lib/kutt uploads
-
-# Switch to non-root user for security
-USER kutt
+# Create necessary directories
+RUN mkdir -p /var/lib/kutt
 
 # Set production environment
 ENV NODE_ENV=production
@@ -89,8 +64,8 @@ ENV NODE_ENV=production
 # Expose port
 EXPOSE 3000
 
-# Optimized health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application
