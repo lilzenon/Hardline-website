@@ -1,16 +1,17 @@
 # ============================================================================
 # KUTT URL SHORTENER - OPTIMIZED PRODUCTION DOCKERFILE
 # ============================================================================
-# Single-stage build with npm 11.5.2+ and all fixes applied
+# Multi-stage build for faster builds and smaller final image
 # Compatible with Express 5.x, Sharp module, and Vite build process
-# Fixes Tailwind CSS and Rollup issues in Alpine Linux
+# Optimized for CI/CD pipelines with BuildKit cache mounts
+# Enhanced with dependency optimization and better layer caching
 # ============================================================================
 
-FROM node:22-alpine
+# Build stage
+FROM node:22-alpine AS builder
 
 # Install system dependencies required for native modules (Sharp, etc.)
-# Also install git for build info generation
-# Using --no-cache to avoid storing package cache in the layer
+# Combined into single RUN command to reduce layers
 RUN apk add --no-cache \
     python3 \
     make \
@@ -24,10 +25,8 @@ RUN apk add --no-cache \
     pixman-dev \
     pangomm-dev \
     libjpeg-turbo-dev \
-    freetype-dev
-
-# Update npm to latest version (11.5.2 or newer)
-RUN npm install -g npm@latest
+    freetype-dev && \
+    npm install -g npm@latest
 
 # Set working directory
 WORKDIR /kutt
@@ -36,27 +35,65 @@ WORKDIR /kutt
 # This layer will be cached unless package files change
 COPY package*.json ./
 
-# Install ALL dependencies (including dev dependencies for build)
-# This is the key fix - we need dev dependencies for Tailwind CSS
-RUN npm install
+# Install dependencies with BuildKit cache mount for faster rebuilds
+# Use npm install since package-lock.json is excluded by .dockerignore
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --include=dev --prefer-offline
 
-# Copy source code
-# This layer will be invalidated when source code changes
+# Copy source code (excluding files in .dockerignore)
 COPY . .
 
-# Fix Rollup optional dependencies issue in Alpine Linux
-# This is a known npm bug with optional dependencies
-RUN rm -rf node_modules package-lock.json && npm install
+# Build the frontend with cache mount for npm cache only
+# Set NODE_ENV to production for optimized builds
+ENV NODE_ENV=production
+RUN --mount=type=cache,target=/root/.npm \
+    npm run build && \
+    npm prune --omit=dev && \
+    npm cache clean --force
 
-# Build the frontend (Vite + Tailwind CSS)
-# This requires dev dependencies to be available
-RUN npm run build
+# Production stage
+FROM node:22-alpine AS production
 
-# Remove dev dependencies to reduce image size
-RUN npm prune --omit=dev
+# Install only runtime dependencies
+RUN apk add --no-cache \
+    cairo \
+    jpeg \
+    pango \
+    giflib \
+    pixman \
+    libjpeg-turbo \
+    freetype
 
-# Create necessary directories
-RUN mkdir -p /var/lib/kutt
+# Create app user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S kutt -u 1001
+
+# Set working directory
+WORKDIR /kutt
+
+# Copy built application from builder stage with optimized order
+# Copy package.json first for better layer caching
+COPY --from=builder --chown=kutt:nodejs /kutt/package*.json ./
+
+# Copy production node_modules
+COPY --from=builder --chown=kutt:nodejs /kutt/node_modules ./node_modules
+
+# Copy built assets
+COPY --from=builder --chown=kutt:nodejs /kutt/dist ./dist
+COPY --from=builder --chown=kutt:nodejs /kutt/static ./static
+
+# Copy server code
+COPY --from=builder --chown=kutt:nodejs /kutt/server ./server
+
+# Copy custom configurations
+COPY --from=builder --chown=kutt:nodejs /kutt/custom ./custom
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /var/lib/kutt uploads/og-images && \
+    chown -R kutt:nodejs /var/lib/kutt uploads
+
+# Switch to non-root user for security
+USER kutt
 
 # Set production environment
 ENV NODE_ENV=production
@@ -64,8 +101,8 @@ ENV NODE_ENV=production
 # Expose port
 EXPOSE 3000
 
-# Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+# Optimized health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
 # Start the application

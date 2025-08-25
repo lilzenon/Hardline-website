@@ -7,11 +7,11 @@
 const API_CONFIG = {
     // Dashboard API endpoint for SEO settings
     DASHBOARD_API: process.env.NODE_ENV === 'production' ?
-        'https://admin.b2b.click/api/settings/seo' : 'http://localhost:3003/api/settings/seo',
+        'https://admin.b2b.click/api/settings/seo' : 'http://localhost:3002/api/settings/seo',
 
     // Maintenance status endpoint (public)
     MAINTENANCE_API: process.env.NODE_ENV === 'production' ?
-        'https://admin.b2b.click/api/settings/maintenance-status' : 'http://localhost:3003/api/settings/maintenance-status'
+        'https://admin.b2b.click/api/settings/maintenance-status' : 'http://localhost:3002/api/settings/maintenance-status'
 };
 
 // Default SEO settings fallback
@@ -115,55 +115,72 @@ export const fetchMaintenanceStatus = async() => {
 /**
  * Generate complete meta tags object from SEO settings
  * @param {Object} seoSettings - SEO settings from API
+ * @param {Object} options - Additional options for meta tag generation
  * @returns {Object} Complete meta tags configuration
  */
-export const generateMetaTags = (seoSettings) => {
+export const generateMetaTags = (seoSettings, options = {}) => {
     const settings = {...DEFAULT_SEO_SETTINGS, ...seoSettings };
+    const { isMobile = false, deviceType = 'unknown' } = options;
 
     // Ensure URLs are absolute for Open Graph
     const ogImage = settings.default_og_image && settings.default_og_image.startsWith('http') ?
         settings.default_og_image :
         `https://b2b.click${settings.default_og_image || '/images/og-image.jpg'}`;
 
+    // Base meta tags
+    const metaTags = [
+        // Basic meta tags
+        { name: 'description', content: settings.default_description },
+        { name: 'keywords', content: settings.default_keywords },
+        { name: 'author', content: settings.default_author },
+        { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
+        { name: 'googlebot', content: 'index, follow' },
+
+        // Open Graph / Facebook
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: 'https://b2b.click/' },
+        { property: 'og:title', content: settings.default_title },
+        { property: 'og:description', content: settings.default_description },
+        { property: 'og:image', content: ogImage },
+        { property: 'og:image:width', content: '1200' },
+        { property: 'og:image:height', content: '630' },
+        { property: 'og:image:alt', content: `${settings.default_title} - Preview Image` },
+        { property: 'og:site_name', content: 'BOUNCE2BOUNCE' },
+        { property: 'og:locale', content: 'en_US' },
+
+        // Twitter Cards
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:site', content: settings.twitter_handle },
+        { name: 'twitter:creator', content: settings.twitter_handle },
+        { name: 'twitter:url', content: 'https://b2b.click/' },
+        { name: 'twitter:title', content: settings.default_title },
+        { name: 'twitter:description', content: settings.default_description },
+        { name: 'twitter:image', content: ogImage },
+        { name: 'twitter:image:alt', content: `${settings.default_title} - Preview Image` },
+
+        // Additional SEO
+        { name: 'theme-color', content: '#000000' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-title', content: 'BOUNCE2BOUNCE' },
+        { name: 'application-name', content: 'BOUNCE2BOUNCE' }
+    ];
+
+    // Add mobile-specific meta tags
+    if (isMobile) {
+        metaTags.push(
+            // Mobile viewport optimization
+            { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover' },
+            // iOS Safari optimizations
+            { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }, { name: 'apple-touch-fullscreen', content: 'yes' }, { name: 'format-detection', content: 'telephone=no' },
+            // Android Chrome optimizations
+            { name: 'mobile-web-app-capable', content: 'yes' }, { name: 'theme-color', content: '#000000' }
+        );
+    }
+
     return {
         title: settings.default_title,
-        meta: [
-            // Basic meta tags
-            { name: 'description', content: settings.default_description },
-            { name: 'keywords', content: settings.default_keywords },
-            { name: 'author', content: settings.default_author },
-            { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
-            { name: 'googlebot', content: 'index, follow' },
-
-            // Open Graph / Facebook
-            { property: 'og:type', content: 'website' },
-            { property: 'og:url', content: 'https://b2b.click/' },
-            { property: 'og:title', content: settings.default_title },
-            { property: 'og:description', content: settings.default_description },
-            { property: 'og:image', content: ogImage },
-            { property: 'og:image:width', content: '1200' },
-            { property: 'og:image:height', content: '630' },
-            { property: 'og:image:alt', content: `${settings.default_title} - Preview Image` },
-            { property: 'og:site_name', content: 'BOUNCE2BOUNCE' },
-            { property: 'og:locale', content: 'en_US' },
-
-            // Twitter Cards
-            { name: 'twitter:card', content: 'summary_large_image' },
-            { name: 'twitter:site', content: settings.twitter_handle },
-            { name: 'twitter:creator', content: settings.twitter_handle },
-            { name: 'twitter:url', content: 'https://b2b.click/' },
-            { name: 'twitter:title', content: settings.default_title },
-            { name: 'twitter:description', content: settings.default_description },
-            { name: 'twitter:image', content: ogImage },
-            { name: 'twitter:image:alt', content: `${settings.default_title} - Preview Image` },
-
-            // Additional SEO
-            { name: 'theme-color', content: '#000000' },
-            { name: 'mobile-web-app-capable', content: 'yes' },
-            { name: 'apple-mobile-web-app-capable', content: 'yes' },
-            { name: 'apple-mobile-web-app-title', content: 'BOUNCE2BOUNCE' },
-            { name: 'application-name', content: 'BOUNCE2BOUNCE' }
-        ],
+        meta: metaTags,
         link: [
             { rel: 'canonical', href: 'https://b2b.click/' }
         ]
@@ -188,19 +205,66 @@ export const getCachedSEOSettings = () => {
         }
     } catch (error) {
         console.warn('⚠️ Failed to read SEO cache:', error);
+        // Clear corrupted cache
+        clearSEOCache();
     }
     return null;
 };
 
+export const clearSEOCache = () => {
+    try {
+        localStorage.removeItem(CACHE_KEY);
+        console.log('🗑️ SEO cache cleared');
+    } catch (error) {
+        console.warn('⚠️ Failed to clear SEO cache:', error);
+    }
+};
+
 export const setCachedSEOSettings = (settings) => {
     try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-            data: settings,
+        // Create a minimal cache object to reduce storage size
+        const cacheData = {
+            data: {
+                default_title: settings.default_title,
+                default_description: settings.default_description,
+                default_og_image: settings.default_og_image,
+                twitter_handle: settings.twitter_handle
+            },
             timestamp: Date.now()
-        }));
+        };
+
+        const cacheString = JSON.stringify(cacheData);
+
+        // Check if we're approaching localStorage quota
+        if (cacheString.length > 50000) { // ~50KB limit
+            console.warn('⚠️ SEO cache data too large, clearing old cache');
+            clearSEOCache();
+        }
+
+        localStorage.setItem(CACHE_KEY, cacheString);
         console.log('💾 SEO settings cached successfully');
     } catch (error) {
-        console.warn('⚠️ Failed to cache SEO settings:', error);
+        if (error.name === 'QuotaExceededError') {
+            console.warn('⚠️ localStorage quota exceeded, clearing cache and retrying');
+            clearSEOCache();
+            try {
+                // Retry with minimal data
+                const minimalCache = {
+                    data: {
+                        default_title: settings.default_title,
+                        default_description: settings.default_description?.substring(0, 200),
+                        default_og_image: settings.default_og_image
+                    },
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
+                console.log('💾 SEO settings cached with minimal data');
+            } catch (retryError) {
+                console.warn('⚠️ Failed to cache even minimal SEO settings:', retryError);
+            }
+        } else {
+            console.warn('⚠️ Failed to cache SEO settings:', error);
+        }
     }
 };
 
@@ -210,5 +274,6 @@ export default {
     generateMetaTags,
     getCachedSEOSettings,
     setCachedSEOSettings,
+    clearSEOCache,
     DEFAULT_SEO_SETTINGS
 };

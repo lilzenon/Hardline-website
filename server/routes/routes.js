@@ -1,10 +1,26 @@
+console.log('🔍 Starting routes.js imports...');
+console.log('🚨 UNIQUE IDENTIFIER: ROUTES.JS FILE MODIFIED AT 16:43 - THIS SHOULD APPEAR!');
 const { Router } = require("express");
-const helpers = require("./../handlers/helpers.handler");
+console.log('✅ Express Router imported');
+
 const locals = require("./../handlers/locals.handler");
+console.log('✅ Locals handler imported');
+
+console.log('🔍 About to import renders routes...');
 const renders = require("./renders.routes");
+console.log('✅ Renders routes imported');
+
+console.log('🔍 About to import domains routes...');
 const domains = require("./domain.routes");
+console.log('✅ Domains routes imported');
+
+console.log('🔍 About to import health routes...');
 const health = require("./health.routes");
+console.log('✅ Health routes imported');
+
+console.log('🔍 About to import link routes...');
 const link = require("./link.routes");
+console.log('✅ Link routes imported');
 const user = require("./user.routes");
 const auth = require("./auth.routes");
 const adminAuth = require("./admin-auth.routes");
@@ -13,7 +29,19 @@ const publicEvents = require("./public_events.routes");
 const qrRoutes = require("./qr.routes");
 const sms = require("./sms.routes");
 // Analytics functionality moved to dashboard repository
+// console.log('🔍 About to require analytics routes...');
+// const analytics = require("./api/analytics.routes");
+// console.log('✅ Analytics routes loaded');
+
+console.log('🔍 About to require contact-book routes...');
 const contactBook = require("./api/contact-book.routes");
+console.log('✅ Contact-book routes loaded');
+
+console.log('🔍 About to require images.route...');
+const images = require("./images.route");
+console.log('✅ Images routes required successfully:', typeof images);
+// const imageOptimization = require("./images.route"); // Same file as images
+// const settings = require("./api/settings.routes"); // Moved to dashboard repository
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
 const sessionAdmin = require("./admin/session-admin.routes");
@@ -40,7 +68,11 @@ apiRouter.use("/auth", adminAuth);
 apiRouter.use("/events", events);
 apiRouter.use("/sms", sms);
 // Analytics routes moved to dashboard repository
+// apiRouter.use("/analytics", analytics);
 apiRouter.use("/contact-book", contactBook);
+apiRouter.use("/images", images);
+// apiRouter.use("/image-optimization", imageOptimization); // Same as images route
+// apiRouter.use("/settings", settings); // Moved to dashboard repository
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);

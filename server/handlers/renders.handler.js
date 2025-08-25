@@ -500,11 +500,135 @@ async function eventEdit(req, res) {
     }
 }
 
-// 🚀 REACT HOMEPAGE - Serve React app instead of Handlebars
+// 🚀 REACT HOMEPAGE - Serve React app with dynamic SEO meta tags
 async function reactHomepage(req, res) {
     try {
         const env = require('../env');
+        const path = require('path');
+        const fs = require('fs');
+        const seoUtils = require('../utils/seo.utils');
 
+        // Get SEO settings from dashboard API
+        let seoSettings;
+        try {
+            const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click/api/settings/seo' :
+                'http://localhost:3002/api/settings/seo';
+
+            const response = await fetch(dashboardApiUrl);
+            if (response.ok) {
+                seoSettings = await response.json();
+                console.log('✅ SEO settings fetched from dashboard API');
+            } else {
+                throw new Error(`Dashboard API responded with ${response.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Failed to fetch SEO settings from dashboard API, using defaults:', error.message);
+            seoSettings = {
+                default_title: 'BOUNCE2BOUNCE',
+                default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
+                default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
+                default_author: 'BOUNCE2BOUNCE',
+                default_og_image: '/uploads/og-images/og-image-1756143877206-973649686.jpg',
+                twitter_handle: '@bounce2bounce'
+            };
+        }
+
+        // Generate meta tags using SEO utils
+        const metaTags = seoUtils.generateMetaTags({
+            title: seoSettings.default_title,
+            description: seoSettings.default_description,
+            keywords: seoSettings.default_keywords,
+            author: seoSettings.default_author,
+            image: seoSettings.default_og_image,
+            url: '/'
+        });
+
+        // Find the React HTML file with fallbacks
+        let reactIndexPath;
+        let htmlContent;
+
+        // First try the Vite-built React homepage (dist/index.html) - contains analytics
+        const viteHomepageIndexPath = path.join(__dirname, '../../dist/index.html');
+        if (fs.existsSync(viteHomepageIndexPath)) {
+            console.log('📱 Serving React homepage from dist/index.html (Vite build with analytics) with dynamic SEO');
+            reactIndexPath = viteHomepageIndexPath;
+        }
+        // Fallback to legacy React homepage (dist/react/index.html) - without analytics
+        else {
+            const legacyReactIndexPath = path.join(__dirname, '../../dist/react/index.html');
+            if (fs.existsSync(legacyReactIndexPath)) {
+                console.log('📱 Serving React homepage from dist/react/index.html (legacy build without analytics) with dynamic SEO');
+                reactIndexPath = legacyReactIndexPath;
+            }
+            // Final fallback to static React homepage (static/react/index.html)
+            else {
+                const staticReactIndexPath = path.join(__dirname, '../../static/react/index.html');
+                if (fs.existsSync(staticReactIndexPath)) {
+                    console.log('📱 Serving React homepage from static/react/index.html (static fallback) with dynamic SEO');
+                    reactIndexPath = staticReactIndexPath;
+                }
+            }
+        }
+
+        if (!reactIndexPath) {
+            console.error('❌ No React index.html found, falling back to Handlebars');
+            return home(req, res);
+        }
+
+        // Read the React HTML template
+        htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
+
+        // Generate dynamic meta tags HTML
+        const dynamicMetaTags = `
+    <!-- Dynamic SEO Meta Tags -->
+    <meta name="description" content="${metaTags.description}">
+    <meta name="keywords" content="${metaTags.keywords}">
+    <meta name="author" content="${metaTags.author}">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="${metaTags.ogType}">
+    <meta property="og:url" content="${metaTags.ogUrl}">
+    <meta property="og:title" content="${metaTags.ogTitle}">
+    <meta property="og:description" content="${metaTags.ogDescription}">
+    <meta property="og:image" content="${metaTags.ogImage}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="${metaTags.ogTitle} - Preview Image">
+    <meta property="og:site_name" content="${metaTags.ogSiteName}">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="${metaTags.twitterCard}">
+    <meta name="twitter:site" content="${seoSettings.twitter_handle || '@bounce2bounce'}">
+    <meta name="twitter:creator" content="${seoSettings.twitter_handle || '@bounce2bounce'}">
+    <meta name="twitter:url" content="${metaTags.ogUrl}">
+    <meta name="twitter:title" content="${metaTags.twitterTitle}">
+    <meta name="twitter:description" content="${metaTags.twitterDescription}">
+    <meta name="twitter:image" content="${metaTags.twitterImage}">
+    <meta name="twitter:image:alt" content="${metaTags.twitterTitle} - Preview Image">
+
+    <!-- Additional Mobile Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="${metaTags.appleMobileWebAppCapable}">
+    <meta name="apple-mobile-web-app-title" content="${metaTags.title}">
+    <meta name="application-name" content="${metaTags.title}">`;
+
+        // Replace the existing title and inject meta tags
+        htmlContent = htmlContent.replace(
+            /<title>.*?<\/title>/i,
+            `<title>${metaTags.title}</title>`
+        );
+
+        // Inject dynamic meta tags before the closing </head> tag
+        htmlContent = htmlContent.replace(
+            '</head>',
+            `${dynamicMetaTags}\n</head>`
+        );
+
+        // Set caching headers
         if (env.NODE_ENV === 'production') {
             // Production: Cache for 5 minutes to balance freshness and performance
             const fiveMinutes = 5 * 60; // 5 minutes in seconds
@@ -514,7 +638,7 @@ async function reactHomepage(req, res) {
                 'Cache-Control': 'public, max-age=' + fiveMinutes + ', must-revalidate',
                 'Expires': expiresDate,
                 'Last-Modified': new Date().toUTCString(),
-                'ETag': '"homepage-' + Date.now() + '"'
+                'ETag': '"homepage-seo-' + Date.now() + '"'
             });
         } else {
             // Development: No cache for easier development
@@ -527,32 +651,10 @@ async function reactHomepage(req, res) {
             });
         }
 
-        // Serve React homepage SPA with proper fallbacks: dist/react -> static/react -> HBS home
-        const path = require('path');
-        const fs = require('fs');
+        // Set proper headers and send the modified HTML
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.send(htmlContent);
 
-        // First try the Vite-built React homepage (dist/index.html) - contains analytics
-        const viteHomepageIndexPath = path.join(__dirname, '../../dist/index.html');
-        if (fs.existsSync(viteHomepageIndexPath)) {
-            console.log('📱 Serving React homepage from dist/index.html (Vite build with analytics)');
-            return res.sendFile(viteHomepageIndexPath);
-        }
-
-        // Fallback to legacy React homepage (dist/react/index.html) - without analytics
-        const legacyReactIndexPath = path.join(__dirname, '../../dist/react/index.html');
-        if (fs.existsSync(legacyReactIndexPath)) {
-            console.log('📱 Serving React homepage from dist/react/index.html (legacy build without analytics)');
-            return res.sendFile(legacyReactIndexPath);
-        }
-
-        // Final fallback to static React homepage (static/react/index.html)
-        const staticReactIndexPath = path.join(__dirname, '../../static/react/index.html');
-        if (fs.existsSync(staticReactIndexPath)) {
-            console.log('📱 Serving React homepage from static/react/index.html (static fallback)');
-            return res.sendFile(staticReactIndexPath);
-        }
-        // Final fallback: server-rendered home
-        return home(req, res);
     } catch (error) {
         console.error('❌ React homepage error:', error);
         // Fallback to Handlebars homepage

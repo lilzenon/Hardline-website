@@ -202,23 +202,18 @@ app.use((req, res, next) => {
 });
 
 // serve static files with optimized caching headers
-// Add image optimization routes
-const imageRoutes = require('./routes/images.route');
-app.use('/images', imageRoutes);
+// Note: API image routes are handled in routes.js under /api/images
+// Static routes moved after API routes to prevent conflicts
 
-// Add image optimization middleware for /images route
-app.use("/images", imageOptimization.optimizedImageMiddleware());
-app.use("/images", express.static("custom/images", {
+// Serve uploaded files (OG images, etc.)
+app.use("/uploads", express.static("uploads", {
     setHeaders: (res, path) => {
-        // Images: Cache for 1 year with immutable flag
-        const oneYear = 365 * 24 * 60 * 60; // 1 year in seconds
-        const expiresDate = new Date(Date.now() + oneYear * 1000).toUTCString();
+        // Uploads: Cache for 1 day (shorter cache for user uploads)
+        const oneDay = 24 * 60 * 60; // 1 day in seconds
+        const expiresDate = new Date(Date.now() + oneDay * 1000).toUTCString();
 
-        res.set({
-            'Cache-Control': 'public, max-age=' + oneYear + ', immutable',
-            'Expires': expiresDate,
-            'Last-Modified': new Date().toUTCString()
-        });
+        res.setHeader('Cache-Control', `public, max-age=${oneDay}, immutable`);
+        res.setHeader('Expires', expiresDate);
     }
 }));
 
@@ -429,8 +424,33 @@ app.use("/api/security", require("./routes/security.routes"));
 app.use("/api/v2", routes.api);
 app.use("/api", routes.api);
 
+// Static routes (after API routes to prevent conflicts)
+// Serve custom images directly without optimization middleware (for uploaded logos, etc.)
+// Note: Changed from "/images" to "/custom-images" to avoid conflict with static/images
+app.use("/custom-images", express.static("custom/images", {
+    setHeaders: (res, path) => {
+        try {
+            // Images: Cache for 1 year with immutable flag
+            const oneYear = 365 * 24 * 60 * 60; // 1 year in seconds
+            const expiresDate = new Date(Date.now() + oneYear * 1000).toUTCString();
+
+            res.set({
+                'Cache-Control': 'public, max-age=' + oneYear + ', immutable',
+                'Expires': expiresDate,
+                'Last-Modified': new Date().toUTCString()
+            });
+        } catch (error) {
+            console.error('Error setting image headers:', error);
+            // Continue without custom headers
+        }
+    }
+}));
+
 // finally, redirect the short link to the target
-app.get("/:id", asyncHandler(links.redirect));
+app.get("/:id", (req, res, next) => {
+    console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${req.params.id}`);
+    return asyncHandler(links.redirect)(req, res, next);
+});
 
 
 

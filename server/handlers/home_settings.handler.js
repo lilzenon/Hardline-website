@@ -13,7 +13,7 @@ try {
 
     const storage = multer.diskStorage({
         destination: async function(req, file, cb) {
-            const uploadDir = path.join(__dirname, "../../static/images/home");
+            const uploadDir = path.join(__dirname, "../../custom/images");
             try {
                 await fs.mkdir(uploadDir, { recursive: true });
                 cb(null, uploadDir);
@@ -89,7 +89,7 @@ async function update(req, res) {
 
         // Handle file upload if present
         if (req.file) {
-            updateData.event_image = `/images/home/${req.file.filename}`;
+            updateData.event_image = `/images/${req.file.filename}`;
         }
 
         // Convert datetime-local format to proper datetime
@@ -449,7 +449,7 @@ async function resendVerification(req, res) {
 
         // Rate limiting: Check if we've sent a verification recently
         const rateLimitKey = `resend_verification:${cleanedPhone}`;
-        const lastSentTime = global.resendRateLimit?.get(rateLimitKey);
+        const lastSentTime = global.resendRateLimit ? global.resendRateLimit.get(rateLimitKey) : null;
         const now = Date.now();
         const cooldownPeriod = 60000; // 60 seconds
 

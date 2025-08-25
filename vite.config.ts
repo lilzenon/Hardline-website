@@ -27,6 +27,9 @@ export default defineConfig({
     // FIXED: Use terser for more conservative minification to prevent hoisting issues
     minify: 'terser',
     target: 'es2020',
+    // Optimize build performance
+    chunkSizeWarningLimit: 1000,
+    reportCompressedSize: false, // Faster builds in CI
     rollupOptions: {
       output: {
         // FIXED: Remove manualChunks to prevent React initialization order issues
@@ -40,6 +43,10 @@ export default defineConfig({
           reservedNamesAsProps: false
         }
       },
+      // Optimize build performance
+      treeshake: {
+        preset: 'recommended'
+      }
     },
     // FIXED: Add terser options for safer minification
     terserOptions: {

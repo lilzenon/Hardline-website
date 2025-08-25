@@ -5,13 +5,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
-import { 
-  fetchSEOSettings, 
+import {
+  fetchSEOSettings,
   fetchMaintenanceStatus,
   generateMetaTags,
   getCachedSEOSettings,
   setCachedSEOSettings,
-  DEFAULT_SEO_SETTINGS 
+  clearSEOCache,
+  DEFAULT_SEO_SETTINGS
 } from '../services/seoService';
 
 // Create SEO Context
@@ -26,6 +27,7 @@ export const SEOProvider = ({ children }) => {
   const [maintenanceStatus, setMaintenanceStatus] = useState({ maintenance_mode: false });
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [deviceInfo, setDeviceInfo] = useState({ isMobile: false, deviceType: 'unknown' });
 
   /**
    * Load SEO settings from API or cache
@@ -106,6 +108,36 @@ export const SEOProvider = ({ children }) => {
     setLastUpdated(new Date());
   };
 
+  /**
+   * Clear SEO cache manually
+   */
+  const clearCache = () => {
+    clearSEOCache();
+    console.log('🗑️ SEO cache cleared manually');
+  };
+
+  // Device detection effect
+  useEffect(() => {
+    const detectDevice = () => {
+      const width = window.innerWidth;
+      const userAgent = navigator.userAgent || '';
+      const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isMobile = width <= 768 || isMobileByUA;
+
+      let deviceType = 'desktop';
+      if (isMobile) {
+        deviceType = width <= 480 ? 'mobile' : 'tablet';
+      }
+
+      setDeviceInfo({ isMobile, deviceType });
+      console.log('📱 SEO Device Detection:', { width, isMobile, deviceType });
+    };
+
+    detectDevice();
+    window.addEventListener('resize', detectDevice);
+    return () => window.removeEventListener('resize', detectDevice);
+  }, []);
+
   // Load settings on mount
   useEffect(() => {
     loadSEOSettings();
@@ -121,8 +153,8 @@ export const SEOProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Generate meta tags from current settings
-  const metaTags = generateMetaTags(seoSettings);
+  // Generate meta tags from current settings with device info
+  const metaTags = generateMetaTags(seoSettings, deviceInfo);
 
   const contextValue = {
     seoSettings,
@@ -130,9 +162,12 @@ export const SEOProvider = ({ children }) => {
     metaTags,
     isLoading,
     lastUpdated,
+    deviceInfo,
     refreshSEOSettings,
     updateSEOSetting,
-    loadSEOSettings
+    clearCache,
+    loadSEOSettings,
+    isMaintenanceMode: () => maintenanceStatus.maintenance_mode
   };
 
   return (
