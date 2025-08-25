@@ -4,7 +4,7 @@ const knex = require('../knex');
 const redis = require('../redis');
 const circuitBreaker = require('../services/monitoring/circuit-breaker.service');
 const intelligentCache = require('../services/cache/intelligent-cache.service');
-const performanceMonitor = require('../services/analytics/performance.service');
+// Performance monitoring moved to dashboard repository
 const sessionStore = require('../services/session/session-store.service');
 const sessionSecurity = require('../services/session/session-security.service');
 

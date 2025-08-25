@@ -1,5 +1,5 @@
 const QRCode = require('qrcode');
-const analyticsQueries = require('../queries/analytics.queries');
+// Analytics queries moved to dashboard repository
 
 /**
  * QR Code Generation and Management Service
@@ -21,7 +21,7 @@ async function generateQRCodeImage(url, options = {}) {
         border: 1
     };
 
-    const qrOptions = { ...defaultOptions, ...options };
+    const qrOptions = {...defaultOptions, ...options };
 
     try {
         if (qrOptions.type === 'svg') {
@@ -52,10 +52,10 @@ function generateQRCodeURL(qrCodeIdentifier, baseUrl = null) {
 async function createEventQRCode(eventId, qrCodeData) {
     try {
         const newQRCode = await analyticsQueries.createQRCode(eventId, qrCodeData);
-        
+
         // Generate the QR code URL
         const qrUrl = generateQRCodeURL(newQRCode.identifier);
-        
+
         return {
             ...newQRCode,
             qr_url: qrUrl,
@@ -74,9 +74,9 @@ async function getQRCodeWithUrls(qrCodeId) {
         if (!qrCode) {
             throw new Error('QR code not found');
         }
-        
+
         const qrUrl = generateQRCodeURL(qrCode.identifier);
-        
+
         return {
             ...qrCode,
             qr_url: qrUrl,
@@ -92,7 +92,7 @@ async function getQRCodeWithUrls(qrCodeId) {
 async function getEventQRCodesWithUrls(eventId) {
     try {
         const qrCodes = await analyticsQueries.getEventQRCodes(eventId);
-        
+
         return qrCodes.map(qrCode => {
             const qrUrl = generateQRCodeURL(qrCode.identifier);
             return {
@@ -126,7 +126,7 @@ async function createDefaultQRCode(eventId, eventSlug) {
             description: 'Primary QR code for this event',
             is_active: true
         };
-        
+
         return await createEventQRCode(eventId, defaultQRData);
     } catch (error) {
         console.error('Error creating default QR code:', error);
@@ -156,23 +156,23 @@ async function getQRCodeAnalytics(qrCodeId, days = 30) {
 // Validate QR code data
 function validateQRCodeData(data) {
     const errors = [];
-    
+
     if (!data.name || data.name.trim().length === 0) {
         errors.push('Name is required');
     }
-    
+
     if (data.name && data.name.length > 100) {
         errors.push('Name must be 100 characters or less');
     }
-    
+
     if (data.description && data.description.length > 500) {
         errors.push('Description must be 500 characters or less');
     }
-    
+
     if (data.custom_url && data.custom_url.length > 2040) {
         errors.push('Custom URL must be 2040 characters or less');
     }
-    
+
     // Validate custom URL format if provided
     if (data.custom_url) {
         try {
@@ -181,7 +181,7 @@ function validateQRCodeData(data) {
             errors.push('Custom URL must be a valid URL');
         }
     }
-    
+
     return errors;
 }
 
@@ -189,19 +189,19 @@ function validateQRCodeData(data) {
 async function generateQRCodeDownload(qrCodeIdentifier, format = 'png', size = 512) {
     try {
         const qrUrl = generateQRCodeURL(qrCodeIdentifier);
-        
+
         const options = {
             width: parseInt(size),
             type: format,
             margin: 4,
             errorCorrectionLevel: 'H'
         };
-        
+
         const qrCodeData = await generateQRCodeImage(qrUrl, options);
-        
+
         const contentType = format === 'svg' ? 'image/svg+xml' : 'image/png';
         const filename = `qr-code-${qrCodeIdentifier}.${format}`;
-        
+
         return {
             data: qrCodeData,
             contentType,

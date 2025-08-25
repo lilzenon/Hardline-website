@@ -12,7 +12,7 @@ const events = require("./events.routes");
 const publicEvents = require("./public_events.routes");
 const qrRoutes = require("./qr.routes");
 const sms = require("./sms.routes");
-const analytics = require("./api/analytics.routes");
+// Analytics functionality moved to dashboard repository
 const contactBook = require("./api/contact-book.routes");
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
@@ -39,7 +39,7 @@ apiRouter.use("/auth", auth);
 apiRouter.use("/auth", adminAuth);
 apiRouter.use("/events", events);
 apiRouter.use("/sms", sms);
-apiRouter.use("/analytics", analytics);
+// Analytics routes moved to dashboard repository
 apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);

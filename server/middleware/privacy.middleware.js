@@ -3,7 +3,7 @@
  * Implements GDPR compliance, cookie consent, and data retention policies
  */
 
-const analyticsQueries = require('../queries/analytics.queries');
+// Analytics queries moved to dashboard repository
 
 // Privacy settings and constants
 const PRIVACY_SETTINGS = {

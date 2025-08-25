@@ -3,7 +3,7 @@ const { validationResult } = require("express-validator");
 
 const events = require("../handlers/events.handler");
 const asyncHandler = require("../utils/asyncHandler");
-const { trackPageView, extractSessionForConversion } = require("../middleware/analytics.middleware");
+// Analytics middleware moved to dashboard repository
 const { CustomError } = require("../utils");
 const query = require("../queries");
 

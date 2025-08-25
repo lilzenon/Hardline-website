@@ -1,9 +1,9 @@
 const { body, param, query } = require("express-validator");
 const validator = require("validator");
 const { event } = require("../queries");
-const analyticsQueries = require("../queries/analytics.queries");
+// Analytics queries moved to dashboard repository
 const qrCodeService = require("../services/qr-code.service");
-const { trackConversion } = require("../middleware/analytics.middleware");
+// Analytics middleware moved to dashboard repository
 const { CustomError } = require("../utils");
 const QRCode = require('qrcode');
 const { nanoid } = require('nanoid');
