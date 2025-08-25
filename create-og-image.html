@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create OG Image - BOUNCE2BOUNCE</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #000;
+            color: #fff;
+        }
+        
+        .og-image {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            margin: 20px 0;
+        }
+        
+        .og-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 2;
+        }
+        
+        .og-logo {
+            font-size: 72px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+        
+        .og-tagline {
+            font-size: 32px;
+            color: #319DFF;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .og-description {
+            font-size: 24px;
+            color: #ccc;
+            max-width: 800px;
+            line-height: 1.4;
+        }
+        
+        .og-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(49, 157, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(10, 255, 75, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .btn {
+            background: #319DFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 16px;
+        }
+        
+        .btn:hover {
+            background: #2080df;
+        }
+        
+        .info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            max-width: 1200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Create Open Graph Image for BOUNCE2BOUNCE</h1>
+    
+    <div class="info">
+        <strong>📏 Optimal OG Image Dimensions:</strong> 1200x630 pixels (1.91:1 ratio)<br>
+        <strong>📱 Supported Formats:</strong> PNG, JPG (PNG recommended for quality)<br>
+        <strong>📊 File Size:</strong> Under 8MB (recommended under 1MB)
+    </div>
+    
+    <div class="controls">
+        <button class="btn" onclick="downloadImage()">📥 Download as PNG</button>
+        <button class="btn" onclick="copyToClipboard()">📋 Copy Image</button>
+        <button class="btn" onclick="testImage()">🧪 Test Image</button>
+    </div>
+    
+    <div class="og-image" id="og-image">
+        <div class="og-background"></div>
+        <div class="og-content">
+            <div class="og-logo">BOUNCE2BOUNCE</div>
+            <div class="og-tagline">Live Music Events & Artist Connections</div>
+            <div class="og-description">Discover exclusive live music events and connect with artists</div>
+        </div>
+    </div>
+    
+    <div class="info">
+        <strong>🔍 How to use:</strong><br>
+        1. Click "Download as PNG" to save the image<br>
+        2. Upload the image to your server at <code>/static/images/og-image.png</code><br>
+        3. Update the SEO settings to use the new image URL<br>
+        4. Test with Facebook Debugger and Twitter Card Validator
+    </div>
+
+    <script>
+        async function downloadImage() {
+            const ogImage = document.getElementById('og-image');
+            
+            try {
+                // Use html2canvas if available, otherwise provide instructions
+                if (typeof html2canvas !== 'undefined') {
+                    const canvas = await html2canvas(ogImage, {
+                        width: 1200,
+                        height: 630,
+                        scale: 1,
+                        backgroundColor: '#000000'
+                    });
+                    
+                    // Download the image
+                    const link = document.createElement('a');
+                    link.download = 'bounce2bounce-og-image.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                } else {
+                    alert('To download the image, you need to:\n\n1. Take a screenshot of the image above\n2. Crop it to exactly 1200x630 pixels\n3. Save as PNG format\n4. Upload to /static/images/og-image.png');
+                }
+            } catch (error) {
+                console.error('Error creating image:', error);
+                alert('Please take a screenshot of the image above and crop it to 1200x630 pixels');
+            }
+        }
+        
+        async function copyToClipboard() {
+            try {
+                // This would require html2canvas library
+                alert('Please take a screenshot of the image above and save it as og-image.png');
+            } catch (error) {
+                alert('Please take a screenshot of the image above');
+            }
+        }
+        
+        function testImage() {
+            const testUrls = [
+                'https://developers.facebook.com/tools/debug/',
+                'https://cards-dev.twitter.com/validator',
+                'https://www.opengraph.xyz/'
+            ];
+            
+            alert('After uploading the image, test it with these tools:\n\n' + testUrls.join('\n'));
+        }
+        
+        // Add html2canvas library
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

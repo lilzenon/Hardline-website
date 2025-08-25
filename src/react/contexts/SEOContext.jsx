@@ -3,7 +3,7 @@
  * Fetches settings from dashboard API and updates meta tags in real-time
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import {
   fetchSEOSettings,
@@ -153,8 +153,44 @@ export const SEOProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // Check if server-side meta tags exist to avoid conflicts
+  const hasServerSideMetaTags = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+
+    // Check for server-side rendered meta tags (without data-rh attribute)
+    const serverMetaTags = document.querySelectorAll('meta:not([data-rh])');
+    const hasOgTags = Array.from(serverMetaTags).some(meta =>
+      meta.getAttribute('property')?.startsWith('og:') ||
+      meta.getAttribute('name')?.startsWith('twitter:')
+    );
+
+    console.log('🔍 Server-side meta tags detected:', hasOgTags);
+    return hasOgTags;
+  }, []);
+
   // Generate meta tags from current settings with device info
-  const metaTags = generateMetaTags(seoSettings, deviceInfo);
+  const metaTags = useMemo(() => {
+    if (!seoSettings) return { title: 'BOUNCE2BOUNCE', meta: [], link: [] };
+
+    // If server-side meta tags exist, only generate client-side specific tags
+    if (hasServerSideMetaTags) {
+      console.log('🔍 Using minimal client-side meta tags to avoid conflicts');
+      return {
+        title: seoSettings.default_title || 'BOUNCE2BOUNCE',
+        meta: [
+          // Only add mobile-specific meta tags that server might not have
+          ...(deviceInfo.isMobile ? [
+            { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover' },
+            { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+            { name: 'format-detection', content: 'telephone=no' }
+          ] : [])
+        ],
+        link: []
+      };
+    }
+
+    return generateMetaTags(seoSettings, deviceInfo);
+  }, [seoSettings, deviceInfo, hasServerSideMetaTags]);
 
   const contextValue = {
     seoSettings,

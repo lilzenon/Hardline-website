@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Meta Tags Test - BOUNCE2BOUNCE</title>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #000;
+            color: #fff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .meta-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .status.good { background: #0AFF4B; color: #000; }
+        .status.warning { background: #FFA500; color: #000; }
+        .status.error { background: #FF4444; color: #fff; }
+        .test-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .test-link {
+            background: rgba(74, 158, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #4A9EFF;
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .test-link:hover {
+            background: rgba(74, 158, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .refresh-btn {
+            background: #4A9EFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .refresh-btn:hover {
+            background: #3A8EEF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 SEO Meta Tags Test - BOUNCE2BOUNCE</h1>
+        <p>This page tests and validates the SEO meta tags for the BOUNCE2BOUNCE homepage.</p>
+        
+        <button class="refresh-btn" onclick="location.reload()">🔄 Refresh Test</button>
+        
+        <div class="section">
+            <h2>📊 Meta Tags Analysis</h2>
+            <div id="meta-analysis">Loading...</div>
+        </div>
+        
+        <div class="section">
+            <h2>🔗 Online SEO Testing Tools</h2>
+            <div class="test-links">
+                <a href="https://developers.facebook.com/tools/debug/" target="_blank" class="test-link">
+                    <strong>Facebook Debugger</strong><br>
+                    Test Open Graph tags
+                </a>
+                <a href="https://cards-dev.twitter.com/validator" target="_blank" class="test-link">
+                    <strong>Twitter Card Validator</strong><br>
+                    Test Twitter Cards
+                </a>
+                <a href="https://search.google.com/test/rich-results" target="_blank" class="test-link">
+                    <strong>Google Rich Results</strong><br>
+                    Test structured data
+                </a>
+                <a href="https://www.opengraph.xyz/" target="_blank" class="test-link">
+                    <strong>Open Graph Preview</strong><br>
+                    Preview social shares
+                </a>
+                <a href="https://metatags.io/" target="_blank" class="test-link">
+                    <strong>Meta Tags Analyzer</strong><br>
+                    Complete meta tag analysis
+                </a>
+                <a href="https://www.heymeta.com/" target="_blank" class="test-link">
+                    <strong>HeyMeta</strong><br>
+                    Social media preview
+                </a>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📋 Test URLs</h2>
+            <div class="meta-tag">
+                <strong>Homepage:</strong> <a href="http://localhost:3001" target="_blank">http://localhost:3001</a>
+            </div>
+            <div class="meta-tag">
+                <strong>Production:</strong> <a href="https://b2b.click" target="_blank">https://b2b.click</a>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 Current Meta Tags</h2>
+            <div id="current-meta-tags">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        function analyzeMetaTags() {
+            const metaTags = Array.from(document.querySelectorAll('meta')).map(meta => {
+                const attrs = {};
+                for (let attr of meta.attributes) {
+                    attrs[attr.name] = attr.value;
+                }
+                return attrs;
+            });
+            
+            const title = document.title;
+            const canonical = document.querySelector('link[rel="canonical"]')?.href;
+            const structuredData = document.querySelector('script[type="application/ld+json"]')?.textContent;
+            
+            // Filter relevant SEO meta tags
+            const seoTags = metaTags.filter(tag => 
+                tag.name?.includes('description') || 
+                tag.name?.includes('keywords') || 
+                tag.name?.includes('author') || 
+                tag.property?.startsWith('og:') || 
+                tag.name?.startsWith('twitter:') ||
+                tag.name === 'robots' ||
+                tag.name === 'googlebot'
+            );
+            
+            return {
+                title,
+                canonical,
+                structuredData: structuredData ? JSON.parse(structuredData) : null,
+                seoTags,
+                totalMetaTags: metaTags.length
+            };
+        }
+        
+        function getStatus(value, type) {
+            if (!value) return '<span class="status error">❌ Missing</span>';
+            
+            switch(type) {
+                case 'title':
+                    return value.length > 60 ? '<span class="status warning">⚠️ Too Long</span>' : '<span class="status good">✅ Good</span>';
+                case 'description':
+                    return value.length > 160 ? '<span class="status warning">⚠️ Too Long</span>' : '<span class="status good">✅ Good</span>';
+                default:
+                    return '<span class="status good">✅ Present</span>';
+            }
+        }
+        
+        function displayAnalysis() {
+            const analysis = analyzeMetaTags();
+            
+            const analysisHtml = `
+                <div class="meta-tag">
+                    <strong>Title:</strong> ${analysis.title} ${getStatus(analysis.title, 'title')}
+                    <br><small>Length: ${analysis.title?.length || 0} characters</small>
+                </div>
+                <div class="meta-tag">
+                    <strong>Description:</strong> ${analysis.seoTags.find(t => t.name === 'description')?.content || 'Not found'} ${getStatus(analysis.seoTags.find(t => t.name === 'description')?.content, 'description')}
+                    <br><small>Length: ${analysis.seoTags.find(t => t.name === 'description')?.content?.length || 0} characters</small>
+                </div>
+                <div class="meta-tag">
+                    <strong>Keywords:</strong> ${analysis.seoTags.find(t => t.name === 'keywords')?.content || 'Not found'} ${getStatus(analysis.seoTags.find(t => t.name === 'keywords')?.content)}
+                </div>
+                <div class="meta-tag">
+                    <strong>Open Graph Title:</strong> ${analysis.seoTags.find(t => t.property === 'og:title')?.content || 'Not found'} ${getStatus(analysis.seoTags.find(t => t.property === 'og:title')?.content)}
+                </div>
+                <div class="meta-tag">
+                    <strong>Open Graph Image:</strong> ${analysis.seoTags.find(t => t.property === 'og:image')?.content || 'Not found'} ${getStatus(analysis.seoTags.find(t => t.property === 'og:image')?.content)}
+                </div>
+                <div class="meta-tag">
+                    <strong>Twitter Card:</strong> ${analysis.seoTags.find(t => t.name === 'twitter:card')?.content || 'Not found'} ${getStatus(analysis.seoTags.find(t => t.name === 'twitter:card')?.content)}
+                </div>
+                <div class="meta-tag">
+                    <strong>Canonical URL:</strong> ${analysis.canonical || 'Not found'} ${getStatus(analysis.canonical)}
+                </div>
+                <div class="meta-tag">
+                    <strong>Structured Data:</strong> ${analysis.structuredData ? 'Present' : 'Not found'} ${getStatus(analysis.structuredData)}
+                </div>
+                <div class="meta-tag">
+                    <strong>Total Meta Tags:</strong> ${analysis.totalMetaTags}
+                </div>
+            `;
+            
+            document.getElementById('meta-analysis').innerHTML = analysisHtml;
+            
+            // Display all current meta tags
+            const currentTagsHtml = analysis.seoTags.map(tag => {
+                const tagStr = Object.entries(tag).map(([key, value]) => `${key}="${value}"`).join(' ');
+                return `<div class="meta-tag">&lt;meta ${tagStr}&gt;</div>`;
+            }).join('');
+            
+            document.getElementById('current-meta-tags').innerHTML = currentTagsHtml || '<div class="meta-tag">No SEO meta tags found</div>';
+        }
+        
+        // Run analysis when page loads
+        document.addEventListener('DOMContentLoaded', displayAnalysis);
+    </script>
+</body>
+</html>

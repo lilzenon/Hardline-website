@@ -48,6 +48,7 @@ const sessionAdmin = require("./admin/session-admin.routes");
 const privacy = require("./privacy.routes");
 const integrations = require("./integrations.routes");
 const webhooks = require("./webhooks.routes");
+const seoTest = require("./seo-test.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -79,6 +80,7 @@ apiRouter.use("/admin/sessions", sessionAdmin);
 apiRouter.use("/privacy", privacy);
 apiRouter.use("/integrations", integrations);
 apiRouter.use("/webhooks", webhooks);
+apiRouter.use("/seo-test", seoTest);
 
 module.exports = {
     api: apiRouter,

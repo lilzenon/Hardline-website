@@ -8,15 +8,15 @@ async function createSEOSettingsTable(knex) {
     if (!hasTable) {
         await knex.schema.createTable("seo_settings", table => {
             table.increments("id").primary();
-            
+
             // Meta tag defaults
             table.string("default_title", 255).defaultTo("BOUNCE2BOUNCE - Live Music Events");
             table.text("default_description").defaultTo("Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.");
             table.string("default_keywords", 500).defaultTo("live music events, concert tickets, artist promotion, event discovery, music experiences");
             table.string("default_author", 100).defaultTo("BOUNCE2BOUNCE");
-            table.string("default_og_image", 500).defaultTo("/images/bounce-logo.svg");
+            table.string("default_og_image", 500).defaultTo("/images/og-image.png");
             table.string("twitter_handle", 50).defaultTo("@bounce2bounce");
-            
+
             // Sitemap settings
             table.boolean("sitemap_enabled").defaultTo(true);
             table.boolean("sitemap_include_events").defaultTo(true);
@@ -26,7 +26,7 @@ async function createSEOSettingsTable(knex) {
             table.integer("sitemap_max_urls").defaultTo(1000);
             table.string("sitemap_changefreq", 20).defaultTo("weekly");
             table.decimal("sitemap_priority", 2, 1).defaultTo(0.8);
-            
+
             // Robots.txt settings
             table.boolean("robots_enabled").defaultTo(true);
             table.text("robots_custom_rules").nullable();
@@ -34,7 +34,7 @@ async function createSEOSettingsTable(knex) {
             table.text("robots_disallowed_paths").defaultTo("/admin/,/dashboard/,/api/,/login,/logout");
             table.text("robots_allowed_paths").defaultTo("/,/event/,/events,/static/,/images/");
             table.integer("robots_crawl_delay").defaultTo(1);
-            
+
             // Structured data settings
             table.boolean("structured_data_enabled").defaultTo(true);
             table.boolean("structured_data_events").defaultTo(true);
@@ -42,7 +42,7 @@ async function createSEOSettingsTable(knex) {
             table.boolean("structured_data_breadcrumbs").defaultTo(true);
             table.boolean("structured_data_faq").defaultTo(true);
             table.text("organization_schema_data").nullable(); // JSON string
-            
+
             // Performance settings
             table.boolean("service_worker_enabled").defaultTo(true);
             table.boolean("lazy_loading_enabled").defaultTo(true);
@@ -50,24 +50,24 @@ async function createSEOSettingsTable(knex) {
             table.boolean("resource_preloading_enabled").defaultTo(true);
             table.boolean("pwa_enabled").defaultTo(true);
             table.integer("cache_duration_hours").defaultTo(24);
-            
+
             // AI/LLM optimization settings
             table.boolean("llms_txt_enabled").defaultTo(true);
             table.text("llms_custom_content").nullable();
             table.boolean("ai_optimization_enabled").defaultTo(true);
             table.boolean("faq_generation_enabled").defaultTo(true);
-            
+
             // Analytics and monitoring
             table.boolean("seo_monitoring_enabled").defaultTo(true);
             table.boolean("performance_monitoring_enabled").defaultTo(true);
             table.string("google_analytics_id", 50).nullable();
             table.string("google_search_console_id", 100).nullable();
-            
+
             // Backup and versioning
             table.text("backup_data").nullable(); // JSON string of previous settings
             table.integer("version").defaultTo(1);
             table.timestamp("last_backup_at").nullable();
-            
+
             // Audit fields
             table
                 .integer("updated_by_id")
@@ -80,7 +80,7 @@ async function createSEOSettingsTable(knex) {
                 .notNullable()
                 .defaultTo(knex.fn.uuid());
             table.timestamps(false, true);
-            
+
             // Indexes
             table.index(["updated_by_id"]);
             table.index(["version"]);
@@ -92,7 +92,7 @@ async function createSEOSettingsTable(knex) {
             default_description: "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.",
             default_keywords: "live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE",
             default_author: "BOUNCE2BOUNCE",
-            default_og_image: "/images/bounce-logo.svg",
+            default_og_image: "/images/og-image.png",
             twitter_handle: "@bounce2bounce",
             sitemap_enabled: true,
             sitemap_include_events: true,
@@ -119,7 +119,7 @@ async function createSEOSettingsTable(knex) {
             performance_monitoring_enabled: true,
             version: 1
         });
-        
+
         console.log('✅ SEO Settings table created with default values');
     }
 }
@@ -139,7 +139,7 @@ async function createSEOFileBackupsTable(knex) {
             table.boolean("is_active").defaultTo(false); // Current active version
             table.integer("file_size").nullable();
             table.string("content_hash", 64).nullable(); // SHA-256 hash for integrity
-            
+
             // Audit fields
             table
                 .integer("created_by_id")
@@ -152,13 +152,13 @@ async function createSEOFileBackupsTable(knex) {
                 .notNullable()
                 .defaultTo(knex.fn.uuid());
             table.timestamps(false, true);
-            
+
             // Indexes
             table.index(["file_name", "is_active"]);
             table.index(["created_by_id"]);
             table.index(["created_at"]);
         });
-        
+
         console.log('✅ SEO File Backups table created');
     }
 }

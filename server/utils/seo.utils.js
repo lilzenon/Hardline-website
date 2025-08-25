@@ -25,7 +25,7 @@ function generateMetaTags(options = {}) {
 
     const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
-    const defaultImage = `${baseUrl}/images/bounce-logo.svg`;
+    const defaultImage = `${baseUrl}/images/og-image.png`;
     const metaImage = image || defaultImage;
 
     return {

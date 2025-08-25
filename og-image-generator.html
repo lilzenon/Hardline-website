@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OG Image Generator</title>
+    <style>
+        body { margin: 0; padding: 0; }
+        .og-image {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-family: 'Inter', Arial, sans-serif;
+            overflow: hidden;
+        }
+        .og-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(49, 157, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(10, 255, 75, 0.1) 0%, transparent 50%);
+        }
+        .logo {
+            font-size: 72px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            z-index: 1;
+        }
+        .tagline {
+            font-size: 32px;
+            color: #319DFF;
+            margin-bottom: 15px;
+            font-weight: 600;
+            z-index: 1;
+        }
+        .description {
+            font-size: 24px;
+            color: #cccccc;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="og-image">
+        <div class="logo">BOUNCE2BOUNCE</div>
+        <div class="tagline">Live Music Events & Artist Connections</div>
+        <div class="description">Discover exclusive live music events and connect with artists</div>
+    </div>
+</body>
+</html>

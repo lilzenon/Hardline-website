@@ -20,7 +20,7 @@ export const DEFAULT_SEO_SETTINGS = {
     default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
     default_keywords: 'events, tickets, entertainment, concerts, festivals',
     default_author: 'BOUNCE2BOUNCE',
-    default_og_image: '/images/og-image.jpg',
+    default_og_image: '/images/og-image.png',
     twitter_handle: '@bounce2bounce',
     google_analytics_id: '',
     google_search_console_id: ''
@@ -125,7 +125,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
     // Ensure URLs are absolute for Open Graph
     const ogImage = settings.default_og_image && settings.default_og_image.startsWith('http') ?
         settings.default_og_image :
-        `https://b2b.click${settings.default_og_image || '/images/og-image.jpg'}`;
+        `https://b2b.click${settings.default_og_image || '/images/og-image.png'}`;
 
     // Base meta tags
     const metaTags = [
@@ -252,7 +252,7 @@ export const setCachedSEOSettings = (settings) => {
                 const minimalCache = {
                     data: {
                         default_title: settings.default_title,
-                        default_description: settings.default_description?.substring(0, 200),
+                        default_description: settings.default_description && settings.default_description.substring(0, 200),
                         default_og_image: settings.default_og_image
                     },
                     timestamp: Date.now()

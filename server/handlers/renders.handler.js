@@ -529,7 +529,7 @@ async function reactHomepage(req, res) {
                 default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
                 default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
                 default_author: 'BOUNCE2BOUNCE',
-                default_og_image: '/uploads/og-images/og-image-1756143877206-973649686.jpg',
+                default_og_image: '/images/og-image.png',
                 twitter_handle: '@bounce2bounce'
             };
         }
@@ -579,53 +579,103 @@ async function reactHomepage(req, res) {
         // Read the React HTML template
         htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
 
+        // Escape HTML content for safe injection
+        const escapeHtml = (text) => {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        };
+
         // Generate dynamic meta tags HTML
         const dynamicMetaTags = `
     <!-- Dynamic SEO Meta Tags -->
-    <meta name="description" content="${metaTags.description}">
-    <meta name="keywords" content="${metaTags.keywords}">
-    <meta name="author" content="${metaTags.author}">
+    <meta name="description" content="${escapeHtml(metaTags.description)}">
+    <meta name="keywords" content="${escapeHtml(metaTags.keywords)}">
+    <meta name="author" content="${escapeHtml(metaTags.author)}">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow">
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="${metaTags.ogType}">
-    <meta property="og:url" content="${metaTags.ogUrl}">
-    <meta property="og:title" content="${metaTags.ogTitle}">
-    <meta property="og:description" content="${metaTags.ogDescription}">
-    <meta property="og:image" content="${metaTags.ogImage}">
+    <meta property="og:type" content="${escapeHtml(metaTags.ogType)}">
+    <meta property="og:url" content="${escapeHtml(metaTags.ogUrl)}">
+    <meta property="og:title" content="${escapeHtml(metaTags.ogTitle)}">
+    <meta property="og:description" content="${escapeHtml(metaTags.ogDescription)}">
+    <meta property="og:image" content="${escapeHtml(metaTags.ogImage)}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="${metaTags.ogTitle} - Preview Image">
-    <meta property="og:site_name" content="${metaTags.ogSiteName}">
+    <meta property="og:image:alt" content="${escapeHtml(metaTags.ogTitle)} - Preview Image">
+    <meta property="og:site_name" content="${escapeHtml(metaTags.ogSiteName)}">
     <meta property="og:locale" content="en_US">
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="${metaTags.twitterCard}">
-    <meta name="twitter:site" content="${seoSettings.twitter_handle || '@bounce2bounce'}">
-    <meta name="twitter:creator" content="${seoSettings.twitter_handle || '@bounce2bounce'}">
-    <meta name="twitter:url" content="${metaTags.ogUrl}">
-    <meta name="twitter:title" content="${metaTags.twitterTitle}">
-    <meta name="twitter:description" content="${metaTags.twitterDescription}">
-    <meta name="twitter:image" content="${metaTags.twitterImage}">
-    <meta name="twitter:image:alt" content="${metaTags.twitterTitle} - Preview Image">
+    <meta name="twitter:card" content="${escapeHtml(metaTags.twitterCard)}">
+    <meta name="twitter:site" content="${escapeHtml(seoSettings.twitter_handle || '@bounce2bounce')}">
+    <meta name="twitter:creator" content="${escapeHtml(seoSettings.twitter_handle || '@bounce2bounce')}">
+    <meta name="twitter:url" content="${escapeHtml(metaTags.ogUrl)}">
+    <meta name="twitter:title" content="${escapeHtml(metaTags.twitterTitle)}">
+    <meta name="twitter:description" content="${escapeHtml(metaTags.twitterDescription)}">
+    <meta name="twitter:image" content="${escapeHtml(metaTags.twitterImage)}">
+    <meta name="twitter:image:alt" content="${escapeHtml(metaTags.twitterTitle)} - Preview Image">
 
-    <!-- Additional Mobile Meta Tags -->
+    <!-- Additional SEO Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="${metaTags.appleMobileWebAppCapable}">
-    <meta name="apple-mobile-web-app-title" content="${metaTags.title}">
-    <meta name="application-name" content="${metaTags.title}">`;
+    <meta name="apple-mobile-web-app-capable" content="${escapeHtml(metaTags.appleMobileWebAppCapable)}">
+    <meta name="apple-mobile-web-app-title" content="${escapeHtml(metaTags.title)}">
+    <meta name="application-name" content="${escapeHtml(metaTags.title)}">
+    <meta name="theme-color" content="${escapeHtml(metaTags.themeColor)}">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="${escapeHtml(metaTags.canonical)}">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "${escapeHtml(metaTags.title)}",
+        "description": "${escapeHtml(metaTags.description)}",
+        "url": "${escapeHtml(metaTags.ogUrl)}",
+        "image": "${escapeHtml(metaTags.ogImage)}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "BOUNCE2BOUNCE",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "${escapeHtml(metaTags.ogImage)}"
+            }
+        }
+    }
+    </script>`;
 
         // Replace the existing title and inject meta tags
         htmlContent = htmlContent.replace(
             /<title>.*?<\/title>/i,
-            `<title>${metaTags.title}</title>`
+            `<title>${escapeHtml(metaTags.title)}</title>`
+        );
+
+        // Remove any existing meta tags that we're about to replace to prevent duplicates
+        htmlContent = htmlContent.replace(
+            /<meta\s+name="description"[^>]*>/gi, ''
+        ).replace(
+            /<meta\s+name="keywords"[^>]*>/gi, ''
+        ).replace(
+            /<meta\s+name="author"[^>]*>/gi, ''
+        ).replace(
+            /<meta\s+property="og:[^"]*"[^>]*>/gi, ''
+        ).replace(
+            /<meta\s+name="twitter:[^"]*"[^>]*>/gi, ''
+        ).replace(
+            /<link\s+rel="canonical"[^>]*>/gi, ''
         );
 
         // Inject dynamic meta tags before the closing </head> tag
         htmlContent = htmlContent.replace(
             '</head>',
-            `${dynamicMetaTags}\n</head>`
+            `${dynamicMetaTags}\n    <!-- Server-side meta tags injected -->\n</head>`
         );
 
         // Set caching headers
