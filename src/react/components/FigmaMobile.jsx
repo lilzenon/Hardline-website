@@ -241,6 +241,13 @@ const getResponsiveSrcSet = (originalUrl, context = 'event') => {
 
 const getAVIFSrcSet = (originalUrl, context = 'event') => {
   if (!originalUrl) return '';
+
+  // Safari mobile has poor AVIF support, skip AVIF for Safari mobile
+  const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  if (isSafariMobile) {
+    return ''; // Return empty to skip AVIF source entirely
+  }
+
   const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
@@ -1239,18 +1246,22 @@ const FigmaMobile = () => {
       console.log('🚀 Preloading critical event images for instant display...');
 
       // Preload first 2 event images (above-the-fold on mobile)
+      const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+
       featuredEvents.slice(0, 2).forEach((event, index) => {
         if (event.coverImage) {
-          // Preload AVIF version for modern browsers
-          const avifLink = document.createElement('link');
-          avifLink.rel = 'preload';
-          avifLink.as = 'image';
-          avifLink.type = 'image/avif';
-          const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
-          document.head.appendChild(avifLink);
+          // Skip AVIF preloading for Safari mobile, go straight to WebP
+          if (!isSafariMobile) {
+            const avifLink = document.createElement('link');
+            avifLink.rel = 'preload';
+            avifLink.as = 'image';
+            avifLink.type = 'image/avif';
+            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+            avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
+            document.head.appendChild(avifLink);
+          }
 
-          // Preload WebP fallback
+          // Preload WebP version (primary for Safari mobile)
           const webpLink = document.createElement('link');
           webpLink.rel = 'preload';
           webpLink.as = 'image';
@@ -1258,7 +1269,16 @@ const FigmaMobile = () => {
           webpLink.href = getOptimizedImageUrl(event.coverImage, 111);
           document.head.appendChild(webpLink);
 
-          console.log(`✅ Preloaded event image ${index + 1}: ${event.title}`);
+          // Safari mobile: also preload original as fallback
+          if (isSafariMobile) {
+            const originalLink = document.createElement('link');
+            originalLink.rel = 'preload';
+            originalLink.as = 'image';
+            originalLink.href = event.coverImage;
+            document.head.appendChild(originalLink);
+          }
+
+          console.log(`✅ Preloaded mobile event image ${index + 1}: ${event.title} ${isSafariMobile ? '(Safari mobile optimized)' : ''}`);
         }
       });
     }
@@ -3203,13 +3223,16 @@ const FigmaMobile = () => {
                         zIndex: 2 // Above gradient overlay
                       }}
                     >
-                      {/* Event Background Image - Progressive Loading with AVIF/WebP/JPEG */}
+                      {/* Event Background Image - Progressive Loading with Safari Mobile Optimization */}
                       <picture>
-                        <source
-                          srcSet={getAVIFSrcSet(card.coverImage, 'event')}
-                          sizes="111px"
-                          type="image/avif"
-                        />
+                        {/* Only include AVIF for non-Safari mobile browsers */}
+                        {getAVIFSrcSet(card.coverImage, 'event') && (
+                          <source
+                            srcSet={getAVIFSrcSet(card.coverImage, 'event')}
+                            sizes="111px"
+                            type="image/avif"
+                          />
+                        )}
                         <source
                           srcSet={getResponsiveSrcSet(card.coverImage, 'event')}
                           sizes="111px"
@@ -3219,6 +3242,17 @@ const FigmaMobile = () => {
                           src={getOptimizedImageUrl(card.coverImage, 111)}
                           alt={`${card.title} event cover`}
                           {...getImageLoadingStrategy(index, true)}
+                          onError={(e) => {
+                            // Safari mobile fallback: try original image if optimized fails
+                            if (e.target.src !== card.coverImage) {
+                              console.log('🔄 Image load failed, trying original:', card.coverImage);
+                              e.target.src = card.coverImage;
+                            } else {
+                              // Final fallback: show gray background
+                              e.target.style.backgroundColor = 'lightgray';
+                              e.target.style.display = 'block';
+                            }
+                          }}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
@@ -3258,10 +3292,6 @@ const FigmaMobile = () => {
                             if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
                               e.target.style.transform = 'scale(1.015) translateY(-2px)';
                             }
-                          }}
-                          onError={(e) => {
-                            e.target.style.backgroundColor = 'lightgray';
-                            e.target.style.display = 'block';
                           }}
                         />
                       </picture>

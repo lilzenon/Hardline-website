@@ -241,6 +241,13 @@ const getResponsiveSrcSet = (originalUrl, context = 'event') => {
 
 const getAVIFSrcSet = (originalUrl, context = 'event') => {
   if (!originalUrl) return '';
+
+  // Safari mobile has poor AVIF support, skip AVIF for Safari mobile
+  const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+  if (isSafariMobile) {
+    return ''; // Return empty to skip AVIF source entirely
+  }
+
   const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
