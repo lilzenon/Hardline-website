@@ -135,7 +135,9 @@ router.get('/api/meta-tags', async(req, res) => {
 
             const response = await fetch(dashboardApiUrl);
             if (response.ok) {
-                seoSettings = await response.json();
+                const apiResponse = await response.json();
+                seoSettings = apiResponse.settings || apiResponse;
+                console.log('✅ SEO test settings fetched from dashboard API:', seoSettings.default_title);
             } else {
                 throw new Error(`Dashboard API responded with ${response.status}`);
             }

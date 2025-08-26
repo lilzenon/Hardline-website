@@ -188,8 +188,8 @@ app.use((req, res, next) => {
         return next();
     }
 
-    // Apply normal body parsing for all other routes
-    express.json()(req, res, next);
+    // Apply normal body parsing for all other routes with increased limit for image uploads
+    express.json({ limit: '50mb' })(req, res, next);
 });
 
 app.use((req, res, next) => {
@@ -198,7 +198,7 @@ app.use((req, res, next) => {
         return next();
     }
 
-    express.urlencoded({ extended: true })(req, res, next);
+    express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
 });
 
 // serve static files with optimized caching headers
@@ -238,6 +238,14 @@ app.use(express.static("dist", {
     index: false,
     setHeaders: (res, filePath) => {
         const isAsset = /\\\/(assets|images)\\\//.test(filePath) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(filePath);
+
+        // Set correct MIME types for ES modules and other assets
+        if (filePath.endsWith('.js')) {
+            res.set('Content-Type', 'application/javascript; charset=utf-8');
+        } else if (filePath.endsWith('.css')) {
+            res.set('Content-Type', 'text/css; charset=utf-8');
+        }
+
         if (env.NODE_ENV === 'production') {
             const maxAge = isAsset ? (365 * 24 * 60 * 60) : (24 * 60 * 60);
             const expiresDate = new Date(Date.now() + maxAge * 1000).toUTCString();
@@ -448,6 +456,12 @@ app.use("/custom-images", express.static("custom/images", {
 
 // finally, redirect the short link to the target
 app.get("/:id", (req, res, next) => {
+    // Skip asset requests - let them be handled by static middleware
+    if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/')) {
+        console.log(`🔍 DEBUG: Skipping /:id route for asset: ${req.path}`);
+        return next();
+    }
+
     console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${req.params.id}`);
     return asyncHandler(links.redirect)(req, res, next);
 });

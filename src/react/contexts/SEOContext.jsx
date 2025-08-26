@@ -153,44 +153,17 @@ export const SEOProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Check if server-side meta tags exist to avoid conflicts
-  const hasServerSideMetaTags = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-
-    // Check for server-side rendered meta tags (without data-rh attribute)
-    const serverMetaTags = document.querySelectorAll('meta:not([data-rh])');
-    const hasOgTags = Array.from(serverMetaTags).some(meta =>
-      meta.getAttribute('property')?.startsWith('og:') ||
-      meta.getAttribute('name')?.startsWith('twitter:')
-    );
-
-    console.log('🔍 Server-side meta tags detected:', hasOgTags);
-    return hasOgTags;
-  }, []);
+  // Note: React Helmet will automatically manage conflicts with server-side meta tags
 
   // Generate meta tags from current settings with device info
   const metaTags = useMemo(() => {
     if (!seoSettings) return { title: 'BOUNCE2BOUNCE', meta: [], link: [] };
 
-    // If server-side meta tags exist, only generate client-side specific tags
-    if (hasServerSideMetaTags) {
-      console.log('🔍 Using minimal client-side meta tags to avoid conflicts');
-      return {
-        title: seoSettings.default_title || 'BOUNCE2BOUNCE',
-        meta: [
-          // Only add mobile-specific meta tags that server might not have
-          ...(deviceInfo.isMobile ? [
-            { name: 'viewport', content: 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover' },
-            { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
-            { name: 'format-detection', content: 'telephone=no' }
-          ] : [])
-        ],
-        link: []
-      };
-    }
-
+    // Always generate full meta tags to ensure dynamic updates work
+    // React Helmet will properly manage conflicts with server-side tags
+    console.log('🔄 Generating dynamic meta tags from current SEO settings');
     return generateMetaTags(seoSettings, deviceInfo);
-  }, [seoSettings, deviceInfo, hasServerSideMetaTags]);
+  }, [seoSettings, deviceInfo]);
 
   const contextValue = {
     seoSettings,

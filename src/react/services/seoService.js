@@ -191,7 +191,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
  * Cache management for SEO settings
  */
 const CACHE_KEY = 'seo_settings_cache';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 1000; // 30 seconds for faster updates
 
 export const getCachedSEOSettings = () => {
     try {

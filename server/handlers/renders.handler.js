@@ -508,17 +508,27 @@ async function reactHomepage(req, res) {
         const fs = require('fs');
         const seoUtils = require('../utils/seo.utils');
 
-        // Get SEO settings from dashboard API
+        // Get SEO settings from dashboard API with timeout and fallback
         let seoSettings;
         try {
             const dashboardApiUrl = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click/api/settings/seo' :
                 'http://localhost:3002/api/settings/seo';
 
-            const response = await fetch(dashboardApiUrl);
+            // Add timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
+            const response = await fetch(dashboardApiUrl, {
+                signal: controller.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+            clearTimeout(timeoutId);
+
             if (response.ok) {
-                seoSettings = await response.json();
-                console.log('✅ SEO settings fetched from dashboard API');
+                const apiResponse = await response.json();
+                seoSettings = apiResponse.settings || apiResponse;
+                console.log('✅ SEO settings fetched from dashboard API:', seoSettings.default_title);
             } else {
                 throw new Error(`Dashboard API responded with ${response.status}`);
             }
