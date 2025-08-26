@@ -1844,9 +1844,6 @@ const FigmaMobile = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         transition: 'transform 0.2s ease-out'
       }}
       onMouseDown={(e) => {
@@ -1858,38 +1855,7 @@ const FigmaMobile = () => {
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
       }}
-    >
-      {/* Play button overlay */}
-      <div
-        style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '50%',
-          background: 'rgba(0, 0, 0, 0.8)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          border: '3px solid rgba(255, 255, 255, 0.9)',
-          transition: 'all 0.2s ease-out'
-        }}
-      >
-        {/* Play icon */}
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M8 5v14l11-7z"
-            fill="rgba(255, 255, 255, 0.95)"
-          />
-        </svg>
-      </div>
-    </div>
+    />
   ), [handleYoutubeThumbnailClick]);
 
   return (
