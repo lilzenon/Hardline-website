@@ -419,6 +419,16 @@ if (process.env.NODE_ENV === 'development') {
 // if is custom domain, redirect to the set homepage
 app.use(asyncHandler(links.redirectCustomDomainHomepage));
 
+// Test API endpoint (moved to top for debugging)
+app.get("/api/test", (req, res) => {
+    res.json({ success: true, message: "Test API endpoint working" });
+});
+
+// Test non-API endpoint
+app.get("/test-route", (req, res) => {
+    res.json({ success: true, message: "Test non-API endpoint working" });
+});
+
 // render html pages
 app.use("/", routes.render);
 

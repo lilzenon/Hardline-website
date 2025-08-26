@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
+import SocialMediaButtons from './SocialMediaButtons';
 
 // Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
@@ -2328,7 +2329,7 @@ const FigmaMobile = () => {
           {/* Hero Video Section */}
           <section
             aria-labelledby="hero-video-title"
-            style={{ width: '100%', marginBottom: '32px' }}
+            style={{ width: '100%', marginBottom: '20px' }}
           >
             <h1
               id="hero-video-title"
@@ -2387,7 +2388,7 @@ const FigmaMobile = () => {
                   <iframe
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
                     loading="lazy"
                     style={{
@@ -2535,10 +2536,28 @@ const FigmaMobile = () => {
           </article>
           </section>
 
+          {/* Social Media Buttons Section */}
+          <section
+            style={{
+              width: '100%',
+              padding: '0', // Remove all padding
+              margin: '0', // Remove all margin
+              boxSizing: 'border-box',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <SocialMediaButtons />
+          </section>
+
           {/* Events Section */}
           <section
             aria-labelledby="events-section-title"
-            style={{ width: '100%' }}
+            style={{
+              width: '100%',
+              marginTop: '20px' // Add spacing between social buttons and events
+            }}
           >
             {/* Events Title with Filter Toggle */}
             <div
@@ -2548,7 +2567,7 @@ const FigmaMobile = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '20px',
-                padding: '0 40px',
+                padding: '0 16px', // Match hero card padding
                 boxSizing: 'border-box'
               }}
             >

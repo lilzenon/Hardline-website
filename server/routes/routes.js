@@ -49,6 +49,9 @@ const privacy = require("./privacy.routes");
 const integrations = require("./integrations.routes");
 const webhooks = require("./webhooks.routes");
 const seoTest = require("./seo-test.routes");
+// console.log('🔍 About to require social-media routes...');
+// const socialMedia = require("./api/social-media.routes");
+// console.log('✅ Social media routes loaded:', typeof socialMedia);
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -81,6 +84,7 @@ apiRouter.use("/privacy", privacy);
 apiRouter.use("/integrations", integrations);
 apiRouter.use("/webhooks", webhooks);
 apiRouter.use("/seo-test", seoTest);
+// apiRouter.use("/social-media", socialMedia);
 
 module.exports = {
     api: apiRouter,

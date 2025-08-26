@@ -2008,7 +2008,7 @@ const FigmaDesktop = () => {
               <iframe
                 src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
                 title="Henry Fong YouTube Video"
-                allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 loading="eager"
                 style={{

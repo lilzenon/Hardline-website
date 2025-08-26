@@ -6,11 +6,13 @@
 // API endpoints configuration
 const API_CONFIG = {
     // Dashboard API endpoint for SEO settings
-    DASHBOARD_API: process.env.NODE_ENV === 'production' ?
+    DASHBOARD_API: (
+            import.meta.env.PROD || window.location.hostname === 'b2b.click' || window.location.hostname === 'bounce2bounce.com') ?
         'https://admin.b2b.click/api/settings/seo' : 'http://localhost:3002/api/settings/seo',
 
     // Maintenance status endpoint (public)
-    MAINTENANCE_API: process.env.NODE_ENV === 'production' ?
+    MAINTENANCE_API: (
+            import.meta.env.PROD || window.location.hostname === 'b2b.click' || window.location.hostname === 'bounce2bounce.com') ?
         'https://admin.b2b.click/api/settings/maintenance-status' : 'http://localhost:3002/api/settings/maintenance-status'
 };
 
