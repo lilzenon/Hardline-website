@@ -83,6 +83,8 @@ const SocialMediaButtons = () => {
           ? 'http://localhost:3002/api/social-media'
           : 'https://admin.b2b.click/api/social-media';
 
+        console.log('🔍 Using dashboard API URL:', dashboardApiUrl);
+
         const response = await fetch(dashboardApiUrl);
         const data = await response.json();
 
@@ -95,7 +97,18 @@ const SocialMediaButtons = () => {
         }
       } catch (err) {
         console.error('❌ Error fetching social media links:', err);
-        setError('Failed to load social media links');
+        console.log('🔄 Using fallback social media links');
+
+        // Fallback to default social media links if API fails
+        const fallbackLinks = [
+          { platform: 'instagram', url: 'https://instagram.com/bounce2bounce' },
+          { platform: 'twitter', url: 'https://twitter.com/bounce2bounce' },
+          { platform: 'tiktok', url: 'https://tiktok.com/@bounce2bounce' },
+          { platform: 'youtube', url: 'https://youtube.com/@bounce2bounce' }
+        ];
+
+        setSocialLinks(fallbackLinks);
+        setError(null); // Clear error since we have fallback
       } finally {
         setLoading(false);
       }

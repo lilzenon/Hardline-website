@@ -500,11 +500,16 @@ const FigmaMobile = () => {
   // Initialize analytics
   const { trackEvent, trackLinkClick } = useAnalytics();
 
-  // Autoplay YouTube on load per requirements (muted for autoplay policy)
-  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
+  // YouTube thumbnail preloader state for better performance
+  const [showYoutubeThumbnail, setShowYoutubeThumbnail] = useState(true);
+  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
 
   useEffect(() => {
-    setShouldLoadYoutube(true);
+    // Start with thumbnail for faster loading, then auto-load video after delay
+    setTimeout(() => {
+      setShowYoutubeThumbnail(false);
+      setShouldLoadYoutube(true);
+    }, 2000); // Load actual video after 2 seconds for better perceived performance
 
     // Track mobile component load - IMPORTANT for understanding user experience
     trackEvent('component_load', {
@@ -1810,6 +1815,83 @@ const FigmaMobile = () => {
     return finalURL;
   }, [videoQuality, connectionSpeed]);
 
+  // Handle YouTube thumbnail click to load video immediately
+  const handleYoutubeThumbnailClick = useCallback(() => {
+    setShowYoutubeThumbnail(false);
+    setShouldLoadYoutube(true);
+
+    // Track user interaction with video
+    trackEvent('video_interaction', {
+      action: 'thumbnail_click',
+      video_id: 'vEHTO3gf1jk',
+      component: 'FigmaMobile'
+    });
+  }, [trackEvent]);
+
+  // YouTube thumbnail component for preloading
+  const YouTubeThumbnail = useMemo(() => (
+    <div
+      onClick={handleYoutubeThumbnailClick}
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '100%',
+        height: '100%',
+        cursor: 'pointer',
+        backgroundImage: 'url(https://img.youtube.com/vi/vEHTO3gf1jk/maxresdefault.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'transform 0.2s ease-out'
+      }}
+      onMouseDown={(e) => {
+        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(0.98)';
+      }}
+      onMouseUp={(e) => {
+        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+      }}
+    >
+      {/* Play button overlay */}
+      <div
+        style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '3px solid rgba(255, 255, 255, 0.9)',
+          transition: 'all 0.2s ease-out'
+        }}
+      >
+        {/* Play icon */}
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M8 5v14l11-7z"
+            fill="rgba(255, 255, 255, 0.95)"
+          />
+        </svg>
+      </div>
+    </div>
+  ), [handleYoutubeThumbnailClick]);
+
   return (
     <>
       {/* Mobile-specific CSS */}
@@ -2384,11 +2466,15 @@ const FigmaMobile = () => {
               >
 
 
-                {shouldLoadYoutube ? (
+                {showYoutubeThumbnail ? (
+                  // Show thumbnail preloader for faster loading
+                  YouTubeThumbnail
+                ) : shouldLoadYoutube ? (
+                  // Show actual YouTube iframe
                   <iframe
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowFullScreen
                     loading="lazy"
                     style={{
@@ -2404,6 +2490,7 @@ const FigmaMobile = () => {
                     }}
                   />
                 ) : (
+                  // Loading state (rarely shown)
                   <div
                     style={{
                       position: 'absolute',
