@@ -98,16 +98,70 @@ const SocialMediaButtons = () => {
         setError('Failed to load social media links');
       } finally {
         setLoading(false);
-        // Trigger animation after data loads
-        setTimeout(() => setButtonsAnimated(true), 100);
       }
     };
 
     fetchSocialLinks();
+
+    // Trigger animation immediately for better loading sequence
+    setTimeout(() => setButtonsAnimated(true), 200);
   }, []);
 
-  // Don't render if no links or error
-  if (loading || error || socialLinks.length === 0) {
+  // Show skeleton during loading to maintain layout and timing
+  if (loading) {
+    return (
+      <section
+        style={{
+          width: '100%',
+          margin: '0',
+          padding: '0',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}
+        aria-label="Loading social media links"
+      >
+        <div
+          className={buttonsAnimated ? 'social-buttons-spring' : 'social-buttons-hidden'}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'nowrap',
+            justifyContent: 'space-evenly',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '100%',
+            padding: '0',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Skeleton buttons */}
+          {[1, 2, 3, 4].map((index) => (
+            <div
+              key={index}
+              style={{
+                width: 'clamp(75px, 18vw, 95px)',
+                height: 'clamp(75px, 18vw, 95px)',
+                borderRadius: '20px',
+                background: 'rgba(22, 22, 22, 0.4)',
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0,
+                opacity: 0.6
+              }}
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // Don't render if error or no links
+  if (error || socialLinks.length === 0) {
     return null;
   }
 
@@ -174,8 +228,8 @@ const SocialMediaButtons = () => {
               onTouchStart={(e) => {
                 e.currentTarget.style.transform = 'scale(0.95)';
                 e.currentTarget.style.background = 'rgba(120, 120, 120, 0.8)'; // Noticeable medium gray like TikTok
-                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.5)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(255, 255, 255, 0.2), 0 0 24px rgba(255, 255, 255, 0.1)'; // More subtle glow
+                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
               }}
               onTouchEnd={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
@@ -186,8 +240,8 @@ const SocialMediaButtons = () => {
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.95)';
                 e.currentTarget.style.background = 'rgba(120, 120, 120, 0.8)'; // Noticeable medium gray like TikTok
-                e.currentTarget.style.boxShadow = '0 0 15px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.5)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(255, 255, 255, 0.2), 0 0 24px rgba(255, 255, 255, 0.1)'; // More subtle glow
+                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
