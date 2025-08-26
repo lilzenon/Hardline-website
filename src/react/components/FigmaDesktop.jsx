@@ -218,7 +218,9 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   }
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
-    const baseUrl = `/images/proxy-optimized?url=${encodedUrl}`;
+    // Use dashboard server for image optimization (publicly accessible)
+    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+    const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
     return width ? `${baseUrl}&w=${width}` : baseUrl;
   }
   return originalUrl;
@@ -239,8 +241,9 @@ const getResponsiveSrcSet = (originalUrl, context = 'event') => {
 
 const getAVIFSrcSet = (originalUrl, context = 'event') => {
   if (!originalUrl) return '';
+  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
   return responsiveSizes(context)
-    .map((size) => `/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
+    .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
     .join(', ');
 };
 
@@ -794,7 +797,8 @@ const FigmaDesktop = () => {
           avifLink.rel = 'preload';
           avifLink.as = 'image';
           avifLink.type = 'image/avif';
-          avifLink.href = `/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
+          const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
           document.head.appendChild(avifLink);
 
           // Preload WebP fallback

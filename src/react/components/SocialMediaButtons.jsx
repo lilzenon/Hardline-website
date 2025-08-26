@@ -97,18 +97,7 @@ const SocialMediaButtons = () => {
         }
       } catch (err) {
         console.error('❌ Error fetching social media links:', err);
-        console.log('🔄 Using fallback social media links');
-
-        // Fallback to default social media links if API fails
-        const fallbackLinks = [
-          { platform: 'instagram', url: 'https://instagram.com/bounce2bounce' },
-          { platform: 'twitter', url: 'https://twitter.com/bounce2bounce' },
-          { platform: 'tiktok', url: 'https://tiktok.com/@bounce2bounce' },
-          { platform: 'youtube', url: 'https://youtube.com/@bounce2bounce' }
-        ];
-
-        setSocialLinks(fallbackLinks);
-        setError(null); // Clear error since we have fallback
+        setError('Failed to load social media links');
       } finally {
         setLoading(false);
       }
