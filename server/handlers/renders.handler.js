@@ -544,14 +544,21 @@ async function reactHomepage(req, res) {
             };
         }
 
-        // Generate meta tags using SEO utils
+        // Generate meta tags using SEO utils with proper image handling
         const metaTags = seoUtils.generateMetaTags({
-            title: seoSettings.default_title,
-            description: seoSettings.default_description,
-            keywords: seoSettings.default_keywords,
-            author: seoSettings.default_author,
+            title: seoSettings.default_title || 'BOUNCE2BOUNCE - Live Music Events',
+            description: seoSettings.default_description || 'Discover exclusive live music events and connect with artists',
+            keywords: seoSettings.default_keywords || 'live music events, concert tickets, artist promotion',
+            author: seoSettings.default_author || 'BOUNCE2BOUNCE',
             image: seoSettings.default_og_image,
             url: '/'
+        });
+
+        console.log('🏷️ Generated meta tags:', {
+            title: metaTags.title,
+            ogImage: metaTags.ogImage,
+            ogTitle: metaTags.ogTitle,
+            ogDescription: metaTags.ogDescription
         });
 
         // Find the React HTML file with fallbacks

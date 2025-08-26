@@ -125,9 +125,16 @@ export const generateMetaTags = (seoSettings, options = {}) => {
     const { isMobile = false, deviceType = 'unknown' } = options;
 
     // Ensure URLs are absolute for Open Graph
-    const ogImage = settings.default_og_image && settings.default_og_image.startsWith('http') ?
-        settings.default_og_image :
-        `https://b2b.click${settings.default_og_image || '/images/og-image.png'}`;
+    const getAbsoluteImageUrl = (imageUrl) => {
+        if (!imageUrl) return 'https://admin.b2b.click/images/og-image.png';
+        if (imageUrl.startsWith('http')) return imageUrl;
+        if (imageUrl.startsWith('/uploads/')) {
+            return `https://admin.b2b.click${imageUrl}`;
+        }
+        return `https://b2b.click${imageUrl}`;
+    };
+
+    const ogImage = getAbsoluteImageUrl(settings.default_og_image);
 
     // Base meta tags
     const metaTags = [
