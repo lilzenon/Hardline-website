@@ -349,7 +349,7 @@ const SocialMediaButtons = () => {
       </div>
 
       {/* CSS Animation Styles */}
-      <style jsx>{`
+      <style>{`
         .social-buttons-hidden {
           opacity: 0;
           transform: translateY(20px);
