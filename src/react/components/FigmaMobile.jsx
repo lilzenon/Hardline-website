@@ -3068,29 +3068,30 @@ const FigmaMobile = () => {
                 }}
               />
 
-              {/* Bottom overlay with date and location - Responsive */}
+              {/* Bottom overlay with date and location - Fixed positioning */}
               <div
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  bottom: '47px', // Use bottom positioning instead of fixed top
+                  bottom: '16px', // More space from bottom to prevent button cutoff
                   display: 'flex',
-                  width: '100%', // Use full width of responsive hero card
+                  width: '100%',
                   justifyContent: 'space-between',
-                  padding: '0px 16px', // Slightly more padding for mobile
-                  gap: '16px',
+                  padding: '0px 16px',
+                  gap: '12px', // Reduced gap to make more room for wider button
                   boxSizing: 'border-box',
-                  zIndex: 3 // Ensure text is above gradient overlay
+                  zIndex: 3,
+                  minHeight: '44px' // Ensure minimum height for button container
                 }}
               >
                 <div
                   style={{
                     display: 'flex',
-                    flex: '1', // Use flex to take available space
+                    flex: '1',
                     padding: '4px 0px',
                     flexDirection: 'column',
                     minWidth: 0,
-                    maxWidth: 'calc(100% - 106px)' // Reserve space for button (90px + 16px gap)
+                    maxWidth: 'calc(100% - 122px)' // Reserve space for wider button (110px + 12px gap)
                   }}
                 >
                   {/* Date row - Enhanced styling */}
@@ -3170,42 +3171,46 @@ const FigmaMobile = () => {
                   </div>
                 </div>
 
-                {/* CTA Button */}
+                {/* CTA Button - Wider and better positioned */}
                 <div
                   style={{
                     display: 'flex',
-                    width: '90px',
-                    height: '36px',
-                    padding: '4px',
+                    width: '110px', // Increased from 90px for better button size
+                    height: '40px', // Increased from 36px for better touch target
+                    padding: '2px', // Reduced padding to maximize button size
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: '4px',
-                    zIndex: 3 // Ensure button is above gradient overlay
+                    flexShrink: 0, // Prevent button from shrinking
+                    zIndex: 3
                   }}
                 >
                   <div
                     style={{
                       display: 'flex',
-                      width: '90px',
-                      height: '36px',
+                      width: '106px', // Match container width minus padding
+                      height: '36px', // Good height for mobile touch
                       justifyContent: 'center',
                       alignItems: 'center',
-                      gap: '8px',
-                      borderRadius: '29px',
-                      background: 'rgba(56, 56, 56, 0.80)',
+                      gap: '6px', // Slightly reduced gap for better fit
+                      borderRadius: '20px', // More modern, less rounded
+                      background: 'rgba(56, 56, 56, 0.85)', // Slightly more opaque for better visibility
+                      border: '1px solid rgba(255, 255, 255, 0.15)', // Subtle border for definition
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       transform: 'scale(1)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // Add shadow for depth
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation();
-                      e.target.style.transform = 'scale(0.95)';
+                      e.target.style.transform = 'scale(0.96)';
                       e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+                      e.target.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.4)';
                     }}
                     onTouchEnd={(e) => {
                       e.stopPropagation();
                       e.target.style.transform = 'scale(1)';
-                      e.target.style.background = 'rgba(56, 56, 56, 0.80)';
+                      e.target.style.background = 'rgba(56, 56, 56, 0.85)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
                     }}
                   >
                     <span
