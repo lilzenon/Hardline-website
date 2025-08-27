@@ -19,11 +19,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
   const [showModal, setShowModal] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [preferences, setPreferences] = useState({
-    analytics: true,
-    marketing: false,
-    functional: true
-  });
+
 
   // Check if consent modal should be shown - delayed for gradual appearance
   useEffect(() => {
@@ -55,7 +51,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Handle accept consent
+  // Handle continue (accept consent by using site)
   const handleAccept = useCallback(async () => {
     setIsAnimating(true);
     
@@ -63,7 +59,11 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
       // Set localStorage consent
       localStorage.setItem('analytics_gdpr_consent', 'granted');
       localStorage.setItem('analytics_consent_timestamp', Date.now().toString());
-      localStorage.setItem('analytics_consent_preferences', JSON.stringify(preferences));
+      localStorage.setItem('analytics_consent_preferences', JSON.stringify({
+        analytics: true,
+        functional: true,
+        marketing: false
+      }));
 
       // Send consent to backend API
       await fetch('/api/privacy/consent', {
@@ -73,7 +73,11 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
         },
         body: JSON.stringify({
           consent: 'accepted',
-          preferences: preferences,
+          preferences: {
+            analytics: true,
+            functional: true,
+            marketing: false
+          },
           timestamp: Date.now()
         })
       });
@@ -99,51 +103,9 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
       console.error('Error setting consent:', error);
       setIsAnimating(false);
     }
-  }, [preferences, onConsentChange]);
-
-  // Handle decline consent
-  const handleDecline = useCallback(async () => {
-    setIsAnimating(true);
-    
-    try {
-      // Set localStorage consent
-      localStorage.setItem('analytics_gdpr_consent', 'denied');
-      localStorage.setItem('analytics_consent_timestamp', Date.now().toString());
-
-      // Send consent to backend API
-      await fetch('/api/privacy/consent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          consent: 'rejected',
-          timestamp: Date.now()
-        })
-      });
-
-      // Clear analytics data if available
-      if (window.getAnalyticsTracker) {
-        const tracker = window.getAnalyticsTracker();
-        if (tracker && tracker.revokeGDPRConsent) {
-          tracker.revokeGDPRConsent();
-        }
-      }
-
-      // Notify parent component
-      onConsentChange?.(false);
-
-      // Close modal with animation
-      setTimeout(() => {
-        setShowModal(false);
-        setIsAnimating(false);
-      }, 300);
-
-    } catch (error) {
-      console.error('Error declining consent:', error);
-      setIsAnimating(false);
-    }
   }, [onConsentChange]);
+
+
 
   // Handle preference toggle
   const handlePreferenceToggle = useCallback((key) => {
@@ -203,26 +165,26 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
             pointerEvents: 'auto' // Re-enable pointer events for the modal itself
           }}
         >
-          {/* Header - Ultra Compact */}
+          {/* Header - Neutral Style */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: '12px' // Further reduced
+              marginBottom: '12px'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Shield size={16} color="#319DFF" /> {/* Even smaller icon */}
+              <Shield size={16} color="rgba(255, 255, 255, 0.7)" /> {/* Neutral white */}
               <h2
                 style={{
                   margin: 0,
-                  fontSize: '16px', // Further reduced
+                  fontSize: '16px',
                   fontWeight: '600',
                   color: '#FFFFFF'
                 }}
               >
-                Privacy & Analytics
+                Site Usage Notice
               </h2>
             </div>
           </div>
@@ -230,144 +192,74 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
           {/* Main Content */}
           {!showDetails ? (
             <>
-              {/* Simple Consent View - Ultra Compact */}
-              <div style={{ marginBottom: '14px' }}> {/* Further reduced */}
+              {/* Legal Consent Notice - Compact */}
+              <div style={{ marginBottom: '16px' }}>
                 <p
                   style={{
-                    margin: '0 0 8px 0', // Further reduced
-                    fontSize: '13px', // Smaller text
-                    lineHeight: '1.3', // Tighter
+                    margin: 0,
+                    fontSize: '12px',
+                    lineHeight: '1.4',
                     color: 'rgba(255, 255, 255, 0.9)',
                     textAlign: 'center'
                   }}
                 >
-                  We use analytics to improve your experience.
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: '11px', // Even smaller
-                    lineHeight: '1.2', // Very tight
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    textAlign: 'center'
-                  }}
-                >
-                  Data is anonymized and never shared.
+                  By entering and continuing to use this site, you agree to our use of analytics tracking to improve your experience and understand platform usage.
                 </p>
               </div>
 
-              {/* Action Buttons - Ultra Compact */}
+              {/* Single Continue Button - Social Media Style */}
               <div
                 style={{
                   display: 'flex',
-                  flexDirection: 'row',
-                  gap: '6px', // Smaller gap
-                  marginBottom: '8px' // Further reduced
+                  justifyContent: 'center',
+                  marginBottom: '8px'
                 }}
               >
-                {/* Accept Button */}
                 <button
                   onClick={handleAccept}
                   disabled={isAnimating}
                   style={{
-                    flex: 1,
-                    height: '36px', // Even smaller
-                    background: '#319DFF',
-                    border: 'none',
-                    borderRadius: '8px', // Smaller radius
+                    width: '100%',
+                    height: '40px',
+                    background: 'rgba(255, 255, 255, 0.1)', // Glassmorphism like social buttons
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px', // Rounded like social buttons
                     color: '#FFFFFF',
-                    fontSize: '12px', // Smaller text
-                    fontWeight: '600',
+                    fontSize: '13px',
+                    fontWeight: '500',
                     fontFamily: 'Inter, sans-serif',
                     cursor: isAnimating ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     opacity: isAnimating ? 0.6 : 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '4px' // Smaller gap
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isAnimating) {
-                      e.target.style.background = '#2B8CE6';
-                      e.target.style.transform = 'translateY(-1px)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isAnimating) {
-                      e.target.style.background = '#319DFF';
-                      e.target.style.transform = 'translateY(0)';
-                    }
-                  }}
-                >
-                  <Check size={14} /> {/* Smaller icon */}
-                  Accept
-                </button>
-
-                {/* Decline Button */}
-                <button
-                  onClick={handleDecline}
-                  disabled={isAnimating}
-                  style={{
-                    flex: 1,
-                    height: '36px', // Even smaller
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '8px', // Smaller radius
-                    color: '#FFFFFF',
-                    fontSize: '12px', // Smaller text
-                    fontWeight: '500',
-                    fontFamily: 'Inter, sans-serif',
-                    cursor: isAnimating ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    opacity: isAnimating ? 0.6 : 1
+                    gap: '6px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                   }}
                   onMouseEnter={(e) => {
                     if (!isAnimating) {
                       e.target.style.background = 'rgba(255, 255, 255, 0.15)';
                       e.target.style.transform = 'translateY(-1px)';
+                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isAnimating) {
                       e.target.style.background = 'rgba(255, 255, 255, 0.1)';
                       e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
                     }
                   }}
                 >
-                  Decline
+                  <Check size={16} />
+                  Continue
                 </button>
               </div>
 
-              {/* Customize Link - Ultra Small */}
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  onClick={() => setShowDetails(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'rgba(49, 157, 255, 0.6)', // Even more subtle
-                    fontSize: '10px', // Very small
-                    fontWeight: '400',
-                    fontFamily: 'Inter, sans-serif',
-                    cursor: 'pointer',
-                    textDecoration: 'none',
-                    transition: 'color 0.2s ease',
-                    opacity: 0.7,
-                    padding: '2px' // Minimal padding
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.color = '#319DFF';
-                    e.target.style.opacity = '1';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.color = 'rgba(49, 157, 255, 0.6)';
-                    e.target.style.opacity = '0.7';
-                  }}
-                >
-                  Customize
-                </button>
-              </div>
+
             </>
           ) : (
             <>
