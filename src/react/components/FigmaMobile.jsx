@@ -3551,49 +3551,56 @@ const FigmaMobile = () => {
                         boxSizing: 'border-box' // Ensure padding is included in width calculation
                       }}
                     >
-                      {/* Event Information */}
+                      {/* Event Information - Optimized Layout */}
                       <div
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'flex-start',
                           alignSelf: 'stretch',
-                          justifyContent: 'space-between'
+                          justifyContent: 'flex-start',
+                          flex: 1,
+                          minWidth: 0, // Allow shrinking
+                          paddingRight: '8px' // Space for button area
                         }}
                       >
-                        {/* Event Title */}
+                        {/* Event Title - Responsive and Multi-line Capable */}
                         <h3
                           id={`event-title-${card.id}`}
                           style={{
-                            display: 'flex',
-                            width: '240px', // Scaled up from 150px
-                            height: '22px', // Scaled up from 16px
-                            flexDirection: 'column',
-                            justifyContent: 'center',
+                            width: '100%',
+                            maxWidth: '100%',
                             color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: '18px', // Scaled up from 14px
+                            fontSize: 'clamp(16px, 4vw, 18px)', // Responsive font size
                             fontWeight: '600',
-                            lineHeight: '1.0',
+                            lineHeight: '1.2', // Better line height for readability
+                            margin: '0 0 6px 0',
+                            // Smart text handling - allow 2 lines max
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            margin: '0 0 8px 0' // Add space between title and date/location
+                            wordBreak: 'break-word',
+                            hyphens: 'auto',
+                            // Minimum height to prevent layout shift
+                            minHeight: '1.2em',
+                            maxHeight: '2.4em' // 2 lines max
                           }}
                         >
                           {card.title}
                         </h3>
 
-                        {/* DATE Information Row - Smaller clickable area */}
+                        {/* DATE Information Row - Optimized Layout */}
                         <div
                           style={{
                             display: 'flex',
-                            paddingLeft: '1px',
-                            marginBottom: '2px', // Further reduced space between date and location
                             alignItems: 'center',
-                            gap: '4px', // Scaled up from 3px
-                            alignSelf: 'stretch',
-                            position: 'relative' // For positioning the clickable area
+                            gap: '6px',
+                            width: '100%',
+                            marginBottom: '4px',
+                            minHeight: '20px' // Consistent height
                           }}
                         >
                           {/* Calendar Icon - Clickable */}
@@ -3655,63 +3662,62 @@ const FigmaMobile = () => {
                             <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
                           </svg>
 
-                          {/* Date text container - no gap between parts */}
+                          {/* Date text container - Optimized for better space usage */}
                           <div
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '0px', // No gap between text parts
-                              flex: 1
+                              flex: 1,
+                              minWidth: 0,
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              // Simplified calendar event logic
+                              const eventTitle = encodeURIComponent(card.title);
+                              const eventLocation = encodeURIComponent(card.location);
+                              const eventDate = card.date;
+
+                              const now = new Date();
+                              const currentYear = now.getFullYear();
+                              const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                              if (dateMatch) {
+                                const [, , month, day, hour, minute, ampm] = dateMatch;
+                                const monthMap = {
+                                  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                                };
+
+                                let hour24 = parseInt(hour);
+                                if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                                if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                                const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                                const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000);
+
+                                const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                                const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                                const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+                                window.open(calendarUrl, '_blank');
+                              }
                             }}
                           >
-                            {/* First part of date - clickable with proper touch target */}
+                            {/* Complete date text - single span for better text handling */}
                             <span
-                              onClick={() => {
-                                // Same calendar event logic as icon
-                                const eventTitle = encodeURIComponent(card.title);
-                                const eventLocation = encodeURIComponent(card.location);
-                                const eventDate = card.date;
-
-                                const now = new Date();
-                                const currentYear = now.getFullYear();
-                                const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                                if (dateMatch) {
-                                  const [, , month, day, hour, minute, ampm] = dateMatch;
-                                  const monthMap = {
-                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                                  };
-
-                                  let hour24 = parseInt(hour);
-                                  if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                                  if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                                  const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                                  const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000);
-
-                                  const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                                  const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                                  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-                                  window.open(calendarUrl, '_blank');
-                                }
-                              }}
                               style={{
-                                color: '#FFF',
+                                color: 'rgba(255, 255, 255, 0.9)',
                                 fontFamily: 'Inter',
-                                fontSize: '12px',
-                                fontWeight: '100',
-                                lineHeight: '1.0',
+                                fontSize: 'clamp(11px, 3vw, 12px)', // Responsive font size
+                                fontWeight: '400',
+                                lineHeight: '1.3',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                display: 'inline-block',
-                                // Enhanced touch target using pseudo-element approach
-                                minHeight: '24px', // WCAG minimum
-                                padding: '6px 8px', // Comfortable padding for touch
-                                margin: '-6px -8px', // Negative margin to maintain visual position
-                                borderRadius: '6px',
+                                flex: 1,
+                                minWidth: 0,
+                                padding: '2px 4px',
+                                borderRadius: '4px',
                                 transition: 'all 0.2s ease-in-out'
                               }}
                               onMouseEnter={(e) => {
@@ -3721,42 +3727,19 @@ const FigmaMobile = () => {
                                 e.currentTarget.style.backgroundColor = 'transparent';
                               }}
                             >
-                              {(() => {
-                                const parts = card.date.split(' @');
-                                return parts[0] + ' @'; // "Fri @"
-                              })()}
-                            </span>
-
-                            {/* Remaining date text - not clickable, no gap */}
-                            <span
-                              style={{
-                                color: '#FFF',
-                                fontFamily: 'Inter',
-                                fontSize: '12px',
-                                fontWeight: '100',
-                                lineHeight: '1.0',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                flex: 1
-                              }}
-                            >
-                              {(() => {
-                                const parts = card.date.split(' @');
-                                return parts.length > 1 ? ' ' + parts[1] : ''; // " Aug 01 10:00PM"
-                              })()}
+                              {card.date}
                             </span>
                           </div>
                         </div>
 
-                        {/* LOCATION Information Row - Fixed spacing and touch areas */}
+                        {/* LOCATION Information Row - Optimized Layout */}
                         <div
                           style={{
                             display: 'flex',
-                            padding: '0px 1px',
                             alignItems: 'center',
-                            gap: '4px', // Gap between icon and text container
-                            alignSelf: 'stretch'
+                            gap: '6px',
+                            width: '100%',
+                            minHeight: '20px' // Consistent height
                           }}
                         >
                           {/* Location Icon - Clickable */}
@@ -3799,44 +3782,43 @@ const FigmaMobile = () => {
                             <circle cx="5" cy="4" r="1" fill="#FFF"/>
                           </svg>
 
-                          {/* Location text container - no gap between parts */}
+                          {/* Location text container - Optimized for better space usage */}
                           <div
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: '0px', // No gap between text parts
-                              flex: 1
+                              flex: 1,
+                              minWidth: 0,
+                              cursor: 'pointer'
+                            }}
+                            onClick={() => {
+                              const address = encodeURIComponent(card.location);
+                              const userAgent = navigator.userAgent || '';
+
+                              if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                                window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                              } else if (/android/i.test(userAgent)) {
+                                window.open(`geo:0,0?q=${address}`, '_blank');
+                              } else {
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                              }
                             }}
                           >
-                            {/* First part of location - clickable with proper touch target */}
+                            {/* Complete location text - single span for better text handling */}
                             <span
-                              onClick={() => {
-                                const address = encodeURIComponent(card.location);
-                                const userAgent = navigator.userAgent || '';
-
-                                if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                                  window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                                } else if (/android/i.test(userAgent)) {
-                                  window.open(`geo:0,0?q=${address}`, '_blank');
-                                } else {
-                                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                                }
-                              }}
                               style={{
-                                color: '#FFF',
+                                color: 'rgba(255, 255, 255, 0.9)',
                                 fontFamily: 'Inter',
-                                fontSize: '12px',
-                                fontWeight: '100',
-                                lineHeight: '1.0',
+                                fontSize: 'clamp(11px, 3vw, 12px)', // Responsive font size
+                                fontWeight: '400',
+                                lineHeight: '1.3',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
-                                cursor: 'pointer',
-                                position: 'relative',
-                                display: 'inline-block',
-                                // Enhanced touch target using proper padding
-                                minHeight: '24px', // WCAG minimum
-                                padding: '6px 8px', // Comfortable padding for touch
-                                margin: '-6px -8px', // Negative margin to maintain visual position
-                                borderRadius: '6px',
+                                flex: 1,
+                                minWidth: 0,
+                                padding: '2px 4px',
+                                borderRadius: '4px',
                                 transition: 'all 0.2s ease-in-out'
                               }}
                               onMouseEnter={(e) => {
@@ -3846,43 +3828,24 @@ const FigmaMobile = () => {
                                 e.currentTarget.style.backgroundColor = 'transparent';
                               }}
                             >
-                              {card.location.split(',')[0]} {/* Only show first part like "Los Angeles" */}
-                            </span>
-
-                            {/* Remaining location text - not clickable, no gap */}
-                            <span
-                              style={{
-                                color: '#FFF',
-                                fontFamily: 'Inter',
-                                fontSize: '12px',
-                                fontWeight: '100',
-                                lineHeight: '1.0',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                flex: 1
-                              }}
-                            >
-                              {card.location.includes(',') ? ',' + card.location.split(',').slice(1).join(',') : ''} {/* Show rest like ", CA" */}
+                              {card.location}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Action Button Section - Aligned with Image Bottom */}
+                      {/* Action Button Section - Optimized Positioning */}
                       <div
                         style={{
-                          position: 'absolute',
-                          bottom: '6px', // Position from bottom to align with image bottom (120px card - 114px image bottom = 6px)
-                          left: '0px',
                           display: 'flex',
+                          justifyContent: 'flex-start',
+                          alignItems: 'flex-end',
+                          marginTop: 'auto', // Push to bottom of flex container
                           width: '100%',
-                          height: '28px', // Button height
-                          justifyContent: 'flex-start', // Match desktop alignment
-                          alignItems: 'center'
+                          paddingTop: '8px' // Space from content above
                         }}
                       >
-                        {/* Get Tickets Button - Extended to right side */}
+                        {/* Get Tickets Button - Optimized for Mobile */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <div
                             onClick={(e) => {
@@ -3891,33 +3854,22 @@ const FigmaMobile = () => {
                             }}
                             style={{
                               display: 'flex',
-                              width: 'auto', // Auto width to fit content
-                              minWidth: '120px', // Minimum width for button
-                              maxWidth: '100%', // Don't exceed container width
-                              height: '28px', // Scaled up from 20px (desktop)
-                              padding: '11px 14px', // Scaled up from 8px 10px (desktop)
-                              justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '8px', // Scaled up from 6px (desktop)
-                              borderRadius: '28px', // Scaled up from 20px (desktop)
-                              background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? 'rgba(23, 23, 23, 0.80)' // Normal state - not hover state
-                                : 'rgba(23, 23, 23, 0.40)',
-                              border: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? '1px solid rgba(255, 255, 255, 0.15)' // Subtle border for better definition
-                                : '1px solid rgba(255, 255, 255, 0.05)',
-                              boxShadow: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? '0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow and inner highlight
-                                : 'none',
-                              cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? 'pointer'
-                                : 'default',
-                              opacity: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                                ? 1
-                                : 0.6,
-                              transition: 'all 0.3s ease', // Match desktop transition
+                              justifyContent: 'center',
+                              padding: '8px 16px',
+                              borderRadius: '20px',
+                              background: 'rgba(23, 23, 23, 0.85)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease',
                               transform: 'scale(1)',
-                              marginRight: '8px' // Small margin from right edge
+                              // Responsive sizing
+                              minWidth: 'clamp(100px, 25vw, 140px)',
+                              height: 'clamp(32px, 8vw, 36px)',
+                              // Touch target optimization
+                              minHeight: '44px',
+                              fontSize: 'clamp(12px, 3vw, 14px)'
                             }}
                             onMouseEnter={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
@@ -4391,4 +4343,67 @@ const FigmaMobile = () => {
 };
 
 export default FigmaMobile;
+
+// Add CSS for mobile event card optimizations
+const mobileCardStyles = `
+  /* Mobile Event Card Responsive Optimizations */
+  @media (max-width: 480px) {
+    .event-card-spring {
+      padding: 12px !important;
+      height: 110px !important;
+    }
+
+    .event-card-spring h3 {
+      font-size: 16px !important;
+      line-height: 1.25 !important;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .event-card-spring {
+      padding: 10px !important;
+      height: 100px !important;
+    }
+
+    .event-card-spring h3 {
+      font-size: 15px !important;
+      line-height: 1.2 !important;
+    }
+  }
+
+  /* Text overflow utilities for better mobile text handling */
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .text-truncate-1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Enhanced touch targets for mobile */
+  @media (max-width: 767px) {
+    .mobile-touch-target {
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+`;
+
+// Inject styles into document head
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = mobileCardStyles;
+  document.head.appendChild(styleElement);
+}
 
