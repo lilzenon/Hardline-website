@@ -2016,6 +2016,23 @@ const FigmaMobile = () => {
       {/* Mobile-specific CSS */}
       <style>
         {`
+          /* Mobile device specific fixes for real device compatibility */
+          html, body {
+            -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
+            overscroll-behavior: none;
+          }
+
+          /* iOS Safari specific fixes for viewport height issues */
+          @supports (-webkit-touch-callout: none) {
+            .mobile-content-container {
+              height: -webkit-fill-available !important;
+              min-height: -webkit-fill-available !important;
+            }
+          }
+
           /* Comprehensive Safari iOS WebKit Optimizations */
 
           /* Prevent iOS Safari zoom on input focus */
@@ -2327,7 +2344,8 @@ const FigmaMobile = () => {
           /* Responsive adjustments for small mobile devices */
           @media (max-width: 375px) {
             .mobile-content-container {
-              width: calc(100vw - 20px) !important;
+              padding-left: 10px !important;
+              padding-right: 10px !important;
             }
 
             .mobile-drawer {
@@ -2339,7 +2357,8 @@ const FigmaMobile = () => {
 
           @media (max-width: 320px) {
             .mobile-content-container {
-              width: calc(100vw - 10px) !important;
+              padding-left: 5px !important;
+              padding-right: 5px !important;
             }
 
             .mobile-drawer {
@@ -2392,10 +2411,10 @@ const FigmaMobile = () => {
         <header
           role="banner"
           style={{
-            position: 'fixed',
+            position: 'absolute',
             left: '0px',
             top: '0px',
-            width: '100vw', // Full viewport width
+            width: '100%', // Match parent container width (430px)
             height: isScrolled ? '70px' : '97px', // Dynamic height based on scroll
             background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000', // Slight transparency when scrolled
             backdropFilter: isScrolled ? 'blur(10px)' : 'none', // Blur effect when scrolled
@@ -2494,17 +2513,17 @@ const FigmaMobile = () => {
           />
         </header>
 
-        {/* Main Content Area - Fixed Viewport Positioning */}
+        {/* Main Content Area - Consistent Absolute Positioning */}
         <div
           ref={contentRef}
           className="mobile-content-container"
           style={{
-            position: 'fixed', // Fixed to viewport like navigation and drawer
-            left: '50%', // Center horizontally in viewport
-            transform: 'translateX(-50%)', // Center using transform
+            position: 'absolute',
+            left: '0px',
+            right: '0px',
             top: isScrolled ? '70px' : '97px', // Dynamic top position
             bottom: '0px', // Use bottom instead of fixed height to allow content expansion
-            width: 'min(430px, calc(100vw - 40px))', // Responsive width with proper constraints
+            width: '100%', // Full width of parent container (430px)
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
