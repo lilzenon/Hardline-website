@@ -349,6 +349,12 @@ const getImageLoadingStrategy = (index, isMobile = true) => {
 const handleFinalImageFallback = (imgElement, card) => {
   console.log('🎨 Applying final image fallback for:', card.title);
 
+  // Check if imgElement and its parent still exist in the DOM
+  if (!imgElement || !imgElement.parentNode) {
+    console.warn('⚠️ Image element or parent node is null, skipping fallback');
+    return;
+  }
+
   // Hide the broken image
   imgElement.style.display = 'none';
 
@@ -377,12 +383,22 @@ const handleFinalImageFallback = (imgElement, card) => {
   placeholder.textContent = displayText;
 
   // Replace the image with the placeholder
-  imgElement.parentNode.insertBefore(placeholder, imgElement);
-  imgElement.remove();
+  try {
+    imgElement.parentNode.insertBefore(placeholder, imgElement);
+    imgElement.remove();
+  } catch (error) {
+    console.warn('⚠️ Failed to replace image with placeholder:', error);
+  }
 };
 
 // Helper for third fallback attempt
 const handleImageFallbackAttempt3 = (imgElement, card) => {
+  // Check if imgElement still exists in the DOM
+  if (!imgElement || !imgElement.parentNode) {
+    console.warn('⚠️ Image element or parent node is null, skipping fallback attempt 3');
+    return;
+  }
+
   if (card.coverImage.includes('/api/images/serve/')) {
     // For new image system, try thumbnail variant as last resort
     const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
@@ -1665,11 +1681,11 @@ const FigmaMobile = () => {
     const baseSpacing = parseInt(drawerHeight.replace('px', ''));
 
     if (isRealMobileDevice) {
-      // Real mobile device: Use full spacing for proper drawer clearance
-      return `calc(${drawerHeight} + 120px)`;
+      // Real mobile device: Reduced spacing for better UX
+      return `calc(${drawerHeight} + 40px)`;
     } else {
-      // Desktop browser mobile simulation: Use reduced spacing to prevent excessive empty space
-      const reducedSpacing = Math.max(60, baseSpacing * 0.7); // Minimum 60px, or 70% of drawer height
+      // Desktop browser mobile simulation: Minimal spacing
+      const reducedSpacing = Math.max(30, baseSpacing * 0.4); // Minimum 30px, or 40% of drawer height
       return `calc(${drawerHeight} + ${reducedSpacing}px)`;
     }
   }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
@@ -2094,12 +2110,12 @@ const FigmaMobile = () => {
             user-select: none;
           }
 
-          /* Prevent iOS Safari bounce scroll */
+          /* Prevent iOS Safari bounce scroll while allowing normal scrolling */
           html, body {
-            position: fixed;
-            overflow: hidden;
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
           }
 
           /* Fix iOS Safari viewport issues */
@@ -2160,10 +2176,11 @@ const FigmaMobile = () => {
             background: rgba(255, 255, 255, 0.5);
           }
 
-          /* iOS-style momentum scrolling */
+          /* iOS-style momentum scrolling with improved behavior */
           .mobile-content-container {
             -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
+            scroll-behavior: auto;
+            overscroll-behavior: contain;
           }
 
           .mobile-phone-input::placeholder {
@@ -2574,6 +2591,8 @@ const FigmaMobile = () => {
             overflow: 'auto',
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            scrollBehavior: 'auto',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         >
@@ -3297,7 +3316,7 @@ const FigmaMobile = () => {
               gap: '8px', // Reduced gap for tighter spacing
               flexShrink: 0,
               margin: '0 auto', // Center the container
-              marginBottom: '60px',
+              marginBottom: '20px',
               boxSizing: 'border-box',
               minHeight: 'auto',
               overflow: 'visible',
