@@ -223,6 +223,21 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
     return width ? `${baseUrl}&w=${width}` : baseUrl;
   }
+
+  // Handle user-uploaded images (custom/images directory or /images/ paths)
+  if (typeof originalUrl === 'string' && (originalUrl.includes('/images/') || originalUrl.includes('/custom/images/'))) {
+    const filename = originalUrl.split('/').pop();
+    const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
+
+    if (width) {
+      // Try to serve optimized responsive variant first
+      return `/images/optimized/${nameWithoutExt}-${width}w.webp`;
+    } else {
+      // Try optimized version, fallback handled by server
+      return `/images/optimized/${nameWithoutExt}.webp`;
+    }
+  }
+
   return originalUrl;
 };
 
