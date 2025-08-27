@@ -2268,10 +2268,10 @@ const FigmaMobile = () => {
           .mobile-drawer {
             position: fixed;
             bottom: 0;
-            left: 20px;
-            right: 20px;
+            left: 25px;
+            right: 25px;
             margin: 0 auto;
-            width: calc(100% - 40px);
+            width: calc(100% - 50px);
             max-width: 390px;
             background: rgb(21 21 21 / 80%);
             backdrop-filter: blur(10px);
@@ -2362,6 +2362,19 @@ const FigmaMobile = () => {
           /* Responsive adjustments for small mobile devices */
           @media (max-width: 375px) {
             .mobile-content-container {
+              padding-left: 15px !important;
+              padding-right: 15px !important;
+            }
+
+            .mobile-drawer {
+              left: 15px !important;
+              right: 15px !important;
+              width: calc(100% - 30px) !important;
+            }
+          }
+
+          @media (max-width: 320px) {
+            .mobile-content-container {
               padding-left: 10px !important;
               padding-right: 10px !important;
             }
@@ -2370,19 +2383,6 @@ const FigmaMobile = () => {
               left: 10px !important;
               right: 10px !important;
               width: calc(100% - 20px) !important;
-            }
-          }
-
-          @media (max-width: 320px) {
-            .mobile-content-container {
-              padding-left: 5px !important;
-              padding-right: 5px !important;
-            }
-
-            .mobile-drawer {
-              left: 5px !important;
-              right: 5px !important;
-              width: calc(100% - 10px) !important;
             }
           }
 
@@ -2583,7 +2583,7 @@ const FigmaMobile = () => {
 
             <article
               style={{
-                width: 'min(350px, calc(100vw - 60px))', // Adjusted to account for container padding
+                width: 'min(350px, calc(100vw - 50px))', // Adjusted to account for container padding (25px each side)
                 height: '200px', // Mobile-optimized height
                 position: 'relative',
                 flexShrink: 0,
@@ -2805,7 +2805,7 @@ const FigmaMobile = () => {
             <div
               style={{
                 display: 'flex',
-                width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
+                width: 'min(350px, calc(100vw - 50px))', // Adjusted to match hero card width exactly (25px each side)
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '20px',
@@ -2984,8 +2984,8 @@ const FigmaMobile = () => {
                 console.log('Hero clicked - navigate to events');
               }}
               style={{
-                width: 'min(350px, calc(100vw - 60px))', // Adjusted to ensure consistent width across all elements
-                height: 'min(350px, calc(100vw - 60px))', // Maintain square aspect ratio
+                width: 'min(350px, calc(100vw - 50px))', // Adjusted to ensure consistent width across all elements (25px each side)
+                height: 'min(350px, calc(100vw - 50px))', // Maintain square aspect ratio
                 position: 'relative',
                 margin: '0 auto', // Center the hero
                 cursor: 'pointer',
@@ -3258,7 +3258,7 @@ const FigmaMobile = () => {
             aria-label="Upcoming live music events"
             style={{
               display: 'flex',
-              width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
+              width: 'min(350px, calc(100vw - 50px))', // Adjusted to match hero card width exactly (25px each side)
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'stretch',
@@ -4287,7 +4287,7 @@ const FigmaMobile = () => {
               width: '430px',
               maxWidth: '100vw',
               margin: '0 auto',
-              padding: '40px 25px',
+              padding: '40px 25px', // Keep menu padding consistent with new layout
               display: 'flex',
               flexDirection: 'column',
               gap: '24px',
