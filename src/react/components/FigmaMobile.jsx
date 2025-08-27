@@ -2327,9 +2327,7 @@ const FigmaMobile = () => {
           /* Responsive adjustments for small mobile devices */
           @media (max-width: 375px) {
             .mobile-content-container {
-              left: 10px !important;
-              right: 10px !important;
-              width: calc(100% - 20px) !important;
+              width: calc(100vw - 20px) !important;
             }
 
             .mobile-drawer {
@@ -2341,9 +2339,7 @@ const FigmaMobile = () => {
 
           @media (max-width: 320px) {
             .mobile-content-container {
-              left: 5px !important;
-              right: 5px !important;
-              width: calc(100% - 10px) !important;
+              width: calc(100vw - 10px) !important;
             }
 
             .mobile-drawer {
@@ -2498,19 +2494,17 @@ const FigmaMobile = () => {
           />
         </header>
 
-        {/* Main Content Area - Dynamic with Scroll-Responsive Navigation */}
+        {/* Main Content Area - Fixed Viewport Positioning */}
         <div
           ref={contentRef}
           className="mobile-content-container"
           style={{
-            position: 'absolute',
-            left: '20px', // Match drawer centering approach
-            right: '20px', // Match drawer centering approach
+            position: 'fixed', // Fixed to viewport like navigation and drawer
+            left: '50%', // Center horizontally in viewport
+            transform: 'translateX(-50%)', // Center using transform
             top: isScrolled ? '70px' : '97px', // Dynamic top position
             bottom: '0px', // Use bottom instead of fixed height to allow content expansion
-            width: 'calc(100% - 40px)', // Match drawer width calculation
-            maxWidth: '430px', // Maximum width constraint
-            margin: '0 auto', // Center the container like the drawer
+            width: 'min(430px, calc(100vw - 40px))', // Responsive width with proper constraints
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
