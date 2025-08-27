@@ -3045,6 +3045,7 @@ const FigmaMobile = () => {
                     }}
                   />
                 </picture>
+                {/* Gradient Overlay - Matching Desktop Version */}
                 <div
                   style={{
                     position: 'absolute',
@@ -3053,7 +3054,8 @@ const FigmaMobile = () => {
                     width: '100%',
                     height: '100%',
                     background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%)`,
-                    pointerEvents: 'none'
+                    pointerEvents: 'none',
+                    zIndex: 2 // Ensure it's above the image but below text
                   }}
                 />
               </div>
@@ -3069,7 +3071,8 @@ const FigmaMobile = () => {
                   justifyContent: 'space-between',
                   padding: '0px 16px', // Slightly more padding for mobile
                   gap: '16px',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  zIndex: 3 // Ensure text is above gradient overlay
                 }}
               >
                 <div
@@ -3082,14 +3085,15 @@ const FigmaMobile = () => {
                     maxWidth: 'calc(100% - 106px)' // Reserve space for button (90px + 16px gap)
                   }}
                 >
-                  {/* Date row */}
+                  {/* Date row - Enhanced styling */}
                   <div
                     style={{
                       display: 'flex',
                       alignSelf: 'stretch',
                       alignItems: 'center',
-                      gap: '4px',
-                      minWidth: 0
+                      gap: '6px', // Slightly more gap for better readability
+                      minWidth: 0,
+                      marginBottom: '2px' // Small margin for separation
                     }}
                   >
                     <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
@@ -3167,7 +3171,8 @@ const FigmaMobile = () => {
                     padding: '4px',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: '4px'
+                    gap: '4px',
+                    zIndex: 3 // Ensure button is above gradient overlay
                   }}
                 >
                   <div
