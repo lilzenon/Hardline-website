@@ -2424,7 +2424,7 @@ const FigmaMobile = () => {
             padding: '0 20px',
             boxSizing: 'border-box',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
-            zIndex: 100, // Ensure it stays on top
+            zIndex: 200, // Ensure it stays above all content
             borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none' // Subtle border when scrolled
           }}
           aria-label="Main navigation"
@@ -2521,7 +2521,7 @@ const FigmaMobile = () => {
             position: 'absolute',
             left: '0px',
             right: '0px',
-            top: isScrolled ? '70px' : '97px', // Dynamic top position
+            top: '110px', // Fixed position below navigation header (97px max height + 13px margin)
             bottom: '0px', // Use bottom instead of fixed height to allow content expansion
             width: '100%', // Full width of parent container (430px)
             background: '#000000',
@@ -2543,7 +2543,7 @@ const FigmaMobile = () => {
           {/* Hero Video Section */}
           <section
             aria-labelledby="hero-video-title"
-            style={{ width: '100%', marginBottom: '20px' }}
+            style={{ width: '100%', marginTop: '20px', marginBottom: '20px' }}
           >
             <h1
               id="hero-video-title"
