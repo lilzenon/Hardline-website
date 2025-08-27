@@ -2503,14 +2503,12 @@ const FigmaMobile = () => {
           ref={contentRef}
           className="mobile-content-container"
           style={{
-            position: 'absolute',
-            left: '20px', // Match drawer centering approach
-            right: '20px', // Match drawer centering approach
+            position: 'fixed', // Changed from absolute to fixed
+            left: '50%', // Center horizontally
+            transform: 'translateX(-50%)', // Center using transform
             top: isScrolled ? '70px' : '97px', // Dynamic top position
             bottom: '0px', // Use bottom instead of fixed height to allow content expansion
-            width: 'calc(100% - 40px)', // Match drawer width calculation
-            maxWidth: '430px', // Maximum width constraint
-            margin: '0 auto', // Center the container like the drawer
+            width: 'min(430px, calc(100vw - 40px))', // Responsive width with max constraint
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
