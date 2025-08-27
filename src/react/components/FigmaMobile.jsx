@@ -3605,10 +3605,10 @@ const FigmaMobile = () => {
                             minHeight: '20px' // Consistent height
                           }}
                         >
-                          {/* Calendar Icon - Clickable */}
+                          {/* Calendar Icon - Clickable - Enhanced Size */}
                           <svg
-                            width="14"
-                            height="14"
+                            width="16"
+                            height="16"
                             viewBox="0 0 10 10"
                             fill="none"
                             onClick={() => {
@@ -3708,7 +3708,7 @@ const FigmaMobile = () => {
                             {/* Complete date text - single span for better text handling */}
                             <span
                               style={{
-                                color: 'rgba(255, 255, 255, 0.9)',
+                                color: 'rgba(255, 255, 255, 0.75)', // Reduced brightness for better balance
                                 fontFamily: 'Inter',
                                 fontSize: 'clamp(11px, 3vw, 12px)', // Responsive font size
                                 fontWeight: '400',
@@ -3744,10 +3744,10 @@ const FigmaMobile = () => {
                             minHeight: '20px' // Consistent height
                           }}
                         >
-                          {/* Location Icon - Clickable */}
+                          {/* Location Icon - Clickable - Enhanced Size */}
                           <svg
-                            width="14"
-                            height="14"
+                            width="16"
+                            height="16"
                             viewBox="0 0 10 10"
                             fill="none"
                             onClick={() => {
@@ -3809,7 +3809,7 @@ const FigmaMobile = () => {
                             {/* Complete location text - single span for better text handling */}
                             <span
                               style={{
-                                color: 'rgba(255, 255, 255, 0.9)',
+                                color: 'rgba(255, 255, 255, 0.75)', // Reduced brightness for better balance
                                 fontFamily: 'Inter',
                                 fontSize: 'clamp(11px, 3vw, 12px)', // Responsive font size
                                 fontWeight: '400',
@@ -3847,7 +3847,7 @@ const FigmaMobile = () => {
                           paddingTop: '8px' // Space from content above
                         }}
                       >
-                        {/* Get Tickets Button - Optimized for Mobile */}
+                        {/* Get Tickets Button - Fixed Container Overflow */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <div
                             onClick={(e) => {
@@ -3858,20 +3858,24 @@ const FigmaMobile = () => {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '8px 16px',
-                              borderRadius: '20px',
+                              padding: '6px 12px', // Reduced padding to prevent overflow
+                              borderRadius: '18px', // Slightly smaller radius
                               background: 'rgba(23, 23, 23, 0.85)',
                               border: '1px solid rgba(255, 255, 255, 0.2)',
                               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
-                              // Responsive sizing
-                              minWidth: 'clamp(100px, 25vw, 140px)',
-                              height: 'clamp(32px, 8vw, 36px)',
+                              // Fixed sizing to prevent overflow
+                              width: 'auto',
+                              maxWidth: '120px', // Constrain maximum width
+                              height: '32px', // Fixed height for consistency
                               // Touch target optimization
-                              minHeight: '44px',
-                              fontSize: 'clamp(12px, 3vw, 14px)'
+                              minHeight: '32px',
+                              fontSize: '13px', // Fixed font size
+                              // Ensure proper containment
+                              boxSizing: 'border-box',
+                              flexShrink: 0 // Prevent shrinking
                             }}
                             onMouseEnter={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
@@ -3900,10 +3904,13 @@ const FigmaMobile = () => {
                               style={{
                                 color: '#FFF', // White text like desktop
                                 fontFamily: 'Inter',
-                                fontSize: '14px', // Scaled up from 10px (desktop)
-                                fontWeight: '300', // Match desktop weight
+                                fontSize: '13px', // Consistent with container
+                                fontWeight: '400', // Slightly bolder for better readability
                                 lineHeight: 'normal',
-                                pointerEvents: 'none'
+                                pointerEvents: 'none',
+                                whiteSpace: 'nowrap', // Prevent text wrapping
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis' // Handle overflow gracefully
                               }}
                             >
                               Get Tickets
