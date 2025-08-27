@@ -21,7 +21,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
 
-  // Check if consent modal should be shown - delayed for gradual appearance
+  // Check if consent modal should be shown - optimized timing
   useEffect(() => {
     const checkConsentStatus = () => {
       const consent = localStorage.getItem('analytics_gdpr_consent');
@@ -29,26 +29,43 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
 
       // Show modal if no consent given or consent is older than 1 year
       if (!consent || !consentTimestamp) {
-        // Delay showing modal until everything else is loaded (3 seconds)
-        setTimeout(() => {
-          setShowModal(true);
-        }, 3000);
+        // Wait for page to be fully interactive, then show modal
+        if (document.readyState === 'complete') {
+          setTimeout(() => setShowModal(true), 800); // Shorter delay when page is ready
+        } else {
+          // Wait for page load completion
+          const handleLoad = () => {
+            setTimeout(() => setShowModal(true), 800);
+            window.removeEventListener('load', handleLoad);
+          };
+          window.addEventListener('load', handleLoad);
+        }
       } else {
         const consentAge = Date.now() - parseInt(consentTimestamp);
         const oneYear = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
 
         if (consentAge > oneYear) {
-          // Delay showing modal until everything else is loaded (3 seconds)
-          setTimeout(() => {
-            setShowModal(true);
-          }, 3000);
+          // Same optimized timing for expired consent
+          if (document.readyState === 'complete') {
+            setTimeout(() => setShowModal(true), 800);
+          } else {
+            const handleLoad = () => {
+              setTimeout(() => setShowModal(true), 800);
+              window.removeEventListener('load', handleLoad);
+            };
+            window.addEventListener('load', handleLoad);
+          }
         }
       }
     };
 
-    // Initial delay to ensure page is loaded, then check consent
-    const timer = setTimeout(checkConsentStatus, 1000);
-    return () => clearTimeout(timer);
+    // Check immediately if page is already loaded, otherwise wait briefly
+    if (document.readyState === 'loading') {
+      const timer = setTimeout(checkConsentStatus, 500);
+      return () => clearTimeout(timer);
+    } else {
+      checkConsentStatus();
+    }
   }, []);
 
   // Handle continue (accept consent by using site)
@@ -120,7 +137,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
 
   return (
     <>
-      {/* Modal Backdrop - No Background Blur, Scrolling Enabled */}
+      {/* Modal Backdrop - Optimized Animations */}
       <div
         style={{
           position: 'fixed',
@@ -128,41 +145,46 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'transparent', // No background overlay
+          background: 'transparent',
           zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '12px', // Minimal padding
+          padding: '12px',
           boxSizing: 'border-box',
           opacity: isAnimating ? 0 : 1,
-          transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)', // Slower, softer transition
-          animation: 'gentleFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1)', // Gentler animation
-          pointerEvents: 'none' // Allow clicks/scrolling to pass through backdrop
+          transition: 'opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Optimized easing curve
+          animation: 'smoothFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Smoother, faster animation
+          pointerEvents: 'none', // Allow clicks/scrolling to pass through backdrop
+          willChange: 'opacity' // Optimize for animation performance
         }}
       >
-        {/* Modal Container - Ultra Compact */}
+        {/* Modal Container - Performance Optimized */}
         <div
+          className="modal-container"
           style={{
             width: '100%',
-            maxWidth: '280px', // Even smaller - reduced from 320px
-            maxHeight: '60vh', // Reduced from 70vh
-            background: 'rgba(0, 0, 0, 0.6)', // Slightly less transparent for readability
-            backdropFilter: 'blur(25px)', // Strong glassmorphism
+            maxWidth: '280px',
+            maxHeight: '60vh',
+            background: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(25px)',
             WebkitBackdropFilter: 'blur(25px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)', // Slightly more visible border
-            borderRadius: '16px', // Smaller radius for compact feel
-            padding: '16px', // Even more compact padding
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '16px',
+            padding: '16px',
             boxSizing: 'border-box',
             fontFamily: 'Inter, sans-serif',
             color: '#FFFFFF',
-            overflow: 'hidden', // Prevent scroll on small modal
-            transform: isAnimating ? 'scale(0.9) translateY(10px)' : 'scale(1) translateY(0)',
+            overflow: 'hidden',
+            transform: isAnimating ? 'scale(0.92) translateY(8px)' : 'scale(1) translateY(0)',
             opacity: isAnimating ? 0 : 1,
-            transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)', // Slower, gentler transition
-            animation: 'gentleSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)', // Softer shadow
-            pointerEvents: 'auto' // Re-enable pointer events for the modal itself
+            transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Faster, smoother transition
+            animation: 'optimizedSlideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Optimized animation
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+            pointerEvents: 'auto',
+            willChange: 'transform, opacity', // Optimize for animation performance
+            backfaceVisibility: 'hidden', // Prevent flickering
+            perspective: '1000px' // Enable hardware acceleration
           }}
         >
           {/* Header - Neutral Style */}
@@ -192,15 +214,20 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
           {/* Main Content */}
           {!showDetails ? (
             <>
-              {/* Legal Consent Notice - Compact */}
+              {/* Legal Consent Notice - Justified & Centered */}
               <div style={{ marginBottom: '16px' }}>
                 <p
                   style={{
                     margin: 0,
                     fontSize: '12px',
-                    lineHeight: '1.4',
+                    lineHeight: '1.5', // Improved line height for readability
                     color: 'rgba(255, 255, 255, 0.9)',
-                    textAlign: 'center'
+                    textAlign: 'justify', // Evenly spaced text
+                    textAlignLast: 'center', // Center the last line
+                    letterSpacing: '0.3px', // Subtle letter spacing for better readability
+                    wordSpacing: '1px', // Slight word spacing improvement
+                    hyphens: 'auto', // Enable hyphenation for better justification
+                    WebkitHyphens: 'auto'
                   }}
                 >
                   By entering and continuing to use this site, you agree to our use of analytics tracking to improve your experience and understand platform usage.
@@ -231,25 +258,27 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
                     fontWeight: '500',
                     fontFamily: 'Inter, sans-serif',
                     cursor: isAnimating ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Faster, smoother transition
                     opacity: isAnimating ? 0.6 : 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                    willChange: 'transform, background-color, box-shadow', // Optimize for hover animations
+                    backfaceVisibility: 'hidden' // Prevent flickering
                   }}
                   onMouseEnter={(e) => {
                     if (!isAnimating) {
                       e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                      e.target.style.transform = 'translateY(-1px)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                      e.target.style.transform = 'translateY(-1px) scale(1.02)'; // Subtle scale for better feedback
+                      e.target.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.15)';
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!isAnimating) {
                       e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.transform = 'translateY(0) scale(1)';
                       e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
                     }
                   }}
@@ -523,9 +552,9 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
         </div>
       </div>
 
-      {/* CSS Animations - Gentle & Soft */}
+      {/* CSS Animations - Performance Optimized */}
       <style jsx>{`
-        @keyframes gentleFadeIn {
+        @keyframes smoothFadeIn {
           from {
             opacity: 0;
           }
@@ -534,19 +563,26 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
           }
         }
 
-        @keyframes gentleSlideUp {
-          from {
+        @keyframes optimizedSlideUp {
+          0% {
             opacity: 0;
-            transform: translateY(30px) scale(0.9);
+            transform: translateY(20px) scale(0.92);
           }
-          50% {
-            opacity: 0.5;
-            transform: translateY(15px) scale(0.95);
+          60% {
+            opacity: 0.8;
+            transform: translateY(-2px) scale(0.98);
           }
-          to {
+          100% {
             opacity: 1;
             transform: translateY(0) scale(1);
           }
+        }
+
+        /* Performance optimizations */
+        * {
+          transform-style: preserve-3d;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -554,6 +590,14 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
+            transform: none !important;
+          }
+        }
+
+        /* Hardware acceleration for smooth animations */
+        @supports (backdrop-filter: blur(1px)) {
+          .modal-container {
+            transform: translateZ(0);
           }
         }
       `}</style>
