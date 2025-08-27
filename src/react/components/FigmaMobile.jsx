@@ -912,7 +912,8 @@ const FigmaMobile = () => {
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
       // Use the new homepage phone submission endpoint
-      const response = await fetch('/api/home-settings/submit-phone', {
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const response = await fetch(`${dashboardDomain}/api/home-settings/submit-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1060,7 +1061,8 @@ const FigmaMobile = () => {
 
       console.log('🔐 Submitting verification code');
 
-      const response = await fetch('/api/home-settings/verify-phone', {
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const response = await fetch(`${dashboardDomain}/api/home-settings/verify-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1151,7 +1153,9 @@ const FigmaMobile = () => {
         return;
       }
 
-      const response = await fetch('/api/home-settings/homepage-data');
+      // Use dashboard domain for API calls
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const response = await fetch(`${dashboardDomain}/api/home-settings/homepage-data`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
@@ -1257,7 +1261,8 @@ const FigmaMobile = () => {
 
       console.log('🔄 Resending verification code to:', verificationPhone);
 
-      const response = await fetch('/api/home-settings/resend-verification', {
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const response = await fetch(`${dashboardDomain}/api/home-settings/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
