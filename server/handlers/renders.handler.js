@@ -535,7 +535,7 @@ async function reactHomepage(req, res) {
         } catch (error) {
             console.warn('⚠️ Failed to fetch SEO settings from dashboard API, using defaults:', error.message);
             seoSettings = {
-                default_title: 'BOUNCE2BOUNCE',
+                default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
                 default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
                 default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
                 default_author: 'BOUNCE2BOUNCE',
@@ -546,7 +546,7 @@ async function reactHomepage(req, res) {
 
         // Generate meta tags using SEO utils with proper image handling
         const metaTags = seoUtils.generateMetaTags({
-            title: seoSettings.default_title || 'BOUNCE2BOUNCE - Live Music Events',
+            title: seoSettings.default_title || 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
             description: seoSettings.default_description || 'Discover exclusive live music events and connect with artists',
             keywords: seoSettings.default_keywords || 'live music events, concert tickets, artist promotion',
             author: seoSettings.default_author || 'BOUNCE2BOUNCE',

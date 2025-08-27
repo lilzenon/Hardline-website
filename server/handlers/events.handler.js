@@ -508,16 +508,40 @@ async function createEvent(req, res) {
 
     try {
         const newEvent = await event.create(eventData);
-        const eventWithStats = await event.findWithStats({ id: newEvent.id });
+        console.log('✅ Event created successfully:', newEvent.id);
+
+        // Try to get event with stats, but fallback to basic event if it fails
+        let eventWithStats;
+        try {
+            eventWithStats = await event.findWithStats({ id: newEvent.id });
+            console.log('📈 Event with stats retrieved');
+        } catch (statsError) {
+            console.warn('⚠️ Failed to get event stats, using basic event data:', statsError.message);
+            // Fallback to basic event data with signup_count: 0
+            eventWithStats = {
+                ...newEvent,
+                signup_count: 0
+            };
+        }
 
         res.status(201).json({
             success: true,
             data: eventWithStats
         });
     } catch (error) {
+        console.error('❌ Event creation error:', error);
+
         if (error.code === 'ER_DUP_ENTRY' || error.code === 'SQLITE_CONSTRAINT') {
             throw new CustomError("An event with this slug already exists", 400);
         }
+
+        // Log the full error for debugging
+        console.error('❌ Full error details:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code
+        });
+
         throw error;
     }
 }

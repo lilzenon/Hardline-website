@@ -26,7 +26,22 @@ function generateMetaTags(options = {}) {
     const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
     const defaultImage = `${baseUrl}/images/og-image.png`;
-    const metaImage = image || defaultImage;
+
+    // Handle absolute URLs for uploaded images
+    const getAbsoluteImageUrl = (imageUrl) => {
+        if (!imageUrl) return defaultImage;
+        if (imageUrl.startsWith('http')) return imageUrl;
+
+        // For uploaded OG images, use the dashboard domain where they're stored
+        if (imageUrl.startsWith('/uploads/')) {
+            return `https://admin.b2b.click${imageUrl}`;
+        }
+
+        // For static images, use the main domain
+        return `${baseUrl}${imageUrl}`;
+    };
+
+    const metaImage = getAbsoluteImageUrl(image);
 
     return {
         // Basic meta tags

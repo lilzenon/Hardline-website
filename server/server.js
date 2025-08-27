@@ -324,6 +324,25 @@ app.use(express.static("static", {
     }
 }));
 
+// Direct SVG serving for specific logo files
+app.get('/B2B_MINI_LOGO.svg', (req, res) => {
+    const path = require('path');
+    const svgPath = path.join(__dirname, '../static/B2B_MINI_LOGO.svg');
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.sendFile(svgPath);
+});
+
+app.get('/b2b_logo.svg', (req, res) => {
+    const path = require('path');
+    const svgPath = path.join(__dirname, '../static/b2b_logo.svg');
+    res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=31536000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.sendFile(svgPath);
+});
+
 // Session security middleware - disabled in development to prevent blocking during testing
 if (env.NODE_ENV === 'production') {
     app.use(sessionSecurity.securityMiddleware());

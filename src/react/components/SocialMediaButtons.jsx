@@ -71,12 +71,17 @@ const SocialMediaButtons = () => {
   const [error, setError] = useState(null);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
 
-  // Fetch social media links from API
+  // Enhanced fetch with retry mechanism and timeout handling
   useEffect(() => {
-    const fetchSocialLinks = async () => {
+    let abortController = new AbortController();
+    let retryCount = 0;
+    const maxRetries = 3;
+    const retryDelay = 1000; // Start with 1 second
+
+    const fetchSocialLinksWithRetry = async () => {
       try {
-        console.log('🔍 Fetching social media links for homepage');
-        
+        console.log(`🔍 Fetching social media links (attempt ${retryCount + 1}/${maxRetries + 1})`);
+
         // Determine the correct dashboard API URL based on environment
         const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const dashboardApiUrl = isLocalDevelopment
@@ -85,28 +90,82 @@ const SocialMediaButtons = () => {
 
         console.log('🔍 Using dashboard API URL:', dashboardApiUrl);
 
-        const response = await fetch(dashboardApiUrl);
+        // Enhanced fetch with timeout and abort signal
+        const timeoutId = setTimeout(() => abortController.abort(), 10000); // 10 second timeout
+
+        const response = await fetch(dashboardApiUrl, {
+          signal: abortController.signal,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors',
+          credentials: 'omit' // Don't send credentials for public endpoint
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
         const data = await response.json();
 
-        if (data.success) {
+        if (data.success && Array.isArray(data.links)) {
           console.log(`✅ Loaded ${data.links.length} social media links`);
           setSocialLinks(data.links);
+          setError(null); // Clear any previous errors
         } else {
-          console.warn('⚠️ Failed to fetch social media links:', data.error);
-          setError(data.error);
+          throw new Error(data.error || 'Invalid response format');
         }
       } catch (err) {
-        console.error('❌ Error fetching social media links:', err);
-        setError('Failed to load social media links');
+        console.error(`❌ Error fetching social media links (attempt ${retryCount + 1}):`, err);
+
+        // Don't retry if aborted (component unmounted)
+        if (err.name === 'AbortError') {
+          console.log('🛑 Fetch aborted (component unmounted)');
+          return;
+        }
+
+        // Retry logic with exponential backoff
+        if (retryCount < maxRetries) {
+          retryCount++;
+          const delay = retryDelay * Math.pow(2, retryCount - 1); // Exponential backoff
+          console.log(`🔄 Retrying in ${delay}ms...`);
+
+          setTimeout(() => {
+            if (!abortController.signal.aborted) {
+              fetchSocialLinksWithRetry();
+            }
+          }, delay);
+          return;
+        }
+
+        // All retries failed - use fallback
+        console.warn('⚠️ All retry attempts failed, using fallback social links');
+        setError('Using fallback links');
+
+        // Fallback social links to prevent complete disappearance
+        setSocialLinks([
+          { platform: 'instagram', url: 'https://instagram.com/bounce2bounce', display_order: 1, enabled: true },
+          { platform: 'tiktok', url: 'https://tiktok.com/@bounce2bounce', display_order: 2, enabled: true },
+          { platform: 'facebook', url: 'https://facebook.com/bounce2bounce', display_order: 3, enabled: true },
+          { platform: 'twitter', url: 'https://twitter.com/bounce2bounce', display_order: 4, enabled: true }
+        ]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSocialLinks();
+    fetchSocialLinksWithRetry();
 
     // Trigger animation immediately for better loading sequence
     setTimeout(() => setButtonsAnimated(true), 200);
+
+    // Cleanup function
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
   // Show skeleton during loading to maintain layout and timing
@@ -162,9 +221,18 @@ const SocialMediaButtons = () => {
     );
   }
 
-  // Don't render if error or no links
-  if (error || socialLinks.length === 0) {
-    return null;
+  // Enhanced error handling - show fallback instead of disappearing
+  if (socialLinks.length === 0) {
+    // If we have an error but no fallback links were set, don't render
+    if (error && !error.includes('fallback')) {
+      console.warn('⚠️ No social links available and no fallback, component will be hidden');
+      return null;
+    }
+
+    // If still loading or no links at all, don't render
+    if (!error) {
+      return null;
+    }
   }
 
   return (
@@ -300,6 +368,36 @@ const SocialMediaButtons = () => {
           100% {
             opacity: 1;
             transform: translateY(0) scale(1);
+          }
+        }
+
+        /* Skeleton loading styles for iOS Safari compatibility */
+        .skeleton-button {
+          width: clamp(75px, 18vw, 95px);
+          height: clamp(75px, 18vw, 95px);
+          border-radius: 50%;
+          background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+          background-size: 200% 100%;
+          animation: skeletonShimmer 1.5s infinite;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .skeleton-icon {
+          width: 24px;
+          height: 24px;
+          border-radius: 4px;
+          background: rgba(255,255,255,0.15);
+        }
+
+        @keyframes skeletonShimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
           }
         }
       `}</style>

@@ -209,20 +209,38 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   );
 });
 
-// Image helpers inlined to avoid external dependency during build
+// Enhanced image helpers with iOS Safari compatibility
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) return originalUrl;
+
+  // Check if we're on iOS Safari for compatibility decisions
+  const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+
   if (typeof originalUrl === 'string' && originalUrl.includes('/images/figma-exact/')) {
     const filename = originalUrl.split('/').pop();
+
+    // For iOS Safari, prefer JPEG over WebP for better compatibility
+    if (isIOSSafari && filename.includes('.webp')) {
+      const jpegFilename = filename.replace('.webp', '.jpg');
+      return `/images/optimized/${jpegFilename}`;
+    }
+
     return `/images/optimized/${filename}`;
   }
+
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
     // Use dashboard server for image optimization (publicly accessible)
     const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
-    return width ? `${baseUrl}&w=${width}` : baseUrl;
+
+    // Add iOS Safari specific parameters for better compatibility
+    const iosSafariParams = isIOSSafari ? '&format=jpeg&quality=85' : '';
+    const finalUrl = width ? `${baseUrl}&w=${width}${iosSafariParams}` : `${baseUrl}${iosSafariParams}`;
+
+    return finalUrl;
   }
+
   return originalUrl;
 };
 
@@ -261,6 +279,42 @@ const getImageLoadingStrategy = (index, isMobile = true) => {
     return { loading: 'eager', decoding: 'async', fetchpriority: 'high' };
   }
   return { loading: 'lazy', decoding: 'async', fetchpriority: 'low' };
+};
+
+// Enhanced iOS Safari image fallback handler
+const handleFinalImageFallback = (imgElement, card) => {
+  console.log('🎨 Applying final image fallback for:', card.title);
+
+  // Hide the broken image
+  imgElement.style.display = 'none';
+
+  // Create a styled placeholder div
+  const placeholder = document.createElement('div');
+  placeholder.style.cssText = `
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    color: white;
+    font-family: Inter, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    padding: 8px;
+    box-sizing: border-box;
+  `;
+
+  // Add event title or generic text
+  const eventTitle = card.title || 'Event';
+  const displayText = eventTitle.length > 20 ? eventTitle.substring(0, 17) + '...' : eventTitle;
+  placeholder.textContent = displayText;
+
+  // Replace the image with the placeholder
+  imgElement.parentNode.insertBefore(placeholder, imgElement);
+  imgElement.remove();
 };
 
 // Simple cache for API responses
@@ -3243,15 +3297,45 @@ const FigmaMobile = () => {
                           alt={`${card.title} event cover`}
                           {...getImageLoadingStrategy(index, true)}
                           onError={(e) => {
-                            // Safari mobile fallback: try original image if optimized fails
-                            if (e.target.src !== card.coverImage) {
-                              console.log('🔄 Image load failed, trying original:', card.coverImage);
+                            console.log('🔄 iOS Safari image fallback sequence starting for:', e.target.src);
+
+                            // Enhanced iOS Safari fallback sequence
+                            if (e.target.dataset.fallbackAttempt === undefined) {
+                              // First attempt: try original image URL
+                              e.target.dataset.fallbackAttempt = '1';
+                              console.log('🔄 Attempt 1: Trying original image URL');
                               e.target.src = card.coverImage;
+                            } else if (e.target.dataset.fallbackAttempt === '1') {
+                              // Second attempt: try JPEG fallback if original was WebP/AVIF
+                              e.target.dataset.fallbackAttempt = '2';
+                              const jpegFallback = card.coverImage.replace(/\.(webp|avif)$/i, '.jpg');
+                              if (jpegFallback !== card.coverImage) {
+                                console.log('🔄 Attempt 2: Trying JPEG fallback:', jpegFallback);
+                                e.target.src = jpegFallback;
+                              } else {
+                                // Skip to final fallback if no format conversion possible
+                                e.target.dataset.fallbackAttempt = '3';
+                                handleFinalImageFallback(e.target, card);
+                              }
+                            } else if (e.target.dataset.fallbackAttempt === '2') {
+                              // Third attempt: try PNG fallback
+                              e.target.dataset.fallbackAttempt = '3';
+                              const pngFallback = card.coverImage.replace(/\.(webp|avif|jpg|jpeg)$/i, '.png');
+                              if (pngFallback !== card.coverImage && !card.coverImage.includes('.png')) {
+                                console.log('🔄 Attempt 3: Trying PNG fallback:', pngFallback);
+                                e.target.src = pngFallback;
+                              } else {
+                                handleFinalImageFallback(e.target, card);
+                              }
                             } else {
-                              // Final fallback: show gray background
-                              e.target.style.backgroundColor = 'lightgray';
-                              e.target.style.display = 'block';
+                              // Final fallback: styled placeholder
+                              handleFinalImageFallback(e.target, card);
                             }
+                          }}
+                          onLoad={(e) => {
+                            // Clear fallback tracking on successful load
+                            delete e.target.dataset.fallbackAttempt;
+                            console.log('✅ Event image loaded successfully:', e.target.src);
                           }}
                           onClick={(e) => {
                             e.stopPropagation();

@@ -101,7 +101,7 @@ async function createSEOSettingsTable(knex) {
             sitemap_include_dashboard: false,
             robots_enabled: true,
             robots_disallowed_paths: "/admin/,/dashboard/,/api/,/login,/logout,/settings,/stats",
-            robots_allowed_paths: "/,/event/,/events,/static/,/images/,/css/,/js/",
+            robots_allowed_paths: "/,/event/,/events,/static/,/images/,/css/,/js/,/uploads/",
             structured_data_enabled: true,
             structured_data_events: true,
             structured_data_organization: true,
