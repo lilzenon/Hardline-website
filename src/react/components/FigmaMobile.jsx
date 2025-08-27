@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from '
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
 import SocialMediaButtons from './SocialMediaButtons';
+import PrivacyConsentModal from './PrivacyConsentModal';
 
 // Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
@@ -638,6 +639,23 @@ const getCurrentCountry = (countryId) => {
 const FigmaMobile = () => {
   // Initialize analytics
   const { trackEvent, trackLinkClick } = useAnalytics();
+
+  // Privacy consent state
+  const [consentGiven, setConsentGiven] = useState(false);
+
+  // Handle consent change
+  const handleConsentChange = useCallback((granted) => {
+    setConsentGiven(granted);
+
+    // Track consent decision for analytics (only if consent was granted)
+    if (granted) {
+      trackEvent('privacy_consent', {
+        action: 'granted',
+        timestamp: Date.now(),
+        component: 'PrivacyConsentModal'
+      });
+    }
+  }, [trackEvent]);
 
   // YouTube thumbnail preloader state for better performance
   const [showYoutubeThumbnail, setShowYoutubeThumbnail] = useState(true);
@@ -2394,38 +2412,49 @@ const FigmaMobile = () => {
         role="main"
         aria-label="BOUNCE2BOUNCE Mobile Experience"
       >
-      {/* Main Mobile Device Frame - 430x932 */}
+      {/* Main Mobile Container - Responsive Full Viewport */}
       <main
         style={{
-          width: '430px',
-          height: '932px',
+          width: '100vw',
+          height: '100vh',
           maxWidth: '100vw',
           maxHeight: '100vh',
-          margin: '0 auto',
+          margin: '0',
           position: 'relative',
-          background: '#000000'
+          background: '#000000',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden', // Prevent viewport scrolling
+          // Mobile-specific viewport fixes
+          minHeight: '100vh',
+          minWidth: '100vw',
+          isolation: 'isolate', // Create new stacking context
+          transform: 'translateZ(0)', // Force hardware acceleration
+          willChange: 'transform', // Optimize for mobile performance
+          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+          WebkitTransform: 'translateZ(0)' // iOS Safari optimization
         }}
         aria-label="Mobile homepage content"
       >
-        {/* Navigation Bar - Dynamic Scroll-Responsive */}
+        {/* Navigation Bar - Fixed Header in Flexbox Layout */}
         <header
           role="banner"
           style={{
-            position: 'absolute',
-            left: '0px',
+            position: 'sticky', // Changed to sticky for better mobile behavior
             top: '0px',
-            width: '100%', // Match parent container width (430px)
-            height: isScrolled ? '70px' : '97px', // Dynamic height based on scroll
-            background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000', // Slight transparency when scrolled
-            backdropFilter: isScrolled ? 'blur(10px)' : 'none', // Blur effect when scrolled
+            width: '100%',
+            height: isScrolled ? '70px' : '97px',
+            background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000',
+            backdropFilter: isScrolled ? 'blur(10px)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             padding: '0 20px',
             boxSizing: 'border-box',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
-            zIndex: 200, // Ensure it stays above all content
-            borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none' // Subtle border when scrolled
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            zIndex: 200,
+            borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
+            flexShrink: 0 // Prevent header from shrinking
           }}
           aria-label="Main navigation"
         >
@@ -2513,31 +2542,25 @@ const FigmaMobile = () => {
           />
         </header>
 
-        {/* Main Content Area - Consistent Absolute Positioning */}
+        {/* Main Content Area - Scrollable Flex Container */}
         <div
           ref={contentRef}
           className="mobile-content-container"
           style={{
-            position: 'absolute',
-            left: '0px',
-            right: '0px',
-            top: '110px', // Fixed position below navigation header (97px max height + 13px margin)
-            bottom: '0px', // Use bottom instead of fixed height to allow content expansion
-            width: '100%', // Full width of parent container (430px)
+            flex: '1 1 auto', // Take remaining space in flex container
+            width: '100%',
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '20px 0px 40px 0px', // Remove horizontal padding to prevent overflow
-            paddingBottom: getDynamicBottomSpacing(), // Dynamic bottom padding based on viewport context
+            padding: '20px 0px 40px 0px',
+            paddingBottom: getDynamicBottomSpacing(),
             boxSizing: 'border-box',
-            overflow: 'auto', // Enable scrolling
-            overflowX: 'hidden', // Prevent horizontal scroll
-            WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
-            zIndex: 45, // Ensure content appears above gradient overlay (zIndex: 40)
-            minHeight: '100%' // Ensure minimum height fills viewport
+            overflow: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
         >
           {/* Hero Video Section */}
@@ -2560,7 +2583,7 @@ const FigmaMobile = () => {
 
             <article
               style={{
-                width: '350px', // Mobile-optimized width
+                width: 'min(350px, calc(100vw - 60px))', // Adjusted to account for container padding
                 height: '200px', // Mobile-optimized height
                 position: 'relative',
                 flexShrink: 0,
@@ -2782,11 +2805,11 @@ const FigmaMobile = () => {
             <div
               style={{
                 display: 'flex',
-                width: '100%',
+                width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '20px',
-                padding: '0 16px', // Match hero card padding
+                margin: '0 auto 20px auto', // Center the container
                 boxSizing: 'border-box'
               }}
             >
@@ -2947,9 +2970,11 @@ const FigmaMobile = () => {
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
               style={{
                 width: '100%',
-                padding: '0 20px', // Reduced padding to match main container
+                padding: '0', // Remove padding to let inner element control width
                 marginBottom: '20px',
                 boxSizing: 'border-box',
+                display: 'flex',
+                justifyContent: 'center', // Center the hero card
                 animationDelay: cardsAnimated ? '0s' : '0s' // Hero animates first (no delay)
               }}
             >
@@ -2959,8 +2984,8 @@ const FigmaMobile = () => {
                 console.log('Hero clicked - navigate to events');
               }}
               style={{
-                width: 'min(350px, calc(100vw - 80px))', // Responsive width that scales on small devices
-                height: 'min(350px, calc(100vw - 80px))', // Maintain square aspect ratio
+                width: 'min(350px, calc(100vw - 60px))', // Adjusted to ensure consistent width across all elements
+                height: 'min(350px, calc(100vw - 60px))', // Maintain square aspect ratio
                 position: 'relative',
                 margin: '0 auto', // Center the hero
                 cursor: 'pointer',
@@ -2985,8 +3010,8 @@ const FigmaMobile = () => {
                   position: 'absolute',
                   left: '0px',
                   top: '0px',
-                  width: '350px',
-                  height: '350px',
+                  width: '100%',
+                  height: '100%',
                   borderRadius: '20px',
                   overflow: 'hidden'
                 }}
@@ -3233,16 +3258,19 @@ const FigmaMobile = () => {
             aria-label="Upcoming live music events"
             style={{
               display: 'flex',
-              width: '100%',
+              width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'stretch',
-              gap: '8px', // Reduced from 16px to 8px
+              gap: '8px', // Reduced gap for tighter spacing
               flexShrink: 0,
-              padding: '0 20px', // Reduced padding to match main container and drawer approach
-              marginBottom: '40px', // Additional bottom margin to ensure last event card is fully visible
-              boxSizing: 'border-box', // Ensure padding doesn't cause overflow
-              maxWidth: '100%' // Use full width of centered parent container
+              margin: '0 auto', // Center the container
+              marginBottom: '60px',
+              boxSizing: 'border-box',
+              minHeight: 'auto',
+              overflow: 'visible',
+              position: 'relative',
+              zIndex: 1
             }}
           >
             {/* Show featured events or empty state */}
@@ -3290,79 +3318,53 @@ const FigmaMobile = () => {
                   role="listitem"
                   aria-labelledby={`event-title-${card.id}`}
                   style={{
-                    display: 'flex',
+                    display: 'block', // Change to block to prevent flex issues
                     width: '100%',
-                    height: '120px', // Scaled up from 85px
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    borderRadius: '20px', // Scaled up from 16px
-                    background: 'rgba(15, 15, 15, 0.95)', // Reduced transparency for better visual separation
-                    backdropFilter: 'blur(20px) saturate(180%)', // Frostier blur effect
-                    WebkitBackdropFilter: 'blur(20px) saturate(180%)', // Safari support
-                    border: '1px solid rgba(255, 255, 255, 0.12)', // Enhanced border for better definition
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)', // Enhanced shadow with stronger inner highlight
+                    minHeight: '120px',
+                    height: 'auto',
+                    borderRadius: '20px',
+                    background: 'rgba(15, 15, 15, 0.95)',
+                    backdropFilter: 'blur(20px) saturate(180%)',
+                    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                     position: 'relative',
-                    margin: '0',
-                    padding: '0',
-                    animationDelay: cardsAnimated ? `${0.1 + (index * 0.05)}s` : '0s', // Start after hero (0.1s base delay + stagger)
-                    overflow: 'hidden' // Ensure backdrop filter works properly
+                    margin: '0', // Remove margin, use container gap instead
+                    padding: '12px', // Increased padding for better mobile touch
+                    animationDelay: cardsAnimated ? `${0.1 + (index * 0.05)}s` : '0s',
+                    overflow: 'hidden',
+                    boxSizing: 'border-box',
+                    isolation: 'isolate',
+                    transform: 'translateZ(0)',
+                    willChange: 'transform',
+                    zIndex: 1, // Ensure proper stacking
+                    clear: 'both' // Prevent float issues
                   }}
                 >
                   {/* Mobile Event Card Content */}
                   <div
                     style={{
                       width: '100%',
-                      height: '120px',
-                      position: 'relative'
+                      minHeight: '96px', // Adjusted for new padding (120px - 24px)
+                      height: 'auto',
+                      position: 'relative',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'flex-start',
+                      gap: '12px', // Add gap between image and content
+                      boxSizing: 'border-box'
                     }}
                   >
-                    {/* Dark Frosty Glass Overlay - Closer to Drawer Color */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: `
-                          linear-gradient(135deg,
-                            rgba(21, 21, 21, 0.4) 0%,
-                            rgba(21, 21, 21, 0.2) 25%,
-                            rgba(21, 21, 21, 0.1) 50%,
-                            rgba(21, 21, 21, 0.2) 75%,
-                            rgba(21, 21, 21, 0.3) 100%
-                          ),
-                          linear-gradient(45deg,
-                            rgba(255, 255, 255, 0.08) 0%,
-                            rgba(255, 255, 255, 0.04) 25%,
-                            rgba(255, 255, 255, 0.02) 50%,
-                            rgba(255, 255, 255, 0.04) 75%,
-                            rgba(255, 255, 255, 0.06) 100%
-                          )
-                        `,
-                        backdropFilter: 'blur(12px) saturate(150%)',
-                        WebkitBackdropFilter: 'blur(12px) saturate(150%)',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        boxShadow: `
-                          inset 0 1px 0 rgba(255, 255, 255, 0.1),
-                          inset 0 -1px 0 rgba(255, 255, 255, 0.05),
-                          0 4px 16px rgba(0, 0, 0, 0.4),
-                          0 1px 4px rgba(0, 0, 0, 0.3)
-                        `,
-                        zIndex: 1,
-                        pointerEvents: 'none'
-                      }}
-                    />
+
                     {/* Image Section - Scaled for Mobile */}
                     <div
                       style={{
-                        position: 'absolute',
-                        width: '118px', // Scaled up from 84px
-                        height: '118px', // Scaled up from 84px
-                        left: '0px',
-                        top: '1px',
-                        zIndex: 2 // Above gradient overlay
+                        position: 'relative',
+                        width: '96px', // Adjusted for better mobile fit
+                        height: '96px',
+                        flexShrink: 0,
+                        borderRadius: '16px',
+                        overflow: 'hidden'
                       }}
                     >
                       {/* Event Background Image - Progressive Loading with Safari Mobile Optimization */}
@@ -3441,17 +3443,14 @@ const FigmaMobile = () => {
                             }
                           }}
                           style={{
-                            position: 'absolute',
-                            left: '4px', // Scaled up from 3px
-                            top: '3px', // Scaled up from 2px
-                            width: '111px', // Scaled up from 79.04px
-                            height: '111px', // Scaled up from 79.04px
-                            borderRadius: '18px', // Scaled up from 14px
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '16px',
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
                             cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            transform: 'scale(1) translateY(0px)',
+                            transform: 'scale(1)',
                             boxShadow: 'none'
                           }}
                           onMouseEnter={(e) => {
@@ -3481,10 +3480,10 @@ const FigmaMobile = () => {
                       <div
                         style={{
                           position: 'absolute',
-                          left: '76px', // Scaled up from 54px
-                          top: '7px', // Scaled up from 5px
-                          width: '34px', // Scaled up from 24px
-                          height: '34px' // Scaled up from 24px
+                          right: '4px',
+                          top: '4px',
+                          width: '32px',
+                          height: '32px'
                         }}
                       >
                         {/* White Badge Background */}
@@ -3551,19 +3550,16 @@ const FigmaMobile = () => {
                     <div
                       className="card-clickable-area"
                       style={{
-                        position: 'absolute',
-                        left: '132px', // Keep fixed left position for image space
-                        right: '8px', // Use right positioning instead of fixed width
-                        top: '0px',
                         display: 'flex',
-                        height: '120px', // Scaled up from 85px
-                        padding: '4px 0px', // Scaled up from 3px
+                        flex: 1,
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
-                        gap: '16px', // Scaled up from 12px
-                        zIndex: 2, // Above gradient overlay
-                        boxSizing: 'border-box' // Ensure padding is included in width calculation
+                        gap: '8px',
+                        minWidth: 0, // Allow shrinking
+                        height: '96px', // Match image height
+                        padding: '4px 0px',
+                        boxSizing: 'border-box'
                       }}
                     >
                       {/* Event Information - Optimized Layout */}
@@ -4360,6 +4356,9 @@ const FigmaMobile = () => {
             </div>
           </div>
         </div>
+
+        {/* Privacy Consent Modal */}
+        <PrivacyConsentModal onConsentChange={handleConsentChange} />
     </>
   );
 };
@@ -4368,11 +4367,32 @@ export default FigmaMobile;
 
 // Add CSS for mobile event card optimizations
 const mobileCardStyles = `
-  /* Mobile Event Card Responsive Optimizations */
-  @media (max-width: 480px) {
+  /* Mobile Event Card Responsive Optimizations - Prevent Overlap */
+  .event-card-spring {
+    /* Force proper spacing and prevent overlap on mobile devices */
+    margin-bottom: 0 !important; /* Use container gap instead */
+    min-height: 120px !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    z-index: 1 !important;
+    isolation: isolate !important;
+    transform: translateZ(0) !important;
+    will-change: transform !important;
+  }
+
+  .event-card-hidden {
+    /* Ensure hidden cards don't interfere with layout */
+    position: relative !important;
+    z-index: 0 !important;
+  }
+
+  /* Mobile-specific viewport fixes */
+  @media screen and (max-width: 480px) {
     .event-card-spring {
       padding: 12px !important;
-      height: 110px !important;
+      margin-bottom: 0 !important; /* Use container gap */
+      min-height: 130px !important;
     }
 
     .event-card-spring h3 {
@@ -4381,15 +4401,63 @@ const mobileCardStyles = `
     }
   }
 
-  @media (max-width: 360px) {
+  @media screen and (max-width: 360px) {
     .event-card-spring {
       padding: 10px !important;
-      height: 100px !important;
+      margin-bottom: 0 !important; /* Use container gap */
+      min-height: 140px !important;
     }
 
     .event-card-spring h3 {
       font-size: 15px !important;
       line-height: 1.2 !important;
+    }
+  }
+
+  /* iOS Safari specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .event-card-spring {
+      -webkit-transform: translateZ(0) !important;
+      -webkit-backface-visibility: hidden !important;
+      -webkit-perspective: 1000 !important;
+    }
+  }
+
+  /* Force proper spacing on all mobile browsers */
+  @media screen and (max-width: 767px) {
+    .event-card-spring {
+      display: block !important;
+      margin-bottom: 0 !important; /* Use container gap for consistent spacing */
+      padding: 12px !important;
+      box-sizing: border-box !important;
+      width: 100% !important;
+      min-height: 120px !important;
+      height: auto !important;
+      position: relative !important;
+      z-index: auto !important;
+      clear: both !important;
+      isolation: isolate !important;
+    }
+
+    /* Ensure container has proper spacing */
+    [role="list"][aria-label="Upcoming live music events"] {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px !important; /* Reduced gap for tighter spacing */
+      padding: 0 !important; /* Remove padding to match hero card */
+      box-sizing: border-box !important;
+    }
+
+    /* Prevent any absolute positioning issues */
+    .event-card-spring * {
+      position: relative !important;
+    }
+
+    .event-card-spring .card-clickable-area {
+      position: relative !important;
+      left: auto !important;
+      right: auto !important;
+      top: auto !important;
     }
   }
 

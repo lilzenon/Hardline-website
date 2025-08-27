@@ -188,10 +188,10 @@ const SocialMediaButtons = () => {
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'nowrap',
-            justifyContent: 'space-evenly',
+            justifyContent: 'space-between', // Match main container distribution
             alignItems: 'center',
-            width: '100%',
-            maxWidth: '100%',
+            width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
+            maxWidth: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
             padding: '0',
             boxSizing: 'border-box'
           }}
@@ -201,8 +201,10 @@ const SocialMediaButtons = () => {
             <div
               key={index}
               style={{
-                width: 'clamp(75px, 18vw, 95px)',
-                height: 'clamp(75px, 18vw, 95px)',
+                width: 'calc((100% - 30px) / 4)', // Match the actual button sizing
+                height: 'clamp(70px, 20vw, 85px)', // Match the actual button height
+                minWidth: '70px',
+                maxWidth: '85px',
                 borderRadius: '20px',
                 background: 'rgba(22, 22, 22, 0.4)',
                 backdropFilter: 'blur(12px)',
@@ -212,7 +214,8 @@ const SocialMediaButtons = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 flexShrink: 0,
-                opacity: 0.6
+                opacity: 0.6,
+                aspectRatio: '1 / 1' // Ensure square skeleton buttons
               }}
             />
           ))}
@@ -254,10 +257,10 @@ const SocialMediaButtons = () => {
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'nowrap', // Prevent stacking
-          justifyContent: 'space-evenly', // Spread equally across width
+          justifyContent: 'space-between', // Use space-between for better edge alignment
           alignItems: 'center',
-          width: '100%',
-          maxWidth: '100%', // Use full available width
+          width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
+          maxWidth: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
           padding: '0', // No padding to maximize space
           boxSizing: 'border-box'
         }}
@@ -274,10 +277,11 @@ const SocialMediaButtons = () => {
               rel="noopener noreferrer"
               aria-label={`Follow us on ${platform.name}`}
               style={{
-                // Optimized sizing for 4 buttons spread across width
-                width: 'clamp(75px, 18vw, 95px)', // Larger and more responsive
-                height: 'clamp(75px, 18vw, 95px)', // Square aspect ratio
-                minWidth: '75px', // Larger minimum for better usability
+                // Calculate button size to fill container width properly (4 buttons with gaps)
+                width: 'calc((100% - 30px) / 4)', // Divide available width by 4 buttons, accounting for gaps
+                height: 'clamp(70px, 20vw, 85px)', // Responsive height that scales well
+                minWidth: '70px', // Minimum for usability
+                maxWidth: '85px', // Maximum to prevent oversizing
                 borderRadius: '20px', // Optimized radius
                 background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect
@@ -293,7 +297,8 @@ const SocialMediaButtons = () => {
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 transform: 'scale(1)',
                 animationDelay: buttonsAnimated ? `${0.2 + (index * 0.1)}s` : '0s',
-                flexShrink: 0 // Prevent buttons from shrinking
+                flexShrink: 0, // Prevent buttons from shrinking
+                aspectRatio: '1 / 1' // Ensure square buttons
               }}
               onTouchStart={(e) => {
                 e.currentTarget.style.transform = 'scale(0.95)';

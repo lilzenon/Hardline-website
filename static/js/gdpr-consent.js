@@ -1,25 +1,29 @@
 // GDPR Consent Management for Homepage
 // Vanilla JavaScript implementation
+//
+// ⚠️ DEPRECATED: This file is being replaced by the React PrivacyConsentModal component
+// The new modal provides a better UX with glassmorphism design and improved functionality
+// This file is kept for backward compatibility but should not be used for new implementations
 
 class GDPRConsent {
-  constructor() {
-    this.showBanner = false
-    this.showDetails = false
-    this.init()
-  }
-
-  init() {
-    // Check if consent has already been given or denied
-    const consent = localStorage.getItem('analytics_gdpr_consent')
-    if (!consent) {
-      this.showBanner = true
-      this.createConsentBanner()
+    constructor() {
+        this.showBanner = false
+        this.showDetails = false
+        this.init()
     }
-  }
 
-  createConsentBanner() {
-    // Create banner HTML
-    const bannerHTML = `
+    init() {
+        // Check if consent has already been given or denied
+        const consent = localStorage.getItem('analytics_gdpr_consent')
+        if (!consent) {
+            this.showBanner = true
+            this.createConsentBanner()
+        }
+    }
+
+    createConsentBanner() {
+        // Create banner HTML
+        const bannerHTML = `
       <div id="gdpr-consent-banner" style="
         position: fixed;
         bottom: 0;
@@ -94,73 +98,73 @@ class GDPRConsent {
       </div>
     `
 
-    // Add banner to page
-    document.body.insertAdjacentHTML('beforeend', bannerHTML)
+        // Add banner to page
+        document.body.insertAdjacentHTML('beforeend', bannerHTML)
 
-    // Add event listeners
-    document.getElementById('gdpr-accept').addEventListener('click', () => this.handleAccept())
-    document.getElementById('gdpr-decline').addEventListener('click', () => this.handleDecline())
-    document.getElementById('gdpr-customize').addEventListener('click', () => this.handleCustomize())
+        // Add event listeners
+        document.getElementById('gdpr-accept').addEventListener('click', () => this.handleAccept())
+        document.getElementById('gdpr-decline').addEventListener('click', () => this.handleDecline())
+        document.getElementById('gdpr-customize').addEventListener('click', () => this.handleCustomize())
 
-    // Add hover effects
-    this.addHoverEffects()
-  }
-
-  addHoverEffects() {
-    const customizeBtn = document.getElementById('gdpr-customize')
-    const declineBtn = document.getElementById('gdpr-decline')
-    const acceptBtn = document.getElementById('gdpr-accept')
-
-    customizeBtn.addEventListener('mouseenter', () => {
-      customizeBtn.style.color = 'white'
-    })
-    customizeBtn.addEventListener('mouseleave', () => {
-      customizeBtn.style.color = '#D1D5DB'
-    })
-
-    declineBtn.addEventListener('mouseenter', () => {
-      declineBtn.style.color = 'white'
-      declineBtn.style.borderColor = '#9CA3AF'
-    })
-    declineBtn.addEventListener('mouseleave', () => {
-      declineBtn.style.color = '#D1D5DB'
-      declineBtn.style.borderColor = '#6B7280'
-    })
-
-    acceptBtn.addEventListener('mouseenter', () => {
-      acceptBtn.style.backgroundColor = '#1D4ED8'
-    })
-    acceptBtn.addEventListener('mouseleave', () => {
-      acceptBtn.style.backgroundColor = '#2563EB'
-    })
-  }
-
-  handleAccept() {
-    const tracker = window.getAnalyticsTracker()
-    if (tracker) {
-      tracker.grantGDPRConsent()
+        // Add hover effects
+        this.addHoverEffects()
     }
-    this.removeBanner()
-  }
 
-  handleDecline() {
-    localStorage.setItem('analytics_gdpr_consent', 'denied')
-    this.removeBanner()
-  }
+    addHoverEffects() {
+        const customizeBtn = document.getElementById('gdpr-customize')
+        const declineBtn = document.getElementById('gdpr-decline')
+        const acceptBtn = document.getElementById('gdpr-accept')
 
-  handleCustomize() {
-    this.createDetailedModal()
-  }
+        customizeBtn.addEventListener('mouseenter', () => {
+            customizeBtn.style.color = 'white'
+        })
+        customizeBtn.addEventListener('mouseleave', () => {
+            customizeBtn.style.color = '#D1D5DB'
+        })
 
-  removeBanner() {
-    const banner = document.getElementById('gdpr-consent-banner')
-    if (banner) {
-      banner.remove()
+        declineBtn.addEventListener('mouseenter', () => {
+            declineBtn.style.color = 'white'
+            declineBtn.style.borderColor = '#9CA3AF'
+        })
+        declineBtn.addEventListener('mouseleave', () => {
+            declineBtn.style.color = '#D1D5DB'
+            declineBtn.style.borderColor = '#6B7280'
+        })
+
+        acceptBtn.addEventListener('mouseenter', () => {
+            acceptBtn.style.backgroundColor = '#1D4ED8'
+        })
+        acceptBtn.addEventListener('mouseleave', () => {
+            acceptBtn.style.backgroundColor = '#2563EB'
+        })
     }
-  }
 
-  createDetailedModal() {
-    const modalHTML = `
+    handleAccept() {
+        const tracker = window.getAnalyticsTracker()
+        if (tracker) {
+            tracker.grantGDPRConsent()
+        }
+        this.removeBanner()
+    }
+
+    handleDecline() {
+        localStorage.setItem('analytics_gdpr_consent', 'denied')
+        this.removeBanner()
+    }
+
+    handleCustomize() {
+        this.createDetailedModal()
+    }
+
+    removeBanner() {
+        const banner = document.getElementById('gdpr-consent-banner')
+        if (banner) {
+            banner.remove()
+        }
+    }
+
+    createDetailedModal() {
+        const modalHTML = `
       <div id="gdpr-modal" style="
         position: fixed;
         inset: 0;
@@ -316,66 +320,66 @@ class GDPRConsent {
       </div>
     `
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML)
+        document.body.insertAdjacentHTML('beforeend', modalHTML)
 
-    // Add event listeners
-    document.getElementById('modal-close').addEventListener('click', () => this.closeModal())
-    document.getElementById('modal-backdrop').addEventListener('click', () => this.closeModal())
-    document.getElementById('modal-decline').addEventListener('click', () => {
-      this.handleDecline()
-      this.closeModal()
-    })
-    document.getElementById('modal-accept').addEventListener('click', () => {
-      this.handleAccept()
-      this.closeModal()
-    })
+        // Add event listeners
+        document.getElementById('modal-close').addEventListener('click', () => this.closeModal())
+        document.getElementById('modal-backdrop').addEventListener('click', () => this.closeModal())
+        document.getElementById('modal-decline').addEventListener('click', () => {
+            this.handleDecline()
+            this.closeModal()
+        })
+        document.getElementById('modal-accept').addEventListener('click', () => {
+            this.handleAccept()
+            this.closeModal()
+        })
 
-    // Add hover effects for modal buttons
-    this.addModalHoverEffects()
-  }
-
-  addModalHoverEffects() {
-    const closeBtn = document.getElementById('modal-close')
-    const declineBtn = document.getElementById('modal-decline')
-    const acceptBtn = document.getElementById('modal-accept')
-
-    closeBtn.addEventListener('mouseenter', () => {
-      closeBtn.style.color = 'white'
-    })
-    closeBtn.addEventListener('mouseleave', () => {
-      closeBtn.style.color = '#9CA3AF'
-    })
-
-    declineBtn.addEventListener('mouseenter', () => {
-      declineBtn.style.color = 'white'
-      declineBtn.style.borderColor = '#9CA3AF'
-    })
-    declineBtn.addEventListener('mouseleave', () => {
-      declineBtn.style.color = '#D1D5DB'
-      declineBtn.style.borderColor = '#6B7280'
-    })
-
-    acceptBtn.addEventListener('mouseenter', () => {
-      acceptBtn.style.backgroundColor = '#1D4ED8'
-    })
-    acceptBtn.addEventListener('mouseleave', () => {
-      acceptBtn.style.backgroundColor = '#2563EB'
-    })
-  }
-
-  closeModal() {
-    const modal = document.getElementById('gdpr-modal')
-    if (modal) {
-      modal.remove()
+        // Add hover effects for modal buttons
+        this.addModalHoverEffects()
     }
-  }
+
+    addModalHoverEffects() {
+        const closeBtn = document.getElementById('modal-close')
+        const declineBtn = document.getElementById('modal-decline')
+        const acceptBtn = document.getElementById('modal-accept')
+
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.color = 'white'
+        })
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.color = '#9CA3AF'
+        })
+
+        declineBtn.addEventListener('mouseenter', () => {
+            declineBtn.style.color = 'white'
+            declineBtn.style.borderColor = '#9CA3AF'
+        })
+        declineBtn.addEventListener('mouseleave', () => {
+            declineBtn.style.color = '#D1D5DB'
+            declineBtn.style.borderColor = '#6B7280'
+        })
+
+        acceptBtn.addEventListener('mouseenter', () => {
+            acceptBtn.style.backgroundColor = '#1D4ED8'
+        })
+        acceptBtn.addEventListener('mouseleave', () => {
+            acceptBtn.style.backgroundColor = '#2563EB'
+        })
+    }
+
+    closeModal() {
+        const modal = document.getElementById('gdpr-modal')
+        if (modal) {
+            modal.remove()
+        }
+    }
 }
 
 // Initialize GDPR consent when DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    window.gdprConsent = new GDPRConsent()
-  })
+    document.addEventListener('DOMContentLoaded', () => {
+        window.gdprConsent = new GDPRConsent()
+    })
 } else {
-  window.gdprConsent = new GDPRConsent()
+    window.gdprConsent = new GDPRConsent()
 }
