@@ -216,6 +216,35 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   // Check if we're on iOS Safari for compatibility decisions
   const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
+  // Handle new image system URLs (/api/images/serve/{uuid})
+  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
+    console.log('🔄 Processing new image system URL:', originalUrl);
+
+    // Extract the UUID from the URL
+    const uuidMatch = originalUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
+    if (uuidMatch) {
+      const uuid = uuidMatch[1];
+
+      // Build optimized URL using the dashboard domain
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+
+      // Use appropriate variant based on width or default to medium for event cards
+      let variant = 'medium'; // Default for event cards (111px)
+      if (width) {
+        if (width <= 150) variant = 'small';
+        else if (width <= 300) variant = 'medium';
+        else if (width <= 600) variant = 'large';
+        else variant = 'large'; // Use large for anything bigger
+      }
+
+      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
+
+      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant})`);
+      return optimizedUrl;
+    }
+  }
+
+  // Handle old image system URLs (/images/figma-exact/)
   if (typeof originalUrl === 'string' && originalUrl.includes('/images/figma-exact/')) {
     const filename = originalUrl.split('/').pop();
 
@@ -228,6 +257,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     return `/images/optimized/${filename}`;
   }
 
+  // Handle external HTTP URLs
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
     // Use dashboard server for image optimization (publicly accessible)
@@ -241,6 +271,25 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     return finalUrl;
   }
 
+  // Handle relative URLs that might be from the new system but without full path
+  if (typeof originalUrl === 'string' && originalUrl.startsWith('/') && !originalUrl.includes('/images/')) {
+    console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
+
+    // If it looks like a UUID-based path, treat it as new system
+    const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
+    if (uuidMatch) {
+      const uuid = uuidMatch[1];
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+
+      // Use medium variant for event cards
+      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
+
+      console.log('✅ Generated URL for UUID-based relative path:', optimizedUrl);
+      return optimizedUrl;
+    }
+  }
+
+  console.log('⚠️ No optimization applied to URL:', originalUrl);
   return originalUrl;
 };
 
@@ -315,6 +364,32 @@ const handleFinalImageFallback = (imgElement, card) => {
   // Replace the image with the placeholder
   imgElement.parentNode.insertBefore(placeholder, imgElement);
   imgElement.remove();
+};
+
+// Helper for third fallback attempt
+const handleImageFallbackAttempt3 = (imgElement, card) => {
+  if (card.coverImage.includes('/api/images/serve/')) {
+    // For new image system, try thumbnail variant as last resort
+    const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
+    if (uuidMatch) {
+      const uuid = uuidMatch[1];
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const thumbnailUrl = `${dashboardDomain}/api/images/serve/${uuid}/thumbnail`;
+      console.log('🔄 Attempt 3: Trying thumbnail variant for new image system:', thumbnailUrl);
+      imgElement.src = thumbnailUrl;
+      return;
+    }
+  }
+
+  // For old system, try PNG fallback
+  const pngFallback = card.coverImage.replace(/\.(webp|avif|jpg|jpeg)$/i, '.png');
+  if (pngFallback !== card.coverImage && !card.coverImage.includes('.png')) {
+    console.log('🔄 Attempt 3: Trying PNG fallback:', pngFallback);
+    imgElement.src = pngFallback;
+  } else {
+    // No more options, go to final fallback
+    handleFinalImageFallback(imgElement, card);
+  }
 };
 
 // Simple cache for API responses
@@ -3298,35 +3373,44 @@ const FigmaMobile = () => {
                           {...getImageLoadingStrategy(index, true)}
                           onError={(e) => {
                             console.log('🔄 iOS Safari image fallback sequence starting for:', e.target.src);
+                            console.log('🔍 Original card.coverImage:', card.coverImage);
 
                             // Enhanced iOS Safari fallback sequence
                             if (e.target.dataset.fallbackAttempt === undefined) {
-                              // First attempt: try original image URL
+                              // First attempt: try original image URL (unoptimized)
                               e.target.dataset.fallbackAttempt = '1';
-                              console.log('🔄 Attempt 1: Trying original image URL');
+                              console.log('🔄 Attempt 1: Trying original unoptimized URL');
                               e.target.src = card.coverImage;
                             } else if (e.target.dataset.fallbackAttempt === '1') {
-                              // Second attempt: try JPEG fallback if original was WebP/AVIF
+                              // Second attempt: for new image system, try different variants
                               e.target.dataset.fallbackAttempt = '2';
+
+                              if (card.coverImage.includes('/api/images/serve/')) {
+                                const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
+                                if (uuidMatch) {
+                                  const uuid = uuidMatch[1];
+                                  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+                                  const smallVariantUrl = `${dashboardDomain}/api/images/serve/${uuid}/small`;
+                                  console.log('🔄 Attempt 2: Trying small variant for new image system:', smallVariantUrl);
+                                  e.target.src = smallVariantUrl;
+                                  return;
+                                }
+                              }
+
+                              // For old system or external URLs, try JPEG fallback
                               const jpegFallback = card.coverImage.replace(/\.(webp|avif)$/i, '.jpg');
                               if (jpegFallback !== card.coverImage) {
                                 console.log('🔄 Attempt 2: Trying JPEG fallback:', jpegFallback);
                                 e.target.src = jpegFallback;
                               } else {
-                                // Skip to final fallback if no format conversion possible
+                                // Skip to next attempt
                                 e.target.dataset.fallbackAttempt = '3';
-                                handleFinalImageFallback(e.target, card);
+                                handleImageFallbackAttempt3(e.target, card);
                               }
                             } else if (e.target.dataset.fallbackAttempt === '2') {
-                              // Third attempt: try PNG fallback
+                              // Third attempt
                               e.target.dataset.fallbackAttempt = '3';
-                              const pngFallback = card.coverImage.replace(/\.(webp|avif|jpg|jpeg)$/i, '.png');
-                              if (pngFallback !== card.coverImage && !card.coverImage.includes('.png')) {
-                                console.log('🔄 Attempt 3: Trying PNG fallback:', pngFallback);
-                                e.target.src = pngFallback;
-                              } else {
-                                handleFinalImageFallback(e.target, card);
-                              }
+                              handleImageFallbackAttempt3(e.target, card);
                             } else {
                               // Final fallback: styled placeholder
                               handleFinalImageFallback(e.target, card);
