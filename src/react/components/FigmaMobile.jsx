@@ -3041,24 +3041,32 @@ const FigmaMobile = () => {
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      objectPosition: 'center'
+                      objectPosition: 'center',
+                      zIndex: 1
                     }}
                   />
                 </picture>
-                {/* Gradient Overlay - Matching Desktop Version */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: '0px',
-                    top: '0px',
-                    width: '100%',
-                    height: '100%',
-                    background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%)`,
-                    pointerEvents: 'none',
-                    zIndex: 2 // Ensure it's above the image but below text
-                  }}
-                />
               </div>
+
+              {/* Mobile-Optimized Gradient Overlay - Outside image container for better mobile rendering */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  width: '100%',
+                  height: '100%',
+                  background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
+                  borderRadius: '20px',
+                  pointerEvents: 'none',
+                  zIndex: 2,
+                  // Mobile-specific optimizations
+                  WebkitTransform: 'translateZ(0)', // Force hardware acceleration on iOS
+                  transform: 'translateZ(0)',
+                  WebkitBackfaceVisibility: 'hidden',
+                  backfaceVisibility: 'hidden'
+                }}
+              />
 
               {/* Bottom overlay with date and location - Responsive */}
               <div
