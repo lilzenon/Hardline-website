@@ -299,15 +299,59 @@ app.use("/css", express.static("custom/css", {
     }
 }));
 
-// Add specific route for CSS files to ensure correct MIME type
-app.get('/*path.css', (req, res, next) => {
-    res.set('Content-Type', 'text/css; charset=utf-8');
+// Enhanced MIME type middleware for mobile browser compatibility
+// This middleware runs before static file serving to ensure correct MIME types
+app.use((req, res, next) => {
+    // Set MIME types for all static assets to ensure mobile browser compatibility
+    // Mobile browsers (especially iOS Safari) are stricter about MIME type checking
+
+    // Use mime-types library for accurate MIME type detection
+    const mimeType = mime.lookup(req.path);
+
+    if (req.path.endsWith('.js')) {
+        res.set('Content-Type', 'application/javascript; charset=utf-8');
+        // Also set X-Content-Type-Options to prevent MIME sniffing
+        res.set('X-Content-Type-Options', 'nosniff');
+    } else if (req.path.endsWith('.css')) {
+        res.set('Content-Type', 'text/css; charset=utf-8');
+        res.set('X-Content-Type-Options', 'nosniff');
+    } else if (mimeType && mimeType !== 'application/octet-stream') {
+        // Use detected MIME type if it's not the generic octet-stream
+        res.set('Content-Type', mimeType);
+    } else if (req.path.endsWith('.svg')) {
+        res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+    } else if (req.path.endsWith('.png')) {
+        res.set('Content-Type', 'image/png');
+    } else if (req.path.endsWith('.jpg') || req.path.endsWith('.jpeg')) {
+        res.set('Content-Type', 'image/jpeg');
+    } else if (req.path.endsWith('.webp')) {
+        res.set('Content-Type', 'image/webp');
+    } else if (req.path.endsWith('.woff') || req.path.endsWith('.woff2')) {
+        res.set('Content-Type', 'font/woff2');
+    } else if (req.path.endsWith('.ttf')) {
+        res.set('Content-Type', 'font/ttf');
+    } else if (req.path.endsWith('.eot')) {
+        res.set('Content-Type', 'application/vnd.ms-fontobject');
+    }
     next();
 });
 
-// Add specific route for JS files to ensure correct MIME type
-app.get('/*path.js', (req, res, next) => {
+// Specific routes for problematic assets mentioned in mobile errors
+app.get('/assets/*.js', (req, res, next) => {
     res.set('Content-Type', 'application/javascript; charset=utf-8');
+    res.set('X-Content-Type-Options', 'nosniff');
+    next();
+});
+
+app.get('/assets/*.css', (req, res, next) => {
+    res.set('Content-Type', 'text/css; charset=utf-8');
+    res.set('X-Content-Type-Options', 'nosniff');
+    next();
+});
+
+app.get('/css/*.css', (req, res, next) => {
+    res.set('Content-Type', 'text/css; charset=utf-8');
+    res.set('X-Content-Type-Options', 'nosniff');
     next();
 });
 
@@ -315,22 +359,61 @@ app.get('/*path.js', (req, res, next) => {
 // We want routing to decide the homepage (HBS by default, SPA opt-in)
 app.use(express.static("dist", {
     index: false,
+    // Force Express to use proper MIME type detection
+    dotfiles: 'ignore',
+    etag: true,
+    extensions: false,
+    fallthrough: true,
+    immutable: false,
+    lastModified: true,
+    maxAge: 0,
+    redirect: true,
     setHeaders: (res, filePath) => {
-        const isAsset = /\\\/(assets|images)\\\//.test(filePath) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(filePath);
+        // Fixed regex pattern for asset detection
+        const isAsset = /\/(assets|images)\//.test(filePath) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(filePath);
 
-        // Set correct MIME types for ES modules and other assets
-        if (filePath.endsWith('.js')) {
-            res.set('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (filePath.endsWith('.css')) {
-            res.set('Content-Type', 'text/css; charset=utf-8');
-        } else if (filePath.endsWith('.svg')) {
-            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
-        } else if (filePath.endsWith('.png')) {
-            res.set('Content-Type', 'image/png');
-        } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-            res.set('Content-Type', 'image/jpeg');
-        } else if (filePath.endsWith('.webp')) {
-            res.set('Content-Type', 'image/webp');
+        // Critical: Force correct MIME types before any other headers
+        // This is essential for mobile browser compatibility
+        const ext = path.extname(filePath).toLowerCase();
+
+        switch (ext) {
+            case '.js':
+                res.set('Content-Type', 'application/javascript; charset=utf-8');
+                res.set('X-Content-Type-Options', 'nosniff');
+                break;
+            case '.css':
+                res.set('Content-Type', 'text/css; charset=utf-8');
+                res.set('X-Content-Type-Options', 'nosniff');
+                break;
+            case '.svg':
+                res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+                break;
+            case '.png':
+                res.set('Content-Type', 'image/png');
+                break;
+            case '.jpg':
+            case '.jpeg':
+                res.set('Content-Type', 'image/jpeg');
+                break;
+            case '.webp':
+                res.set('Content-Type', 'image/webp');
+                break;
+            case '.woff':
+            case '.woff2':
+                res.set('Content-Type', 'font/woff2');
+                break;
+            case '.ttf':
+                res.set('Content-Type', 'font/ttf');
+                break;
+            case '.eot':
+                res.set('Content-Type', 'application/vnd.ms-fontobject');
+                break;
+            default:
+                // Use mime-types library as fallback
+                const mimeType = mime.lookup(filePath);
+                if (mimeType && mimeType !== 'application/octet-stream') {
+                    res.set('Content-Type', mimeType);
+                }
         }
 
         if (env.NODE_ENV === 'production') {
