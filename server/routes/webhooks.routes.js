@@ -1459,8 +1459,9 @@ router.get(
     asyncHandler((req, res) => {
         // Redirect to messenger endpoint for consistency
         console.log('🔄 Redirecting Facebook webhook to Messenger Platform handler');
-        req.url = req.url.replace('/facebook', '/messenger');
-        return router.handle(req, res);
+        // Use proper Express redirect instead of router.handle()
+        const newUrl = req.originalUrl.replace('/facebook', '/messenger');
+        return res.redirect(302, newUrl);
     })
 );
 
@@ -1554,8 +1555,9 @@ router.post(
     asyncHandler((req, res) => {
         // Redirect to messenger endpoint for consistency
         console.log('🔄 Redirecting Facebook webhook POST to Messenger Platform handler');
-        req.url = req.url.replace('/facebook', '/messenger');
-        return router.handle(req, res);
+        // Use proper Express redirect instead of router.handle()
+        const newUrl = req.originalUrl.replace('/facebook', '/messenger');
+        return res.redirect(307, newUrl); // 307 preserves POST method
     })
 );
 
