@@ -368,7 +368,7 @@ app.get('/css/*', (req, res, next) => {
 // Force deployment restart to apply MIME type fixes - 2025-01-28
 
 // Handle CSS files with correct MIME type
-app.get('/assets/*.css', (req, res) => {
+app.get('/assets/:filename.css', (req, res) => {
     console.log('🎨 CSS Route Handler Hit:', req.path);
     const filePath = path.join(__dirname, '../dist', req.path);
     console.log('📁 CSS File Path:', filePath);
@@ -395,7 +395,7 @@ app.get('/assets/*.css', (req, res) => {
 });
 
 // Handle JS files with correct MIME type
-app.get('/assets/*.js', (req, res) => {
+app.get('/assets/:filename.js', (req, res) => {
     console.log('⚡ JS Route Handler Hit:', req.path);
     const filePath = path.join(__dirname, '../dist', req.path);
     console.log('📁 JS File Path:', filePath);
