@@ -117,33 +117,70 @@ function clearSEOSettingsCache() {
  * Update SEO settings with cache invalidation and corruption protection
  */
 async function updateSEOSettings(settingsData, userId = null) {
+    const startTime = Date.now();
+    console.log('🔄 Starting SEO settings update...');
+
     try {
-        // Get current settings
-        const currentSettings = await getSEOSettings();
+        // Use a transaction for better performance and consistency
+        const result = await knex.transaction(async(trx) => {
+            // Get current settings within transaction with timeout
+            const currentSettings = await trx("seo_settings")
+                .orderBy("created_at", "desc")
+                .first()
+                .timeout(5000); // 5 second timeout
 
-        // Update settings
-        const updatedData = {
-            ...settingsData,
-            updated_by_id: userId,
-            version: (currentSettings ? .version || 0) + 1,
-            updated_at: new Date()
-        };
+            if (!currentSettings) {
+                // Create new record if none exists
+                const newData = {
+                    ...getDefaultSEOSettings(),
+                    ...settingsData,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                    version: 1,
+                    updated_by_id: userId
+                };
 
-        const [updatedSettings] = await knex("seo_settings")
-            .where("id", currentSettings.id)
-            .update(updatedData)
-            .returning("*");
+                const [newSettings] = await trx("seo_settings")
+                    .insert(newData)
+                    .returning("*")
+                    .timeout(5000);
 
-        // Clear cache to force refresh
+                console.log(`✅ SEO settings created in ${Date.now() - startTime}ms`);
+                return newSettings;
+            }
+
+            // Update existing record with timeout
+            const updatedData = {
+                ...settingsData,
+                updated_by_id: userId,
+                version: (currentSettings.version || 0) + 1,
+                updated_at: new Date()
+            };
+
+            const [updatedSettings] = await trx("seo_settings")
+                .where("id", currentSettings.id)
+                .update(updatedData)
+                .returning("*")
+                .timeout(5000);
+
+            console.log(`✅ SEO settings updated in ${Date.now() - startTime}ms (version ${updatedSettings.version})`);
+            return updatedSettings;
+        });
+
+        // Clear cache after successful update
         clearSEOSettingsCache();
 
-        console.log(`✅ SEO settings updated (version ${updatedSettings.version})`);
-        return updatedSettings;
+        return result;
     } catch (error) {
-        console.error("Error updating SEO settings:", error);
+        console.error(`❌ Error updating SEO settings after ${Date.now() - startTime}ms:`, error);
 
         // Clear cache on error to prevent stale data
         clearSEOSettingsCache();
+
+        // Provide more specific error information
+        if (error.message.includes('timeout')) {
+            throw new Error('Database operation timed out. Please try again.');
+        }
 
         throw error;
     }

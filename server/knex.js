@@ -25,20 +25,20 @@ const db = knex({
         }),
         pool: {
             min: env.DB_POOL_MIN || 1,
-            max: env.DB_POOL_MAX || 3, // Further reduced for connection limit issues
-            // Connection pool timeouts optimized for Render Basic tier
-            acquireTimeoutMillis: 15000, // 15 seconds to acquire connection
-            createTimeoutMillis: 10000, // 10 seconds to create connection
-            destroyTimeoutMillis: 5000, // 5 seconds to destroy connection
-            idleTimeoutMillis: 20000, // 20 seconds idle timeout (reduced)
-            reapIntervalMillis: 1000, // Check for idle connections every second
-            createRetryIntervalMillis: 200, // Retry connection creation every 200ms
+            max: env.DB_POOL_MAX || 2, // Reduced to 2 for better stability
+            // Optimized timeouts for faster response
+            acquireTimeoutMillis: 8000, // Reduced from 15s to 8s
+            createTimeoutMillis: 6000, // Reduced from 10s to 6s
+            destroyTimeoutMillis: 3000, // Reduced from 5s to 3s
+            idleTimeoutMillis: 15000, // Reduced from 20s to 15s
+            reapIntervalMillis: 500, // Check more frequently (every 500ms)
+            createRetryIntervalMillis: 100, // Faster retry (every 100ms)
             // Validation and error handling
             propagateCreateError: false, // Don't crash on connection errors
             afterCreate: function(conn, done) {
                 // Set connection-level timeouts for PostgreSQL
                 if (isPostgres) {
-                    conn.query('SET statement_timeout = 30000', function(err) {
+                    conn.query('SET statement_timeout = 15000', function(err) { // Reduced from 30s to 15s
                         if (err) {
                             console.warn('⚠️ Failed to set statement_timeout:', err.message);
                         }
@@ -46,6 +46,22 @@ const db = knex({
                     });
                 } else {
                     done(null, conn);
+                }
+            },
+            // Add connection validation
+            validate: function(conn) {
+                return conn && !conn.destroyed;
+            },
+            // Log connection pool events for debugging
+            log: {
+                warn: function(message) {
+                    console.warn('🔶 DB Pool Warning:', message);
+                },
+                error: function(message) {
+                    console.error('🔴 DB Pool Error:', message);
+                },
+                deprecate: function(message) {
+                    console.warn('⚠️ DB Pool Deprecation:', message);
                 }
             }
         }

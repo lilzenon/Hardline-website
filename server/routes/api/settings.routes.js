@@ -111,7 +111,20 @@ router.get(
 router.post(
     "/seo",
     asyncHandler(async(req, res) => {
+        // Set request timeout to prevent hanging
+        req.setTimeout(15000, () => {
+            console.error('⏰ SEO settings request timed out after 15 seconds');
+            if (!res.headersSent) {
+                res.status(408).json({
+                    success: false,
+                    error: 'Request timeout',
+                    message: 'The request took too long to process. Please try again.'
+                });
+            }
+        });
+
         try {
+            const startTime = Date.now();
             console.log('💾 Updating SEO settings via API...');
             console.log('📊 Request body:', req.body);
 
@@ -156,15 +169,22 @@ router.post(
 
             console.log('📝 Processed settings data:', settingsData);
 
-            // Update settings in database
+            // Update settings in database with performance tracking
+            const dbStartTime = Date.now();
             const updatedSettings = await query.seoSettings.updateSEOSettings(settingsData, null);
+            const dbDuration = Date.now() - dbStartTime;
 
-            console.log('✅ SEO settings updated successfully');
+            const totalDuration = Date.now() - startTime;
+            console.log(`✅ SEO settings updated successfully in ${totalDuration}ms (DB: ${dbDuration}ms)`);
 
             res.json({
                 success: true,
                 message: 'SEO settings updated successfully',
-                settings: updatedSettings
+                settings: updatedSettings,
+                performance: {
+                    total_time: totalDuration,
+                    database_time: dbDuration
+                }
             });
 
         } catch (error) {
