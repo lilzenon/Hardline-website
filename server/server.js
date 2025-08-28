@@ -363,42 +363,9 @@ app.get('/css/*', (req, res, next) => {
 });
 */
 
-// CRITICAL FIX: Enhanced MIME type middleware for mobile browser compatibility
-// This middleware runs BEFORE express.static to ensure correct MIME types
+// CRITICAL FIX: Enhanced static file serving with proper MIME types
+// Using express.static with setHeaders function to ensure correct MIME types
 // Force deployment restart to apply MIME type fixes - 2025-01-28
-app.use((req, res, next) => {
-    // Set correct MIME types for ALL static assets, especially for mobile browsers
-    // Mobile browsers (iOS Safari, Android Chrome) are strict about MIME types
-
-    const ext = path.extname(req.path).toLowerCase();
-
-    // Force correct MIME types for critical file types
-    if (ext === '.css') {
-        res.set('Content-Type', 'text/css; charset=utf-8');
-        res.set('X-Content-Type-Options', 'nosniff');
-    } else if (ext === '.js') {
-        res.set('Content-Type', 'application/javascript; charset=utf-8');
-        res.set('X-Content-Type-Options', 'nosniff');
-    } else if (ext === '.svg') {
-        res.set('Content-Type', 'image/svg+xml; charset=utf-8');
-    } else if (ext === '.png') {
-        res.set('Content-Type', 'image/png');
-    } else if (ext === '.jpg' || ext === '.jpeg') {
-        res.set('Content-Type', 'image/jpeg');
-    } else if (ext === '.webp') {
-        res.set('Content-Type', 'image/webp');
-    } else if (ext === '.woff') {
-        res.set('Content-Type', 'font/woff');
-    } else if (ext === '.woff2') {
-        res.set('Content-Type', 'font/woff2');
-    } else if (ext === '.ico') {
-        res.set('Content-Type', 'image/x-icon');
-    }
-
-    next();
-});
-
-// Fallback: Standard express.static for any remaining files (non-asset files)
 app.use(express.static("dist", {
     index: false,
     dotfiles: 'ignore',
@@ -408,6 +375,50 @@ app.use(express.static("dist", {
     immutable: false,
     lastModified: true,
     maxAge: 0,
+    setHeaders: function (res, path, stat) {
+        // Get file extension
+        const ext = require('path').extname(path).toLowerCase();
+
+        // Force correct MIME types for critical file types
+        // This is especially important for mobile browsers (iOS Safari, Android Chrome)
+        if (ext === '.css') {
+            res.set('Content-Type', 'text/css; charset=utf-8');
+            res.set('X-Content-Type-Options', 'nosniff');
+        } else if (ext === '.js') {
+            res.set('Content-Type', 'application/javascript; charset=utf-8');
+            res.set('X-Content-Type-Options', 'nosniff');
+        } else if (ext === '.svg') {
+            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+        } else if (ext === '.png') {
+            res.set('Content-Type', 'image/png');
+        } else if (ext === '.jpg' || ext === '.jpeg') {
+            res.set('Content-Type', 'image/jpeg');
+        } else if (ext === '.webp') {
+            res.set('Content-Type', 'image/webp');
+        } else if (ext === '.woff') {
+            res.set('Content-Type', 'font/woff');
+        } else if (ext === '.woff2') {
+            res.set('Content-Type', 'font/woff2');
+        } else if (ext === '.ico') {
+            res.set('Content-Type', 'image/x-icon');
+        }
+
+        // Set cache headers based on environment
+        if (process.env.NODE_ENV === 'production') {
+            const isAsset = /\/(assets|images)\//.test(path) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(path);
+            const maxAge = isAsset ? (365 * 24 * 60 * 60) : (24 * 60 * 60);
+            res.set({
+                'Cache-Control': 'public, max-age=' + maxAge + (isAsset ? ', immutable' : ''),
+                'Expires': new Date(Date.now() + maxAge * 1000).toUTCString()
+            });
+        } else {
+            res.set({
+                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            });
+        }
+    },
     redirect: true
 }));
 
