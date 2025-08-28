@@ -1,6 +1,7 @@
 console.log('🔍 Starting routes.js imports...');
-console.log('🚨 DEPLOYMENT CACHE FIX: ROUTES.JS MODIFIED AT 17:15 - FORCE REFRESH!');
+console.log('🚨 FINAL DEPLOYMENT FIX: ROUTES.JS MODIFIED AT 17:45 - COMPLETE CACHE CLEAR!');
 console.log('🚨 CRITICAL: Settings routes are COMPLETELY REMOVED from homepage!');
+console.log('🚨 WARNING: Any attempt to load settings routes will cause path-to-regexp errors!');
 const { Router } = require("express");
 console.log('✅ Express Router imported');
 
@@ -43,6 +44,8 @@ const images = require("./images.route");
 console.log('✅ Images routes required successfully:', typeof images);
 // const imageOptimization = require("./images.route"); // Same file as images
 // const settings = require("./api/settings.routes"); // Moved to dashboard repository
+// CRITICAL DEPLOYMENT FIX: Settings routes MUST NOT be loaded - causes path-to-regexp errors
+// If you see "Loading settings routes" in deployment logs, there's a cache issue
 // CRITICAL: Settings routes MUST NOT be loaded in homepage - they cause path-to-regexp errors
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
