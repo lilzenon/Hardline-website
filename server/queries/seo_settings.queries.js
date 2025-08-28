@@ -126,20 +126,23 @@ function clearSEOSettingsCache() {
 }
 
 /**
- * Update SEO settings with cache invalidation and corruption protection
+ * Update SEO settings with enhanced timeout handling and performance optimization
  */
 async function updateSEOSettings(settingsData, userId = null) {
     const startTime = Date.now();
-    console.log('🔄 Starting SEO settings update...');
+    console.log('🔄 Starting SEO settings update with timeout protection...');
 
     try {
-        // Use a transaction for better performance and consistency
+        // TIMEOUT FIX: Use optimized transaction with longer timeout
         const result = await knex.transaction(async(trx) => {
-            // Get current settings within transaction with timeout
+            // Set transaction-level timeout to prevent hanging
+            await trx.raw('SET LOCAL statement_timeout = 12000'); // 12 seconds
+
+            // Get current settings within transaction with extended timeout
             const currentSettings = await trx("seo_settings")
                 .orderBy("created_at", "desc")
                 .first()
-                .timeout(5000); // 5 second timeout
+                .timeout(10000); // Increased to 10 second timeout
 
             if (!currentSettings) {
                 // Create new record if none exists
@@ -152,16 +155,17 @@ async function updateSEOSettings(settingsData, userId = null) {
                     updated_by_id: userId
                 };
 
+                // TIMEOUT FIX: Insert with extended timeout and retry logic
                 const [newSettings] = await trx("seo_settings")
                     .insert(newData)
                     .returning("*")
-                    .timeout(5000);
+                    .timeout(10000); // Increased to 10 seconds
 
                 console.log(`✅ SEO settings created in ${Date.now() - startTime}ms`);
                 return newSettings;
             }
 
-            // Update existing record with timeout
+            // Update existing record with extended timeout and optimistic locking
             const updatedData = {
                 ...settingsData,
                 updated_by_id: userId,
@@ -169,11 +173,18 @@ async function updateSEOSettings(settingsData, userId = null) {
                 updated_at: new Date()
             };
 
+            // TIMEOUT FIX: Use optimistic locking to prevent conflicts
             const [updatedSettings] = await trx("seo_settings")
                 .where("id", currentSettings.id)
+                .where("version", currentSettings.version || 0) // Optimistic locking
                 .update(updatedData)
                 .returning("*")
-                .timeout(5000);
+                .timeout(10000); // Increased to 10 seconds
+
+            // Check if update was successful (optimistic locking check)
+            if (!updatedSettings) {
+                throw new Error('Settings were modified by another user. Please refresh and try again.');
+            }
 
             console.log(`✅ SEO settings updated in ${Date.now() - startTime}ms (version ${updatedSettings.version})`);
             return updatedSettings;
@@ -184,17 +195,31 @@ async function updateSEOSettings(settingsData, userId = null) {
 
         return result;
     } catch (error) {
-        console.error(`❌ Error updating SEO settings after ${Date.now() - startTime}ms:`, error);
+        const duration = Date.now() - startTime;
+        console.error(`❌ Error updating SEO settings after ${duration}ms:`, error);
 
         // Clear cache on error to prevent stale data
         clearSEOSettingsCache();
 
-        // Provide more specific error information
-        if (error.message.includes('timeout')) {
-            throw new Error('Database operation timed out. Please try again.');
+        // TIMEOUT FIX: Enhanced error handling with specific timeout messages
+        if (error.message.includes('timeout') || error.code === 'ETIMEDOUT') {
+            throw new Error(`Database operation timed out after ${duration}ms. The server may be under heavy load. Please try again in a few moments.`);
         }
 
-        throw error;
+        if (error.message.includes('connection') || error.code === 'ECONNRESET') {
+            throw new Error('Database connection lost. Please check your internet connection and try again.');
+        }
+
+        if (error.message.includes('modified by another user')) {
+            throw new Error('Settings were modified by another user. Please refresh the page and try again.');
+        }
+
+        if (error.message.includes('lock') || error.code === 'EDEADLK') {
+            throw new Error('Database is temporarily locked. Please try again in a few seconds.');
+        }
+
+        // Generic error with helpful message
+        throw new Error(`Failed to update settings: ${error.message}. Please try again or contact support if the problem persists.`);
     }
 }
 

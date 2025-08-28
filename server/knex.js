@@ -18,31 +18,59 @@ const db = knex({
         ssl: env.DB_SSL,
         // Optimized connection settings for PostgreSQL (PERFORMANCE TUNED for dashboard)
         ...(isPostgres && {
-            statement_timeout: 6000, // 6 seconds (reduced to fix dashboard timeouts)
-            query_timeout: 5000, // 5 seconds (reduced to fix slow queries)
-            connectionTimeoutMillis: 3000, // 3 seconds (faster connection)
-            idleTimeoutMillis: 15000, // 15 seconds (reduced idle time)
+            // TIMEOUT FIX: Increased PostgreSQL timeouts to prevent 12-second frontend timeouts
+            statement_timeout: 15000, // 15 seconds - allows complex queries to complete
+            query_timeout: 12000, // 12 seconds - matches frontend timeout expectation
+            connectionTimeoutMillis: 8000, // 8 seconds - stable connection establishment
+            idleTimeoutMillis: 30000, // 30 seconds - keep connections alive longer
+            // Add lock timeout to prevent deadlocks
+            lock_timeout: 10000, // 10 seconds - prevent indefinite lock waits
         }),
         pool: {
-            min: env.DB_POOL_MIN || 1,
-            max: env.DB_POOL_MAX || 3, // Increased to 3 for better concurrency
-            // Optimized timeouts for faster response (DASHBOARD PERFORMANCE FIX)
-            acquireTimeoutMillis: 4000, // Reduced from 8s to 4s
-            createTimeoutMillis: 6000, // Reduced from 10s to 6s
-            destroyTimeoutMillis: 3000, // Reduced from 5s to 3s
-            idleTimeoutMillis: 15000, // Reduced from 20s to 15s
-            reapIntervalMillis: 500, // Check more frequently (every 500ms)
-            createRetryIntervalMillis: 100, // Faster retry (every 100ms)
-            // Validation and error handling
+            min: env.DB_POOL_MIN || 2, // Increased minimum for better availability
+            max: env.DB_POOL_MAX || 5, // Increased to 5 for better concurrency under load
+            // TIMEOUT FIX: Optimized for 12-second frontend timeout resolution
+            acquireTimeoutMillis: 8000, // Increased to 8s to prevent pool exhaustion
+            createTimeoutMillis: 10000, // Increased to 10s for stable connections
+            destroyTimeoutMillis: 5000, // Increased to 5s for proper cleanup
+            idleTimeoutMillis: 30000, // Increased to 30s to keep connections alive longer
+            reapIntervalMillis: 1000, // Check every 1s for balanced performance
+            createRetryIntervalMillis: 200, // Retry every 200ms for stability
+            // Enhanced validation and error handling
             propagateCreateError: false, // Don't crash on connection errors
+            // Add eviction policy to prevent stale connections
+            evictionRunIntervalMillis: 10000, // Run eviction every 10s
+            numTestsPerEvictionRun: 3, // Test 3 connections per eviction run
+            softIdleTimeoutMillis: 20000, // Soft idle timeout before eviction
             afterCreate: function(conn, done) {
-                // Set connection-level timeouts for PostgreSQL (DASHBOARD PERFORMANCE FIX)
+                // TIMEOUT FIX: Set optimized PostgreSQL session parameters
                 if (isPostgres) {
-                    conn.query('SET statement_timeout = 6000', function(err) { // Reduced to 6s to fix dashboard timeouts
-                        if (err) {
-                            console.warn('⚠️ Failed to set statement_timeout:', err.message);
-                        }
-                        done(err, conn);
+                    // Set multiple timeout parameters for comprehensive coverage
+                    const timeoutQueries = [
+                        'SET statement_timeout = 15000', // 15s for complex queries
+                        'SET lock_timeout = 10000', // 10s to prevent deadlocks
+                        'SET idle_in_transaction_session_timeout = 20000', // 20s for idle transactions
+                        'SET tcp_keepalives_idle = 300', // 5 minutes for TCP keepalive
+                        'SET tcp_keepalives_interval = 30', // 30s keepalive interval
+                        'SET tcp_keepalives_count = 3' // 3 keepalive probes
+                    ];
+
+                    let completed = 0;
+                    let hasError = false;
+
+                    timeoutQueries.forEach(query => {
+                        conn.query(query, function(err) {
+                            if (err && !hasError) {
+                                hasError = true;
+                                console.warn(`⚠️ Failed to set PostgreSQL parameter: ${query}`, err.message);
+                                return done(err, conn);
+                            }
+                            completed++;
+                            if (completed === timeoutQueries.length && !hasError) {
+                                console.log('✅ PostgreSQL connection optimized for timeout prevention');
+                                done(null, conn);
+                            }
+                        });
                     });
                 } else {
                     done(null, conn);
