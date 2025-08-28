@@ -212,6 +212,35 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
 // Image helpers inlined to avoid external dependency during build
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) return originalUrl;
+
+  // Handle new image system URLs (/api/images/serve/{uuid}) - FIXED: Handle both absolute and relative URLs
+  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
+    console.log('🔄 Processing new image system URL:', originalUrl);
+
+    // Extract UUID and variant from the URL
+    const match = originalUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})(?:\/(\w+))?/);
+    if (match) {
+      const uuid = match[1];
+      const existingVariant = match[2] || 'medium'; // Default to medium if no variant specified
+
+      // Determine the best variant based on width request
+      let variant = existingVariant;
+      if (width) {
+        if (width <= 150) variant = 'small';
+        else if (width <= 400) variant = 'medium';
+        else variant = 'large';
+      }
+
+      // Always use dashboard domain for image serving
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+
+      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
+
+      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant})`);
+      return optimizedUrl;
+    }
+  }
+
   if (typeof originalUrl === 'string' && originalUrl.includes('/images/figma-exact/')) {
     const filename = originalUrl.split('/').pop();
     return `/images/optimized/${filename}`;
@@ -222,6 +251,26 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
     return width ? `${baseUrl}&w=${width}` : baseUrl;
+  }
+
+  // Handle relative URLs that might be from the new system but without full path
+  // FIXED: Also handle /api/images/serve/ URLs specifically by checking for them OR excluding regular /images/ paths
+  if (typeof originalUrl === 'string' && originalUrl.startsWith('/') &&
+      (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
+    console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
+
+    // If it looks like a UUID-based path, treat it as new system
+    const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
+    if (uuidMatch) {
+      const uuid = uuidMatch[1];
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+
+      // Use medium variant for event cards
+      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
+
+      console.log('✅ Generated URL for UUID-based relative path:', optimizedUrl);
+      return optimizedUrl;
+    }
   }
 
   // Handle user-uploaded images (custom/images directory or /images/ paths)
@@ -238,6 +287,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     }
   }
 
+  console.log('⚠️ No optimization applied to URL:', originalUrl);
   return originalUrl;
 };
 
@@ -1758,21 +1808,22 @@ const FigmaDesktop = () => {
           >
             <picture>
               <source
-                srcSet="/images/optimized/hero-left-image-299w.webp 299w, /images/optimized/hero-left-image-598w.webp 598w, /images/optimized/hero-left-image-897w.webp 897w"
-                sizes="299px"
-                type="image/webp"
-              />
-              <source
-                srcSet="/images/optimized/hero-left-image.avif"
+                srcSet="/images/optimized/hero-left-image-768w.avif 768w, /images/optimized/hero-left-image-1024w.avif 1024w, /images/optimized/hero-left-image-1280w.avif 1280w, /images/optimized/hero-left-image-1440w.avif 1440w"
+                sizes="(max-width: 1024px) 768px, (max-width: 1280px) 1024px, (max-width: 1440px) 1280px, 1440px"
                 type="image/avif"
               />
+              <source
+                srcSet="/images/optimized/hero-left-image-768w.webp 768w, /images/optimized/hero-left-image-1024w.webp 1024w, /images/optimized/hero-left-image-1280w.webp 1280w, /images/optimized/hero-left-image-1440w.webp 1440w"
+                sizes="(max-width: 1024px) 768px, (max-width: 1280px) 1024px, (max-width: 1440px) 1280px, 1440px"
+                type="image/webp"
+              />
               <img
-                src="/images/optimized/hero-left-image-299w.webp"
+                src="/images/optimized/hero-left-image-fallback.jpg"
                 alt="Hero background"
                 loading="eager"
                 decoding="async"
                 fetchpriority="high"
-                onLoad={() => console.log('✅ DESKTOP HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
+                onLoad={() => console.log('✅ DESKTOP HERO IMAGE LOADED SUCCESSFULLY (Optimized Responsive)')}
                 onError={(e) => console.error('❌ DESKTOP HERO IMAGE FAILED TO LOAD:', e.target.src)}
                 style={{
                   position: 'absolute',

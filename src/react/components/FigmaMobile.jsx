@@ -273,7 +273,9 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   }
 
   // Handle relative URLs that might be from the new system but without full path
-  if (typeof originalUrl === 'string' && originalUrl.startsWith('/') && !originalUrl.includes('/images/')) {
+  // FIXED: Also handle /api/images/serve/ URLs specifically by checking for them OR excluding regular /images/ paths
+  if (typeof originalUrl === 'string' && originalUrl.startsWith('/') &&
+      (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
     console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
 
     // If it looks like a UUID-based path, treat it as new system
@@ -3056,21 +3058,22 @@ const FigmaMobile = () => {
               >
                 <picture>
                   <source
-                    srcSet="/images/optimized/hero-left-image-350w.webp 350w, /images/optimized/hero-left-image-700w.webp 700w, /images/optimized/hero-left-image-1050w.webp 1050w"
-                    sizes="350px"
-                    type="image/webp"
-                  />
-                  <source
-                    srcSet="/images/optimized/hero-left-image.avif"
+                    srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
+                    sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
                     type="image/avif"
                   />
+                  <source
+                    srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
+                    sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                    type="image/webp"
+                  />
                   <img
-                    src="/images/optimized/hero-left-image-350w.webp"
+                    src="/images/optimized/hero-left-image-375w.jpg"
                     alt="Hero background"
                     loading="eager"
                     decoding="async"
                     fetchpriority="high"
-                    onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY (WebP Optimized)')}
+                    onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY (Optimized Responsive)')}
                     onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
                     style={{
                       position: 'absolute',
