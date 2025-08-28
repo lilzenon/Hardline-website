@@ -30,7 +30,6 @@ const ContactPage = lazy(() => import('./react/components/ContactPage'));
 
 // Import any additional CSS if needed
 import './react/styles.css';
-import '../static/css/mobile-save-button.css';
 
 // Loading component for lazy-loaded pages
 const PageLoader = () => (
