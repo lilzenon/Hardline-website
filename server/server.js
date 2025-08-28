@@ -300,13 +300,13 @@ app.use("/css", express.static("custom/css", {
 }));
 
 // Add specific route for CSS files to ensure correct MIME type
-app.get('*.css', (req, res, next) => {
+app.get('/*path.css', (req, res, next) => {
     res.set('Content-Type', 'text/css; charset=utf-8');
     next();
 });
 
 // Add specific route for JS files to ensure correct MIME type
-app.get('*.js', (req, res, next) => {
+app.get('/*path.js', (req, res, next) => {
     res.set('Content-Type', 'application/javascript; charset=utf-8');
     next();
 });
