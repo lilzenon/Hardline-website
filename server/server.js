@@ -382,6 +382,7 @@ app.get('/css/*', (req, res, next) => {
 // MIME type handling now integrated into express.static setHeaders configuration below
 // Removed redundant custom route handlers - express.static now handles MIME types correctly
 
+
 // Fallback: Standard express.static for other files (images, fonts, etc.) with proper MIME types
 app.use(express.static("dist", {
     index: false,
