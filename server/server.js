@@ -7,6 +7,7 @@ const express = require("express");
 const helmet = require("helmet");
 const compression = require("compression");
 const path = require("node:path");
+const mime = require("mime-types");
 const hbs = require("hbs");
 
 // Session store service
@@ -238,6 +239,32 @@ app.use((req, res, next) => {
     express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
 });
 
+// MIME type fix middleware - runs before all static file serving
+app.use((req, res, next) => {
+    const ext = path.extname(req.path).toLowerCase();
+
+    // Force correct MIME types for critical file types
+    if (ext === '.css') {
+        res.set('Content-Type', 'text/css; charset=utf-8');
+    } else if (ext === '.js') {
+        res.set('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (ext === '.svg') {
+        res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+    } else if (ext === '.png') {
+        res.set('Content-Type', 'image/png');
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+        res.set('Content-Type', 'image/jpeg');
+    } else if (ext === '.webp') {
+        res.set('Content-Type', 'image/webp');
+    } else if (ext === '.woff') {
+        res.set('Content-Type', 'font/woff');
+    } else if (ext === '.woff2') {
+        res.set('Content-Type', 'font/woff2');
+    }
+
+    next();
+});
+
 // serve static files with optimized caching headers
 // Note: API image routes are handled in routes.js under /api/images
 // Static routes moved after API routes to prevent conflicts
@@ -257,6 +284,9 @@ app.use("/uploads", express.static("uploads", {
 app.use("/css", express.static("custom/css", {
     extensions: ["css"],
     setHeaders: (res, path) => {
+        // Set correct MIME type for CSS files
+        res.set('Content-Type', 'text/css; charset=utf-8');
+
         // CSS: Cache for 1 month
         const oneMonth = 30 * 24 * 60 * 60; // 1 month in seconds
         const expiresDate = new Date(Date.now() + oneMonth * 1000).toUTCString();
@@ -268,6 +298,18 @@ app.use("/css", express.static("custom/css", {
         });
     }
 }));
+
+// Add specific route for CSS files to ensure correct MIME type
+app.get('*.css', (req, res, next) => {
+    res.set('Content-Type', 'text/css; charset=utf-8');
+    next();
+});
+
+// Add specific route for JS files to ensure correct MIME type
+app.get('*.js', (req, res, next) => {
+    res.set('Content-Type', 'application/javascript; charset=utf-8');
+    next();
+});
 
 // Serve Vite build assets (dist) under root; DO NOT auto-serve dist/index.html at "/"
 // We want routing to decide the homepage (HBS by default, SPA opt-in)
@@ -281,6 +323,14 @@ app.use(express.static("dist", {
             res.set('Content-Type', 'application/javascript; charset=utf-8');
         } else if (filePath.endsWith('.css')) {
             res.set('Content-Type', 'text/css; charset=utf-8');
+        } else if (filePath.endsWith('.svg')) {
+            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+        } else if (filePath.endsWith('.png')) {
+            res.set('Content-Type', 'image/png');
+        } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+            res.set('Content-Type', 'image/jpeg');
+        } else if (filePath.endsWith('.webp')) {
+            res.set('Content-Type', 'image/webp');
         }
 
         if (env.NODE_ENV === 'production') {
@@ -330,6 +380,21 @@ app.use("/react", express.static("static/react", {
 app.use(imageOptimization.optimizedImageMiddleware());
 app.use(express.static("static", {
     setHeaders: (res, path) => {
+        // Set correct MIME types first
+        if (path.endsWith('.css')) {
+            res.set('Content-Type', 'text/css; charset=utf-8');
+        } else if (path.endsWith('.js')) {
+            res.set('Content-Type', 'application/javascript; charset=utf-8');
+        } else if (path.endsWith('.svg')) {
+            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+        } else if (path.endsWith('.png')) {
+            res.set('Content-Type', 'image/png');
+        } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+            res.set('Content-Type', 'image/jpeg');
+        } else if (path.endsWith('.webp')) {
+            res.set('Content-Type', 'image/webp');
+        }
+
         // Static assets: Different cache times based on file type
         const ext = path.split('.').pop().toLowerCase();
         let maxAge, expiresDate;

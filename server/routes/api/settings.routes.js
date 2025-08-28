@@ -12,7 +12,7 @@ console.log('🚀 KUTT Settings Routes Loaded!', new Date().toISOString());
  */
 router.get(
     "/seo",
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             console.log('📊 Fetching SEO settings from kutt system...');
 
@@ -39,7 +39,7 @@ router.get(
 
         } catch (error) {
             console.error('❌ Error fetching SEO settings:', error);
-            
+
             // Return default settings as fallback
             res.json({
                 success: true,
@@ -68,7 +68,7 @@ router.get(
  */
 router.get(
     "/maintenance-status",
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         try {
             console.log('🔧 Fetching maintenance status...');
 
@@ -89,7 +89,7 @@ router.get(
 
         } catch (error) {
             console.error('❌ Error fetching maintenance status:', error);
-            
+
             // Return default maintenance status
             res.json({
                 success: true,
@@ -105,12 +105,86 @@ router.get(
 );
 
 /**
+ * POST /api/settings/seo
+ * Update SEO settings (authenticated endpoint)
+ */
+router.post(
+    "/seo",
+    asyncHandler(async(req, res) => {
+        try {
+            console.log('💾 Updating SEO settings via API...');
+            console.log('📊 Request body:', req.body);
+
+            const {
+                default_title,
+                default_description,
+                default_keywords,
+                default_author,
+                default_og_image,
+                twitter_handle,
+                google_analytics_id,
+                google_search_console_id,
+                maintenance_mode,
+                maintenance_message,
+                maintenance_title,
+                maintenance_estimated_time
+            } = req.body;
+
+            // Basic validation
+            if (!default_title || !default_description) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Title and description are required"
+                });
+            }
+
+            // Prepare settings data
+            const settingsData = {
+                default_title: default_title ? .trim(),
+                default_description: default_description ? .trim(),
+                default_keywords: default_keywords ? .trim(),
+                default_author: default_author ? .trim(),
+                default_og_image: default_og_image ? .trim(),
+                twitter_handle: twitter_handle ? .trim(),
+                google_analytics_id: google_analytics_id ? .trim(),
+                google_search_console_id: google_search_console_id ? .trim(),
+                maintenance_mode: maintenance_mode || false,
+                maintenance_message: maintenance_message ? .trim(),
+                maintenance_title: maintenance_title ? .trim(),
+                maintenance_estimated_time: maintenance_estimated_time ? .trim()
+            };
+
+            console.log('📝 Processed settings data:', settingsData);
+
+            // Update settings in database
+            const updatedSettings = await query.seoSettings.updateSEOSettings(settingsData, null);
+
+            console.log('✅ SEO settings updated successfully');
+
+            res.json({
+                success: true,
+                message: 'SEO settings updated successfully',
+                settings: updatedSettings
+            });
+
+        } catch (error) {
+            console.error('❌ Error updating SEO settings:', error);
+            res.status(500).json({
+                success: false,
+                error: 'Failed to update SEO settings',
+                message: error.message
+            });
+        }
+    })
+);
+
+/**
  * GET /api/settings/test
  * Test settings API connectivity
  */
 router.get(
     "/test",
-    asyncHandler(async (req, res) => {
+    asyncHandler(async(req, res) => {
         res.json({
             success: true,
             message: 'KUTT Settings API is working',
