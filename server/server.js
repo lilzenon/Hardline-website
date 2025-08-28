@@ -665,14 +665,22 @@ app.use("/custom-images", express.static("custom/images", {
 }));
 
 // finally, redirect the short link to the target
-app.get("/:id", (req, res, next) => {
+// CRITICAL FIX: Add proper route pattern validation to prevent path-to-regexp errors
+app.get("/:id([a-zA-Z0-9_-]+)", (req, res, next) => {
     // Skip asset requests - let them be handled by static middleware
     if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/')) {
         console.log(`🔍 DEBUG: Skipping /:id route for asset: ${req.path}`);
         return next();
     }
 
-    console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${req.params.id}`);
+    // Validate the ID parameter to prevent path-to-regexp errors
+    const id = req.params.id;
+    if (!id || id.length === 0 || id.length > 100) {
+        console.log(`🚨 Invalid ID parameter: ${id}`);
+        return next(); // Let 404 handler deal with it
+    }
+
+    console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${id}`);
     return asyncHandler(links.redirect)(req, res, next);
 });
 
