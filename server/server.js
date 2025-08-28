@@ -98,15 +98,21 @@ app.use(compression({
     memLevel: 8
 }));
 
-// Pre-compressed file serving middleware (serve .gz and .br files if they exist)
+// CRITICAL FIX: Pre-compressed file serving middleware with route safety
+// This middleware was causing path-to-regexp errors by modifying req.url
 app.use((req, res, next) => {
     const acceptEncoding = req.headers['accept-encoding'] || '';
 
-    // Only handle static asset requests
-    if (req.url.match(/\.(js|css|html|json|xml|txt)$/)) {
+    // Only handle static asset requests - be more specific to avoid route conflicts
+    if (req.url.match(/\.(js|css|html|json|xml|txt)$/) &&
+        (req.url.startsWith('/dist/') || req.url.startsWith('/assets/') || req.url.startsWith('/static/'))) {
+
+        // Store original URL to prevent route parsing issues
+        const originalUrl = req.url;
+
         // Check for Brotli support first (better compression)
         if (acceptEncoding.includes('br')) {
-            const brPath = req.url + '.br';
+            const brPath = originalUrl + '.br';
             const fs = require('fs');
             const path = require('path');
             const fullBrPath = path.join(__dirname, '../dist', brPath.substring(1));
@@ -117,17 +123,17 @@ app.use((req, res, next) => {
                 res.set('Vary', 'Accept-Encoding');
 
                 // CRITICAL: Set proper MIME type for pre-compressed files
-                const originalPath = req.url.replace('.br', '');
-                if (originalPath.endsWith('.css')) {
+                if (originalUrl.endsWith('.css')) {
                     res.set('Content-Type', 'text/css; charset=utf-8');
-                } else if (originalPath.endsWith('.js')) {
+                } else if (originalUrl.endsWith('.js')) {
                     res.set('Content-Type', 'application/javascript; charset=utf-8');
                 }
+                console.log(`🗜️ Serving Brotli: ${originalUrl} -> ${brPath}`);
             }
         }
         // Fallback to Gzip if Brotli not supported or file doesn't exist
         else if (acceptEncoding.includes('gzip')) {
-            const gzPath = req.url + '.gz';
+            const gzPath = originalUrl + '.gz';
             const fs = require('fs');
             const path = require('path');
             const fullGzPath = path.join(__dirname, '../dist', gzPath.substring(1));
@@ -138,12 +144,12 @@ app.use((req, res, next) => {
                 res.set('Vary', 'Accept-Encoding');
 
                 // CRITICAL: Set proper MIME type for pre-compressed files
-                const originalPath = req.url.replace('.gz', '');
-                if (originalPath.endsWith('.css')) {
+                if (originalUrl.endsWith('.css')) {
                     res.set('Content-Type', 'text/css; charset=utf-8');
-                } else if (originalPath.endsWith('.js')) {
+                } else if (originalUrl.endsWith('.js')) {
                     res.set('Content-Type', 'application/javascript; charset=utf-8');
                 }
+                console.log(`🗜️ Serving Gzip: ${originalUrl} -> ${gzPath}`);
             }
         }
     }
