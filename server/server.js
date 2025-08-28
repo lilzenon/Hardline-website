@@ -365,6 +365,7 @@ app.get('/css/*', (req, res, next) => {
 
 // CRITICAL FIX: Custom static middleware with proper MIME type handling
 // This replaces express.static to ensure correct MIME types for mobile browsers
+// Force deployment restart to apply MIME type fixes - 2025-01-28
 app.use((req, res, next) => {
     // Only handle requests for static assets from dist directory
     if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|avif|woff|woff2|ttf|eot|ico)$/i)) {
