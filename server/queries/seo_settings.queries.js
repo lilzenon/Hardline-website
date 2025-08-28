@@ -2,25 +2,37 @@ const knex = require("../knex");
 const { safeWriteFile, safeReadFile, cleanupBackups } = require("../utils/file-safe-operations");
 const path = require('path');
 
-// Cache for SEO settings to reduce database calls
+// Cache for SEO settings to reduce database calls and prevent timeouts
 let seoSettingsCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 60 * 1000; // 1 minute
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (increased to reduce DB load)
 
 /**
  * Get current SEO settings with caching and corruption recovery
  */
 async function getSEOSettings() {
     try {
-        // Check cache first
+        // Check cache first to prevent slow database queries
         const now = Date.now();
         if (seoSettingsCache && (now - cacheTimestamp) < CACHE_DURATION) {
+            console.log('📦 Serving SEO settings from cache (preventing slow DB query)');
             return seoSettingsCache;
         }
+
+        console.log('🔍 Fetching SEO settings from database...');
+        const startTime = Date.now();
 
         const settings = await knex("seo_settings")
             .orderBy("created_at", "desc")
             .first();
+
+        const queryDuration = Date.now() - startTime;
+        console.log(`⚡ SEO settings query completed in ${queryDuration}ms`);
+
+        // Warn if query is slow (over 1 second)
+        if (queryDuration > 1000) {
+            console.warn(`⚠️ SLOW QUERY WARNING: SEO settings took ${queryDuration}ms - consider database optimization`);
+        }
 
         if (!settings) {
             console.log("No SEO settings found, creating default settings...");

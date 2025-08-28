@@ -16,18 +16,18 @@ const db = knex({
         user: env.DB_USER,
         password: env.DB_PASSWORD,
         ssl: env.DB_SSL,
-        // Optimized connection settings for PostgreSQL
+        // Optimized connection settings for PostgreSQL (PERFORMANCE TUNED for dashboard)
         ...(isPostgres && {
-            statement_timeout: 30000, // 30 seconds
-            query_timeout: 25000, // 25 seconds
-            connectionTimeoutMillis: 10000, // 10 seconds
-            idleTimeoutMillis: 30000, // 30 seconds
+            statement_timeout: 6000, // 6 seconds (reduced to fix dashboard timeouts)
+            query_timeout: 5000, // 5 seconds (reduced to fix slow queries)
+            connectionTimeoutMillis: 3000, // 3 seconds (faster connection)
+            idleTimeoutMillis: 15000, // 15 seconds (reduced idle time)
         }),
         pool: {
             min: env.DB_POOL_MIN || 1,
-            max: env.DB_POOL_MAX || 2, // Reduced to 2 for better stability
-            // Optimized timeouts for faster response
-            acquireTimeoutMillis: 8000, // Reduced from 15s to 8s
+            max: env.DB_POOL_MAX || 3, // Increased to 3 for better concurrency
+            // Optimized timeouts for faster response (DASHBOARD PERFORMANCE FIX)
+            acquireTimeoutMillis: 4000, // Reduced from 8s to 4s
             createTimeoutMillis: 6000, // Reduced from 10s to 6s
             destroyTimeoutMillis: 3000, // Reduced from 5s to 3s
             idleTimeoutMillis: 15000, // Reduced from 20s to 15s
@@ -36,9 +36,9 @@ const db = knex({
             // Validation and error handling
             propagateCreateError: false, // Don't crash on connection errors
             afterCreate: function(conn, done) {
-                // Set connection-level timeouts for PostgreSQL
+                // Set connection-level timeouts for PostgreSQL (DASHBOARD PERFORMANCE FIX)
                 if (isPostgres) {
-                    conn.query('SET statement_timeout = 15000', function(err) { // Reduced from 30s to 15s
+                    conn.query('SET statement_timeout = 6000', function(err) { // Reduced to 6s to fix dashboard timeouts
                         if (err) {
                             console.warn('⚠️ Failed to set statement_timeout:', err.message);
                         }
