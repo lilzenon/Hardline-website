@@ -115,14 +115,6 @@ app.use((req, res, next) => {
                 req.url = brPath;
                 res.set('Content-Encoding', 'br');
                 res.set('Vary', 'Accept-Encoding');
-
-                // CRITICAL: Set proper MIME type for pre-compressed files
-                const originalPath = req.url.replace('.br', '');
-                if (originalPath.endsWith('.css')) {
-                    res.set('Content-Type', 'text/css; charset=utf-8');
-                } else if (originalPath.endsWith('.js')) {
-                    res.set('Content-Type', 'application/javascript; charset=utf-8');
-                }
             }
         }
         // Fallback to Gzip if Brotli not supported or file doesn't exist
