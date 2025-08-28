@@ -256,27 +256,45 @@ app.use((req, res, next) => {
     express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
 });
 
-// MIME type fix middleware - runs before all static file serving
+// Consolidated MIME type middleware - runs once before all static file serving
 app.use((req, res, next) => {
     const ext = path.extname(req.path).toLowerCase();
 
-    // Force correct MIME types for critical file types
-    if (ext === '.css') {
-        res.set('Content-Type', 'text/css; charset=utf-8');
-    } else if (ext === '.js') {
-        res.set('Content-Type', 'application/javascript; charset=utf-8');
-    } else if (ext === '.svg') {
-        res.set('Content-Type', 'image/svg+xml; charset=utf-8');
-    } else if (ext === '.png') {
-        res.set('Content-Type', 'image/png');
-    } else if (ext === '.jpg' || ext === '.jpeg') {
-        res.set('Content-Type', 'image/jpeg');
-    } else if (ext === '.webp') {
-        res.set('Content-Type', 'image/webp');
-    } else if (ext === '.woff') {
-        res.set('Content-Type', 'font/woff');
-    } else if (ext === '.woff2') {
-        res.set('Content-Type', 'font/woff2');
+    // Set MIME types and security headers for all static assets
+    switch (ext) {
+        case '.css':
+            res.set('Content-Type', 'text/css; charset=utf-8');
+            res.set('X-Content-Type-Options', 'nosniff');
+            break;
+        case '.js':
+            res.set('Content-Type', 'application/javascript; charset=utf-8');
+            res.set('X-Content-Type-Options', 'nosniff');
+            break;
+        case '.svg':
+            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+            break;
+        case '.png':
+            res.set('Content-Type', 'image/png');
+            break;
+        case '.jpg':
+        case '.jpeg':
+            res.set('Content-Type', 'image/jpeg');
+            break;
+        case '.webp':
+            res.set('Content-Type', 'image/webp');
+            break;
+        case '.woff':
+            res.set('Content-Type', 'font/woff');
+            break;
+        case '.woff2':
+            res.set('Content-Type', 'font/woff2');
+            break;
+        case '.ttf':
+            res.set('Content-Type', 'font/ttf');
+            break;
+        case '.eot':
+            res.set('Content-Type', 'application/vnd.ms-fontobject');
+            break;
     }
 
     next();
@@ -316,71 +334,10 @@ app.use("/css", express.static("custom/css", {
     }
 }));
 
-// Enhanced MIME type middleware for mobile browser compatibility
-// This middleware runs before static file serving to ensure correct MIME types
-app.use((req, res, next) => {
-    // Set MIME types for all static assets to ensure mobile browser compatibility
-    // Mobile browsers (especially iOS Safari) are stricter about MIME type checking
+// MIME type handling now consolidated above - removed redundant middleware
 
-    // Use mime-types library for accurate MIME type detection
-    const mimeType = mime.lookup(req.path);
-
-    if (req.path.endsWith('.js')) {
-        res.set('Content-Type', 'application/javascript; charset=utf-8');
-        // Also set X-Content-Type-Options to prevent MIME sniffing
-        res.set('X-Content-Type-Options', 'nosniff');
-    } else if (req.path.endsWith('.css')) {
-        res.set('Content-Type', 'text/css; charset=utf-8');
-        res.set('X-Content-Type-Options', 'nosniff');
-    } else if (mimeType && mimeType !== 'application/octet-stream') {
-        // Use detected MIME type if it's not the generic octet-stream
-        res.set('Content-Type', mimeType);
-    } else if (req.path.endsWith('.svg')) {
-        res.set('Content-Type', 'image/svg+xml; charset=utf-8');
-    } else if (req.path.endsWith('.png')) {
-        res.set('Content-Type', 'image/png');
-    } else if (req.path.endsWith('.jpg') || req.path.endsWith('.jpeg')) {
-        res.set('Content-Type', 'image/jpeg');
-    } else if (req.path.endsWith('.webp')) {
-        res.set('Content-Type', 'image/webp');
-    } else if (req.path.endsWith('.woff') || req.path.endsWith('.woff2')) {
-        res.set('Content-Type', 'font/woff2');
-    } else if (req.path.endsWith('.ttf')) {
-        res.set('Content-Type', 'font/ttf');
-    } else if (req.path.endsWith('.eot')) {
-        res.set('Content-Type', 'application/vnd.ms-fontobject');
-    }
-    next();
-});
-
-// TEMPORARILY DISABLED: Specific routes for problematic assets
-// These routes were causing path-to-regexp errors
-// The MIME type fixes are handled in the static middleware below
-/*
-app.get('/assets/*', (req, res, next) => {
-    const filename = req.params[0];
-    if (filename.endsWith('.js')) {
-        res.set('Content-Type', 'application/javascript; charset=utf-8');
-        res.set('X-Content-Type-Options', 'nosniff');
-    } else if (filename.endsWith('.css')) {
-        res.set('Content-Type', 'text/css; charset=utf-8');
-        res.set('X-Content-Type-Options', 'nosniff');
-    }
-    next();
-});
-
-app.get('/css/*', (req, res, next) => {
-    const filename = req.params[0];
-    if (filename.endsWith('.css')) {
-        res.set('Content-Type', 'text/css; charset=utf-8');
-        res.set('X-Content-Type-Options', 'nosniff');
-    }
-    next();
-});
-*/
-
-// MIME type handling now integrated into express.static setHeaders configuration below
-// Removed redundant custom route handlers - express.static now handles MIME types correctly
+// MIME type handling integrated into express.static setHeaders configuration
+// Consolidated MIME type processing for better performance
 
 
 // Fallback: Standard express.static for other files (images, fonts, etc.) with proper MIME types
