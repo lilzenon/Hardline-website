@@ -7,6 +7,7 @@ const express = require("express");
 const helmet = require("helmet");
 const compression = require("compression");
 const path = require("node:path");
+const fs = require("node:fs");
 const mime = require("mime-types");
 const hbs = require("hbs");
 
@@ -362,11 +363,95 @@ app.get('/css/*', (req, res, next) => {
 });
 */
 
-// Serve Vite build assets (dist) under root; DO NOT auto-serve dist/index.html at "/"
-// We want routing to decide the homepage (HBS by default, SPA opt-in)
+// CRITICAL FIX: Custom static middleware with proper MIME type handling
+// This replaces express.static to ensure correct MIME types for mobile browsers
+app.use((req, res, next) => {
+    // Only handle requests for static assets from dist directory
+    if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|avif|woff|woff2|ttf|eot|ico)$/i)) {
+        return next();
+    }
+
+    const filePath = path.join(__dirname, '../dist', req.path);
+
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+        return next();
+    }
+
+    // Set correct MIME type BEFORE sending file
+    const ext = path.extname(req.path).toLowerCase();
+
+    switch (ext) {
+        case '.js':
+            res.set('Content-Type', 'application/javascript; charset=utf-8');
+            res.set('X-Content-Type-Options', 'nosniff');
+            break;
+        case '.css':
+            res.set('Content-Type', 'text/css; charset=utf-8');
+            res.set('X-Content-Type-Options', 'nosniff');
+            break;
+        case '.svg':
+            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+            break;
+        case '.png':
+            res.set('Content-Type', 'image/png');
+            break;
+        case '.jpg':
+        case '.jpeg':
+            res.set('Content-Type', 'image/jpeg');
+            break;
+        case '.webp':
+            res.set('Content-Type', 'image/webp');
+            break;
+        case '.woff':
+        case '.woff2':
+            res.set('Content-Type', 'font/woff2');
+            break;
+        case '.ttf':
+            res.set('Content-Type', 'font/ttf');
+            break;
+        case '.eot':
+            res.set('Content-Type', 'application/vnd.ms-fontobject');
+            break;
+        case '.ico':
+            res.set('Content-Type', 'image/x-icon');
+            break;
+        default:
+            // Use mime-types library as fallback
+            const mimeType = mime.lookup(req.path);
+            if (mimeType && mimeType !== 'application/octet-stream') {
+                res.set('Content-Type', mimeType);
+            } else {
+                res.set('Content-Type', 'application/octet-stream');
+            }
+    }
+
+    // Set cache headers
+    const isAsset = /\/(assets|images)\//.test(req.path) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(req.path);
+
+    if (env.NODE_ENV === 'production') {
+        const maxAge = isAsset ? (365 * 24 * 60 * 60) : (24 * 60 * 60);
+        const expiresDate = new Date(Date.now() + maxAge * 1000).toUTCString();
+        res.set({
+            'Cache-Control': 'public, max-age=' + maxAge + (isAsset ? ', immutable' : ''),
+            'Expires': expiresDate,
+            'Last-Modified': new Date().toUTCString()
+        });
+    } else {
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+    }
+
+    // Send the file
+    res.sendFile(filePath);
+});
+
+// Fallback: Standard express.static for any remaining files (non-asset files)
 app.use(express.static("dist", {
     index: false,
-    // Force Express to use proper MIME type detection
     dotfiles: 'ignore',
     etag: true,
     extensions: false,
@@ -374,71 +459,7 @@ app.use(express.static("dist", {
     immutable: false,
     lastModified: true,
     maxAge: 0,
-    redirect: true,
-    setHeaders: (res, filePath) => {
-        // Fixed regex pattern for asset detection
-        const isAsset = /\/(assets|images)\//.test(filePath) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(filePath);
-
-        // Critical: Force correct MIME types before any other headers
-        // This is essential for mobile browser compatibility
-        const ext = path.extname(filePath).toLowerCase();
-
-        switch (ext) {
-            case '.js':
-                res.set('Content-Type', 'application/javascript; charset=utf-8');
-                res.set('X-Content-Type-Options', 'nosniff');
-                break;
-            case '.css':
-                res.set('Content-Type', 'text/css; charset=utf-8');
-                res.set('X-Content-Type-Options', 'nosniff');
-                break;
-            case '.svg':
-                res.set('Content-Type', 'image/svg+xml; charset=utf-8');
-                break;
-            case '.png':
-                res.set('Content-Type', 'image/png');
-                break;
-            case '.jpg':
-            case '.jpeg':
-                res.set('Content-Type', 'image/jpeg');
-                break;
-            case '.webp':
-                res.set('Content-Type', 'image/webp');
-                break;
-            case '.woff':
-            case '.woff2':
-                res.set('Content-Type', 'font/woff2');
-                break;
-            case '.ttf':
-                res.set('Content-Type', 'font/ttf');
-                break;
-            case '.eot':
-                res.set('Content-Type', 'application/vnd.ms-fontobject');
-                break;
-            default:
-                // Use mime-types library as fallback
-                const mimeType = mime.lookup(filePath);
-                if (mimeType && mimeType !== 'application/octet-stream') {
-                    res.set('Content-Type', mimeType);
-                }
-        }
-
-        if (env.NODE_ENV === 'production') {
-            const maxAge = isAsset ? (365 * 24 * 60 * 60) : (24 * 60 * 60);
-            const expiresDate = new Date(Date.now() + maxAge * 1000).toUTCString();
-            res.set({
-                'Cache-Control': 'public, max-age=' + maxAge + (isAsset ? ', immutable' : ''),
-                'Expires': expiresDate,
-                'Last-Modified': new Date().toUTCString()
-            });
-        } else {
-            res.set({
-                'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-                'Pragma': 'no-cache',
-                'Expires': '0'
-            });
-        }
-    }
+    redirect: true
 }));
 
 // Legacy /react static removed: Vite-only serving
