@@ -1,7 +1,15 @@
 console.log('🔍 Starting routes.js imports...');
-console.log('🚨 FINAL DEPLOYMENT FIX: ROUTES.JS MODIFIED AT 17:45 - COMPLETE CACHE CLEAR!');
+console.log('🚨 DEPLOYMENT FIX: ROUTES.JS MODIFIED AT 18:15 - CACHE CLEARED FOR PATH-TO-REGEXP FIX!');
 console.log('🚨 CRITICAL: Settings routes are COMPLETELY REMOVED from homepage!');
 console.log('🚨 WARNING: Any attempt to load settings routes will cause path-to-regexp errors!');
+
+// Clear module cache to prevent path-to-regexp errors from cached routes
+Object.keys(require.cache).forEach(key => {
+    if (key.includes('routes') && !key.includes('node_modules')) {
+        delete require.cache[key];
+        console.log(`🧹 Cleared cache for: ${key}`);
+    }
+});
 const { Router } = require("express");
 console.log('✅ Express Router imported');
 
@@ -52,8 +60,9 @@ const monitoring = require("./monitoring.routes");
 const sessionAdmin = require("./admin/session-admin.routes");
 const privacy = require("./privacy.routes");
 const integrations = require("./integrations.routes");
-const webhooks = require("./webhooks.routes");
-const seoTest = require("./seo-test.routes");
+// TEMPORARILY COMMENTED OUT TO ISOLATE PATH-TO-REGEXP ERROR
+// const webhooks = require("./webhooks.routes");
+// const seoTest = require("./seo-test.routes");
 // Settings routes moved to dashboard repository - no longer needed in homepage
 // Force deployment refresh - settings routes completely removed
 // DEPLOYMENT FIX: Ensure no settings routes are loaded in homepage
@@ -90,8 +99,10 @@ apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);
 apiRouter.use("/privacy", privacy);
 apiRouter.use("/integrations", integrations);
-apiRouter.use("/webhooks", webhooks);
-apiRouter.use("/seo-test", seoTest);
+// TEMPORARILY COMMENTED OUT TO ISOLATE PATH-TO-REGEXP ERROR
+// apiRouter.use("/webhooks", webhooks);
+// TEMPORARILY COMMENTED OUT TO ISOLATE PATH-TO-REGEXP ERROR
+// apiRouter.use("/seo-test", seoTest);
 // apiRouter.use("/social-media", socialMedia);
 
 module.exports = {
