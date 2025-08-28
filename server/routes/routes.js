@@ -49,9 +49,7 @@ const privacy = require("./privacy.routes");
 const integrations = require("./integrations.routes");
 const webhooks = require("./webhooks.routes");
 const seoTest = require("./seo-test.routes");
-console.log('🔍 Loading settings routes...');
-const settings = require("./api/settings.routes");
-console.log('✅ Settings routes loaded successfully');
+// Settings routes moved to dashboard repository - no longer needed in homepage
 // console.log('🔍 About to require social-media routes...');
 // const socialMedia = require("./api/social-media.routes");
 // console.log('✅ Social media routes loaded:', typeof socialMedia);
@@ -79,7 +77,7 @@ apiRouter.use("/sms", sms);
 apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/images", images);
 // apiRouter.use("/image-optimization", imageOptimization); // Same as images route
-apiRouter.use("/settings", settings); // Restored settings routes for proper SEO handling
+// Settings routes moved to dashboard repository - handled by admin.b2b.click
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);
