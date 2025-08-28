@@ -1665,7 +1665,7 @@ router.get(
 
 // Catch-all route for any unmatched webhook requests
 router.all(
-    "*",
+    "/*path",
     webhookLoggingMiddleware,
     asyncHandler((req, res) => {
         console.log('🚨 ===== UNMATCHED WEBHOOK REQUEST =====');
