@@ -363,91 +363,39 @@ app.get('/css/*', (req, res, next) => {
 });
 */
 
-// CRITICAL FIX: Custom static middleware with proper MIME type handling
-// This replaces express.static to ensure correct MIME types for mobile browsers
+// CRITICAL FIX: Enhanced MIME type middleware for mobile browser compatibility
+// This middleware runs BEFORE express.static to ensure correct MIME types
 // Force deployment restart to apply MIME type fixes - 2025-01-28
 app.use((req, res, next) => {
-    // Only handle requests for static assets from dist directory
-    if (!req.path.match(/\.(js|css|png|jpg|jpeg|gif|svg|webp|avif|woff|woff2|ttf|eot|ico)$/i)) {
-        return next();
-    }
+    // Set correct MIME types for ALL static assets, especially for mobile browsers
+    // Mobile browsers (iOS Safari, Android Chrome) are strict about MIME types
 
-    const filePath = path.join(__dirname, '../dist', req.path);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-        return next();
-    }
-
-    // Set correct MIME type BEFORE sending file
     const ext = path.extname(req.path).toLowerCase();
 
-    switch (ext) {
-        case '.js':
-            res.set('Content-Type', 'application/javascript; charset=utf-8');
-            res.set('X-Content-Type-Options', 'nosniff');
-            break;
-        case '.css':
-            res.set('Content-Type', 'text/css; charset=utf-8');
-            res.set('X-Content-Type-Options', 'nosniff');
-            break;
-        case '.svg':
-            res.set('Content-Type', 'image/svg+xml; charset=utf-8');
-            break;
-        case '.png':
-            res.set('Content-Type', 'image/png');
-            break;
-        case '.jpg':
-        case '.jpeg':
-            res.set('Content-Type', 'image/jpeg');
-            break;
-        case '.webp':
-            res.set('Content-Type', 'image/webp');
-            break;
-        case '.woff':
-        case '.woff2':
-            res.set('Content-Type', 'font/woff2');
-            break;
-        case '.ttf':
-            res.set('Content-Type', 'font/ttf');
-            break;
-        case '.eot':
-            res.set('Content-Type', 'application/vnd.ms-fontobject');
-            break;
-        case '.ico':
-            res.set('Content-Type', 'image/x-icon');
-            break;
-        default:
-            // Use mime-types library as fallback
-            const mimeType = mime.lookup(req.path);
-            if (mimeType && mimeType !== 'application/octet-stream') {
-                res.set('Content-Type', mimeType);
-            } else {
-                res.set('Content-Type', 'application/octet-stream');
-            }
+    // Force correct MIME types for critical file types
+    if (ext === '.css') {
+        res.set('Content-Type', 'text/css; charset=utf-8');
+        res.set('X-Content-Type-Options', 'nosniff');
+    } else if (ext === '.js') {
+        res.set('Content-Type', 'application/javascript; charset=utf-8');
+        res.set('X-Content-Type-Options', 'nosniff');
+    } else if (ext === '.svg') {
+        res.set('Content-Type', 'image/svg+xml; charset=utf-8');
+    } else if (ext === '.png') {
+        res.set('Content-Type', 'image/png');
+    } else if (ext === '.jpg' || ext === '.jpeg') {
+        res.set('Content-Type', 'image/jpeg');
+    } else if (ext === '.webp') {
+        res.set('Content-Type', 'image/webp');
+    } else if (ext === '.woff') {
+        res.set('Content-Type', 'font/woff');
+    } else if (ext === '.woff2') {
+        res.set('Content-Type', 'font/woff2');
+    } else if (ext === '.ico') {
+        res.set('Content-Type', 'image/x-icon');
     }
 
-    // Set cache headers
-    const isAsset = /\/(assets|images)\//.test(req.path) || /\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|gif|svg|webp|avif)$/i.test(req.path);
-
-    if (env.NODE_ENV === 'production') {
-        const maxAge = isAsset ? (365 * 24 * 60 * 60) : (24 * 60 * 60);
-        const expiresDate = new Date(Date.now() + maxAge * 1000).toUTCString();
-        res.set({
-            'Cache-Control': 'public, max-age=' + maxAge + (isAsset ? ', immutable' : ''),
-            'Expires': expiresDate,
-            'Last-Modified': new Date().toUTCString()
-        });
-    } else {
-        res.set({
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-        });
-    }
-
-    // Send the file
-    res.sendFile(filePath);
+    next();
 });
 
 // Fallback: Standard express.static for any remaining files (non-asset files)
