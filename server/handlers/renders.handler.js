@@ -515,13 +515,16 @@ async function reactHomepage(req, res) {
                 'https://admin.b2b.click/api/settings/seo' :
                 'http://localhost:3002/api/settings/seo';
 
-            // Add timeout to prevent hanging
+            // Add timeout to prevent hanging (increased for large responses)
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
             const response = await fetch(dashboardApiUrl, {
                 signal: controller.signal,
-                headers: { 'Accept': 'application/json' }
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
             });
             clearTimeout(timeoutId);
 

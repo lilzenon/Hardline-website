@@ -49,6 +49,9 @@ const privacy = require("./privacy.routes");
 const integrations = require("./integrations.routes");
 const webhooks = require("./webhooks.routes");
 const seoTest = require("./seo-test.routes");
+console.log('🔍 Loading SEO fix routes...');
+const seoFix = require("./api/seo-fix.routes");
+console.log('✅ SEO fix routes loaded successfully');
 // console.log('🔍 About to require social-media routes...');
 // const socialMedia = require("./api/social-media.routes");
 // console.log('✅ Social media routes loaded:', typeof socialMedia);
@@ -77,6 +80,7 @@ apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/images", images);
 // apiRouter.use("/image-optimization", imageOptimization); // Same as images route
 // apiRouter.use("/settings", settings); // Moved to dashboard repository
+apiRouter.use("/settings", seoFix); // SEO fix route for homepage compatibility
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);

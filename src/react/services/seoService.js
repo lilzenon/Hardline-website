@@ -36,6 +36,10 @@ export const fetchSEOSettings = async() => {
     try {
         console.log('🔍 Fetching SEO settings from dashboard API...');
 
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const response = await fetch(API_CONFIG.DASHBOARD_API, {
             method: 'GET',
             headers: {
@@ -43,12 +47,22 @@ export const fetchSEOSettings = async() => {
                 'Accept': 'application/json'
             },
             // Don't include credentials for cross-origin requests
-            mode: 'cors'
+            mode: 'cors',
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             console.warn(`⚠️ SEO API returned ${response.status}: ${response.statusText}`);
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.warn('⚠️ SEO API returned non-JSON response:', contentType);
+            throw new Error('API returned HTML instead of JSON - possible routing issue');
         }
 
         const data = await response.json();
@@ -65,7 +79,11 @@ export const fetchSEOSettings = async() => {
         }
 
     } catch (error) {
-        console.error('❌ Failed to fetch SEO settings:', error);
+        if (error.name === 'AbortError') {
+            console.error('❌ SEO API request timed out after 10 seconds');
+        } else {
+            console.error('❌ Failed to fetch SEO settings:', error.message);
+        }
         console.log('🔄 Using default SEO settings as fallback');
         return DEFAULT_SEO_SETTINGS;
     }
