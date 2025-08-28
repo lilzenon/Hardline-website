@@ -51,6 +51,7 @@ const webhooks = require("./webhooks.routes");
 const seoTest = require("./seo-test.routes");
 // Settings routes moved to dashboard repository - no longer needed in homepage
 // Force deployment refresh - settings routes completely removed
+// DEPLOYMENT FIX: Ensure no settings routes are loaded in homepage
 // console.log('🔍 About to require social-media routes...');
 // const socialMedia = require("./api/social-media.routes");
 // console.log('✅ Social media routes loaded:', typeof socialMedia);
