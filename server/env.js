@@ -122,6 +122,7 @@ const spec = {
     SESSION_SECRET_OLD: str({ default: "", desc: "Previous session secret for rotation" }),
     SESSION_NAME: str({ default: "kutt.sid", desc: "Session cookie name" }),
     SESSION_TTL: num({ default: 86400, desc: "Session TTL in seconds (24 hours default)" }),
+    SESSIONS_PATH: str({ default: "", desc: "Custom path for session files (fallback to temp directory)" }),
     MAIL_ENABLED: bool({ default: false }),
     MAIL_HOST: str({ default: "" }),
     MAIL_PORT: num({ default: 587 }),

@@ -129,8 +129,14 @@ class SessionStoreService {
         // Fallback to file store for production without Redis
         if (FileStore && env.NODE_ENV === 'production') {
             try {
+                // Use a more appropriate path for containerized environments
+                const sessionsPath = this.getSessionsPath();
+
+                // Ensure the directory exists and is writable
+                this.ensureSessionsDirectory(sessionsPath);
+
                 this.store = new FileStore({
-                    path: './sessions',
+                    path: sessionsPath,
                     ttl: this.getSessionTTL(),
                     retries: 3,
                     factor: 2,
@@ -148,10 +154,11 @@ class SessionStoreService {
                     }
                 });
                 this.storeType = 'file';
-                console.log('✅ File session store initialized');
+                console.log(`✅ File session store initialized at: ${sessionsPath}`);
                 return;
             } catch (error) {
                 console.error('🚨 Failed to initialize file session store:', error);
+                console.log('🔄 Falling back to memory store due to file system permissions...');
             }
         }
 
@@ -159,6 +166,67 @@ class SessionStoreService {
         console.warn('⚠️ Using memory session store - NOT suitable for production');
         this.storeType = 'memory';
         this.store = null; // Express will use default MemoryStore
+    }
+
+    /**
+     * Get appropriate sessions directory path for different environments
+     */
+    getSessionsPath() {
+        const fs = require('fs');
+        const path = require('path');
+        const os = require('os');
+
+        // Try different paths in order of preference
+        const possiblePaths = [
+            // 1. Environment variable if specified (SESSIONS_PATH or SESSION_PATH for Docker compatibility)
+            env.SESSIONS_PATH || process.env.SESSION_PATH,
+            // 2. Temp directory (most likely to be writable)
+            path.join(os.tmpdir(), 'kutt-sessions'),
+            // 3. Current working directory (if writable)
+            path.join(process.cwd(), 'sessions'),
+            // 4. User's home directory
+            path.join(os.homedir(), '.kutt', 'sessions')
+        ].filter(Boolean);
+
+        for (const sessionPath of possiblePaths) {
+            try {
+                // Test if we can write to this location
+                const testDir = path.dirname(sessionPath);
+                fs.accessSync(testDir, fs.constants.W_OK);
+                return sessionPath;
+            } catch (error) {
+                // Try next path
+                continue;
+            }
+        }
+
+        // If all else fails, use temp directory
+        return path.join(os.tmpdir(), 'kutt-sessions');
+    }
+
+    /**
+     * Ensure sessions directory exists and is writable
+     */
+    ensureSessionsDirectory(sessionsPath) {
+        const fs = require('fs');
+        const path = require('path');
+
+        try {
+            // Create directory if it doesn't exist
+            if (!fs.existsSync(sessionsPath)) {
+                fs.mkdirSync(sessionsPath, { recursive: true, mode: 0o755 });
+                console.log(`📁 Created sessions directory: ${sessionsPath}`);
+            }
+
+            // Test write permissions
+            const testFile = path.join(sessionsPath, '.write-test');
+            fs.writeFileSync(testFile, 'test');
+            fs.unlinkSync(testFile);
+
+            console.log(`✅ Sessions directory is writable: ${sessionsPath}`);
+        } catch (error) {
+            throw new Error(`Cannot create or write to sessions directory ${sessionsPath}: ${error.message}`);
+        }
     }
 
     /**
