@@ -96,6 +96,43 @@ app.use(compression({
     memLevel: 8
 }));
 
+// Pre-compressed file serving middleware (serve .gz and .br files if they exist)
+app.use((req, res, next) => {
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+
+    // Only handle static asset requests
+    if (req.url.match(/\.(js|css|html|json|xml|txt)$/)) {
+        // Check for Brotli support first (better compression)
+        if (acceptEncoding.includes('br')) {
+            const brPath = req.url + '.br';
+            const fs = require('fs');
+            const path = require('path');
+            const fullBrPath = path.join(__dirname, '../dist', brPath.substring(1));
+
+            if (fs.existsSync(fullBrPath)) {
+                req.url = brPath;
+                res.set('Content-Encoding', 'br');
+                res.set('Vary', 'Accept-Encoding');
+            }
+        }
+        // Fallback to Gzip if Brotli not supported or file doesn't exist
+        else if (acceptEncoding.includes('gzip')) {
+            const gzPath = req.url + '.gz';
+            const fs = require('fs');
+            const path = require('path');
+            const fullGzPath = path.join(__dirname, '../dist', gzPath.substring(1));
+
+            if (fs.existsSync(fullGzPath)) {
+                req.url = gzPath;
+                res.set('Content-Encoding', 'gzip');
+                res.set('Vary', 'Accept-Encoding');
+            }
+        }
+    }
+
+    next();
+});
+
 // Add performance optimization middleware
 app.use(performance.performanceHeaders());
 app.use(performance.compressionOptimization());

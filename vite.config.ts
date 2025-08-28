@@ -1,10 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import viteCompression from 'vite-plugin-compression'
 import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Gzip compression for production builds
+    viteCompression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 1024, // Only compress files larger than 1KB
+      deleteOriginFile: false, // Keep original files
+    }),
+    // Brotli compression for production builds (better compression)
+    viteCompression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 1024,
+      deleteOriginFile: false,
+    }),
+  ],
   publicDir: 'static',
   resolve: {
     alias: {
@@ -29,7 +46,7 @@ export default defineConfig({
     target: 'es2020',
     // Optimize build performance
     chunkSizeWarningLimit: 1000,
-    reportCompressedSize: false, // Faster builds in CI
+    reportCompressedSize: true, // Show compression stats for optimization
     rollupOptions: {
       output: {
         // FIXED: Remove manualChunks to prevent React initialization order issues
