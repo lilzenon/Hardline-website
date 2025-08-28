@@ -1,5 +1,6 @@
 console.log('🔍 Starting routes.js imports...');
-console.log('🚨 UNIQUE IDENTIFIER: ROUTES.JS FILE MODIFIED AT 16:43 - THIS SHOULD APPEAR!');
+console.log('🚨 DEPLOYMENT CACHE FIX: ROUTES.JS MODIFIED AT 17:15 - FORCE REFRESH!');
+console.log('🚨 CRITICAL: Settings routes are COMPLETELY REMOVED from homepage!');
 const { Router } = require("express");
 console.log('✅ Express Router imported');
 
@@ -42,6 +43,7 @@ const images = require("./images.route");
 console.log('✅ Images routes required successfully:', typeof images);
 // const imageOptimization = require("./images.route"); // Same file as images
 // const settings = require("./api/settings.routes"); // Moved to dashboard repository
+// CRITICAL: Settings routes MUST NOT be loaded in homepage - they cause path-to-regexp errors
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
 const sessionAdmin = require("./admin/session-admin.routes");
