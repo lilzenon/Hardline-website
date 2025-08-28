@@ -367,8 +367,8 @@ app.get('/css/*', (req, res, next) => {
 // This bypasses express.static to ensure correct MIME types for mobile browsers
 // Force deployment restart to apply MIME type fixes - 2025-01-28
 
-// Handle CSS files with correct MIME type
-app.get('/assets/:filename.css', (req, res) => {
+// Handle CSS files with correct MIME type (matches complex filenames with hyphens/underscores)
+app.get(/^\/assets\/.*\.css$/, (req, res) => {
     console.log('🎨 CSS Route Handler Hit:', req.path);
     const filePath = path.join(__dirname, '../dist', req.path);
     console.log('📁 CSS File Path:', filePath);
@@ -394,8 +394,8 @@ app.get('/assets/:filename.css', (req, res) => {
     });
 });
 
-// Handle JS files with correct MIME type
-app.get('/assets/:filename.js', (req, res) => {
+// Handle JS files with correct MIME type (matches complex filenames with hyphens/underscores)
+app.get(/^\/assets\/.*\.js$/, (req, res) => {
     console.log('⚡ JS Route Handler Hit:', req.path);
     const filePath = path.join(__dirname, '../dist', req.path);
     console.log('📁 JS File Path:', filePath);
