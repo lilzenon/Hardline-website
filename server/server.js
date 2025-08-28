@@ -243,8 +243,11 @@ app.use((req, res, next) => {
         return next();
     }
 
-    // Apply normal body parsing for all other routes with increased limit for image uploads
-    express.json({ limit: '50mb' })(req, res, next);
+    // Apply normal body parsing for all other routes with increased limit for image uploads and large payloads
+    express.json({
+        limit: '100mb',
+        parameterLimit: 50000 // Increased parameter limit for JSON payloads
+    })(req, res, next);
 });
 
 app.use((req, res, next) => {
@@ -253,7 +256,32 @@ app.use((req, res, next) => {
         return next();
     }
 
-    express.urlencoded({ extended: true, limit: '50mb' })(req, res, next);
+    express.urlencoded({
+        extended: true,
+        limit: '100mb',
+        parameterLimit: 50000 // Increased parameter limit for large form data
+    })(req, res, next);
+});
+
+// Payload size error handling middleware
+app.use((error, req, res, next) => {
+    if (error && (error.name === 'PayloadTooLargeError' ||
+                  error.message?.includes('request entity too large'))) {
+        console.warn(`⚠️ Payload too large for ${req.method} ${req.url}:`, {
+            contentLength: req.headers['content-length'],
+            contentType: req.headers['content-type'],
+            limit: '100MB'
+        });
+
+        return res.status(413).json({
+            error: 'Request payload too large',
+            message: 'The request payload exceeds the maximum allowed size of 100MB.',
+            maxSize: '100MB',
+            receivedSize: req.headers['content-length'] ?
+                `${Math.round(req.headers['content-length'] / 1024 / 1024)}MB` : 'unknown'
+        });
+    }
+    next(error);
 });
 
 // Consolidated MIME type middleware - runs once before all static file serving
@@ -587,6 +615,32 @@ app.use("/api/security", require("./routes/security.routes"));
 // handle api requests
 app.use("/api/v2", routes.api);
 app.use("/api", routes.api);
+
+// React SPA catch-all routes for dashboard (must come after API routes but before /:id)
+const dashboardRoutes = [
+    '/dashboard',
+    '/events',
+    '/users',
+    '/sms',
+    '/settings',
+    '/analytics',
+    '/links',
+    '/messages',
+    '/contacts'
+];
+
+dashboardRoutes.forEach(route => {
+    app.get(route, (req, res) => {
+        console.log(`📱 Serving React SPA for route: ${req.path}`);
+        res.sendFile(path.join(__dirname, '../dist/index.html'));
+    });
+
+    // Handle sub-routes (e.g., /events/123/edit, /settings/seo)
+    app.get(`${route}/*`, (req, res) => {
+        console.log(`📱 Serving React SPA for sub-route: ${req.path}`);
+        res.sendFile(path.join(__dirname, '../dist/index.html'));
+    });
+});
 
 // Static routes (after API routes to prevent conflicts)
 // Serve custom images directly without optimization middleware (for uploaded logos, etc.)

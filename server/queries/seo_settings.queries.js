@@ -22,9 +22,32 @@ async function getSEOSettings() {
         console.log('🔍 Fetching SEO settings from database...');
         const startTime = Date.now();
 
-        const settings = await knex("seo_settings")
-            .orderBy("created_at", "desc")
-            .first();
+        // Add timeout to database query to prevent hanging with retry logic
+        let settings;
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (retryCount < maxRetries) {
+            try {
+                settings = await knex("seo_settings")
+                    .orderBy("created_at", "desc")
+                    .first()
+                    .timeout(15000); // 15 second timeout for database query
+                break; // Success, exit retry loop
+            } catch (error) {
+                retryCount++;
+                console.warn(`🔄 SEO settings query attempt ${retryCount} failed:`, error.message);
+
+                if (retryCount >= maxRetries) {
+                    throw error; // Re-throw after max retries
+                }
+
+                // Wait before retry (exponential backoff)
+                const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 5000);
+                console.log(`⏳ Retrying SEO settings query in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
 
         const queryDuration = Date.now() - startTime;
         console.log(`⚡ SEO settings query completed in ${queryDuration}ms`);
@@ -51,7 +74,16 @@ async function getSEOSettings() {
 
         return settings;
     } catch (error) {
-        console.error("Error getting SEO settings:", error);
+        const queryTime = Date.now() - startTime;
+        console.error(`❌ Error getting SEO settings after ${queryTime}ms:`, error.message);
+
+        // Clear cache on error to prevent serving stale data
+        if (error.message.includes('Connection terminated unexpectedly') ||
+            error.message.includes('timeout')) {
+            console.warn("🔄 Clearing SEO settings cache due to connection error");
+            seoSettingsCache = null;
+            cacheTimestamp = 0;
+        }
 
         // If we have cached data, return it
         if (seoSettingsCache) {
@@ -61,12 +93,19 @@ async function getSEOSettings() {
 
         // If table doesn't exist, return default settings
         if (error.message.includes('does not exist') || error.message.includes('no such table')) {
-            console.log("SEO settings table doesn't exist, returning default settings");
+            console.log("📋 SEO settings table doesn't exist, returning default settings");
             return getDefaultSEOSettings();
         }
 
+        // Handle connection termination errors specifically
+        if (error.message.includes('Connection terminated unexpectedly') ||
+            error.message.includes('connection') ||
+            error.message.includes('timeout')) {
+            console.error("🚨 Database connection issue detected for SEO settings");
+        }
+
         // Last resort: return default settings
-        console.log("⚠️ Returning default SEO settings due to error");
+        console.log("📋 Returning default SEO settings due to error");
         return getDefaultSEOSettings();
     }
 }

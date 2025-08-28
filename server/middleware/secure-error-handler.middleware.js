@@ -26,13 +26,13 @@ function logSecurityError(error, req, additionalInfo = {}) {
             ip: req.ip,
             userAgent: req.headers['user-agent'],
             referer: req.headers.referer,
-            userId: req.user?.id,
-            sessionId: req.session?.id
+            userId: req.user ? .id,
+            sessionId: req.session ? .id
         },
         additionalInfo,
         severity: determineSeverity(error)
     };
-    
+
     // Log based on severity
     if (errorLog.severity === 'critical') {
         console.error('🚨 CRITICAL SECURITY ERROR:', JSON.stringify(errorLog, null, 2));
@@ -43,7 +43,7 @@ function logSecurityError(error, req, additionalInfo = {}) {
     } else {
         console.log('ℹ️ LOW SECURITY ERROR:', JSON.stringify(errorLog, null, 2));
     }
-    
+
     // In production, you might want to send critical errors to external monitoring
     if (env.NODE_ENV === 'production' && errorLog.severity === 'critical') {
         // TODO: Send to external monitoring service (Sentry, LogRocket, etc.)
@@ -55,36 +55,41 @@ function logSecurityError(error, req, additionalInfo = {}) {
  * Determine error severity based on error type and context
  */
 function determineSeverity(error) {
+    // If severity is already set, respect it
+    if (error.severity) {
+        return error.severity;
+    }
+
     // Critical errors - immediate attention required
-    if (error.message?.includes('ECONNREFUSED') || 
-        error.message?.includes('database') ||
-        error.message?.includes('redis') ||
+    if (error.message ? .includes('ECONNREFUSED') ||
+        error.message ? .includes('database') ||
+        error.message ? .includes('redis') ||
         error.code === 'ENOTFOUND') {
         return 'critical';
     }
-    
+
     // High severity - security-related
-    if (error.message?.includes('authentication') ||
-        error.message?.includes('authorization') ||
-        error.message?.includes('token') ||
-        error.message?.includes('session') ||
+    if (error.message ? .includes('authentication') ||
+        error.message ? .includes('authorization') ||
+        error.message ? .includes('token') ||
+        error.message ? .includes('session') ||
         error.status === 401 ||
         error.status === 403) {
         return 'high';
     }
-    
+
     // Medium severity - validation and business logic
     if (error.status === 400 ||
         error.status === 422 ||
-        error.message?.includes('validation')) {
+        error.message ? .includes('validation')) {
         return 'medium';
     }
-    
+
     // Low severity - client errors
     if (error.status >= 400 && error.status < 500) {
         return 'low';
     }
-    
+
     // Default to high for unknown server errors
     return 'high';
 }
@@ -98,15 +103,15 @@ function sanitizeErrorMessage(error, isProduction) {
     if (error instanceof CustomError) {
         return error.message;
     }
-    
+
     // In development, show more detailed errors
     if (!isProduction) {
         return error.message;
     }
-    
+
     // In production, sanitize based on error type
     const status = error.status || error.statusCode || 500;
-    
+
     switch (status) {
         case 400:
             return 'Bad request. Please check your input.';
@@ -138,10 +143,23 @@ function sanitizeErrorMessage(error, isProduction) {
  */
 function secureErrorHandler(error, req, res, next) {
     const isProduction = env.NODE_ENV === 'production';
-    
+
+    // Handle specific error types first
+    if (error.name === 'PayloadTooLargeError' ||
+        error.message ? .includes('request entity too large')) {
+        console.warn(`⚠️ Payload too large error for ${req.method} ${req.url}:`, {
+            contentLength: req.headers['content-length'],
+            contentType: req.headers['content-type']
+        });
+
+        // Override error with more helpful message
+        error = new CustomError('Request payload too large. Maximum allowed size is 100MB.', 413);
+        error.severity = 'low';
+    }
+
     // Log the error securely
     logSecurityError(error, req);
-    
+
     // Determine response status
     let status = 500;
     if (error instanceof CustomError) {
@@ -149,27 +167,27 @@ function secureErrorHandler(error, req, res, next) {
     } else if (error.status || error.statusCode) {
         status = error.status || error.statusCode;
     }
-    
+
     // Sanitize error message
     const message = sanitizeErrorMessage(error, isProduction);
-    
+
     // Prepare error response
     const errorResponse = {
         error: message,
         status: status,
         timestamp: new Date().toISOString()
     };
-    
+
     // Add validation errors if present (from CustomError)
     if (error instanceof CustomError && error.details) {
         errorResponse.details = error.details;
     }
-    
+
     // Add request ID for tracking (if available)
     if (req.id) {
         errorResponse.requestId = req.id;
     }
-    
+
     // In development, add more debugging info
     if (!isProduction) {
         errorResponse.debug = {
@@ -178,12 +196,12 @@ function secureErrorHandler(error, req, res, next) {
             code: error.code
         };
     }
-    
+
     // Set security headers for error responses
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    
+
     // Send error response
     res.status(status).json(errorResponse);
 }
@@ -202,6 +220,8 @@ function asyncErrorHandler(fn) {
  */
 function notFoundHandler(req, res, next) {
     const error = new CustomError('Resource not found', 404);
+    // Mark as low severity to prevent security escalation
+    error.severity = 'low';
     next(error);
 }
 
@@ -215,7 +235,7 @@ function handleUncaughtException() {
             stack: error.stack,
             timestamp: new Date().toISOString()
         });
-        
+
         // In production, gracefully shutdown
         if (env.NODE_ENV === 'production') {
             console.error('🚨 Shutting down due to uncaught exception...');
@@ -234,7 +254,7 @@ function handleUnhandledRejection() {
             promise: promise,
             timestamp: new Date().toISOString()
         });
-        
+
         // In production, gracefully shutdown
         if (env.NODE_ENV === 'production') {
             console.error('🚨 Shutting down due to unhandled promise rejection...');
@@ -250,19 +270,53 @@ function handleDatabaseError(error, req, res, next) {
     // Check if it's a database-related error
     if (error.code === 'ECONNREFUSED' ||
         error.code === 'ENOTFOUND' ||
-        error.message?.includes('database') ||
-        error.message?.includes('connection')) {
-        
+        error.message ? .includes('database') ||
+        error.message ? .includes('connection') ||
+        error.message ? .includes('Connection terminated unexpectedly') ||
+        error.message ? .includes('timeout')) {
+
         logSecurityError(error, req, { type: 'database_error' });
-        
+
         const sanitizedError = new CustomError(
             'Database service temporarily unavailable',
             503
         );
-        
+
+        // Mark as critical severity for connection issues
+        sanitizedError.severity = 'critical';
+
         return next(sanitizedError);
     }
-    
+
+    next(error);
+}
+
+/**
+ * Handle payload size errors
+ */
+function handlePayloadError(error, req, res, next) {
+    // Check if it's a payload size error
+    if (error.name === 'PayloadTooLargeError' ||
+        error.message ? .includes('request entity too large') ||
+        error.message ? .includes('payload too large')) {
+
+        console.warn(`⚠️ Payload too large error for ${req.method} ${req.url}:`, {
+            contentLength: req.headers['content-length'],
+            contentType: req.headers['content-type'],
+            userAgent: req.headers['user-agent']
+        });
+
+        const sanitizedError = new CustomError(
+            'Request payload too large. Maximum allowed size is 100MB.',
+            413
+        );
+
+        // Mark as low severity since this is a client error
+        sanitizedError.severity = 'low';
+
+        return next(sanitizedError);
+    }
+
     next(error);
 }
 
@@ -270,17 +324,17 @@ function handleDatabaseError(error, req, res, next) {
  * Rate limiting error handler
  */
 function handleRateLimitError(error, req, res, next) {
-    if (error.status === 429 || error.message?.includes('rate limit')) {
+    if (error.status === 429 || error.message ? .includes('rate limit')) {
         logSecurityError(error, req, { type: 'rate_limit_exceeded' });
-        
+
         const sanitizedError = new CustomError(
             'Too many requests. Please try again later.',
             429
         );
-        
+
         return next(sanitizedError);
     }
-    
+
     next(error);
 }
 

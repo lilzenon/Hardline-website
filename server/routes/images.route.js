@@ -589,6 +589,27 @@ router.get('/proxy-optimized', async(req, res) => {
         if (!url) return res.status(400).json({ error: 'URL parameter is required' });
 
         const decodedUrl = decodeURIComponent(url);
+
+        // Check if this is an internal image serving route that shouldn't be proxy optimized
+        if (decodedUrl.includes('/api/images/serve/') || decodedUrl.startsWith('/api/')) {
+            console.warn(`⚠️ [${requestId}] Internal API route detected, skipping proxy optimization: ${decodedUrl}`);
+            return res.status(400).json({
+                error: 'Internal API routes cannot be proxy optimized',
+                message: 'Use direct image serving endpoints instead'
+            });
+        }
+
+        // Validate that the URL is a proper external URL
+        try {
+            new URL(decodedUrl);
+        } catch (urlError) {
+            console.error(`❌ [${requestId}] Invalid URL format: ${decodedUrl}`);
+            return res.status(400).json({
+                error: 'Invalid URL format',
+                message: 'URL must be a valid external URL'
+            });
+        }
+
         const width = req.query.w ? parseInt(req.query.w) : null;
         const bestFormat = getBestFormat(req);
         const contentType = bestFormat === 'webp' ? 'image/webp' : bestFormat === 'avif' ? 'image/avif' : 'image/jpeg';
@@ -604,8 +625,17 @@ router.get('/proxy-optimized', async(req, res) => {
         console.log(`🔄 [${requestId}] Cache MISS; fetching ${decodedUrl}`);
 
         if (!checkSharpAvailability(requestId)) {
-            console.warn(`⚠️ [${requestId}] Sharp not available, redirecting to original: ${decodedUrl}`);
-            return res.redirect(decodedUrl);
+            console.warn(`⚠️ [${requestId}] Sharp not available, cannot optimize external image: ${decodedUrl}`);
+            // For external URLs, we can redirect. For internal routes, return error.
+            try {
+                new URL(decodedUrl);
+                return res.redirect(decodedUrl);
+            } catch {
+                return res.status(503).json({
+                    error: 'Image optimization unavailable',
+                    message: 'Sharp library not available for image processing'
+                });
+            }
         }
 
         const fetch = (await
@@ -641,7 +671,23 @@ router.get('/proxy-optimized', async(req, res) => {
     } catch (error) {
         console.error(`❌ [${requestId}] Proxy optimization error:`, error.message);
         const { url } = req.query;
-        if (url) return res.redirect(decodeURIComponent(url));
+
+        if (url) {
+            const decodedUrl = decodeURIComponent(url);
+
+            // Only redirect if it's a valid external URL
+            try {
+                new URL(decodedUrl);
+                return res.redirect(decodedUrl);
+            } catch {
+                console.error(`❌ [${requestId}] Cannot redirect to invalid URL: ${decodedUrl}`);
+                return res.status(400).json({
+                    error: 'Invalid URL for redirection',
+                    message: 'The provided URL is not valid for external redirection'
+                });
+            }
+        }
+
         return res.status(500).json({ error: 'Image optimization failed' });
     }
 });

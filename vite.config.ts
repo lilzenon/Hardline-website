@@ -7,19 +7,27 @@ import path from 'path'
 export default defineConfig({
   plugins: [
     react(),
-    // Gzip compression for production builds
+    // Aggressive Gzip compression for production builds
     viteCompression({
       algorithm: 'gzip',
       ext: '.gz',
-      threshold: 1024, // Only compress files larger than 1KB
-      deleteOriginFile: false, // Keep original files
+      threshold: 512, // Compress files larger than 512 bytes
+      deleteOriginFile: false,
+      compressionOptions: {
+        level: 9, // Maximum compression level
+        memLevel: 9 // Maximum memory usage for better compression
+      }
     }),
     // Brotli compression for production builds (better compression)
     viteCompression({
       algorithm: 'brotliCompress',
       ext: '.br',
-      threshold: 1024,
+      threshold: 512,
       deleteOriginFile: false,
+      compressionOptions: {
+        level: 11, // Maximum brotli compression level
+        mode: 0 // Generic mode for best compression
+      }
     }),
   ],
   publicDir: 'static',
@@ -40,45 +48,58 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
-    // FIXED: Use terser for more conservative minification to prevent hoisting issues
+    sourcemap: false, // Disable sourcemaps in production for smaller files
     minify: 'terser',
     target: 'es2020',
-    // Optimize build performance
-    chunkSizeWarningLimit: 1000,
-    reportCompressedSize: true, // Show compression stats for optimization
+    chunkSizeWarningLimit: 500, // Lower warning limit to catch large chunks
+    reportCompressedSize: true,
     rollupOptions: {
       output: {
-        // FIXED: Remove manualChunks to prevent React initialization order issues
-        // The vendor chunk splitting was causing 'Cannot access before initialization' errors
-        // when lazy-loaded components tried to access React before it was fully loaded
         format: 'es',
-        // FIXED: Add conservative code generation settings
-        generatedCode: {
-          constBindings: false,
-          objectShorthand: false,
-          reservedNamesAsProps: false
-        }
+        // Optimize chunk splitting for better caching and smaller initial load
+        manualChunks: {
+          // Separate vendor libraries for better caching
+          'react-vendor': ['react', 'react-dom'],
+          // Separate analytics and utilities
+          'analytics': ['./src/lib/analytics/beacon', './src/utils/cleanup'],
+          // Separate lazy-loaded pages
+          'pages': ['./src/react/components/AboutPage', './src/react/components/ContactPage']
+        },
+        // Optimize asset naming for better caching
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
       },
-      // Optimize build performance
+      // Aggressive tree shaking for smaller bundles
       treeshake: {
-        preset: 'recommended'
+        preset: 'smallest',
+        moduleSideEffects: false
       }
     },
-    // FIXED: Add terser options for safer minification
+    // Optimize terser for production
     terserOptions: {
       compress: {
-        // Disable aggressive optimizations that can cause hoisting issues
-        hoist_funs: false,
-        hoist_vars: false,
-        reduce_vars: false,
-        collapse_vars: false,
-        // Keep function names for better debugging
-        keep_fnames: true
+        // Enable aggressive optimizations for smaller bundles
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.debug', 'console.info'],
+        // Enable safe optimizations
+        hoist_funs: true,
+        reduce_vars: true,
+        collapse_vars: true,
+        // Remove unused code
+        dead_code: true,
+        unused: true
       },
       mangle: {
-        // Keep function names to prevent initialization issues
-        keep_fnames: true
+        // Mangle all names for smaller bundles
+        toplevel: true,
+        safari10: true
+      },
+      format: {
+        // Remove comments and optimize formatting
+        comments: false,
+        ascii_only: true
       }
     }
   },
