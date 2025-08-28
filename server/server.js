@@ -336,24 +336,31 @@ app.use((req, res, next) => {
     next();
 });
 
-// Specific routes for problematic assets mentioned in mobile errors
-app.get('/assets/*.js', (req, res, next) => {
-    res.set('Content-Type', 'application/javascript; charset=utf-8');
-    res.set('X-Content-Type-Options', 'nosniff');
+// TEMPORARILY DISABLED: Specific routes for problematic assets
+// These routes were causing path-to-regexp errors
+// The MIME type fixes are handled in the static middleware below
+/*
+app.get('/assets/*', (req, res, next) => {
+    const filename = req.params[0];
+    if (filename.endsWith('.js')) {
+        res.set('Content-Type', 'application/javascript; charset=utf-8');
+        res.set('X-Content-Type-Options', 'nosniff');
+    } else if (filename.endsWith('.css')) {
+        res.set('Content-Type', 'text/css; charset=utf-8');
+        res.set('X-Content-Type-Options', 'nosniff');
+    }
     next();
 });
 
-app.get('/assets/*.css', (req, res, next) => {
-    res.set('Content-Type', 'text/css; charset=utf-8');
-    res.set('X-Content-Type-Options', 'nosniff');
+app.get('/css/*', (req, res, next) => {
+    const filename = req.params[0];
+    if (filename.endsWith('.css')) {
+        res.set('Content-Type', 'text/css; charset=utf-8');
+        res.set('X-Content-Type-Options', 'nosniff');
+    }
     next();
 });
-
-app.get('/css/*.css', (req, res, next) => {
-    res.set('Content-Type', 'text/css; charset=utf-8');
-    res.set('X-Content-Type-Options', 'nosniff');
-    next();
-});
+*/
 
 // Serve Vite build assets (dist) under root; DO NOT auto-serve dist/index.html at "/"
 // We want routing to decide the homepage (HBS by default, SPA opt-in)

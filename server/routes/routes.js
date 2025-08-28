@@ -65,9 +65,7 @@ const sessionAdmin = require("./admin/session-admin.routes");
 const privacy = require("./privacy.routes");
 const integrations = require("./integrations.routes");
 const seoTest = require("./seo-test.routes");
-
-// TEMPORARILY DISABLED: webhooks causing path-to-regexp error
-// const webhooks = require("./webhooks.routes");
+const webhooks = require("./webhooks.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -92,8 +90,7 @@ apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/admin/sessions", sessionAdmin);
 apiRouter.use("/privacy", privacy);
 apiRouter.use("/integrations", integrations);
-// TEMPORARILY DISABLED: webhooks causing path-to-regexp error
-// apiRouter.use("/webhooks", webhooks);
+apiRouter.use("/webhooks", webhooks);
 apiRouter.use("/seo-test", seoTest);
 
 module.exports = {
