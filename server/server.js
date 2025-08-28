@@ -369,7 +369,9 @@ app.get('/css/*', (req, res, next) => {
 
 // Handle CSS files with correct MIME type
 app.get('/assets/*.css', (req, res) => {
+    console.log('🎨 CSS Route Handler Hit:', req.path);
     const filePath = path.join(__dirname, '../dist', req.path);
+    console.log('📁 CSS File Path:', filePath);
 
     // Force correct MIME type for CSS
     res.set({
@@ -380,17 +382,23 @@ app.get('/assets/*.css', (req, res) => {
             : 'no-cache, no-store, must-revalidate'
     });
 
+    console.log('✅ CSS Headers Set:', res.getHeaders());
+
     res.sendFile(filePath, (err) => {
         if (err) {
-            console.error('Error serving CSS file:', err);
+            console.error('❌ Error serving CSS file:', err);
             res.status(404).send('CSS file not found');
+        } else {
+            console.log('✅ CSS file served successfully');
         }
     });
 });
 
 // Handle JS files with correct MIME type
 app.get('/assets/*.js', (req, res) => {
+    console.log('⚡ JS Route Handler Hit:', req.path);
     const filePath = path.join(__dirname, '../dist', req.path);
+    console.log('📁 JS File Path:', filePath);
 
     // Force correct MIME type for JavaScript
     res.set({
@@ -401,10 +409,14 @@ app.get('/assets/*.js', (req, res) => {
             : 'no-cache, no-store, must-revalidate'
     });
 
+    console.log('✅ JS Headers Set:', res.getHeaders());
+
     res.sendFile(filePath, (err) => {
         if (err) {
-            console.error('Error serving JS file:', err);
+            console.error('❌ Error serving JS file:', err);
             res.status(404).send('JS file not found');
+        } else {
+            console.log('✅ JS file served successfully');
         }
     });
 });
