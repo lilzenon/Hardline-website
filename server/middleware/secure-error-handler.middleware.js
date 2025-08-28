@@ -26,8 +26,8 @@ function logSecurityError(error, req, additionalInfo = {}) {
             ip: req.ip,
             userAgent: req.headers['user-agent'],
             referer: req.headers.referer,
-            userId: req.user ? .id,
-            sessionId: req.session ? .id
+            userId: req.user && req.user.id,
+            sessionId: req.session && req.session.id
         },
         additionalInfo,
         severity: determineSeverity(error)
@@ -61,18 +61,18 @@ function determineSeverity(error) {
     }
 
     // Critical errors - immediate attention required
-    if (error.message ? .includes('ECONNREFUSED') ||
-        error.message ? .includes('database') ||
-        error.message ? .includes('redis') ||
+    if ((error.message && error.message.includes('ECONNREFUSED')) ||
+        (error.message && error.message.includes('database')) ||
+        (error.message && error.message.includes('redis')) ||
         error.code === 'ENOTFOUND') {
         return 'critical';
     }
 
     // High severity - security-related
-    if (error.message ? .includes('authentication') ||
-        error.message ? .includes('authorization') ||
-        error.message ? .includes('token') ||
-        error.message ? .includes('session') ||
+    if ((error.message && error.message.includes('authentication')) ||
+        (error.message && error.message.includes('authorization')) ||
+        (error.message && error.message.includes('token')) ||
+        (error.message && error.message.includes('session')) ||
         error.status === 401 ||
         error.status === 403) {
         return 'high';
@@ -81,7 +81,7 @@ function determineSeverity(error) {
     // Medium severity - validation and business logic
     if (error.status === 400 ||
         error.status === 422 ||
-        error.message ? .includes('validation')) {
+        (error.message && error.message.includes('validation'))) {
         return 'medium';
     }
 
@@ -146,7 +146,7 @@ function secureErrorHandler(error, req, res, next) {
 
     // Handle specific error types first
     if (error.name === 'PayloadTooLargeError' ||
-        error.message ? .includes('request entity too large')) {
+        (error.message && error.message.includes('request entity too large'))) {
         console.warn(`⚠️ Payload too large error for ${req.method} ${req.url}:`, {
             contentLength: req.headers['content-length'],
             contentType: req.headers['content-type']
@@ -270,10 +270,10 @@ function handleDatabaseError(error, req, res, next) {
     // Check if it's a database-related error
     if (error.code === 'ECONNREFUSED' ||
         error.code === 'ENOTFOUND' ||
-        error.message ? .includes('database') ||
-        error.message ? .includes('connection') ||
-        error.message ? .includes('Connection terminated unexpectedly') ||
-        error.message ? .includes('timeout')) {
+        (error.message && error.message.includes('database')) ||
+        (error.message && error.message.includes('connection')) ||
+        (error.message && error.message.includes('Connection terminated unexpectedly')) ||
+        (error.message && error.message.includes('timeout'))) {
 
         logSecurityError(error, req, { type: 'database_error' });
 
@@ -297,8 +297,8 @@ function handleDatabaseError(error, req, res, next) {
 function handlePayloadError(error, req, res, next) {
     // Check if it's a payload size error
     if (error.name === 'PayloadTooLargeError' ||
-        error.message ? .includes('request entity too large') ||
-        error.message ? .includes('payload too large')) {
+        (error.message && error.message.includes('request entity too large')) ||
+        (error.message && error.message.includes('payload too large'))) {
 
         console.warn(`⚠️ Payload too large error for ${req.method} ${req.url}:`, {
             contentLength: req.headers['content-length'],
@@ -324,7 +324,7 @@ function handlePayloadError(error, req, res, next) {
  * Rate limiting error handler
  */
 function handleRateLimitError(error, req, res, next) {
-    if (error.status === 429 || error.message ? .includes('rate limit')) {
+    if (error.status === 429 || (error.message && error.message.includes('rate limit'))) {
         logSecurityError(error, req, { type: 'rate_limit_exceeded' });
 
         const sanitizedError = new CustomError(
