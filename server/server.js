@@ -363,65 +363,10 @@ app.get('/css/*', (req, res, next) => {
 });
 */
 
-// CRITICAL FIX: Direct route handlers for CSS and JS files with forced MIME types
-// This bypasses express.static to ensure correct MIME types for mobile browsers
-// Force deployment restart to apply MIME type fixes - 2025-01-28
+// MIME type handling now integrated into express.static setHeaders configuration below
+// Removed redundant custom route handlers - express.static now handles MIME types correctly
 
-// Handle CSS files with correct MIME type (matches complex filenames with hyphens/underscores)
-app.get(/^\/assets\/.*\.css$/, (req, res) => {
-    console.log('🎨 CSS Route Handler Hit:', req.path);
-    const filePath = path.join(__dirname, '../dist', req.path);
-    console.log('📁 CSS File Path:', filePath);
-
-    // Force correct MIME type for CSS
-    res.set({
-        'Content-Type': 'text/css; charset=utf-8',
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': process.env.NODE_ENV === 'production'
-            ? 'public, max-age=31536000, immutable'
-            : 'no-cache, no-store, must-revalidate'
-    });
-
-    console.log('✅ CSS Headers Set:', res.getHeaders());
-
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error('❌ Error serving CSS file:', err);
-            res.status(404).send('CSS file not found');
-        } else {
-            console.log('✅ CSS file served successfully');
-        }
-    });
-});
-
-// Handle JS files with correct MIME type (matches complex filenames with hyphens/underscores)
-app.get(/^\/assets\/.*\.js$/, (req, res) => {
-    console.log('⚡ JS Route Handler Hit:', req.path);
-    const filePath = path.join(__dirname, '../dist', req.path);
-    console.log('📁 JS File Path:', filePath);
-
-    // Force correct MIME type for JavaScript
-    res.set({
-        'Content-Type': 'application/javascript; charset=utf-8',
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': process.env.NODE_ENV === 'production'
-            ? 'public, max-age=31536000, immutable'
-            : 'no-cache, no-store, must-revalidate'
-    });
-
-    console.log('✅ JS Headers Set:', res.getHeaders());
-
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error('❌ Error serving JS file:', err);
-            res.status(404).send('JS file not found');
-        } else {
-            console.log('✅ JS file served successfully');
-        }
-    });
-});
-
-// Fallback: Standard express.static for other files (images, fonts, etc.)
+// Fallback: Standard express.static for other files (images, fonts, etc.) with proper MIME types
 app.use(express.static("dist", {
     index: false,
     dotfiles: 'ignore',
@@ -431,7 +376,30 @@ app.use(express.static("dist", {
     immutable: false,
     lastModified: true,
     maxAge: process.env.NODE_ENV === 'production' ? 86400000 : 0, // 1 day in production
-    redirect: true
+    redirect: true,
+    setHeaders: (res, filePath) => {
+        // CRITICAL: Set proper MIME types to fix mobile browser issues
+        if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        } else if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        } else if (filePath.endsWith('.svg')) {
+            res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+        } else if (filePath.endsWith('.png')) {
+            res.setHeader('Content-Type', 'image/png');
+        } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+            res.setHeader('Content-Type', 'image/jpeg');
+        } else if (filePath.endsWith('.webp')) {
+            res.setHeader('Content-Type', 'image/webp');
+        } else if (filePath.endsWith('.woff')) {
+            res.setHeader('Content-Type', 'font/woff');
+        } else if (filePath.endsWith('.woff2')) {
+            res.setHeader('Content-Type', 'font/woff2');
+        }
+
+        // Set security headers
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
 }));
 
 // Legacy /react static removed: Vite-only serving
