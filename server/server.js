@@ -66,7 +66,9 @@ try {
         console.error('🔍 PATH-TO-REGEXP ERROR DETECTED:');
         console.error('   This error occurs when a route has a malformed parameter pattern');
         console.error('   Look for routes with empty parameters like ":" or ":)"');
-        console.error('   Error position:', error.message.match(/at (\d+)/) ? .[1] || 'unknown');
+        const positionMatch = error.message.match(/at (\d+)/);
+        const position = positionMatch ? positionMatch[1] : 'unknown';
+        console.error('   Error position:', position);
     }
 
     // Exit the process to prevent further issues
@@ -670,7 +672,9 @@ try {
         console.error('🔍 PATH-TO-REGEXP ERROR DURING ROUTE REGISTRATION:');
         console.error('   This error occurs when Express tries to compile a malformed route pattern');
         console.error('   The route pattern has a colon (:) followed by an invalid parameter name');
-        console.error('   Error position:', error.message.match(/at (\d+)/)?.[1] || 'unknown');
+        const positionMatch = error.message.match(/at (\d+)/);
+        const position = positionMatch ? positionMatch[1] : 'unknown';
+        console.error('   Error position:', position);
         console.error('   Check for routes with patterns like ":" or ":)" or ": "');
     }
 
@@ -691,18 +695,42 @@ const dashboardRoutes = [
     '/contacts'
 ];
 
-dashboardRoutes.forEach(route => {
-    app.get(route, (req, res) => {
-        console.log(`📱 Serving React SPA for route: ${req.path}`);
-        res.sendFile(path.join(__dirname, '../dist/index.html'));
-    });
+// CRITICAL FIX: Add error handling for dashboard route registration
+try {
+    console.log('🔍 Registering dashboard SPA routes...');
+    dashboardRoutes.forEach(route => {
+        console.log(`🔍 Registering dashboard route: ${route}`);
+        app.get(route, (req, res) => {
+            console.log(`📱 Serving React SPA for route: ${req.path}`);
+            res.sendFile(path.join(__dirname, '../dist/index.html'));
+        });
 
-    // Handle sub-routes (e.g., /events/123/edit, /settings/seo)
-    app.get(`${route}/*`, (req, res) => {
-        console.log(`📱 Serving React SPA for sub-route: ${req.path}`);
-        res.sendFile(path.join(__dirname, '../dist/index.html'));
+        // Handle sub-routes (e.g., /events/123/edit, /settings/seo)
+        // CRITICAL FIX: Use regex pattern to avoid path-to-regexp issues with /*
+        const subRoutePattern = new RegExp(`^${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/.*`);
+        console.log(`🔍 Registering dashboard sub-route with regex: ${subRoutePattern}`);
+        app.get(subRoutePattern, (req, res) => {
+            console.log(`📱 Serving React SPA for sub-route: ${req.path}`);
+            res.sendFile(path.join(__dirname, '../dist/index.html'));
+        });
     });
-});
+    console.log('✅ Dashboard SPA routes registered successfully');
+} catch (error) {
+    console.error('🚨 CRITICAL ERROR during dashboard route registration:', error);
+    console.error('Stack trace:', error.stack);
+
+    // If this is a path-to-regexp error, provide specific guidance
+    if (error.message && error.message.includes('Missing parameter name')) {
+        console.error('🔍 PATH-TO-REGEXP ERROR IN DASHBOARD ROUTES:');
+        console.error('   This error occurs in dashboard route patterns');
+        const positionMatch = error.message.match(/at (\d+)/);
+        const position = positionMatch ? positionMatch[1] : 'unknown';
+        console.error('   Error position:', position);
+    }
+
+    // Exit the process to prevent further issues
+    process.exit(1);
+}
 
 // Static routes (after API routes to prevent conflicts)
 // Serve custom images directly without optimization middleware (for uploaded logos, etc.)
@@ -726,25 +754,47 @@ app.use("/custom-images", express.static("custom/images", {
     }
 }));
 
-// finally, redirect the short link to the target
-// CRITICAL FIX: Add proper route pattern validation to prevent path-to-regexp errors
-app.get("/:id([a-zA-Z0-9_-]+)", (req, res, next) => {
-    // Skip asset requests - let them be handled by static middleware
-    if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/')) {
-        console.log(`🔍 DEBUG: Skipping /:id route for asset: ${req.path}`);
-        return next();
+// CRITICAL FIX: Add error handling for catch-all route registration
+try {
+    console.log('🔍 Registering catch-all short link route: /:id');
+
+    // finally, redirect the short link to the target
+    // CRITICAL FIX: Use simple parameter pattern to avoid path-to-regexp errors
+    app.get("/:id", (req, res, next) => {
+        // Skip asset requests - let them be handled by static middleware
+        if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/')) {
+            console.log(`🔍 DEBUG: Skipping /:id route for asset: ${req.path}`);
+            return next();
+        }
+
+        // Validate the ID parameter to prevent path-to-regexp errors
+        const id = req.params.id;
+        if (!id || id.length === 0 || id.length > 100) {
+            console.log(`🚨 Invalid ID parameter: ${id}`);
+            return next(); // Let 404 handler deal with it
+        }
+
+        console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${id}`);
+        return asyncHandler(links.redirect)(req, res, next);
+    });
+
+    console.log('✅ Catch-all short link route registered successfully');
+} catch (error) {
+    console.error('🚨 CRITICAL ERROR during catch-all route registration:', error);
+    console.error('Stack trace:', error.stack);
+
+    // If this is a path-to-regexp error, provide specific guidance
+    if (error.message && error.message.includes('Missing parameter name')) {
+        console.error('🔍 PATH-TO-REGEXP ERROR IN CATCH-ALL ROUTE:');
+        console.error('   This error occurs in the /:id([a-zA-Z0-9_-]+) route pattern');
+        const positionMatch = error.message.match(/at (\d+)/);
+        const position = positionMatch ? positionMatch[1] : 'unknown';
+        console.error('   Error position:', position);
     }
 
-    // Validate the ID parameter to prevent path-to-regexp errors
-    const id = req.params.id;
-    if (!id || id.length === 0 || id.length > 100) {
-        console.log(`🚨 Invalid ID parameter: ${id}`);
-        return next(); // Let 404 handler deal with it
-    }
-
-    console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${id}`);
-    return asyncHandler(links.redirect)(req, res, next);
-});
+    // Exit the process to prevent further issues
+    process.exit(1);
+}
 
 
 
