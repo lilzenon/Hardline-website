@@ -7,79 +7,129 @@ let visit;
 let visitWorker;
 
 if (env.REDIS_ENABLED) {
-    const connection = {
-        port: env.REDIS_PORT,
-        host: env.REDIS_HOST,
-        db: env.REDIS_DB,
-        ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD })
-    };
+    try {
+        const connection = {
+            port: env.REDIS_PORT,
+            host: env.REDIS_HOST,
+            db: env.REDIS_DB,
+            ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+            // CRITICAL: Add connection timeout and retry settings
+            connectTimeout: 3000, // 3 second timeout
+            commandTimeout: 2000, // 2 second command timeout
+            retryDelayOnFailover: 100,
+            maxRetriesPerRequest: 1, // Only try once
+            lazyConnect: true, // Don't connect immediately
+            enableOfflineQueue: false, // Disable offline queue to prevent hanging
+        };
 
-    // Create the queue
-    visit = new Queue("visit", {
-        connection,
-        defaultJobOptions: {
-            removeOnComplete: 10, // Keep only 10 completed jobs
-            removeOnFail: 5, // Keep only 5 failed jobs
-            attempts: 3, // Retry failed jobs 3 times
-            backoff: {
-                type: 'exponential',
-                delay: 2000, // Start with 2 second delay
-            },
-            delay: 1000, // 1 second delay between jobs to reduce DB pressure
+        // Create the queue with error handling
+        visit = new Queue("visit", {
+            connection,
+            defaultJobOptions: {
+                removeOnComplete: 10, // Keep only 10 completed jobs
+                removeOnFail: 5, // Keep only 5 failed jobs
+                attempts: 1, // Reduced attempts to prevent hanging
+                backoff: {
+                    type: 'exponential',
+                    delay: 1000, // Reduced delay
+                },
+                delay: 500, // Reduced delay between jobs
+            }
+        });
+
+        // Create the worker with error handling
+        visitWorker = new Worker("visit", path.resolve(__dirname, "visit.js"), {
+            connection,
+            concurrency: 2, // Further reduced for stability
+            stalledInterval: 15000, // Check more frequently
+            maxStalledCount: 1, // Max 1 stalled job before considering it failed
+        });
+    } catch (error) {
+        console.error('🚨 Failed to initialize Redis queues:', error.message);
+        console.log('🔄 Falling back to direct processing...');
+        // Fall through to direct processing
+        visit = null;
+        visitWorker = null;
+    }
+
+    // CRITICAL: Only set up queue operations if initialization succeeded
+    if (visit && visitWorker) {
+        try {
+            // Clean up old jobs more frequently
+            visit.clean(5000, "completed").catch(err => console.warn('Queue cleanup failed:', err.message));
+            visit.clean(10000, "failed").catch(err => console.warn('Queue cleanup failed:', err.message));
+
+            // Enhanced error handling and monitoring
+            visitWorker.on("completed", (job) => {
+                console.log(`✅ Visit job ${job.id} completed`);
+            });
+
+            visitWorker.on("failed", (job, error) => {
+                console.error(`🚨 Visit job ${job.id} failed:`, error.message);
+                // Don't retry certain types of errors
+                if (error.message.includes('timeout') ||
+                    error.message.includes('connection') ||
+                    error.message.includes('ENOTFOUND') ||
+                    error.message.includes('MaxRetriesPerRequestError')) {
+                    try {
+                        job.remove();
+                    } catch (removeError) {
+                        console.warn('Failed to remove failed job:', removeError.message);
+                    }
+                }
+            });
+
+            visitWorker.on("stalled", (job) => {
+                console.warn(`⚠️ Visit job ${job.id} stalled`);
+            });
+
+            visitWorker.on("error", (error) => {
+                console.error("🚨 Visit worker error:", error.message);
+                // CRITICAL: If Redis connection fails, fall back to direct processing
+                if (error.message.includes('ENOTFOUND') || error.message.includes('connection')) {
+                    console.log('🔄 Redis connection failed, switching to direct processing...');
+                    visit = null;
+                    visitWorker = null;
+                }
+            });
+
+            visit.on("error", (error) => {
+                console.error("🚨 Visit queue error:", error.message);
+                // CRITICAL: If Redis connection fails, fall back to direct processing
+                if (error.message.includes('ENOTFOUND') || error.message.includes('connection')) {
+                    console.log('🔄 Redis connection failed, switching to direct processing...');
+                    visit = null;
+                    visitWorker = null;
+                }
+            });
+
+            // Add rate limiting to prevent overwhelming the database
+            visitWorker.on("waiting", (jobId) => {
+                // Add small delay between jobs
+                setTimeout(() => {}, 100);
+            });
+        } catch (setupError) {
+            console.error('🚨 Failed to setup queue event handlers:', setupError.message);
+            visit = null;
+            visitWorker = null;
         }
-    });
+    }
+}
 
-    // Create the worker
-    visitWorker = new Worker("visit", path.resolve(__dirname, "visit.js"), {
-        connection,
-        concurrency: 3, // Reduced from 6 to 3 for Basic tier optimization
-        stalledInterval: 30000, // Check for stalled jobs every 30 seconds
-        maxStalledCount: 1, // Max 1 stalled job before considering it failed
-    });
-
-    // Clean up old jobs more frequently
-    visit.clean(5000, "completed");
-    visit.clean(10000, "failed");
-
-    // Enhanced error handling and monitoring
-    visitWorker.on("completed", (job) => {
-        console.log(`✅ Visit job ${job.id} completed`);
-    });
-
-    visitWorker.on("failed", (job, error) => {
-        console.error(`🚨 Visit job ${job.id} failed:`, error.message);
-        // Don't retry certain types of errors
-        if (error.message.includes('timeout') || error.message.includes('connection')) {
-            job.remove();
-        }
-    });
-
-    visitWorker.on("stalled", (job) => {
-        console.warn(`⚠️ Visit job ${job.id} stalled`);
-    });
-
-    visitWorker.on("error", (error) => {
-        console.error("🚨 Visit worker error:", error.message);
-    });
-
-    visit.on("error", (error) => {
-        console.error("🚨 Visit queue error:", error.message);
-    });
-
-    // Add rate limiting to prevent overwhelming the database
-    visitWorker.on("waiting", (jobId) => {
-        // Add small delay between jobs
-        setTimeout(() => {}, 100);
-    });
-} else {
+// CRITICAL: Ensure fallback to direct processing if Redis failed or is disabled
+if (!visit) {
+    console.log('📊 Using direct visit processing (Redis unavailable)');
     const visitProcessor = require(path.resolve(__dirname, "visit.js"));
     visit = {
         add(data) {
-            visitProcessor({ data }).catch(function(error) {
-                console.error("Add visit error: ", error);
+            // Process visits directly without queue
+            setImmediate(() => {
+                visitProcessor({ data }).catch(function(error) {
+                    console.error("🚨 Direct visit processing error:", error.message);
+                });
             });
         }
-    }
+    };
 }
 
 
