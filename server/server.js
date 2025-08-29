@@ -36,9 +36,42 @@ Object.keys(require.cache).forEach(key => {
 });
 
 console.log('🔥🔥🔥 ABOUT TO LOAD ROUTES FROM SERVER.JS!');
-const routes = require("./routes");
-console.log('🔥🔥🔥 ROUTES LOADED! Type:', typeof routes);
-console.log('✅ Routes loaded fresh at:', new Date().toISOString());
+
+// CRITICAL FIX: Add comprehensive error handling for route loading
+try {
+    const routes = require("./routes");
+    console.log('🔥🔥🔥 ROUTES LOADED! Type:', typeof routes);
+    console.log('✅ Routes loaded fresh at:', new Date().toISOString());
+
+    // Validate route structure
+    if (!routes || typeof routes !== 'object') {
+        throw new Error('Routes object is invalid');
+    }
+
+    if (!routes.api || !routes.render) {
+        throw new Error('Required route modules (api, render) are missing');
+    }
+
+    console.log('✅ Route structure validation passed');
+
+    // Export routes for use later in the file
+    global.appRoutes = routes;
+
+} catch (error) {
+    console.error('🚨 CRITICAL ERROR loading routes:', error);
+    console.error('Stack trace:', error.stack);
+
+    // If this is a path-to-regexp error, provide specific guidance
+    if (error.message && error.message.includes('Missing parameter name')) {
+        console.error('🔍 PATH-TO-REGEXP ERROR DETECTED:');
+        console.error('   This error occurs when a route has a malformed parameter pattern');
+        console.error('   Look for routes with empty parameters like ":" or ":)"');
+        console.error('   Error position:', error.message.match(/at (\d+)/) ? .[1] || 'unknown');
+    }
+
+    // Exit the process to prevent further issues
+    process.exit(1);
+}
 const utils = require("./utils");
 const { initializePrivacySystem } = require("./middleware/privacy.middleware");
 const performance = require("./middleware/performance.middleware");
@@ -609,18 +642,41 @@ app.get("/test-route", (req, res) => {
     res.json({ success: true, message: "Test non-API endpoint working" });
 });
 
-// render html pages
-app.use("/", routes.render);
+// CRITICAL FIX: Add error handling for route registration
+try {
+    console.log('🔍 Registering render routes...');
+    app.use("/", global.appRoutes.render);
+    console.log('✅ Render routes registered successfully');
 
-// AI agent access routes (before other API routes)
-app.use("/api", require("./routes/ai-access.routes"));
+    console.log('🔍 Registering AI agent access routes...');
+    app.use("/api", require("./routes/ai-access.routes"));
+    console.log('✅ AI agent access routes registered successfully');
 
-// Security reporting routes
-app.use("/api/security", require("./routes/security.routes"));
+    console.log('🔍 Registering security reporting routes...');
+    app.use("/api/security", require("./routes/security.routes"));
+    console.log('✅ Security reporting routes registered successfully');
 
-// handle api requests
-app.use("/api/v2", routes.api);
-app.use("/api", routes.api);
+    console.log('🔍 Registering API routes...');
+    app.use("/api/v2", global.appRoutes.api);
+    app.use("/api", global.appRoutes.api);
+    console.log('✅ API routes registered successfully');
+
+} catch (error) {
+    console.error('🚨 CRITICAL ERROR during route registration:', error);
+    console.error('Stack trace:', error.stack);
+
+    // If this is a path-to-regexp error, provide specific guidance
+    if (error.message && error.message.includes('Missing parameter name')) {
+        console.error('🔍 PATH-TO-REGEXP ERROR DURING ROUTE REGISTRATION:');
+        console.error('   This error occurs when Express tries to compile a malformed route pattern');
+        console.error('   The route pattern has a colon (:) followed by an invalid parameter name');
+        console.error('   Error position:', error.message.match(/at (\d+)/)?.[1] || 'unknown');
+        console.error('   Check for routes with patterns like ":" or ":)" or ": "');
+    }
+
+    // Exit the process to prevent further issues
+    process.exit(1);
+}
 
 // React SPA catch-all routes for dashboard (must come after API routes but before /:id)
 const dashboardRoutes = [
