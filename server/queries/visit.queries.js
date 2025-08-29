@@ -15,7 +15,11 @@ async function add(params) {
     const nowUTC = new Date().toISOString();
     const truncatedNow = nowUTC.substring(0, 10) + " " + nowUTC.substring(11, 14) + "00:00";
 
+    // CRITICAL FIX: Add timeout to transaction to prevent hanging
     return knex.transaction(async(trx) => {
+        // Set transaction timeout to prevent hanging
+        await trx.raw('SET LOCAL statement_timeout = 5000'); // 5 second timeout
+
         // Create a subquery first that truncates the
         const subquery = trx("visits")
             .select("visits.*")
@@ -25,17 +29,26 @@ async function add(params) {
             .where({ link_id: data.link_id })
             .as("subquery");
 
-        const visit = await trx
+        // CRITICAL FIX: Use timeout and reduce lock time
+        const visit = await Promise.race([
+            trx
             .select("*")
             .from(subquery)
             .where("created_at_hours", "=", truncatedNow)
             .forUpdate()
-            .first();
+            .first(),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Visit query timeout')), 3000)
+            )
+        ]);
 
         if (visit) {
             const countries = typeof visit.countries === "string" ? JSON.parse(visit.countries) : visit.countries;
             const referrers = typeof visit.referrers === "string" ? JSON.parse(visit.referrers) : visit.referrers;
-            await trx("visits")
+
+            // CRITICAL FIX: Add timeout to update query
+            await Promise.race([
+                trx("visits")
                 .where({ id: visit.id })
                 .increment(`br_${data.browser}`, 1)
                 .increment(`os_${data.os}`, 1)
@@ -50,25 +63,41 @@ async function add(params) {
                         ...referrers,
                         [data.referrer]: (referrers[data.referrer] || 0) + 1
                     })
-                });
+                }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Visit update timeout')), 2000)
+                )
+            ]);
         } else {
-            // This must also happen in the transaction to avoid concurrency
-            await trx("visits").insert({
-                [`br_${data.browser}`]: 1,
-                countries: {
-                    [data.country]: 1
-                },
-                referrers: {
-                    [data.referrer]: 1
-                },
-                [`os_${data.os}`]: 1,
-                total: 1,
-                link_id: data.link_id,
-                user_id: data.user_id,
-            });
+            // CRITICAL FIX: Add timeout to insert query
+            await Promise.race([
+                trx("visits").insert({
+                    [`br_${data.browser}`]: 1,
+                    countries: {
+                        [data.country]: 1
+                    },
+                    referrers: {
+                        [data.referrer]: 1
+                    },
+                    [`os_${data.os}`]: 1,
+                    total: 1,
+                    link_id: data.link_id,
+                    user_id: data.user_id,
+                }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Visit insert timeout')), 2000)
+                )
+            ]);
         }
 
         return visit;
+    }).catch(error => {
+        // CRITICAL FIX: Handle timeout errors gracefully
+        if (error.message.includes('timeout')) {
+            console.error('🚨 Visit database operation timed out:', error.message);
+            throw new Error('Visit processing timeout');
+        }
+        throw error;
     });
 }
 

@@ -128,10 +128,22 @@ if (!visit) {
     const visitProcessor = require(path.resolve(__dirname, "visit.js"));
     visit = {
         add(data) {
-            // Process visits directly without queue
+            // Process visits directly without queue with timeout protection
             setImmediate(() => {
-                visitProcessor({ data }).catch(function(error) {
-                    console.error("🚨 Direct visit processing error:", error.message);
+                // CRITICAL FIX: Add timeout protection for direct processing
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Direct visit processing timeout')), 8000);
+                });
+
+                Promise.race([
+                    visitProcessor({ data }),
+                    timeoutPromise
+                ]).catch(function(error) {
+                    if (error.message.includes('timeout')) {
+                        console.error("🚨 Visit worker error: Command timed out");
+                    } else {
+                        console.error("🚨 Direct visit processing error:", error.message);
+                    }
                 });
             });
         }
