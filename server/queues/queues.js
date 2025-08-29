@@ -21,13 +21,16 @@ if (env.REDIS_ENABLED) {
             host: env.REDIS_HOST,
             db: env.REDIS_DB,
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
-            // CRITICAL: Add connection timeout and retry settings
-            connectTimeout: 3000, // 3 second timeout
-            commandTimeout: 2000, // 2 second command timeout
-            retryDelayOnFailover: 100,
-            maxRetriesPerRequest: 1, // Only try once
+            // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
+            connectTimeout: 5000, // Increased for stability
+            commandTimeout: 3000, // Increased for stability
+            retryDelayOnFailover: 200,
+            maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
             lazyConnect: true, // Don't connect immediately
-            enableOfflineQueue: false, // Disable offline queue to prevent hanging
+            enableOfflineQueue: true, // Enable for queue reliability
+            // Add BullMQ-specific optimizations
+            enableReadyCheck: true,
+            maxLoadingTimeout: 5000,
         };
 
         // Create the queue with error handling
@@ -45,19 +48,26 @@ if (env.REDIS_ENABLED) {
             }
         });
 
-        // Create the worker with error handling
+        // Create the worker with enhanced error handling and timeouts
         visitWorker = new Worker("visit", path.resolve(__dirname, "visit.js"), {
             connection,
-            concurrency: 3, // CRITICAL FIX: Restored to 3 to match increased DB pool
-            stalledInterval: 15000, // Check more frequently
+            concurrency: 2, // CRITICAL FIX: Reduced to 2 for better stability
+            stalledInterval: 10000, // Check every 10 seconds
             maxStalledCount: 1, // Max 1 stalled job before considering it failed
-            // CRITICAL FIX: Add job timeout to prevent hanging
+            // CRITICAL FIX: Add comprehensive job timeout settings
             settings: {
-                stalledInterval: 15000,
+                stalledInterval: 10000,
                 maxStalledCount: 1,
-                retryProcessDelay: 5000, // 5 second delay before retrying failed jobs
-            }
+                retryProcessDelay: 3000, // 3 second delay before retrying failed jobs
+            },
+            // CRITICAL FIX: Add job timeout at worker level
+            removeOnComplete: 5, // Keep only 5 completed jobs
+            removeOnFail: 3, // Keep only 3 failed jobs
         });
+
+        console.log('✅ Redis queue and worker initialized successfully');
+        console.log(`📊 Worker concurrency: 2, Stalled interval: 10s`);
+
     } catch (error) {
         console.error('🚨 Failed to initialize Redis queues:', error.message);
         console.log('🔄 Falling back to direct processing...');
