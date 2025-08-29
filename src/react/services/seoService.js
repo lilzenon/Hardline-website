@@ -33,12 +33,13 @@ export const DEFAULT_SEO_SETTINGS = {
  * @returns {Promise<Object>} SEO settings object
  */
 export const fetchSEOSettings = async() => {
+    const startTime = Date.now();
     try {
         console.log('🔍 Fetching SEO settings from dashboard API...');
 
-        // Add timeout to prevent hanging
+        // PERFORMANCE OPTIMIZATION: Reduced timeout to match backend optimizations
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout to match backend
 
         const response = await fetch(API_CONFIG.DASHBOARD_API, {
             method: 'GET',
@@ -68,7 +69,11 @@ export const fetchSEOSettings = async() => {
         const data = await response.json();
 
         if (data.success && data.settings) {
-            console.log('✅ SEO settings fetched successfully:', data.settings);
+            const duration = Date.now() - startTime;
+            const performanceMessage = duration < 1000 ?
+                `✅ SEO settings fetched successfully in ${duration}ms (⚡ Performance optimized!)` :
+                `✅ SEO settings fetched successfully in ${duration}ms`;
+            console.log(performanceMessage, data.settings);
             return {
                 ...DEFAULT_SEO_SETTINGS,
                 ...data.settings
@@ -80,7 +85,7 @@ export const fetchSEOSettings = async() => {
 
     } catch (error) {
         if (error.name === 'AbortError') {
-            console.error('❌ SEO API request timed out after 10 seconds');
+            console.error('❌ SEO API request timed out after 8 seconds (performance optimized)');
         } else {
             console.error('❌ Failed to fetch SEO settings:', error.message);
         }
