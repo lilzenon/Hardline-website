@@ -3,6 +3,14 @@ const path = require("node:path");
 
 const env = require("../env");
 
+// CRITICAL DEBUG: Check environment variables for Redis
+console.log('🔍 Queue System Environment Debug:');
+console.log('   NODE_ENV:', process.env.NODE_ENV);
+console.log('   REDIS_ENABLED (raw):', process.env.REDIS_ENABLED);
+console.log('   REDIS_ENABLED (parsed):', env.REDIS_ENABLED);
+console.log('   REDIS_HOST:', env.REDIS_HOST);
+console.log('   REDIS_PORT:', env.REDIS_PORT);
+
 let visit;
 let visitWorker;
 
@@ -125,14 +133,18 @@ if (env.REDIS_ENABLED) {
 // CRITICAL: Ensure fallback to direct processing if Redis failed or is disabled
 if (!visit) {
     console.log('📊 Using direct visit processing (Redis unavailable)');
+    console.log('⚠️ PERFORMANCE WARNING: Direct processing can cause timeouts under load');
+    console.log('💡 Enable Redis in production for optimal performance');
+    console.log('🔧 Check REDIS_ENABLED environment variable');
+
     const visitProcessor = require(path.resolve(__dirname, "visit.js"));
     visit = {
         add(data) {
-            // Process visits directly without queue with timeout protection
+            // Process visits directly without queue with enhanced timeout protection
             setImmediate(() => {
-                // CRITICAL FIX: Add timeout protection for direct processing
+                // CRITICAL FIX: Add multiple timeout layers for direct processing
                 const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Direct visit processing timeout')), 8000);
+                    setTimeout(() => reject(new Error('Direct visit processing timeout')), 6000); // Reduced to 6s
                 });
 
                 Promise.race([
@@ -140,7 +152,8 @@ if (!visit) {
                     timeoutPromise
                 ]).catch(function(error) {
                     if (error.message.includes('timeout')) {
-                        console.error("🚨 Visit worker error: Command timed out");
+                        console.error("🚨 Visit worker error: Command timed out (direct processing)");
+                        console.error("💡 Consider enabling Redis to eliminate these timeouts");
                     } else {
                         console.error("🚨 Direct visit processing error:", error.message);
                     }
