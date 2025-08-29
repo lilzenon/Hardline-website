@@ -39,13 +39,13 @@ class IntelligentCacheService {
      * Get cached data with metrics tracking
      */
     async get(key) {
-        if (!this.enabled || !redis.client) {
+        if (!this.enabled || !redis.isRedisReady()) {
             this.metrics.misses++;
             return null;
         }
 
         try {
-            const data = await redis.client.get(key);
+            const data = await redis.safeRedisCommand('get', key);
             if (data) {
                 this.metrics.hits++;
                 return JSON.parse(data);
@@ -64,11 +64,11 @@ class IntelligentCacheService {
      * Set cached data with intelligent TTL selection
      */
     async set(key, data, customTTL = null) {
-        if (!this.enabled || !redis.client) return false;
+        if (!this.enabled || !redis.isRedisReady()) return false;
 
         try {
             const ttl = customTTL || this.selectTTL(key, data);
-            await redis.client.setex(key, ttl, JSON.stringify(data));
+            await redis.safeRedisCommand('setex', key, ttl, JSON.stringify(data));
             return true;
         } catch (error) {
             this.metrics.errors++;
@@ -134,12 +134,12 @@ class IntelligentCacheService {
      * Batch invalidate related keys
      */
     async invalidatePattern(pattern) {
-        if (!this.enabled || !redis.client) return;
+        if (!this.enabled || !redis.isRedisReady()) return;
 
         try {
-            const keys = await redis.client.keys(pattern);
+            const keys = await redis.safeRedisCommand('keys', pattern);
             if (keys.length > 0) {
-                await redis.client.del(...keys);
+                await redis.safeRedisCommand('del', ...keys);
                 console.log(`✅ Invalidated ${keys.length} keys matching pattern: ${pattern}`);
             }
         } catch (error) {
@@ -212,7 +212,7 @@ class IntelligentCacheService {
 
             for (const link of popularLinks) {
                 const key = redis.key.stats(link.id);
-                const exists = await redis.client.exists(key);
+                const exists = await redis.safeRedisCommand('exists', key);
 
                 if (!exists) {
                     // Warm the cache by triggering stats computation
@@ -241,7 +241,7 @@ class IntelligentCacheService {
 
             for (const user of activeUsers) {
                 const key = this.generateKey('analytics', user.id, 'dashboard');
-                const exists = await redis.client.exists(key);
+                const exists = await redis.safeRedisCommand('exists', key);
 
                 if (!exists) {
                     // Warm user analytics cache
@@ -289,7 +289,7 @@ class IntelligentCacheService {
         }
 
         try {
-            await redis.client.ping();
+            await redis.safeRedisCommand('ping');
             return {
                 status: 'healthy',
                 message: 'Cache service is operational',

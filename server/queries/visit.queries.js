@@ -74,14 +74,14 @@ async function add(params) {
 
 async function find(match, total) {
     // Enhanced caching with longer TTL for expensive stats
-    if (match.link_id && env.REDIS_ENABLED && redis.client) {
+    if (match.link_id && env.REDIS_ENABLED && redis.isRedisReady()) {
         try {
             const key = redis.key.stats(match.link_id);
-            const cached = await redis.client.get(key);
+            const cached = await redis.safeRedisCommand('get', key);
             if (cached) return JSON.parse(cached);
         } catch (error) {
             // Redis not available, continue without cache
-            console.warn('⚠️ Redis not available for visit stats cache');
+            console.warn('⚠️ Redis cache read failed for visit stats, continuing with database query:', error.message);
         }
     }
 
@@ -223,14 +223,14 @@ async function find(match, total) {
         updatedAt: new Date()
     };
 
-    if (match.link_id && env.REDIS_ENABLED && redis.client) {
+    if (match.link_id && env.REDIS_ENABLED && redis.isRedisReady()) {
         try {
             const key = redis.key.stats(match.link_id);
             // Longer cache TTL for expensive stats queries (5 minutes)
-            redis.client.set(key, JSON.stringify(response), "EX", 300);
+            await redis.safeRedisCommand('setex', key, 300, JSON.stringify(response));
         } catch (error) {
             // Redis not available, continue without cache
-            console.warn('⚠️ Redis not available for visit stats cache write');
+            console.warn('⚠️ Redis cache write failed for visit stats:', error.message);
         }
     }
 

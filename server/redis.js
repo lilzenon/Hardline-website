@@ -76,7 +76,6 @@ if (client) {
         console.warn('⚠️ Redis connection ended');
     });
 }
-}
 
 // CRITICAL FIX: Helper function to safely check Redis connection status
 function isRedisReady() {
@@ -106,24 +105,44 @@ const key = {
 };
 
 const remove = {
-    domain: (domain) => {
-        if (!domain || !client) return Promise.resolve();
-        return client.del(key.domain(domain.address));
+    domain: async(domain) => {
+        if (!domain || !isRedisReady()) return Promise.resolve();
+        try {
+            return await safeRedisCommand('del', key.domain(domain.address));
+        } catch (error) {
+            console.warn('⚠️ Redis cache delete failed for domain:', error.message);
+            return Promise.resolve();
+        }
     },
-    host: (host) => {
-        if (!host || !client) return Promise.resolve();
-        return client.del(key.host(host.address));
+    host: async(host) => {
+        if (!host || !isRedisReady()) return Promise.resolve();
+        try {
+            return await safeRedisCommand('del', key.host(host.address));
+        } catch (error) {
+            console.warn('⚠️ Redis cache delete failed for host:', error.message);
+            return Promise.resolve();
+        }
     },
-    link: (link) => {
-        if (!link || !client) return Promise.resolve();
-        return client.del(key.link(link.address, link.domain_id));
+    link: async(link) => {
+        if (!link || !isRedisReady()) return Promise.resolve();
+        try {
+            return await safeRedisCommand('del', key.link(link.address, link.domain_id));
+        } catch (error) {
+            console.warn('⚠️ Redis cache delete failed for link:', error.message);
+            return Promise.resolve();
+        }
     },
-    user: (user) => {
-        if (!user || !client) return Promise.resolve();
-        return Promise.all([
-            client.del(key.user(user.id)),
-            client.del(key.user(user.apikey)),
-        ]);
+    user: async(user) => {
+        if (!user || !isRedisReady()) return Promise.resolve();
+        try {
+            return await Promise.all([
+                safeRedisCommand('del', key.user(user.id)),
+                safeRedisCommand('del', key.user(user.apikey)),
+            ]);
+        } catch (error) {
+            console.warn('⚠️ Redis cache delete failed for user:', error.message);
+            return Promise.resolve();
+        }
     }
 };
 

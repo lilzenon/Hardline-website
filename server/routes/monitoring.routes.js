@@ -80,10 +80,10 @@ router.get('/database', async(req, res) => {
  */
 router.get('/redis', async(req, res) => {
     try {
-        if (!redis.client) {
+        if (!redis.isRedisReady()) {
             return res.json({
                 status: 'disabled',
-                message: 'Redis is not enabled',
+                message: 'Redis is not enabled or not ready',
                 timestamp: new Date().toISOString()
             });
         }
@@ -91,13 +91,13 @@ router.get('/redis', async(req, res) => {
         const startTime = Date.now();
 
         // Test Redis connection
-        await redis.client.ping();
+        await redis.safeRedisCommand('ping');
         const pingTime = Date.now() - startTime;
 
         // Get Redis info
-        const info = await redis.client.info();
-        const memory = await redis.client.info('memory');
-        const stats = await redis.client.info('stats');
+        const info = await redis.safeRedisCommand('info');
+        const memory = await redis.safeRedisCommand('info', 'memory');
+        const stats = await redis.safeRedisCommand('info', 'stats');
 
         // Get cache metrics from intelligent cache service
         const cacheMetrics = intelligentCache.getMetrics();

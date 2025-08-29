@@ -181,11 +181,15 @@ async function getAdmin(match, params) {
 }
 
 async function find(match) {
-    if (match.address && match.domain_id !== undefined && env.REDIS_ENABLED) {
-        // Use lowercase address for consistent cache keys
-        const key = redis.key.link(match.address.toLowerCase(), match.domain_id);
-        const cachedLink = await redis.client.get(key);
-        if (cachedLink) return JSON.parse(cachedLink);
+    if (match.address && match.domain_id !== undefined && env.REDIS_ENABLED && redis.isRedisReady()) {
+        try {
+            // Use lowercase address for consistent cache keys
+            const key = redis.key.link(match.address.toLowerCase(), match.domain_id);
+            const cachedLink = await redis.safeRedisCommand('get', key);
+            if (cachedLink) return JSON.parse(cachedLink);
+        } catch (error) {
+            console.warn('⚠️ Redis cache read failed for link, continuing with database query:', error.message);
+        }
     }
 
     const query = knex("links")
@@ -205,10 +209,14 @@ async function find(match) {
 
     const link = await query.first();
 
-    if (link && env.REDIS_ENABLED) {
-        // Use lowercase address for consistent cache keys
-        const key = redis.key.link(link.address.toLowerCase(), link.domain_id);
-        redis.client.set(key, JSON.stringify(link), "EX", 60 * 15);
+    if (link && env.REDIS_ENABLED && redis.isRedisReady()) {
+        try {
+            // Use lowercase address for consistent cache keys
+            const key = redis.key.link(link.address.toLowerCase(), link.domain_id);
+            await redis.safeRedisCommand('setex', key, 60 * 15, JSON.stringify(link));
+        } catch (error) {
+            console.warn('⚠️ Redis cache write failed for link:', error.message);
+        }
     }
 
     return link;
