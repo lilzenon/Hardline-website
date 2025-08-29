@@ -73,7 +73,7 @@ class VisitProcessor {
      */
     async processVisitImmediate(visitData) {
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Immediate visit processing timeout')), 3000);
+            setTimeout(() => reject(new Error('Immediate visit processing timeout')), 10000);
         });
 
         return Promise.race([
@@ -134,23 +134,47 @@ class VisitProcessor {
             console.warn('⚠️ Complex visit insert failed, trying simple approach:', error.message);
 
             try {
-                // Fallback: Simple insert without aggregation
+                // Fallback: Simple insert without aggregation - FIXED JSONB FORMAT
                 const knex = require("../knex");
-                await knex("visits").insert({
-                    [`br_${visitData.browser}`]: 1,
-                    [`os_${visitData.os}`]: 1,
+
+                // Map browser and OS to valid database columns
+                const browserMap = {
+                    'chrome': 'br_chrome',
+                    'firefox': 'br_firefox',
+                    'safari': 'br_safari',
+                    'edge': 'br_edge',
+                    'opera': 'br_opera',
+                    'ie': 'br_ie'
+                };
+
+                const osMap = {
+                    'windows': 'os_windows',
+                    'macos': 'os_macos',
+                    'linux': 'os_linux',
+                    'android': 'os_android',
+                    'ios': 'os_ios'
+                };
+
+                const browserColumn = browserMap[visitData.browser.toLowerCase()] || 'br_other';
+                const osColumn = osMap[visitData.os.toLowerCase()] || 'os_other';
+
+                const insertData = {
+                    [browserColumn]: 1,
+                    [osColumn]: 1,
                     total: 1,
                     link_id: visitData.link_id,
                     user_id: visitData.user_id,
-                    countries: JSON.stringify({
+                    countries: {
                         [visitData.country]: 1
-                    }),
-                    referrers: JSON.stringify({
+                    },
+                    referrers: {
                         [visitData.referrer]: 1
-                    }),
+                    },
                     created_at: new Date(),
                     updated_at: new Date()
-                });
+                };
+
+                await knex("visits").insert(insertData);
 
                 console.log('✅ Visit recorded with simple insert');
                 return true;
