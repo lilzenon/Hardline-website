@@ -27,8 +27,8 @@ const db = knex({
             lock_timeout: 10000, // 10 seconds - prevent indefinite lock waits
         }),
         pool: {
-            min: env.DB_POOL_MIN || 2, // Increased minimum for better availability
-            max: env.DB_POOL_MAX || 5, // Increased to 5 for better concurrency under load
+            min: env.DB_POOL_MIN || 1, // MEMORY OPTIMIZATION: Reduced for 500MB RAM limit
+            max: env.DB_POOL_MAX || 2, // MEMORY OPTIMIZATION: Reduced for 500MB RAM limit
             // TIMEOUT FIX: Optimized for 12-second frontend timeout resolution
             acquireTimeoutMillis: 8000, // Increased to 8s to prevent pool exhaustion
             createTimeoutMillis: 10000, // Increased to 10s for stable connections

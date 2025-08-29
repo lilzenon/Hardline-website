@@ -15,7 +15,7 @@ function error(error, req, res, _next) {
     }
 
     const message = error instanceof CustomError ? error.message : "An error occurred.";
-    const statusCode = error.statusCode ?? 500;
+    const statusCode = error.statusCode ? ? 500;
 
     if (req.isHTML && req.viewTemplate) {
         res.locals.error = message;
@@ -93,10 +93,30 @@ function rateLimit(params) {
     }
 
     let store = undefined;
-    if (env.REDIS_ENABLED) {
-        store = new RateLimitRedisStore({
-            sendCommand: (...args) => redis.client.call(...args),
-        })
+
+    // CRITICAL FIX: Only use Redis store if Redis is enabled and ready
+    if (env.REDIS_ENABLED && redis.isRedisReady()) {
+        try {
+            store = new RateLimitRedisStore({
+                sendCommand: (...args) => {
+                    // Use the safe Redis command helper
+                    if (redis.isRedisReady()) {
+                        return redis.client.call(...args);
+                    } else {
+                        // Fallback to memory store by throwing error that will be caught
+                        throw new Error('Redis client not ready');
+                    }
+                },
+            });
+            console.log('✅ Rate limiting using Redis store');
+        } catch (error) {
+            console.warn('⚠️ Failed to create Redis rate limit store, using memory store:', error.message);
+            store = undefined; // Fallback to memory store
+        }
+    } else {
+        if (env.REDIS_ENABLED) {
+            console.warn('⚠️ Redis enabled but not ready, using memory store for rate limiting');
+        }
     }
 
     return expressRateLimit({

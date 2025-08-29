@@ -23,7 +23,7 @@ const secureDbConfig = {
     user: process.env.USER_DB_USER || 'app_service_user',
     password: process.env.USER_DB_PASSWORD,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20, // Maximum number of connections
+    max: 2, // EMERGENCY: Reduced from 20 for 500MB RAM limit
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
     // Security settings
@@ -59,12 +59,12 @@ class SecureContactModel {
      */
     static async createContact(contactData, securityContext, accessReason) {
         const client = await securePool.connect();
-        
+
         try {
             // Set security context
             await securityContext.setContext(client);
             await client.query('SELECT set_config($1, $2, true)', ['app.access_reason', accessReason]);
-            
+
             // Validate required fields
             if (!contactData.email && !contactData.phone) {
                 throw new Error('Either email or phone is required');
@@ -114,12 +114,12 @@ class SecureContactModel {
      */
     static async findContactByEmail(email, securityContext, accessReason) {
         const client = await securePool.connect();
-        
+
         try {
             // Set security context
             await securityContext.setContext(client);
             await client.query('SELECT set_config($1, $2, true)', ['app.access_reason', accessReason]);
-            
+
             // Use secure search function
             const result = await client.query(`
                 SELECT contact_id, uuid, lifecycle_stage
@@ -145,11 +145,11 @@ class SecureContactModel {
      */
     static async getContactDetails(contactUuid, securityContext, accessReason) {
         const client = await securePool.connect();
-        
+
         try {
             // Set security context
             await securityContext.setContext(client);
-            
+
             // Validate access reason
             if (!accessReason || accessReason.length < 10) {
                 throw new Error('Access reason must be at least 10 characters');
@@ -183,11 +183,11 @@ class SecureContactModel {
      */
     static async updateContact(contactUuid, updateData, securityContext, updateReason) {
         const client = await securePool.connect();
-        
+
         try {
             // Set security context
             await securityContext.setContext(client);
-            
+
             // Validate update reason
             if (!updateReason || updateReason.length < 10) {
                 throw new Error('Update reason must be at least 10 characters');
@@ -227,11 +227,11 @@ class SecureContactModel {
      */
     static async markForDeletion(contactUuid, securityContext, deletionReason) {
         const client = await securePool.connect();
-        
+
         try {
             // Set security context
             await securityContext.setContext(client);
-            
+
             // Validate deletion reason
             if (!deletionReason || deletionReason.length < 10) {
                 throw new Error('Deletion reason must be at least 10 characters');
@@ -261,13 +261,13 @@ class SecureContactModel {
      */
     static async getAnalytics(securityContext, accessReason) {
         const client = await securePool.connect();
-        
+
         try {
             // Set security context for analytics
             await securityContext.setContext(client);
             await client.query('SELECT set_config($1, $2, true)', ['app.access_reason', accessReason]);
             await client.query('SELECT set_config($1, $2, true)', ['app.access_purpose', 'analytics']);
-            
+
             // Get analytics data from secure view
             const result = await client.query(`
                 SELECT 
@@ -304,7 +304,7 @@ class SecureContactModel {
      */
     static async getComplianceReport(securityContext) {
         const client = await securePool.connect();
-        
+
         try {
             // Only allow admin or auditor roles
             if (!['admin', 'auditor'].includes(securityContext.userRole)) {
@@ -314,7 +314,7 @@ class SecureContactModel {
             // Set security context
             await securityContext.setContext(client);
             await client.query('SELECT set_config($1, $2, true)', ['app.access_reason', 'Security compliance report generation']);
-            
+
             // Generate compliance report
             const result = await client.query(`
                 SELECT generate_security_compliance_report() as report
@@ -340,7 +340,7 @@ class SecureContactModel {
      */
     static async detectSuspiciousActivity(securityContext) {
         const client = await securePool.connect();
-        
+
         try {
             // Only allow admin or auditor roles
             if (!['admin', 'auditor'].includes(securityContext.userRole)) {
@@ -349,7 +349,7 @@ class SecureContactModel {
 
             // Set security context
             await securityContext.setContext(client);
-            
+
             // Detect suspicious activity
             const result = await client.query(`
                 SELECT alert_type, severity, description, affected_records, time_window
@@ -376,18 +376,18 @@ class SecureContactModel {
      */
     static async healthCheck() {
         const client = await securePool.connect();
-        
+
         try {
             // Test basic connectivity
             await client.query('SELECT 1');
-            
+
             // Test encryption functions
             const encryptTest = await client.query(`
                 SELECT 
                     encrypt_pii('test') IS NOT NULL as encryption_works,
                     decrypt_pii(encrypt_pii('test')) = 'test' as decryption_works
             `);
-            
+
             // Get connection pool status
             const poolStatus = {
                 totalConnections: securePool.totalCount,
@@ -417,13 +417,13 @@ class SecureContactModel {
 }
 
 // Graceful shutdown
-process.on('SIGINT', async () => {
+process.on('SIGINT', async() => {
     console.log('🔒 Closing secure database connections...');
     await securePool.end();
     process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
+process.on('SIGTERM', async() => {
     console.log('🔒 Closing secure database connections...');
     await securePool.end();
     process.exit(0);

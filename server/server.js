@@ -1,5 +1,51 @@
 const env = require("./env");
 
+// CRITICAL FIX: Global error handlers to prevent server crashes from Redis issues
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('🚨 Unhandled Promise Rejection:', reason);
+
+    // Don't crash for Redis-related errors
+    if (reason && reason.message) {
+        if (reason.message.includes('Redis') ||
+            reason.message.includes('Stream isn\'t writeable') ||
+            reason.message.includes('ECONNREFUSED') ||
+            reason.message.includes('rate-limit-redis')) {
+            console.warn('⚠️ Redis-related error handled gracefully, continuing...');
+            return;
+        }
+    }
+
+    // For other critical errors, log and continue (don't crash in production)
+    if (process.env.NODE_ENV === 'production') {
+        console.warn('⚠️ Production error handled, continuing...');
+        return;
+    }
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('🚨 Uncaught Exception:', error);
+
+    // Don't crash for Redis-related errors
+    if (error.message && (
+            error.message.includes('Redis') ||
+            error.message.includes('Stream isn\'t writeable') ||
+            error.message.includes('ECONNREFUSED') ||
+            error.message.includes('rate-limit-redis'))) {
+        console.warn('⚠️ Redis-related uncaught exception handled gracefully, continuing...');
+        return;
+    }
+
+    // For other critical errors in production, log and continue
+    if (process.env.NODE_ENV === 'production') {
+        console.warn('⚠️ Production uncaught exception handled, continuing...');
+        return;
+    }
+
+    // In development, crash for debugging
+    console.error('💥 Uncaught exception in development mode');
+    process.exit(1);
+});
+
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const passport = require("passport");

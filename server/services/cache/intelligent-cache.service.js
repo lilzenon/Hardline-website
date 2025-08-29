@@ -5,14 +5,14 @@ class IntelligentCacheService {
     constructor() {
         this.enabled = env.REDIS_ENABLED;
         this.defaultTTL = 300; // 5 minutes
-        this.longTTL = 1800;   // 30 minutes
-        this.shortTTL = 60;    // 1 minute
-        
+        this.longTTL = 1800; // 30 minutes
+        this.shortTTL = 60; // 1 minute
+
         // Cache warming configuration
         this.warmingEnabled = true;
         this.warmingInterval = 240000; // 4 minutes (before 5-minute cache expires)
         this.warmingBatchSize = 10;
-        
+
         // Performance tracking
         this.metrics = {
             hits: 0,
@@ -20,10 +20,11 @@ class IntelligentCacheService {
             errors: 0,
             warmingJobs: 0
         };
-        
-        if (this.enabled && this.warmingEnabled) {
-            this.startCacheWarming();
-        }
+
+        // MEMORY OPTIMIZATION: Disable cache warming to reduce RAM usage
+        // if (this.enabled && this.warmingEnabled) {
+        //     this.startCacheWarming();
+        // }
     }
 
     /**
@@ -81,22 +82,22 @@ class IntelligentCacheService {
      */
     selectTTL(key, data) {
         const dataSize = JSON.stringify(data).length;
-        
+
         // Expensive queries get longer TTL
         if (key.includes('stats') || key.includes('analytics')) {
             return this.longTTL;
         }
-        
+
         // Large datasets get shorter TTL to prevent memory issues
         if (dataSize > 50000) { // 50KB
             return this.shortTTL;
         }
-        
+
         // User data gets medium TTL
         if (key.includes('user') || key.includes('link')) {
             return this.defaultTTL;
         }
-        
+
         return this.defaultTTL;
     }
 
@@ -107,7 +108,7 @@ class IntelligentCacheService {
         try {
             // Try cache first
             let data = await this.get(key);
-            
+
             if (data) {
                 console.log(`📊 Cache hit: ${key}`);
                 return data;
@@ -163,8 +164,8 @@ class IntelligentCacheService {
      */
     startCacheWarming() {
         console.log('🔥 Starting intelligent cache warming...');
-        
-        setInterval(async () => {
+
+        setInterval(async() => {
             try {
                 await this.performCacheWarming();
             } catch (error) {
@@ -185,10 +186,10 @@ class IntelligentCacheService {
         try {
             // Warm popular link stats
             await this.warmPopularLinkStats();
-            
+
             // Warm user analytics for active users
             await this.warmActiveUserAnalytics();
-            
+
             console.log('✅ Cache warming completed');
         } catch (error) {
             console.error('🚨 Cache warming failed:', error);
@@ -201,7 +202,7 @@ class IntelligentCacheService {
     async warmPopularLinkStats() {
         try {
             const knex = require("../../knex");
-            
+
             // Get top 10 most visited links from last 24 hours
             const popularLinks = await knex("links")
                 .select("id")
@@ -212,7 +213,7 @@ class IntelligentCacheService {
             for (const link of popularLinks) {
                 const key = redis.key.stats(link.id);
                 const exists = await redis.client.exists(key);
-                
+
                 if (!exists) {
                     // Warm the cache by triggering stats computation
                     const visitQueries = require("../../queries/visit.queries");
@@ -231,7 +232,7 @@ class IntelligentCacheService {
     async warmActiveUserAnalytics() {
         try {
             const knex = require("../../knex");
-            
+
             // Get recently active users
             const activeUsers = await knex("users")
                 .select("id")
@@ -241,7 +242,7 @@ class IntelligentCacheService {
             for (const user of activeUsers) {
                 const key = this.generateKey('analytics', user.id, 'dashboard');
                 const exists = await redis.client.exists(key);
-                
+
                 if (!exists) {
                     // Warm user analytics cache
                     console.log(`🔥 Warmed analytics cache for user ${user.id}`);
@@ -258,7 +259,7 @@ class IntelligentCacheService {
     getMetrics() {
         const total = this.metrics.hits + this.metrics.misses;
         const hitRate = total > 0 ? ((this.metrics.hits / total) * 100).toFixed(2) : 0;
-        
+
         return {
             ...this.metrics,
             hitRate: `${hitRate}%`,
@@ -289,14 +290,14 @@ class IntelligentCacheService {
 
         try {
             await redis.client.ping();
-            return { 
-                status: 'healthy', 
+            return {
+                status: 'healthy',
                 message: 'Cache service is operational',
                 metrics: this.getMetrics()
             };
         } catch (error) {
-            return { 
-                status: 'unhealthy', 
+            return {
+                status: 'unhealthy',
                 message: `Cache service error: ${error.message}`,
                 error: error.message
             };

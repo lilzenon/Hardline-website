@@ -32,8 +32,8 @@ if (env.CRM_DB_HOST && env.CRM_DB_HOST !== "" &&
                 password: env.CRM_DB_PASSWORD,
                 ssl: env.CRM_DB_SSL !== 'false', // Default to true for production
                 pool: {
-                    min: env.CRM_DB_POOL_MIN || 2,
-                    max: env.CRM_DB_POOL_MAX || 10
+                    min: env.CRM_DB_POOL_MIN || 0, // EMERGENCY: No minimum for 500MB RAM limit
+                    max: env.CRM_DB_POOL_MAX || 1, // EMERGENCY: Maximum 1 connection for 500MB RAM limit
                 }
             },
             useNullAsDefault: true,
