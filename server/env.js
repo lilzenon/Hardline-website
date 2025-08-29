@@ -150,6 +150,13 @@ const spec = {
     INSTAGRAM_WEBHOOK_VERIFY_TOKEN: str({ default: "" }),
     FACEBOOK_WEBHOOK_VERIFY_TOKEN: str({ default: "" }),
     BASE_URL: str({ default: "" }),
+
+    // 🔴 REDIS CONFIGURATION (CRITICAL FOR VISIT PROCESSING)
+    REDIS_ENABLED: bool({ default: false }),
+    REDIS_HOST: str({ default: "127.0.0.1" }),
+    REDIS_PORT: num({ default: 6379 }),
+    REDIS_PASSWORD: str({ default: "" }),
+    REDIS_DB: num({ default: 0 }),
 };
 
 for (const key in spec) {

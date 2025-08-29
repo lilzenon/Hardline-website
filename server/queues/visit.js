@@ -22,48 +22,92 @@ function filterInOs(agent) {
 
 module.exports = async function({ data }) {
     try {
-        // CRITICAL FIX: Add timeout wrapper for entire visit processing
-        const processVisit = async() => {
-            const tasks = [];
+        // CRITICAL FIX: Ultra-fast processing with multiple fallback strategies
+        const processVisitUltraFast = async() => {
+            const results = [];
 
-            tasks.push(query.link.incrementVisit({ id: data.link.id }));
+            // Strategy 1: Try link increment with 2-second timeout
+            try {
+                // CRITICAL FIX: Ensure link ID is properly formatted
+                const linkId = typeof data.link.id === 'string' ? data.link.id : String(data.link.id);
 
-            // the following line is for backward compatibility
-            // used to send the whole header to get the user agent
-            const userAgent = data.userAgent || (data.headers && data.headers["user-agent"]);
-            const parser = new UAParser(userAgent);
-            const agent = parser.getResult();
-            const [browser = "Other"] = browsersList.filter(filterInBrowser(agent));
-            const [os = "Other"] = osList.filter(filterInOs(agent));
-            const referrer =
-                data.referrer && removeWww(URL.parse(data.referrer).hostname);
+                const linkIncrementPromise = query.link.incrementVisit({ id: linkId });
+                const linkTimeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Link increment timeout')), 2000)
+                );
 
-            const geoData = geoip.lookup(data.ip);
-            const country = data.country || (geoData && geoData.country);
+                const linkResult = await Promise.race([linkIncrementPromise, linkTimeout]);
+                results.push(linkResult);
+                console.log('✅ Link visit incremented successfully');
+            } catch (error) {
+                console.warn('⚠️ Link increment failed, continuing:', error.message);
+                // Continue processing even if link increment fails
+            }
 
-            tasks.push(
-                query.visit.add({
+            // Strategy 2: Try simplified visit record with 3-second timeout
+            try {
+                const userAgent = data.userAgent || (data.headers && data.headers["user-agent"]);
+                const parser = new UAParser(userAgent);
+                const agent = parser.getResult();
+                const [browser = "Other"] = browsersList.filter(filterInBrowser(agent));
+                const [os = "Other"] = osList.filter(filterInOs(agent));
+                const referrer = data.referrer && removeWww(URL.parse(data.referrer).hostname);
+                const geoData = geoip.lookup(data.ip);
+                const country = data.country || (geoData && geoData.country);
+
+                // Use simplified visit insertion with proper ID handling
+                const visitData = {
                     browser: browser.toLowerCase(),
                     country: country || "Unknown",
-                    link_id: data.link.id,
-                    user_id: data.link.user_id,
+                    link_id: typeof data.link.id === 'string' ? data.link.id : String(data.link.id),
+                    user_id: typeof data.link.user_id === 'string' ? data.link.user_id : String(data.link.user_id),
                     os: os.toLowerCase().replace(/\s/gi, ""),
                     referrer: (referrer && referrer.replace(/\./gi, "[dot]")) || "Direct"
-                })
-            );
+                };
 
-            return Promise.all(tasks);
+                const visitPromise = query.visit.add(visitData);
+                const visitTimeout = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Visit add timeout')), 3000)
+                );
+
+                const visitResult = await Promise.race([visitPromise, visitTimeout]);
+                results.push(visitResult);
+                console.log('✅ Visit record added successfully');
+            } catch (error) {
+                console.warn('⚠️ Visit record failed, trying fallback:', error.message);
+
+                // Strategy 3: Ultra-simple direct database insert with proper ID handling
+                try {
+                    const knex = require("../knex");
+                    await knex("visits").insert({
+                        link_id: typeof data.link.id === 'string' ? data.link.id : String(data.link.id),
+                        user_id: typeof data.link.user_id === 'string' ? data.link.user_id : String(data.link.user_id),
+                        total: 1,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    });
+                    console.log('✅ Fallback visit insert successful');
+                } catch (fallbackError) {
+                    console.error('🚨 All visit processing strategies failed:', fallbackError.message);
+                }
+            }
+
+            return results;
         };
 
-        // CRITICAL FIX: Add 10-second timeout to prevent hanging workers
+        // CRITICAL FIX: Reduce overall timeout to 5 seconds for faster failure detection
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Visit processing timeout')), 10000);
+            setTimeout(() => reject(new Error('Visit processing timeout')), 5000);
         });
 
-        return await Promise.race([processVisit(), timeoutPromise]);
+        return await Promise.race([processVisitUltraFast(), timeoutPromise]);
 
     } catch (error) {
-        console.error('🚨 Visit processing error:', error.message);
+        if (error.message.includes('timeout')) {
+            console.error('🚨 Visit worker error: Command timed out (5s limit exceeded)');
+        } else {
+            console.error('🚨 Visit processing error:', error.message);
+        }
         // Don't throw - let the worker continue with other jobs
         return null;
     }

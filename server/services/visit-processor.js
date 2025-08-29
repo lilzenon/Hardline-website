@@ -38,10 +38,10 @@ class VisitProcessor {
         this.retryDelay = 1000; // 1 second
         this.batchSize = 5;
         this.processInterval = 2000; // Process every 2 seconds
-        
+
         // Start background processor
         this.startBackgroundProcessor();
-        
+
         console.log('✅ Robust Visit Processor initialized');
     }
 
@@ -56,14 +56,14 @@ class VisitProcessor {
             return result;
         } catch (error) {
             console.warn('⚠️ Immediate processing failed, queuing for batch:', error.message);
-            
+
             // Strategy 2: Add to background queue
             this.processingQueue.push({
                 data: visitData,
                 attempts: 0,
                 addedAt: Date.now()
             });
-            
+
             console.log(`📊 Visit queued for background processing (queue size: ${this.processingQueue.length})`);
         }
     }
@@ -88,8 +88,9 @@ class VisitProcessor {
     async processVisitCore(visitData) {
         const tasks = [];
 
-        // 1. Increment link visit count
-        tasks.push(query.link.incrementVisit({ id: visitData.link.id }));
+        // 1. Increment link visit count with proper ID handling
+        const linkId = typeof visitData.link.id === 'string' ? visitData.link.id : String(visitData.link.id);
+        tasks.push(query.link.incrementVisit({ id: linkId }));
 
         // 2. Parse user agent
         const userAgent = visitData.userAgent || (visitData.headers && visitData.headers["user-agent"]);
@@ -97,7 +98,7 @@ class VisitProcessor {
         const agent = parser.getResult();
         const [browser = "Other"] = browsersList.filter(filterInBrowser(agent));
         const [os = "Other"] = osList.filter(filterInOs(agent));
-        
+
         // 3. Process referrer
         const referrer = visitData.referrer && removeWww(URL.parse(visitData.referrer).hostname);
 
@@ -105,13 +106,13 @@ class VisitProcessor {
         const geoData = geoip.lookup(visitData.ip);
         const country = visitData.country || (geoData && geoData.country);
 
-        // 5. Add visit record with simplified approach
+        // 5. Add visit record with simplified approach and proper ID handling
         tasks.push(
             this.addVisitRecord({
                 browser: browser.toLowerCase(),
                 country: country || "Unknown",
-                link_id: visitData.link.id,
-                user_id: visitData.link.user_id,
+                link_id: typeof visitData.link.id === 'string' ? visitData.link.id : String(visitData.link.id),
+                user_id: typeof visitData.link.user_id === 'string' ? visitData.link.user_id : String(visitData.link.user_id),
                 os: os.toLowerCase().replace(/\s/gi, ""),
                 referrer: (referrer && referrer.replace(/\./gi, "[dot]")) || "Direct"
             })
@@ -131,7 +132,7 @@ class VisitProcessor {
         } catch (error) {
             // If complex aggregation fails, try simple insert
             console.warn('⚠️ Complex visit insert failed, trying simple approach:', error.message);
-            
+
             try {
                 // Fallback: Simple insert without aggregation
                 const knex = require("../knex");
@@ -141,12 +142,16 @@ class VisitProcessor {
                     total: 1,
                     link_id: visitData.link_id,
                     user_id: visitData.user_id,
-                    countries: JSON.stringify({ [visitData.country]: 1 }),
-                    referrers: JSON.stringify({ [visitData.referrer]: 1 }),
+                    countries: JSON.stringify({
+                        [visitData.country]: 1
+                    }),
+                    referrers: JSON.stringify({
+                        [visitData.referrer]: 1
+                    }),
                     created_at: new Date(),
                     updated_at: new Date()
                 });
-                
+
                 console.log('✅ Visit recorded with simple insert');
                 return true;
             } catch (fallbackError) {
@@ -160,13 +165,13 @@ class VisitProcessor {
      * Background processor for queued visits
      */
     startBackgroundProcessor() {
-        setInterval(async () => {
+        setInterval(async() => {
             if (this.isProcessing || this.processingQueue.length === 0) {
                 return;
             }
 
             this.isProcessing = true;
-            
+
             try {
                 const batch = this.processingQueue.splice(0, this.batchSize);
                 console.log(`🔄 Processing visit batch of ${batch.length} items`);
@@ -177,13 +182,13 @@ class VisitProcessor {
                         console.log('✅ Background visit processed successfully');
                     } catch (error) {
                         item.attempts++;
-                        
+
                         if (item.attempts < this.maxRetries) {
                             // Retry later
                             setTimeout(() => {
                                 this.processingQueue.push(item);
                             }, this.retryDelay * item.attempts);
-                            
+
                             console.warn(`⚠️ Visit processing failed, will retry (attempt ${item.attempts}/${this.maxRetries}):`, error.message);
                         } else {
                             console.error(`🚨 Visit processing failed permanently after ${this.maxRetries} attempts:`, error.message);
@@ -205,7 +210,7 @@ class VisitProcessor {
         return {
             queueSize: this.processingQueue.length,
             isProcessing: this.isProcessing,
-            oldestQueueItem: this.processingQueue.length > 0 ? 
+            oldestQueueItem: this.processingQueue.length > 0 ?
                 Date.now() - this.processingQueue[0].addedAt : 0
         };
     }
