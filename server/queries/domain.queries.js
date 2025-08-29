@@ -36,7 +36,7 @@ async function add(params) {
 
     const existingDomain = await knex("domains").where("address", params.address).first();
 
-    let id = existingDomain ? .id;
+    let id = existingDomain ?.id;
 
     const newDomain = {
         address: params.address,
@@ -147,8 +147,8 @@ async function getAdmin(match, params) {
         .groupBy("l.links_count")
         .groupBy("users.email");
 
-    if (params ? .user) {
-        const id = parseInt(params ? .user);
+    if (params ?.user) {
+        const id = parseInt(params ?.user);
         if (Number.isNaN(id)) {
             query[knex.compatibleILIKE]("users.email", "%" + params.user + "%");
         } else {
@@ -156,15 +156,15 @@ async function getAdmin(match, params) {
         }
     }
 
-    if (params ? .search) {
+    if (params ?.search) {
         query[knex.compatibleILIKE](
             knex.raw("concat_ws(' ', domains.address, domains.homepage)"),
             "%" + params.search + "%"
         );
     }
 
-    if (params ? .links !== undefined) {
-        query.andWhere("links_count", params ? .links ? "is not" : "is", null);
+    if (params ?.links !== undefined) {
+        query.andWhere("links_count", params ?.links ? "is not" : "is", null);
     }
 
     query.leftJoin(
@@ -185,8 +185,8 @@ async function totalAdmin(match, params) {
         query.andWhere(key, ...(Array.isArray(value) ? value : [value]));
     });
 
-    if (params ? .user) {
-        const id = parseInt(params ? .user);
+    if (params ?.user) {
+        const id = parseInt(params ?.user);
         if (Number.isNaN(id)) {
             query[knex.compatibleILIKE]("users.email", "%" + params.user + "%");
         } else {
@@ -194,20 +194,20 @@ async function totalAdmin(match, params) {
         }
     }
 
-    if (params ? .search) {
+    if (params ?.search) {
         query[knex.compatibleILIKE](
             knex.raw("concat_ws(' ', domains.address, domains.homepage)"),
             "%" + params.search + "%"
         );
     }
 
-    if (params ? .links !== undefined) {
+    if (params ?.links !== undefined) {
         query.leftJoin(
             knex("links").select("domain_id").count("* as links_count").groupBy("domain_id").as("l"),
             "domains.id",
             "l.domain_id"
         );
-        query.andWhere("links_count", params ? .links ? "is not" : "is", null);
+        query.andWhere("links_count", params ?.links ? "is not" : "is", null);
     }
 
     query.leftJoin("users", "domains.user_id", "users.id");

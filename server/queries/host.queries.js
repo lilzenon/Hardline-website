@@ -34,7 +34,7 @@ async function add(params) {
 
     const existingHost = await knex("hosts").where("address", params.address).first();
 
-    let id = existingHost ? .id;
+    let id = existingHost ?.id;
 
     const newHost = {
         address: params.address,
