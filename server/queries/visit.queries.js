@@ -65,7 +65,7 @@ async function add(params) {
                     })
                 }),
                 new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Visit update timeout')), 2000)
+                    setTimeout(() => reject(new Error('Visit update timeout')), 8000)
                 )
             ]);
         } else {
@@ -85,7 +85,7 @@ async function add(params) {
                     user_id: data.user_id,
                 }),
                 new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Visit insert timeout')), 2000)
+                    setTimeout(() => reject(new Error('Visit insert timeout')), 8000)
                 )
             ]);
         }

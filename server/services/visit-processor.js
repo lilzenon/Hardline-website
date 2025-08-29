@@ -88,8 +88,8 @@ class VisitProcessor {
     async processVisitCore(visitData) {
         const tasks = [];
 
-        // 1. Increment link visit count with proper ID handling
-        const linkId = typeof visitData.link.id === 'string' ? visitData.link.id : String(visitData.link.id);
+        // 1. Increment link visit count with proper INTEGER ID handling
+        const linkId = typeof visitData.link.id === 'number' ? visitData.link.id : parseInt(visitData.link.id, 10);
         tasks.push(query.link.incrementVisit({ id: linkId }));
 
         // 2. Parse user agent
@@ -106,13 +106,13 @@ class VisitProcessor {
         const geoData = geoip.lookup(visitData.ip);
         const country = visitData.country || (geoData && geoData.country);
 
-        // 5. Add visit record with simplified approach and proper ID handling
+        // 5. Add visit record with simplified approach and proper INTEGER ID handling
         tasks.push(
             this.addVisitRecord({
                 browser: browser.toLowerCase(),
                 country: country || "Unknown",
-                link_id: typeof visitData.link.id === 'string' ? visitData.link.id : String(visitData.link.id),
-                user_id: typeof visitData.link.user_id === 'string' ? visitData.link.user_id : String(visitData.link.user_id),
+                link_id: typeof visitData.link.id === 'number' ? visitData.link.id : parseInt(visitData.link.id, 10),
+                user_id: typeof visitData.link.user_id === 'number' ? visitData.link.user_id : parseInt(visitData.link.user_id, 10),
                 os: os.toLowerCase().replace(/\s/gi, ""),
                 referrer: (referrer && referrer.replace(/\./gi, "[dot]")) || "Direct"
             })

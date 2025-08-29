@@ -28,19 +28,19 @@ module.exports = async function({ data }) {
 
             // Strategy 1: Try link increment with 2-second timeout
             try {
-                // CRITICAL FIX: Ensure link ID is properly formatted
-                const linkId = typeof data.link.id === 'string' ? data.link.id : String(data.link.id);
+                // CRITICAL FIX: Ensure link ID is properly formatted as INTEGER
+                const linkId = typeof data.link.id === 'number' ? data.link.id : parseInt(data.link.id, 10);
 
                 const linkIncrementPromise = query.link.incrementVisit({ id: linkId });
                 const linkTimeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Link increment timeout')), 2000)
+                    setTimeout(() => reject(new Error('Link increment timeout')), 5000)
                 );
 
                 const linkResult = await Promise.race([linkIncrementPromise, linkTimeout]);
                 results.push(linkResult);
-                console.log('✅ Link visit incremented successfully');
+                console.log('✅ Dashboard link visit incremented successfully');
             } catch (error) {
-                console.warn('⚠️ Link increment failed, continuing:', error.message);
+                console.warn('⚠️ Dashboard link increment failed, continuing:', error.message);
                 // Continue processing even if link increment fails
             }
 
@@ -55,19 +55,19 @@ module.exports = async function({ data }) {
                 const geoData = geoip.lookup(data.ip);
                 const country = data.country || (geoData && geoData.country);
 
-                // Use simplified visit insertion with proper ID handling
+                // Use simplified visit insertion with proper INTEGER ID handling
                 const visitData = {
                     browser: browser.toLowerCase(),
                     country: country || "Unknown",
-                    link_id: typeof data.link.id === 'string' ? data.link.id : String(data.link.id),
-                    user_id: typeof data.link.user_id === 'string' ? data.link.user_id : String(data.link.user_id),
+                    link_id: typeof data.link.id === 'number' ? data.link.id : parseInt(data.link.id, 10),
+                    user_id: typeof data.link.user_id === 'number' ? data.link.user_id : parseInt(data.link.user_id, 10),
                     os: os.toLowerCase().replace(/\s/gi, ""),
                     referrer: (referrer && referrer.replace(/\./gi, "[dot]")) || "Direct"
                 };
 
                 const visitPromise = query.visit.add(visitData);
                 const visitTimeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Visit add timeout')), 3000)
+                    setTimeout(() => reject(new Error('Visit add timeout')), 8000)
                 );
 
                 const visitResult = await Promise.race([visitPromise, visitTimeout]);
@@ -80,8 +80,8 @@ module.exports = async function({ data }) {
                 try {
                     const knex = require("../knex");
                     await knex("visits").insert({
-                        link_id: typeof data.link.id === 'string' ? data.link.id : String(data.link.id),
-                        user_id: typeof data.link.user_id === 'string' ? data.link.user_id : String(data.link.user_id),
+                        link_id: typeof data.link.id === 'number' ? data.link.id : parseInt(data.link.id, 10),
+                        user_id: typeof data.link.user_id === 'number' ? data.link.user_id : parseInt(data.link.user_id, 10),
                         total: 1,
                         created_at: new Date(),
                         updated_at: new Date()
@@ -95,9 +95,9 @@ module.exports = async function({ data }) {
             return results;
         };
 
-        // CRITICAL FIX: Reduce overall timeout to 5 seconds for faster failure detection
+        // CRITICAL FIX: Increase overall timeout to 12 seconds to match database configuration
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Visit processing timeout')), 5000);
+            setTimeout(() => reject(new Error('Visit processing timeout')), 12000);
         });
 
         return await Promise.race([processVisitUltraFast(), timeoutPromise]);
