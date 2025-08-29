@@ -1,5 +1,15 @@
-const env = require("./env");
+// 🚀 STARTUP DEBUGGING: Server initialization begins
+console.log('🚀 Starting KUTT Homepage Server...');
+console.log('📊 Environment:', process.env.NODE_ENV || 'development');
+console.log('🔌 Target Port:', process.env.PORT || 3000);
+console.log('⏰ Startup Time:', new Date().toISOString());
 
+console.log('✅ Step 1: Loading environment configuration...');
+const env = require("./env");
+console.log('✅ Environment configuration loaded successfully');
+console.log('📊 Final Port Configuration:', env.PORT);
+
+console.log('✅ Step 2: Setting up global error handlers...');
 // CRITICAL FIX: Global error handlers to prevent server crashes from Redis issues
 process.on('unhandledRejection', (reason, promise) => {
     console.error('🚨 Unhandled Promise Rejection:', reason);
@@ -46,6 +56,7 @@ process.on('uncaughtException', (error) => {
     process.exit(1);
 });
 
+console.log('✅ Step 3: Loading core dependencies...');
 const cookieParser = require("cookie-parser");
 const session = require("express-session");
 const passport = require("passport");
@@ -56,7 +67,9 @@ const path = require("node:path");
 const fs = require("node:fs");
 const mime = require("mime-types");
 const hbs = require("hbs");
+console.log('✅ Core dependencies loaded successfully');
 
+console.log('✅ Step 4: Loading services and middleware...');
 // Session store service
 const sessionStore = require("./services/session/session-store.service");
 const sessionSecurity = require("./services/session/session-security.service");
@@ -66,12 +79,17 @@ const securityHeaders = require("./middleware/security-headers.middleware");
 const secureErrorHandler = require("./middleware/secure-error-handler.middleware");
 const databaseSecurity = require("./middleware/database-security.middleware");
 const { securityMonitor } = require("./middleware/security-monitoring.middleware");
+console.log('✅ Services and middleware loaded successfully');
 
+console.log('✅ Step 5: Loading handlers and utilities...');
 const helpers = require("./handlers/helpers.handler");
 const renders = require("./handlers/renders.handler");
 const asyncHandler = require("./utils/asyncHandler");
 const locals = require("./handlers/locals.handler");
 const links = require("./handlers/links.handler");
+console.log('✅ Handlers and utilities loaded successfully');
+
+console.log('✅ Step 6: Loading routes and utilities...');
 // Force clear all route-related module cache
 console.log('🔄 Clearing route module cache...');
 Object.keys(require.cache).forEach(key => {
@@ -133,11 +151,13 @@ if (env.NODE_APP_INSTANCE === 0) {
     require("./cron");
 }
 
+console.log('✅ Step 7: Initializing passport and Express app...');
 // intialize passport authentication library
 require("./passport");
 
 // create express app
 const app = express();
+console.log('✅ Express app created successfully');
 
 // this tells the express app that it's running behind a proxy server
 // and thus it should get the IP address from the proxy server
@@ -863,6 +883,8 @@ secureErrorHandler.initializeSecureErrorHandling();
 // Initialize database security
 databaseSecurity.initializeDatabaseSecurity();
 
+console.log('🎯 Step 8: Starting server on port:', env.PORT);
+console.log('🔌 About to bind to PORT environment variable...');
 app.listen(env.PORT, () => {
     console.log(`> Ready on http://localhost:${env.PORT}`);
     console.log(`🔍 Optimized logging active | Level: ${process.env.LOG_LEVEL || 'NORMAL'}`);
