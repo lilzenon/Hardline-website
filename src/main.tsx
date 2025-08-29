@@ -11,9 +11,13 @@ import { SEOProvider, MaintenanceMode, SEODebug } from './react/contexts/SEOCont
 // Initialize consolidated analytics system FIRST
 import { initializeAnalytics } from './lib/analytics/beacon';
 import { initializeCleanup } from './utils/cleanup';
+import { initializeMobileOptimizations } from './utils/mobileOptimization';
 
 // Initialize cleanup utilities to remove old blob URLs
 initializeCleanup();
+
+// Initialize mobile optimizations for better mobile performance
+initializeMobileOptimizations();
 
 // Initialize analytics with proper configuration
 initializeAnalytics({

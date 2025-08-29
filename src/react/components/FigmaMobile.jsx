@@ -3,6 +3,8 @@ import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
 import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
+import useMobileLifecycle from '../hooks/useMobileLifecycle';
+import { mobileDebounce, mobileThrottle, memoryManager } from '../../utils/mobileOptimization';
 
 // Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
@@ -14,6 +16,9 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   const contentCheckInterval = useRef(null);
   const maxRetries = 2;
   const contentCheckTimeout = 2000; // 2 seconds to detect content (faster)
+
+  // Mobile lifecycle management for this component
+  const mobileLifecycle = useMobileLifecycle();
 
   // Build Laylo URL with parameters
   const layloUrl = useMemo(() => {
@@ -101,14 +106,14 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     // Check immediately
     checkContent();
 
-    // Then check every 100ms (faster polling)
-    contentCheckInterval.current = setInterval(checkContent, 100);
+    // Then check every 100ms (faster polling) - using mobile lifecycle management
+    contentCheckInterval.current = mobileLifecycle.createInterval(checkContent, 100);
 
-    // Timeout after 2 seconds (faster timeout)
-    setTimeout(() => {
+    // Timeout after 2 seconds (faster timeout) - using mobile lifecycle management
+    mobileLifecycle.createTimer(() => {
       if (contentCheckInterval.current && !contentLoaded) {
         console.warn('⚠️ Laylo content detection timeout');
-        clearInterval(contentCheckInterval.current);
+        mobileLifecycle.clearInterval(contentCheckInterval.current);
         contentCheckInterval.current = null;
 
         // Retry if we haven't exceeded max retries
@@ -118,8 +123,8 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
           setIframeReady(false);
           setContentLoaded(false);
 
-          // Recreate iframe after a shorter delay
-          setTimeout(() => {
+          // Recreate iframe after a shorter delay - using mobile lifecycle management
+          mobileLifecycle.createTimer(() => {
             if (iframeRef.current) {
               iframeRef.current.src = layloUrl + '&_retry=' + Date.now();
             }
@@ -153,23 +158,23 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     // Check immediately
     if (checkSDK()) return;
 
-    // Poll every 50ms until SDK is ready (faster polling)
-    const interval = setInterval(() => {
+    // Poll every 50ms until SDK is ready (faster polling) - using mobile lifecycle management
+    const interval = mobileLifecycle.createInterval(() => {
       if (checkSDK()) {
-        clearInterval(interval);
+        mobileLifecycle.clearInterval(interval);
       }
     }, 50);
 
-    // Timeout after 3 seconds (much faster)
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
+    // Timeout after 3 seconds (much faster) - using mobile lifecycle management
+    const timeout = mobileLifecycle.createTimer(() => {
+      mobileLifecycle.clearInterval(interval);
       console.warn('⚠️ Laylo SDK initialization timeout, proceeding anyway');
       setLayloReady(true);
     }, 3000);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
+      mobileLifecycle.clearInterval(interval);
+      mobileLifecycle.clearTimer(timeout);
     };
   }, [layloReady, checkLayloSDKReady]);
 
@@ -177,10 +182,10 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   useEffect(() => {
     return () => {
       if (contentCheckInterval.current) {
-        clearInterval(contentCheckInterval.current);
+        mobileLifecycle.clearInterval(contentCheckInterval.current);
       }
     };
-  }, []);
+  }, [mobileLifecycle]);
 
   // Only render iframe when Laylo SDK is ready
   if (!layloReady) {
@@ -672,6 +677,9 @@ const FigmaMobile = () => {
   // Initialize analytics
   const { trackEvent, trackLinkClick } = useAnalytics();
 
+  // Initialize mobile lifecycle management for the main component
+  const mobileLifecycle = useMobileLifecycle();
+
   // Privacy consent state
   const [consentGiven, setConsentGiven] = useState(false);
 
@@ -694,8 +702,8 @@ const FigmaMobile = () => {
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
 
   useEffect(() => {
-    // Start with thumbnail for faster loading, then auto-load video after delay
-    setTimeout(() => {
+    // Start with thumbnail for faster loading, then auto-load video after delay - using mobile lifecycle
+    mobileLifecycle.createTimer(() => {
       setShowYoutubeThumbnail(false);
       setShouldLoadYoutube(true);
     }, 2000); // Load actual video after 2 seconds for better perceived performance
@@ -1348,12 +1356,12 @@ const FigmaMobile = () => {
 
   // Animate drawer to collapsed state after component mounts (show text only, no iframe)
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = mobileLifecycle.createTimer(() => {
       setDrawerFullyClosed(false);
       setDrawerExpanded(false); // Start in collapsed state - text only, no iframe
     }, 500); // Wait 500ms then animate to collapsed state
 
-    return () => clearTimeout(timer);
+    return () => mobileLifecycle.clearTimer(timer);
   }, []);
 
   // Detect connection speed for adaptive video quality
@@ -1957,8 +1965,8 @@ const FigmaMobile = () => {
       if (rafId) cancelAnimationFrame(rafId);
       if (timeoutId) clearTimeout(timeoutId);
 
-      // Debounce viewport changes to prevent excessive reflows
-      timeoutId = setTimeout(() => {
+      // Debounce viewport changes to prevent excessive reflows - using mobile lifecycle
+      timeoutId = mobileLifecycle.createTimer(() => {
         rafId = requestAnimationFrame(() => {
           const vh = window.innerHeight * 0.01;
           document.documentElement.style.setProperty('--vh', `${vh}px`);

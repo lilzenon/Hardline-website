@@ -4,6 +4,8 @@ import FigmaMobile from './FigmaMobile';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useSEO } from '../hooks/useSEO';
+import useMobileLifecycle from '../hooks/useMobileLifecycle';
+import { initializeMobileOptimizations, isMobileDevice } from '../../utils/mobileOptimization';
 
 /**
  * Homepage component that automatically serves mobile or desktop version
@@ -19,33 +21,43 @@ const HomePage = () => {
   // Initialize analytics tracking
   const { trackEvent, isTrackingEnabled } = useAnalytics();
 
+  // Initialize mobile lifecycle management
+  const mobileLifecycle = useMobileLifecycle();
+
   // Initialize SEO management
   const { seoSettings, isMaintenanceMode, refreshSEOSettings } = useSEO();
 
   useEffect(() => {
-    // Check user agent for mobile devices
-    const userAgent = navigator.userAgent || '';
-    const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    // Initialize mobile optimizations first
+    initializeMobileOptimizations();
 
-    // Device is mobile if either condition is true
-    const deviceIsMobile = isMobileByWidth || isMobileByUA;
+    // Enhanced mobile device detection using utility
+    const deviceIsMobile = isMobileDevice() || isMobileByWidth;
 
     setIsMobile(deviceIsMobile);
     setIsLoading(false);
 
-    console.log('📱 Device Detection:', {
+    console.log('📱 Enhanced Device Detection:', {
       viewportWidth,
       isMobileByWidth,
-      isMobileByUA,
+      isMobileByUtility: isMobileDevice(),
       finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
     });
+
+    // Register cleanup for mobile lifecycle
+    if (deviceIsMobile) {
+      console.log('📱 Mobile device detected - enabling lifecycle management');
+      mobileLifecycle.registerCleanup(() => {
+        console.log('🧹 HomePage cleanup for mobile');
+      });
+    }
 
     // Track device type for analytics - IMPORTANT for serving correct content
     if (isTrackingEnabled) {
       trackEvent('device_detection', {
         device_type: deviceIsMobile ? 'mobile' : 'desktop',
         viewport_width: viewportWidth,
-        user_agent_mobile: isMobileByUA,
+        user_agent_mobile: isMobileDevice(),
         viewport_mobile: isMobileByWidth
       });
     }
@@ -57,7 +69,7 @@ const HomePage = () => {
       og_image: seoSettings.default_og_image,
       maintenance_mode: isMaintenanceMode()
     });
-  }, [viewportWidth, isMobileByWidth]);
+  }, [viewportWidth, isMobileByWidth, mobileLifecycle, isTrackingEnabled, trackEvent, seoSettings, isMaintenanceMode]);
 
   // Loading state
   if (isLoading) {
