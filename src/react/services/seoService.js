@@ -258,14 +258,14 @@ export const generateMetaTags = (seoSettings, options = {}) => {
  * Cache management for SEO settings
  */
 const CACHE_KEY = 'seo_settings_cache';
-const CACHE_DURATION = 30 * 1000; // 30 seconds for faster updates
+const LOCAL_CACHE_DURATION = 30 * 1000; // 30 seconds for faster updates
 
 export const getCachedSEOSettings = () => {
     try {
         const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
             const { data, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < CACHE_DURATION) {
+            if (Date.now() - timestamp < LOCAL_CACHE_DURATION) {
                 console.log('📦 Using cached SEO settings');
                 return data;
             }
