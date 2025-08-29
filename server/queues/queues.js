@@ -40,9 +40,15 @@ if (env.REDIS_ENABLED) {
         // Create the worker with error handling
         visitWorker = new Worker("visit", path.resolve(__dirname, "visit.js"), {
             connection,
-            concurrency: 2, // Further reduced for stability
+            concurrency: 3, // CRITICAL FIX: Restored to 3 to match increased DB pool
             stalledInterval: 15000, // Check more frequently
             maxStalledCount: 1, // Max 1 stalled job before considering it failed
+            // CRITICAL FIX: Add job timeout to prevent hanging
+            settings: {
+                stalledInterval: 15000,
+                maxStalledCount: 1,
+                retryProcessDelay: 5000, // 5 second delay before retrying failed jobs
+            }
         });
     } catch (error) {
         console.error('🚨 Failed to initialize Redis queues:', error.message);

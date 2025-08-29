@@ -6,43 +6,38 @@ let client;
 
 if (env.REDIS_ENABLED) {
     try {
+        // UNIFIED REDIS CONFIG: Optimized for both performance and reliability
         client = new Redis({
             host: env.REDIS_HOST,
             port: env.REDIS_PORT,
             db: env.REDIS_DB,
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
-            // CRITICAL FIX: Improved Redis configuration for stability
-            connectTimeout: 5000, // Reduced timeout for faster failure detection
-            commandTimeout: 3000, // Reduced timeout for faster failure detection
-            retryDelayOnFailover: 100, // Faster retry for better responsiveness
-            maxRetriesPerRequest: 1, // Reduced to 1 for immediate fallback to memory store
+            // UNIFIED CONFIG: Balanced timeouts for stability and performance
+            connectTimeout: 8000, // 8 seconds - balanced for both servers
+            commandTimeout: 5000, // 5 seconds - balanced for both servers
+            retryDelayOnFailover: 150, // 150ms - balanced retry delay
+            maxRetriesPerRequest: 2, // 2 retries - balanced for reliability
             lazyConnect: true, // Connect only when needed
             keepAlive: 30000, // Keep connections alive for 30 seconds
             // Connection pool settings
             family: 4, // Use IPv4
-            // CRITICAL FIX: Better error handling configuration
-            retryDelayOnClusterDown: 100, // Faster retry
-            enableOfflineQueue: false, // CRITICAL: Disable queue to prevent hanging requests
+            // UNIFIED CONFIG: Optimized error handling
+            retryDelayOnClusterDown: 200, // Balanced retry delay
+            enableOfflineQueue: true, // CRITICAL: Enable for queue reliability
             // Performance optimizations
             enableReadyCheck: true,
-            maxLoadingTimeout: 3000, // Reduced for faster failure detection
+            maxLoadingTimeout: 6000, // Balanced loading timeout
             // Logging
             showFriendlyErrorStack: env.NODE_ENV === 'development',
-            // CRITICAL FIX: Add reconnection strategy with limits
+            // UNIFIED CONFIG: Balanced reconnection strategy
             enableAutoPipelining: false, // Disable for better error handling
-            // Add connection recovery options
-            autoResubscribe: false, // Disable to prevent hanging
-            autoResendUnfulfilledCommands: false, // Disable to prevent hanging
-            // CRITICAL: Add retry strategy with maximum attempts
-            retryDelayOnFailover: 100,
-            maxRetriesPerRequest: 1, // Only try once before giving up
-            // CRITICAL: Disable reconnection attempts that cause crashes
-            reconnectOnError: null, // Disable automatic reconnection
+            autoResubscribe: true, // Enable for queue reliability
+            autoResendUnfulfilledCommands: true, // Enable for queue reliability
             // CRITICAL: Set connection name for debugging
-            connectionName: 'kutt-homepage'
+            connectionName: 'kutt-homepage-unified'
         });
 
-        console.log('🔄 Redis client created with fail-fast configuration...');
+        console.log('🔄 Redis client created with unified configuration...');
     } catch (error) {
         console.error('🚨 Failed to create Redis client:', error.message);
         client = null;
@@ -76,8 +71,31 @@ if (client) {
         console.log('✅ Redis connected successfully');
     });
 
-    client.on('ready', () => {
+    client.on('ready', async() => {
         console.log('🚀 Redis ready for commands');
+
+        // CRITICAL FIX: Check and fix Redis eviction policy
+        try {
+            const config = await client.config('GET', 'maxmemory-policy');
+            const currentPolicy = config[1];
+
+            if (currentPolicy !== 'noeviction') {
+                console.log(`⚠️ Redis eviction policy is ${currentPolicy}, should be noeviction`);
+                console.log('🔧 Attempting to set eviction policy to noeviction...');
+
+                try {
+                    await client.config('SET', 'maxmemory-policy', 'noeviction');
+                    console.log('✅ Redis eviction policy set to noeviction');
+                } catch (policyError) {
+                    console.warn('⚠️ Could not change Redis eviction policy (may require admin privileges)');
+                    console.warn('📋 Please manually set: CONFIG SET maxmemory-policy noeviction');
+                }
+            } else {
+                console.log('✅ Redis eviction policy is correctly set to noeviction');
+            }
+        } catch (configError) {
+            console.warn('⚠️ Could not check Redis eviction policy:', configError.message);
+        }
     });
 
     client.on('close', () => {
