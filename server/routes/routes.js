@@ -87,6 +87,7 @@ apiRouter.use("/contact-book", contactBook);
 apiRouter.use("/images", images);
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
+apiRouter.use("/visit-health", require("./visit-health.routes"));
 apiRouter.use("/admin/sessions", sessionAdmin);
 apiRouter.use("/privacy", privacy);
 apiRouter.use("/integrations", integrations);

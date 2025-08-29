@@ -16,7 +16,7 @@ if (env.REDIS_ENABLED) {
             connectTimeout: 8000, // 8 seconds - balanced for both servers
             commandTimeout: 5000, // 5 seconds - balanced for both servers
             retryDelayOnFailover: 150, // 150ms - balanced retry delay
-            maxRetriesPerRequest: 2, // 2 retries - balanced for reliability
+            maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
             lazyConnect: true, // Connect only when needed
             keepAlive: 30000, // Keep connections alive for 30 seconds
             // Connection pool settings

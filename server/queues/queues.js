@@ -140,37 +140,22 @@ if (env.REDIS_ENABLED) {
     }
 }
 
-// CRITICAL: Ensure fallback to direct processing if Redis failed or is disabled
+// CRITICAL: Ensure fallback to robust visit processing if Redis failed or is disabled
 if (!visit) {
-    console.log('📊 Using direct visit processing (Redis unavailable)');
-    console.log('⚠️ PERFORMANCE WARNING: Direct processing can cause timeouts under load');
-    console.log('💡 Enable Redis in production for optimal performance');
-    console.log('🔧 Check REDIS_ENABLED environment variable');
+    console.log('📊 Using robust visit processing (Redis unavailable)');
+    console.log('🚀 Initializing multi-strategy visit processor...');
 
-    const visitProcessor = require(path.resolve(__dirname, "visit.js"));
+    const robustVisitProcessor = require("../services/visit-processor");
     visit = {
         add(data) {
-            // Process visits directly without queue with enhanced timeout protection
-            setImmediate(() => {
-                // CRITICAL FIX: Add multiple timeout layers for direct processing
-                const timeoutPromise = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Direct visit processing timeout')), 6000); // Reduced to 6s
-                });
-
-                Promise.race([
-                    visitProcessor({ data }),
-                    timeoutPromise
-                ]).catch(function(error) {
-                    if (error.message.includes('timeout')) {
-                        console.error("🚨 Visit worker error: Command timed out (direct processing)");
-                        console.error("💡 Consider enabling Redis to eliminate these timeouts");
-                    } else {
-                        console.error("🚨 Direct visit processing error:", error.message);
-                    }
-                });
+            // Use robust visit processor with multiple fallback strategies
+            robustVisitProcessor.addVisit(data).catch(function(error) {
+                console.error("🚨 Robust visit processing error:", error.message);
             });
         }
     };
+
+    console.log('✅ Robust visit processor initialized successfully');
 }
 
 
