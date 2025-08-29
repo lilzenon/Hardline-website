@@ -28,48 +28,62 @@ const HomePage = () => {
   const { seoSettings, isMaintenanceMode, refreshSEOSettings } = useSEO();
 
   useEffect(() => {
-    // Initialize mobile optimizations first
-    initializeMobileOptimizations();
+    // PERFORMANCE OPTIMIZATION: Batch initialization operations
+    const initializeHomepage = async () => {
+      const startTime = performance.now();
 
-    // Enhanced mobile device detection using utility
-    const deviceIsMobile = isMobileDevice() || isMobileByWidth;
+      // Initialize mobile optimizations first (only if mobile)
+      const deviceIsMobile = isMobileDevice() || isMobileByWidth;
 
-    setIsMobile(deviceIsMobile);
-    setIsLoading(false);
+      if (deviceIsMobile) {
+        initializeMobileOptimizations();
 
-    console.log('📱 Enhanced Device Detection:', {
-      viewportWidth,
-      isMobileByWidth,
-      isMobileByUtility: isMobileDevice(),
-      finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
-    });
+        // Register cleanup for mobile lifecycle
+        mobileLifecycle.registerCleanup(() => {
+          // Minimal cleanup logging
+        });
+      }
 
-    // Register cleanup for mobile lifecycle
-    if (deviceIsMobile) {
-      console.log('📱 Mobile device detected - enabling lifecycle management');
-      mobileLifecycle.registerCleanup(() => {
-        console.log('🧹 HomePage cleanup for mobile');
-      });
-    }
+      setIsMobile(deviceIsMobile);
+      setIsLoading(false);
 
-    // Track device type for analytics - IMPORTANT for serving correct content
-    if (isTrackingEnabled) {
-      trackEvent('device_detection', {
-        device_type: deviceIsMobile ? 'mobile' : 'desktop',
-        viewport_width: viewportWidth,
-        user_agent_mobile: isMobileDevice(),
-        viewport_mobile: isMobileByWidth
-      });
-    }
+      // PERFORMANCE OPTIMIZATION: Minimal logging in production
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('📱 Device Detection:', {
+          viewportWidth,
+          finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
+        });
+      }
 
-    // Log SEO settings for debugging
-    console.log('🔍 Homepage SEO Settings:', {
-      title: seoSettings.default_title,
-      description: seoSettings.default_description?.substring(0, 50) + '...',
-      og_image: seoSettings.default_og_image,
-      maintenance_mode: isMaintenanceMode()
-    });
-  }, [viewportWidth, isMobileByWidth, mobileLifecycle, isTrackingEnabled, trackEvent, seoSettings, isMaintenanceMode]);
+      // PERFORMANCE OPTIMIZATION: Defer analytics tracking to not block rendering
+      if (isTrackingEnabled) {
+        setTimeout(() => {
+          trackEvent('device_detection', {
+            device_type: deviceIsMobile ? 'mobile' : 'desktop',
+            viewport_width: viewportWidth
+          });
+        }, 100);
+      }
+
+      // PERFORMANCE OPTIMIZATION: Defer SEO logging to not block rendering
+      if (process.env.NODE_ENV !== 'production') {
+        setTimeout(() => {
+          console.log('🔍 SEO Settings loaded:', {
+            title: seoSettings.default_title,
+            hasDescription: !!seoSettings.default_description,
+            hasOGImage: !!seoSettings.default_og_image
+          });
+        }, 200);
+      }
+
+      const initTime = performance.now() - startTime;
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`⚡ Homepage initialized in ${initTime.toFixed(2)}ms`);
+      }
+    };
+
+    initializeHomepage();
+  }, [viewportWidth, isMobileByWidth]);
 
   // Loading state
   if (isLoading) {

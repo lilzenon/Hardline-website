@@ -28,14 +28,33 @@ export const DEFAULT_SEO_SETTINGS = {
     google_search_console_id: ''
 };
 
+// PERFORMANCE OPTIMIZATION: Cache SEO settings to avoid repeated API calls
+let seoCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 /**
- * Fetch SEO settings from dashboard API
+ * Fetch SEO settings from dashboard API with caching
  * @returns {Promise<Object>} SEO settings object
  */
 export const fetchSEOSettings = async() => {
     const startTime = Date.now();
+
     try {
-        console.log('🔍 Fetching SEO settings from dashboard API...');
+        // PERFORMANCE OPTIMIZATION: Return cached data if still valid
+        const now = Date.now();
+        if (seoCache && (now - cacheTimestamp) < CACHE_DURATION) {
+            const cacheAge = now - cacheTimestamp;
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`⚡ SEO settings served from cache (${Math.round(cacheAge/1000)}s old)`);
+            }
+            return seoCache;
+        }
+
+        // PERFORMANCE OPTIMIZATION: Minimal logging in production
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('🔍 Fetching SEO settings from dashboard API...');
+        }
 
         // PERFORMANCE OPTIMIZATION: Reduced timeout to match backend optimizations
         const controller = new AbortController();
@@ -70,25 +89,41 @@ export const fetchSEOSettings = async() => {
 
         if (data.success && data.settings) {
             const duration = Date.now() - startTime;
-            const performanceMessage = duration < 1000 ?
-                `✅ SEO settings fetched successfully in ${duration}ms (⚡ Performance optimized!)` :
-                `✅ SEO settings fetched successfully in ${duration}ms`;
-            console.log(performanceMessage, data.settings);
-            return {
+
+            // PERFORMANCE OPTIMIZATION: Cache the successful result
+            seoCache = {
                 ...DEFAULT_SEO_SETTINGS,
                 ...data.settings
             };
+            cacheTimestamp = now;
+
+            // PERFORMANCE OPTIMIZATION: Minimal logging in production
+            if (process.env.NODE_ENV !== 'production') {
+                const performanceMessage = duration < 1000 ?
+                    `✅ SEO settings fetched in ${duration}ms (⚡ Performance optimized!)` :
+                    `✅ SEO settings fetched in ${duration}ms`;
+                console.log(performanceMessage);
+            }
+
+            return seoCache;
         } else {
             console.warn('⚠️ Invalid SEO API response format:', data);
             throw new Error('Invalid API response format');
         }
 
     } catch (error) {
+        // PERFORMANCE OPTIMIZATION: Return cached data if available, even if expired
+        if (seoCache) {
+            console.log('🔄 Using cached SEO settings due to API error');
+            return seoCache;
+        }
+
         if (error.name === 'AbortError') {
-            console.error('❌ SEO API request timed out after 8 seconds (performance optimized)');
+            console.error('❌ SEO API request timed out after 8 seconds');
         } else {
             console.error('❌ Failed to fetch SEO settings:', error.message);
         }
+
         console.log('🔄 Using default SEO settings as fallback');
         return DEFAULT_SEO_SETTINGS;
     }
