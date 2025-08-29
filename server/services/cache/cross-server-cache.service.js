@@ -13,16 +13,16 @@ class CrossServerCacheService {
         this.isRedisAvailable = false;
         this.memoryCache = new Map();
         this.maxMemoryItems = 1000;
-        
+
         // Cache TTL configurations (in seconds)
         this.ttl = {
-            seo_settings: 300,      // 5 minutes - SEO settings
-            homepage_data: 180,     // 3 minutes - Homepage data
-            events: 120,            // 2 minutes - Events data
-            analytics: 60,          // 1 minute - Analytics data
-            api_response: 30,       // 30 seconds - General API responses
-            session: 1800,          // 30 minutes - Session data
-            user_cache: 900         // 15 minutes - User data
+            seo_settings: 300, // 5 minutes - SEO settings
+            homepage_data: 180, // 3 minutes - Homepage data
+            events: 120, // 2 minutes - Events data
+            analytics: 60, // 1 minute - Analytics data
+            api_response: 30, // 30 seconds - General API responses
+            session: 1800, // 30 minutes - Session data
+            user_cache: 900 // 15 minutes - User data
         };
 
         this.initializeRedis();
@@ -64,6 +64,30 @@ class CrossServerCacheService {
             this.redis.on('connect', () => {
                 this.isRedisAvailable = true;
                 console.log('✅ Cross-Server Cache: Redis connected');
+            });
+
+            this.redis.on('ready', async() => {
+                this.isRedisAvailable = true;
+                console.log('✅ Cross-Server Cache: Redis ready for commands');
+
+                // Check eviction policy with managed service compatibility
+                try {
+                    const config = await this.redis.config('GET', 'maxmemory-policy');
+                    const currentPolicy = config[1];
+
+                    if (currentPolicy !== 'noeviction') {
+                        console.warn(`⚠️ Cross-Server Cache: Redis eviction policy is ${currentPolicy}`);
+                        console.log('💡 For optimal caching, eviction policy should be "noeviction"');
+                    } else {
+                        console.log('✅ Cross-Server Cache: Redis eviction policy is optimal');
+                    }
+                } catch (configError) {
+                    if (configError.message.includes('NOPERM') || configError.message.includes('no permissions')) {
+                        console.log('💡 Cross-Server Cache: CONFIG restricted by managed service (normal)');
+                    } else {
+                        console.warn('⚠️ Cross-Server Cache: Could not check eviction policy:', configError.message);
+                    }
+                }
             });
 
             this.redis.on('error', (error) => {
