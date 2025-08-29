@@ -104,9 +104,9 @@ module.exports = async function({ data }) {
 
     } catch (error) {
         if (error.message.includes('timeout')) {
-            console.error('🚨 Homepage visit worker error: Command timed out (12s limit exceeded)');
+            console.error('🚨 Dashboard visit worker error: Command timed out (12s limit exceeded)');
         } else {
-            console.error('🚨 Homepage visit processing error:', error.message);
+            console.error('🚨 Dashboard visit processing error:', error.message);
         }
         // Don't throw - let the worker continue with other jobs
         return null;

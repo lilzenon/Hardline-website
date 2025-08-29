@@ -16,21 +16,24 @@ let visitWorker;
 
 if (env.REDIS_ENABLED) {
     try {
+        console.log('🔄 Initializing Redis connection for BullMQ...');
+        console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
+
         const connection = {
             port: env.REDIS_PORT,
             host: env.REDIS_HOST,
             db: env.REDIS_DB,
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
             // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
-            connectTimeout: 5000, // Increased for stability
-            commandTimeout: 3000, // Increased for stability
+            connectTimeout: 8000, // Increased for stability
+            commandTimeout: 15000, // CRITICAL: Must exceed visit.js timeout (12s)
             retryDelayOnFailover: 200,
             maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
             lazyConnect: true, // Don't connect immediately
             enableOfflineQueue: true, // Enable for queue reliability
             // Add BullMQ-specific optimizations
             enableReadyCheck: true,
-            maxLoadingTimeout: 5000,
+            maxLoadingTimeout: 15000, // CRITICAL: Must exceed visit.js timeout (12s)
         };
 
         // Create the queue with error handling
