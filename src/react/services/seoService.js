@@ -28,10 +28,11 @@ export const DEFAULT_SEO_SETTINGS = {
     google_search_console_id: ''
 };
 
-// PERFORMANCE OPTIMIZATION: Cache SEO settings to avoid repeated API calls
+// PERFORMANCE OPTIMIZATION: Staggered cache to prevent cascade expiration
 let seoCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 6 * 60 * 1000; // 6 minutes (staggered from 5 minutes)
+const PROACTIVE_REFRESH_THRESHOLD = 0.8; // Refresh at 80% of cache duration
 
 /**
  * Fetch SEO settings from dashboard API with caching
@@ -41,13 +42,22 @@ export const fetchSEOSettings = async() => {
     const startTime = Date.now();
 
     try {
-        // PERFORMANCE OPTIMIZATION: Return cached data if still valid
+        // PERFORMANCE OPTIMIZATION: Proactive cache warming to prevent cascade expiration
         const now = Date.now();
-        if (seoCache && (now - cacheTimestamp) < CACHE_DURATION) {
-            const cacheAge = now - cacheTimestamp;
+        const cacheAge = now - cacheTimestamp;
+        const shouldProactiveRefresh = cacheAge > (CACHE_DURATION * PROACTIVE_REFRESH_THRESHOLD);
+
+        if (seoCache && cacheAge < CACHE_DURATION) {
             if (process.env.NODE_ENV !== 'production') {
                 console.log(`⚡ SEO settings served from cache (${Math.round(cacheAge/1000)}s old)`);
             }
+
+            // Proactive refresh in background if approaching expiration
+            if (shouldProactiveRefresh) {
+                console.log('🔥 Proactively refreshing SEO cache in background...');
+                setTimeout(() => refreshSEOCacheInBackground(), 100);
+            }
+
             return seoCache;
         }
 
@@ -334,6 +344,36 @@ export const setCachedSEOSettings = (settings) => {
         }
     }
 };
+
+/**
+ * Background refresh function for proactive cache warming
+ */
+async function refreshSEOCacheInBackground() {
+    try {
+        // Temporarily clear cache to force refresh
+        const oldCache = seoCache;
+        const oldTimestamp = cacheTimestamp;
+
+        seoCache = null;
+        cacheTimestamp = 0;
+
+        // Fetch fresh data
+        const freshData = await fetchSEOSettings();
+
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('✅ SEO cache proactively refreshed in background');
+        }
+
+        return freshData;
+
+    } catch (error) {
+        // Restore old cache on error
+        seoCache = oldCache;
+        cacheTimestamp = oldTimestamp;
+
+        console.warn('⚠️ Background SEO cache refresh failed, keeping old cache:', error.message);
+    }
+}
 
 export default {
     fetchSEOSettings,
