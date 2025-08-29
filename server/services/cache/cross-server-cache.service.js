@@ -47,7 +47,7 @@ class CrossServerCacheService {
                 connectTimeout: 8000,
                 commandTimeout: 5000,
                 retryDelayOnFailover: 150,
-                maxRetriesPerRequest: 2,
+                maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
                 lazyConnect: true,
                 keepAlive: 30000,
                 family: 4,

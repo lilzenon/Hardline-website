@@ -73,7 +73,7 @@ class VisitProcessor {
      */
     async processVisitImmediate(visitData) {
         const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Immediate visit processing timeout')), 10000);
+            setTimeout(() => reject(new Error('Immediate visit processing timeout')), 30000);
         });
 
         return Promise.race([
