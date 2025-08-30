@@ -14,7 +14,7 @@ if (env.REDIS_ENABLED) {
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
             // UNIFIED CONFIG: Balanced timeouts for stability and performance
             connectTimeout: 8000, // 8 seconds - balanced for both servers
-            commandTimeout: 5000, // 5 seconds - balanced for both servers
+            commandTimeout: 15000, // CRITICAL: Must exceed visit.js timeout (12s)
             retryDelayOnFailover: 150, // 150ms - balanced retry delay
             maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
             lazyConnect: true, // Connect only when needed
@@ -73,6 +73,27 @@ if (client) {
 
     client.on('ready', async() => {
         console.log('🚀 Redis ready for commands');
+        console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
+
+        // CRITICAL: Enhanced connection testing with timeout verification
+        try {
+            const startTime = Date.now();
+            await client.ping();
+            const responseTime = Date.now() - startTime;
+            console.log(`🔗 Redis PING test successful (${responseTime}ms)`);
+
+            // Test command timeout by setting a test key
+            await client.set('connection_test', Date.now(), 'EX', 10);
+            console.log('✅ Redis write test successful');
+
+            // Verify Redis is available for other services
+            global.redisAvailable = true;
+            console.log('🚀 Redis marked as available for application services');
+
+        } catch (testError) {
+            console.error('❌ Redis connection test failed:', testError.message);
+            global.redisAvailable = false;
+        }
 
         // CRITICAL FIX: Check Redis eviction policy with managed service compatibility
         try {

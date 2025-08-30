@@ -25,7 +25,7 @@ const secureDbConfig = {
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     max: 2, // EMERGENCY: Reduced from 20 for 500MB RAM limit
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 8000, // CRITICAL: Increased from 2s to match Redis timeouts
     // Security settings
     application_name: 'kutt_b2b_secure_api',
     statement_timeout: 30000, // 30 second timeout
