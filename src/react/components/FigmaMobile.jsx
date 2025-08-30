@@ -3671,123 +3671,94 @@ const FigmaMobile = () => {
                           {card.title}
                         </h3>
 
-                        {/* DATE Information Row - Optimized Layout */}
+                        {/* REDESIGNED: Date/Time and Location on Same Line */}
                         <div
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px',
+                            gap: '12px', // Increased gap between date and location sections
                             width: '100%',
-                            marginBottom: '4px',
-                            minHeight: '20px' // Consistent height
+                            marginBottom: '8px', // Space before button
+                            minHeight: '20px',
+                            flexWrap: 'nowrap' // Prevent wrapping to keep on same line
                           }}
                         >
-                          {/* Calendar Icon - Clickable - Enhanced Size */}
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 10 10"
-                            fill="none"
-                            onClick={() => {
-                              // Create calendar event
-                              const eventTitle = encodeURIComponent(card.title);
-                              const eventLocation = encodeURIComponent(card.location);
-                              const eventDate = card.date;
-
-                              // Parse date string to create proper calendar format
-                              const now = new Date();
-                              const currentYear = now.getFullYear();
-
-                              // Extract date parts
-                              const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                              if (dateMatch) {
-                                const [, , month, day, hour, minute, ampm] = dateMatch;
-                                const monthMap = {
-                                  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                                };
-
-                                let hour24 = parseInt(hour);
-                                if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                                if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                                const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                                const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
-
-                                // Format for calendar URL
-                                const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                                const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                                // Try different calendar methods
-                                const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-
-                                window.open(calendarUrl, '_blank');
-                              }
-                            }}
-                            style={{
-                              cursor: 'pointer',
-                              padding: '2px',
-                              borderRadius: '4px',
-                              transition: 'all 0.2s ease-in-out'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
-                          </svg>
-
-                          {/* Date text container - Optimized for better space usage */}
+                          {/* DATE Section - Left Side */}
                           <div
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              flex: 1,
-                              minWidth: 0,
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => {
-                              // Simplified calendar event logic
-                              const eventTitle = encodeURIComponent(card.title);
-                              const eventLocation = encodeURIComponent(card.location);
-                              const eventDate = card.date;
-
-                              const now = new Date();
-                              const currentYear = now.getFullYear();
-                              const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                              if (dateMatch) {
-                                const [, , month, day, hour, minute, ampm] = dateMatch;
-                                const monthMap = {
-                                  'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                                  'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                                };
-
-                                let hour24 = parseInt(hour);
-                                if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                                if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                                const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                                const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000);
-
-                                const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                                const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                                const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-                                window.open(calendarUrl, '_blank');
-                              }
+                              gap: '4px',
+                              flex: '1 1 50%', // Take up to 50% of available space
+                              minWidth: 0 // Allow shrinking
                             }}
                           >
-                            {/* Complete date text - single span for better text handling */}
+                            {/* Calendar Icon - Clickable */}
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 10 10"
+                              fill="none"
+                              onClick={() => {
+                                // Create calendar event
+                                const eventTitle = encodeURIComponent(card.title);
+                                const eventLocation = encodeURIComponent(card.location);
+                                const eventDate = card.date;
+
+                                // Parse date string to create proper calendar format
+                                const now = new Date();
+                                const currentYear = now.getFullYear();
+
+                                // Extract date parts
+                                const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                                if (dateMatch) {
+                                  const [, , month, day, hour, minute, ampm] = dateMatch;
+                                  const monthMap = {
+                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                                  };
+
+                                  let hour24 = parseInt(hour);
+                                  if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                                  if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                                  const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                                  const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
+
+                                  // Format for calendar URL
+                                  const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                                  const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                                  // Try different calendar methods
+                                  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+
+                                  window.open(calendarUrl, '_blank');
+                                }
+                              }}
+                              style={{
+                                cursor: 'pointer',
+                                padding: '2px',
+                                borderRadius: '4px',
+                                transition: 'all 0.2s ease-in-out',
+                                flexShrink: 0 // Don't shrink the icon
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
+                            </svg>
+
+                            {/* Date text - Compact */}
                             <span
                               style={{
-                                color: 'rgba(255, 255, 255, 0.75)', // Reduced brightness for better balance
+                                color: 'rgba(255, 255, 255, 0.75)',
                                 fontFamily: 'Inter',
-                                fontSize: 'clamp(11px, 3vw, 12px)', // Responsive font size
+                                fontSize: 'clamp(10px, 2.8vw, 11px)', // Slightly smaller for side-by-side layout
                                 fontWeight: '400',
                                 lineHeight: '1.3',
                                 overflow: 'hidden',
@@ -3795,9 +3766,41 @@ const FigmaMobile = () => {
                                 whiteSpace: 'nowrap',
                                 flex: 1,
                                 minWidth: 0,
+                                cursor: 'pointer',
                                 padding: '2px 4px',
                                 borderRadius: '4px',
                                 transition: 'all 0.2s ease-in-out'
+                              }}
+                              onClick={() => {
+                                // Same calendar logic as icon
+                                const eventTitle = encodeURIComponent(card.title);
+                                const eventLocation = encodeURIComponent(card.location);
+                                const eventDate = card.date;
+
+                                const now = new Date();
+                                const currentYear = now.getFullYear();
+                                const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
+
+                                if (dateMatch) {
+                                  const [, , month, day, hour, minute, ampm] = dateMatch;
+                                  const monthMap = {
+                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                                  };
+
+                                  let hour24 = parseInt(hour);
+                                  if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
+                                  if (ampm === 'AM' && hour24 === 12) hour24 = 0;
+
+                                  const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
+                                  const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000);
+
+                                  const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                                  const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+                                  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
+                                  window.open(calendarUrl, '_blank');
+                                }
                               }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
@@ -3809,86 +3812,64 @@ const FigmaMobile = () => {
                               {card.date}
                             </span>
                           </div>
-                        </div>
 
-                        {/* LOCATION Information Row - Optimized Layout */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            width: '100%',
-                            minHeight: '20px' // Consistent height
-                          }}
-                        >
-                          {/* Location Icon - Clickable - Enhanced Size */}
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 10 10"
-                            fill="none"
-                            onClick={() => {
-                              const address = encodeURIComponent(card.location);
-                              const userAgent = navigator.userAgent || '';
-
-                              // Detect iOS
-                              if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                                window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                              }
-                              // Detect Android
-                              else if (/android/i.test(userAgent)) {
-                                window.open(`geo:0,0?q=${address}`, '_blank');
-                              }
-                              // Default to Google Maps for web browsers
-                              else {
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                              }
-                            }}
-                            style={{
-                              cursor: 'pointer',
-                              padding: '2px',
-                              borderRadius: '4px',
-                              transition: 'all 0.2s ease-in-out'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                            }}
-                          >
-                            <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
-                            <circle cx="5" cy="4" r="1" fill="#FFF"/>
-                          </svg>
-
-                          {/* Location text container - Optimized for better space usage */}
+                          {/* LOCATION Section - Right Side */}
                           <div
                             style={{
                               display: 'flex',
                               alignItems: 'center',
-                              flex: 1,
-                              minWidth: 0,
-                              cursor: 'pointer'
-                            }}
-                            onClick={() => {
-                              const address = encodeURIComponent(card.location);
-                              const userAgent = navigator.userAgent || '';
-
-                              if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                                window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                              } else if (/android/i.test(userAgent)) {
-                                window.open(`geo:0,0?q=${address}`, '_blank');
-                              } else {
-                                window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                              }
+                              gap: '4px',
+                              flex: '1 1 50%', // Take up to 50% of available space
+                              minWidth: 0 // Allow shrinking
                             }}
                           >
-                            {/* Complete location text - single span for better text handling */}
+                            {/* Location Icon - Clickable */}
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 10 10"
+                              fill="none"
+                              onClick={() => {
+                                const address = encodeURIComponent(card.location);
+                                const userAgent = navigator.userAgent || '';
+
+                                // Detect iOS
+                                if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                                  window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                                }
+                                // Detect Android
+                                else if (/android/i.test(userAgent)) {
+                                  window.open(`geo:0,0?q=${address}`, '_blank');
+                                }
+                                // Default to Google Maps for web browsers
+                                else {
+                                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                                }
+                              }}
+                              style={{
+                                cursor: 'pointer',
+                                padding: '2px',
+                                borderRadius: '4px',
+                                transition: 'all 0.2s ease-in-out',
+                                flexShrink: 0 // Don't shrink the icon
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.backgroundColor = 'transparent';
+                              }}
+                            >
+                              <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
+                              <circle cx="5" cy="4" r="1" fill="#FFF"/>
+                            </svg>
+
+                            {/* Location text - Compact */}
                             <span
                               style={{
-                                color: 'rgba(255, 255, 255, 0.75)', // Reduced brightness for better balance
+                                color: 'rgba(255, 255, 255, 0.75)',
                                 fontFamily: 'Inter',
-                                fontSize: 'clamp(11px, 3vw, 12px)', // Responsive font size
+                                fontSize: 'clamp(10px, 2.8vw, 11px)', // Slightly smaller for side-by-side layout
                                 fontWeight: '400',
                                 lineHeight: '1.3',
                                 overflow: 'hidden',
@@ -3896,9 +3877,22 @@ const FigmaMobile = () => {
                                 whiteSpace: 'nowrap',
                                 flex: 1,
                                 minWidth: 0,
+                                cursor: 'pointer',
                                 padding: '2px 4px',
                                 borderRadius: '4px',
                                 transition: 'all 0.2s ease-in-out'
+                              }}
+                              onClick={() => {
+                                const address = encodeURIComponent(card.location);
+                                const userAgent = navigator.userAgent || '';
+
+                                if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                                  window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
+                                } else if (/android/i.test(userAgent)) {
+                                  window.open(`geo:0,0?q=${address}`, '_blank');
+                                } else {
+                                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                                }
                               }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
@@ -3913,18 +3907,17 @@ const FigmaMobile = () => {
                         </div>
                       </div>
 
-                      {/* Action Button Section - Optimized Positioning */}
+                      {/* REDESIGNED: Full-Width Button Section Under Date/Location */}
                       <div
                         style={{
                           display: 'flex',
-                          justifyContent: 'flex-start',
-                          alignItems: 'flex-end',
-                          marginTop: 'auto', // Push to bottom of flex container
+                          justifyContent: 'stretch',
+                          alignItems: 'center',
                           width: '100%',
-                          paddingTop: '8px' // Space from content above
+                          marginTop: '4px' // Reduced space from date/location line above
                         }}
                       >
-                        {/* Get Tickets Button - Fixed Container Overflow */}
+                        {/* Get Tickets Button - Full Width Design */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <div
                             onClick={(e) => {
@@ -3935,45 +3928,43 @@ const FigmaMobile = () => {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '6px 12px', // Reduced padding to prevent overflow
-                              borderRadius: '18px', // Slightly smaller radius
+                              padding: '10px 16px', // Increased padding for better touch target
+                              borderRadius: '12px', // Modern rounded corners
                               background: 'rgba(23, 23, 23, 0.85)',
                               border: '1px solid rgba(255, 255, 255, 0.2)',
                               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
-                              // Fixed sizing to prevent overflow
-                              width: 'auto',
-                              maxWidth: '120px', // Constrain maximum width
-                              height: '32px', // Fixed height for consistency
-                              // Touch target optimization
-                              minHeight: '32px',
-                              fontSize: '13px', // Fixed font size
+                              // FULL WIDTH: Span the entire text container width
+                              width: '100%',
+                              minHeight: '44px', // Minimum touch target for accessibility
+                              fontSize: '14px', // Slightly larger for better readability
+                              fontWeight: '500', // Medium weight for better visibility
                               // Ensure proper containment
                               boxSizing: 'border-box',
                               flexShrink: 0 // Prevent shrinking
                             }}
                             onMouseEnter={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.transform = 'scale(1.02)'; // Subtle scale for full-width button
                                 e.currentTarget.style.background = 'rgba(76, 76, 76, 0.90)'; // Match desktop hover
                               }
                             }}
                             onMouseLeave={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
                                 e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)'; // Reset to normal state
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.85)'; // Reset to normal state
                               }
                             }}
                             onMouseDown={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(0.95)';
+                                e.currentTarget.style.transform = 'scale(0.98)'; // Subtle press effect
                               }
                             }}
                             onMouseUp={(e) => {
                               if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(1.05)';
+                                e.currentTarget.style.transform = 'scale(1.02)';
                               }
                             }}
                           >
@@ -3981,8 +3972,8 @@ const FigmaMobile = () => {
                               style={{
                                 color: '#FFF', // White text like desktop
                                 fontFamily: 'Inter',
-                                fontSize: '13px', // Consistent with container
-                                fontWeight: '400', // Slightly bolder for better readability
+                                fontSize: '14px', // Consistent with container
+                                fontWeight: '500', // Medium weight for better readability
                                 lineHeight: 'normal',
                                 pointerEvents: 'none',
                                 whiteSpace: 'nowrap', // Prevent text wrapping
@@ -3990,10 +3981,45 @@ const FigmaMobile = () => {
                                 textOverflow: 'ellipsis' // Handle overflow gracefully
                               }}
                             >
-                              Get Tickets
+                              Buy Tickets
                             </span>
                           </div>
-                        ) : null}
+                        ) : (
+                          /* Show disabled button for events without ticket links */
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '10px 16px',
+                              borderRadius: '12px',
+                              background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
+                              border: '1px solid rgba(255, 255, 255, 0.1)', // Lighter border
+                              cursor: 'default', // No pointer cursor for disabled
+                              // FULL WIDTH: Span the entire text container width
+                              width: '100%',
+                              minHeight: '44px', // Minimum touch target for accessibility
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              boxSizing: 'border-box',
+                              opacity: 0.6 // Visual indication of disabled state
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: 'rgba(255, 255, 255, 0.5)', // Dimmed text for disabled state
+                                fontFamily: 'Inter',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                lineHeight: 'normal',
+                                pointerEvents: 'none',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Event Info
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
