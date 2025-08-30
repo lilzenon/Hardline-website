@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const express = require("express");
 const asyncHandler = require("../utils/asyncHandler");
-const instagramHandler = require("../handlers/instagram-integration.handler");
+// Note: Instagram integration migrated to dashboard
 const smsHandler = require("../handlers/sms-integration.handler");
 const logger = require("../utils/logger");
 
@@ -1210,13 +1210,9 @@ router.get(
 
             // Use Page Access Token from account record (FIXED)
             const pageAccessToken = account.access_token;
-            const result = await instagramHandler.sendInstagramDM(
-                pageAccessToken, // FIXED: Use Page Access Token from account.access_token
-                facebookPageId, // Use Facebook Page ID for Messenger Platform
-                recipient_id,
-                message,
-                'test-interaction-' + Date.now()
-            );
+            // Note: Instagram DM functionality migrated to dashboard
+            console.log('⚠️ Instagram DM functionality has been migrated to dashboard');
+            const result = { success: false, message: 'Instagram integration migrated to dashboard' };
 
             res.json({
                 success: true,
@@ -1254,7 +1250,7 @@ router.post(
 
         try {
             const knex = require('../knex');
-            const instagramHandler = require('../handlers/instagram-integration.handler');
+            // Note: Instagram integration migrated to dashboard
 
             // Get Instagram account from database
             const accounts = await knex('social_media_accounts')
@@ -1294,13 +1290,9 @@ router.post(
 
             // Use Page Access Token from account record (FIXED)
             const pageAccessToken = account.access_token;
-            const result = await instagramHandler.sendInstagramDM(
-                pageAccessToken, // FIXED: Use Page Access Token from account.access_token
-                facebookPageId, // Use Facebook Page ID for Messenger Platform
-                recipient_id,
-                message,
-                'test-interaction-' + Date.now()
-            );
+            // Note: Instagram DM functionality migrated to dashboard
+            console.log('⚠️ Instagram DM functionality has been migrated to dashboard');
+            const result = { success: false, message: 'Instagram integration migrated to dashboard' };
 
             res.json({
                 success: true,
@@ -1405,7 +1397,13 @@ router.get(
         }
         next();
     },
-    asyncHandler(instagramHandler.verifyInstagramWebhook)
+    (req, res) => {
+        console.log('⚠️ Instagram webhook verification migrated to dashboard');
+        res.status(410).json({
+            error: 'Instagram integration has been migrated to dashboard',
+            redirect: 'https://admin.b2b.click/settings?tab=integrations'
+        });
+    }
 );
 
 // Instagram webhook events (POST request)
@@ -1413,7 +1411,13 @@ router.post(
     "/instagram",
     rawBodyMiddleware, // Must be first to capture raw body before any parsing
     webhookLoggingMiddleware,
-    asyncHandler(instagramHandler.handleInstagramWebhook)
+    (req, res) => {
+        console.log('⚠️ Instagram webhook handling migrated to dashboard');
+        res.status(410).json({
+            error: 'Instagram integration has been migrated to dashboard',
+            redirect: 'https://admin.b2b.click/settings?tab=integrations'
+        });
+    }
 );
 
 /**
