@@ -3437,30 +3437,30 @@ const FigmaMobile = () => {
                     clear: 'both' // Prevent float issues
                   }}
                 >
-                  {/* Mobile Event Card Content - Enhanced Scaling */}
+                  {/* Mobile Event Card Content - Desktop Structure Inspired */}
                   <div
                     style={{
                       width: '100%',
-                      minHeight: '120px', // Increased for larger image and better proportions
-                      height: 'auto',
+                      height: '85px', // Match desktop card height for consistency
                       position: 'relative',
                       display: 'flex',
-                      alignItems: 'flex-start', // Changed to flex-start for better alignment
-                      justifyContent: 'flex-start',
-                      gap: '16px', // Increased gap for better spacing
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       boxSizing: 'border-box',
-                      padding: '8px 0' // Add vertical padding for better spacing
+                      padding: '0' // Remove padding to match desktop structure
                     }}
                   >
 
-                    {/* Image Section - Enhanced Scaling */}
+                    {/* Image Section - Desktop Structure Inspired */}
                     <div
                       style={{
-                        position: 'relative',
-                        width: '120px', // Increased from 96px for better visual impact
-                        height: '120px', // Increased proportionally
+                        position: 'absolute',
+                        left: '0px', // Match desktop positioning
+                        top: '0px',
+                        width: '84px', // Match desktop image frame width
+                        height: '84px', // Match desktop image frame height
                         flexShrink: 0,
-                        borderRadius: '20px', // Proportionally increased border radius
+                        borderRadius: '16px', // Match desktop border radius
                         overflow: 'hidden'
                       }}
                     >
@@ -3540,9 +3540,12 @@ const FigmaMobile = () => {
                             }
                           }}
                           style={{
-                            width: '100%',
-                            height: '100%',
-                            borderRadius: '20px', // Match container border radius
+                            position: 'absolute',
+                            left: '3px', // Match desktop image positioning
+                            top: '2px',
+                            width: '79px', // Match desktop image width (79.04px)
+                            height: '79px', // Match desktop image height (79.04px)
+                            borderRadius: '14px', // Match desktop image border radius
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
                             cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
@@ -3573,68 +3576,71 @@ const FigmaMobile = () => {
                         />
                       </picture>
 
-                      {/* Date Badge Container - Scaled for Mobile */}
+                      {/* Date Badge Container - Desktop Structure Inspired */}
                       <div
                         style={{
                           position: 'absolute',
-                          right: '4px',
-                          top: '4px',
-                          width: '32px',
-                          height: '32px'
+                          left: '55.64px', // Match desktop date square positioning
+                          top: '6px',
+                          width: '21px', // Match desktop date square width
+                          height: '21px', // Match desktop date square height
+                          zIndex: 2
                         }}
                       >
-                        {/* White Badge Background */}
+                        {/* White Badge Background - Desktop Structure */}
                         <div
                           style={{
                             position: 'absolute',
-                            left: '0px',
-                            top: '-1px',
-                            width: '34px', // Scaled up from 24px
-                            height: '34px', // Scaled up from 24px
-                            borderRadius: '6px', // Scaled up from 4px
-                            background: '#FFF',
-                            opacity: 0.7 // Reduced transparency for more subtle appearance
+                            left: '0.15px', // Match desktop date background positioning
+                            top: '-0.86px',
+                            width: '21.16px', // Match desktop date background width
+                            height: '21.16px', // Match desktop date background height
+                            borderRadius: '4px', // Match desktop border radius
+                            background: '#FFFFFF', // Match desktop background
+                            opacity: 1 // Full opacity like desktop
                           }}
                         />
 
-                        {/* Date Badge Content */}
+                        {/* Date Badge Content - Desktop Structure */}
                         <div
                           style={{
                             position: 'absolute',
-                            left: '3px', // Scaled up from 2px
-                            top: '3px', // Scaled up from 2px
+                            left: '3.36px', // Match desktop date content positioning
+                            top: '3px',
                             display: 'flex',
-                            width: '28px', // Scaled up from 20px
-                            height: '25px', // Scaled up from 18px
+                            width: '15px', // Match desktop date content width
+                            height: '14px', // Match desktop date content height
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            gap: '1px'
+                            gap: '2px' // Match desktop gap
                           }}
                         >
-                          {/* DAY Number */}
+                          {/* DAY Number - Desktop Typography */}
                           <span
                             style={{
-                              color: '#000',
+                              color: '#232323', // Match desktop text color
                               textAlign: 'center',
                               fontFamily: 'Inter',
-                              fontSize: '14px', // Scaled up from 10px
-                              fontWeight: '600',
-                              lineHeight: 'normal'
+                              fontSize: '10px', // Match desktop font size
+                              fontWeight: '800', // Match desktop font weight
+                              lineHeight: '1.21', // Match desktop line height
+                              margin: '0'
                             }}
                           >
                             {card.day}
                           </span>
 
-                          {/* MONTH Abbreviation */}
+                          {/* MONTH Abbreviation - Desktop Typography */}
                           <span
                             style={{
-                              color: '#000',
+                              color: '#232323', // Match desktop text color
                               textAlign: 'center',
                               fontFamily: 'Inter',
-                              fontSize: '8px', // Scaled up from 6px
-                              fontWeight: '600',
-                              lineHeight: 'normal'
+                              fontSize: '6px', // Match desktop font size
+                              fontWeight: '800', // Match desktop font weight
+                              lineHeight: '1.21', // Match desktop line height
+                              margin: '0'
                             }}
                           >
                             {card.month}
@@ -3643,417 +3649,224 @@ const FigmaMobile = () => {
                       </div>
                     </div>
 
-                    {/* Text Content Section - Enhanced for Larger Layout */}
+                    {/* Text Content Section - Desktop Structure Inspired */}
                     <div
                       className="card-clickable-area"
                       style={{
                         display: 'flex',
-                        flex: 1,
+                        width: '156px', // Match desktop content frame width
+                        padding: '3px 0px', // Match desktop content frame padding
                         flexDirection: 'column',
-                        justifyContent: 'flex-start',
+                        justifyContent: 'space-between', // Match desktop content frame layout
                         alignItems: 'flex-start',
-                        minWidth: 0, // Allow shrinking
-                        height: '120px', // Match new image height
-                        padding: '8px 0px', // Increased padding for better spacing
-                        boxSizing: 'border-box',
-                        position: 'relative' // Enable absolute positioning for button
+                        position: 'absolute',
+                        left: '94px', // Match desktop content frame positioning
+                        top: '0px',
+                        height: '85px', // Match desktop content frame height
+                        boxSizing: 'border-box'
                       }}
                     >
-                      {/* Event Information - Enhanced Layout */}
+                      {/* Event Information - Desktop Structure Inspired */}
                       <div
                         style={{
+                          width: '100%',
+                          height: '53px', // Match desktop event details height
                           display: 'flex',
                           flexDirection: 'column',
-                          alignItems: 'flex-start',
-                          alignSelf: 'stretch',
-                          justifyContent: 'flex-start',
-                          minWidth: 0, // Allow shrinking
-                          paddingRight: '12px', // Increased space for button area
-                          paddingBottom: '48px' // Reserve space for button (40px + 8px margin)
+                          alignSelf: 'stretch'
                         }}
                       >
-                        {/* Event Title - Dynamic Height Based on Content */}
+                        {/* Event Title - Desktop Typography Inspired */}
                         <h3
                           id={`event-title-${card.id}`}
                           style={{
-                            width: '100%',
-                            maxWidth: '100%',
-                            color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: 'clamp(16px, 4vw, 18px)', // Increased font size for better readability
-                            fontWeight: '600',
-                            lineHeight: '1.3', // Improved line height for readability
-                            margin: '0 0 10px 0', // Increased bottom margin
-                            // Smart text handling - dynamic expansion
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
+                            fontWeight: '800', // Match desktop font weight
+                            fontSize: '16px', // Match desktop font size
+                            lineHeight: '1.21', // Match desktop line height
+                            textAlign: 'left',
+                            color: '#FFFFFF',
+                            width: '128px', // Match desktop title width
+                            height: '20px', // Match desktop title height
+                            margin: '0',
+                            padding: '0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            wordBreak: 'break-word',
-                            hyphens: 'auto',
-                            // Dynamic height - expands based on content
-                            minHeight: '1.3em', // Minimum height for single line
-                            maxHeight: '2.6em', // Maximum height for two lines
-                            height: 'auto', // Allow dynamic height
-                            flexShrink: 0 // Don't allow title to shrink
+                            whiteSpace: 'nowrap' // Single line like desktop
                           }}
                         >
                           {card.title}
                         </h3>
 
-                        {/* Enhanced: Date/Time and Location - Better Spacing */}
+                        {/* Event DateTime - Desktop Structure Inspired */}
                         <div
                           style={{
                             display: 'flex',
+                            flexDirection: 'row',
                             alignItems: 'center',
-                            gap: '12px', // Increased gap for better visual separation
-                            width: '100%',
-                            minHeight: '20px', // Increased height for better touch targets
-                            flexWrap: 'nowrap', // Prevent wrapping to keep on same line
-                            flexShrink: 0, // Don't allow this section to shrink
-                            marginBottom: '8px' // Add margin to separate from button area
+                            alignSelf: 'stretch',
+                            gap: '4px', // Match desktop gap
+                            padding: '0px 0px 0px 1px' // Match desktop padding
                           }}
                         >
-                          {/* DATE Section - Left Side */}
-                          <div
+                          {/* DateTime Icon - Desktop Structure */}
+                          <svg
+                            width="10" // Match desktop icon width
+                            height="10" // Match desktop icon height
+                            viewBox="0 0 10 10"
+                            fill="none"
+                            style={{ color: '#FFFFFF' }} // Match desktop icon color
+                          >
+                            <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
+                          </svg>
+
+                          {/* DateTime Text - Desktop Typography */}
+                          <span
                             style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              flex: '1 1 50%', // Take up to 50% of available space
-                              minWidth: 0 // Allow shrinking
+                              fontFamily: 'Inter',
+                              fontWeight: '200', // Match desktop font weight
+                              fontSize: '10px', // Match desktop font size
+                              lineHeight: '1.21', // Match desktop line height
+                              textAlign: 'left',
+                              color: '#FFFFFF',
+                              width: '111px', // Match desktop text width
+                              height: '12px', // Match desktop text height
+                              margin: '0',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
                             }}
                           >
-                            {/* Calendar Icon - Clickable */}
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 10 10"
-                              fill="none"
-                              onClick={() => {
-                                // Create calendar event
-                                const eventTitle = encodeURIComponent(card.title);
-                                const eventLocation = encodeURIComponent(card.location);
-                                const eventDate = card.date;
+                            {card.date}
+                          </span>
+                        </div>
 
-                                // Parse date string to create proper calendar format
-                                const now = new Date();
-                                const currentYear = now.getFullYear();
+                        {/* Event Location - Desktop Structure Inspired */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            alignSelf: 'stretch',
+                            gap: '4px', // Match desktop gap
+                            padding: '0px 1px' // Match desktop padding
+                          }}
+                        >
+                          {/* Location Icon - Desktop Structure */}
+                          <svg
+                            width="10" // Match desktop icon width
+                            height="10" // Match desktop icon height
+                            viewBox="0 0 10 10"
+                            fill="none"
+                            style={{ color: '#FFFFFF' }} // Match desktop icon color
+                          >
+                            <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 5 5 5s5-1.25 5-5c0-2.76-2.24-5-5-5zm0 7.5c-1.38 0-2.5-1.12-2.5-2.5S3.62 2.5 5 2.5 7.5 3.62 7.5 5 6.38 7.5 5 7.5z" fill="currentColor"/>
+                          </svg>
 
-                                // Extract date parts
-                                const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                                if (dateMatch) {
-                                  const [, , month, day, hour, minute, ampm] = dateMatch;
-                                  const monthMap = {
-                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                                  };
-
-                                  let hour24 = parseInt(hour);
-                                  if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                                  if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                                  const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                                  const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
-
-                                  // Format for calendar URL
-                                  const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                                  const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                                  // Try different calendar methods
-                                  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-
-                                  window.open(calendarUrl, '_blank');
-                                }
-                              }}
-                              style={{
-                                cursor: 'pointer',
-                                padding: '2px',
-                                borderRadius: '4px',
-                                transition: 'all 0.2s ease-in-out',
-                                flexShrink: 0 // Don't shrink the icon
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }}
-                            >
-                              <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
-                            </svg>
-
-                            {/* Date text - Compact */}
-                            <span
-                              style={{
-                                color: 'rgba(255, 255, 255, 0.75)',
-                                fontFamily: 'Inter',
-                                fontSize: 'clamp(10px, 2.8vw, 11px)', // Slightly smaller for side-by-side layout
-                                fontWeight: '400',
-                                lineHeight: '1.3',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                flex: 1,
-                                minWidth: 0,
-                                cursor: 'pointer',
-                                padding: '2px 4px',
-                                borderRadius: '4px',
-                                transition: 'all 0.2s ease-in-out'
-                              }}
-                              onClick={() => {
-                                // Same calendar logic as icon
-                                const eventTitle = encodeURIComponent(card.title);
-                                const eventLocation = encodeURIComponent(card.location);
-                                const eventDate = card.date;
-
-                                const now = new Date();
-                                const currentYear = now.getFullYear();
-                                const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                                if (dateMatch) {
-                                  const [, , month, day, hour, minute, ampm] = dateMatch;
-                                  const monthMap = {
-                                    'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                                    'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                                  };
-
-                                  let hour24 = parseInt(hour);
-                                  if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                                  if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                                  const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                                  const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000);
-
-                                  const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                                  const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                                  const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-                                  window.open(calendarUrl, '_blank');
-                                }
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }}
-                            >
-                              {card.date}
-                            </span>
-                          </div>
-
-                          {/* LOCATION Section - Right Side */}
-                          <div
+                          {/* Location Text - Desktop Typography */}
+                          <span
                             style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              flex: '1 1 50%', // Take up to 50% of available space
-                              minWidth: 0 // Allow shrinking
+                              fontFamily: 'Inter',
+                              fontWeight: '200', // Match desktop font weight
+                              fontSize: '10px', // Match desktop font size
+                              lineHeight: '1.21', // Match desktop line height
+                              textAlign: 'left',
+                              color: '#FFFFFF',
+                              width: '111px', // Match desktop text width
+                              height: '12px', // Match desktop text height
+                              margin: '0',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
                             }}
                           >
-                            {/* Location Icon - Clickable */}
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 10 10"
-                              fill="none"
-                              onClick={() => {
-                                const address = encodeURIComponent(card.location);
-                                const userAgent = navigator.userAgent || '';
-
-                                // Detect iOS
-                                if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                                  window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                                }
-                                // Detect Android
-                                else if (/android/i.test(userAgent)) {
-                                  window.open(`geo:0,0?q=${address}`, '_blank');
-                                }
-                                // Default to Google Maps for web browsers
-                                else {
-                                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                                }
-                              }}
-                              style={{
-                                cursor: 'pointer',
-                                padding: '2px',
-                                borderRadius: '4px',
-                                transition: 'all 0.2s ease-in-out',
-                                flexShrink: 0 // Don't shrink the icon
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }}
-                            >
-                              <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
-                              <circle cx="5" cy="4" r="1" fill="#FFF"/>
-                            </svg>
-
-                            {/* Location text - Compact */}
-                            <span
-                              style={{
-                                color: 'rgba(255, 255, 255, 0.75)',
-                                fontFamily: 'Inter',
-                                fontSize: 'clamp(10px, 2.8vw, 11px)', // Slightly smaller for side-by-side layout
-                                fontWeight: '400',
-                                lineHeight: '1.3',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                                flex: 1,
-                                minWidth: 0,
-                                cursor: 'pointer',
-                                padding: '2px 4px',
-                                borderRadius: '4px',
-                                transition: 'all 0.2s ease-in-out'
-                              }}
-                              onClick={() => {
-                                const address = encodeURIComponent(card.location);
-                                const userAgent = navigator.userAgent || '';
-
-                                if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                                  window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                                } else if (/android/i.test(userAgent)) {
-                                  window.open(`geo:0,0?q=${address}`, '_blank');
-                                } else {
-                                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                                }
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                              }}
-                            >
-                              {card.location}
-                            </span>
-                          </div>
+                            {card.location}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Enhanced: Button Positioned for Visibility and Accessibility */}
+                      {/* Event Buttons - Desktop Structure Inspired */}
                       <div
                         style={{
-                          position: 'absolute',
-                          bottom: '8px', // Increased from 4px for better visibility
-                          left: '0',
-                          right: '12px', // Account for increased paddingRight
+                          width: '100%',
+                          height: '26px', // Match desktop buttons height
                           display: 'flex',
-                          justifyContent: 'stretch',
-                          alignItems: 'center',
-                          zIndex: 2 // Ensure button is above other content
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          gap: '4px', // Match desktop gap
+                          padding: '0px 4px 0px 0px' // Match desktop padding
                         }}
                       >
-                        {/* Get Tickets Button - Full Width Design */}
+                        {/* Get Tickets Button - Desktop Structure Inspired */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
-                          <div
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               window.open(card.ticketsUrl, '_blank');
                             }}
                             style={{
+                              background: 'rgba(23, 23, 23, 0.8)', // Match desktop background
+                              borderRadius: '37px', // Match desktop border radius
                               display: 'flex',
-                              alignItems: 'center',
+                              flexDirection: 'row',
                               justifyContent: 'center',
-                              padding: '10px 16px', // Increased padding for better touch target
-                              borderRadius: '12px', // Increased radius to match enhanced design
-                              background: 'rgba(23, 23, 23, 0.9)', // Slightly more opaque for better visibility
-                              border: '1px solid rgba(255, 255, 255, 0.25)', // Slightly more visible border
-                              boxShadow: '0 3px 12px rgba(0, 0, 0, 0.4)', // Enhanced shadow for depth
+                              alignItems: 'center',
+                              gap: '10px', // Match desktop gap
+                              padding: '13px 12px', // Match desktop padding
+                              width: '155px', // Match desktop width
+                              height: '26px', // Match desktop height
+                              border: 'none',
                               cursor: 'pointer',
+                              fontFamily: 'Inter',
+                              fontWeight: '500', // Match desktop font weight
+                              fontSize: '12px', // Match desktop font size
+                              lineHeight: '1.21', // Match desktop line height
+                              textAlign: 'left',
+                              color: '#FFFFFF',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
-                              // FULL WIDTH: Span the entire available width
-                              width: '100%',
-                              height: '40px', // Increased height for better accessibility
-                              fontSize: '14px', // Increased font size for better readability
-                              fontWeight: '500', // Medium weight for better visibility
-                              // Ensure proper containment
-                              boxSizing: 'border-box',
-                              flexShrink: 0 // Prevent shrinking
+                              boxSizing: 'border-box'
                             }}
                             onMouseEnter={(e) => {
-                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(1.02)'; // Subtle scale for full-width button
-                                e.currentTarget.style.background = 'rgba(76, 76, 76, 0.90)'; // Match desktop hover
-                              }
+                              e.currentTarget.style.transform = 'scale(1.02)';
+                              e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
                             }}
                             onMouseLeave={(e) => {
-                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.85)'; // Reset to normal state
-                              }
-                            }}
-                            onMouseDown={(e) => {
-                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(0.98)'; // Subtle press effect
-                              }
-                            }}
-                            onMouseUp={(e) => {
-                              if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                                e.currentTarget.style.transform = 'scale(1.02)';
-                              }
+                              e.currentTarget.style.transform = 'scale(1)';
+                              e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
                             }}
                           >
-                            <span
-                              style={{
-                                color: '#FFF', // White text like desktop
-                                fontFamily: 'Inter',
-                                fontSize: '14px', // Consistent with container
-                                fontWeight: '500', // Medium weight for better readability
-                                lineHeight: 'normal',
-                                pointerEvents: 'none',
-                                whiteSpace: 'nowrap', // Prevent text wrapping
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis' // Handle overflow gracefully
-                              }}
-                            >
-                              Buy Tickets
-                            </span>
-                          </div>
+                            Buy Tickets
+                          </button>
                         ) : (
                           /* Show disabled button for events without ticket links */
-                          <div
+                          <button
+                            disabled
                             style={{
+                              background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
+                              borderRadius: '37px', // Match desktop border radius
                               display: 'flex',
-                              alignItems: 'center',
+                              flexDirection: 'row',
                               justifyContent: 'center',
-                              padding: '10px 16px', // Match enhanced active button padding
-                              borderRadius: '12px', // Match enhanced active button radius
-                              background: 'rgba(23, 23, 23, 0.5)', // More transparent for disabled state
-                              border: '1px solid rgba(255, 255, 255, 0.15)', // Lighter border
-                              cursor: 'default', // No pointer cursor for disabled
-                              // FULL WIDTH: Span the entire available width
-                              width: '100%',
-                              height: '40px', // Match enhanced active button height
-                              fontSize: '14px', // Match enhanced active button font size
-                              fontWeight: '500',
+                              alignItems: 'center',
+                              gap: '10px', // Match desktop gap
+                              padding: '13px 12px', // Match desktop padding
+                              width: '155px', // Match desktop width
+                              height: '26px', // Match desktop height
+                              border: 'none',
+                              cursor: 'default',
+                              fontFamily: 'Inter',
+                              fontWeight: '500', // Match desktop font weight
+                              fontSize: '12px', // Match desktop font size
+                              lineHeight: '1.21', // Match desktop line height
+                              textAlign: 'left',
+                              color: 'rgba(255, 255, 255, 0.6)',
                               boxSizing: 'border-box',
-                              opacity: 0.7 // Slightly less transparent for better visibility
+                              opacity: 0.7
                             }}
                           >
-                            <span
-                              style={{
-                                color: 'rgba(255, 255, 255, 0.6)', // Slightly less dimmed for better visibility
-                                fontFamily: 'Inter',
-                                fontSize: '14px', // Match enhanced active button font size
-                                fontWeight: '500',
-                                lineHeight: 'normal',
-                                pointerEvents: 'none',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              Event Info
-                            </span>
-                          </div>
+                            Event Info
+                          </button>
                         )}
                       </div>
                     </div>
@@ -4064,565 +3877,32 @@ const FigmaMobile = () => {
           </div>
           </section>
         </div>
-        </main>
 
-        {/* Dynamic Gradient Overlay Behind Drawer - Only visible when drawer is open */}
-        {!drawerFullyClosed && (
-          <div
-            style={{
-              position: 'fixed',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: `calc(${getDrawerHeight()} + 80px)`, // Reduced height for less blocking
-              background: `linear-gradient(
-                to top,
-                rgba(0, 0, 0, 0.6) 0%,
-                rgba(0, 0, 0, 0.4) 20%,
-                rgba(0, 0, 0, 0.2) 40%,
-                rgba(0, 0, 0, 0.1) 60%,
-                rgba(0, 0, 0, 0.05) 80%,
-                rgba(0, 0, 0, 0) 100%
-              )`,
-              opacity: 1,
-              transition: 'opacity 0.1s ease-out', // Ultra-fast transition
-              zIndex: 40, // Lower z-index to ensure content visibility
-              pointerEvents: 'none', // Don't interfere with interactions
-              transform: 'translateY(0%)',
-              transformOrigin: 'bottom'
-            }}
-          />
-        )}
-
-        {/* Text Us Drawer - Bottom with Dynamic Height and Swipe Gestures */}
-        <div
-          ref={drawerRef}
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent background click when clicking drawer
-            handleDrawerClick(); // Handle drawer click to open when closed
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'}`}
+        {/* Footer Section */}
+        <footer
           style={{
-            height: '280px', // Fixed height for consistent transform animations
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '8px 0px 20px 0px', // Remove left/right padding, keep top/bottom
-            boxSizing: 'border-box',
-            overflow: drawerExpanded ? 'visible' : 'hidden', // Allow content to be visible when expanded
-            cursor: drawerFullyClosed ? 'pointer' : 'default',
-            touchAction: 'pan-y', // Allow vertical panning for swipe gestures
-            userSelect: 'none', // Prevent text selection during swipe
-            WebkitUserSelect: 'none' // Safari support
+            width: '100%',
+            padding: '40px 16px 20px',
+            textAlign: 'center',
+            background: 'transparent'
           }}
         >
-          {/* Drawer Card Gradient Overlay - Creates hiding effect */}
           <div
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: `linear-gradient(to bottom,
-                transparent 0%,
-                transparent 30%,
-                rgba(0, 0, 0, 0.3) 70%,
-                rgba(0, 0, 0, 0.6) 100%)`,
-              pointerEvents: 'none',
-              zIndex: 1,
-              opacity: drawerExpanded ? 0 : 1,
-              transition: 'opacity 0.4s ease'
-            }}
-          />
-          {/* Drawer Handle with Enhanced Touch Area */}
-          <div
-            style={{
-              alignSelf: 'center',
-              width: '80px', // Larger touch area
-              height: '20px', // Larger touch area
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginTop: '6px',
-              flexShrink: 0,
-              position: 'relative',
-              zIndex: 2,
-              cursor: 'grab',
-              touchAction: 'pan-y' // Allow vertical panning
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            {/* Visual Handle */}
-            <div
-              style={{
-                width: '60px',
-                height: '4px',
-                background: '#D9D9D9',
-                borderRadius: '100px',
-                opacity: 0.8,
-                transition: 'opacity 0.2s ease'
-              }}
-            />
-          </div>
-
-          {/* Verification Collapsed Indicator */}
-          {showVerification && !drawerExpanded && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '4px',
-                flexShrink: 0,
-                position: 'relative',
-                zIndex: 2,
-                opacity: 0.8
-              }}
-            >
-              <div
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  textAlign: 'center'
-                }}
-              >
-                Verification Code
-              </div>
-              <div
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter',
-                  fontSize: '10px',
-                  fontWeight: '400',
-                  textAlign: 'center',
-                  opacity: 0.7
-                }}
-              >
-                Tap to continue
-              </div>
-            </div>
-          )}
-
-          {/* Text Us Group - Hidden during verification */}
-          {!drawerFullyClosed && !showVerification && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2px',
-                marginLeft: '20px', // Add left margin for text positioning
-                flexShrink: 0,
-                position: 'relative',
-                zIndex: 2
-              }}
-            >
-            <div
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '20px',
-                lineHeight: '1.2em',
-                color: '#FFFFFF'
-              }}
-            >
-              Text us
-            </div>
-            <div
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '300',
-                fontSize: '12px',
-                lineHeight: '1.3em',
-                color: '#FFFFFF',
-                opacity: 0.8
-              }}
-            >
-              Exclusive events, contests, and more
-            </div>
-          </div>
-          )}
-
-          {/* Laylo Iframe - Persistent in DOM for state preservation */}
-          <div
-            onClick={handleIframeClick}
-            style={{
-              width: '100%',
-              maxWidth: '1000px',
-              margin: '0 auto', // Remove all margins for tight spacing
-              cursor: 'pointer',
-              borderRadius: '8px',
-              overflow: 'visible', // Allow iframe content to be fully visible
-              flexShrink: 0, // Prevent container from shrinking
-              visibility: (drawerExpanded && !drawerFullyClosed) ? 'visible' : 'hidden',
-              opacity: (drawerExpanded && !drawerFullyClosed) ? 1 : 0,
-              transform: (drawerExpanded && !drawerFullyClosed) ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.1s ease-out, transform 0.1s ease-out, visibility 0.1s ease-out'
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontFamily: 'Inter',
+              fontSize: '12px',
+              fontWeight: '300',
+              lineHeight: '1.5'
             }}
           >
-            <LayloIframe
-              dropId="1nTsX"
-              color="ff0409"
-              theme="dark"
-              background="solid"
-              minimal={true}
-              style={{
-                width: '1px',
-                minWidth: '100%',
-                maxWidth: '1000px',
-                height: iframeExpanded ? '200px' : '160px', // Much larger height for phone form content
-                border: 'none',
-                borderRadius: '8px',
-                background: 'transparent',
-                display: 'block',
-                transition: 'height 0.1s ease-out',
-                pointerEvents: 'auto' // Ensure iframe can receive clicks
-              }}
-            />
+            © 2024 BOUNCE2BOUNCE. All rights reserved.
           </div>
-
-          {/* Disclaimer Text - Removed, replaced by Laylo iframe */}
-
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0, 0, 0, 0.95)',
-          zIndex: 1000,
-          display: 'flex',
-          flexDirection: 'column',
-          opacity: showMenu ? 1 : 0,
-          visibility: showMenu ? 'visible' : 'hidden',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)'
-        }}
-      >
-          {/* Navigation Bar in Menu */}
-          <div
-            style={{
-              width: '430px',
-              height: '97px',
-              maxWidth: '100vw',
-              margin: '0 auto',
-              position: 'relative',
-              background: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 20px',
-              boxSizing: 'border-box'
-            }}
-          >
-            {/* Close Menu Button (Animated X) - Right Side */}
-            <div
-              onClick={toggleMenu}
-              className="mobile-menu-button"
-              style={{
-                position: 'absolute',
-                right: '20px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '34px',
-                height: '34px',
-                cursor: 'pointer',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              {/* Same animated lines as main nav */}
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: 'rotate(45deg) translateY(6px)',
-                  transformOrigin: 'center'
-                }}
-              />
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: 0,
-                  transform: 'scale(0)'
-                }}
-              />
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: 'rotate(-45deg) translateY(-6px)',
-                  transformOrigin: 'center'
-                }}
-              />
-            </div>
-
-            {/* B2B Logo - Centered - Clickable */}
-            <img
-              onClick={() => handleNavigation('/')}
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
-              alt="B2B Logo"
-              style={{
-                width: '138.41px',
-                height: '43px',
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                userSelect: 'none'
-              }}
-              onMouseDown={(e) => {
-                e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
-              }}
-              onMouseUp={(e) => {
-                e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-              }}
-            />
-          </div>
-
-          {/* Navigation Body */}
-          <div
-            style={{
-              width: '430px',
-              maxWidth: '100vw',
-              margin: '0 auto',
-              padding: '40px 25px', // Keep menu padding consistent with new layout
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '24px',
-              transform: showMenu ? 'translateY(0)' : 'translateY(-20px)',
-              opacity: showMenu ? 1 : 0,
-              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.2s' : '0s'
-            }}
-          >
-            <div
-              onClick={() => handleNavigation('/')}
-              className="mobile-nav-item"
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '64px',
-                lineHeight: '1.21em',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
-                opacity: showMenu ? 1 : 0,
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-                transitionDelay: showMenu ? '0.3s' : '0s'
-              }}
-            >
-              Events
-            </div>
-            <div
-              onClick={() => handleNavigation('/about')}
-              className="mobile-nav-item"
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '64px',
-                lineHeight: '1.21em',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
-                opacity: showMenu ? 1 : 0,
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-                transitionDelay: showMenu ? '0.4s' : '0s'
-              }}
-            >
-              About
-            </div>
-            <div
-              onClick={() => handleNavigation('/contact')}
-              className="mobile-nav-item"
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '64px',
-                lineHeight: '1.21em',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
-                opacity: showMenu ? 1 : 0,
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-                transitionDelay: showMenu ? '0.5s' : '0s'
-              }}
-            >
-              Contact
-            </div>
-          </div>
-        </div>
-
-        {/* Privacy Consent Modal */}
-        <PrivacyConsentModal onConsentChange={handleConsentChange} />
+        </footer>
+      </main>
+    </div>
     </>
   );
 };
 
 export default FigmaMobile;
-
-// Add CSS for mobile event card optimizations
-const mobileCardStyles = `
-  /* Mobile Event Card Responsive Optimizations - Prevent Overlap */
-  .event-card-spring {
-    /* Force proper spacing and prevent overlap on mobile devices */
-    margin-bottom: 0 !important; /* Use container gap instead */
-    min-height: 120px !important;
-    height: auto !important;
-    box-sizing: border-box !important;
-    position: relative !important;
-    z-index: 1 !important;
-    isolation: isolate !important;
-    transform: translateZ(0) !important;
-    will-change: transform !important;
-  }
-
-  .event-card-hidden {
-    /* Ensure hidden cards don't interfere with layout */
-    position: relative !important;
-    z-index: 0 !important;
-  }
-
-  /* Mobile-specific viewport fixes */
-  @media screen and (max-width: 480px) {
-    .event-card-spring {
-      padding: 12px !important;
-      margin-bottom: 0 !important; /* Use container gap */
-      min-height: 130px !important;
-    }
-
-    .event-card-spring h3 {
-      font-size: 16px !important;
-      line-height: 1.25 !important;
-    }
-  }
-
-  @media screen and (max-width: 360px) {
-    .event-card-spring {
-      padding: 10px !important;
-      margin-bottom: 0 !important; /* Use container gap */
-      min-height: 140px !important;
-    }
-
-    .event-card-spring h3 {
-      font-size: 15px !important;
-      line-height: 1.2 !important;
-    }
-  }
-
-  /* iOS Safari specific fixes */
-  @supports (-webkit-touch-callout: none) {
-    .event-card-spring {
-      -webkit-transform: translateZ(0) !important;
-      -webkit-backface-visibility: hidden !important;
-      -webkit-perspective: 1000 !important;
-    }
-  }
-
-  /* Force proper spacing on all mobile browsers */
-  @media screen and (max-width: 767px) {
-    .event-card-spring {
-      display: block !important;
-      margin-bottom: 0 !important; /* Use container gap for consistent spacing */
-      padding: 12px !important;
-      box-sizing: border-box !important;
-      width: 100% !important;
-      min-height: 120px !important;
-      height: auto !important;
-      position: relative !important;
-      z-index: auto !important;
-      clear: both !important;
-      isolation: isolate !important;
-    }
-
-    /* Ensure container has proper spacing */
-    [role="list"][aria-label="Upcoming live music events"] {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 8px !important; /* Reduced gap for tighter spacing */
-      padding: 0 !important; /* Remove padding to match hero card */
-      box-sizing: border-box !important;
-    }
-
-    /* Prevent any absolute positioning issues */
-    .event-card-spring * {
-      position: relative !important;
-    }
-
-    .event-card-spring .card-clickable-area {
-      position: relative !important;
-      left: auto !important;
-      right: auto !important;
-      top: auto !important;
-    }
-  }
-
-  /* Text overflow utilities for better mobile text handling */
-  .text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    word-break: break-word;
-    hyphens: auto;
-  }
-
-  .text-truncate-1 {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Enhanced touch targets for mobile */
-  @media (max-width: 767px) {
-    .mobile-touch-target {
-      min-height: 44px;
-      min-width: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
-`;
-
-// Inject styles into document head
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
-  styleElement.textContent = mobileCardStyles;
-  document.head.appendChild(styleElement);
-}
-

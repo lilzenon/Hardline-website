@@ -38,11 +38,28 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    cors: {
+      origin: ['http://localhost:3000', 'https://admin.b2b.click', 'https://b2b.click'],
+      credentials: true,
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: process.env.NODE_ENV === 'development'
+          ? 'https://admin.b2b.click'  // Use live API for local development
+          : 'http://localhost:3001',
         changeOrigin: true,
-        secure: false,
+        secure: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('Proxy error:', err);
+          });
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            console.log('Sending Request to the Target:', req.method, req.url);
+          });
+          proxy.on('proxyRes', (proxyRes, req, _res) => {
+            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+          });
+        },
       },
     },
   },
