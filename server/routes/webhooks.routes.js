@@ -1087,8 +1087,8 @@ router.get(
     asyncHandler(async(req, res) => {
         const axios = require('axios');
 
-        // Get Instagram account from database
-        const socialQueries = require('../queries/social-integrations.queries');
+        // Note: Instagram integration has been migrated to dashboard
+        // This endpoint is deprecated and will be removed
 
         // Get all Instagram accounts (we'll filter by platform in the query)
         const knex = require('../knex');
@@ -1168,7 +1168,7 @@ router.get(
 
         try {
             const knex = require('../knex');
-            const instagramHandler = require('../handlers/instagram-integration.handler');
+            // Note: Instagram handler has been migrated to dashboard
 
             // Get Instagram account from database
             const accounts = await knex('social_media_accounts')
@@ -1529,9 +1529,8 @@ router.post(
                             continue;
                         }
 
-                        // Process incoming Instagram DM via Messenger Platform
-                        const instagramHandler = require('../handlers/instagram-integration.handler');
-                        await instagramHandler.processInstagramMessage(messagingEvent, entry.id);
+                        // Note: Instagram DM processing has been migrated to dashboard
+                        console.log('📱 Instagram DM received but processing migrated to dashboard');
                     }
                 }
 

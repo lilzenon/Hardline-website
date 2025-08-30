@@ -1,4 +1,5 @@
-const socialQueries = require('../queries/social-integrations.queries');
+// Note: Social queries have been migrated to dashboard
+const knex = require('../knex');
 
 /**
  * Handle incoming SMS webhook from Twilio
@@ -6,7 +7,7 @@ const socialQueries = require('../queries/social-integrations.queries');
 async function handleSmsWebhook(req, res) {
     try {
         console.log('📱 Received SMS webhook:', req.body);
-        
+
         const {
             MessageSid,
             From,
@@ -19,34 +20,34 @@ async function handleSmsWebhook(req, res) {
             MessagingServiceSid,
             DateCreated
         } = req.body;
-        
+
         // Validate required fields
         if (!MessageSid || !From || !To || !Body) {
             console.error('❌ Missing required SMS webhook fields');
             return res.status(400).send('Missing required fields');
         }
-        
+
         // Normalize phone numbers
         const fromPhone = normalizePhoneNumber(From);
         const toPhone = normalizePhoneNumber(To);
         const messageBody = Body.trim();
-        
+
         console.log(`📱 SMS from ${fromPhone} to ${toPhone}: "${messageBody}"`);
-        
+
         // Create or update SMS user
         await socialQueries.createOrUpdateSmsUser(fromPhone, {
             // Additional user data can be added here if available
         });
-        
+
         // Find matching keywords
         const matchingKeywords = await socialQueries.findMatchingKeywords(messageBody, 'sms');
-        
+
         if (matchingKeywords.length > 0) {
             console.log(`🎯 Found ${matchingKeywords.length} matching SMS keywords`);
-            
+
             // Process the first matching keyword
             const keyword = matchingKeywords[0];
-            
+
             // Create SMS interaction record
             const interaction = await socialQueries.createSmsInteraction({
                 twilio_message_sid: MessageSid,
@@ -68,22 +69,22 @@ async function handleSmsWebhook(req, res) {
                 twilio_created_at: DateCreated ? new Date(DateCreated) : new Date(),
                 raw_webhook_data: req.body
             });
-            
+
             // Send auto-response if configured
             if (keyword.send_auto_response && keyword.auto_response_message) {
                 await sendSmsResponse(fromPhone, keyword.auto_response_message, interaction.id);
             }
-            
+
             // Update keyword trigger count
             await socialQueries.updateKeyword(keyword.id, {
                 total_triggers: keyword.total_triggers + 1,
                 last_triggered_at: new Date()
             });
-            
+
             console.log('✅ SMS interaction processed successfully');
         } else {
             console.log('ℹ️ No matching keywords found for SMS');
-            
+
             // Still create interaction record for tracking
             await socialQueries.createSmsInteraction({
                 twilio_message_sid: MessageSid,
@@ -103,10 +104,10 @@ async function handleSmsWebhook(req, res) {
                 raw_webhook_data: req.body
             });
         }
-        
+
         // Respond to Twilio
         res.status(200).send('OK');
-        
+
     } catch (error) {
         console.error('❌ Error processing SMS webhook:', error);
         res.status(500).send('Internal Server Error');
@@ -123,17 +124,17 @@ async function sendSmsResponse(toPhone, message, interactionId = null) {
             console.error('❌ Twilio not configured for SMS responses');
             return false;
         }
-        
+
         const twilio = require('twilio')(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-        
+
         const response = await twilio.messages.create({
             body: message,
             from: process.env.TWILIO_PHONE_NUMBER,
             to: toPhone
         });
-        
+
         console.log(`✅ SMS response sent to ${toPhone}: "${message}"`);
-        
+
         // Update interaction record if provided
         if (interactionId) {
             await socialQueries.createSmsInteraction({
@@ -151,9 +152,9 @@ async function sendSmsResponse(toPhone, message, interactionId = null) {
                 raw_webhook_data: response
             });
         }
-        
+
         return true;
-        
+
     } catch (error) {
         console.error('❌ Error sending SMS response:', error);
         return false;
@@ -166,7 +167,7 @@ async function sendSmsResponse(toPhone, message, interactionId = null) {
 function normalizePhoneNumber(phone) {
     // Remove all non-digit characters except +
     let normalized = phone.replace(/[^\d+]/g, '');
-    
+
     // Ensure it starts with +
     if (!normalized.startsWith('+')) {
         // Assume US number if no country code
@@ -178,7 +179,7 @@ function normalizePhoneNumber(phone) {
             normalized = '+' + normalized;
         }
     }
-    
+
     return normalized;
 }
 
@@ -191,31 +192,31 @@ function verifyTwilioSignature(req, res, next) {
             console.warn('⚠️ Twilio auth token not configured, skipping signature verification');
             return next();
         }
-        
+
         const twilio = require('twilio');
         const twilioSignature = req.headers['x-twilio-signature'];
         const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
-        
+
         if (!twilioSignature) {
             console.warn('⚠️ No Twilio signature header found');
             return next();
         }
-        
+
         const isValid = twilio.validateRequest(
             process.env.TWILIO_AUTH_TOKEN,
             twilioSignature,
             url,
             req.body
         );
-        
+
         if (!isValid) {
             console.error('❌ Invalid Twilio signature');
             return res.status(403).send('Forbidden');
         }
-        
+
         console.log('✅ Twilio signature verified');
         next();
-        
+
     } catch (error) {
         console.error('❌ Error verifying Twilio signature:', error);
         // Continue anyway for development
