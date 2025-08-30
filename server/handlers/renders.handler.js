@@ -564,40 +564,19 @@ async function reactHomepage(req, res) {
             ogDescription: metaTags.ogDescription
         });
 
-        // Find the React HTML file with fallbacks
-        let reactIndexPath;
-        let htmlContent;
+        // FIXED: Only use Vite-built React homepage to prevent bundle conflicts
+        const reactIndexPath = path.join(__dirname, '../../dist/index.html');
 
-        // First try the Vite-built React homepage (dist/index.html) - contains analytics
-        const viteHomepageIndexPath = path.join(__dirname, '../../dist/index.html');
-        if (fs.existsSync(viteHomepageIndexPath)) {
-            console.log('📱 Serving React homepage from dist/index.html (Vite build with analytics) with dynamic SEO');
-            reactIndexPath = viteHomepageIndexPath;
-        }
-        // Fallback to legacy React homepage (dist/react/index.html) - without analytics
-        else {
-            const legacyReactIndexPath = path.join(__dirname, '../../dist/react/index.html');
-            if (fs.existsSync(legacyReactIndexPath)) {
-                console.log('📱 Serving React homepage from dist/react/index.html (legacy build without analytics) with dynamic SEO');
-                reactIndexPath = legacyReactIndexPath;
-            }
-            // Final fallback to static React homepage (static/react/index.html)
-            else {
-                const staticReactIndexPath = path.join(__dirname, '../../static/react/index.html');
-                if (fs.existsSync(staticReactIndexPath)) {
-                    console.log('📱 Serving React homepage from static/react/index.html (static fallback) with dynamic SEO');
-                    reactIndexPath = staticReactIndexPath;
-                }
-            }
+        if (!fs.existsSync(reactIndexPath)) {
+            console.error('🚨 CRITICAL: Vite-built React homepage not found at dist/index.html');
+            console.error('🔧 Run "npm run build" to generate the Vite build');
+            return res.status(500).send('Homepage build not found. Please run npm run build.');
         }
 
-        if (!reactIndexPath) {
-            console.error('❌ No React index.html found, falling back to Handlebars');
-            return home(req, res);
-        }
+        console.log('📱 Serving React homepage from dist/index.html (Vite build only) with dynamic SEO');
 
         // Read the React HTML template
-        htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
+        const htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
 
         // Escape HTML content for safe injection
         const escapeHtml = (text) => {
@@ -721,8 +700,16 @@ async function reactHomepage(req, res) {
             });
         }
 
-        // Set proper headers and send the modified HTML
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        // Set aggressive cache-busting headers to prevent old bundle loading
+        res.set({
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Last-Modified': new Date().toUTCString(),
+            'ETag': `"${Date.now()}"`, // Force browser to check for updates
+            'Vary': 'Accept-Encoding'
+        });
         res.send(htmlContent);
 
     } catch (error) {

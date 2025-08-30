@@ -11,17 +11,16 @@ const path = require('path');
 
 console.log('🔍 Checking for required production files before push...');
 
-// Define critical files that must be included in commits
+// Define critical files that must be included in commits (UPDATED FOR VITE BUILD)
 const CRITICAL_FILES = [
-    'static/react/bundle.js',
-    'static/react/index.html',
+    'dist/index.html',
     'build-info.json'
 ];
 
 try {
     // Check if any critical files have uncommitted changes
     const uncommittedCritical = [];
-    
+
     for (const file of CRITICAL_FILES) {
         try {
             execSync(`git diff --quiet HEAD -- "${file}"`, { stdio: 'pipe' });
@@ -30,13 +29,13 @@ try {
             uncommittedCritical.push(file);
         }
     }
-    
+
     // Check if any React source files were changed in recent commits
     const recentReactChanges = execSync('git diff HEAD~3..HEAD --name-only', { encoding: 'utf8' })
         .split('\n')
         .filter(line => line.match(/src\/react\/.*\.(jsx?|css)$/))
         .length;
-    
+
     // If React source files changed but bundle wasn't updated, warn
     if (recentReactChanges > 0 && uncommittedCritical.length > 0) {
         console.log('⚠️  WARNING: React source files were changed but production bundle may be outdated!');
@@ -49,29 +48,29 @@ try {
         console.log('');
         console.log('❓ Continuing with push anyway...');
     }
-    
-    // Check if bundle.js exists
-    if (!fs.existsSync('static/react/bundle.js')) {
-        console.log('❌ ERROR: static/react/bundle.js is missing!');
+
+    // Check if Vite build exists
+    if (!fs.existsSync('dist/index.html')) {
+        console.log('❌ ERROR: dist/index.html is missing!');
         console.log('🔧 Run: npm run build');
         process.exit(1);
     }
-    
-    // Check if bundle.js is older than source files
-    const bundleStats = fs.statSync('static/react/bundle.js');
-    const bundleTime = bundleStats.mtime.getTime();
-    
+
+    // Check if Vite build is older than source files
+    const buildStats = fs.statSync('dist/index.html');
+    const buildTime = buildStats.mtime.getTime();
+
     let newestSourceTime = 0;
-    
+
     // Find newest React source file
     function findNewestInDir(dir) {
         if (!fs.existsSync(dir)) return;
-        
+
         const items = fs.readdirSync(dir);
         for (const item of items) {
             const fullPath = path.join(dir, item);
             const stats = fs.statSync(fullPath);
-            
+
             if (stats.isDirectory()) {
                 findNewestInDir(fullPath);
             } else if (item.match(/\.(jsx?|css)$/)) {
@@ -82,17 +81,17 @@ try {
             }
         }
     }
-    
-    findNewestInDir('src/react');
-    
-    if (newestSourceTime > bundleTime) {
-        console.log('⚠️  WARNING: React source files are newer than bundle.js');
-        console.log('🔧 Consider running: npm run build:commit');
+
+    findNewestInDir('src');
+
+    if (newestSourceTime > buildTime) {
+        console.log('⚠️  WARNING: React source files are newer than Vite build');
+        console.log('🔧 Consider running: npm run build');
     }
-    
+
     console.log('✅ Pre-push checks completed');
     process.exit(0);
-    
+
 } catch (error) {
     console.error('❌ Error during pre-push check:', error.message);
     process.exit(1);
