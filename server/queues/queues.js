@@ -25,15 +25,15 @@ if (env.REDIS_ENABLED) {
             db: env.REDIS_DB,
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
             // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
-            connectTimeout: 8000, // Increased for stability
-            commandTimeout: 15000, // CRITICAL: Must exceed visit.js timeout (12s)
+            connectTimeout: 10000, // PRODUCTION: 10s connection timeout for stability
+            commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
             retryDelayOnFailover: 200,
             maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
             lazyConnect: true, // Don't connect immediately
             enableOfflineQueue: true, // Enable for queue reliability
             // Add BullMQ-specific optimizations
             enableReadyCheck: true,
-            maxLoadingTimeout: 15000, // CRITICAL: Must exceed visit.js timeout (12s)
+            maxLoadingTimeout: 30000, // PRODUCTION: 30s timeout for production stability
         };
 
         // Create the queue with error handling

@@ -14,7 +14,7 @@ if (env.REDIS_ENABLED) {
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
             // UNIFIED CONFIG: Balanced timeouts for stability and performance
             connectTimeout: 8000, // 8 seconds - balanced for both servers
-            commandTimeout: 15000, // CRITICAL: Must exceed visit.js timeout (12s)
+            commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
             retryDelayOnFailover: 150, // 150ms - balanced retry delay
             maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
             lazyConnect: true, // Connect only when needed
@@ -69,6 +69,8 @@ if (client) {
 
     client.on('connect', () => {
         console.log('✅ Redis connected successfully');
+        console.log('📊 PRODUCTION: Redis connection established with 30s timeout');
+        global.redisAvailable = true;
     });
 
     client.on('ready', async() => {
