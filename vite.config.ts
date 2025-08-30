@@ -44,20 +44,21 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: process.env.NODE_ENV === 'development'
-          ? 'https://admin.b2b.click'  // Use live API for local development
-          : 'http://localhost:3001',
+        target: 'https://admin.b2b.click',  // ALWAYS use live API for main homepage
         changeOrigin: true,
         secure: true,
+        headers: {
+          'Origin': 'http://localhost:3000'
+        },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
-            console.log('Proxy error:', err);
+            console.log('🚨 Proxy error connecting to live API:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
+            console.log('📡 Sending to live API:', req.method, req.url, '→ https://admin.b2b.click' + req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+            console.log('✅ Response from live API:', proxyRes.statusCode, req.url);
           });
         },
       },

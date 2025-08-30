@@ -3430,30 +3430,30 @@ const FigmaMobile = () => {
                     clear: 'both' // Prevent float issues
                   }}
                 >
-                  {/* Mobile Event Card Content - Desktop Structure Inspired */}
+                  {/* Mobile Event Card Content - Scaled Desktop Structure */}
                   <div
                     style={{
                       width: '100%',
-                      height: '85px', // Match desktop card height for consistency
+                      height: '120px', // Scaled up from 85px for better mobile visibility
                       position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       boxSizing: 'border-box',
-                      padding: '0' // Remove padding to match desktop structure
+                      padding: '8px' // Add padding for mobile touch targets
                     }}
                   >
 
-                    {/* Image Section - Desktop Structure Inspired */}
+                    {/* Image Section - Scaled Mobile Structure */}
                     <div
                       style={{
                         position: 'absolute',
-                        left: '0px', // Match desktop positioning
-                        top: '0px',
-                        width: '84px', // Match desktop image frame width
-                        height: '84px', // Match desktop image frame height
+                        left: '8px', // Account for container padding
+                        top: '8px',
+                        width: '104px', // Scaled up from 84px (24% increase)
+                        height: '104px', // Scaled up from 84px (24% increase)
                         flexShrink: 0,
-                        borderRadius: '16px', // Match desktop border radius
+                        borderRadius: '20px', // Scaled up from 16px
                         overflow: 'hidden'
                       }}
                     >
@@ -3534,11 +3534,11 @@ const FigmaMobile = () => {
                           }}
                           style={{
                             position: 'absolute',
-                            left: '3px', // Match desktop image positioning
-                            top: '2px',
-                            width: '79px', // Match desktop image width (79.04px)
-                            height: '79px', // Match desktop image height (79.04px)
-                            borderRadius: '14px', // Match desktop image border radius
+                            left: '4px', // Scaled positioning
+                            top: '3px',
+                            width: '96px', // Scaled up from 79px (22% increase)
+                            height: '96px', // Scaled up from 79px (22% increase)
+                            borderRadius: '17px', // Scaled up from 14px
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
                             cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
@@ -3572,28 +3572,28 @@ const FigmaMobile = () => {
 
                     </div>
 
-                    {/* Text Content Section - Desktop Structure Inspired */}
+                    {/* Text Content Section - Scaled Mobile Structure */}
                     <div
                       className="card-clickable-area"
                       style={{
                         display: 'flex',
-                        width: '156px', // Match desktop content frame width
-                        padding: '3px 0px', // Match desktop content frame padding
+                        width: '200px', // Scaled up from 156px (28% increase)
+                        padding: '4px 8px', // Scaled padding with mobile spacing
                         flexDirection: 'column',
-                        justifyContent: 'space-between', // Match desktop content frame layout
+                        justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         position: 'absolute',
-                        left: '94px', // Match desktop content frame positioning
-                        top: '0px',
-                        height: '85px', // Match desktop content frame height
+                        left: '120px', // Scaled from 94px + container padding adjustment
+                        top: '8px', // Account for container padding
+                        height: '104px', // Scaled up from 85px (22% increase)
                         boxSizing: 'border-box'
                       }}
                     >
-                      {/* Event Information - Desktop Structure Inspired */}
+                      {/* Event Information - Scaled Mobile Structure */}
                       <div
                         style={{
                           width: '100%',
-                          height: '53px', // Match desktop event details height
+                          height: '68px', // Scaled up from 53px (28% increase)
                           display: 'flex',
                           flexDirection: 'column',
                           alignSelf: 'stretch'
@@ -3621,24 +3621,24 @@ const FigmaMobile = () => {
                           {card.title}
                         </h3>
 
-                        {/* Event DateTime - Desktop Structure Inspired */}
+                        {/* Event DateTime - Scaled Mobile Structure */}
                         <div
                           style={{
                             display: 'flex',
                             flexDirection: 'row',
                             alignItems: 'center',
                             alignSelf: 'stretch',
-                            gap: '4px', // Match desktop gap
-                            padding: '0px 0px 0px 1px' // Match desktop padding
+                            gap: '6px', // Scaled up from 4px
+                            padding: '0px 0px 0px 2px' // Scaled padding
                           }}
                         >
-                          {/* DateTime Icon - Desktop Structure */}
+                          {/* DateTime Icon - Scaled Mobile Structure */}
                           <svg
-                            width="10" // Match desktop icon width
-                            height="10" // Match desktop icon height
+                            width="12" // Scaled up from 10px (20% increase)
+                            height="12" // Scaled up from 10px (20% increase)
                             viewBox="0 0 10 10"
                             fill="none"
-                            style={{ color: '#FFFFFF' }} // Match desktop icon color
+                            style={{ color: '#FFFFFF' }}
                           >
                             <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
                           </svg>
@@ -3664,24 +3664,24 @@ const FigmaMobile = () => {
                           </span>
                         </div>
 
-                        {/* Event Location - Desktop Structure Inspired */}
+                        {/* Event Location - Scaled Mobile Structure */}
                         <div
                           style={{
                             display: 'flex',
                             flexDirection: 'row',
                             alignItems: 'center',
                             alignSelf: 'stretch',
-                            gap: '4px', // Match desktop gap
-                            padding: '0px 1px' // Match desktop padding
+                            gap: '6px', // Scaled up from 4px
+                            padding: '0px 2px' // Scaled padding
                           }}
                         >
-                          {/* Location Icon - Desktop Structure */}
+                          {/* Location Icon - Scaled Mobile Structure */}
                           <svg
-                            width="10" // Match desktop icon width
-                            height="10" // Match desktop icon height
+                            width="12" // Scaled up from 10px (20% increase)
+                            height="12" // Scaled up from 10px (20% increase)
                             viewBox="0 0 10 10"
                             fill="none"
-                            style={{ color: '#FFFFFF' }} // Match desktop icon color
+                            style={{ color: '#FFFFFF' }}
                           >
                             <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 5 5 5s5-1.25 5-5c0-2.76-2.24-5-5-5zm0 7.5c-1.38 0-2.5-1.12-2.5-2.5S3.62 2.5 5 2.5 7.5 3.62 7.5 5 6.38 7.5 5 7.5z" fill="currentColor"/>
                           </svg>
@@ -3708,19 +3708,19 @@ const FigmaMobile = () => {
                         </div>
                       </div>
 
-                      {/* Event Buttons - Desktop Structure Inspired */}
+                      {/* Event Buttons - Scaled Mobile Structure */}
                       <div
                         style={{
                           width: '100%',
-                          height: '26px', // Match desktop buttons height
+                          height: '32px', // Scaled up from 26px (23% increase)
                           display: 'flex',
                           flexDirection: 'row',
                           justifyContent: 'space-between',
-                          gap: '4px', // Match desktop gap
-                          padding: '0px 4px 0px 0px' // Match desktop padding
+                          gap: '6px', // Scaled up from 4px
+                          padding: '0px 6px 0px 0px' // Scaled padding
                         }}
                       >
-                        {/* Get Tickets Button - Desktop Structure Inspired */}
+                        {/* Get Tickets Button - Scaled Mobile Structure */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <button
                             onClick={(e) => {
@@ -3728,23 +3728,23 @@ const FigmaMobile = () => {
                               window.open(card.ticketsUrl, '_blank');
                             }}
                             style={{
-                              background: 'rgba(23, 23, 23, 0.8)', // Match desktop background
-                              borderRadius: '37px', // Match desktop border radius
+                              background: 'rgba(23, 23, 23, 0.8)',
+                              borderRadius: '46px', // Scaled up from 37px (24% increase)
                               display: 'flex',
                               flexDirection: 'row',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '10px', // Match desktop gap
-                              padding: '13px 12px', // Match desktop padding
-                              width: '155px', // Match desktop width
-                              height: '26px', // Match desktop height
+                              gap: '12px', // Scaled up from 10px
+                              padding: '16px 15px', // Scaled up from 13px 12px
+                              width: '190px', // Scaled up from 155px (23% increase)
+                              height: '32px', // Scaled up from 26px (23% increase)
                               border: 'none',
                               cursor: 'pointer',
                               fontFamily: 'Inter',
-                              fontWeight: '500', // Match desktop font weight
-                              fontSize: '12px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
-                              textAlign: 'left',
+                              fontWeight: '500',
+                              fontSize: '14px', // Scaled up from 12px (17% increase)
+                              lineHeight: '1.21',
+                              textAlign: 'center', // Changed to center for better mobile UX
                               color: '#FFFFFF',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
@@ -3767,22 +3767,22 @@ const FigmaMobile = () => {
                             disabled
                             style={{
                               background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
-                              borderRadius: '37px', // Match desktop border radius
+                              borderRadius: '46px', // Scaled up from 37px (24% increase)
                               display: 'flex',
                               flexDirection: 'row',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '10px', // Match desktop gap
-                              padding: '13px 12px', // Match desktop padding
-                              width: '155px', // Match desktop width
-                              height: '26px', // Match desktop height
+                              gap: '12px', // Scaled up from 10px
+                              padding: '16px 15px', // Scaled up from 13px 12px
+                              width: '190px', // Scaled up from 155px (23% increase)
+                              height: '32px', // Scaled up from 26px (23% increase)
                               border: 'none',
                               cursor: 'default',
                               fontFamily: 'Inter',
-                              fontWeight: '500', // Match desktop font weight
-                              fontSize: '12px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
-                              textAlign: 'left',
+                              fontWeight: '500',
+                              fontSize: '14px', // Scaled up from 12px (17% increase)
+                              lineHeight: '1.21',
+                              textAlign: 'center', // Changed to center for better mobile UX
                               color: 'rgba(255, 255, 255, 0.6)',
                               boxSizing: 'border-box',
                               opacity: 0.7
@@ -3823,6 +3823,126 @@ const FigmaMobile = () => {
           </div>
         </footer>
       </main>
+
+      {/* Mobile Drawer - Restored Layout Component */}
+      <div
+        ref={drawerRef}
+        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
+        style={{
+          height: getDrawerHeight(),
+          transform: drawerFullyClosed
+            ? 'translate3d(0, 100%, 0)'
+            : drawerExpanded
+              ? 'translate3d(0, 0, 0)'
+              : 'translate3d(0, calc(100% - 80px), 0)',
+          zIndex: 1000
+        }}
+        onClick={handleDrawerClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        role="dialog"
+        aria-label="Contact form drawer"
+        aria-expanded={drawerExpanded}
+      >
+        {/* Drawer Handle */}
+        <div
+          style={{
+            width: '40px',
+            height: '4px',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            borderRadius: '2px',
+            margin: '8px auto 16px',
+            cursor: 'pointer'
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Drawer Content */}
+        <div
+          className={`drawer-content ${showVerification ? 'verification-mode' : ''}`}
+          style={{
+            padding: '0 20px 20px',
+            opacity: drawerFullyClosed ? 0 : 1,
+            transition: 'opacity 0.2s ease'
+          }}
+        >
+          {/* Text Us Group - Hidden during verification */}
+          {!drawerFullyClosed && !showVerification && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                marginBottom: '12px',
+                flexShrink: 0,
+                position: 'relative',
+                zIndex: 2
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: 'Inter',
+                  fontWeight: '800',
+                  fontSize: '20px',
+                  lineHeight: '1.2em',
+                  color: '#FFFFFF'
+                }}
+              >
+                Text us
+              </div>
+              <div
+                style={{
+                  fontFamily: 'Inter',
+                  fontWeight: '300',
+                  fontSize: '12px',
+                  lineHeight: '1.3em',
+                  color: '#FFFFFF',
+                  opacity: 0.8
+                }}
+              >
+                Exclusive events, contests, and more
+              </div>
+            </div>
+          )}
+
+          {/* Laylo Integration */}
+          {drawerExpanded && !drawerFullyClosed && !showVerification && (
+            <div
+              onClick={handleIframeClick}
+              style={{
+                width: '100%',
+                maxWidth: '1000px',
+                margin: '8px auto 0 auto',
+                cursor: 'pointer',
+                borderRadius: '8px',
+                overflow: 'visible',
+                flexShrink: 0
+              }}
+            >
+              <LayloIframe
+                dropId="1nTsX"
+                color="ff0409"
+                theme="dark"
+                background="solid"
+                minimal={true}
+                style={{
+                  width: '1px',
+                  minWidth: '100%',
+                  maxWidth: '1000px',
+                  height: iframeExpanded ? '200px' : '160px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: 'transparent',
+                  display: 'block',
+                  transition: 'opacity 0.3s ease, height 0.3s ease',
+                  pointerEvents: 'auto'
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
     </>
   );
