@@ -36,6 +36,8 @@ function getCSPDirectives() {
             "https://www.google.com", // Allow Google reCAPTCHA for Laylo
             "https://www.gstatic.com", // Allow Google static resources
             "https://recaptcha.google.com", // Allow reCAPTCHA scripts
+            "https://connect.facebook.net", // Allow Facebook Pixel
+            "https://www.facebook.com", // Allow Facebook scripts
             ...(isProduction ? [] : ["'unsafe-eval'"]) // Allow eval in development only
         ],
 
@@ -103,6 +105,8 @@ function getCSPDirectives() {
             "https://recaptcha.google.com", // Allow reCAPTCHA API
             "https://admin.b2b.click", // Allow analytics dashboard connections
             "https://ipapi.co", // Allow location API for analytics
+            "https://connect.facebook.net", // Allow Facebook Pixel connections
+            "https://www.facebook.com", // Allow Facebook API connections
             ...(isProduction ? [] : ["ws://localhost:*", "http://localhost:*"])
         ],
 
@@ -229,7 +233,16 @@ function createSecurityMiddleware() {
         originAgentCluster: true,
 
         // Hide X-Powered-By header
-        hidePoweredBy: true
+        hidePoweredBy: true,
+
+        // Permissions Policy to prevent web-share violations
+        permissionsPolicy: {
+            'web-share': ['self'], // Only allow web-share on same origin
+            'camera': [], // Disable camera access
+            'microphone': [], // Disable microphone access
+            'geolocation': ['self'], // Allow geolocation only on same origin
+            'payment': [] // Disable payment API
+        }
     });
 }
 

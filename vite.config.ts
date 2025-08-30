@@ -51,19 +51,24 @@ export default defineConfig({
     sourcemap: false, // Disable sourcemaps in production for smaller files
     minify: 'terser',
     target: 'es2020',
-    chunkSizeWarningLimit: 500, // Lower warning limit to catch large chunks
-    reportCompressedSize: true,
+    chunkSizeWarningLimit: 250, // CRITICAL: Much smaller chunks for 512MB RAM limit
+    reportCompressedSize: false, // Disable to save build memory
     rollupOptions: {
       output: {
         format: 'es',
-        // Optimize chunk splitting for better caching and smaller initial load
+        // MEMORY OPTIMIZATION: Aggressive chunk splitting for 512MB RAM limit
         manualChunks: {
-          // Separate vendor libraries for better caching
-          'react-vendor': ['react', 'react-dom'],
-          // Separate analytics and utilities
-          'analytics': ['./src/lib/analytics/beacon', './src/utils/cleanup'],
-          // Separate lazy-loaded pages
-          'pages': ['./src/react/components/AboutPage', './src/react/components/ContactPage']
+          // Core React (keep minimal)
+          'react-core': ['react', 'react-dom'],
+          // Analytics (lazy load to save initial memory)
+          'analytics': ['./src/lib/analytics/beacon'],
+          // Utilities (separate to allow lazy loading)
+          'utils': ['./src/utils/cleanup', './src/utils/mobileOptimization'],
+          // Large components (lazy load to save memory)
+          'figma-desktop': ['./src/react/components/FigmaDesktop'],
+          'figma-mobile': ['./src/react/components/FigmaMobile'],
+          // Hooks (separate for better tree shaking)
+          'hooks': ['./src/react/hooks/useAnalytics', './src/react/hooks/useMobileLifecycle']
         },
         // Optimize asset naming for better caching
         chunkFileNames: 'assets/[name]-[hash].js',

@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import FigmaDesktop from './FigmaDesktop';
-import FigmaMobile from './FigmaMobile';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+
+// MEMORY OPTIMIZATION: Lazy load large components to reduce initial bundle size
+const FigmaDesktop = lazy(() => import('./FigmaDesktop'));
+const FigmaMobile = lazy(() => import('./FigmaMobile'));
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useSEO } from '../hooks/useSEO';
@@ -106,8 +108,25 @@ const HomePage = () => {
     );
   }
 
-  // Serve appropriate component based on device detection
-  return isMobile ? <FigmaMobile /> : <FigmaDesktop />;
+  // MEMORY OPTIMIZATION: Wrap lazy components in Suspense with loading fallback
+  return (
+    <Suspense fallback={
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: '#000',
+        color: '#FFF',
+        fontFamily: 'Inter, sans-serif',
+        fontSize: '18px'
+      }}>
+        Loading component...
+      </div>
+    }>
+      {isMobile ? <FigmaMobile /> : <FigmaDesktop />}
+    </Suspense>
+  );
 };
 
 export default HomePage;

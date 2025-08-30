@@ -19,6 +19,9 @@ initializeCleanup();
 // Initialize mobile optimizations for better mobile performance
 initializeMobileOptimizations();
 
+// Initialize memory monitoring for production optimization
+import memoryMonitor from './utils/memoryMonitor';
+
 // Initialize analytics with proper configuration
 initializeAnalytics({
   trackingId: 'kutt-homepage',
@@ -31,6 +34,9 @@ initializeAnalytics({
 // Lazy load About and Contact pages for better performance
 const AboutPage = lazy(() => import('./react/components/AboutPage'));
 const ContactPage = lazy(() => import('./react/components/ContactPage'));
+
+// Import Error Boundary for graceful error handling
+import ErrorBoundary from './react/components/ErrorBoundary';
 
 // Import any additional CSS if needed
 import './react/styles.css';
@@ -139,7 +145,9 @@ const container = document.getElementById('root');
 if (container) {
   try {
     const root = createRoot(container);
-    root.render(React.createElement(App));
+    root.render(
+      React.createElement(ErrorBoundary, null, React.createElement(App))
+    );
   } catch (error) {
     console.error('React mounting error:', error);
   }

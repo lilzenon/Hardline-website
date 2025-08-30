@@ -207,12 +207,12 @@ export const useMobileLifecycle = () => {
                 const memInfo = performance.memory;
                 const usedRatio = memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit;
 
-                if (usedRatio > 0.8) {
+                if (usedRatio > 0.6) { // Lower threshold for 512MB RAM limit
                     handleMemoryPressure();
                 }
             };
 
-            const memoryCheckInterval = setInterval(checkMemory, 30000); // Check every 30 seconds
+            const memoryCheckInterval = setInterval(checkMemory, 60000); // Check every 60 seconds (reduced frequency)
 
             return () => clearInterval(memoryCheckInterval);
         }
