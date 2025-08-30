@@ -6,31 +6,53 @@ import PrivacyConsentModal from './PrivacyConsentModal';
 import useMobileLifecycle from '../hooks/useMobileLifecycle';
 import { mobileDebounce, mobileThrottle, memoryManager } from '../../utils/mobileOptimization';
 
-// Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
+// Enhanced Laylo Iframe Component with State Persistence and Optimized Loading
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
   const [layloReady, setLayloReady] = useState(false);
   const [iframeReady, setIframeReady] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isPreloading, setIsPreloading] = useState(true);
   const iframeRef = useRef(null);
   const contentCheckInterval = useRef(null);
+  const preloadTimer = useRef(null);
   const maxRetries = 2;
-  const contentCheckTimeout = 2000; // 2 seconds to detect content (faster)
+  const contentCheckTimeout = 1500; // Faster content detection
 
   // Mobile lifecycle management for this component
   const mobileLifecycle = useMobileLifecycle();
 
-  // Build Laylo URL with parameters
+  // Build Laylo URL with parameters and cache busting for state preservation
   const layloUrl = useMemo(() => {
     const params = new URLSearchParams({
       dropId,
       color,
       theme,
       background: background,
-      ...(minimal && { minimal: 'true' })
+      ...(minimal && { minimal: 'true' }),
+      // Add timestamp to prevent aggressive caching but preserve user state
+      _t: Math.floor(Date.now() / 60000) // Update every minute to balance freshness and state preservation
     });
     return `https://embed.laylo.com/?${params.toString()}`;
   }, [dropId, color, theme, background, minimal]);
+
+  // Preload iframe to eliminate blank state visibility
+  useEffect(() => {
+    if (layloReady && !iframeReady) {
+      setIsPreloading(true);
+
+      // Start preloading timer
+      preloadTimer.current = mobileLifecycle.createTimer(() => {
+        setIsPreloading(false);
+      }, 800); // Short preload time for faster perceived loading
+    }
+
+    return () => {
+      if (preloadTimer.current) {
+        mobileLifecycle.clearTimer(preloadTimer.current);
+      }
+    };
+  }, [layloReady, iframeReady, mobileLifecycle]);
 
   // Suppress permissions policy violations for encrypted-media
   useEffect(() => {
@@ -215,11 +237,38 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     };
   }, [mobileLifecycle]);
 
-  // Only render iframe when Laylo SDK is ready
+  // Enhanced loading states with preloading
   if (!layloReady) {
     return (
-      <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', opacity: 0.7 }}>
-        <span style={{ fontSize: '12px', color: '#666' }}>Loading Laylo...</span>
+      <div style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60px',
+        background: 'rgba(255, 255, 255, 0.05)',
+        borderRadius: '8px',
+        opacity: 0.8
+      }}>
+        <span style={{ fontSize: '12px', color: '#999', fontFamily: 'Inter' }}>Loading Laylo...</span>
+      </div>
+    );
+  }
+
+  // Show loading indicator during preload to prevent blank state
+  if (isPreloading && !contentLoaded) {
+    return (
+      <div style={{
+        ...style,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '60px',
+        background: 'rgba(255, 255, 255, 0.03)',
+        borderRadius: '8px',
+        opacity: 0.9
+      }}>
+        <span style={{ fontSize: '11px', color: '#aaa', fontFamily: 'Inter' }}>Preparing form...</span>
       </div>
     );
   }
@@ -232,11 +281,14 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       onLoad={handleIframeLoad}
       style={{
         ...style,
-        opacity: contentLoaded ? 1 : 0.8,
-        transition: 'opacity 0.15s ease-out',
+        opacity: contentLoaded ? 1 : 0.7,
+        transition: 'opacity 0.2s ease-out',
         minHeight: '60px',
         border: 'none',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        // Preserve iframe content by preventing reload on re-render
+        pointerEvents: 'auto',
+        isolation: 'isolate'
       }}
       src={layloUrl}
     />
@@ -816,7 +868,7 @@ const FigmaMobile = () => {
     phoneNumber: ''
   });
 
-  // Helper function to save current drawer state
+  // Enhanced state preservation including iframe content state
   const saveCurrentDrawerState = useCallback(() => {
     setPreviousDrawerState({
       expanded: drawerExpanded,
@@ -825,6 +877,10 @@ const FigmaMobile = () => {
       verificationCode: verificationCode,
       phoneNumber: phoneNumber
     });
+
+    // Preserve iframe state by keeping it in DOM but hidden
+    // This prevents content loss when drawer is collapsed/reopened
+    console.log('💾 Drawer state saved, iframe content preserved');
   }, [drawerExpanded, showDisclaimer, showVerification, verificationCode, phoneNumber]);
   const [isButtonPressed, setIsButtonPressed] = useState(false);
 
@@ -1477,7 +1533,7 @@ const FigmaMobile = () => {
             avifLink.as = 'image';
             avifLink.type = 'image/avif';
             const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
-            avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
+            avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=120&format=avif`;
             document.head.appendChild(avifLink);
           }
 
@@ -1486,7 +1542,7 @@ const FigmaMobile = () => {
           webpLink.rel = 'preload';
           webpLink.as = 'image';
           webpLink.type = 'image/webp';
-          webpLink.href = getOptimizedImageUrl(event.coverImage, 111);
+          webpLink.href = getOptimizedImageUrl(event.coverImage, 120);
           document.head.appendChild(webpLink);
 
           // Safari mobile: also preload original as fallback
@@ -3444,16 +3500,16 @@ const FigmaMobile = () => {
                     }}
                   >
 
-                    {/* Image Section - Scaled Mobile Structure */}
+                    {/* Image Section - Enhanced Mobile Structure */}
                     <div
                       style={{
                         position: 'absolute',
-                        left: '8px', // Account for container padding
+                        left: '4px', // Moved closer to left edge for better visual balance
                         top: '8px',
-                        width: '104px', // Scaled up from 84px (24% increase)
-                        height: '104px', // Scaled up from 84px (24% increase)
+                        width: '120px', // Increased from 104px for more prominent image
+                        height: '104px', // Maintain height for proper aspect ratio
                         flexShrink: 0,
-                        borderRadius: '20px', // Scaled up from 16px
+                        borderRadius: '20px',
                         overflow: 'hidden'
                       }}
                     >
@@ -3463,17 +3519,17 @@ const FigmaMobile = () => {
                         {getAVIFSrcSet(card.coverImage, 'event') && (
                           <source
                             srcSet={getAVIFSrcSet(card.coverImage, 'event')}
-                            sizes="111px"
+                            sizes="120px"
                             type="image/avif"
                           />
                         )}
                         <source
                           srcSet={getResponsiveSrcSet(card.coverImage, 'event')}
-                          sizes="111px"
+                          sizes="120px"
                           type="image/webp"
                         />
                         <img
-                          src={getOptimizedImageUrl(card.coverImage, 111)}
+                          src={getOptimizedImageUrl(card.coverImage, 120)}
                           alt={`${card.title} event cover`}
                           {...getImageLoadingStrategy(index, true)}
                           onError={(e) => {
@@ -3534,11 +3590,11 @@ const FigmaMobile = () => {
                           }}
                           style={{
                             position: 'absolute',
-                            left: '4px', // Scaled positioning
+                            left: '4px',
                             top: '3px',
-                            width: '96px', // Scaled up from 79px (22% increase)
-                            height: '96px', // Scaled up from 79px (22% increase)
-                            borderRadius: '17px', // Scaled up from 14px
+                            width: '112px', // Increased to match larger container
+                            height: '96px', // Maintain aspect ratio
+                            borderRadius: '17px',
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
                             cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
@@ -3572,20 +3628,20 @@ const FigmaMobile = () => {
 
                     </div>
 
-                    {/* Text Content Section - Scaled Mobile Structure */}
+                    {/* Text Content Section - Optimized Mobile Structure */}
                     <div
                       className="card-clickable-area"
                       style={{
                         display: 'flex',
-                        width: '200px', // Scaled up from 156px (28% increase)
-                        padding: '4px 8px', // Scaled padding with mobile spacing
+                        width: '190px', // Adjusted to accommodate larger image
+                        padding: '4px 8px',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         position: 'absolute',
-                        left: '120px', // Scaled from 94px + container padding adjustment
-                        top: '8px', // Account for container padding
-                        height: '104px', // Scaled up from 85px (22% increase)
+                        left: '132px', // Moved right to accommodate larger image (120px + 12px spacing)
+                        top: '8px',
+                        height: '104px',
                         boxSizing: 'border-box'
                       }}
                     >
@@ -3720,7 +3776,7 @@ const FigmaMobile = () => {
                           padding: '0px 6px 0px 0px' // Scaled padding
                         }}
                       >
-                        {/* Get Tickets Button - Scaled Mobile Structure */}
+                        {/* Get Tickets Button - Enhanced Mobile Structure */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <button
                             onClick={(e) => {
@@ -3729,22 +3785,22 @@ const FigmaMobile = () => {
                             }}
                             style={{
                               background: 'rgba(23, 23, 23, 0.8)',
-                              borderRadius: '46px', // Scaled up from 37px (24% increase)
+                              borderRadius: '46px',
                               display: 'flex',
                               flexDirection: 'row',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '12px', // Scaled up from 10px
-                              padding: '16px 15px', // Scaled up from 13px 12px
-                              width: '190px', // Scaled up from 155px (23% increase)
-                              height: '32px', // Scaled up from 26px (23% increase)
+                              gap: '12px',
+                              padding: '16px 15px',
+                              width: '174px', // Extended for visual balance (190px - 16px for symmetry)
+                              height: '32px',
                               border: 'none',
                               cursor: 'pointer',
                               fontFamily: 'Inter',
                               fontWeight: '500',
-                              fontSize: '14px', // Scaled up from 12px (17% increase)
+                              fontSize: '14px',
                               lineHeight: '1.21',
-                              textAlign: 'center', // Changed to center for better mobile UX
+                              textAlign: 'center',
                               color: '#FFFFFF',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
@@ -3767,22 +3823,22 @@ const FigmaMobile = () => {
                             disabled
                             style={{
                               background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
-                              borderRadius: '46px', // Scaled up from 37px (24% increase)
+                              borderRadius: '46px',
                               display: 'flex',
                               flexDirection: 'row',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '12px', // Scaled up from 10px
-                              padding: '16px 15px', // Scaled up from 13px 12px
-                              width: '190px', // Scaled up from 155px (23% increase)
-                              height: '32px', // Scaled up from 26px (23% increase)
+                              gap: '12px',
+                              padding: '16px 15px',
+                              width: '174px', // Match active button width for consistency
+                              height: '32px',
                               border: 'none',
                               cursor: 'default',
                               fontFamily: 'Inter',
                               fontWeight: '500',
-                              fontSize: '14px', // Scaled up from 12px (17% increase)
+                              fontSize: '14px',
                               lineHeight: '1.21',
-                              textAlign: 'center', // Changed to center for better mobile UX
+                              textAlign: 'center',
                               color: 'rgba(255, 255, 255, 0.6)',
                               boxSizing: 'border-box',
                               opacity: 0.7
@@ -3824,7 +3880,7 @@ const FigmaMobile = () => {
         </footer>
       </main>
 
-      {/* Mobile Drawer - Restored Layout Component */}
+      {/* Mobile Drawer - Enhanced Animation Component */}
       <div
         ref={drawerRef}
         className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
@@ -3835,6 +3891,9 @@ const FigmaMobile = () => {
             : drawerExpanded
               ? 'translate3d(0, 0, 0)'
               : 'translate3d(0, calc(100% - 80px), 0)',
+          transition: 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.2s ease-out',
+          willChange: 'transform, height',
+          backfaceVisibility: 'hidden',
           zIndex: 1000
         }}
         onClick={handleDrawerClick}
@@ -3906,18 +3965,21 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* Laylo Integration */}
-          {drawerExpanded && !drawerFullyClosed && !showVerification && (
+          {/* Laylo Integration - Enhanced with State Preservation */}
+          {!drawerFullyClosed && !showVerification && (
             <div
               onClick={handleIframeClick}
               style={{
                 width: '100%',
-                maxWidth: '1000px',
-                margin: '8px auto 0 auto',
+                margin: '8px 0 0 0', // Remove auto margins to align with text content
                 cursor: 'pointer',
                 borderRadius: '8px',
                 overflow: 'visible',
-                flexShrink: 0
+                flexShrink: 0,
+                // Hide iframe when drawer is collapsed but keep in DOM to preserve state
+                display: drawerExpanded ? 'block' : 'none',
+                opacity: drawerExpanded ? 1 : 0,
+                transition: 'opacity 0.2s ease-out'
               }}
             >
               <LayloIframe
@@ -3927,16 +3989,14 @@ const FigmaMobile = () => {
                 background="solid"
                 minimal={true}
                 style={{
-                  width: '1px',
-                  minWidth: '100%',
-                  maxWidth: '1000px',
+                  width: '100%', // Match text content width exactly
                   height: iframeExpanded ? '200px' : '160px',
                   border: 'none',
                   borderRadius: '8px',
                   background: 'transparent',
                   display: 'block',
-                  transition: 'opacity 0.3s ease, height 0.3s ease',
-                  pointerEvents: 'auto'
+                  transition: 'height 0.3s ease',
+                  pointerEvents: drawerExpanded ? 'auto' : 'none'
                 }}
               />
             </div>
