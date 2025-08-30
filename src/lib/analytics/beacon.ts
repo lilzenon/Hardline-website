@@ -222,9 +222,16 @@ class AnalyticsBeacon {
             }
 
         } catch (error) {
-            console.error('📊 Analytics error:', error);
-            console.error('📊 Analytics endpoint:', this.config.endpoint);
-            console.error('📊 Analytics data:', data);
+            // DEVELOPMENT: Graceful handling when analytics API is not available
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                if (this.config.debug) {
+                    console.log('ℹ️ Analytics API not available in development - data would be sent to:', this.config.endpoint);
+                }
+            } else {
+                console.error('📊 Analytics error:', error);
+                console.error('📊 Analytics endpoint:', this.config.endpoint);
+                console.error('📊 Analytics data:', data);
+            }
             return false;
         }
     }

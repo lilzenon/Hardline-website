@@ -6,14 +6,24 @@
 // API endpoints configuration
 const API_CONFIG = {
     // Dashboard API endpoint for SEO settings
-    DASHBOARD_API: (
-            import.meta.env.PROD || window.location.hostname === 'b2b.click' || window.location.hostname === 'bounce2bounce.com') ?
-        'https://admin.b2b.click/api/settings/seo' : 'http://localhost:3002/api/settings/seo',
+    DASHBOARD_API: (() => {
+        // DEVELOPMENT: Use localhost for development environment
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:3002/api/settings/seo';
+        }
+        // PRODUCTION: Use production API for production domains
+        return 'https://admin.b2b.click/api/settings/seo';
+    })(),
 
     // Maintenance status endpoint (public)
-    MAINTENANCE_API: (
-            import.meta.env.PROD || window.location.hostname === 'b2b.click' || window.location.hostname === 'bounce2bounce.com') ?
-        'https://admin.b2b.click/api/settings/maintenance-status' : 'http://localhost:3002/api/settings/maintenance-status'
+    MAINTENANCE_API: (() => {
+        // DEVELOPMENT: Use localhost for development environment
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:3002/api/settings/maintenance-status';
+        }
+        // PRODUCTION: Use production API for production domains
+        return 'https://admin.b2b.click/api/settings/maintenance-status';
+    })()
 };
 
 // Default SEO settings fallback
@@ -129,7 +139,14 @@ export const fetchSEOSettings = async() => {
         }
 
         if (error.name === 'AbortError') {
-            console.error('❌ SEO API request timed out after 8 seconds');
+            console.warn('⚠️ SEO API request timed out after 8 seconds - using defaults');
+        } else if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+            // DEVELOPMENT: Graceful handling when dashboard API is not available
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('ℹ️ Dashboard API not available in development - using default SEO settings');
+            } else {
+                console.error('❌ Failed to fetch SEO settings:', error.message);
+            }
         } else {
             console.error('❌ Failed to fetch SEO settings:', error.message);
         }
@@ -177,7 +194,16 @@ export const fetchMaintenanceStatus = async() => {
         }
 
     } catch (error) {
-        console.error('❌ Failed to fetch maintenance status:', error);
+        if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+            // DEVELOPMENT: Graceful handling when dashboard API is not available
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                console.log('ℹ️ Maintenance API not available in development - assuming not in maintenance mode');
+            } else {
+                console.error('❌ Failed to fetch maintenance status:', error);
+            }
+        } else {
+            console.error('❌ Failed to fetch maintenance status:', error);
+        }
         return { maintenance_mode: false };
     }
 };

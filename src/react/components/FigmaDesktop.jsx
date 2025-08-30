@@ -231,8 +231,8 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
         else variant = 'large';
       }
 
-      // Always use dashboard domain for image serving
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      // Always use dashboard domain for image serving - with fallback for development
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
 
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
@@ -247,8 +247,8 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   }
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
-    // Use dashboard server for image optimization (publicly accessible)
-    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+    // Use dashboard server for image optimization (publicly accessible) - with fallback for development
+    const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
     return width ? `${baseUrl}&w=${width}` : baseUrl;
   }
@@ -263,7 +263,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
     if (uuidMatch) {
       const uuid = uuidMatch[1];
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
 
       // Use medium variant for event cards
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
@@ -313,7 +313,7 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     return ''; // Return empty to skip AVIF source entirely
   }
 
-  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+  const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
     .join(', ');
@@ -760,8 +760,8 @@ const FigmaDesktop = () => {
         return;
       }
 
-      // Use dashboard domain for API calls
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      // Use dashboard domain for API calls - with fallback for development
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/homepage-data`);
 
       if (!response.ok) {
@@ -871,7 +871,7 @@ const FigmaDesktop = () => {
           avifLink.rel = 'preload';
           avifLink.as = 'image';
           avifLink.type = 'image/avif';
-          const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+          const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
           avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
           document.head.appendChild(avifLink);
 
@@ -1025,8 +1025,8 @@ const FigmaDesktop = () => {
 
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
-      // Use the new homepage phone submission endpoint
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      // Use the new homepage phone submission endpoint - with fallback for development
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/submit-phone`, {
         method: 'POST',
         headers: {
@@ -1156,7 +1156,7 @@ const FigmaDesktop = () => {
 
       console.log('🔐 Submitting verification code');
 
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/verify-phone`, {
         method: 'POST',
         headers: {
@@ -1236,7 +1236,7 @@ const FigmaDesktop = () => {
 
       console.log('🔄 Resending verification code to:', verificationPhone);
 
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/resend-verification`, {
         method: 'POST',
         headers: {
@@ -1533,7 +1533,8 @@ const FigmaDesktop = () => {
           }
         }
 
-        const coverImage = event.cover_image || '/images/figma-exact/event-card-bg.png';
+        // Use a more reliable fallback image or generate a placeholder
+        const coverImage = event.cover_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIyIiBoZWlnaHQ9IjEyNCIgdmlld0JveD0iMCAwIDIyMiAxMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMjIiIGhlaWdodD0iMTI0IiBmaWxsPSIjMTYxNjE2Ii8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNTY1NjU2IiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc2l6ZT0iMTQiPkV2ZW50IEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
         const ticketsUrl = event.posh_embed_url || '#';
 
         featuredCards.push({
