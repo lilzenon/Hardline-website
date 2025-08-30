@@ -63,7 +63,7 @@ const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
 const sessionAdmin = require("./admin/session-admin.routes");
 const privacy = require("./privacy.routes");
-const integrations = require("./integrations.routes");
+// Note: integrations routes migrated to dashboard
 const seoTest = require("./seo-test.routes");
 const webhooks = require("./webhooks.routes");
 
@@ -90,7 +90,7 @@ apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/visit-health", require("./visit-health.routes"));
 apiRouter.use("/admin/sessions", sessionAdmin);
 apiRouter.use("/privacy", privacy);
-apiRouter.use("/integrations", integrations);
+// Note: /integrations routes migrated to dashboard
 apiRouter.use("/webhooks", webhooks);
 apiRouter.use("/seo-test", seoTest);
 
