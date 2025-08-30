@@ -3,9 +3,9 @@
  * Implements caching strategies for performance optimization
  */
 
-const CACHE_NAME = 'bounce2bounce-v5-' + Date.now();
-const STATIC_CACHE = 'bounce2bounce-static-v5-' + Date.now();
-const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v5-' + Date.now();
+const CACHE_NAME = 'bounce2bounce-v6-csp-fix-' + Date.now();
+const STATIC_CACHE = 'bounce2bounce-static-v6-csp-fix-' + Date.now();
+const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v6-csp-fix-' + Date.now();
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -96,6 +96,12 @@ self.addEventListener('fetch', event => {
         return;
     }
 
+    // CRITICAL: Only handle same-origin requests to prevent CSP violations
+    // Let external requests (Google Fonts, YouTube, etc.) bypass Service Worker
+    if (url.origin !== self.location.origin) {
+        return;
+    }
+
     // Skip admin, API, dashboard, and Vite assets for fresh content
     if (url.pathname.startsWith('/admin') ||
         url.pathname.startsWith('/api') ||
@@ -133,8 +139,19 @@ async function handleRequest(request) {
         return await networkFirst(request);
 
     } catch (error) {
-        console.error('Service Worker: Error handling request', error);
-        return fetch(request);
+        // Graceful error handling - don't spam console with CSP violations
+        if (error.message && error.message.includes('Content Security Policy')) {
+            console.warn('Service Worker: CSP blocked request (expected):', request.url);
+        } else {
+            console.error('Service Worker: Error handling request', error);
+        }
+        // Always try to return the original request as fallback
+        try {
+            return await fetch(request);
+        } catch (fallbackError) {
+            console.error('Service Worker: Fallback fetch also failed', fallbackError);
+            throw fallbackError;
+        }
     }
 }
 
@@ -156,7 +173,12 @@ async function cacheFirst(request) {
 
         return networkResponse;
     } catch (error) {
-        console.error('Service Worker: Network error in cacheFirst', error);
+        // Graceful error handling - don't spam console with CSP violations
+        if (error.message && error.message.includes('Content Security Policy')) {
+            console.warn('Service Worker: CSP blocked external request (expected):', request.url);
+        } else {
+            console.error('Service Worker: Network error in cacheFirst', error);
+        }
         throw error;
     }
 }
