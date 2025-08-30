@@ -52,14 +52,7 @@ router.get(
     asyncHandler(renders.reactHomepage)
 );
 
-// 🚀 BACKUP: Handlebars homepage fallback
-router.get(
-    "/home-handlebars",
-    asyncHandler(auth.jwtLoosePage),
-    asyncHandler(helpers.adminSetup),
-    asyncHandler(locals.user),
-    asyncHandler(renders.home)
-);
+// REMOVED: Handlebars homepage fallback - React-only serving to prevent template conflicts
 
 // Public events listing page for SEO
 router.get(

@@ -27,46 +27,7 @@ async function homepage(req, res) {
     });
 }
 
-async function modernHomepage(req, res) {
-    try {
-        let events = [];
-        let stats = {
-            totalEvents: 0,
-            activeEvents: 0,
-            totalSignups: 0,
-            totalViews: 0
-        };
-
-        if (req.user) {
-            // Load user's events with stats for the modern homepage
-            events = await query.event.findByUserWithStats(req.user.id, { limit: 8 });
-
-            // Calculate basic stats
-            stats.totalEvents = events.length;
-            stats.activeEvents = events.filter(event => event.is_active).length;
-            stats.totalSignups = events.reduce((sum, event) => sum + (event.signup_count || 0), 0);
-            stats.totalViews = events.reduce((sum, event) => sum + (event.view_count || 0), 0);
-        }
-
-        res.render("home", {
-            title: "BOUNCE2BOUNCE - Modern B2B Platform",
-            pageTitle: "Home",
-            layout: "layouts/home",
-            events: events,
-            stats: stats,
-            user: req.user,
-            domain: env.DEFAULT_DOMAIN,
-            currentPage: "home"
-        });
-    } catch (error) {
-        console.error('❌ Modern homepage error:', error);
-        res.status(500).render("error", {
-            title: "Error",
-            layout: "layouts/home",
-            error: "Failed to load home page"
-        });
-    }
-}
+// REMOVED: modernHomepage function - unused legacy Handlebars renderer
 
 // Old login functions removed - now using React-based admin login
 
@@ -576,7 +537,7 @@ async function reactHomepage(req, res) {
         console.log('📱 Serving React homepage from dist/index.html (Vite build only) with dynamic SEO');
 
         // Read the React HTML template
-        const htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
+        let htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
 
         // Escape HTML content for safe injection
         const escapeHtml = (text) => {
@@ -713,9 +674,17 @@ async function reactHomepage(req, res) {
         res.send(htmlContent);
 
     } catch (error) {
-        console.error('❌ React homepage error:', error);
-        // Fallback to Handlebars homepage
-        return home(req, res);
+        console.error('🚨 CRITICAL: React homepage failed:', error);
+        console.error('📍 Error stack:', error.stack);
+
+        // NEVER fallback to Handlebars - always serve React or proper error
+        // Return a proper error response instead of falling back to legacy templates
+        return res.status(500).json({
+            error: 'Homepage temporarily unavailable',
+            message: 'The React homepage failed to load. Please try refreshing the page.',
+            timestamp: new Date().toISOString(),
+            requestId: req.id || 'unknown'
+        });
     }
 }
 
@@ -738,7 +707,6 @@ module.exports = {
     home,
     homeEditor,
     homepage,
-    modernHomepage,
     linkEdit,
     linkEditAdmin,
     logout,
