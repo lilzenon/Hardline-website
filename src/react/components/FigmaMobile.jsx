@@ -1518,8 +1518,6 @@ const FigmaMobile = () => {
         // Validate and parse event date
         let eventDate = new Date();
         let formattedDate = 'Tue, Sep 02 @ 10:00PM';
-        let day = '02';
-        let month = 'SEP';
 
         if (event.event_date) {
           const cacheKey = event.event_date;
@@ -1534,14 +1532,11 @@ const FigmaMobile = () => {
                 month: 'short',
                 day: '2-digit'
               }).replace(',', ' @') + ' 10:00PM';
-              day = eventDate.getDate().toString().padStart(2, '0');
-              month = eventDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-
-              cachedFormat = { formattedDate, day, month, eventDate };
+              cachedFormat = { formattedDate, eventDate };
               dateFormatCache.set(cacheKey, cachedFormat);
             }
           } else {
-            ({ formattedDate, day, month, eventDate } = cachedFormat);
+            ({ formattedDate, eventDate } = cachedFormat);
           }
         }
 
@@ -1570,8 +1565,6 @@ const FigmaMobile = () => {
           id: `event-${event.id}`,
           title: title,
           date: formattedDate,
-          day: day,
-          month: month,
           location: location,
           coverImage: coverImage,
           ticketsUrl: ticketsUrl,
@@ -3576,77 +3569,7 @@ const FigmaMobile = () => {
                         />
                       </picture>
 
-                      {/* Date Badge Container - Desktop Structure Inspired */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: '55.64px', // Match desktop date square positioning
-                          top: '6px',
-                          width: '21px', // Match desktop date square width
-                          height: '21px', // Match desktop date square height
-                          zIndex: 2
-                        }}
-                      >
-                        {/* White Badge Background - Desktop Structure */}
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: '0.15px', // Match desktop date background positioning
-                            top: '-0.86px',
-                            width: '21.16px', // Match desktop date background width
-                            height: '21.16px', // Match desktop date background height
-                            borderRadius: '4px', // Match desktop border radius
-                            background: '#FFFFFF', // Match desktop background
-                            opacity: 1 // Full opacity like desktop
-                          }}
-                        />
 
-                        {/* Date Badge Content - Desktop Structure */}
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: '3.36px', // Match desktop date content positioning
-                            top: '3px',
-                            display: 'flex',
-                            width: '15px', // Match desktop date content width
-                            height: '14px', // Match desktop date content height
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '2px' // Match desktop gap
-                          }}
-                        >
-                          {/* DAY Number - Desktop Typography */}
-                          <span
-                            style={{
-                              color: '#232323', // Match desktop text color
-                              textAlign: 'center',
-                              fontFamily: 'Inter',
-                              fontSize: '10px', // Match desktop font size
-                              fontWeight: '800', // Match desktop font weight
-                              lineHeight: '1.21', // Match desktop line height
-                              margin: '0'
-                            }}
-                          >
-                            {card.day}
-                          </span>
-
-                          {/* MONTH Abbreviation - Desktop Typography */}
-                          <span
-                            style={{
-                              color: '#232323', // Match desktop text color
-                              textAlign: 'center',
-                              fontFamily: 'Inter',
-                              fontSize: '6px', // Match desktop font size
-                              fontWeight: '800', // Match desktop font weight
-                              lineHeight: '1.21', // Match desktop line height
-                              margin: '0'
-                            }}
-                          >
-                            {card.month}
-                          </span>
-                        </div>
-                      </div>
                     </div>
 
                     {/* Text Content Section - Desktop Structure Inspired */}
@@ -3676,23 +3599,23 @@ const FigmaMobile = () => {
                           alignSelf: 'stretch'
                         }}
                       >
-                        {/* Event Title - Desktop Typography Inspired */}
+                        {/* Event Title - Primary Hierarchy Element */}
                         <h3
                           id={`event-title-${card.id}`}
                           style={{
                             fontFamily: 'Inter',
-                            fontWeight: '800', // Match desktop font weight
-                            fontSize: '16px', // Match desktop font size
-                            lineHeight: '1.21', // Match desktop line height
+                            fontWeight: '700', // Slightly reduced for better hierarchy balance
+                            fontSize: '16px', // Maintain size for prominence
+                            lineHeight: '1.25', // Improved line height for readability
                             textAlign: 'left',
-                            color: '#FFFFFF',
-                            width: '128px', // Match desktop title width
-                            height: '20px', // Match desktop title height
+                            color: '#FFFFFF', // Full white for maximum contrast and prominence
+                            width: '128px',
+                            height: '20px',
                             margin: '0',
                             padding: '0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap' // Single line like desktop
+                            whiteSpace: 'nowrap'
                           }}
                         >
                           {card.title}
@@ -3720,17 +3643,17 @@ const FigmaMobile = () => {
                             <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
                           </svg>
 
-                          {/* DateTime Text - Desktop Typography */}
+                          {/* DateTime Text - Secondary Hierarchy */}
                           <span
                             style={{
                               fontFamily: 'Inter',
-                              fontWeight: '200', // Match desktop font weight
-                              fontSize: '10px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
+                              fontWeight: '400', // Increased weight for better readability
+                              fontSize: '10px',
+                              lineHeight: '1.3', // Improved line height for readability
                               textAlign: 'left',
-                              color: '#FFFFFF',
-                              width: '111px', // Match desktop text width
-                              height: '12px', // Match desktop text height
+                              color: 'rgba(255, 255, 255, 0.85)', // Slightly reduced opacity for hierarchy
+                              width: '111px',
+                              height: '12px',
                               margin: '0',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -3763,17 +3686,17 @@ const FigmaMobile = () => {
                             <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 5 5 5s5-1.25 5-5c0-2.76-2.24-5-5-5zm0 7.5c-1.38 0-2.5-1.12-2.5-2.5S3.62 2.5 5 2.5 7.5 3.62 7.5 5 6.38 7.5 5 7.5z" fill="currentColor"/>
                           </svg>
 
-                          {/* Location Text - Desktop Typography */}
+                          {/* Location Text - Supporting Information */}
                           <span
                             style={{
                               fontFamily: 'Inter',
-                              fontWeight: '200', // Match desktop font weight
-                              fontSize: '10px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
+                              fontWeight: '300', // Slightly increased for readability
+                              fontSize: '10px',
+                              lineHeight: '1.3', // Improved line height for readability
                               textAlign: 'left',
-                              color: '#FFFFFF',
-                              width: '111px', // Match desktop text width
-                              height: '12px', // Match desktop text height
+                              color: 'rgba(255, 255, 255, 0.75)', // More reduced opacity for tertiary hierarchy
+                              width: '111px',
+                              height: '12px',
                               margin: '0',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
