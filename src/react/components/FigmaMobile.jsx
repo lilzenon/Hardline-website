@@ -3944,208 +3944,42 @@ const FigmaMobile = () => {
             transition: 'opacity 0.2s ease'
           }}
         >
-          {!showVerification ? (
-            /* Phone Input Section */
-            <div style={{ marginBottom: '16px' }}>
-              <h3
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  margin: '0 0 12px 0',
-                  textAlign: 'center'
-                }}
-              >
-                Get Event Updates
-              </h3>
-
-              {/* Phone Input Container */}
+          {/* Text Us Group - Hidden during verification */}
+          {!drawerFullyClosed && !showVerification && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                marginBottom: '12px',
+                flexShrink: 0,
+                position: 'relative',
+                zIndex: 2
+              }}
+            >
               <div
-                ref={phoneContainerRef}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  padding: '12px',
-                  border: `2px solid ${phoneInputState === 'valid' ? '#0AFF4B' : phoneInputState === 'invalid' ? '#FF4444' : 'rgba(255, 255, 255, 0.2)'}`,
-                  transition: 'border-color 0.3s ease'
+                  fontFamily: 'Inter',
+                  fontWeight: '800',
+                  fontSize: '20px',
+                  lineHeight: '1.2em',
+                  color: '#FFFFFF'
                 }}
               >
-                {/* Country Flag */}
-                <img
-                  ref={flagImageRef}
-                  src="/flags/us.svg"
-                  alt="US Flag"
-                  style={{
-                    width: '24px',
-                    height: '18px',
-                    marginRight: '8px',
-                    borderRadius: '2px'
-                  }}
-                />
-
-                {/* Country Code */}
-                <span
-                  style={{
-                    color: '#FFFFFF',
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    marginRight: '8px'
-                  }}
-                >
-                  +1
-                </span>
-
-                {/* Phone Input */}
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={handlePhoneChange}
-                  onFocus={handlePhoneInputFocus}
-                  onBlur={handlePhoneInputBlur}
-                  placeholder="(555) 123-4567"
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    color: '#FFFFFF',
-                    fontFamily: 'Inter',
-                    fontSize: '16px',
-                    fontWeight: '400'
-                  }}
-                  aria-label="Phone number input"
-                />
-
-                {/* Submit Button */}
-                <button
-                  onClick={handlePhoneSubmit}
-                  disabled={phoneSubmitting || !phoneNumber.trim()}
-                  style={{
-                    background: phoneSubmitting ? 'rgba(255, 255, 255, 0.1)' : '#319DFF',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: phoneSubmitting || !phoneNumber.trim() ? 'default' : 'pointer',
-                    opacity: phoneSubmitting || !phoneNumber.trim() ? 0.5 : 1,
-                    transition: 'all 0.2s ease'
-                  }}
-                  aria-label="Submit phone number"
-                >
-                  {phoneSubmitting ? 'Sending...' : 'Submit'}
-                </button>
+                Text us
               </div>
-
-              {/* Disclaimer */}
-              {showDisclaimer && (
-                <p
-                  style={{
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    fontFamily: 'Inter',
-                    fontSize: '12px',
-                    fontWeight: '300',
-                    margin: '8px 0 0 0',
-                    textAlign: 'center',
-                    lineHeight: '1.4'
-                  }}
-                >
-                  By submitting, you agree to receive event updates via SMS. Message and data rates may apply.
-                </p>
-              )}
-            </div>
-          ) : (
-            /* Verification Section */
-            <div style={{ textAlign: 'center' }}>
-              <h3
+              <div
                 style={{
-                  color: '#FFFFFF',
                   fontFamily: 'Inter',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  margin: '0 0 8px 0'
-                }}
-              >
-                Verify Your Number
-              </h3>
-
-              <p
-                style={{
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
                   fontWeight: '300',
-                  margin: '0 0 16px 0'
+                  fontSize: '12px',
+                  lineHeight: '1.3em',
+                  color: '#FFFFFF',
+                  opacity: 0.8
                 }}
               >
-                Enter the 4-digit code sent to {verificationPhone}
-              </p>
-
-              {/* Verification Code Input */}
-              <input
-                type="text"
-                value={verificationCode}
-                onChange={handleVerificationChange}
-                placeholder="0000"
-                maxLength="4"
-                style={{
-                  width: '120px',
-                  padding: '12px',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: `2px solid ${verificationState === 'valid' ? '#0AFF4B' : verificationState === 'invalid' ? '#FF4444' : 'rgba(255, 255, 255, 0.2)'}`,
-                  borderRadius: '8px',
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  textAlign: 'center',
-                  letterSpacing: '4px',
-                  outline: 'none',
-                  transition: 'border-color 0.3s ease'
-                }}
-                aria-label="Verification code input"
-              />
-
-              {/* Resend Button */}
-              {canResend && (
-                <button
-                  onClick={handleResendCode}
-                  style={{
-                    background: 'transparent',
-                    color: '#319DFF',
-                    border: 'none',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    marginTop: '12px',
-                    textDecoration: 'underline'
-                  }}
-                  aria-label="Resend verification code"
-                >
-                  Resend Code
-                </button>
-              )}
-
-              {resendCountdown > 0 && (
-                <p
-                  style={{
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    fontFamily: 'Inter',
-                    fontSize: '12px',
-                    fontWeight: '300',
-                    margin: '8px 0 0 0'
-                  }}
-                >
-                  Resend in {resendCountdown}s
-                </p>
-              )}
+                Exclusive events, contests, and more
+              </div>
             </div>
           )}
 
@@ -4154,26 +3988,32 @@ const FigmaMobile = () => {
             <div
               onClick={handleIframeClick}
               style={{
-                marginTop: '16px',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                background: 'rgba(255, 255, 255, 0.05)',
-                minHeight: iframeExpanded ? '200px' : '120px',
-                transition: 'min-height 0.3s ease'
+                width: '100%',
+                maxWidth: '1000px',
+                margin: '8px auto 0 auto',
+                cursor: 'pointer',
+                borderRadius: '8px',
+                overflow: 'visible',
+                flexShrink: 0
               }}
             >
               <LayloIframe
-                dropId="clzlhqhqr0001l708aqhqhqhq"
-                color="319DFF"
+                dropId="1nTsX"
+                color="ff0409"
                 theme="dark"
-                background="transparent"
+                background="solid"
                 minimal={true}
                 style={{
-                  width: '100%',
-                  height: iframeExpanded ? '200px' : '120px',
+                  width: '1px',
+                  minWidth: '100%',
+                  maxWidth: '1000px',
+                  height: iframeExpanded ? '200px' : '160px',
                   border: 'none',
-                  borderRadius: '12px',
-                  transition: 'height 0.3s ease'
+                  borderRadius: '8px',
+                  background: 'transparent',
+                  display: 'block',
+                  transition: 'opacity 0.3s ease, height 0.3s ease',
+                  pointerEvents: 'auto'
                 }}
               />
             </div>
