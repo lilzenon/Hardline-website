@@ -285,9 +285,11 @@ function staticAssetHeaders() {
  */
 function permissionsPolicyHeaders() {
     return (req, res, next) => {
-        // Set Permissions Policy - Allow encrypted-media and web-share for third-party services
+        // Set Permissions Policy - Optimized to prevent console violations
+        // Removed encrypted-media to prevent YouTube iframe violations
+        // Only allow necessary permissions for third-party services
         res.setHeader('Permissions-Policy',
-            'camera=(), microphone=(), geolocation=(), encrypted-media=(self "https://www.youtube.com" "https://youtube.com" "https://embed.laylo.com" "https://laylo.com" "https://js-cdn.music.apple.com"), web-share=(self "https://www.youtube.com" "https://youtube.com" "https://laylo.com" "https://www.laylo.com")'
+            'camera=(), microphone=(), geolocation=(), encrypted-media=(), web-share=(self "https://www.youtube.com" "https://youtube.com" "https://laylo.com" "https://www.laylo.com" "https://embed.laylo.com"), fullscreen=(self "https://www.youtube.com" "https://youtube.com"), autoplay=(self "https://www.youtube.com" "https://youtube.com")'
         );
         next();
     };

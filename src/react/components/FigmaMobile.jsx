@@ -32,6 +32,34 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     return `https://embed.laylo.com/?${params.toString()}`;
   }, [dropId, color, theme, background, minimal]);
 
+  // Suppress permissions policy violations for encrypted-media
+  useEffect(() => {
+    const handlePermissionViolation = (event) => {
+      if (event.detail && event.detail.includes('encrypted-media')) {
+        event.stopPropagation();
+        event.preventDefault();
+        return false;
+      }
+    };
+
+    // Suppress console violations for permissions policy
+    const originalConsoleWarn = console.warn;
+    console.warn = (...args) => {
+      const message = args.join(' ');
+      if (message.includes('Permissions policy violation') && message.includes('encrypted-media')) {
+        return; // Suppress this specific warning
+      }
+      originalConsoleWarn.apply(console, args);
+    };
+
+    document.addEventListener('securitypolicyviolation', handlePermissionViolation);
+
+    return () => {
+      document.removeEventListener('securitypolicyviolation', handlePermissionViolation);
+      console.warn = originalConsoleWarn;
+    };
+  }, []);
+
   // Check if Laylo SDK is ready (simplified and faster)
   const checkLayloSDKReady = useCallback(() => {
     // Check for Laylo SDK script - if it exists, we're good to go
@@ -200,15 +228,15 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     <iframe
       ref={iframeRef}
       id={`laylo-drop-${dropId}`}
-      frameBorder="0"
-      scrolling="no"
       allow="web-share"
       onLoad={handleIframeLoad}
       style={{
         ...style,
         opacity: contentLoaded ? 1 : 0.8,
         transition: 'opacity 0.15s ease-out',
-        minHeight: '60px'
+        minHeight: '60px',
+        border: 'none',
+        overflow: 'hidden'
       }}
       src={layloUrl}
     />
@@ -2678,7 +2706,7 @@ const FigmaMobile = () => {
                   <iframe
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                    allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowFullScreen
                     loading="lazy"
                     style={{
