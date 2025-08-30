@@ -3437,29 +3437,30 @@ const FigmaMobile = () => {
                     clear: 'both' // Prevent float issues
                   }}
                 >
-                  {/* Mobile Event Card Content */}
+                  {/* Mobile Event Card Content - Enhanced Scaling */}
                   <div
                     style={{
                       width: '100%',
-                      minHeight: '96px', // Adjusted for new padding (120px - 24px)
+                      minHeight: '120px', // Increased for larger image and better proportions
                       height: 'auto',
                       position: 'relative',
                       display: 'flex',
-                      alignItems: 'center',
+                      alignItems: 'flex-start', // Changed to flex-start for better alignment
                       justifyContent: 'flex-start',
-                      gap: '12px', // Add gap between image and content
-                      boxSizing: 'border-box'
+                      gap: '16px', // Increased gap for better spacing
+                      boxSizing: 'border-box',
+                      padding: '8px 0' // Add vertical padding for better spacing
                     }}
                   >
 
-                    {/* Image Section - Scaled for Mobile */}
+                    {/* Image Section - Enhanced Scaling */}
                     <div
                       style={{
                         position: 'relative',
-                        width: '96px', // Adjusted for better mobile fit
-                        height: '96px',
+                        width: '120px', // Increased from 96px for better visual impact
+                        height: '120px', // Increased proportionally
                         flexShrink: 0,
-                        borderRadius: '16px',
+                        borderRadius: '20px', // Proportionally increased border radius
                         overflow: 'hidden'
                       }}
                     >
@@ -3541,7 +3542,7 @@ const FigmaMobile = () => {
                           style={{
                             width: '100%',
                             height: '100%',
-                            borderRadius: '16px',
+                            borderRadius: '20px', // Match container border radius
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
                             cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
@@ -3642,23 +3643,23 @@ const FigmaMobile = () => {
                       </div>
                     </div>
 
-                    {/* Text Content Section - Optimized for Dynamic Content */}
+                    {/* Text Content Section - Enhanced for Larger Layout */}
                     <div
                       className="card-clickable-area"
                       style={{
                         display: 'flex',
                         flex: 1,
                         flexDirection: 'column',
-                        justifyContent: 'flex-start', // Changed from space-between to flex-start
+                        justifyContent: 'flex-start',
                         alignItems: 'flex-start',
                         minWidth: 0, // Allow shrinking
-                        height: '96px', // Match image height - maintain consistent card height
-                        padding: '4px 0px',
+                        height: '120px', // Match new image height
+                        padding: '8px 0px', // Increased padding for better spacing
                         boxSizing: 'border-box',
                         position: 'relative' // Enable absolute positioning for button
                       }}
                     >
-                      {/* Event Information - Dynamic Content Layout */}
+                      {/* Event Information - Enhanced Layout */}
                       <div
                         style={{
                           display: 'flex',
@@ -3667,11 +3668,11 @@ const FigmaMobile = () => {
                           alignSelf: 'stretch',
                           justifyContent: 'flex-start',
                           minWidth: 0, // Allow shrinking
-                          paddingRight: '8px', // Space for button area
-                          paddingBottom: '52px' // Reserve space for button (44px + 8px margin)
+                          paddingRight: '12px', // Increased space for button area
+                          paddingBottom: '48px' // Reserve space for button (40px + 8px margin)
                         }}
                       >
-                        {/* Event Title - Optimized for Dynamic Length */}
+                        {/* Event Title - Dynamic Height Based on Content */}
                         <h3
                           id={`event-title-${card.id}`}
                           style={{
@@ -3679,11 +3680,11 @@ const FigmaMobile = () => {
                             maxWidth: '100%',
                             color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: 'clamp(15px, 3.8vw, 17px)', // Slightly smaller for better fit
+                            fontSize: 'clamp(16px, 4vw, 18px)', // Increased font size for better readability
                             fontWeight: '600',
-                            lineHeight: '1.25', // Optimized line height
-                            margin: '0 0 8px 0', // Increased bottom margin
-                            // Smart text handling - allow 2 lines max
+                            lineHeight: '1.3', // Improved line height for readability
+                            margin: '0 0 10px 0', // Increased bottom margin
+                            // Smart text handling - dynamic expansion
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
                             WebkitBoxOrient: 'vertical',
@@ -3691,24 +3692,27 @@ const FigmaMobile = () => {
                             textOverflow: 'ellipsis',
                             wordBreak: 'break-word',
                             hyphens: 'auto',
-                            // Fixed height to prevent layout shift regardless of content
-                            height: '2.5em', // Exactly 2 lines worth of space
+                            // Dynamic height - expands based on content
+                            minHeight: '1.3em', // Minimum height for single line
+                            maxHeight: '2.6em', // Maximum height for two lines
+                            height: 'auto', // Allow dynamic height
                             flexShrink: 0 // Don't allow title to shrink
                           }}
                         >
                           {card.title}
                         </h3>
 
-                        {/* OPTIMIZED: Date/Time and Location - Fixed Position */}
+                        {/* Enhanced: Date/Time and Location - Better Spacing */}
                         <div
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '10px', // Optimized gap for better space usage
+                            gap: '12px', // Increased gap for better visual separation
                             width: '100%',
-                            minHeight: '18px', // Reduced height for tighter layout
+                            minHeight: '20px', // Increased height for better touch targets
                             flexWrap: 'nowrap', // Prevent wrapping to keep on same line
-                            flexShrink: 0 // Don't allow this section to shrink
+                            flexShrink: 0, // Don't allow this section to shrink
+                            marginBottom: '8px' // Add margin to separate from button area
                           }}
                         >
                           {/* DATE Section - Left Side */}
@@ -3935,16 +3939,17 @@ const FigmaMobile = () => {
                         </div>
                       </div>
 
-                      {/* OPTIMIZED: Button Positioned at Bottom - Aligned with Image */}
+                      {/* Enhanced: Button Positioned for Visibility and Accessibility */}
                       <div
                         style={{
                           position: 'absolute',
-                          bottom: '4px', // Align with image bottom
+                          bottom: '8px', // Increased from 4px for better visibility
                           left: '0',
-                          right: '8px', // Account for paddingRight
+                          right: '12px', // Account for increased paddingRight
                           display: 'flex',
                           justifyContent: 'stretch',
-                          alignItems: 'center'
+                          alignItems: 'center',
+                          zIndex: 2 // Ensure button is above other content
                         }}
                       >
                         {/* Get Tickets Button - Full Width Design */}
@@ -3958,18 +3963,18 @@ const FigmaMobile = () => {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '8px 12px', // Optimized padding for absolute positioning
-                              borderRadius: '10px', // Slightly smaller radius for compact design
-                              background: 'rgba(23, 23, 23, 0.85)',
-                              border: '1px solid rgba(255, 255, 255, 0.2)',
-                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                              padding: '10px 16px', // Increased padding for better touch target
+                              borderRadius: '12px', // Increased radius to match enhanced design
+                              background: 'rgba(23, 23, 23, 0.9)', // Slightly more opaque for better visibility
+                              border: '1px solid rgba(255, 255, 255, 0.25)', // Slightly more visible border
+                              boxShadow: '0 3px 12px rgba(0, 0, 0, 0.4)', // Enhanced shadow for depth
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
                               // FULL WIDTH: Span the entire available width
                               width: '100%',
-                              height: '36px', // Fixed height for consistent appearance
-                              fontSize: '13px', // Optimized font size
+                              height: '40px', // Increased height for better accessibility
+                              fontSize: '14px', // Increased font size for better readability
                               fontWeight: '500', // Medium weight for better visibility
                               // Ensure proper containment
                               boxSizing: 'border-box',
@@ -4021,25 +4026,25 @@ const FigmaMobile = () => {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              padding: '8px 12px', // Match active button padding
-                              borderRadius: '10px', // Match active button radius
-                              background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
-                              border: '1px solid rgba(255, 255, 255, 0.1)', // Lighter border
+                              padding: '10px 16px', // Match enhanced active button padding
+                              borderRadius: '12px', // Match enhanced active button radius
+                              background: 'rgba(23, 23, 23, 0.5)', // More transparent for disabled state
+                              border: '1px solid rgba(255, 255, 255, 0.15)', // Lighter border
                               cursor: 'default', // No pointer cursor for disabled
                               // FULL WIDTH: Span the entire available width
                               width: '100%',
-                              height: '36px', // Match active button height
-                              fontSize: '13px', // Match active button font size
+                              height: '40px', // Match enhanced active button height
+                              fontSize: '14px', // Match enhanced active button font size
                               fontWeight: '500',
                               boxSizing: 'border-box',
-                              opacity: 0.6 // Visual indication of disabled state
+                              opacity: 0.7 // Slightly less transparent for better visibility
                             }}
                           >
                             <span
                               style={{
-                                color: 'rgba(255, 255, 255, 0.5)', // Dimmed text for disabled state
+                                color: 'rgba(255, 255, 255, 0.6)', // Slightly less dimmed for better visibility
                                 fontFamily: 'Inter',
-                                fontSize: '13px', // Match active button font size
+                                fontSize: '14px', // Match enhanced active button font size
                                 fontWeight: '500',
                                 lineHeight: 'normal',
                                 pointerEvents: 'none',
