@@ -3437,30 +3437,30 @@ const FigmaMobile = () => {
                     clear: 'both' // Prevent float issues
                   }}
                 >
-                  {/* Mobile Event Card Content - Desktop Structure Inspired */}
+                  {/* Mobile Event Card Content - Scaled Desktop Structure */}
                   <div
                     style={{
                       width: '100%',
-                      height: '85px', // Match desktop card height for consistency
+                      height: '120px', // Scaled up from 85px for better mobile visibility
                       position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       boxSizing: 'border-box',
-                      padding: '0' // Remove padding to match desktop structure
+                      padding: '8px' // Add padding for mobile touch targets
                     }}
                   >
 
-                    {/* Image Section - Desktop Structure Inspired */}
+                    {/* Image Section - Scaled Mobile Structure */}
                     <div
                       style={{
                         position: 'absolute',
-                        left: '0px', // Match desktop positioning
-                        top: '0px',
-                        width: '84px', // Match desktop image frame width
-                        height: '84px', // Match desktop image frame height
+                        left: '8px', // Account for container padding
+                        top: '8px',
+                        width: '104px', // Scaled up from 84px (24% increase)
+                        height: '104px', // Scaled up from 84px (24% increase)
                         flexShrink: 0,
-                        borderRadius: '16px', // Match desktop border radius
+                        borderRadius: '20px', // Scaled up from 16px
                         overflow: 'hidden'
                       }}
                     >
@@ -3541,11 +3541,11 @@ const FigmaMobile = () => {
                           }}
                           style={{
                             position: 'absolute',
-                            left: '3px', // Match desktop image positioning
-                            top: '2px',
-                            width: '79px', // Match desktop image width (79.04px)
-                            height: '79px', // Match desktop image height (79.04px)
-                            borderRadius: '14px', // Match desktop image border radius
+                            left: '4px', // Scaled positioning
+                            top: '3px',
+                            width: '96px', // Scaled up from 79px (22% increase)
+                            height: '96px', // Scaled up from 79px (22% increase)
+                            borderRadius: '17px', // Scaled up from 14px
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
                             cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
@@ -3576,70 +3576,70 @@ const FigmaMobile = () => {
                         />
                       </picture>
 
-                      {/* Date Badge Container - Desktop Structure Inspired */}
+                      {/* Date Badge Container - Scaled Mobile Structure */}
                       <div
                         style={{
                           position: 'absolute',
-                          left: '55.64px', // Match desktop date square positioning
-                          top: '6px',
-                          width: '21px', // Match desktop date square width
-                          height: '21px', // Match desktop date square height
+                          left: '77px', // Scaled from 55.64px + container padding adjustment
+                          top: '15px', // Scaled from 6px + container padding
+                          width: '28px', // Scaled up from 21px (33% increase)
+                          height: '28px', // Scaled up from 21px (33% increase)
                           zIndex: 2
                         }}
                       >
-                        {/* White Badge Background - Desktop Structure */}
+                        {/* White Badge Background - Scaled Mobile Structure */}
                         <div
                           style={{
                             position: 'absolute',
-                            left: '0.15px', // Match desktop date background positioning
-                            top: '-0.86px',
-                            width: '21.16px', // Match desktop date background width
-                            height: '21.16px', // Match desktop date background height
-                            borderRadius: '4px', // Match desktop border radius
-                            background: '#FFFFFF', // Match desktop background
-                            opacity: 1 // Full opacity like desktop
+                            left: '0.2px', // Scaled positioning
+                            top: '-1px',
+                            width: '28px', // Scaled up from 21.16px (32% increase)
+                            height: '28px', // Scaled up from 21.16px (32% increase)
+                            borderRadius: '6px', // Scaled up from 4px
+                            background: '#FFFFFF',
+                            opacity: 1
                           }}
                         />
 
-                        {/* Date Badge Content - Desktop Structure */}
+                        {/* Date Badge Content - Scaled Mobile Structure */}
                         <div
                           style={{
                             position: 'absolute',
-                            left: '3.36px', // Match desktop date content positioning
-                            top: '3px',
+                            left: '4.5px', // Scaled from 3.36px
+                            top: '4px', // Scaled from 3px
                             display: 'flex',
-                            width: '15px', // Match desktop date content width
-                            height: '14px', // Match desktop date content height
+                            width: '20px', // Scaled up from 15px (33% increase)
+                            height: '18px', // Scaled up from 14px (29% increase)
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            gap: '2px' // Match desktop gap
+                            gap: '2px'
                           }}
                         >
-                          {/* DAY Number - Desktop Typography */}
+                          {/* DAY Number - Scaled Mobile Typography */}
                           <span
                             style={{
-                              color: '#232323', // Match desktop text color
+                              color: '#232323',
                               textAlign: 'center',
                               fontFamily: 'Inter',
-                              fontSize: '10px', // Match desktop font size
-                              fontWeight: '800', // Match desktop font weight
-                              lineHeight: '1.21', // Match desktop line height
+                              fontSize: '12px', // Scaled up from 10px (20% increase)
+                              fontWeight: '800',
+                              lineHeight: '1.21',
                               margin: '0'
                             }}
                           >
                             {card.day}
                           </span>
 
-                          {/* MONTH Abbreviation - Desktop Typography */}
+                          {/* MONTH Abbreviation - Scaled Mobile Typography */}
                           <span
                             style={{
-                              color: '#232323', // Match desktop text color
+                              color: '#232323',
                               textAlign: 'center',
                               fontFamily: 'Inter',
-                              fontSize: '6px', // Match desktop font size
-                              fontWeight: '800', // Match desktop font weight
-                              lineHeight: '1.21', // Match desktop line height
+                              fontSize: '7px', // Scaled up from 6px (17% increase)
+                              fontWeight: '800',
+                              lineHeight: '1.21',
                               margin: '0'
                             }}
                           >
@@ -3649,88 +3649,88 @@ const FigmaMobile = () => {
                       </div>
                     </div>
 
-                    {/* Text Content Section - Desktop Structure Inspired */}
+                    {/* Text Content Section - Scaled Mobile Structure */}
                     <div
                       className="card-clickable-area"
                       style={{
                         display: 'flex',
-                        width: '156px', // Match desktop content frame width
-                        padding: '3px 0px', // Match desktop content frame padding
+                        width: '200px', // Scaled up from 156px (28% increase)
+                        padding: '4px 8px', // Scaled padding with mobile spacing
                         flexDirection: 'column',
-                        justifyContent: 'space-between', // Match desktop content frame layout
+                        justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         position: 'absolute',
-                        left: '94px', // Match desktop content frame positioning
-                        top: '0px',
-                        height: '85px', // Match desktop content frame height
+                        left: '120px', // Scaled from 94px + container padding adjustment
+                        top: '8px', // Account for container padding
+                        height: '104px', // Scaled up from 85px (22% increase)
                         boxSizing: 'border-box'
                       }}
                     >
-                      {/* Event Information - Desktop Structure Inspired */}
+                      {/* Event Information - Scaled Mobile Structure */}
                       <div
                         style={{
                           width: '100%',
-                          height: '53px', // Match desktop event details height
+                          height: '68px', // Scaled up from 53px (28% increase)
                           display: 'flex',
                           flexDirection: 'column',
                           alignSelf: 'stretch'
                         }}
                       >
-                        {/* Event Title - Desktop Typography Inspired */}
+                        {/* Event Title - Scaled Mobile Typography */}
                         <h3
                           id={`event-title-${card.id}`}
                           style={{
                             fontFamily: 'Inter',
-                            fontWeight: '800', // Match desktop font weight
-                            fontSize: '16px', // Match desktop font size
-                            lineHeight: '1.21', // Match desktop line height
+                            fontWeight: '800',
+                            fontSize: '18px', // Scaled up from 16px (12% increase)
+                            lineHeight: '1.21',
                             textAlign: 'left',
                             color: '#FFFFFF',
-                            width: '128px', // Match desktop title width
-                            height: '20px', // Match desktop title height
+                            width: '180px', // Scaled up from 128px (41% increase)
+                            height: '24px', // Scaled up from 20px (20% increase)
                             margin: '0',
                             padding: '0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap' // Single line like desktop
+                            whiteSpace: 'nowrap'
                           }}
                         >
                           {card.title}
                         </h3>
 
-                        {/* Event DateTime - Desktop Structure Inspired */}
+                        {/* Event DateTime - Scaled Mobile Structure */}
                         <div
                           style={{
                             display: 'flex',
                             flexDirection: 'row',
                             alignItems: 'center',
                             alignSelf: 'stretch',
-                            gap: '4px', // Match desktop gap
-                            padding: '0px 0px 0px 1px' // Match desktop padding
+                            gap: '6px', // Scaled up from 4px
+                            padding: '0px 0px 0px 2px' // Scaled padding
                           }}
                         >
-                          {/* DateTime Icon - Desktop Structure */}
+                          {/* DateTime Icon - Scaled Mobile Structure */}
                           <svg
-                            width="10" // Match desktop icon width
-                            height="10" // Match desktop icon height
+                            width="12" // Scaled up from 10px (20% increase)
+                            height="12" // Scaled up from 10px (20% increase)
                             viewBox="0 0 10 10"
                             fill="none"
-                            style={{ color: '#FFFFFF' }} // Match desktop icon color
+                            style={{ color: '#FFFFFF' }}
                           >
                             <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
                           </svg>
 
-                          {/* DateTime Text - Desktop Typography */}
+                          {/* DateTime Text - Scaled Mobile Typography */}
                           <span
                             style={{
                               fontFamily: 'Inter',
-                              fontWeight: '200', // Match desktop font weight
-                              fontSize: '10px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
+                              fontWeight: '200',
+                              fontSize: '12px', // Scaled up from 10px (20% increase)
+                              lineHeight: '1.21',
                               textAlign: 'left',
                               color: '#FFFFFF',
-                              width: '111px', // Match desktop text width
-                              height: '12px', // Match desktop text height
+                              width: '140px', // Scaled up from 111px (26% increase)
+                              height: '15px', // Scaled up from 12px (25% increase)
                               margin: '0',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -3741,39 +3741,39 @@ const FigmaMobile = () => {
                           </span>
                         </div>
 
-                        {/* Event Location - Desktop Structure Inspired */}
+                        {/* Event Location - Scaled Mobile Structure */}
                         <div
                           style={{
                             display: 'flex',
                             flexDirection: 'row',
                             alignItems: 'center',
                             alignSelf: 'stretch',
-                            gap: '4px', // Match desktop gap
-                            padding: '0px 1px' // Match desktop padding
+                            gap: '6px', // Scaled up from 4px
+                            padding: '0px 2px' // Scaled padding
                           }}
                         >
-                          {/* Location Icon - Desktop Structure */}
+                          {/* Location Icon - Scaled Mobile Structure */}
                           <svg
-                            width="10" // Match desktop icon width
-                            height="10" // Match desktop icon height
+                            width="12" // Scaled up from 10px (20% increase)
+                            height="12" // Scaled up from 10px (20% increase)
                             viewBox="0 0 10 10"
                             fill="none"
-                            style={{ color: '#FFFFFF' }} // Match desktop icon color
+                            style={{ color: '#FFFFFF' }}
                           >
                             <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 5 5 5s5-1.25 5-5c0-2.76-2.24-5-5-5zm0 7.5c-1.38 0-2.5-1.12-2.5-2.5S3.62 2.5 5 2.5 7.5 3.62 7.5 5 6.38 7.5 5 7.5z" fill="currentColor"/>
                           </svg>
 
-                          {/* Location Text - Desktop Typography */}
+                          {/* Location Text - Scaled Mobile Typography */}
                           <span
                             style={{
                               fontFamily: 'Inter',
-                              fontWeight: '200', // Match desktop font weight
-                              fontSize: '10px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
+                              fontWeight: '200',
+                              fontSize: '12px', // Scaled up from 10px (20% increase)
+                              lineHeight: '1.21',
                               textAlign: 'left',
                               color: '#FFFFFF',
-                              width: '111px', // Match desktop text width
-                              height: '12px', // Match desktop text height
+                              width: '140px', // Scaled up from 111px (26% increase)
+                              height: '15px', // Scaled up from 12px (25% increase)
                               margin: '0',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -3785,19 +3785,19 @@ const FigmaMobile = () => {
                         </div>
                       </div>
 
-                      {/* Event Buttons - Desktop Structure Inspired */}
+                      {/* Event Buttons - Scaled Mobile Structure */}
                       <div
                         style={{
                           width: '100%',
-                          height: '26px', // Match desktop buttons height
+                          height: '32px', // Scaled up from 26px (23% increase)
                           display: 'flex',
                           flexDirection: 'row',
                           justifyContent: 'space-between',
-                          gap: '4px', // Match desktop gap
-                          padding: '0px 4px 0px 0px' // Match desktop padding
+                          gap: '6px', // Scaled up from 4px
+                          padding: '0px 6px 0px 0px' // Scaled padding
                         }}
                       >
-                        {/* Get Tickets Button - Desktop Structure Inspired */}
+                        {/* Get Tickets Button - Scaled Mobile Structure */}
                         {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
                           <button
                             onClick={(e) => {
@@ -3805,23 +3805,23 @@ const FigmaMobile = () => {
                               window.open(card.ticketsUrl, '_blank');
                             }}
                             style={{
-                              background: 'rgba(23, 23, 23, 0.8)', // Match desktop background
-                              borderRadius: '37px', // Match desktop border radius
+                              background: 'rgba(23, 23, 23, 0.8)',
+                              borderRadius: '46px', // Scaled up from 37px (24% increase)
                               display: 'flex',
                               flexDirection: 'row',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '10px', // Match desktop gap
-                              padding: '13px 12px', // Match desktop padding
-                              width: '155px', // Match desktop width
-                              height: '26px', // Match desktop height
+                              gap: '12px', // Scaled up from 10px
+                              padding: '16px 15px', // Scaled up from 13px 12px
+                              width: '190px', // Scaled up from 155px (23% increase)
+                              height: '32px', // Scaled up from 26px (23% increase)
                               border: 'none',
                               cursor: 'pointer',
                               fontFamily: 'Inter',
-                              fontWeight: '500', // Match desktop font weight
-                              fontSize: '12px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
-                              textAlign: 'left',
+                              fontWeight: '500',
+                              fontSize: '14px', // Scaled up from 12px (17% increase)
+                              lineHeight: '1.21',
+                              textAlign: 'center', // Changed to center for better mobile UX
                               color: '#FFFFFF',
                               transition: 'all 0.2s ease',
                               transform: 'scale(1)',
@@ -3844,22 +3844,22 @@ const FigmaMobile = () => {
                             disabled
                             style={{
                               background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
-                              borderRadius: '37px', // Match desktop border radius
+                              borderRadius: '46px', // Scaled up from 37px (24% increase)
                               display: 'flex',
                               flexDirection: 'row',
                               justifyContent: 'center',
                               alignItems: 'center',
-                              gap: '10px', // Match desktop gap
-                              padding: '13px 12px', // Match desktop padding
-                              width: '155px', // Match desktop width
-                              height: '26px', // Match desktop height
+                              gap: '12px', // Scaled up from 10px
+                              padding: '16px 15px', // Scaled up from 13px 12px
+                              width: '190px', // Scaled up from 155px (23% increase)
+                              height: '32px', // Scaled up from 26px (23% increase)
                               border: 'none',
                               cursor: 'default',
                               fontFamily: 'Inter',
-                              fontWeight: '500', // Match desktop font weight
-                              fontSize: '12px', // Match desktop font size
-                              lineHeight: '1.21', // Match desktop line height
-                              textAlign: 'left',
+                              fontWeight: '500',
+                              fontSize: '14px', // Scaled up from 12px (17% increase)
+                              lineHeight: '1.21',
+                              textAlign: 'center', // Changed to center for better mobile UX
                               color: 'rgba(255, 255, 255, 0.6)',
                               boxSizing: 'border-box',
                               opacity: 0.7
@@ -3900,6 +3900,286 @@ const FigmaMobile = () => {
           </div>
         </footer>
       </main>
+
+      {/* Mobile Drawer - Restored Layout Component */}
+      <div
+        ref={drawerRef}
+        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
+        style={{
+          height: getDrawerHeight(),
+          transform: drawerFullyClosed
+            ? 'translate3d(0, 100%, 0)'
+            : drawerExpanded
+              ? 'translate3d(0, 0, 0)'
+              : 'translate3d(0, calc(100% - 80px), 0)',
+          zIndex: 1000
+        }}
+        onClick={handleDrawerClick}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        role="dialog"
+        aria-label="Contact form drawer"
+        aria-expanded={drawerExpanded}
+      >
+        {/* Drawer Handle */}
+        <div
+          style={{
+            width: '40px',
+            height: '4px',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            borderRadius: '2px',
+            margin: '8px auto 16px',
+            cursor: 'pointer'
+          }}
+          aria-hidden="true"
+        />
+
+        {/* Drawer Content */}
+        <div
+          className={`drawer-content ${showVerification ? 'verification-mode' : ''}`}
+          style={{
+            padding: '0 20px 20px',
+            opacity: drawerFullyClosed ? 0 : 1,
+            transition: 'opacity 0.2s ease'
+          }}
+        >
+          {!showVerification ? (
+            /* Phone Input Section */
+            <div style={{ marginBottom: '16px' }}>
+              <h3
+                style={{
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  margin: '0 0 12px 0',
+                  textAlign: 'center'
+                }}
+              >
+                Get Event Updates
+              </h3>
+
+              {/* Phone Input Container */}
+              <div
+                ref={phoneContainerRef}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  border: `2px solid ${phoneInputState === 'valid' ? '#0AFF4B' : phoneInputState === 'invalid' ? '#FF4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                  transition: 'border-color 0.3s ease'
+                }}
+              >
+                {/* Country Flag */}
+                <img
+                  ref={flagImageRef}
+                  src="/flags/us.svg"
+                  alt="US Flag"
+                  style={{
+                    width: '24px',
+                    height: '18px',
+                    marginRight: '8px',
+                    borderRadius: '2px'
+                  }}
+                />
+
+                {/* Country Code */}
+                <span
+                  style={{
+                    color: '#FFFFFF',
+                    fontFamily: 'Inter',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    marginRight: '8px'
+                  }}
+                >
+                  +1
+                </span>
+
+                {/* Phone Input */}
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  onFocus={handlePhoneInputFocus}
+                  onBlur={handlePhoneInputBlur}
+                  placeholder="(555) 123-4567"
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#FFFFFF',
+                    fontFamily: 'Inter',
+                    fontSize: '16px',
+                    fontWeight: '400'
+                  }}
+                  aria-label="Phone number input"
+                />
+
+                {/* Submit Button */}
+                <button
+                  onClick={handlePhoneSubmit}
+                  disabled={phoneSubmitting || !phoneNumber.trim()}
+                  style={{
+                    background: phoneSubmitting ? 'rgba(255, 255, 255, 0.1)' : '#319DFF',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: phoneSubmitting || !phoneNumber.trim() ? 'default' : 'pointer',
+                    opacity: phoneSubmitting || !phoneNumber.trim() ? 0.5 : 1,
+                    transition: 'all 0.2s ease'
+                  }}
+                  aria-label="Submit phone number"
+                >
+                  {phoneSubmitting ? 'Sending...' : 'Submit'}
+                </button>
+              </div>
+
+              {/* Disclaimer */}
+              {showDisclaimer && (
+                <p
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    fontFamily: 'Inter',
+                    fontSize: '12px',
+                    fontWeight: '300',
+                    margin: '8px 0 0 0',
+                    textAlign: 'center',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  By submitting, you agree to receive event updates via SMS. Message and data rates may apply.
+                </p>
+              )}
+            </div>
+          ) : (
+            /* Verification Section */
+            <div style={{ textAlign: 'center' }}>
+              <h3
+                style={{
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  margin: '0 0 8px 0'
+                }}
+              >
+                Verify Your Number
+              </h3>
+
+              <p
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  fontFamily: 'Inter',
+                  fontSize: '14px',
+                  fontWeight: '300',
+                  margin: '0 0 16px 0'
+                }}
+              >
+                Enter the 4-digit code sent to {verificationPhone}
+              </p>
+
+              {/* Verification Code Input */}
+              <input
+                type="text"
+                value={verificationCode}
+                onChange={handleVerificationChange}
+                placeholder="0000"
+                maxLength="4"
+                style={{
+                  width: '120px',
+                  padding: '12px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: `2px solid ${verificationState === 'valid' ? '#0AFF4B' : verificationState === 'invalid' ? '#FF4444' : 'rgba(255, 255, 255, 0.2)'}`,
+                  borderRadius: '8px',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  letterSpacing: '4px',
+                  outline: 'none',
+                  transition: 'border-color 0.3s ease'
+                }}
+                aria-label="Verification code input"
+              />
+
+              {/* Resend Button */}
+              {canResend && (
+                <button
+                  onClick={handleResendCode}
+                  style={{
+                    background: 'transparent',
+                    color: '#319DFF',
+                    border: 'none',
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    marginTop: '12px',
+                    textDecoration: 'underline'
+                  }}
+                  aria-label="Resend verification code"
+                >
+                  Resend Code
+                </button>
+              )}
+
+              {resendCountdown > 0 && (
+                <p
+                  style={{
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    fontFamily: 'Inter',
+                    fontSize: '12px',
+                    fontWeight: '300',
+                    margin: '8px 0 0 0'
+                  }}
+                >
+                  Resend in {resendCountdown}s
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Laylo Integration */}
+          {drawerExpanded && !drawerFullyClosed && !showVerification && (
+            <div
+              onClick={handleIframeClick}
+              style={{
+                marginTop: '16px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                background: 'rgba(255, 255, 255, 0.05)',
+                minHeight: iframeExpanded ? '200px' : '120px',
+                transition: 'min-height 0.3s ease'
+              }}
+            >
+              <LayloIframe
+                dropId="clzlhqhqr0001l708aqhqhqhq"
+                color="319DFF"
+                theme="dark"
+                background="transparent"
+                minimal={true}
+                style={{
+                  width: '100%',
+                  height: iframeExpanded ? '200px' : '120px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  transition: 'height 0.3s ease'
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
     </>
   );

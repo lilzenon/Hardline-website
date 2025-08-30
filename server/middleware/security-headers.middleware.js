@@ -70,7 +70,13 @@ function getCSPDirectives() {
             "http:", // Allow HTTP images for development
             "https://images.unsplash.com",
             "https://via.placeholder.com",
-            "https://picsum.photos"
+            "https://picsum.photos",
+            "https://img.youtube.com", // Allow YouTube thumbnails
+            "https://i.ytimg.com", // Allow YouTube thumbnail CDN
+            "https://i1.ytimg.com", // Allow YouTube thumbnail variants
+            "https://i2.ytimg.com",
+            "https://i3.ytimg.com",
+            "https://i4.ytimg.com"
         ],
 
         // Fonts: Allow self and Google Fonts
