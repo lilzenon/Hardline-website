@@ -6,299 +6,38 @@ import PrivacyConsentModal from './PrivacyConsentModal';
 import useMobileLifecycle from '../hooks/useMobileLifecycle';
 import { mobileDebounce, mobileThrottle, memoryManager } from '../../utils/mobileOptimization';
 
-// Enhanced Laylo Iframe Component with State Persistence and Optimized Loading
+// Simple and Working Laylo Iframe Component - RESTORED from working commit
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
-  const [layloReady, setLayloReady] = useState(false);
-  const [iframeReady, setIframeReady] = useState(false);
-  const [contentLoaded, setContentLoaded] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [isPreloading, setIsPreloading] = useState(true);
-  const iframeRef = useRef(null);
-  const contentCheckInterval = useRef(null);
-  const preloadTimer = useRef(null);
-  const maxRetries = 2;
-  const contentCheckTimeout = 1500; // Faster content detection
-
-  // Mobile lifecycle management for this component
-  const mobileLifecycle = useMobileLifecycle();
-
-  // Build Laylo URL with parameters and cache busting for state preservation
+  // Simple Laylo URL generation - RESTORED from working implementation
   const layloUrl = useMemo(() => {
     const params = new URLSearchParams({
       dropId,
       color,
       theme,
-      background: background,
-      ...(minimal && { minimal: 'true' }),
-      // Add timestamp to prevent aggressive caching but preserve user state
-      _t: Math.floor(Date.now() / 60000) // Update every minute to balance freshness and state preservation
+      background,
+      ...(minimal && { minimal: 'true' })
     });
     return `https://embed.laylo.com/?${params.toString()}`;
   }, [dropId, color, theme, background, minimal]);
 
-  // Preload iframe to eliminate blank state visibility
-  useEffect(() => {
-    if (layloReady && !iframeReady) {
-      setIsPreloading(true);
-
-      // Start preloading timer
-      preloadTimer.current = mobileLifecycle.createTimer(() => {
-        setIsPreloading(false);
-      }, 800); // Short preload time for faster perceived loading
-    }
-
-    return () => {
-      if (preloadTimer.current) {
-        mobileLifecycle.clearTimer(preloadTimer.current);
-      }
-    };
-  }, [layloReady, iframeReady, mobileLifecycle]);
-
-  // Suppress permissions policy violations for encrypted-media
-  useEffect(() => {
-    const handlePermissionViolation = (event) => {
-      if (event.detail && event.detail.includes('encrypted-media')) {
-        event.stopPropagation();
-        event.preventDefault();
-        return false;
-      }
-    };
-
-    // Suppress console violations for permissions policy
-    const originalConsoleWarn = console.warn;
-    console.warn = (...args) => {
-      const message = args.join(' ');
-      if (message.includes('Permissions policy violation') && message.includes('encrypted-media')) {
-        return; // Suppress this specific warning
-      }
-      originalConsoleWarn.apply(console, args);
-    };
-
-    document.addEventListener('securitypolicyviolation', handlePermissionViolation);
-
-    return () => {
-      document.removeEventListener('securitypolicyviolation', handlePermissionViolation);
-      console.warn = originalConsoleWarn;
-    };
-  }, []);
-
-  // Check if Laylo SDK is ready (simplified and faster) - FIXED with fallback
-  const checkLayloSDKReady = useCallback(() => {
-    // Check for Laylo SDK script - if it exists, we're good to go
-    const sdkScript = document.querySelector('script[src*="laylo-sdk.js"]');
-    if (sdkScript) {
-      console.log('✅ Laylo SDK script found, proceeding with iframe');
-      return true;
-    }
-
-    // FALLBACK: If no SDK script found, proceed anyway after timeout
-    // The iframe embed should work without the SDK
-    console.log('ℹ️ No Laylo SDK script found, proceeding with direct iframe embed');
-    return true; // Always return true to allow iframe loading
-  }, []);
-
-  // Check if iframe content has loaded (phone form is visible)
-  const checkIframeContent = useCallback(() => {
-    if (!iframeRef.current) return false;
-
-    try {
-      // Try to access iframe content (may fail due to CORS)
-      const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-
-      if (iframeDoc) {
-        // Look for Laylo-specific elements
-        const hasPhoneInput = iframeDoc.querySelector('input[type="tel"]') ||
-                             iframeDoc.querySelector('input[placeholder*="phone"]') ||
-                             iframeDoc.querySelector('.phone-input') ||
-                             iframeDoc.querySelector('[data-testid*="phone"]');
-
-        const hasSubmitButton = iframeDoc.querySelector('button[type="submit"]') ||
-                               iframeDoc.querySelector('button:contains("RSVP")') ||
-                               iframeDoc.querySelector('.submit-button');
-
-        if (hasPhoneInput || hasSubmitButton) {
-          console.log('✅ Laylo iframe content detected (phone form visible)');
-          return true;
-        }
-
-        // Check for any meaningful content (not just empty body)
-        const bodyContent = iframeDoc.body?.innerHTML || '';
-        if (bodyContent.length > 100 && !bodyContent.includes('loading')) {
-          console.log('✅ Laylo iframe has meaningful content');
-          return true;
-        }
-      }
-    } catch (e) {
-      // CORS error is expected, but iframe might still be working
-      // Check iframe dimensions as a proxy for content
-      const iframe = iframeRef.current;
-      if (iframe && iframe.offsetHeight > 50) {
-        console.log('✅ Laylo iframe appears to have content (height check)');
-        return true;
-      }
-    }
-
-    return false;
-  }, []);
-
-  // Start content detection polling
-  const startContentDetection = useCallback(() => {
-    console.log('🔍 Starting Laylo content detection...');
-
-    const checkContent = () => {
-      if (checkIframeContent()) {
-        setContentLoaded(true);
-        if (contentCheckInterval.current) {
-          clearInterval(contentCheckInterval.current);
-          contentCheckInterval.current = null;
-        }
-        return;
-      }
-    };
-
-    // Check immediately
-    checkContent();
-
-    // Then check every 100ms (faster polling) - using mobile lifecycle management
-    contentCheckInterval.current = mobileLifecycle.createInterval(checkContent, 100);
-
-    // Timeout after 2 seconds (faster timeout) - using mobile lifecycle management
-    mobileLifecycle.createTimer(() => {
-      if (contentCheckInterval.current && !contentLoaded) {
-        console.warn('⚠️ Laylo content detection timeout');
-        mobileLifecycle.clearInterval(contentCheckInterval.current);
-        contentCheckInterval.current = null;
-
-        // Retry if we haven't exceeded max retries
-        if (retryCount < maxRetries) {
-          console.log(`🔄 Retrying Laylo iframe (${retryCount + 1}/${maxRetries})`);
-          setRetryCount(prev => prev + 1);
-          setIframeReady(false);
-          setContentLoaded(false);
-
-          // Recreate iframe after a shorter delay - using mobile lifecycle management
-          mobileLifecycle.createTimer(() => {
-            if (iframeRef.current) {
-              iframeRef.current.src = layloUrl + '&_retry=' + Date.now();
-            }
-          }, 500);
-        }
-      }
-    }, contentCheckTimeout);
-  }, [checkIframeContent, contentLoaded, retryCount, maxRetries, layloUrl]);
-
-  // Handle iframe load
-  const handleIframeLoad = useCallback(() => {
-    console.log('📦 Laylo iframe element loaded');
-    setIframeReady(true);
-
-    // Start checking for content immediately (no delay)
-    startContentDetection();
-  }, [startContentDetection]);
-
-  // Wait for Laylo SDK to be fully ready
-  useEffect(() => {
-    if (layloReady) return;
-
-    const checkSDK = () => {
-      if (checkLayloSDKReady()) {
-        setLayloReady(true);
-        return true;
-      }
-      return false;
-    };
-
-    // Check immediately
-    if (checkSDK()) return;
-
-    // Poll every 50ms until SDK is ready (faster polling) - using mobile lifecycle management
-    const interval = mobileLifecycle.createInterval(() => {
-      if (checkSDK()) {
-        mobileLifecycle.clearInterval(interval);
-      }
-    }, 50);
-
-    // Timeout after 1 second (faster) - using mobile lifecycle management
-    const timeout = mobileLifecycle.createTimer(() => {
-      mobileLifecycle.clearInterval(interval);
-      console.log('⚡ Laylo SDK initialization timeout, proceeding with direct iframe');
-      setLayloReady(true);
-    }, 1000);
-
-    return () => {
-      mobileLifecycle.clearInterval(interval);
-      mobileLifecycle.clearTimer(timeout);
-    };
-  }, [layloReady, checkLayloSDKReady]);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (contentCheckInterval.current) {
-        mobileLifecycle.clearInterval(contentCheckInterval.current);
-      }
-    };
-  }, [mobileLifecycle]);
-
-  // Enhanced loading states with preloading - FIXED to prevent infinite loading
-  if (!layloReady) {
-    return (
-      <div style={{
-        ...style,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        borderRadius: '8px',
-        opacity: 0.8
-      }}>
-        <span style={{ fontSize: '12px', color: '#999', fontFamily: 'Inter' }}>
-          {retryCount > 0 ? `Connecting... (${retryCount}/${maxRetries})` : 'Loading form...'}
-        </span>
-      </div>
-    );
-  }
-
-  // Show loading indicator during preload to prevent blank state
-  if (isPreloading && !contentLoaded) {
-    return (
-      <div style={{
-        ...style,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        borderRadius: '8px',
-        opacity: 0.9
-      }}>
-        <span style={{ fontSize: '11px', color: '#aaa', fontFamily: 'Inter' }}>Preparing form...</span>
-      </div>
-    );
-  }
-
+  // Simple iframe render - no complex loading states
   return (
     <iframe
-      ref={iframeRef}
       id={`laylo-drop-${dropId}`}
-      allow="web-share"
-      onLoad={handleIframeLoad}
+      src={layloUrl}
       style={{
         ...style,
-        opacity: contentLoaded ? 1 : 0.7,
-        transition: 'opacity 0.2s ease-out',
-        minHeight: '60px',
         border: 'none',
-        overflow: 'hidden',
-        // Preserve iframe content by preventing reload on re-render
-        pointerEvents: 'auto',
-        isolation: 'isolate'
+        width: '100%',
+        height: '100%'
       }}
-      src={layloUrl}
+      allow="web-share"
+      title="Laylo Signup Form"
     />
   );
 });
+
+
 
 // Enhanced image helpers with iOS Safari compatibility
 const getOptimizedImageUrl = (originalUrl, width = null) => {
@@ -4206,22 +3945,17 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* Laylo Integration - Fixed Loading Issue with Smart Visibility */}
+          {/* Laylo Integration - RESTORED to working configuration */}
           {!drawerFullyClosed && !showVerification && (
             <div
               onClick={handleIframeClick}
               style={{
-                width: '100%',
+                width: '100%', // Match text content width exactly
                 margin: '8px 0 0 0', // Remove auto margins to align with text content
                 cursor: 'pointer',
                 borderRadius: '8px',
-                overflow: 'hidden', // Hide content when collapsed
-                flexShrink: 0,
-                // FIXED: Always keep in DOM to allow iframe loading, use height/opacity for visibility
-                display: 'block',
-                opacity: drawerExpanded ? 1 : 0,
-                height: drawerExpanded ? 'auto' : '0px',
-                transition: 'opacity 0.3s ease-out, height 0.3s ease-out'
+                overflow: 'visible',
+                flexShrink: 0
               }}
             >
               <LayloIframe
@@ -4237,11 +3971,8 @@ const FigmaMobile = () => {
                   borderRadius: '8px',
                   background: 'transparent',
                   display: 'block',
-                  transition: 'height 0.3s ease',
-                  // FIXED: Allow iframe to load even when collapsed, but disable interaction
-                  pointerEvents: drawerExpanded ? 'auto' : 'none',
-                  // Ensure iframe loads by keeping it in layout flow
-                  visibility: 'visible'
+                  transition: 'opacity 0.3s ease, height 0.3s ease',
+                  pointerEvents: 'auto'
                 }}
               />
             </div>
