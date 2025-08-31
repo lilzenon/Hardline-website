@@ -556,6 +556,7 @@ async function getFeaturedEvents(options = {}) {
         console.log('🔍 getFeaturedEvents: Starting query with options:', options);
 
         // Enhanced query with explicit field selection for homepage display
+        // Filter for events marked as featured and active
         const query = knex("events")
             .select([
                 "events.id",
@@ -608,6 +609,8 @@ async function getFeaturedEvents(options = {}) {
                 "events.event_address",
                 "events.posh_embed_url"
             ])
+            .where("events.is_featured", true)
+            .where("events.is_active", true)
             .orderBy("events.created_at", "desc")
             .limit(limit);
 

@@ -757,7 +757,9 @@ function validateAndSanitizeEventData(data) {
         'twitter_image',
         'ios_title',
         'ios_description',
-        'ios_image'
+        'ios_image',
+        // Featured event functionality
+        'is_featured'
     ];
 
     const sanitizedData = {};
@@ -780,7 +782,7 @@ function validateAndSanitizeEventData(data) {
                 } else {
                     console.warn(`⚠️ Invalid URL format for ${key}: ${value}`);
                 }
-            } else if (typeof value === 'boolean' || key === 'is_active' || key === 'collect_email' || key === 'collect_phone' || key === 'display_tickets' || key === 'posh_embed_enabled') {
+            } else if (typeof value === 'boolean' || key === 'is_active' || key === 'collect_email' || key === 'collect_phone' || key === 'display_tickets' || key === 'posh_embed_enabled' || key === 'is_featured') {
                 // Handle boolean fields
                 sanitizedData[key] = Boolean(value);
             } else if (key === 'gradient_data') {

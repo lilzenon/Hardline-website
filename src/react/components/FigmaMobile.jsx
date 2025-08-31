@@ -3032,8 +3032,14 @@ const FigmaMobile = () => {
             >
             <div
               onClick={() => {
-                // Navigate to events or handle click
-                console.log('Hero clicked - navigate to events');
+                // Navigate to first featured event or handle click
+                const firstFeaturedEvent = processedEventCards[0];
+                if (firstFeaturedEvent && firstFeaturedEvent.hasTicketLink && firstFeaturedEvent.ticketsUrl) {
+                  console.log('🎫 Hero clicked - opening ticket link for featured event:', firstFeaturedEvent.title);
+                  window.open(firstFeaturedEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
+                } else {
+                  console.log('Hero clicked - no ticket link available for featured event');
+                }
               }}
               style={{
                 width: 'min(350px, calc(100vw - 50px))', // Adjusted to ensure consistent width across all elements (25px each side)
@@ -3068,37 +3074,77 @@ const FigmaMobile = () => {
                   overflow: 'hidden'
                 }}
               >
-                <picture>
-                  <source
-                    srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
-                    sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                    type="image/avif"
-                  />
-                  <source
-                    srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
-                    sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                    type="image/webp"
-                  />
-                  <img
-                    src="/images/optimized/hero-left-image-375w.jpg"
-                    alt="Hero background"
-                    loading="eager"
-                    decoding="async"
-                    fetchpriority="high"
-                    onLoad={() => console.log('✅ MOBILE HERO IMAGE LOADED SUCCESSFULLY (Optimized Responsive)')}
-                    onError={(e) => console.error('❌ MOBILE HERO IMAGE FAILED TO LOAD:', e.target.src)}
-                    style={{
-                      position: 'absolute',
-                      left: '0px',
-                      top: '0px',
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      zIndex: 1
-                    }}
-                  />
-                </picture>
+                {/* Dynamic Featured Event Image or Fallback */}
+                {processedEventCards.length > 0 && processedEventCards[0].coverImage ? (
+                  <picture>
+                    <source
+                      srcSet={getAVIFSrcSet(processedEventCards[0].coverImage, 'hero')}
+                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                      type="image/avif"
+                    />
+                    <source
+                      srcSet={getResponsiveSrcSet(processedEventCards[0].coverImage, 'hero')}
+                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                      type="image/webp"
+                    />
+                    <img
+                      src={getOptimizedImageUrl(processedEventCards[0].coverImage, 375)}
+                      alt={`${processedEventCards[0].title} - Featured Event`}
+                      loading="eager"
+                      decoding="async"
+                      fetchpriority="high"
+                      onLoad={() => console.log('✅ MOBILE FEATURED EVENT HERO IMAGE LOADED:', processedEventCards[0].title)}
+                      onError={(e) => {
+                        console.error('❌ MOBILE FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
+                        // Fallback to default hero image
+                        e.target.src = '/images/optimized/hero-left-image-375w.jpg';
+                      }}
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '0px',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        zIndex: 1
+                      }}
+                    />
+                  </picture>
+                ) : (
+                  /* Fallback to default hero image when no featured events */
+                  <picture>
+                    <source
+                      srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
+                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                      type="image/avif"
+                    />
+                    <source
+                      srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
+                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                      type="image/webp"
+                    />
+                    <img
+                      src="/images/optimized/hero-left-image-375w.jpg"
+                      alt="Default Hero Background"
+                      loading="eager"
+                      decoding="async"
+                      fetchpriority="high"
+                      onLoad={() => console.log('✅ MOBILE DEFAULT HERO IMAGE LOADED')}
+                      onError={(e) => console.error('❌ MOBILE DEFAULT HERO IMAGE FAILED:', e.target.src)}
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '0px',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center',
+                        zIndex: 1
+                      }}
+                    />
+                  </picture>
+                )}
               </div>
 
               {/* Mobile-Optimized Gradient Overlay - Outside image container for better mobile rendering */}
