@@ -311,8 +311,8 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     if (uuidMatch) {
       const uuid = uuidMatch[1];
 
-      // Build optimized URL using the dashboard domain - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      // Build optimized URL using the dashboard domain - with local proxy for development
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
 
       // Use appropriate variant based on width or default to medium for event cards
       let variant = 'medium'; // Default for event cards (111px)
@@ -346,8 +346,8 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   // Handle external HTTP URLs
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
-    // Use dashboard server for image optimization (publicly accessible) - with fallback for development
-    const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+    // Use dashboard server for image optimization (publicly accessible) - with local proxy for development
+    const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
 
     // Add iOS Safari specific parameters for better compatibility
@@ -367,7 +367,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
     if (uuidMatch) {
       const uuid = uuidMatch[1];
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
 
       // Use medium variant for event cards
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
@@ -417,7 +417,7 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     return ''; // Return empty to skip AVIF source entirely
   }
 
-  const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
     .join(', ');
@@ -491,7 +491,7 @@ const handleImageFallbackAttempt3 = (imgElement, card) => {
     const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
     if (uuidMatch) {
       const uuid = uuidMatch[1];
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
       const thumbnailUrl = `${dashboardDomain}/api/images/serve/${uuid}/thumbnail`;
       console.log('🔄 Attempt 3: Trying thumbnail variant for new image system:', thumbnailUrl);
       imgElement.src = thumbnailUrl;
@@ -853,6 +853,41 @@ const FigmaMobile = () => {
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
 
+  // Image expansion state
+  const [expandedImage, setExpandedImage] = useState(null);
+  const [imageExpanding, setImageExpanding] = useState(false);
+
+  // Handle image expansion
+  const handleImageExpand = useCallback((card, imageElement) => {
+    if (imageExpanding) {
+      console.log('⚠️ Image expansion already in progress');
+      return; // Prevent multiple expansions
+    }
+
+    console.log('🚀 Starting image expansion for:', card.title);
+    setImageExpanding(true);
+
+    // Get image URL from element or fallback to card data
+    const imageUrl = imageElement?.src || card.coverImage;
+
+    setExpandedImage({
+      ...card,
+      imageUrl: imageUrl,
+      originalRect: imageElement?.getBoundingClientRect() || null
+    });
+
+    // Reset expanding state after animation
+    setTimeout(() => {
+      setImageExpanding(false);
+      console.log('✅ Image expansion animation complete');
+    }, 400);
+  }, [imageExpanding]);
+
+  // Handle image collapse
+  const handleImageCollapse = useCallback(() => {
+    setExpandedImage(null);
+  }, []);
+
   // Optimized scroll state for dynamic navigation (contentRef defined below)
 
   // Video quality state for adaptive streaming
@@ -1005,8 +1040,8 @@ const FigmaMobile = () => {
 
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
-      // Use the new homepage phone submission endpoint - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      // Use the new homepage phone submission endpoint - with local proxy for development
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/submit-phone`, {
         method: 'POST',
         headers: {
@@ -1155,7 +1190,7 @@ const FigmaMobile = () => {
 
       console.log('🔐 Submitting verification code');
 
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/verify-phone`, {
         method: 'POST',
         headers: {
@@ -1247,8 +1282,8 @@ const FigmaMobile = () => {
         return;
       }
 
-      // Use dashboard domain for API calls - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      // Use dashboard domain for API calls - with local proxy for development
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/homepage-data`);
 
       if (!response.ok) {
@@ -1355,7 +1390,7 @@ const FigmaMobile = () => {
 
       console.log('🔄 Resending verification code to:', verificationPhone);
 
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/resend-verification`, {
         method: 'POST',
         headers: {
@@ -1532,7 +1567,7 @@ const FigmaMobile = () => {
             avifLink.rel = 'preload';
             avifLink.as = 'image';
             avifLink.type = 'image/avif';
-            const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+            const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
             avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=120&format=avif`;
             document.head.appendChild(avifLink);
           }
@@ -2195,12 +2230,18 @@ const FigmaMobile = () => {
             -moz-osx-font-smoothing: grayscale;
           }
 
-          /* Safari iOS specific fixes */
-          body {
+          /* Enhanced iOS Safari scrolling optimization */
+          html, body {
             -webkit-overflow-scrolling: touch;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
+            /* Prevent scroll bounce and improve momentum */
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
+            /* Optimize scroll performance */
+            scroll-behavior: smooth;
+            touch-action: manipulation; /* Improve touch responsiveness */
           }
 
           /* Prevent iOS Safari bounce scroll while allowing normal scrolling */
@@ -2269,11 +2310,18 @@ const FigmaMobile = () => {
             background: rgba(255, 255, 255, 0.5);
           }
 
-          /* iOS-style momentum scrolling with improved behavior */
+          /* Enhanced iOS-style momentum scrolling */
           .mobile-content-container {
             -webkit-overflow-scrolling: touch;
-            scroll-behavior: auto;
+            scroll-behavior: smooth;
             overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
+            /* Improve scroll performance and stability */
+            scroll-snap-type: none; /* Disable snap scrolling that can cause jitter */
+            touch-action: pan-y; /* Only allow vertical scrolling */
+            /* Optimize rendering during scroll */
+            contain: layout style;
+            will-change: scroll-position;
           }
 
           .mobile-phone-input::placeholder {
@@ -2403,23 +2451,27 @@ const FigmaMobile = () => {
             transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-origin: bottom center;
             z-index: 100;
-            will-change: transform;
+            will-change: auto; /* Let browser optimize to prevent main scroll conflicts */
             backface-visibility: hidden;
             perspective: 1000px;
             /* Enhanced touch interaction */
             touch-action: pan-y;
             user-select: none;
             -webkit-user-select: none;
+            /* Isolate drawer interactions from main scroll */
+            contain: layout style;
           }
 
-          /* Fast momentum animation for flick gestures */
+          /* Fast momentum animation for flick gestures - scroll optimized */
           .mobile-drawer.momentum-fast {
             transition: transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            contain: strict; /* Strict containment during fast animations */
           }
 
-          /* Slow momentum animation for gentle swipes */
+          /* Slow momentum animation for gentle swipes - scroll optimized */
           .mobile-drawer.momentum-slow {
             transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            contain: layout style; /* Layout containment for smooth animations */
           }
 
           .mobile-drawer.collapsed {
@@ -2457,30 +2509,73 @@ const FigmaMobile = () => {
             transform: scale(1.02);
           }
 
-          /* Optimized fade-in animation - prevents black frames */
+          /* Optimized fade-in animation - scroll-friendly */
           @keyframes optimizedFadeIn {
             0% {
               opacity: 0;
-              transform: translate3d(0, 12px, 0) scale(0.96);
+              transform: translate3d(0, 8px, 0); /* Reduced movement to prevent scroll interference */
             }
             100% {
               opacity: 1;
-              transform: translate3d(0, 0, 0) scale(1);
+              transform: translate3d(0, 0, 0);
             }
           }
 
           .event-card-spring {
-            animation: optimizedFadeIn 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-            will-change: transform, opacity;
+            animation: optimizedFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; /* Faster, smoother animation */
+            will-change: auto; /* Let browser decide to prevent scroll conflicts */
             backface-visibility: hidden;
-            transform-style: preserve-3d;
+            transform-style: flat; /* Reduce 3D transforms that can cause scroll issues */
             -webkit-font-smoothing: antialiased;
+            contain: layout style; /* Contain layout changes to prevent scroll reflow */
           }
 
           .event-card-hidden {
             opacity: 0;
-            transform: translate3d(0, 12px, 0) scale(0.96);
+            transform: translate3d(0, 8px, 0); /* Match reduced movement */
             backface-visibility: hidden;
+          }
+
+          /* Expanded Image Modal Animations */
+          @keyframes expandedImageFadeIn {
+            0% {
+              opacity: 0;
+              backdrop-filter: blur(0px);
+              -webkit-backdrop-filter: blur(0px);
+              background-color: rgba(0, 0, 0, 0);
+            }
+            100% {
+              opacity: 1;
+              backdrop-filter: blur(60px);
+              -webkit-backdrop-filter: blur(60px);
+              background-color: rgba(0, 0, 0, 0.15);
+            }
+          }
+
+          @keyframes expandedImageScale {
+            0% {
+              opacity: 0;
+              transform: scale(0.3) translateY(20px);
+            }
+            60% {
+              opacity: 1;
+              transform: scale(1.05) translateY(-5px);
+            }
+            100% {
+              opacity: 1;
+              transform: scale(1) translateY(0);
+            }
+          }
+
+          @keyframes expandedButtonsSlideUp {
+            0% {
+              opacity: 0;
+              transform: translateY(30px) scale(0.9);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
           }
 
           /* Responsive adjustments for small mobile devices */
@@ -2554,9 +2649,12 @@ const FigmaMobile = () => {
           minWidth: '100vw',
           isolation: 'isolate', // Create new stacking context
           transform: 'translateZ(0)', // Force hardware acceleration
-          willChange: 'transform', // Optimize for mobile performance
+          willChange: 'auto', // Let browser optimize to prevent scroll conflicts
           WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-          WebkitTransform: 'translateZ(0)' // iOS Safari optimization
+          WebkitTransform: 'translateZ(0)', // iOS Safari optimization
+          // Enhanced scroll optimization
+          touchAction: 'pan-y', // Only allow vertical scrolling
+          overscrollBehavior: 'contain' // Prevent scroll chaining
         }}
         aria-label="Mobile homepage content"
       >
@@ -2566,14 +2664,15 @@ const FigmaMobile = () => {
           style={{
             position: 'sticky', // Changed to sticky for better mobile behavior
             top: '0px',
-            width: '100%',
+            width: 'calc(100% - 40px)', // Reduced width by additional 20px (total 40px reduction)
             height: isScrolled ? '70px' : '97px',
             background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000',
             backdropFilter: isScrolled ? 'blur(10px)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 20px',
+            padding: '0 15px', // Reduced padding from 20px to 15px
+            margin: '0 20px', // Increased margin to center the further reduced nav bar
             boxSizing: 'border-box',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 200,
@@ -2588,7 +2687,7 @@ const FigmaMobile = () => {
             className="mobile-menu-button"
             style={{
               position: 'absolute',
-              right: '20px',
+              right: '15px', // Adjusted to match reduced nav bar padding
               top: '50%',
               transform: 'translateY(-50%)',
               width: '34px',
@@ -2678,21 +2777,23 @@ const FigmaMobile = () => {
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '20px 0px 40px 0px',
+            padding: '5px 0px 40px 0px', // Reduced top padding from 20px to 5px
             paddingBottom: getDynamicBottomSpacing(),
             boxSizing: 'border-box',
             overflow: 'auto',
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
-            scrollBehavior: 'auto',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            scrollBehavior: 'smooth',
+            // Remove transition that can interfere with scrolling
+            touchAction: 'pan-y', // Allow only vertical scrolling
+            scrollSnapType: 'none' // Disable scroll snapping that can cause jitter
           }}
         >
           {/* Hero Video Section */}
           <section
             aria-labelledby="hero-video-title"
-            style={{ width: '100%', marginTop: '20px', marginBottom: '20px' }}
+            style={{ width: '100%', marginTop: '2px', marginBottom: '20px' }} // Reduced to almost nothing
           >
             <h1
               id="hero-video-title"
@@ -3465,8 +3566,8 @@ const FigmaMobile = () => {
                   style={{
                     display: 'block', // Change to block to prevent flex issues
                     width: '100%',
-                    minHeight: '120px',
-                    height: 'auto',
+                    minHeight: '128px', // Minimum height for layout stability
+                    height: 'auto', // Dynamic height to accommodate multi-line titles
                     borderRadius: '20px',
                     background: 'rgba(15, 15, 15, 0.95)',
                     backdropFilter: 'blur(20px) saturate(180%)',
@@ -3475,7 +3576,7 @@ const FigmaMobile = () => {
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                     position: 'relative',
                     margin: '0', // Remove margin, use container gap instead
-                    padding: '12px', // Increased padding for better mobile touch
+                    padding: '2px', // Reduced to 2px maximum for compact design
                     animationDelay: cardsAnimated ? `${0.1 + (index * 0.05)}s` : '0s',
                     overflow: 'hidden',
                     boxSizing: 'border-box',
@@ -3490,27 +3591,66 @@ const FigmaMobile = () => {
                   <div
                     style={{
                       width: '100%',
-                      height: '120px', // Scaled up from 85px for better mobile visibility
+                      height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
                       position: 'relative',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       boxSizing: 'border-box',
-                      padding: '8px' // Add padding for mobile touch targets
+                      padding: '2px' // Reduced padding for compact design
                     }}
                   >
 
-                    {/* Image Section - Enhanced Mobile Structure */}
+                    {/* Image Section - Square Aspect Ratio Optimized with Enhanced Click Area */}
                     <div
                       style={{
                         position: 'absolute',
-                        left: '4px', // Moved closer to left edge for better visual balance
-                        top: '8px',
-                        width: '120px', // Increased from 104px for more prominent image
-                        height: '104px', // Maintain height for proper aspect ratio
+                        left: '2px', // Positioned close to left edge with minimal padding
+                        top: '2px',
+                        width: '120px', // Maintain current width
+                        height: '120px', // Changed to match width for perfect square (1:1 aspect ratio)
                         flexShrink: 0,
                         borderRadius: '20px',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        cursor: 'pointer', // Make entire container clickable
+                        zIndex: 100, // Much higher z-index to ensure it's above everything
+                        transition: 'transform 0.1s ease',
+                        border: '2px solid transparent', // Add subtle border for debug
+                        boxSizing: 'border-box'
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🖱️ Image container clicked:', card.title, 'Expanding state:', imageExpanding);
+                        const imgElement = e.currentTarget.querySelector('img');
+                        console.log('📷 Found image element:', !!imgElement, imgElement?.src);
+                        // Always try to expand, even without img element
+                        handleImageExpand(card, imgElement);
+                      }}
+                      onTouchStart={(e) => {
+                        e.currentTarget.style.transform = 'scale(0.95)';
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.style.transform = 'scale(1)';
+                        console.log('👆 Image container touched:', card.title, 'Expanding state:', imageExpanding);
+                        const imgElement = e.currentTarget.querySelector('img');
+                        console.log('📷 Found image element on touch:', !!imgElement, imgElement?.src);
+                        // Always try to expand, even without img element
+                        handleImageExpand(card, imgElement);
+                      }}
+                      onTouchCancel={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                      onMouseDown={(e) => {
+                        e.currentTarget.style.transform = 'scale(0.95)';
+                      }}
+                      onMouseUp={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
                       }}
                     >
                       {/* Event Background Image - Progressive Loading with Safari Mobile Optimization */}
@@ -3550,7 +3690,7 @@ const FigmaMobile = () => {
                                 const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
                                 if (uuidMatch) {
                                   const uuid = uuidMatch[1];
-                                  const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+                                  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
                                   const smallVariantUrl = `${dashboardDomain}/api/images/serve/${uuid}/small`;
                                   console.log('🔄 Attempt 2: Trying small variant for new image system:', smallVariantUrl);
                                   e.target.src = smallVariantUrl;
@@ -3582,25 +3722,20 @@ const FigmaMobile = () => {
                             delete e.target.dataset.fallbackAttempt;
                             console.log('✅ Event image loaded successfully:', e.target.src);
                           }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                              window.open(card.ticketsUrl, '_blank');
-                            }
-                          }}
+                          // Disable pointer events on image to prevent interference with container clicks
                           style={{
                             position: 'absolute',
                             left: '4px',
-                            top: '3px',
-                            width: '112px', // Increased to match larger container
-                            height: '96px', // Maintain aspect ratio
+                            top: '4px',
+                            width: '112px', // Maintain width within container
+                            height: '112px', // Changed to square to match container
                             borderRadius: '17px',
                             objectFit: 'cover',
                             backgroundColor: 'lightgray',
-                            cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             transform: 'scale(1)',
-                            boxShadow: 'none'
+                            boxShadow: 'none',
+                            pointerEvents: 'none' // Critical: prevents image from blocking container clicks
                           }}
                           onMouseEnter={(e) => {
                             if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
@@ -3628,31 +3763,33 @@ const FigmaMobile = () => {
 
                     </div>
 
-                    {/* Text Content Section - Optimized Mobile Structure */}
+                    {/* Text Content Section - Square Image Optimized */}
                     <div
                       className="card-clickable-area"
                       style={{
                         display: 'flex',
-                        width: '190px', // Adjusted to accommodate larger image
-                        padding: '4px 8px',
+                        width: 'calc(100% - 130px)', // Dynamic width: full card minus image and spacing
+                        padding: '2px 2px 2px 4px', // Reduced right padding for closer edge alignment
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         alignItems: 'flex-start',
                         position: 'absolute',
-                        left: '132px', // Moved right to accommodate larger image (120px + 12px spacing)
-                        top: '8px',
-                        height: '104px',
+                        left: '126px', // Adjusted for square image (120px + 6px spacing)
+                        top: '2px', // Aligned with image top
+                        height: '120px', // Match square image height
                         boxSizing: 'border-box'
                       }}
                     >
-                      {/* Event Information - Scaled Mobile Structure */}
+                      {/* Event Information - Dynamic Layout for Multi-line Titles */}
                       <div
                         style={{
                           width: '100%',
-                          height: '68px', // Scaled up from 53px (28% increase)
+                          minHeight: '84px', // Minimum height for layout stability
+                          height: 'auto', // Dynamic height to accommodate expanded titles
                           display: 'flex',
                           flexDirection: 'column',
-                          alignSelf: 'stretch'
+                          alignSelf: 'stretch',
+                          flex: '1 1 auto' // Allow flexible growth
                         }}
                       >
                         {/* Event Title - Primary Hierarchy Element */}
@@ -3665,13 +3802,16 @@ const FigmaMobile = () => {
                             lineHeight: '1.25', // Improved line height for readability
                             textAlign: 'left',
                             color: '#FFFFFF', // Full white for maximum contrast and prominence
-                            width: '128px',
-                            height: '20px',
-                            margin: '0',
+                            width: '100%', // Utilize full expanded container width
+                            minHeight: '20px', // Minimum height for single line
+                            height: 'auto', // Dynamic height for multi-line content
+                            margin: '0 0 4px 0', // Add bottom margin for spacing
                             padding: '0',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
+                            overflow: 'visible', // Allow content to expand
+                            textOverflow: 'unset', // Remove ellipsis truncation
+                            whiteSpace: 'normal', // Allow text wrapping
+                            wordWrap: 'break-word', // Handle long words gracefully
+                            hyphens: 'auto' // Enable hyphenation for better line breaks
                           }}
                         >
                           {card.title}
@@ -3694,7 +3834,7 @@ const FigmaMobile = () => {
                             height="12" // Scaled up from 10px (20% increase)
                             viewBox="0 0 10 10"
                             fill="none"
-                            style={{ color: '#FFFFFF' }}
+                            style={{ color: 'rgba(255, 255, 255, 0.7)' }} // Reduced opacity for visual hierarchy
                           >
                             <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
                           </svg>
@@ -3703,13 +3843,13 @@ const FigmaMobile = () => {
                           <span
                             style={{
                               fontFamily: 'Inter',
-                              fontWeight: '400', // Increased weight for better readability
-                              fontSize: '10px',
-                              lineHeight: '1.3', // Improved line height for readability
+                              fontWeight: '300', // Reduced weight for refined appearance
+                              fontSize: '12px', // Increased from 10px for better mobile readability
+                              lineHeight: '1.4', // Improved line height for readability
                               textAlign: 'left',
-                              color: 'rgba(255, 255, 255, 0.85)', // Slightly reduced opacity for hierarchy
-                              width: '111px',
-                              height: '12px',
+                              color: 'rgba(255, 255, 255, 0.7)', // More transparent for better hierarchy
+                              width: '100%', // Utilize full expanded container width
+                              height: '14px', // Increased to accommodate larger font
                               margin: '0',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -3733,26 +3873,26 @@ const FigmaMobile = () => {
                         >
                           {/* Location Icon - Scaled Mobile Structure */}
                           <svg
-                            width="12" // Scaled up from 10px (20% increase)
-                            height="12" // Scaled up from 10px (20% increase)
-                            viewBox="0 0 10 10"
+                            width="12" // Optimized size for mobile clarity
+                            height="12" // Optimized size for mobile clarity
+                            viewBox="0 0 24 24"
                             fill="none"
-                            style={{ color: '#FFFFFF' }}
+                            style={{ color: 'rgba(255, 255, 255, 0.7)' }} // Consistent transparency with date icon
                           >
-                            <path d="M5 0C2.24 0 0 2.24 0 5c0 3.75 5 5 5 5s5-1.25 5-5c0-2.76-2.24-5-5-5zm0 7.5c-1.38 0-2.5-1.12-2.5-2.5S3.62 2.5 5 2.5 7.5 3.62 7.5 5 6.38 7.5 5 7.5z" fill="currentColor"/>
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
                           </svg>
 
                           {/* Location Text - Supporting Information */}
                           <span
                             style={{
                               fontFamily: 'Inter',
-                              fontWeight: '300', // Slightly increased for readability
-                              fontSize: '10px',
-                              lineHeight: '1.3', // Improved line height for readability
+                              fontWeight: '300', // Consistent light weight for refined appearance
+                              fontSize: '12px', // Increased from 10px for better mobile readability
+                              lineHeight: '1.4', // Improved line height for readability
                               textAlign: 'left',
-                              color: 'rgba(255, 255, 255, 0.75)', // More reduced opacity for tertiary hierarchy
-                              width: '111px',
-                              height: '12px',
+                              color: 'rgba(255, 255, 255, 0.65)', // Further reduced opacity for tertiary hierarchy
+                              width: '100%', // Utilize full expanded container width
+                              height: '14px', // Increased to accommodate larger font
                               margin: '0',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -3764,16 +3904,20 @@ const FigmaMobile = () => {
                         </div>
                       </div>
 
-                      {/* Event Buttons - Scaled Mobile Structure */}
+                      {/* Event Buttons - Bottom Aligned with Square Image */}
                       <div
                         style={{
                           width: '100%',
-                          height: '32px', // Scaled up from 26px (23% increase)
+                          height: '32px', // Maintain button height for touch targets
                           display: 'flex',
                           flexDirection: 'row',
-                          justifyContent: 'space-between',
-                          gap: '6px', // Scaled up from 4px
-                          padding: '0px 6px 0px 0px' // Scaled padding
+                          justifyContent: 'flex-start',
+                          alignItems: 'flex-end', // Align to bottom of container
+                          gap: '6px',
+                          padding: '0px 2px 0px 0px', // Reduced padding for closer right-edge alignment
+                          position: 'absolute',
+                          bottom: '0px', // Position at bottom of text container to align with image bottom
+                          left: '0px'
                         }}
                       >
                         {/* Get Tickets Button - Enhanced Mobile Structure */}
@@ -3792,7 +3936,7 @@ const FigmaMobile = () => {
                               alignItems: 'center',
                               gap: '12px',
                               padding: '16px 15px',
-                              width: '174px', // Extended for visual balance (190px - 16px for symmetry)
+                              width: 'calc(100% - 4px)', // Closer to right edge for visual balance with image positioning
                               height: '32px',
                               border: 'none',
                               cursor: 'pointer',
@@ -3830,7 +3974,7 @@ const FigmaMobile = () => {
                               alignItems: 'center',
                               gap: '12px',
                               padding: '16px 15px',
-                              width: '174px', // Match active button width for consistency
+                              width: 'calc(100% - 4px)', // Closer to right edge, matching image's 2px left positioning
                               height: '32px',
                               border: 'none',
                               cursor: 'default',
@@ -4004,6 +4148,169 @@ const FigmaMobile = () => {
         </div>
       </div>
     </div>
+
+    {/* Expanded Image Modal */}
+    {expandedImage && (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.15)', // Barely covering - very transparent
+          backdropFilter: 'blur(60px)', // Heavy blur for glassmorphism effect
+          WebkitBackdropFilter: 'blur(60px)',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px',
+          boxSizing: 'border-box',
+          animation: 'expandedImageFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
+        }}
+        onClick={handleImageCollapse}
+      >
+        {/* Expanded Image */}
+        <div
+          style={{
+            width: 'min(80vw, 80vh)',
+            height: 'min(80vw, 80vh)',
+            aspectRatio: '1 / 1',
+            borderRadius: '20px',
+            overflow: 'hidden',
+            marginBottom: '20px',
+            animation: 'expandedImageScale 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
+            border: '1px solid rgba(255, 255, 255, 0.1)', // Subtle border for definition
+            cursor: 'pointer'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <img
+            src={expandedImage.imageUrl}
+            alt={expandedImage.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block'
+            }}
+          />
+        </div>
+
+        {/* Action Buttons */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '16px',
+            animation: 'expandedButtonsSlideUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Share Button */}
+          <button
+            onClick={() => {
+              if (navigator.share) {
+                navigator.share({
+                  title: expandedImage.title,
+                  text: `Check out this event: ${expandedImage.title}`,
+                  url: window.location.href
+                });
+              } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+              }
+            }}
+            style={{
+              background: 'rgba(22, 22, 22, 0.8)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              borderRadius: '25px',
+              padding: '12px 24px',
+              color: '#FFFFFF',
+              fontFamily: 'Inter',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              minWidth: '80px',
+              height: '44px'
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.background = 'rgba(60, 60, 60, 0.8)';
+              e.currentTarget.style.transform = 'scale(0.95)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.8)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            Share
+          </button>
+
+          {/* Buy Tickets Button */}
+          {expandedImage.isRealEvent && expandedImage.ticketsUrl && expandedImage.ticketsUrl !== '#' ? (
+            <button
+              onClick={() => {
+                window.open(expandedImage.ticketsUrl, '_blank');
+                handleImageCollapse();
+              }}
+              style={{
+                background: 'rgba(49, 157, 255, 0.9)',
+                border: '1px solid rgba(49, 157, 255, 0.3)',
+                borderRadius: '25px',
+                padding: '12px 24px',
+                color: '#FFFFFF',
+                fontFamily: 'Inter',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                minWidth: '100px',
+                height: '44px'
+              }}
+              onTouchStart={(e) => {
+                e.currentTarget.style.background = 'rgba(49, 157, 255, 1)';
+                e.currentTarget.style.transform = 'scale(0.95)';
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.background = 'rgba(49, 157, 255, 0.9)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              Buy Tickets
+            </button>
+          ) : (
+            <button
+              disabled
+              style={{
+                background: 'rgba(22, 22, 22, 0.4)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '25px',
+                padding: '12px 24px',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontFamily: 'Inter',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'default',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+                minWidth: '100px',
+                height: '44px'
+              }}
+            >
+              Event Info
+            </button>
+          )}
+        </div>
+      </div>
+    )}
     </>
   );
 };

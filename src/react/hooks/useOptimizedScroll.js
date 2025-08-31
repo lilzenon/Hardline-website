@@ -25,6 +25,7 @@ export const useOptimizedScroll = (element = null, options = {}) => {
   const lastScrollY = useRef(0);
   const lastScrollX = useRef(0);
   const lastTimestamp = useRef(0);
+  const lastVelocity = useRef(0);
   const rafId = useRef(null);
   const isThrottled = useRef(false);
 
@@ -57,19 +58,22 @@ export const useOptimizedScroll = (element = null, options = {}) => {
         direction = deltaX > 0 ? 'right' : 'left';
       }
       
-      const velocity = deltaTime > 0 ? Math.abs(deltaY) / deltaTime : 0;
-      
+      // Smooth velocity calculation to prevent jitter
+      const rawVelocity = deltaTime > 0 ? Math.abs(deltaY) / deltaTime : 0;
+      const smoothedVelocity = rawVelocity * 0.3 + lastVelocity.current * 0.7;
+
       setScrollState({
         scrollY: currentScrollY,
         scrollX: currentScrollX,
         isScrolled: currentScrollY > threshold,
         direction,
-        velocity
+        velocity: smoothedVelocity
       });
-      
+
       lastScrollY.current = currentScrollY;
       lastScrollX.current = currentScrollX;
       lastTimestamp.current = now;
+      lastVelocity.current = smoothedVelocity;
       
       // Reset throttle after delay
       setTimeout(() => {

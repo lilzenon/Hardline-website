@@ -37,27 +37,48 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 3006, // Updated to match Vite's auto-selected port
+    host: true, // Allow external connections
     cors: {
-      origin: ['http://localhost:3000', 'https://admin.b2b.click', 'https://b2b.click'],
+      origin: [
+        'http://localhost:3006',
+        'http://localhost:3005',
+        'http://localhost:3000',
+        'https://admin.b2b.click',
+        'https://b2b.click'
+      ],
       credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     },
     proxy: {
       '/api': {
-        target: 'https://admin.b2b.click',  // ALWAYS use live API for main homepage
+        target: 'https://admin.b2b.click',
         changeOrigin: true,
         secure: true,
+        ws: true, // Enable WebSocket proxying
         headers: {
-          'Origin': 'http://localhost:3000'
+          'Origin': 'https://admin.b2b.click', // Use the target origin instead
+          'Referer': 'https://admin.b2b.click',
+          'User-Agent': 'Mozilla/5.0 (compatible; Vite-Dev-Server)',
         },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('🚨 Proxy error connecting to live API:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Add CORS headers to the proxy request
+            proxyReq.setHeader('Access-Control-Allow-Origin', '*');
+            proxyReq.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            proxyReq.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
             console.log('📡 Sending to live API:', req.method, req.url, '→ https://admin.b2b.click' + req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
+            // Add CORS headers to the response
+            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
+            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
+            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With';
+            proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
             console.log('✅ Response from live API:', proxyRes.statusCode, req.url);
           });
         },
