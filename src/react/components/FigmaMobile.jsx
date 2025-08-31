@@ -1814,7 +1814,7 @@ const FigmaMobile = () => {
     } else if (drawerExpanded) {
       return '280px'; // Expanded - show text + Laylo iframe with proper height for phone form
     } else {
-      return '200px'; // Collapsed - show text content + Laylo iframe (increased from 80px)
+      return '80px'; // Collapsed - show only text content, hide Laylo iframe
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer, iframeExpanded]);
 
@@ -4201,7 +4201,7 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* Laylo Integration - Always Visible in Drawer */}
+          {/* Laylo Integration - Enhanced with State Preservation */}
           {!drawerFullyClosed && !showVerification && (
             <div
               onClick={handleIframeClick}
@@ -4212,9 +4212,9 @@ const FigmaMobile = () => {
                 borderRadius: '8px',
                 overflow: 'visible',
                 flexShrink: 0,
-                // Always show iframe to preserve state and allow interaction
-                display: 'block',
-                opacity: 1,
+                // Hide iframe when drawer is collapsed but keep in DOM to preserve state
+                display: drawerExpanded ? 'block' : 'none',
+                opacity: drawerExpanded ? 1 : 0,
                 transition: 'opacity 0.2s ease-out'
               }}
             >
@@ -4226,13 +4226,13 @@ const FigmaMobile = () => {
                 minimal={true}
                 style={{
                   width: '100%', // Match text content width exactly
-                  height: iframeExpanded ? '200px' : drawerExpanded ? '160px' : '120px',
+                  height: iframeExpanded ? '200px' : '160px',
                   border: 'none',
                   borderRadius: '8px',
                   background: 'transparent',
                   display: 'block',
                   transition: 'height 0.3s ease',
-                  pointerEvents: 'auto' // Always allow interaction
+                  pointerEvents: drawerExpanded ? 'auto' : 'none'
                 }}
               />
             </div>
