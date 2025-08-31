@@ -3,6 +3,8 @@ const validator = require("validator");
 const { event } = require("../queries");
 // Backup direct import in case of module loading issues
 const eventQueries = require("../queries/event.queries");
+// Additional fallback - direct knex import
+const knex = require("../knex");
 // Analytics queries moved to dashboard repository
 const qrCodeService = require("../services/qr-code.service");
 // Analytics middleware moved to dashboard repository
@@ -1841,18 +1843,33 @@ async function handleCoverImageUpload(req, res) {
         const userId = req.user && req.user.id;
 
         console.log(`🖼️ Cover image upload request for event ${id} by user ${userId}`);
+        console.log(`🔍 Debug: event object:`, event);
         console.log(`🔍 Debug: event object type:`, typeof event);
+        console.log(`🔍 Debug: eventQueries object:`, eventQueries);
         console.log(`🔍 Debug: eventQueries object type:`, typeof eventQueries);
 
         // Use backup import if main import fails - ensure we have a valid service
-        const eventService = event || eventQueries;
+        let eventService;
 
-        if (!eventService || typeof eventService.findOne !== 'function') {
-            console.error('❌ Event service not available:', { event: typeof event, eventQueries: typeof eventQueries });
-            return res.status(500).json({
-                success: false,
-                error: "Event service not available"
-            });
+        if (event && typeof event.findOne === 'function') {
+            eventService = event;
+            console.log('✅ Using main event service');
+        } else if (eventQueries && typeof eventQueries.findOne === 'function') {
+            eventService = eventQueries;
+            console.log('✅ Using backup eventQueries service');
+        } else {
+            // Final fallback - create minimal event service using direct knex
+            console.warn('⚠️ Using direct knex fallback for event operations');
+            eventService = {
+                findOne: async (match) => {
+                    return await knex("events").where(match).first();
+                },
+                update: async (id, data) => {
+                    await knex("events").where("id", id).update(data);
+                    return await knex("events").where("id", id).first();
+                }
+            };
+            console.log('✅ Using direct knex fallback service');
         }
 
         // Check if event exists and belongs to user
