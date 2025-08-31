@@ -617,12 +617,26 @@ const FigmaMobile = () => {
     console.log('🚀 Starting image expansion for:', card.title);
     setImageExpanding(true);
 
-    // Get image URL from element or fallback to card data
-    const imageUrl = imageElement?.src || card.coverImage;
+    // Get full-size image URL - prioritize original cover image over thumbnail
+    let imageUrl = card.coverImage;
+
+    // If we have a dashboard domain, construct the full-size image URL
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      imageUrl = `${dashboardDomain}${imageUrl}`;
+    }
+
+    // Remove any size parameters to get full-size image
+    if (imageUrl) {
+      imageUrl = imageUrl.replace(/[?&](w|width|h|height|size)=\d+/g, '');
+      imageUrl = imageUrl.replace(/[?&]$/, ''); // Clean up trailing ? or &
+    }
+
+    console.log('📸 Expanding image URL:', imageUrl);
 
     setExpandedImage({
       ...card,
-      imageUrl: imageUrl,
+      imageUrl: imageUrl || card.coverImage, // Fallback to original if processing fails
       originalRect: imageElement?.getBoundingClientRect() || null
     });
 
@@ -4042,7 +4056,7 @@ const FigmaMobile = () => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Share Button */}
+          {/* Share Button - Consistent styling with View Event button */}
           <button
             onClick={() => {
               if (navigator.share) {
@@ -4081,11 +4095,19 @@ const FigmaMobile = () => {
               e.currentTarget.style.background = 'rgba(22, 22, 22, 0.8)';
               e.currentTarget.style.transform = 'scale(1)';
             }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(60, 60, 60, 0.8)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.8)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
           >
             Share
           </button>
 
-          {/* View Event Button */}
+          {/* View Event Button - Styled to match Share button */}
           {expandedImage.isRealEvent && expandedImage.hasTicketLink ? (
             <button
               onClick={() => {
@@ -4117,6 +4139,14 @@ const FigmaMobile = () => {
                 e.currentTarget.style.background = 'rgba(49, 157, 255, 0.9)';
                 e.currentTarget.style.transform = 'scale(1)';
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(49, 157, 255, 1)';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(49, 157, 255, 0.9)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
               {expandedImage.buttonText || 'View Event'}
             </button>
@@ -4124,6 +4154,197 @@ const FigmaMobile = () => {
             /* Hidden when no ticket link */
             null
           )}
+        </div>
+      </div>
+    )}
+
+    {/* Mobile Navigation Overlay */}
+    {showMenu && (
+      <div
+        style={{
+          position: 'fixed',
+          top: '0',
+          left: '0',
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.95)',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          opacity: showMenu ? 1 : 0,
+          visibility: showMenu ? 'visible' : 'hidden',
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)'
+        }}
+        onClick={() => setShowMenu(false)}
+      >
+        {/* Navigation Bar in Menu */}
+        <div
+          style={{
+            width: '100%',
+            height: '97px',
+            maxWidth: '100vw',
+            margin: '0 auto',
+            position: 'relative',
+            background: 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0 20px',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Close Button (X) */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMenu(false);
+            }}
+            style={{
+              position: 'absolute',
+              right: '15px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '34px',
+              height: '34px',
+              cursor: 'pointer',
+              zIndex: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '4px'
+            }}
+          >
+            {/* X Icon */}
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'rotate(45deg) translateY(6px)',
+                transformOrigin: 'center'
+              }}
+            />
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: 0,
+                transform: 'scale(0)'
+              }}
+            />
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'rotate(-45deg) translateY(-6px)',
+                transformOrigin: 'center'
+              }}
+            />
+          </div>
+
+          {/* Logo in Menu */}
+          <img
+            src="/images/mobile-figma/b2b-logo-mobile.svg"
+            alt="B2B Logo"
+            style={{
+              width: '138.41px',
+              height: '43px',
+              cursor: 'pointer',
+              userSelect: 'none'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNavigation('/');
+            }}
+          />
+        </div>
+
+        {/* Navigation Menu Items */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            maxWidth: '430px',
+            margin: '0 auto',
+            padding: '40px 25px',
+            gap: '24px',
+            transform: showMenu ? 'translateY(0)' : 'translateY(-20px)',
+            opacity: showMenu ? 1 : 0,
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionDelay: showMenu ? '0.2s' : '0s'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div
+            onClick={() => handleNavigation('/')}
+            className="mobile-nav-item"
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: '64px',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              opacity: 1,
+              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+              transitionDelay: showMenu ? '0.3s' : '0s'
+            }}
+          >
+            Events
+          </div>
+          <div
+            onClick={() => handleNavigation('/about')}
+            className="mobile-nav-item"
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: '64px',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              opacity: 1,
+              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+              transitionDelay: showMenu ? '0.4s' : '0s'
+            }}
+          >
+            About
+          </div>
+          <div
+            onClick={() => handleNavigation('/contact')}
+            className="mobile-nav-item"
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: '64px',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              opacity: 1,
+              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+              transitionDelay: showMenu ? '0.5s' : '0s'
+            }}
+          >
+            Contact
+          </div>
         </div>
       </div>
     )}
