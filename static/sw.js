@@ -97,8 +97,9 @@ self.addEventListener('fetch', event => {
     }
 
     // CRITICAL: Only handle same-origin requests to prevent CSP violations
-    // Let external requests (Google Fonts, YouTube, etc.) bypass Service Worker
+    // Let external requests (Google Fonts, YouTube, etc.) bypass Service Worker entirely
     if (url.origin !== self.location.origin) {
+        console.log('Service Worker: Bypassing external request:', url.href);
         return;
     }
 
