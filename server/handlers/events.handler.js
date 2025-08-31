@@ -1,6 +1,8 @@
 const { body, param, query } = require("express-validator");
 const validator = require("validator");
 const { event } = require("../queries");
+// Backup direct import in case of module loading issues
+const eventQueries = require("../queries/event.queries");
 // Analytics queries moved to dashboard repository
 const qrCodeService = require("../services/qr-code.service");
 // Analytics middleware moved to dashboard repository
@@ -53,11 +55,40 @@ try {
             fileSize: 5 * 1024 * 1024 // 5MB limit
         }
     }).single('social_preview_image');
+
+    // Cover image upload configuration
+    const coverImageStorage = multer.diskStorage({
+        destination: async function(req, file, cb) {
+            const uploadDir = path.join(__dirname, "../../static/uploads/temp");
+            try {
+                await fs.mkdir(uploadDir, { recursive: true });
+                cb(null, uploadDir);
+            } catch (error) {
+                cb(error);
+            }
+        },
+        filename: function(req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, 'cover-image-' + uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+
+    uploadCoverImage = multer({
+        storage: coverImageStorage,
+        fileFilter: fileFilter,
+        limits: {
+            fileSize: 10 * 1024 * 1024 // 10MB limit for cover images
+        }
+    }).single('cover_image');
 } catch (error) {
-    console.warn('Multer not installed, social preview image upload will be disabled:', error.message);
+    console.warn('Multer not installed, image upload will be disabled:', error.message);
     // Fallback for when multer is not installed
     uploadSocialPreviewImage = (req, res, next) => {
         console.warn('Social preview image upload attempted but multer is not installed');
+        next();
+    };
+    uploadCoverImage = (req, res, next) => {
+        console.warn('Cover image upload attempted but multer is not installed');
         next();
     };
 }
@@ -1803,6 +1834,172 @@ async function invalidateSocialCache(req, res) {
     });
 }
 
+// 📷 Cover Image Upload Handler
+async function handleCoverImageUpload(req, res) {
+    try {
+        const { id } = req.params;
+        const userId = req.user && req.user.id;
+
+        console.log(`🖼️ Cover image upload request for event ${id} by user ${userId}`);
+        console.log(`🔍 Debug: event object type:`, typeof event);
+        console.log(`🔍 Debug: eventQueries object type:`, typeof eventQueries);
+
+        // Use backup import if main import fails - ensure we have a valid service
+        const eventService = event || eventQueries;
+
+        if (!eventService || typeof eventService.findOne !== 'function') {
+            console.error('❌ Event service not available:', { event: typeof event, eventQueries: typeof eventQueries });
+            return res.status(500).json({
+                success: false,
+                error: "Event service not available"
+            });
+        }
+
+        // Check if event exists and belongs to user
+        let foundEvent;
+        try {
+            foundEvent = await eventService.findOne({ id, user_id: userId });
+        } catch (findError) {
+            console.error('❌ Error finding event:', findError.message);
+            return res.status(500).json({
+                success: false,
+                error: "Database error while finding event",
+                details: findError.message
+            });
+        }
+
+        if (!foundEvent) {
+            return res.status(404).json({
+                success: false,
+                error: "Event not found or access denied"
+            });
+        }
+
+        // Check if file was uploaded
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: "No image file provided"
+            });
+        }
+
+        console.log(`📁 Processing uploaded file: ${req.file.filename}`);
+
+        // Try to use the image processing service
+        try {
+            const ImageProcessingService = require('../services/image-processing.service');
+            const imageProcessor = new ImageProcessingService();
+
+            // Process the uploaded image
+            const processedImage = await imageProcessor.processUpload(
+                req.file,
+                userId,
+                'event_cover',
+                {
+                    title: `Cover image for event ${id}`,
+                    description: 'Event cover image uploaded via dashboard',
+                    tags: ['event', 'cover', 'dashboard']
+                }
+            );
+
+            // Generate the API URL for serving the image
+            const imageUrl = `/api/images/serve/${processedImage.uuid}/medium`;
+
+            // Update event with new cover image URL
+            try {
+                await eventService.update(id, { cover_image: imageUrl });
+                console.log(`✅ Event ${id} updated with new cover image URL: ${imageUrl}`);
+            } catch (updateError) {
+                console.error('❌ Error updating event with cover image URL:', updateError.message);
+                throw new Error(`Failed to update event: ${updateError.message}`);
+            }
+
+            console.log(`✅ Cover image uploaded successfully for event ${id}`);
+
+            res.json({
+                success: true,
+                message: "Cover image uploaded and event updated successfully",
+                data: {
+                    id: processedImage.id,
+                    uuid: processedImage.uuid,
+                    filename: processedImage.filename,
+                    originalFilename: processedImage.original_filename,
+                    mimeType: processedImage.mime_type,
+                    fileSize: processedImage.file_size,
+                    processingStatus: processedImage.processing_status,
+                    usageContext: processedImage.usage_context,
+                    urls: {
+                        original: `/api/images/serve/${processedImage.uuid}`,
+                        thumbnail: `/api/images/serve/${processedImage.uuid}/thumbnail`,
+                        small: `/api/images/serve/${processedImage.uuid}/small`,
+                        medium: `/api/images/serve/${processedImage.uuid}/medium`,
+                        large: `/api/images/serve/${processedImage.uuid}/large`
+                    },
+                    createdAt: processedImage.created_at
+                },
+                // Legacy fields for backward compatibility
+                imageUrl: imageUrl,
+                imageId: processedImage.id,
+                uuid: processedImage.uuid,
+                filename: processedImage.filename,
+                size: req.file.size,
+                processingStatus: processedImage.processing_status,
+                eventUpdated: true
+            });
+
+        } catch (processingError) {
+            console.error('❌ Image processing failed:', processingError.message);
+
+            // Fallback: Simple file storage
+            const crypto = require('crypto');
+            const uuid = crypto.randomUUID();
+            const timestamp = Date.now();
+            const extension = path.extname(req.file.originalname);
+            const filename = `${timestamp}-${crypto.randomBytes(6).toString('hex')}${extension}`;
+
+            // Simple URL for fallback
+            const imageUrl = `/static/uploads/temp/${req.file.filename}`;
+
+            // Update event with fallback URL
+            try {
+                await eventService.update(id, { cover_image: imageUrl });
+                console.log(`✅ Event ${id} updated with fallback cover image URL: ${imageUrl}`);
+            } catch (updateError) {
+                console.error('❌ Error updating event with fallback cover image URL:', updateError.message);
+                throw new Error(`Failed to update event with fallback URL: ${updateError.message}`);
+            }
+
+            res.json({
+                success: true,
+                message: "Cover image uploaded (fallback mode)",
+                imageUrl: imageUrl,
+                filename: req.file.filename,
+                size: req.file.size,
+                warning: "Used fallback storage - full processing unavailable",
+                eventUpdated: true
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error uploading cover image:', error);
+
+        // Clean up uploaded file if it exists
+        if (req.file && req.file.path) {
+            try {
+                await fs.unlink(req.file.path);
+            } catch (unlinkError) {
+                console.warn('Failed to clean up file after error:', unlinkError);
+            }
+        }
+
+        res.status(500).json({
+            success: false,
+            error: "Failed to upload cover image",
+            details: error.message
+        });
+    }
+}
+
 module.exports = {
     createEventValidation,
     updateEventValidation,
@@ -1838,6 +2035,10 @@ module.exports = {
     // 📱 Social Preview Image Upload
     uploadSocialPreviewImage,
     handleSocialPreviewImageUpload,
+
+    // 📱 Cover Image Upload
+    uploadCoverImage,
+    handleCoverImageUpload,
 
     // 🔄 Social Media Cache Invalidation
     invalidateSocialCache
