@@ -773,11 +773,24 @@ const FigmaDesktop = () => {
         return;
       }
 
-      // Use dashboard domain for API calls - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
-      const response = await fetch(`${dashboardDomain}/api/home-settings/homepage-data`);
+      // TEMPORARY FIX: Call local dashboard API directly during development
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      const apiUrl = `${dashboardDomain}/api/home-settings/homepage-data`;
+
+      console.log('🔍 DESKTOP DEBUGGING API CALL:');
+      console.log('  hostname:', window.location.hostname);
+      console.log('  dashboardDomain:', dashboardDomain);
+      console.log('  final API URL:', apiUrl);
+
+      const response = await fetch(apiUrl);
+
+      console.log('📊 DESKTOP API Response:');
+      console.log('  status:', response.status);
+      console.log('  statusText:', response.statusText);
+      console.log('  ok:', response.ok);
 
       if (!response.ok) {
+        console.error('❌ DESKTOP API call failed:', response.status, response.statusText);
         throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
       }
 
