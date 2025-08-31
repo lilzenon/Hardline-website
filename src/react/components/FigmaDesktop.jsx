@@ -524,16 +524,18 @@ const getCurrentCountry = (countryId) => {
 const EventCard = memo(({ card, scaledDimensions }) => {
   const handleImageClick = useCallback((e) => {
     e.stopPropagation();
-    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-      window.open(card.ticketsUrl, '_blank');
+    if (card.isRealEvent && card.hasTicketLink) {
+      console.log(`🎫 Desktop: Opening ticket link for ${card.title}:`, card.ticketsUrl);
+      window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
     }
-  }, [card.isRealEvent, card.ticketsUrl]);
+  }, [card.isRealEvent, card.hasTicketLink, card.ticketsUrl, card.title]);
 
   const handleTicketClick = useCallback(() => {
-    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-      window.open(card.ticketsUrl, '_blank');
+    if (card.isRealEvent && card.hasTicketLink) {
+      console.log(`🎫 Desktop: Opening ticket link for ${card.title}:`, card.ticketsUrl);
+      window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
     }
-  }, [card.isRealEvent, card.ticketsUrl]);
+  }, [card.isRealEvent, card.hasTicketLink, card.ticketsUrl, card.title]);
 
   const imageHandlers = useMemo(() => ({
     onMouseEnter: (e) => {
@@ -1546,7 +1548,17 @@ const FigmaDesktop = () => {
 
         // Use a more reliable fallback image or generate a placeholder
         const coverImage = event.cover_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIyIiBoZWlnaHQ9IjEyNCIgdmlld0JveD0iMCAwIDIyMiAxMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMjIiIGhlaWdodD0iMTI0IiBmaWxsPSIjMTYxNjE2Ii8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNTY1NjU2IiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc2l6ZT0iMTQiPkV2ZW50IEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
-        const ticketsUrl = event.posh_embed_url || '#';
+        // 🎫 FIXED: Use external_ticket_url from dashboard "Ticket Link" field
+        const ticketsUrl = event.external_ticket_url || event.posh_embed_url || '#';
+        const hasTicketLink = event.display_tickets && ticketsUrl && ticketsUrl !== '#';
+
+        console.log(`🎫 Desktop ticket data for ${title}:`, {
+          external_ticket_url: event.external_ticket_url,
+          display_tickets: event.display_tickets,
+          buy_button_text: event.buy_button_text,
+          hasTicketLink: hasTicketLink,
+          finalTicketsUrl: ticketsUrl
+        });
 
         featuredCards.push({
           id: `event-${event.id}`,
@@ -1557,6 +1569,8 @@ const FigmaDesktop = () => {
           location: location,
           coverImage: coverImage,
           ticketsUrl: ticketsUrl,
+          hasTicketLink: hasTicketLink,
+          buttonText: event.buy_button_text || 'View Event',
           isRealEvent: true,
           showOnHomepage: event.show_on_homepage,
           eventData: event, // Store original event data for debugging
@@ -2493,8 +2507,9 @@ const FigmaDesktop = () => {
                 onClick={(e) => {
                   // Only trigger if clicking on the card itself, not child elements
                   if (e.target === e.currentTarget || e.target.closest('.card-clickable-area')) {
-                    if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                      window.open(card.ticketsUrl, '_blank');
+                    if (card.isRealEvent && card.hasTicketLink) {
+                      console.log(`🎫 Desktop card: Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                      window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
                     }
                   }
                 }}
@@ -2561,12 +2576,13 @@ const FigmaDesktop = () => {
                         {...getImageLoadingStrategy(index, false)}
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent interference with card interactions
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            window.open(card.ticketsUrl, '_blank');
+                          if (card.isRealEvent && card.hasTicketLink) {
+                            console.log(`🎫 Desktop image: Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
                           }
                         }}
                         onMouseEnter={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                          if (card.isRealEvent && card.hasTicketLink) {
                             e.target.style.transform = 'scale(1.015) translateY(-2px)';
                             e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
                           }
@@ -2576,7 +2592,7 @@ const FigmaDesktop = () => {
                           e.target.style.boxShadow = 'none';
                         }}
                         onMouseDown={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
+                          if (card.isRealEvent && card.hasTicketLink) {
                             e.target.style.transform = 'scale(0.995) translateY(0px)';
                           }
                         }}
@@ -2892,8 +2908,9 @@ const FigmaDesktop = () => {
                       {/* Get Tickets Button */}
                       <div
                         onClick={() => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            window.open(card.ticketsUrl, '_blank');
+                          if (card.isRealEvent && card.hasTicketLink) {
+                            console.log(`🎫 Desktop button: Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
                           }
                         }}
                         style={{

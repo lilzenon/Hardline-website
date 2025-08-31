@@ -1435,7 +1435,18 @@ const FigmaMobile = () => {
         }
 
         console.log(`📷 Final coverImage for ${title}:`, coverImage);
-        const ticketsUrl = event.posh_embed_url || '#';
+
+        // 🎫 FIXED: Use external_ticket_url from dashboard "Ticket Link" field
+        const ticketsUrl = event.external_ticket_url || event.posh_embed_url || '#';
+        const hasTicketLink = event.display_tickets && ticketsUrl && ticketsUrl !== '#';
+
+        console.log(`🎫 Ticket data for ${title}:`, {
+          external_ticket_url: event.external_ticket_url,
+          display_tickets: event.display_tickets,
+          buy_button_text: event.buy_button_text,
+          hasTicketLink: hasTicketLink,
+          finalTicketsUrl: ticketsUrl
+        });
 
         featuredCards.push({
           id: `event-${event.id}`,
@@ -1444,6 +1455,8 @@ const FigmaMobile = () => {
           location: location,
           coverImage: coverImage,
           ticketsUrl: ticketsUrl,
+          hasTicketLink: hasTicketLink,
+          buttonText: event.buy_button_text || 'View Event',
           isRealEvent: true,
           showOnHomepage: event.show_on_homepage,
           eventData: event,
@@ -3756,12 +3769,13 @@ const FigmaMobile = () => {
                           left: '0px'
                         }}
                       >
-                        {/* Get Tickets Button - Enhanced Mobile Structure */}
-                        {card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? (
+                        {/* View Event Button - Connected to Dashboard Ticket Link */}
+                        {card.isRealEvent && card.hasTicketLink ? (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(card.ticketsUrl, '_blank');
+                              console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                              window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
                             }}
                             style={{
                               background: 'rgba(23, 23, 23, 0.8)',
@@ -3795,37 +3809,11 @@ const FigmaMobile = () => {
                               e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
                             }}
                           >
-                            Buy Tickets
+                            {card.buttonText || 'View Event'}
                           </button>
                         ) : (
-                          /* Show disabled button for events without ticket links */
-                          <button
-                            disabled
-                            style={{
-                              background: 'rgba(23, 23, 23, 0.4)', // More transparent for disabled state
-                              borderRadius: '46px',
-                              display: 'flex',
-                              flexDirection: 'row',
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                              gap: '12px',
-                              padding: '16px 15px',
-                              width: 'calc(100% - 4px)', // Closer to right edge, matching image's 2px left positioning
-                              height: '32px',
-                              border: 'none',
-                              cursor: 'default',
-                              fontFamily: 'Inter',
-                              fontWeight: '500',
-                              fontSize: '14px',
-                              lineHeight: '1.21',
-                              textAlign: 'center',
-                              color: 'rgba(255, 255, 255, 0.6)',
-                              boxSizing: 'border-box',
-                              opacity: 0.7
-                            }}
-                          >
-                            Event Info
-                          </button>
+                          /* Hidden when no ticket link - cleaner UX */
+                          null
                         )}
                       </div>
                     </div>
@@ -4084,11 +4072,12 @@ const FigmaMobile = () => {
             Share
           </button>
 
-          {/* Buy Tickets Button */}
-          {expandedImage.isRealEvent && expandedImage.ticketsUrl && expandedImage.ticketsUrl !== '#' ? (
+          {/* View Event Button */}
+          {expandedImage.isRealEvent && expandedImage.hasTicketLink ? (
             <button
               onClick={() => {
-                window.open(expandedImage.ticketsUrl, '_blank');
+                console.log(`🎫 Opening ticket link from modal for ${expandedImage.title}:`, expandedImage.ticketsUrl);
+                window.open(expandedImage.ticketsUrl, '_blank', 'noopener,noreferrer');
                 handleImageCollapse();
               }}
               style={{
@@ -4116,29 +4105,11 @@ const FigmaMobile = () => {
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
-              Buy Tickets
+              {expandedImage.buttonText || 'View Event'}
             </button>
           ) : (
-            <button
-              disabled
-              style={{
-                background: 'rgba(22, 22, 22, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '25px',
-                padding: '12px 24px',
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontFamily: 'Inter',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: 'default',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                minWidth: '100px',
-                height: '44px'
-              }}
-            >
-              Event Info
-            </button>
+            /* Hidden when no ticket link */
+            null
           )}
         </div>
       </div>
