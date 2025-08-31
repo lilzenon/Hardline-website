@@ -299,6 +299,12 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) return originalUrl;
 
+  // Handle data URLs (base64 encoded images) - return as-is
+  if (typeof originalUrl === 'string' && originalUrl.startsWith('data:')) {
+    console.log('⚠️ Data URL detected, returning as-is:', originalUrl.substring(0, 50) + '...');
+    return originalUrl;
+  }
+
   // Check if we're on iOS Safari for compatibility decisions
   const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
@@ -1648,8 +1654,43 @@ const FigmaMobile = () => {
           }
         }
 
-        // Use a more reliable fallback image or generate a placeholder
-        const coverImage = event.cover_image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIyIiBoZWlnaHQ9IjEyNCIgdmlld0JveD0iMCAwIDIyMiAxMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMjIiIGhlaWdodD0iMTI0IiBmaWxsPSIjMTYxNjE2Ii8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNTY1NjU2IiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc2l6ZT0iMTQiPkV2ZW50IEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
+        // Debug the cover image data
+        console.log(`🔍 Event ${index + 1} (${title}) cover_image:`, event.cover_image);
+
+        // Enhanced image handling with better fallbacks
+        let coverImage = null;
+
+        if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
+          // Valid image URL provided
+          coverImage = event.cover_image.trim();
+          console.log(`✅ Using provided cover image for ${title}:`, coverImage);
+        } else {
+          // No valid image provided, try alternative fields
+          const alternativeFields = [
+            event.image_url,
+            event.image,
+            event.cover,
+            event.poster_image,
+            event.banner_image
+          ];
+
+          for (const altField of alternativeFields) {
+            if (altField && typeof altField === 'string' && altField.trim() !== '') {
+              coverImage = altField.trim();
+              console.log(`✅ Using alternative image field for ${title}:`, coverImage);
+              break;
+            }
+          }
+
+          // If still no image, use a default event image instead of placeholder
+          if (!coverImage) {
+            // Try to use a default event image from the server
+            coverImage = '/images/defaults/event-placeholder.jpg';
+            console.log(`⚠️ No image found for ${title}, using default placeholder`);
+          }
+        }
+
+        console.log(`📷 Final coverImage for ${title}:`, coverImage);
         const ticketsUrl = event.posh_embed_url || '#';
 
         featuredCards.push({
@@ -1773,7 +1814,7 @@ const FigmaMobile = () => {
     } else if (drawerExpanded) {
       return '280px'; // Expanded - show text + Laylo iframe with proper height for phone form
     } else {
-      return '80px'; // Collapsed - show only text content, hide Laylo iframe
+      return '200px'; // Collapsed - show text content + Laylo iframe (increased from 80px)
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer, iframeExpanded]);
 
@@ -3669,12 +3710,56 @@ const FigmaMobile = () => {
                           type="image/webp"
                         />
                         <img
-                          src={getOptimizedImageUrl(card.coverImage, 120)}
+                          src={(() => {
+                            const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
+                            console.log(`🖼️ Loading image for "${card.title}":`, {
+                              original: card.coverImage,
+                              optimized: optimizedUrl,
+                              isDataUrl: card.coverImage?.startsWith('data:')
+                            });
+                            return optimizedUrl;
+                          })()}
                           alt={`${card.title} event cover`}
                           {...getImageLoadingStrategy(index, true)}
                           onError={(e) => {
-                            console.log('🔄 iOS Safari image fallback sequence starting for:', e.target.src);
+                            console.log('❌ Image failed to load for:', card.title);
+                            console.log('🔄 Image fallback sequence starting for:', e.target.src);
                             console.log('🔍 Original card.coverImage:', card.coverImage);
+                            console.log('🔍 Is data URL?', card.coverImage?.startsWith('data:'));
+
+                            const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
+                            console.log('🔍 Current attempt:', currentAttempt);
+
+                            // Enhanced fallback sequence
+                            if (currentAttempt === 0) {
+                              // First fallback: try with different image optimization
+                              const fallbackUrl = card.coverImage.replace(/\?.*$/, '') + '?w=120&h=120&fit=crop&auto=format';
+                              console.log('🔄 Trying optimized fallback:', fallbackUrl);
+                              e.target.src = fallbackUrl;
+                              e.target.dataset.fallbackAttempt = '1';
+                            } else if (currentAttempt === 1) {
+                              // Second fallback: try original URL without optimization
+                              console.log('🔄 Trying original URL without optimization');
+                              e.target.src = card.coverImage.replace(/\?.*$/, '');
+                              e.target.dataset.fallbackAttempt = '2';
+                            } else if (currentAttempt === 2) {
+                              // Third fallback: try JPEG version
+                              const jpegUrl = card.coverImage.replace(/\.(webp|avif|png)(\?.*)?$/i, '.jpg$2');
+                              if (jpegUrl !== card.coverImage) {
+                                console.log('🔄 Trying JPEG version:', jpegUrl);
+                                e.target.src = jpegUrl;
+                                e.target.dataset.fallbackAttempt = '3';
+                              } else {
+                                // Final fallback: use a working placeholder
+                                console.log('🔄 Using final placeholder');
+                                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                e.target.dataset.fallbackAttempt = '4';
+                              }
+                            } else {
+                              // Final fallback: use a working placeholder
+                              console.log('🔄 Using final placeholder after all attempts failed');
+                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                            }
 
                             // Enhanced iOS Safari fallback sequence
                             if (e.target.dataset.fallbackAttempt === undefined) {
@@ -3720,7 +3805,14 @@ const FigmaMobile = () => {
                           onLoad={(e) => {
                             // Clear fallback tracking on successful load
                             delete e.target.dataset.fallbackAttempt;
-                            console.log('✅ Event image loaded successfully:', e.target.src);
+                            console.log('✅ Event image loaded successfully for:', card.title, e.target.src);
+                            // Remove loading background once image loads
+                            e.target.style.backgroundColor = 'transparent';
+                          }}
+                          onLoadStart={(e) => {
+                            console.log('🔄 Image loading started for:', card.title);
+                            // Show loading background while image loads
+                            e.target.style.backgroundColor = '#2a2a2a';
                           }}
                           // Disable pointer events on image to prevent interference with container clicks
                           style={{
@@ -3731,7 +3823,7 @@ const FigmaMobile = () => {
                             height: '112px', // Changed to square to match container
                             borderRadius: '17px',
                             objectFit: 'cover',
-                            backgroundColor: 'lightgray',
+                            backgroundColor: '#2a2a2a', // Better loading background that matches dark theme
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             transform: 'scale(1)',
                             boxShadow: 'none',
@@ -4109,7 +4201,7 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* Laylo Integration - Enhanced with State Preservation */}
+          {/* Laylo Integration - Always Visible in Drawer */}
           {!drawerFullyClosed && !showVerification && (
             <div
               onClick={handleIframeClick}
@@ -4120,9 +4212,9 @@ const FigmaMobile = () => {
                 borderRadius: '8px',
                 overflow: 'visible',
                 flexShrink: 0,
-                // Hide iframe when drawer is collapsed but keep in DOM to preserve state
-                display: drawerExpanded ? 'block' : 'none',
-                opacity: drawerExpanded ? 1 : 0,
+                // Always show iframe to preserve state and allow interaction
+                display: 'block',
+                opacity: 1,
                 transition: 'opacity 0.2s ease-out'
               }}
             >
@@ -4134,13 +4226,13 @@ const FigmaMobile = () => {
                 minimal={true}
                 style={{
                   width: '100%', // Match text content width exactly
-                  height: iframeExpanded ? '200px' : '160px',
+                  height: iframeExpanded ? '200px' : drawerExpanded ? '160px' : '120px',
                   border: 'none',
                   borderRadius: '8px',
                   background: 'transparent',
                   display: 'block',
                   transition: 'height 0.3s ease',
-                  pointerEvents: drawerExpanded ? 'auto' : 'none'
+                  pointerEvents: 'auto' // Always allow interaction
                 }}
               />
             </div>
