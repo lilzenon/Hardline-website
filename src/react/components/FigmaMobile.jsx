@@ -82,7 +82,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     };
   }, []);
 
-  // Check if Laylo SDK is ready (simplified and faster)
+  // Check if Laylo SDK is ready (simplified and faster) - FIXED with fallback
   const checkLayloSDKReady = useCallback(() => {
     // Check for Laylo SDK script - if it exists, we're good to go
     const sdkScript = document.querySelector('script[src*="laylo-sdk.js"]');
@@ -91,7 +91,10 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       return true;
     }
 
-    return false;
+    // FALLBACK: If no SDK script found, proceed anyway after timeout
+    // The iframe embed should work without the SDK
+    console.log('ℹ️ No Laylo SDK script found, proceeding with direct iframe embed');
+    return true; // Always return true to allow iframe loading
   }, []);
 
   // Check if iframe content has loaded (phone form is visible)
@@ -215,12 +218,12 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       }
     }, 50);
 
-    // Timeout after 3 seconds (much faster) - using mobile lifecycle management
+    // Timeout after 1 second (faster) - using mobile lifecycle management
     const timeout = mobileLifecycle.createTimer(() => {
       mobileLifecycle.clearInterval(interval);
-      console.warn('⚠️ Laylo SDK initialization timeout, proceeding anyway');
+      console.log('⚡ Laylo SDK initialization timeout, proceeding with direct iframe');
       setLayloReady(true);
-    }, 3000);
+    }, 1000);
 
     return () => {
       mobileLifecycle.clearInterval(interval);
@@ -237,7 +240,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     };
   }, [mobileLifecycle]);
 
-  // Enhanced loading states with preloading
+  // Enhanced loading states with preloading - FIXED to prevent infinite loading
   if (!layloReady) {
     return (
       <div style={{
@@ -250,7 +253,9 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
         borderRadius: '8px',
         opacity: 0.8
       }}>
-        <span style={{ fontSize: '12px', color: '#999', fontFamily: 'Inter' }}>Loading Laylo...</span>
+        <span style={{ fontSize: '12px', color: '#999', fontFamily: 'Inter' }}>
+          {retryCount > 0 ? `Connecting... (${retryCount}/${maxRetries})` : 'Loading form...'}
+        </span>
       </div>
     );
   }
@@ -1801,7 +1806,7 @@ const FigmaMobile = () => {
     };
   }, [drawerExpanded, handleOutsideClick]);
 
-  // Calculate drawer height based on content and state
+  // Calculate drawer height based on content and state - FIXED for iframe loading
   const getDrawerHeight = useCallback(() => {
     if (drawerFullyClosed) {
       return '50px'; // Fully closed - only handle and minimal padding visible
@@ -1814,7 +1819,7 @@ const FigmaMobile = () => {
     } else if (drawerExpanded) {
       return '280px'; // Expanded - show text + Laylo iframe with proper height for phone form
     } else {
-      return '80px'; // Collapsed - show only text content, hide Laylo iframe
+      return '80px'; // Collapsed - show only text content, iframe hidden but loading in background
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer, iframeExpanded]);
 
@@ -4201,7 +4206,7 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* Laylo Integration - Enhanced with State Preservation */}
+          {/* Laylo Integration - Fixed Loading Issue with Smart Visibility */}
           {!drawerFullyClosed && !showVerification && (
             <div
               onClick={handleIframeClick}
@@ -4210,12 +4215,13 @@ const FigmaMobile = () => {
                 margin: '8px 0 0 0', // Remove auto margins to align with text content
                 cursor: 'pointer',
                 borderRadius: '8px',
-                overflow: 'visible',
+                overflow: 'hidden', // Hide content when collapsed
                 flexShrink: 0,
-                // Hide iframe when drawer is collapsed but keep in DOM to preserve state
-                display: drawerExpanded ? 'block' : 'none',
+                // FIXED: Always keep in DOM to allow iframe loading, use height/opacity for visibility
+                display: 'block',
                 opacity: drawerExpanded ? 1 : 0,
-                transition: 'opacity 0.2s ease-out'
+                height: drawerExpanded ? 'auto' : '0px',
+                transition: 'opacity 0.3s ease-out, height 0.3s ease-out'
               }}
             >
               <LayloIframe
@@ -4232,7 +4238,10 @@ const FigmaMobile = () => {
                   background: 'transparent',
                   display: 'block',
                   transition: 'height 0.3s ease',
-                  pointerEvents: drawerExpanded ? 'auto' : 'none'
+                  // FIXED: Allow iframe to load even when collapsed, but disable interaction
+                  pointerEvents: drawerExpanded ? 'auto' : 'none',
+                  // Ensure iframe loads by keeping it in layout flow
+                  visibility: 'visible'
                 }}
               />
             </div>
