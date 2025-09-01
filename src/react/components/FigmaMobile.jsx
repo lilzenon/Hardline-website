@@ -611,11 +611,9 @@ const FigmaMobile = () => {
   // Handle image expansion
   const handleImageExpand = useCallback((card, imageElement) => {
     if (imageExpanding) {
-      console.log('⚠️ Image expansion already in progress');
       return; // Prevent multiple expansions
     }
 
-    console.log('🚀 Starting image expansion for:', card.title);
     setImageExpanding(true);
 
     // Get full-size image URL - prioritize original cover image over thumbnail
@@ -633,8 +631,6 @@ const FigmaMobile = () => {
       imageUrl = imageUrl.replace(/[?&]$/, ''); // Clean up trailing ? or &
     }
 
-    console.log('📸 Expanding image URL:', imageUrl);
-
     setExpandedImage({
       ...card,
       imageUrl: imageUrl || card.coverImage, // Fallback to original if processing fails
@@ -644,7 +640,6 @@ const FigmaMobile = () => {
     // Reset expanding state after animation
     setTimeout(() => {
       setImageExpanding(false);
-      console.log('✅ Image expansion animation complete');
     }, 400);
   }, [imageExpanding]);
 
@@ -1088,22 +1083,6 @@ const FigmaMobile = () => {
 
       console.log(`✅ Mobile homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
 
-      // Debug: Log the actual data structure
-      console.log('🔍 API Response Debug:', {
-        featuredEvents: validatedFeaturedEvents.map(e => ({
-          id: e.id,
-          title: e.title,
-          is_featured: e.is_featured,
-          show_on_homepage: e.show_on_homepage
-        })),
-        homepageEvents: validatedHomepageEvents.map(e => ({
-          id: e.id,
-          title: e.title,
-          is_featured: e.is_featured,
-          show_on_homepage: e.show_on_homepage
-        }))
-      });
-
       // Cache the successful response
       apiCache.set(cacheKey, {
         data: data,
@@ -1389,11 +1368,6 @@ const FigmaMobile = () => {
 
   // Featured events processing for mobile (hero cards using original styling)
   const featuredEventCards = useMemo(() => {
-    console.log('🎯 Processing featuredEventCards:', {
-      featuredEventsCount: featuredEvents.length,
-      featuredEvents: featuredEvents.map(e => ({ id: e.id, title: e.title, is_featured: e.is_featured }))
-    });
-
     return featuredEvents.map((event, index) => {
       try {
         // Validate and parse event date
@@ -1477,19 +1451,8 @@ const FigmaMobile = () => {
     // Filter out events that are already featured to avoid duplicates
     const featuredEventIds = new Set(featuredEvents.map(event => event.id));
 
-    console.log('🏠 Processing homepageEventCards:', {
-      homepageEventsCount: homepageEvents.length,
-      featuredEventIds: Array.from(featuredEventIds),
-      homepageEvents: homepageEvents.map(e => ({ id: e.id, title: e.title, is_featured: e.is_featured }))
-    });
-
-    const filteredEvents = homepageEvents.filter(event => !featuredEventIds.has(event.id));
-    console.log('🔍 After filtering:', {
-      filteredEventsCount: filteredEvents.length,
-      filteredEvents: filteredEvents.map(e => ({ id: e.id, title: e.title, is_featured: e.is_featured }))
-    });
-
-    return filteredEvents
+    return homepageEvents
+      .filter(event => !featuredEventIds.has(event.id)) // Exclude featured events
       .map((event, index) => {
         try {
           // Validate and parse event date
@@ -3079,14 +3042,10 @@ const FigmaMobile = () => {
               }}
             >
             <div
-              onClick={() => {
-                // Navigate to featured event
-                if (featuredEvent && featuredEvent.hasTicketLink && featuredEvent.ticketsUrl) {
-                  console.log('🎫 Featured hero clicked - opening ticket link for event:', featuredEvent.title);
-                  window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
-                } else {
-                  console.log('Featured hero clicked - no ticket link available for event');
-                }
+              onClick={(e) => {
+                // Navigate to featured event image expansion
+                const imgElement = e.currentTarget.querySelector('img');
+                handleImageExpand(featuredEvent, imgElement);
               }}
               style={{
                 width: 'min(350px, calc(100vw - 50px))', // Adjusted to ensure consistent width across all elements (25px each side)
@@ -3563,10 +3522,30 @@ const FigmaMobile = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          if (card.hasTicketLink && card.ticketsUrl) {
-                            console.log('🎫 Homepage event image clicked:', card.title);
-                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                          }
+                          const imgElement = e.currentTarget.querySelector('img');
+                          handleImageExpand(card, imgElement);
+                        }}
+                        onTouchStart={(e) => {
+                          e.currentTarget.style.transform = 'scale(0.95)';
+                        }}
+                        onTouchEnd={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.style.transform = 'scale(1)';
+                          const imgElement = e.currentTarget.querySelector('img');
+                          handleImageExpand(card, imgElement);
+                        }}
+                        onTouchCancel={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        onMouseDown={(e) => {
+                          e.currentTarget.style.transform = 'scale(0.95)';
+                        }}
+                        onMouseUp={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
                         }}
                       >
                         {/* Event Background Image */}
@@ -3575,11 +3554,9 @@ const FigmaMobile = () => {
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           onError={(e) => {
-                            console.log('❌ Homepage event image failed to load:', card.title);
                             e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                           }}
                           onLoad={(e) => {
-                            console.log('✅ Homepage event image loaded:', card.title);
                             e.target.style.backgroundColor = 'transparent';
                           }}
                           style={{
