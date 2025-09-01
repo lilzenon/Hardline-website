@@ -274,20 +274,23 @@ const getDashboardImageUrl = (imageUrl) => {
 
   // Handle relative URLs
   if (imageUrl.startsWith('/')) {
-    // Check if it's a broken static file path that needs conversion
-    if (imageUrl.startsWith('/static/uploads/temp/') || imageUrl.startsWith('/static/uploads/')) {
-      console.warn('⚠️ Converting broken static file path to placeholder:', imageUrl);
-      // Use a working placeholder endpoint instead of broken static files
-      // This will trigger the fallback system to show proper placeholders
-      return null; // Return null to trigger fallback logic
-    }
-
-    // Check if it's already a working API endpoint
+    // Check if it's a working API endpoint (preferred method)
     if (imageUrl.startsWith('/api/images/serve/')) {
       // For development: use proxy path
       // For production: use production dashboard domain
       if (window.location.hostname === 'localhost') {
         return imageUrl; // Vite proxy will handle /api/* routes
+      } else {
+        return `https://admin.b2b.click${imageUrl}`;
+      }
+    }
+
+    // Handle fallback static file paths (from failed image processing)
+    if (imageUrl.startsWith('/static/uploads/temp/') || imageUrl.startsWith('/static/uploads/')) {
+      console.warn('⚠️ Using fallback static file path (image processing may have failed):', imageUrl);
+      // Try to serve through static file middleware
+      if (window.location.hostname === 'localhost') {
+        return `/api/proxy${imageUrl}`; // Route through Vite proxy
       } else {
         return `https://admin.b2b.click${imageUrl}`;
       }
