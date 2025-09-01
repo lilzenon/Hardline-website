@@ -127,12 +127,7 @@ router.get(
     asyncHandler(events.generateQRCodeImage)
 );
 
-// POST /api/events/:id/social-preview/upload-image - Upload social preview image
-router.post(
-    "/:id/social-preview/upload-image",
-    events.uploadSocialPreviewImage,
-    asyncHandler(events.handleSocialPreviewImageUpload)
-);
+
 
 // GET /api/events/:id/social-preview/invalidate-cache - Get social media cache invalidation info
 router.get(

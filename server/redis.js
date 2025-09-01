@@ -12,6 +12,7 @@ if (env.REDIS_ENABLED) {
             port: env.REDIS_PORT,
             db: env.REDIS_DB,
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+            ...(env.REDIS_TLS ? { tls: {} } : {}),
             // UNIFIED CONFIG: Balanced timeouts for stability and performance
             connectTimeout: 10000, // 10 seconds - increased for Render Redis
             commandTimeout: 15000, // 15s timeout - reduced for faster fallback

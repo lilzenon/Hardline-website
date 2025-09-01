@@ -146,6 +146,14 @@ const spec = {
     FACEBOOK_WEBHOOK_VERIFY_TOKEN: str({ default: "" }),
     BASE_URL: str({ default: "" }),
 
+    // 📁 PERSISTENT STORAGE PATHS (Render persistent disk under /data)
+    UPLOADS_DIR: str({ default: "/data/uploads" }),
+    STATIC_UPLOADS_DIR: str({ default: "/data/static/uploads" }),
+    TEMP_UPLOADS_DIR: str({ default: "/data/temp/uploads" }),
+
+    // 🔴 REDIS CONFIGURATION (CRITICAL FOR VISIT PROCESSING)
+    REDIS_TLS: bool({ default: false }),
+
     // 🔴 REDIS CONFIGURATION (CRITICAL FOR VISIT PROCESSING)
     REDIS_ENABLED: bool({ default: false }),
     REDIS_HOST: str({ default: "127.0.0.1" }),

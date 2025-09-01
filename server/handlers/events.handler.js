@@ -77,6 +77,15 @@ const eventService = (() => {
 
 // Replace the original event object with our robust service
 event = eventService;
+
+// Debug logging to verify service is working
+console.log('🔍 Event service initialization:', {
+    eventServiceType: typeof eventService,
+    hasFindOne: typeof eventService?.findOne,
+    hasUpdate: typeof eventService?.update,
+    eventType: typeof event,
+    eventHasFindOne: typeof event?.findOne
+});
 // Analytics queries moved to dashboard repository
 const qrCodeService = require("../services/qr-code.service");
 // Analytics middleware moved to dashboard repository
@@ -99,7 +108,7 @@ try {
 
     const storage = multer.diskStorage({
         destination: async function(req, file, cb) {
-            const uploadDir = path.join(__dirname, "../../static/images/social-previews");
+            const uploadDir = path.join(env.STATIC_UPLOADS_DIR, 'images', 'social-previews');
             try {
                 await fs.mkdir(uploadDir, { recursive: true });
                 cb(null, uploadDir);
@@ -133,7 +142,7 @@ try {
     // Cover image upload configuration
     const coverImageStorage = multer.diskStorage({
         destination: async function(req, file, cb) {
-            const uploadDir = path.join(__dirname, "../../static/uploads/temp");
+            const uploadDir = path.join(env.TEMP_UPLOADS_DIR);
             try {
                 await fs.mkdir(uploadDir, { recursive: true });
                 cb(null, uploadDir);
