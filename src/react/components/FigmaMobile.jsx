@@ -263,7 +263,7 @@ const handleImageFallbackAttempt3 = (imgElement, card) => {
 // Simple cache for API responses
 const apiCache = new Map();
 
-// Helper function to convert relative image URLs to proxy-compatible URLs
+// Helper function to convert image URLs to working dashboard endpoints
 const getDashboardImageUrl = (imageUrl) => {
   if (!imageUrl) return null;
 
@@ -272,16 +272,31 @@ const getDashboardImageUrl = (imageUrl) => {
     return imageUrl;
   }
 
-  // Convert relative URLs to use Vite proxy for development
+  // Handle relative URLs
   if (imageUrl.startsWith('/')) {
-    // For development: use proxy path that Vite will route to dashboard server
-    // For production: use production dashboard domain
+    // Check if it's a broken static file path that needs conversion
+    if (imageUrl.startsWith('/static/uploads/temp/') || imageUrl.startsWith('/static/uploads/')) {
+      console.warn('⚠️ Converting broken static file path to placeholder:', imageUrl);
+      // Use a working placeholder endpoint instead of broken static files
+      // This will trigger the fallback system to show proper placeholders
+      return null; // Return null to trigger fallback logic
+    }
+
+    // Check if it's already a working API endpoint
+    if (imageUrl.startsWith('/api/images/serve/')) {
+      // For development: use proxy path
+      // For production: use production dashboard domain
+      if (window.location.hostname === 'localhost') {
+        return imageUrl; // Vite proxy will handle /api/* routes
+      } else {
+        return `https://admin.b2b.click${imageUrl}`;
+      }
+    }
+
+    // For other relative URLs, use proxy approach
     if (window.location.hostname === 'localhost') {
-      // Use proxy path - Vite will route /api/* to dashboard server
-      // But for static files, we need a different approach
       return `/api/proxy${imageUrl}`;
     } else {
-      // Production: use admin dashboard domain
       return `https://admin.b2b.click${imageUrl}`;
     }
   }
