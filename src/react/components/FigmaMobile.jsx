@@ -3504,127 +3504,296 @@ const FigmaMobile = () => {
             {/* Homepage Event Cards - Small Layout */}
             {homepageEventCards.length > 0 ? (
               homepageEventCards.map((card, index) => (
-                  <div
+                  <article
                     key={`homepage-${card.id}`}
                     className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
                     style={{
+                      display: 'block', // Change to block to prevent flex issues
                       width: '100%',
-                      padding: '0',
-                      marginBottom: '20px',
+                      minHeight: '128px', // Minimum height for layout stability
+                      height: 'auto', // Dynamic height to accommodate multi-line titles
+                      borderRadius: '20px',
+                      background: 'rgba(15, 15, 15, 0.95)',
+                      backdropFilter: 'blur(20px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                      position: 'relative',
+                      margin: '0 0 8px 0', // Reduced margin for tighter spacing
+                      padding: '2px', // Reduced to 2px maximum for compact design
+                      animationDelay: cardsAnimated ? `${0.1 + (index * 0.05)}s` : '0s',
+                      overflow: 'hidden',
                       boxSizing: 'border-box',
-                      animationDelay: `${index * 100}ms`,
-                      backfaceVisibility: 'hidden',
-                      transform: 'translate3d(0, 0, 0)',
-                      willChange: 'transform'
+                      isolation: 'isolate',
+                      transform: 'translateZ(0)',
+                      willChange: 'transform',
+                      zIndex: 1, // Ensure proper stacking
+                      clear: 'both' // Prevent float issues
                     }}
                   >
-                    {/* Large Hero Square Card Content */}
+                    {/* Mobile Event Card Content - Compact Horizontal Layout */}
                     <div
-                      onClick={() => {
-                        if (card.hasTicketLink && card.ticketsUrl) {
-                          console.log('🎫 Featured event clicked - opening ticket link:', card.title);
-                          window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                        }
-                      }}
                       style={{
                         width: '100%',
-                        aspectRatio: '1/1', // Square aspect ratio
+                        height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
                         position: 'relative',
-                        background: 'rgba(22, 22, 22, 0.8)',
-                        backdropFilter: 'blur(20px)',
-                        border: '1px solid rgba(56, 56, 56, 0.3)',
-                        borderRadius: '20px',
-                        overflow: 'hidden',
-                        cursor: card.hasTicketLink ? 'pointer' : 'default',
-                        transition: 'all 0.3s ease'
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxSizing: 'border-box',
+                        padding: '2px' // Reduced padding for compact design
                       }}
                     >
-                      {/* Featured Event Image */}
-                      {card.coverImage && (
+                      {/* Image Section - Compact Horizontal Layout */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: '2px',
+                          top: '2px',
+                          width: '120px',
+                          height: '120px',
+                          flexShrink: 0,
+                          borderRadius: '20px',
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          zIndex: 100,
+                          transition: 'transform 0.1s ease',
+                          boxSizing: 'border-box'
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (card.hasTicketLink && card.ticketsUrl) {
+                            console.log('🎫 Homepage event image clicked:', card.title);
+                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                          }
+                        }}
+                      >
+                        {/* Event Background Image */}
                         <img
-                          src={getOptimizedImageUrl(card.coverImage, 375)}
-                          alt={`${card.title} - Featured Event`}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0
-                          }}
+                          src={getOptimizedImageUrl(card.coverImage, 120)}
+                          alt={`${card.title} event cover`}
+                          loading="lazy"
                           onError={(e) => {
-                            e.target.style.backgroundColor = 'rgba(56, 56, 56, 0.3)';
-                            e.target.style.display = 'none';
+                            console.log('❌ Homepage event image failed to load:', card.title);
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                          }}
+                          onLoad={(e) => {
+                            console.log('✅ Homepage event image loaded:', card.title);
+                            e.target.style.backgroundColor = 'transparent';
+                          }}
+                          style={{
+                            position: 'absolute',
+                            left: '4px',
+                            top: '4px',
+                            width: '112px',
+                            height: '112px',
+                            borderRadius: '17px',
+                            objectFit: 'cover',
+                            backgroundColor: '#2a2a2a',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            transform: 'scale(1)',
+                            boxShadow: 'none',
+                            pointerEvents: 'none'
                           }}
                         />
-                      )}
+                      </div>
 
-                      {/* Featured Event Overlay */}
-                      <div style={{
-                        position: 'absolute',
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-                        padding: '40px 20px 20px 20px',
-                        color: '#FFF'
-                      }}>
-                        <h3 style={{
-                          fontFamily: 'Inter',
-                          fontSize: '24px',
-                          fontWeight: '700',
-                          margin: '0 0 8px 0',
-                          lineHeight: '1.2'
-                        }}>
-                          {card.title}
-                        </h3>
-                        {card.artist_name && (
-                          <p style={{
-                            fontFamily: 'Inter',
-                            fontSize: '16px',
-                            fontWeight: '400',
-                            margin: '0 0 12px 0',
-                            opacity: 0.9
-                          }}>
-                            {card.artist_name}
-                          </p>
-                        )}
-                        <div style={{
+                      {/* Text Content Section - Compact Horizontal Layout */}
+                      <div
+                        style={{
                           display: 'flex',
+                          width: 'calc(100% - 130px)',
+                          padding: '2px 2px 2px 4px',
+                          flexDirection: 'column',
                           justifyContent: 'space-between',
-                          alignItems: 'center',
-                          fontSize: '14px',
-                          opacity: 0.8
-                        }}>
-                          <span>{card.date}</span>
-                          <span>{card.location}</span>
-                        </div>
-                        {card.hasTicketLink && (
-                          <button
+                          alignItems: 'flex-start',
+                          position: 'absolute',
+                          left: '126px',
+                          top: '2px',
+                          height: '120px',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        {/* Event Information */}
+                        <div
+                          style={{
+                            width: '100%',
+                            minHeight: '84px',
+                            height: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignSelf: 'stretch',
+                            flex: '1 1 auto'
+                          }}
+                        >
+                          {/* Event Title */}
+                          <h3
                             style={{
-                              marginTop: '16px',
-                              padding: '12px 24px',
-                              background: 'rgba(255, 255, 255, 0.9)',
-                              color: '#000',
-                              border: 'none',
-                              borderRadius: '25px',
                               fontFamily: 'Inter',
-                              fontSize: '14px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              transition: 'all 0.3s ease'
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                              fontWeight: '700',
+                              fontSize: '16px',
+                              lineHeight: '1.25',
+                              textAlign: 'left',
+                              color: '#FFFFFF',
+                              width: '100%',
+                              minHeight: '20px',
+                              height: 'auto',
+                              margin: '0 0 4px 0',
+                              padding: '0',
+                              overflow: 'visible',
+                              textOverflow: 'unset',
+                              whiteSpace: 'normal',
+                              wordWrap: 'break-word',
+                              hyphens: 'auto'
                             }}
                           >
-                            {card.buttonText}
-                          </button>
-                        )}
+                            {card.title}
+                          </h3>
+
+                          {/* Event DateTime */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              alignSelf: 'stretch',
+                              gap: '6px',
+                              padding: '0px 0px 0px 2px'
+                            }}
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 10 10"
+                              fill="none"
+                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            >
+                              <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
+                            </svg>
+                            <span
+                              style={{
+                                fontFamily: 'Inter',
+                                fontWeight: '300',
+                                fontSize: '12px',
+                                lineHeight: '1.4',
+                                textAlign: 'left',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                width: '100%',
+                                height: '14px',
+                                margin: '0',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {card.date}
+                            </span>
+                          </div>
+
+                          {/* Event Location */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              alignSelf: 'stretch',
+                              gap: '6px',
+                              padding: '0px 2px'
+                            }}
+                          >
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            >
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                            </svg>
+                            <span
+                              style={{
+                                fontFamily: 'Inter',
+                                fontWeight: '300',
+                                fontSize: '12px',
+                                lineHeight: '1.4',
+                                textAlign: 'left',
+                                color: 'rgba(255, 255, 255, 0.65)',
+                                width: '100%',
+                                height: '14px',
+                                margin: '0',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {card.location}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Event Button */}
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '32px',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'flex-start',
+                            alignItems: 'flex-end',
+                            gap: '6px',
+                            padding: '0px 2px 0px 0px',
+                            position: 'absolute',
+                            bottom: '0px',
+                            left: '0px'
+                          }}
+                        >
+                          {card.isRealEvent && card.hasTicketLink ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                                window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                              }}
+                              style={{
+                                background: 'rgba(23, 23, 23, 0.8)',
+                                borderRadius: '46px',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '16px 15px',
+                                width: 'calc(100% - 4px)',
+                                height: '32px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontFamily: 'Inter',
+                                fontWeight: '500',
+                                fontSize: '14px',
+                                lineHeight: '1.21',
+                                textAlign: 'center',
+                                color: '#FFFFFF',
+                                transition: 'all 0.2s ease',
+                                transform: 'scale(1)',
+                                boxSizing: 'border-box'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
+                              }}
+                            >
+                              {card.buttonText || 'View Event'}
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 ))
             ) : (
               /* Empty State - No Events */
