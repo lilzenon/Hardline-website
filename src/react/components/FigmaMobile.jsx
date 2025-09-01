@@ -262,6 +262,28 @@ const handleImageFallbackAttempt3 = (imgElement, card) => {
 
 // Simple cache for API responses
 const apiCache = new Map();
+
+// Helper function to convert relative image URLs to absolute dashboard URLs
+const getDashboardImageUrl = (imageUrl) => {
+  if (!imageUrl) return null;
+
+  // If already absolute URL, return as-is
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl;
+  }
+
+  // Convert relative URLs to absolute dashboard server URLs
+  if (imageUrl.startsWith('/')) {
+    // For development: use localhost:3002 (dashboard server)
+    // For production: this will be handled by the proxy
+    const dashboardBaseUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:3002'
+      : window.location.origin;
+    return `${dashboardBaseUrl}${imageUrl}`;
+  }
+
+  return imageUrl;
+};
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Cache for formatted dates to avoid repeated calculations
@@ -1416,8 +1438,8 @@ const FigmaMobile = () => {
         let coverImage = null;
 
         if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
-          // Valid image URL provided
-          coverImage = event.cover_image.trim();
+          // Valid image URL provided - convert to absolute dashboard URL
+          coverImage = getDashboardImageUrl(event.cover_image.trim());
           console.log(`✅ Using provided cover image for ${title}:`, coverImage);
         }
 
@@ -1500,7 +1522,8 @@ const FigmaMobile = () => {
           // Enhanced image handling with better fallbacks
           let coverImage = null;
           if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
-            coverImage = event.cover_image.trim();
+            // Convert relative URLs to absolute dashboard URLs
+            coverImage = getDashboardImageUrl(event.cover_image.trim());
             console.log(`✅ Homepage event "${title}" has cover image:`, coverImage);
           } else {
             console.log(`⚠️ Homepage event "${title}" has no cover image:`, event.cover_image);
