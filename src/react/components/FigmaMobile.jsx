@@ -844,8 +844,12 @@ const FigmaMobile = () => {
 
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
-      // Use Vite proxy for API calls - routes to local dashboard in development
-      const response = await fetch('/api/home-settings/submit-phone', {
+      // Environment-aware API URL construction
+      const apiBaseUrl = window.location.hostname === 'localhost'
+        ? '' // Development: use Vite proxy
+        : 'https://admin.b2b.click'; // Production: use dashboard server directly
+
+      const response = await fetch(`${apiBaseUrl}/api/home-settings/submit-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -993,7 +997,12 @@ const FigmaMobile = () => {
 
       console.log('🔐 Submitting verification code');
 
-      const response = await fetch('/api/home-settings/verify-phone', {
+      // Environment-aware API URL construction
+      const apiBaseUrl = window.location.hostname === 'localhost'
+        ? '' // Development: use Vite proxy
+        : 'https://admin.b2b.click'; // Production: use dashboard server directly
+
+      const response = await fetch(`${apiBaseUrl}/api/home-settings/verify-phone`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1085,7 +1094,12 @@ const FigmaMobile = () => {
         return;
       }
 
-      const response = await fetch('/api/home-settings/homepage-data');
+      // Environment-aware API URL construction
+      const apiBaseUrl = window.location.hostname === 'localhost'
+        ? '' // Development: use Vite proxy
+        : 'https://admin.b2b.click'; // Production: use dashboard server directly
+
+      const response = await fetch(`${apiBaseUrl}/api/home-settings/homepage-data`);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
@@ -1204,7 +1218,12 @@ const FigmaMobile = () => {
 
       console.log('🔄 Resending verification code to:', verificationPhone);
 
-      const response = await fetch('/api/home-settings/resend-verification', {
+      // Environment-aware API URL construction
+      const apiBaseUrl = window.location.hostname === 'localhost'
+        ? '' // Development: use Vite proxy
+        : 'https://admin.b2b.click'; // Production: use dashboard server directly
+
+      const response = await fetch(`${apiBaseUrl}/api/home-settings/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
