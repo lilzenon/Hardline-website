@@ -1,10 +1,82 @@
 const { body, param, query } = require("express-validator");
 const validator = require("validator");
-const { event } = require("../queries");
+// Import event queries with comprehensive fallback handling
+let event;
+try {
+    const queries = require("../queries");
+    event = queries.event;
+} catch (error) {
+    console.warn('⚠️ Failed to import from ../queries:', error.message);
+}
+
 // Backup direct import in case of module loading issues
 const eventQueries = require("../queries/event.queries");
 // Additional fallback - direct knex import
 const knex = require("../knex");
+
+// Create a robust event service that always works
+const eventService = (() => {
+    if (event && typeof event.findOne === 'function') {
+        console.log('✅ Using main event service from queries');
+        return event;
+    } else if (eventQueries && typeof eventQueries.findOne === 'function') {
+        console.log('✅ Using backup eventQueries service');
+        return eventQueries;
+    } else {
+        console.warn('⚠️ Using direct knex fallback for event operations');
+        return {
+            findOne: async (match) => {
+                return await knex("events").where(match).first();
+            },
+            update: async (id, data) => {
+                await knex("events").where("id", id).update(data);
+                return await knex("events").where("id", id).first();
+            },
+            create: async (data) => {
+                const [id] = await knex("events").insert(data);
+                return await knex("events").where("id", id).first();
+            },
+            remove: async (id) => {
+                return await knex("events").where("id", id).del();
+            },
+            find: async (match = {}) => {
+                const query = knex("events");
+                if (match && Object.keys(match).length > 0) {
+                    query.where(match);
+                }
+                return await query.orderBy("created_at", "desc");
+            },
+            findWithStats: async (match) => {
+                const eventRecord = await knex("events").where(match).first();
+                if (!eventRecord) return null;
+
+                const signupCount = await knex("event_signups")
+                    .where("event_id", eventRecord.id)
+                    .count("* as count")
+                    .first();
+
+                return {
+                    ...eventRecord,
+                    signup_count: parseInt(signupCount.count) || 0
+                };
+            },
+            findSignups: async (eventId, options = {}) => {
+                const query = knex("event_signups").where("event_id", eventId);
+                if (options.limit) query.limit(options.limit);
+                if (options.offset) query.offset(options.offset);
+                return await query.orderBy("created_at", "desc");
+            },
+            createSignup: async (eventId, signupData) => {
+                const data = { event_id: eventId, ...signupData };
+                const [id] = await knex("event_signups").insert(data);
+                return await knex("event_signups").where("id", id).first();
+            }
+        };
+    }
+})();
+
+// Replace the original event object with our robust service
+event = eventService;
 // Analytics queries moved to dashboard repository
 const qrCodeService = require("../services/qr-code.service");
 // Analytics middleware moved to dashboard repository
@@ -1843,39 +1915,11 @@ async function handleCoverImageUpload(req, res) {
         const userId = req.user && req.user.id;
 
         console.log(`🖼️ Cover image upload request for event ${id} by user ${userId}`);
-        console.log(`🔍 Debug: event object:`, event);
-        console.log(`🔍 Debug: event object type:`, typeof event);
-        console.log(`🔍 Debug: eventQueries object:`, eventQueries);
-        console.log(`🔍 Debug: eventQueries object type:`, typeof eventQueries);
-
-        // Use backup import if main import fails - ensure we have a valid service
-        let eventService;
-
-        if (event && typeof event.findOne === 'function') {
-            eventService = event;
-            console.log('✅ Using main event service');
-        } else if (eventQueries && typeof eventQueries.findOne === 'function') {
-            eventService = eventQueries;
-            console.log('✅ Using backup eventQueries service');
-        } else {
-            // Final fallback - create minimal event service using direct knex
-            console.warn('⚠️ Using direct knex fallback for event operations');
-            eventService = {
-                findOne: async (match) => {
-                    return await knex("events").where(match).first();
-                },
-                update: async (id, data) => {
-                    await knex("events").where("id", id).update(data);
-                    return await knex("events").where("id", id).first();
-                }
-            };
-            console.log('✅ Using direct knex fallback service');
-        }
 
         // Check if event exists and belongs to user
         let foundEvent;
         try {
-            foundEvent = await eventService.findOne({ id, user_id: userId });
+            foundEvent = await event.findOne({ id, user_id: userId });
         } catch (findError) {
             console.error('❌ Error finding event:', findError.message);
             return res.status(500).json({
@@ -1924,7 +1968,7 @@ async function handleCoverImageUpload(req, res) {
 
             // Update event with new cover image URL
             try {
-                await eventService.update(id, { cover_image: imageUrl });
+                await event.update(id, { cover_image: imageUrl });
                 console.log(`✅ Event ${id} updated with new cover image URL: ${imageUrl}`);
             } catch (updateError) {
                 console.error('❌ Error updating event with cover image URL:', updateError.message);
@@ -1979,7 +2023,7 @@ async function handleCoverImageUpload(req, res) {
 
             // Update event with fallback URL
             try {
-                await eventService.update(id, { cover_image: imageUrl });
+                await event.update(id, { cover_image: imageUrl });
                 console.log(`✅ Event ${id} updated with fallback cover image URL: ${imageUrl}`);
             } catch (updateError) {
                 console.error('❌ Error updating event with fallback cover image URL:', updateError.message);
