@@ -67,11 +67,18 @@ export default defineConfig({
             console.log('🚨 Proxy error connecting to dashboard API:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('📡 Proxying to dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
+            console.log('📡 Proxying API to dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('✅ Response from dashboard:', proxyRes.statusCode, req.url);
+            console.log('✅ API Response from dashboard:', proxyRes.statusCode, req.url);
           });
+        },
+        rewrite: (path) => {
+          // Handle proxy paths for static files
+          if (path.startsWith('/api/proxy/')) {
+            return path.replace('/api/proxy', '');
+          }
+          return path;
         },
       },
     },

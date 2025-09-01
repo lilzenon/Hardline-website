@@ -263,7 +263,7 @@ const handleImageFallbackAttempt3 = (imgElement, card) => {
 // Simple cache for API responses
 const apiCache = new Map();
 
-// Helper function to convert relative image URLs to absolute dashboard URLs
+// Helper function to convert relative image URLs to proxy-compatible URLs
 const getDashboardImageUrl = (imageUrl) => {
   if (!imageUrl) return null;
 
@@ -272,14 +272,18 @@ const getDashboardImageUrl = (imageUrl) => {
     return imageUrl;
   }
 
-  // Convert relative URLs to absolute dashboard server URLs
+  // Convert relative URLs to use Vite proxy for development
   if (imageUrl.startsWith('/')) {
-    // For development: use localhost:3002 (dashboard server)
-    // For production: this will be handled by the proxy
-    const dashboardBaseUrl = window.location.hostname === 'localhost'
-      ? 'http://localhost:3002'
-      : window.location.origin;
-    return `${dashboardBaseUrl}${imageUrl}`;
+    // For development: use proxy path that Vite will route to dashboard server
+    // For production: use production dashboard domain
+    if (window.location.hostname === 'localhost') {
+      // Use proxy path - Vite will route /api/* to dashboard server
+      // But for static files, we need a different approach
+      return `/api/proxy${imageUrl}`;
+    } else {
+      // Production: use admin dashboard domain
+      return `https://admin.b2b.click${imageUrl}`;
+    }
   }
 
   return imageUrl;
