@@ -897,47 +897,7 @@ const FigmaDesktop = () => {
   }, [fetchHomepageData]);
 
   // Preload critical above-the-fold images for instant loading (Desktop)
-  useEffect(() => {
-    if (processedEventCards.featuredCards && processedEventCards.featuredCards.length > 0) {
-      console.log('🚀 Preloading critical desktop featured event images for instant display...');
 
-      // Preload featured event images first
-      processedEventCards.featuredCards.forEach((card, index) => {
-        if (card.coverImage) {
-          // Preload AVIF version for modern browsers
-          const avifLink = document.createElement('link');
-          avifLink.rel = 'preload';
-          avifLink.as = 'image';
-          avifLink.type = 'image/avif';
-          const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
-          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(card.coverImage)}&w=111&format=avif`;
-          document.head.appendChild(avifLink);
-
-          // Preload WebP fallback
-          const webpLink = document.createElement('link');
-          webpLink.rel = 'preload';
-          webpLink.as = 'image';
-          webpLink.type = 'image/webp';
-          webpLink.href = getOptimizedImageUrl(card.coverImage, 111);
-          document.head.appendChild(webpLink);
-
-          console.log(`✅ Preloaded desktop featured event image ${index + 1}: ${card.title}`);
-        }
-      });
-
-      // Also preload first 4 regular event images (above-the-fold on desktop)
-      if (processedEventCards.regularCards && processedEventCards.regularCards.length > 0) {
-        processedEventCards.regularCards.slice(0, 4).forEach((card, index) => {
-          if (card.coverImage) {
-            const img = new Image();
-            img.src = getOptimizedImageUrl(card.coverImage, 400);
-            img.onload = () => console.log(`✅ Preloaded desktop regular event image ${index + 1}:`, card.title);
-            img.onerror = () => console.warn(`❌ Failed to preload desktop regular event image ${index + 1}:`, card.title);
-          }
-        });
-      }
-    }
-  }, [processedEventCards]);
 
   // Cleanup timer on unmount and when verification changes
   useEffect(() => {
@@ -1744,6 +1704,49 @@ const FigmaDesktop = () => {
       regularCards: filteredRegularCards
     };
   }, [featuredEvents, homepageEvents, showAllEvents]);
+
+  // Preload critical desktop event images for instant display
+  useEffect(() => {
+    if (processedEventCards.featuredCards && processedEventCards.featuredCards.length > 0) {
+      console.log('🚀 Preloading critical desktop featured event images for instant display...');
+
+      // Preload featured event images first
+      processedEventCards.featuredCards.forEach((card, index) => {
+        if (card.coverImage) {
+          // Preload AVIF version for modern browsers
+          const avifLink = document.createElement('link');
+          avifLink.rel = 'preload';
+          avifLink.as = 'image';
+          avifLink.type = 'image/avif';
+          const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(card.coverImage)}&w=111&format=avif`;
+          document.head.appendChild(avifLink);
+
+          // Preload WebP fallback
+          const webpLink = document.createElement('link');
+          webpLink.rel = 'preload';
+          webpLink.as = 'image';
+          webpLink.type = 'image/webp';
+          webpLink.href = getOptimizedImageUrl(card.coverImage, 111);
+          document.head.appendChild(webpLink);
+
+          console.log(`✅ Preloaded desktop featured event image ${index + 1}: ${card.title}`);
+        }
+      });
+
+      // Also preload first 4 regular event images (above-the-fold on desktop)
+      if (processedEventCards.regularCards && processedEventCards.regularCards.length > 0) {
+        processedEventCards.regularCards.slice(0, 4).forEach((card, index) => {
+          if (card.coverImage) {
+            const img = new Image();
+            img.src = getOptimizedImageUrl(card.coverImage, 400);
+            img.onload = () => console.log(`✅ Preloaded desktop regular event image ${index + 1}:`, card.title);
+            img.onerror = () => console.warn(`❌ Failed to preload desktop regular event image ${index + 1}:`, card.title);
+          }
+        });
+      }
+    }
+  }, [processedEventCards]);
 
   // Get the most recent event for hero sections
   const mostRecentEvent = useMemo(() => {
