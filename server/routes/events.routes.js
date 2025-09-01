@@ -127,7 +127,9 @@ router.get(
     asyncHandler(events.generateQRCodeImage)
 );
 
-
+// REMOVED: Image upload endpoints moved to Admin Dashboard for single source of truth
+// All image uploads now handled by kutt-dashboard-deploy service
+// Homepage only consumes image URLs from Dashboard API responses
 
 // GET /api/events/:id/social-preview/invalidate-cache - Get social media cache invalidation info
 router.get(
