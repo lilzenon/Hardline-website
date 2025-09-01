@@ -729,10 +729,7 @@ const FigmaDesktop = () => {
     }
   }, []);
 
-  // Get the most recent event for hero sections
-  const mostRecentEvent = useMemo(() => {
-    return processedEventCards.featuredCards && processedEventCards.featuredCards.length > 0 ? processedEventCards.featuredCards[0] : null;
-  }, [processedEventCards]);
+
 
   // Format location to show just venue and city (prevent overflow)
   const formatLocation = useCallback((address) => {
@@ -1747,6 +1744,11 @@ const FigmaDesktop = () => {
       regularCards: filteredRegularCards
     };
   }, [featuredEvents, homepageEvents, showAllEvents]);
+
+  // Get the most recent event for hero sections
+  const mostRecentEvent = useMemo(() => {
+    return processedEventCards.featuredCards && processedEventCards.featuredCards.length > 0 ? processedEventCards.featuredCards[0] : null;
+  }, [processedEventCards]);
 
   // Show loading state while maintaining Figma layout
   if (loading) {
