@@ -1501,6 +1501,9 @@ const FigmaMobile = () => {
           let coverImage = null;
           if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
             coverImage = event.cover_image.trim();
+            console.log(`✅ Homepage event "${title}" has cover image:`, coverImage);
+          } else {
+            console.log(`⚠️ Homepage event "${title}" has no cover image:`, event.cover_image);
           }
 
           // 🎫 Use external_ticket_url from dashboard "Ticket Link" field
@@ -3550,13 +3553,64 @@ const FigmaMobile = () => {
                       >
                         {/* Event Background Image */}
                         <img
-                          src={getOptimizedImageUrl(card.coverImage, 120)}
+                          src={(() => {
+                            const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
+                            console.log(`🖼️ Loading homepage image for "${card.title}":`, {
+                              original: card.coverImage,
+                              optimized: optimizedUrl,
+                              isDataUrl: card.coverImage?.startsWith('data:')
+                            });
+                            return optimizedUrl;
+                          })()}
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           onError={(e) => {
+                            console.log('❌ Homepage event image failed to load:', card.title, 'URL:', e.target.src);
+                            console.log('🔄 Image fallback sequence starting for:', e.target.src);
+                            console.log('🔍 Original card.coverImage:', card.coverImage);
+
+                            const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
+                            console.log('🔍 Current attempt:', currentAttempt);
+
+                            // Enhanced fallback sequence
+                            if (currentAttempt === 0) {
+                              // First fallback: try with different image optimization
+                              if (card.coverImage) {
+                                const fallbackUrl = card.coverImage.replace(/\?.*$/, '') + '?w=120&h=120&fit=crop&auto=format';
+                                console.log('🔄 Trying optimized fallback:', fallbackUrl);
+                                e.target.src = fallbackUrl;
+                                e.target.dataset.fallbackAttempt = '1';
+                                return;
+                              }
+                            } else if (currentAttempt === 1) {
+                              // Second fallback: try original URL without optimization
+                              if (card.coverImage) {
+                                console.log('🔄 Trying original URL without optimization');
+                                e.target.src = card.coverImage.replace(/\?.*$/, '');
+                                e.target.dataset.fallbackAttempt = '2';
+                                return;
+                              }
+                            } else if (currentAttempt === 2) {
+                              // Third fallback: try JPEG version
+                              if (card.coverImage) {
+                                const jpegUrl = card.coverImage.replace(/\.(webp|avif|png)(\?.*)?$/i, '.jpg$2');
+                                if (jpegUrl !== card.coverImage) {
+                                  console.log('🔄 Trying JPEG version:', jpegUrl);
+                                  e.target.src = jpegUrl;
+                                  e.target.dataset.fallbackAttempt = '3';
+                                  return;
+                                }
+                              }
+                            }
+
+                            // Final fallback: use placeholder
+                            console.log('🔄 Using final placeholder');
                             e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                           }}
                           onLoad={(e) => {
+                            // Clear fallback tracking on successful load
+                            delete e.target.dataset.fallbackAttempt;
+                            console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);
                             e.target.style.backgroundColor = 'transparent';
                           }}
                           style={{
@@ -3709,7 +3763,7 @@ const FigmaMobile = () => {
                           </div>
                         </div>
 
-                        {/* Event Button */}
+                        {/* Event Button - Aligned with image bottom edge */}
                         <div
                           style={{
                             width: '100%',
@@ -3721,7 +3775,7 @@ const FigmaMobile = () => {
                             gap: '6px',
                             padding: '0px 2px 0px 0px',
                             position: 'absolute',
-                            bottom: '0px',
+                            bottom: '4px', // Fine-tuned to perfectly align button bottom with image bottom edge
                             left: '0px'
                           }}
                         >
