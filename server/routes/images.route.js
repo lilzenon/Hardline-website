@@ -599,15 +599,37 @@ router.get('/proxy-optimized', async(req, res) => {
             });
         }
 
-        // Validate that the URL is a proper external URL
-        try {
-            new URL(decodedUrl);
-        } catch (urlError) {
-            console.error(`❌ [${requestId}] Invalid URL format: ${decodedUrl}`);
-            return res.status(400).json({
-                error: 'Invalid URL format',
-                message: 'URL must be a valid external URL'
-            });
+        // Handle relative paths for internal images
+        if (decodedUrl.startsWith('/')) {
+            // This is a relative path to an internal image
+            console.log(`🔄 [${requestId}] Starting proxy optimization: ${decodedUrl}`);
+
+            // Check if the file exists in static directory
+            const fs = require('fs').promises;
+            const path = require('path');
+            const staticPath = path.join(__dirname, '../../static', decodedUrl);
+
+            try {
+                await fs.access(staticPath);
+                // File exists, continue with optimization
+            } catch (fileError) {
+                console.error(`❌ [${requestId}] File not found: ${staticPath}`);
+                return res.status(404).json({
+                    error: 'File not found',
+                    message: `Image file does not exist: ${decodedUrl}`
+                });
+            }
+        } else {
+            // Validate that the URL is a proper external URL
+            try {
+                new URL(decodedUrl);
+            } catch (urlError) {
+                console.error(`❌ [${requestId}] Invalid URL format: ${decodedUrl}`);
+                return res.status(400).json({
+                    error: 'Invalid URL format',
+                    message: 'URL must be a valid external URL or relative path'
+                });
+            }
         }
 
         const width = req.query.w ? parseInt(req.query.w) : null;

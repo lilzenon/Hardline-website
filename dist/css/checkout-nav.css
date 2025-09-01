@@ -1,0 +1,570 @@
+/**
+ * 🎫 CHECKOUT NAVIGATION COMPONENT
+ *
+ * Inline navigation component for ticket purchasing
+ * Positioned between title and form sections
+ * Matches phone card width and follows 8px grid system
+ */
+
+
+/* ===== CHECKOUT NAV CONTAINER ===== */
+
+.checkout-nav-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    margin: 16px auto 16px auto;
+    z-index: 100;
+    pointer-events: all;
+    /* Match the phone input container width exactly */
+    box-sizing: border-box;
+}
+
+.checkout-nav-container.active {
+    pointer-events: all;
+}
+
+
+/* Ensure width matches phone input container in event layout */
+
+.event-container .checkout-nav-container {
+    max-width: 100%;
+    width: 100%;
+    /* Assign to dedicated checkout grid area */
+    grid-area: checkout;
+}
+
+
+/* ===== CHECKOUT NAV BASE STYLES ===== */
+
+.checkout-nav {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    height: 56px;
+    position: relative;
+    pointer-events: all;
+}
+
+
+/* Hover effects */
+
+.checkout-nav:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+
+/* ===== TICKET PRICE DISPLAY ===== */
+
+.ticket-price {
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* ===== BUY BUTTON ===== */
+
+.buy-button {
+    width: 100%;
+    padding: 20px 24px;
+    border-radius: 16px;
+    /* Clean black background to match design */
+    background: #000000;
+    color: #ffffff;
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    padding-right: 80px;
+    /* Make room for arrow */
+}
+
+
+/* Button Text Section */
+
+.buy-button .button-text-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.buy-button .button-title {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 1;
+    line-height: 1.3;
+    margin-bottom: 2px;
+    color: #aaaaaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block !important;
+    visibility: visible !important;
+    position: relative;
+    z-index: 10;
+}
+
+.buy-button .button-text {
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #ffffff;
+}
+
+
+/* Arrow section */
+
+.buy-button::after {
+    content: '→';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 400;
+    color: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0 16px 16px 0;
+}
+
+.buy-button:hover {
+    background: #000000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.buy-button:hover::after {
+    background: #ffffff;
+    color: #000000;
+    border-radius: 12px;
+    margin: 4px;
+    width: 64px;
+}
+
+.buy-button:active {
+    transform: translateY(0) scale(0.98);
+    background: #000000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.15s ease;
+}
+
+.buy-button.clicking {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.15s ease;
+}
+
+
+/* ===== MODAL OVERLAY (for iframe) ===== */
+
+.checkout-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.checkout-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ===== MODAL CONTENT ===== */
+
+.checkout-modal-content {
+    background: #1a1a1a;
+    border-radius: 16px;
+    padding: 24px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+
+/* Remove complex animations - keep it simple like working homepage modal */
+
+.checkout-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.checkout-modal-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    margin: 0;
+}
+
+.checkout-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.checkout-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* ===== IFRAME STYLES ===== */
+
+
+/* IFRAME CONTAINER - Like working homepage modal */
+
+.checkout-iframe-container {
+    width: 100%;
+    height: 600px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.checkout-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.checkout-iframe.loading {
+    /* Slightly more visible background during loading */
+    background: rgba(255, 255, 255, 0.08);
+    position: relative;
+}
+
+.checkout-iframe.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+
+/* Mobile: 320px - 767px */
+
+@media (max-width: 767px) {
+    .checkout-nav-container {
+        margin: 8px auto 8px auto;
+        max-width: calc(100% - 24px);
+        padding: 0 12px;
+    }
+    .checkout-nav {
+        height: 52px;
+        padding: 6px 12px;
+        border-radius: 14px;
+    }
+    .ticket-price {
+        font-size: 15px;
+    }
+    .buy-button {
+        height: 56px;
+        border-radius: 12px;
+        padding: 16px 20px;
+        padding-right: 60px;
+    }
+    .buy-button::after {
+        width: 56px;
+        font-size: 18px;
+        border-radius: 0 12px 12px 0;
+    }
+    .buy-button:hover::after {
+        border-radius: 8px;
+        margin: 3px;
+        width: 50px;
+    }
+    .buy-button .button-title {
+        font-size: 10px;
+        margin-bottom: 2px;
+        opacity: 1 !important;
+        display: block !important;
+    }
+    .buy-button .button-text {
+        font-size: 16px;
+    }
+    .checkout-modal-content {
+        margin: 10px;
+        padding: 16px;
+        /* REMOVED max-height constraint for mobile to allow dynamic iframe sizing */
+    }
+    .checkout-iframe {
+        min-height: 250px;
+        height: 350px;
+        /* REMOVED max-height constraint for mobile to allow JavaScript control */
+    }
+}
+
+
+/* Tablet: 768px - 1023px */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .checkout-nav-container {
+        margin: 8px auto 8px auto;
+        max-width: 420px;
+    }
+    .buy-button {
+        height: 64px;
+        border-radius: 14px;
+        padding: 18px 22px;
+        padding-right: 70px;
+    }
+    .buy-button::after {
+        width: 64px;
+        border-radius: 0 14px 14px 0;
+    }
+    .buy-button:hover::after {
+        border-radius: 10px;
+        margin: 3px;
+        width: 58px;
+    }
+    .buy-button .button-title {
+        font-size: 11px;
+        margin-bottom: 3px;
+        opacity: 1 !important;
+        display: block !important;
+    }
+    .buy-button .button-text {
+        font-size: 17px;
+    }
+    .checkout-iframe {
+        min-height: 300px;
+        height: 400px;
+        /* REMOVED max-height constraint for tablet to allow JavaScript control */
+    }
+}
+
+
+/* Desktop: 1024px+ */
+
+@media (min-width: 1024px) {
+    .checkout-nav-container {
+        margin: 8px auto 8px auto;
+        max-width: 420px;
+        /* Desktop grid positioning - use dedicated checkout area */
+        grid-area: checkout;
+        align-self: start;
+        justify-self: start;
+    }
+    .checkout-iframe {
+        min-height: 350px;
+        height: 450px;
+        /* REMOVED max-height constraint for desktop to allow JavaScript control */
+    }
+}
+
+
+/* ===== REDUCED MOTION SUPPORT ===== */
+
+@media (prefers-reduced-motion: reduce) {
+    .checkout-modal,
+    .checkout-modal-content,
+    .checkout-iframe {
+        transition: none;
+    }
+    .checkout-modal-content {
+        transform: none;
+    }
+    .checkout-modal.active .checkout-modal-content {
+        transform: none;
+    }
+    .checkout-nav:hover {
+        transform: none;
+    }
+    .buy-button:hover {
+        transform: none;
+    }
+    .buy-button:active,
+    .buy-button.clicking {
+        transform: none;
+    }
+    @keyframes spin {
+        0%,
+        100% {
+            transform: translate(-50%, -50%) rotate(0deg);
+        }
+    }
+}
+
+
+/* ===== ACCESSIBILITY ===== */
+
+
+/* Focus styles for keyboard navigation */
+
+.buy-button:focus,
+.checkout-close:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+
+/* High contrast mode support */
+
+@media (prefers-contrast: high) {
+    .checkout-nav {
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        background: rgba(0, 0, 0, 0.9);
+    }
+    .buy-button {
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+        border: 1px solid #fff;
+    }
+    .ticket-price {
+        color: #fff;
+        font-weight: 800;
+    }
+}
+
+
+/* Screen reader support */
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+
+/* FIX: Prevent white background in dark mode iframes */
+
+.modal-iframe-container iframe,
+#poshIframe,
+.checkout-iframe {
+    color-scheme: normal !important;
+    background: transparent !important;
+}
+
+
+/* Touch target improvements for mobile */
+
+@media (pointer: coarse) {
+    .buy-button,
+    .checkout-close {
+        min-height: 48px;
+        min-width: 48px;
+    }
+    .checkout-nav {
+        min-height: 64px;
+    }
+}
+
+
+/* ===== LOADING STATE ===== */
+
+.checkout-iframe.loading {
+    background: rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.checkout-iframe.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
