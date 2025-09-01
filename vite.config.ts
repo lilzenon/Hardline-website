@@ -53,13 +53,13 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3006',
+        target: 'http://localhost:3002',
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
         headers: {
-          'Origin': 'http://localhost:3006',
-          'Referer': 'http://localhost:3006',
+          'Origin': 'http://localhost:3002',
+          'Referer': 'http://localhost:3002',
           'User-Agent': 'Mozilla/5.0 (compatible; Vite-Dev-Server)',
         },
         configure: (proxy, _options) => {
@@ -67,7 +67,7 @@ export default defineConfig({
             console.log('🚨 Proxy error connecting to dashboard API:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('📡 Proxying to dashboard:', req.method, req.url, '→ http://localhost:3006' + req.url);
+            console.log('📡 Proxying to dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
             console.log('✅ Response from dashboard:', proxyRes.statusCode, req.url);
