@@ -1100,7 +1100,7 @@ const FigmaMobile = () => {
         return true;
       });
 
-      console.log(`✅ Mobile homepage data loaded: ${validatedEvents.length} featured events`);
+      console.log(`✅ Mobile homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
 
       // Cache the successful response
       apiCache.set(cacheKey, {
