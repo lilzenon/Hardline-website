@@ -97,7 +97,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
     // Use dashboard server for image optimization (publicly accessible) - with local proxy for development
-    const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
 
     // Add iOS Safari specific parameters for better compatibility
@@ -167,7 +167,7 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     return ''; // Return empty to skip AVIF source entirely
   }
 
-  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
     .join(', ');
@@ -1358,7 +1358,7 @@ const FigmaMobile = () => {
             avifLink.rel = 'preload';
             avifLink.as = 'image';
             avifLink.type = 'image/avif';
-            const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
             avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=120&format=avif`;
             document.head.appendChild(avifLink);
           }
