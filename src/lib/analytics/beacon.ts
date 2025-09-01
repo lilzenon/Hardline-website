@@ -57,9 +57,9 @@ class AnalyticsBeacon {
                    window.location.hostname.includes('localhost') ||
                    window.location.port === '3001' ||
                    window.location.href.includes('localhost')) {
-            // Local development - send to dashboard dev server (includes any port-based development)
-            apiEndpoint = 'http://localhost:3002/api';
-            console.log('🔧 Development mode detected, using local dashboard:', apiEndpoint);
+            // Local development - use Vite proxy to dashboard dev server
+            apiEndpoint = '/api';
+            console.log('🔧 Development mode detected, using Vite proxy:', apiEndpoint);
             console.log('🔧 Current location:', window.location.href);
         } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
             // Current temporary setup - b2b.click homepage sends to admin.b2b.click

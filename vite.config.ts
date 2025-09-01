@@ -53,33 +53,24 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://admin.b2b.click',
+        target: 'http://localhost:3002',
         changeOrigin: true,
-        secure: true,
+        secure: false,
         ws: true, // Enable WebSocket proxying
         headers: {
-          'Origin': 'https://admin.b2b.click', // Use the target origin instead
-          'Referer': 'https://admin.b2b.click',
+          'Origin': 'http://localhost:3007',
+          'Referer': 'http://localhost:3007',
           'User-Agent': 'Mozilla/5.0 (compatible; Vite-Dev-Server)',
         },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
-            console.log('🚨 Proxy error connecting to live API:', err.message);
+            console.log('🚨 Proxy error connecting to local dashboard API:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            // Add CORS headers to the proxy request
-            proxyReq.setHeader('Access-Control-Allow-Origin', '*');
-            proxyReq.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            proxyReq.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-            console.log('📡 Sending to live API:', req.method, req.url, '→ https://admin.b2b.click' + req.url);
+            console.log('📡 Proxying to local dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            // Add CORS headers to the response
-            proxyRes.headers['Access-Control-Allow-Origin'] = '*';
-            proxyRes.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS';
-            proxyRes.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With';
-            proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
-            console.log('✅ Response from live API:', proxyRes.statusCode, req.url);
+            console.log('✅ Response from local dashboard:', proxyRes.statusCode, req.url);
           });
         },
       },

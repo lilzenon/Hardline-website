@@ -7,9 +7,9 @@
 const API_CONFIG = {
     // Dashboard API endpoint for SEO settings
     DASHBOARD_API: (() => {
-        // DEVELOPMENT: Use localhost for development environment
+        // DEVELOPMENT: Use Vite proxy for development environment
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return 'http://localhost:3002/api/settings/seo';
+            return '/api/settings/seo';
         }
         // PRODUCTION: Use production API for production domains
         return 'https://admin.b2b.click/api/settings/seo';
@@ -17,9 +17,9 @@ const API_CONFIG = {
 
     // Maintenance status endpoint (public)
     MAINTENANCE_API: (() => {
-        // DEVELOPMENT: Use localhost for development environment
+        // DEVELOPMENT: Use Vite proxy for development environment
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return 'http://localhost:3002/api/settings/maintenance-status';
+            return '/api/settings/maintenance-status';
         }
         // PRODUCTION: Use production API for production domains
         return 'https://admin.b2b.click/api/settings/maintenance-status';

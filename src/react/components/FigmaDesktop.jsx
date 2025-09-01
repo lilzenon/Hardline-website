@@ -603,6 +603,7 @@ const FigmaDesktop = () => {
   }, []);
   const [homeSettings, setHomeSettings] = useState(null);
   const [featuredEvents, setFeaturedEvents] = useState([]);
+  const [homepageEvents, setHomepageEvents] = useState([]);
   const [formattedDate, setFormattedDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -730,8 +731,8 @@ const FigmaDesktop = () => {
 
   // Get the most recent event for hero sections
   const mostRecentEvent = useMemo(() => {
-    return featuredEvents.length > 0 ? featuredEvents[0] : null;
-  }, [featuredEvents]);
+    return processedEventCards.featuredCards && processedEventCards.featuredCards.length > 0 ? processedEventCards.featuredCards[0] : null;
+  }, [processedEventCards]);
 
   // Format location to show just venue and city (prevent overflow)
   const formatLocation = useCallback((address) => {
@@ -768,14 +769,14 @@ const FigmaDesktop = () => {
         console.log('📦 Using cached homepage data');
         setHomeSettings(cached.data.homeSettings);
         setFeaturedEvents(cached.data.featuredEvents || []);
+        setHomepageEvents(cached.data.homepageEvents || []);
         setFormattedDate(cached.data.formattedDate || "March 29th, 9:00 P.M.");
         setLoading(false);
         return;
       }
 
-      // TEMPORARY FIX: Call local dashboard API directly during development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-      const apiUrl = `${dashboardDomain}/api/home-settings/homepage-data`;
+      // Use Vite proxy for API calls - routes to local dashboard in development
+      const apiUrl = '/api/home-settings/homepage-data';
 
       console.log('🔍 DESKTOP DEBUGGING API CALL:');
       console.log('  hostname:', window.location.hostname);
@@ -809,15 +810,27 @@ const FigmaDesktop = () => {
 
       // Validate featured events
       const featuredEvents = Array.isArray(data.featuredEvents) ? data.featuredEvents : [];
+      const homepageEvents = Array.isArray(data.homepageEvents) ? data.homepageEvents : [];
+
       if (featuredEvents.length === 0) {
         console.warn('No featured events found, using placeholder cards');
       }
 
-      // Validate each event has required fields
-      const validatedEvents = featuredEvents.filter(event => {
+      // Validate each featured event has required fields
+      const validatedFeaturedEvents = featuredEvents.filter(event => {
         if (!event || typeof event !== 'object') return false;
         if (!event.id || !event.title) {
-          console.warn('Event missing required fields:', event);
+          console.warn('Featured event missing required fields:', event);
+          return false;
+        }
+        return true;
+      });
+
+      // Validate each homepage event has required fields
+      const validatedHomepageEvents = homepageEvents.filter(event => {
+        if (!event || typeof event !== 'object') return false;
+        if (!event.id || !event.title) {
+          console.warn('Homepage event missing required fields:', event);
           return false;
         }
         return true;
@@ -832,7 +845,8 @@ const FigmaDesktop = () => {
       });
 
       setHomeSettings(homeSettings);
-      setFeaturedEvents(validatedEvents);
+      setFeaturedEvents(validatedFeaturedEvents);
+      setHomepageEvents(validatedHomepageEvents);
 
       // Use most recent event data for hero sections if available
       let heroFormattedDate = data.formattedDate || "March 29th, 9:00 P.M.";
@@ -868,6 +882,7 @@ const FigmaDesktop = () => {
         email_url: null
       });
       setFeaturedEvents([]);
+      setHomepageEvents([]);
       setFormattedDate("March 29th, 9:00 P.M.");
     } finally {
       setLoading(false);
@@ -886,19 +901,19 @@ const FigmaDesktop = () => {
 
   // Preload critical above-the-fold images for instant loading (Desktop)
   useEffect(() => {
-    if (featuredEvents && featuredEvents.length > 0) {
-      console.log('🚀 Preloading critical desktop event images for instant display...');
+    if (processedEventCards.featuredCards && processedEventCards.featuredCards.length > 0) {
+      console.log('🚀 Preloading critical desktop featured event images for instant display...');
 
-      // Preload first 4 event images (above-the-fold on desktop)
-      featuredEvents.slice(0, 4).forEach((event, index) => {
-        if (event.coverImage) {
+      // Preload featured event images first
+      processedEventCards.featuredCards.forEach((card, index) => {
+        if (card.coverImage) {
           // Preload AVIF version for modern browsers
           const avifLink = document.createElement('link');
           avifLink.rel = 'preload';
           avifLink.as = 'image';
           avifLink.type = 'image/avif';
           const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
-          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=111&format=avif`;
+          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(card.coverImage)}&w=111&format=avif`;
           document.head.appendChild(avifLink);
 
           // Preload WebP fallback
@@ -906,14 +921,26 @@ const FigmaDesktop = () => {
           webpLink.rel = 'preload';
           webpLink.as = 'image';
           webpLink.type = 'image/webp';
-          webpLink.href = getOptimizedImageUrl(event.coverImage, 111);
+          webpLink.href = getOptimizedImageUrl(card.coverImage, 111);
           document.head.appendChild(webpLink);
 
-          console.log(`✅ Preloaded desktop event image ${index + 1}: ${event.title}`);
+          console.log(`✅ Preloaded desktop featured event image ${index + 1}: ${card.title}`);
         }
       });
+
+      // Also preload first 4 regular event images (above-the-fold on desktop)
+      if (processedEventCards.regularCards && processedEventCards.regularCards.length > 0) {
+        processedEventCards.regularCards.slice(0, 4).forEach((card, index) => {
+          if (card.coverImage) {
+            const img = new Image();
+            img.src = getOptimizedImageUrl(card.coverImage, 400);
+            img.onload = () => console.log(`✅ Preloaded desktop regular event image ${index + 1}:`, card.title);
+            img.onerror = () => console.warn(`❌ Failed to preload desktop regular event image ${index + 1}:`, card.title);
+          }
+        });
+      }
     }
-  }, [featuredEvents]);
+  }, [processedEventCards]);
 
   // Cleanup timer on unmount and when verification changes
   useEffect(() => {
@@ -1503,11 +1530,12 @@ const FigmaDesktop = () => {
     };
   }, [activeNavTab]);
 
-  // Memoized event cards processing for performance
+  // Memoized event cards processing for desktop with two-tier system
   const processedEventCards = useMemo(() => {
     const featuredCards = [];
+    const regularCards = [];
 
-    // Process only featured events from API
+    // Process featured events (Large Hero Square Cards)
     featuredEvents.forEach((event, index) => {
       try {
         // Validate and parse event date
@@ -1602,11 +1630,90 @@ const FigmaDesktop = () => {
       return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
     });
 
-    // Filter events based on toggle state - identical to mobile
+    // Process regular homepage events (Small Event Cards) - exclude featured events
+    const featuredEventIds = new Set(featuredEvents.map(event => event.id));
+
+    homepageEvents.forEach((event, index) => {
+      // Skip if this event is already featured
+      if (featuredEventIds.has(event.id)) {
+        return;
+      }
+
+      try {
+        // Validate and parse event date
+        let eventDate = new Date();
+        let formattedDate = 'Tue, Sep 02 @ 10:00PM';
+        let day = '02';
+
+        if (event.event_date) {
+          eventDate = new Date(event.event_date);
+          if (!isNaN(eventDate.getTime())) {
+            formattedDate = eventDate.toLocaleDateString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: '2-digit',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            }).replace(',', ' @');
+            day = eventDate.getDate().toString().padStart(2, '0');
+          }
+        }
+
+        // Process cover image
+        let coverImage = null;
+        if (event.cover_image) {
+          coverImage = event.cover_image.startsWith('/')
+            ? event.cover_image
+            : `/${event.cover_image}`;
+        }
+
+        // Process ticket URL
+        const ticketsUrl = event.external_ticket_url || '#';
+        const hasTicketLink = ticketsUrl && ticketsUrl !== '#' && event.display_tickets;
+
+        regularCards.push({
+          id: event.id,
+          title: event.title || 'Event Title',
+          artist_name: event.artist_name || '',
+          location: event.event_address || 'Location TBA',
+          date: formattedDate,
+          day: day,
+          coverImage: coverImage,
+          ticketsUrl: ticketsUrl,
+          hasTicketLink: hasTicketLink,
+          buttonText: event.buy_button_text || 'View Event',
+          isRealEvent: true,
+          showOnHomepage: event.show_on_homepage,
+          eventData: event,
+          eventDate: eventDate,
+          cardType: 'regular' // Mark as regular card
+        });
+      } catch (error) {
+        console.warn(`Error processing regular desktop event ${event.id}:`, error);
+      }
+    });
+
+    // Sort featured events by creation order (as specified in requirements)
+    featuredCards.sort((a, b) => {
+      const dateA = new Date(a.eventData.created_at || a.eventDate);
+      const dateB = new Date(b.eventData.created_at || b.eventDate);
+      return dateA.getTime() - dateB.getTime(); // Ascending order (creation order)
+    });
+
+    // Sort regular events by date in reverse chronological order (most recent first)
+    regularCards.sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
+    });
+
+    // Filter events based on toggle state
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
 
-    const filteredCards = featuredCards.filter(card => {
+    // Filter featured events based on toggle state
+    const filteredFeaturedCards = featuredCards.filter(card => {
       const eventDate = new Date(card.eventDate);
       eventDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
 
@@ -1619,9 +1726,27 @@ const FigmaDesktop = () => {
       }
     });
 
-    console.log(`🎯 Desktop rendering ${filteredCards.length} of ${featuredCards.length} featured event cards (${showAllEvents ? 'All' : 'Past'} events)`);
-    return filteredCards;
-  }, [featuredEvents, showAllEvents]);
+    // Filter regular events based on toggle state
+    const filteredRegularCards = regularCards.filter(card => {
+      const eventDate = new Date(card.eventDate);
+      eventDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+
+      if (showAllEvents) {
+        // Show all events (both upcoming and past)
+        return true;
+      } else {
+        // Show only past events
+        return eventDate < currentDate;
+      }
+    });
+
+    console.log(`🎯 Desktop rendering ${filteredFeaturedCards.length} featured cards and ${filteredRegularCards.length} regular cards (${showAllEvents ? 'All' : 'Past'} events)`);
+
+    return {
+      featuredCards: filteredFeaturedCards,
+      regularCards: filteredRegularCards
+    };
+  }, [featuredEvents, homepageEvents, showAllEvents]);
 
   // Show loading state while maintaining Figma layout
   if (loading) {
@@ -2474,9 +2599,138 @@ const FigmaDesktop = () => {
               justifyItems: 'start'  // Justify event cards to the left within grid
             }}
           >
-            {/* Show featured events or empty state */}
-            {featuredEvents.length === 0 ? (
-              /* Empty State - No Featured Events */
+            {/* Featured Events Section - Large Hero Square Cards */}
+            {processedEventCards.featuredCards.length > 0 && (
+              <div style={{
+                gridColumn: '1 / -1', // Span all columns
+                marginBottom: '32px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '20px'
+              }}>
+                <h2 style={{
+                  gridColumn: '1 / -1',
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: '24px',
+                  fontWeight: '600',
+                  margin: '0 0 20px 0'
+                }}>
+                  Featured Events
+                </h2>
+                {processedEventCards.featuredCards.map((card, index) => (
+                  <div
+                    key={`featured-${card.id}`}
+                    onClick={() => {
+                      if (card.hasTicketLink && card.ticketsUrl) {
+                        console.log('🎫 Featured event clicked - opening ticket link:', card.title);
+                        window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                    style={{
+                      aspectRatio: '1/1', // Square aspect ratio
+                      position: 'relative',
+                      background: 'rgba(22, 22, 22, 0.8)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(56, 56, 56, 0.3)',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      cursor: card.hasTicketLink ? 'pointer' : 'default',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    {/* Featured Event Image */}
+                    {card.coverImage && (
+                      <img
+                        src={getOptimizedImageUrl(card.coverImage, 400)}
+                        alt={`${card.title} - Featured Event`}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
+                        }}
+                        onError={(e) => {
+                          e.target.style.backgroundColor = 'rgba(56, 56, 56, 0.3)';
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    )}
+
+                    {/* Featured Event Overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
+                      padding: '40px 24px 24px 24px',
+                      color: '#FFF'
+                    }}>
+                      <h3 style={{
+                        fontFamily: 'Inter',
+                        fontSize: '28px',
+                        fontWeight: '700',
+                        margin: '0 0 8px 0',
+                        lineHeight: '1.2'
+                      }}>
+                        {card.title}
+                      </h3>
+                      {card.artist_name && (
+                        <p style={{
+                          fontFamily: 'Inter',
+                          fontSize: '18px',
+                          fontWeight: '400',
+                          margin: '0 0 16px 0',
+                          opacity: 0.9
+                        }}>
+                          {card.artist_name}
+                        </p>
+                      )}
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '16px',
+                        opacity: 0.8,
+                        marginBottom: '16px'
+                      }}>
+                        <span>{card.date}</span>
+                        <span>{card.location}</span>
+                      </div>
+                      {card.hasTicketLink && (
+                        <button
+                          style={{
+                            padding: '14px 28px',
+                            background: 'rgba(255, 255, 255, 0.9)',
+                            color: '#000',
+                            border: 'none',
+                            borderRadius: '25px',
+                            fontFamily: 'Inter',
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                          }}
+                        >
+                          {card.buttonText}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Show regular events (small cards) or empty state */}
+            {processedEventCards.regularCards.length === 0 && processedEventCards.featuredCards.length === 0 ? (
+              /* Empty State - No Events */
               <div
                 style={{
                   display: 'flex',
@@ -2498,7 +2752,7 @@ const FigmaDesktop = () => {
                     opacity: '0.8'
                   }}
                 >
-                  No Featured Events
+                  No Events Available
                 </div>
                 <div
                   style={{
@@ -2513,8 +2767,8 @@ const FigmaDesktop = () => {
                 </div>
               </div>
             ) : (
-              /* EventCard_small instances - Dynamic data from featured events only */
-              processedEventCards.map((card, index) => (
+              /* Regular Event Cards - Small Cards (excluding featured events) */
+              processedEventCards.regularCards.map((card, index) => (
               <div
                 key={card.id}
                 onClick={(e) => {
