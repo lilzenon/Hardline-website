@@ -62,23 +62,25 @@ export default defineConfig({
           'Referer': 'http://localhost:3002',
           'User-Agent': 'Mozilla/5.0 (compatible; Vite-Dev-Server)',
         },
+        rewrite: (path) => {
+          // Handle proxy paths for static files
+          if (path.startsWith('/api/proxy/')) {
+            const rewrittenPath = path.replace('/api/proxy', '');
+            console.log('🔄 Rewriting proxy path:', path, '→', rewrittenPath);
+            return rewrittenPath;
+          }
+          return path;
+        },
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('🚨 Proxy error connecting to dashboard API:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('📡 Proxying API to dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
+            console.log('📡 Proxying to dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
           });
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('✅ API Response from dashboard:', proxyRes.statusCode, req.url);
+            console.log('✅ Response from dashboard:', proxyRes.statusCode, req.url);
           });
-        },
-        rewrite: (path) => {
-          // Handle proxy paths for static files
-          if (path.startsWith('/api/proxy/')) {
-            return path.replace('/api/proxy', '');
-          }
-          return path;
         },
       },
     },
