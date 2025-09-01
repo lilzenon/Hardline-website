@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MobileNavigation from './MobileNavigation';
 
 /**
@@ -6,6 +6,73 @@ import MobileNavigation from './MobileNavigation';
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const AboutPageMobile = () => {
+  const [aboutContent, setAboutContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAboutContent();
+  }, []);
+
+  const fetchAboutContent = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Determine API base URL based on environment
+      const isDevelopment = window.location.hostname === 'localhost';
+      const apiBaseUrl = isDevelopment ? '' : 'https://admin.b2b.click';
+
+      console.log('🔍 Fetching About page content from API...');
+
+      const response = await fetch(`${apiBaseUrl}/api/settings/about`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setAboutContent(data.data.content);
+        console.log('✅ About page content loaded successfully');
+      } else {
+        throw new Error('Invalid response format');
+      }
+
+    } catch (error) {
+      console.error('❌ Error fetching About page content:', error);
+      setError(error.message);
+      // Set fallback content
+      setAboutContent(`Bounce2Bounce is the premier destination for exclusive events, contests, and unforgettable experiences. We connect people with the most exciting opportunities in their area.
+
+Our platform brings together event organizers, brands, and participants to create meaningful connections and memorable moments. From VIP experiences to local gatherings, we curate the best events for our community.
+
+Join thousands of members who trust Bounce2Bounce to discover and participate in exclusive events, win amazing prizes, and connect with like-minded individuals.`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format content with proper paragraphs
+  const formatContent = (content) => {
+    if (!content) return [];
+
+    // Split by double newlines or single newlines and filter empty strings
+    const paragraphs = content.split(/\n\s*\n|\n/).filter(p => p.trim());
+
+    return paragraphs.map((paragraph, index) => (
+      <p key={index} style={{ marginBottom: index === paragraphs.length - 1 ? '0' : '20px' }}>
+        {paragraph.trim()}
+      </p>
+    ));
+  };
 
   return (
     <>
@@ -98,20 +165,35 @@ const AboutPageMobile = () => {
                 textAlign: 'left'
               }}
             >
-              <p style={{ marginBottom: '20px' }}>
-                Bounce2Bounce is the premier destination for exclusive events, contests, and unforgettable experiences. 
-                We connect people with the most exciting opportunities in their area.
-              </p>
-              
-              <p style={{ marginBottom: '20px' }}>
-                Our platform brings together event organizers, brands, and participants to create meaningful connections 
-                and memorable moments. From VIP experiences to local gatherings, we curate the best events for our community.
-              </p>
-              
-              <p style={{ marginBottom: '20px' }}>
-                Join thousands of members who trust Bounce2Bounce to discover and participate in exclusive events, 
-                win amazing prizes, and connect with like-minded individuals.
-              </p>
+              {loading ? (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  minHeight: '100px',
+                  fontSize: '14px',
+                  color: 'rgba(255, 255, 255, 0.7)'
+                }}>
+                  Loading content...
+                </div>
+              ) : (
+                <>
+                  {formatContent(aboutContent)}
+                  {error && (
+                    <div style={{
+                      marginTop: '16px',
+                      padding: '12px',
+                      background: 'rgba(255, 0, 0, 0.1)',
+                      border: '1px solid rgba(255, 0, 0, 0.3)',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      color: 'rgba(255, 255, 255, 0.7)'
+                    }}>
+                      Note: Using fallback content due to connection issue.
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Features Section */}

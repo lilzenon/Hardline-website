@@ -8,6 +8,9 @@ const AboutPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeNavTab, setActiveNavTab] = useState('About');
+  const [aboutContent, setAboutContent] = useState('');
+  const [contentLoading, setContentLoading] = useState(true);
+  const [contentError, setContentError] = useState(null);
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
     heroHeight: 299,
@@ -111,6 +114,78 @@ const AboutPage = () => {
 
     updateScaling();
   }, [viewportWidth]); // Depend on viewportWidth from useViewportDimensions
+
+  // Fetch About page content from API
+  useEffect(() => {
+    fetchAboutContent();
+  }, []);
+
+  const fetchAboutContent = async () => {
+    try {
+      setContentLoading(true);
+      setContentError(null);
+
+      // Determine API base URL based on environment
+      const isDevelopment = window.location.hostname === 'localhost';
+      const apiBaseUrl = isDevelopment ? '' : 'https://admin.b2b.click';
+
+      console.log('🔍 Fetching About page content from API...');
+
+      const response = await fetch(`${apiBaseUrl}/api/settings/about`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setAboutContent(data.data.content);
+        console.log('✅ About page content loaded successfully');
+      } else {
+        throw new Error('Invalid response format');
+      }
+
+    } catch (error) {
+      console.error('❌ Error fetching About page content:', error);
+      setContentError(error.message);
+      // Set fallback content
+      setAboutContent(`Welcome to BOUNCE2BOUNCE, your premier destination for exclusive live music events. We're passionate about connecting music lovers with unforgettable experiences that showcase the best in live entertainment.
+
+Our platform brings together top artists, intimate venues, and discerning audiences to create magical moments that resonate long after the last note fades. From emerging talents to established performers, we curate events that celebrate the power of live music.
+
+At BOUNCE2BOUNCE, we believe that great music deserves great experiences. That's why we've built a seamless platform that makes discovering, booking, and attending premium events effortless and exciting.
+
+Join our community of music enthusiasts and discover your next favorite artist, your next unforgettable night, and your next reason to fall in love with live music all over again.`);
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
+  // Format content with proper paragraphs
+  const formatContent = (content) => {
+    if (!content) return [];
+
+    // Split by double newlines or single newlines and filter empty strings
+    const paragraphs = content.split(/\n\s*\n|\n/).filter(p => p.trim());
+
+    return paragraphs.map((paragraph, index) => (
+      <p key={index} style={{
+        margin: index === paragraphs.length - 1 ? '0' : '0 0 24px 0',
+        fontSize: '18px',
+        lineHeight: '1.7',
+        color: 'rgba(255, 255, 255, 0.9)'
+      }}>
+        {paragraph.trim()}
+      </p>
+    ));
+  };
 
   const handleNavClick = (tab) => {
     setActiveNavTab(tab);
@@ -312,21 +387,54 @@ const AboutPage = () => {
           About Us
         </div>
 
-          {/* Content Area - Blank for now */}
+          {/* Content Area - Dynamic About Content */}
           <div
             style={{
               width: '100%',
-              minHeight: '400px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: '#FFF',
-              fontSize: '18px',
-              opacity: 0.5,
-              marginTop: '32px'
+              maxWidth: '800px',
+              margin: '64px auto 0 auto',
+              background: 'rgba(22, 22, 22, 0.8)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              border: '1px solid rgba(56, 56, 56, 0.3)',
+              borderRadius: '24px',
+              padding: '48px',
+              boxSizing: 'border-box'
             }}
           >
-            Content coming soon...
+            {contentLoading ? (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '200px',
+                fontSize: '16px',
+                color: 'rgba(255, 255, 255, 0.7)'
+              }}>
+                Loading content...
+              </div>
+            ) : (
+              <>
+                <div style={{
+                  textAlign: 'left'
+                }}>
+                  {formatContent(aboutContent)}
+                </div>
+                {contentError && (
+                  <div style={{
+                    marginTop: '24px',
+                    padding: '16px',
+                    background: 'rgba(255, 0, 0, 0.1)',
+                    border: '1px solid rgba(255, 0, 0, 0.3)',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    color: 'rgba(255, 255, 255, 0.7)'
+                  }}>
+                    Note: Using fallback content due to connection issue.
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
