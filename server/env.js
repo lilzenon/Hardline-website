@@ -90,11 +90,6 @@ const spec = {
     ANALYTICS_DASHBOARD_URL: str({ example: "https://admin.b2b.click/api/analytics", default: "" }),
     HOMEPAGE_API_URL: str({ example: "https://bounce2bounce.com/api", default: "" }),
 
-    REDIS_ENABLED: bool({ default: false }),
-    REDIS_HOST: str({ default: "127.0.0.1" }),
-    REDIS_PORT: num({ default: 6379 }),
-    REDIS_PASSWORD: str({ default: "" }),
-    REDIS_DB: num({ default: 0 }),
     DISALLOW_ANONYMOUS_LINKS: bool({ default: true }),
     DISALLOW_REGISTRATION: bool({ default: true }),
 

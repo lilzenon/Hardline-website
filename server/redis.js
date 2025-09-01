@@ -13,8 +13,8 @@ if (env.REDIS_ENABLED) {
             db: env.REDIS_DB,
             ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
             // UNIFIED CONFIG: Balanced timeouts for stability and performance
-            connectTimeout: 8000, // 8 seconds - balanced for both servers
-            commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
+            connectTimeout: 10000, // 10 seconds - increased for Render Redis
+            commandTimeout: 15000, // 15s timeout - reduced for faster fallback
             retryDelayOnFailover: 150, // 150ms - balanced retry delay
             maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
             lazyConnect: true, // Connect only when needed
@@ -137,11 +137,19 @@ if (client) {
         console.log(`🔄 Redis reconnecting in ${delay}ms...`);
 
         // CRITICAL: Limit reconnection attempts to prevent infinite loops
-        if (delay > 1000) {
+        if (delay > 5000) {
             console.warn('⚠️ Redis reconnection taking too long, disabling Redis');
             client.disconnect(false);
         }
     });
+
+    // Add connection timeout handler
+    setTimeout(() => {
+        if (client && client.status === 'wait') {
+            console.warn('⚠️ Redis connection timeout after 15 seconds, falling back to memory cache');
+            client.disconnect(false);
+        }
+    }, 15000);
 
     client.on('end', () => {
         console.warn('⚠️ Redis connection ended');
