@@ -1088,6 +1088,22 @@ const FigmaMobile = () => {
 
       console.log(`✅ Mobile homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
 
+      // Debug: Log the actual data structure
+      console.log('🔍 API Response Debug:', {
+        featuredEvents: validatedFeaturedEvents.map(e => ({
+          id: e.id,
+          title: e.title,
+          is_featured: e.is_featured,
+          show_on_homepage: e.show_on_homepage
+        })),
+        homepageEvents: validatedHomepageEvents.map(e => ({
+          id: e.id,
+          title: e.title,
+          is_featured: e.is_featured,
+          show_on_homepage: e.show_on_homepage
+        }))
+      });
+
       // Cache the successful response
       apiCache.set(cacheKey, {
         data: data,
@@ -1373,6 +1389,11 @@ const FigmaMobile = () => {
 
   // Featured events processing for mobile (hero cards using original styling)
   const featuredEventCards = useMemo(() => {
+    console.log('🎯 Processing featuredEventCards:', {
+      featuredEventsCount: featuredEvents.length,
+      featuredEvents: featuredEvents.map(e => ({ id: e.id, title: e.title, is_featured: e.is_featured }))
+    });
+
     return featuredEvents.map((event, index) => {
       try {
         // Validate and parse event date
@@ -1456,8 +1477,19 @@ const FigmaMobile = () => {
     // Filter out events that are already featured to avoid duplicates
     const featuredEventIds = new Set(featuredEvents.map(event => event.id));
 
-    return homepageEvents
-      .filter(event => !featuredEventIds.has(event.id)) // Exclude featured events
+    console.log('🏠 Processing homepageEventCards:', {
+      homepageEventsCount: homepageEvents.length,
+      featuredEventIds: Array.from(featuredEventIds),
+      homepageEvents: homepageEvents.map(e => ({ id: e.id, title: e.title, is_featured: e.is_featured }))
+    });
+
+    const filteredEvents = homepageEvents.filter(event => !featuredEventIds.has(event.id));
+    console.log('🔍 After filtering:', {
+      filteredEventsCount: filteredEvents.length,
+      filteredEvents: filteredEvents.map(e => ({ id: e.id, title: e.title, is_featured: e.is_featured }))
+    });
+
+    return filteredEvents
       .map((event, index) => {
         try {
           // Validate and parse event date
