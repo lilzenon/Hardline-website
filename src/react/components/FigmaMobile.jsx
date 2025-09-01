@@ -581,7 +581,6 @@ const FigmaMobile = () => {
 
   // Events data state
   const [featuredEvents, setFeaturedEvents] = useState([]);
-  const [homepageEvents, setHomepageEvents] = useState([]);
   const [homeSettings, setHomeSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -1041,28 +1040,13 @@ const FigmaMobile = () => {
         console.log('📦 Using cached homepage data');
         setHomeSettings(cached.data.homeSettings);
         setFeaturedEvents(cached.data.featuredEvents || []);
-        setHomepageEvents(cached.data.homepageEvents || []);
         setLoading(false);
         return;
       }
 
-      // Use Vite proxy for API calls - routes to local dashboard in development
-      const apiUrl = '/api/home-settings/homepage-data';
-
-      console.log('🔍 DEBUGGING API CALL:');
-      console.log('  hostname:', window.location.hostname);
-      console.log('  using Vite proxy for API calls');
-      console.log('  final API URL:', apiUrl);
-
-      const response = await fetch(apiUrl);
-
-      console.log('📊 API Response:');
-      console.log('  status:', response.status);
-      console.log('  statusText:', response.statusText);
-      console.log('  ok:', response.ok);
+      const response = await fetch('/api/home-settings/homepage-data');
 
       if (!response.ok) {
-        console.error('❌ API call failed:', response.status, response.statusText);
         throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
       }
 
@@ -1078,29 +1062,18 @@ const FigmaMobile = () => {
 
       // Validate featured events
       const featuredEvents = Array.isArray(data.featuredEvents) ? data.featuredEvents : [];
-      const homepageEvents = Array.isArray(data.homepageEvents) ? data.homepageEvents : [];
 
-      // Validate each featured event has required fields
-      const validatedFeaturedEvents = featuredEvents.filter(event => {
+      // Validate each event has required fields
+      const validatedEvents = featuredEvents.filter(event => {
         if (!event || typeof event !== 'object') return false;
         if (!event.id || !event.title) {
-          console.warn('Featured event missing required fields:', event);
+          console.warn('Event missing required fields:', event);
           return false;
         }
         return true;
       });
 
-      // Validate each homepage event has required fields
-      const validatedHomepageEvents = homepageEvents.filter(event => {
-        if (!event || typeof event !== 'object') return false;
-        if (!event.id || !event.title) {
-          console.warn('Homepage event missing required fields:', event);
-          return false;
-        }
-        return true;
-      });
-
-      console.log(`✅ Mobile homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
+      console.log(`✅ Mobile homepage data loaded: ${validatedEvents.length} featured events`);
 
       // Cache the successful response
       apiCache.set(cacheKey, {
@@ -1109,8 +1082,7 @@ const FigmaMobile = () => {
       });
 
       setHomeSettings(homeSettings);
-      setFeaturedEvents(validatedFeaturedEvents);
-      setHomepageEvents(validatedHomepageEvents);
+      setFeaturedEvents(validatedEvents);
 
     } catch (err) {
       console.error('❌ Error fetching mobile homepage data:', err);
@@ -1124,7 +1096,6 @@ const FigmaMobile = () => {
         tickets_url: null
       });
       setFeaturedEvents([]);
-      setHomepageEvents([]);
     } finally {
       setLoading(false);
     }
@@ -1385,15 +1356,9 @@ const FigmaMobile = () => {
 
   // Scroll handling now optimized with useOptimizedScroll hook
 
-  // Memoized event cards processing for mobile with two-tier system
-  const processedEventCards = useMemo(() => {
-    const featuredCards = [];
-    const regularCards = [];
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-
-    // Process featured events (Large Hero Square Cards)
-    featuredEvents.forEach((event, index) => {
+  // Simple event cards processing for mobile (original structure)
+  const eventCards = useMemo(() => {
+    return featuredEvents.map((event, index) => {
       try {
         // Validate and parse event date
         let eventDate = new Date();
@@ -1437,9 +1402,6 @@ const FigmaMobile = () => {
           }
         }
 
-        // Debug the cover image data
-        console.log(`🔍 Event ${index + 1} (${title}) cover_image:`, event.cover_image);
-
         // Enhanced image handling with better fallbacks
         let coverImage = null;
 
@@ -1447,47 +1409,13 @@ const FigmaMobile = () => {
           // Valid image URL provided
           coverImage = event.cover_image.trim();
           console.log(`✅ Using provided cover image for ${title}:`, coverImage);
-        } else {
-          // No valid image provided, try alternative fields
-          const alternativeFields = [
-            event.image_url,
-            event.image,
-            event.cover,
-            event.poster_image,
-            event.banner_image
-          ];
-
-          for (const altField of alternativeFields) {
-            if (altField && typeof altField === 'string' && altField.trim() !== '') {
-              coverImage = altField.trim();
-              console.log(`✅ Using alternative image field for ${title}:`, coverImage);
-              break;
-            }
-          }
-
-          // If still no image, use a default event image instead of placeholder
-          if (!coverImage) {
-            // Try to use a default event image from the server
-            coverImage = '/images/defaults/event-placeholder.jpg';
-            console.log(`⚠️ No image found for ${title}, using default placeholder`);
-          }
         }
-
-        console.log(`📷 Final coverImage for ${title}:`, coverImage);
 
         // 🎫 FIXED: Use external_ticket_url from dashboard "Ticket Link" field
         const ticketsUrl = event.external_ticket_url || event.posh_embed_url || '#';
         const hasTicketLink = event.display_tickets && ticketsUrl && ticketsUrl !== '#';
 
-        console.log(`🎫 Ticket data for ${title}:`, {
-          external_ticket_url: event.external_ticket_url,
-          display_tickets: event.display_tickets,
-          buy_button_text: event.buy_button_text,
-          hasTicketLink: hasTicketLink,
-          finalTicketsUrl: ticketsUrl
-        });
-
-        featuredCards.push({
+        return {
           id: `event-${event.id}`,
           title: title,
           date: formattedDate,
@@ -1499,123 +1427,14 @@ const FigmaMobile = () => {
           isRealEvent: true,
           showOnHomepage: event.show_on_homepage,
           eventData: event,
-          eventDate: eventDate // Add the actual Date object for proper sorting
-        });
+          eventDate: eventDate
+        };
       } catch (error) {
         console.warn(`Error processing mobile event ${event.id}:`, error);
+        return null;
       }
-    });
-
-    // Process regular homepage events (Small Event Cards) - exclude featured events
-    const featuredEventIds = new Set(featuredEvents.map(event => event.id));
-
-    homepageEvents.forEach((event, index) => {
-      // Skip if this event is already featured
-      if (featuredEventIds.has(event.id)) {
-        return;
-      }
-
-      try {
-        // Validate and parse event date
-        let eventDate = new Date();
-        let formattedDate = 'Tue, Sep 02 @ 10:00PM';
-
-        if (event.event_date) {
-          eventDate = new Date(event.event_date);
-          if (!isNaN(eventDate.getTime())) {
-            formattedDate = eventDate.toLocaleDateString('en-US', {
-              weekday: 'short',
-              month: 'short',
-              day: '2-digit',
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true
-            }).replace(',', ' @');
-          }
-        }
-
-        // Process cover image
-        let coverImage = null;
-        if (event.cover_image) {
-          coverImage = event.cover_image.startsWith('/')
-            ? event.cover_image
-            : `/${event.cover_image}`;
-        }
-
-        // Process ticket URL
-        const ticketsUrl = event.external_ticket_url || '#';
-        const hasTicketLink = ticketsUrl && ticketsUrl !== '#' && event.display_tickets;
-
-        regularCards.push({
-          id: event.id,
-          title: event.title || 'Event Title',
-          artist_name: event.artist_name || '',
-          location: event.event_address || 'Location TBA',
-          date: formattedDate,
-          coverImage: coverImage,
-          ticketsUrl: ticketsUrl,
-          hasTicketLink: hasTicketLink,
-          buttonText: event.buy_button_text || 'View Event',
-          isRealEvent: true,
-          showOnHomepage: event.show_on_homepage,
-          eventData: event,
-          eventDate: eventDate,
-          cardType: 'regular' // Mark as regular card
-        });
-      } catch (error) {
-        console.warn(`Error processing regular mobile event ${event.id}:`, error);
-      }
-    });
-
-    // Sort featured events by creation order (as specified in requirements)
-    featuredCards.sort((a, b) => {
-      const dateA = new Date(a.eventData.created_at || a.eventDate);
-      const dateB = new Date(b.eventData.created_at || b.eventDate);
-      return dateA.getTime() - dateB.getTime(); // Ascending order (creation order)
-    });
-
-    // Sort regular events by date in reverse chronological order (most recent first)
-    regularCards.sort((a, b) => {
-      const dateA = new Date(a.eventDate);
-      const dateB = new Date(b.eventDate);
-      return dateB.getTime() - dateA.getTime(); // Descending order (newest first)
-    });
-
-    // Filter featured events based on toggle state
-    const filteredFeaturedCards = featuredCards.filter(card => {
-      const eventDate = new Date(card.eventDate);
-      eventDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-
-      if (showAllEvents) {
-        // Show all events (both upcoming and past)
-        return true;
-      } else {
-        // Show only past events
-        return eventDate < currentDate;
-      }
-    });
-
-    // Filter regular events based on toggle state
-    const filteredRegularCards = regularCards.filter(card => {
-      const eventDate = new Date(card.eventDate);
-      eventDate.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-
-      if (showAllEvents) {
-        // Show all events (both upcoming and past)
-        return true;
-      } else {
-        // Show only past events
-        return eventDate < currentDate;
-      }
-    });
-
-    console.log(`🎯 Mobile rendering ${filteredFeaturedCards.length} featured cards and ${filteredRegularCards.length} regular cards (${showAllEvents ? 'All' : 'Past'} events)`);
-
-    return {
-      featuredCards: filteredFeaturedCards,
-      regularCards: filteredRegularCards
-    };
-  }, [featuredEvents, homepageEvents, showAllEvents]);
+    }).filter(Boolean);
+  }, [featuredEvents]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -3130,13 +2949,13 @@ const FigmaMobile = () => {
             >
             <div
               onClick={() => {
-                // Navigate to first featured event or handle click
-                const firstFeaturedEvent = processedEventCards.featuredCards && processedEventCards.featuredCards[0];
-                if (firstFeaturedEvent && firstFeaturedEvent.hasTicketLink && firstFeaturedEvent.ticketsUrl) {
-                  console.log('🎫 Hero clicked - opening ticket link for featured event:', firstFeaturedEvent.title);
-                  window.open(firstFeaturedEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
+                // Navigate to first event or handle click
+                const firstEvent = eventCards && eventCards[0];
+                if (firstEvent && firstEvent.hasTicketLink && firstEvent.ticketsUrl) {
+                  console.log('🎫 Hero clicked - opening ticket link for event:', firstEvent.title);
+                  window.open(firstEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
                 } else {
-                  console.log('Hero clicked - no ticket link available for featured event');
+                  console.log('Hero clicked - no ticket link available for event');
                 }
               }}
               style={{
@@ -3172,26 +2991,26 @@ const FigmaMobile = () => {
                   overflow: 'hidden'
                 }}
               >
-                {/* Dynamic Featured Event Image or Fallback */}
-                {processedEventCards.featuredCards.length > 0 && processedEventCards.featuredCards[0].coverImage ? (
+                {/* Dynamic Event Image or Fallback */}
+                {eventCards.length > 0 && eventCards[0].coverImage ? (
                   <picture>
                     <source
-                      srcSet={getAVIFSrcSet(processedEventCards.featuredCards[0].coverImage, 'hero')}
+                      srcSet={getAVIFSrcSet(eventCards[0].coverImage, 'hero')}
                       sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
                       type="image/avif"
                     />
                     <source
-                      srcSet={getResponsiveSrcSet(processedEventCards.featuredCards[0].coverImage, 'hero')}
+                      srcSet={getResponsiveSrcSet(eventCards[0].coverImage, 'hero')}
                       sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
                       type="image/webp"
                     />
                     <img
-                      src={getOptimizedImageUrl(processedEventCards.featuredCards[0].coverImage, 375)}
-                      alt={`${processedEventCards.featuredCards[0].title} - Featured Event`}
+                      src={getOptimizedImageUrl(eventCards[0].coverImage, 375)}
+                      alt={`${eventCards[0].title} - Event`}
                       loading="eager"
                       decoding="async"
                       fetchpriority="high"
-                      onLoad={() => console.log('✅ MOBILE FEATURED EVENT HERO IMAGE LOADED:', processedEventCards.featuredCards[0].title)}
+                      onLoad={() => console.log('✅ MOBILE EVENT HERO IMAGE LOADED:', eventCards[0].title)}
                       onError={(e) => {
                         console.error('❌ MOBILE FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
                         // Fallback to default hero image
@@ -3319,8 +3138,8 @@ const FigmaMobile = () => {
                         minWidth: 0
                       }}
                     >
-                      {processedEventCards.featuredCards.length > 0 && processedEventCards.featuredCards[0].eventDate
-                        ? new Date(processedEventCards.featuredCards[0].eventDate).toLocaleDateString('en-US', {
+                      {eventCards.length > 0 && eventCards[0].eventDate
+                        ? new Date(eventCards[0].eventDate).toLocaleDateString('en-US', {
                             month: 'long',
                             day: 'numeric',
                             hour: 'numeric',
@@ -3360,8 +3179,8 @@ const FigmaMobile = () => {
                         minWidth: 0
                       }}
                     >
-                      {processedEventCards.featuredCards.length > 0 && processedEventCards.featuredCards[0].location
-                        ? processedEventCards.featuredCards[0].location
+                      {eventCards.length > 0 && eventCards[0].location
+                        ? eventCards[0].location
                         : "Asbury Park, NJ"
                       }
                     </span>
@@ -3457,8 +3276,8 @@ const FigmaMobile = () => {
                     margin: '0px 0px 8px 0px' // Added margin as requested
                   }}
                 >
-                  {processedEventCards.featuredCards.length > 0 && (processedEventCards.featuredCards[0].title || processedEventCards.featuredCards[0].artist_name)
-                    ? (processedEventCards.featuredCards[0].title || processedEventCards.featuredCards[0].artist_name)
+                  {eventCards.length > 0 && (eventCards[0].title || eventCards[0].artist_name)
+                    ? (eventCards[0].title || eventCards[0].artist_name)
                     : "FEATURED EVENT"
                   }
                 </div>
@@ -3488,20 +3307,9 @@ const FigmaMobile = () => {
               zIndex: 1
             }}
           >
-            {/* Featured Events Section - Large Hero Square Cards */}
-            {processedEventCards.featuredCards.length > 0 && (
-              <div style={{ marginBottom: '32px' }}>
-                <h2 style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '20px',
-                  fontWeight: '600',
-                  margin: '0 0 16px 0',
-                  padding: '0 16px'
-                }}>
-                  Featured Events
-                </h2>
-                {processedEventCards.featuredCards.map((card, index) => (
+            {/* Event Cards - Simple Layout */}
+            {eventCards.length > 0 ? (
+              eventCards.map((card, index) => (
                   <div
                     key={`featured-${card.id}`}
                     className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
@@ -3623,12 +3431,8 @@ const FigmaMobile = () => {
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Regular Events Section - Small Event Cards */}
-            {processedEventCards.regularCards.length === 0 && processedEventCards.featuredCards.length === 0 ? (
+                ))
+            ) : (
               /* Empty State - No Events */
               <div
                 style={{
@@ -3663,9 +3467,7 @@ const FigmaMobile = () => {
                   Check back soon for exciting events!
                 </div>
               </div>
-            ) : (
-              /* Regular Event Cards - Small Cards */
-              processedEventCards.regularCards.map((card, index) => (
+            )}
                 <article
                   key={card.id}
                   className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
