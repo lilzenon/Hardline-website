@@ -236,7 +236,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
 
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
-      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant})`);
+      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
       return optimizedUrl;
     }
   }

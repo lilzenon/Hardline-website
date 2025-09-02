@@ -76,7 +76,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
 
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
-      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant})`);
+      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
       return optimizedUrl;
     }
   }
@@ -3640,7 +3640,9 @@ const FigmaMobile = () => {
                             console.log(`🖼️ Loading homepage image for "${card.title}":`, {
                               original: card.coverImage,
                               optimized: optimizedUrl,
-                              isDataUrl: card.coverImage?.startsWith('data:')
+                              isDataUrl: card.coverImage?.startsWith('data:'),
+                              isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
+                              hostname: window.location.hostname
                             });
                             return optimizedUrl;
                           })()}
@@ -3662,10 +3664,22 @@ const FigmaMobile = () => {
                             const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
                             console.log('🔍 Current attempt:', currentAttempt);
 
-                            // Enhanced fallback sequence
+                            // Enhanced fallback sequence with new image system support
                             if (currentAttempt === 0) {
-                              // First fallback: try with different image optimization
-                              if (card.coverImage) {
+                              // First fallback: try different variant for new image system
+                              if (card.coverImage && card.coverImage.includes('/api/images/serve/')) {
+                                const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
+                                if (uuidMatch) {
+                                  const uuid = uuidMatch[1];
+                                  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+                                  const fallbackUrl = `${dashboardDomain}/api/images/serve/${uuid}/small`;
+                                  console.log('🔄 Trying small variant for new image system:', fallbackUrl);
+                                  e.target.src = fallbackUrl;
+                                  e.target.dataset.fallbackAttempt = '1';
+                                  return;
+                                }
+                              } else if (card.coverImage) {
+                                // Old system fallback
                                 const fallbackUrl = card.coverImage.replace(/\?.*$/, '') + '?w=120&h=120&fit=crop&auto=format';
                                 console.log('🔄 Trying optimized fallback:', fallbackUrl);
                                 e.target.src = fallbackUrl;
@@ -3673,8 +3687,20 @@ const FigmaMobile = () => {
                                 return;
                               }
                             } else if (currentAttempt === 1) {
-                              // Second fallback: try original URL without optimization
-                              if (card.coverImage) {
+                              // Second fallback: try medium variant for new image system or original URL
+                              if (card.coverImage && card.coverImage.includes('/api/images/serve/')) {
+                                const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
+                                if (uuidMatch) {
+                                  const uuid = uuidMatch[1];
+                                  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+                                  const fallbackUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
+                                  console.log('🔄 Trying medium variant for new image system:', fallbackUrl);
+                                  e.target.src = fallbackUrl;
+                                  e.target.dataset.fallbackAttempt = '2';
+                                  return;
+                                }
+                              } else if (card.coverImage) {
+                                // Old system fallback
                                 console.log('🔄 Trying original URL without optimization');
                                 e.target.src = card.coverImage.replace(/\?.*$/, '');
                                 e.target.dataset.fallbackAttempt = '2';
