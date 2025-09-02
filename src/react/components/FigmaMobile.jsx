@@ -64,12 +64,13 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       // Build optimized URL using the dashboard domain - with local proxy for development
       const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
 
-      // Use appropriate variant based on width or default to medium for event cards
-      let variant = 'medium'; // Default for event cards (111px)
+      // Use appropriate variant based on width with optimized size selection
+      let variant = 'small'; // Default to small for event cards (111px display) - OPTIMIZED
       if (width) {
-        if (width <= 150) variant = 'small';
-        else if (width <= 300) variant = 'medium';
-        else if (width <= 600) variant = 'large';
+        if (width <= 150) variant = 'thumbnail';  // 150x150 for very small displays
+        else if (width <= 300) variant = 'small'; // 300x300 for event cards
+        else if (width <= 600) variant = 'medium'; // 600x600 for larger cards
+        else if (width <= 1200) variant = 'large'; // 1200x1200 for hero images
         else variant = 'large'; // Use large for anything bigger
       }
 
@@ -146,9 +147,10 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
 };
 
 const responsiveSizes = (context) => {
-  if (context === 'event') return [111, 222, 333];
-  if (context === 'hero') return [350, 700, 1050];
-  return [150, 300, 600];
+  // Optimized sizes based on actual display requirements and available variants
+  if (context === 'event') return [150, 300, 450]; // thumbnail, small, medium variants
+  if (context === 'hero') return [600, 900, 1200]; // medium, large, large variants
+  return [150, 300, 600]; // Default: thumbnail, small, medium variants
 };
 
 const getResponsiveSrcSet = (originalUrl, context = 'event') => {
@@ -285,15 +287,13 @@ const getDashboardImageUrl = (imageUrl) => {
       }
     }
 
-    // Handle fallback static file paths (from failed image processing)
+    // REMOVED: Temp storage fallback logic - all images should use persistent storage pipeline
+    // If we encounter temp storage paths, log error and return null to trigger proper fallback
     if (imageUrl.startsWith('/static/uploads/temp/') || imageUrl.startsWith('/static/uploads/')) {
-      console.warn('⚠️ Using fallback static file path (image processing may have failed):', imageUrl);
-      // Try to serve through static file middleware
-      if (window.location.hostname === 'localhost') {
-        return `/api/proxy${imageUrl}`; // Route through Vite proxy
-      } else {
-        return `https://admin.b2b.click${imageUrl}`;
-      }
+      console.error('🚨 CRITICAL: Temp storage path detected - image processing pipeline failed:', imageUrl);
+      console.error('🔧 This should not happen with the new persistent storage system');
+      console.error('📋 Please check image upload pipeline and database records');
+      return null; // Return null to trigger proper image fallback handling
     }
 
     // For other relative URLs, use proxy approach
@@ -1404,12 +1404,12 @@ const FigmaMobile = () => {
             document.head.appendChild(avifLink);
           }
 
-          // Preload WebP version (primary for Safari mobile)
+          // Preload optimized version for mobile (use small variant for better performance)
           const webpLink = document.createElement('link');
           webpLink.rel = 'preload';
           webpLink.as = 'image';
           webpLink.type = 'image/webp';
-          webpLink.href = getOptimizedImageUrl(event.coverImage, 120);
+          webpLink.href = getOptimizedImageUrl(event.coverImage, 300); // Use small variant (300x300)
           document.head.appendChild(webpLink);
 
           // Safari mobile: also preload original as fallback
@@ -1481,7 +1481,16 @@ const FigmaMobile = () => {
         if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
           // Valid image URL provided - convert to absolute dashboard URL
           coverImage = getDashboardImageUrl(event.cover_image.trim());
-          console.log(`✅ Using provided cover image for ${title}:`, coverImage);
+
+          // Validate that we're using the persistent storage pipeline
+          if (coverImage && coverImage.includes('/api/images/serve/')) {
+            console.log(`✅ Using persistent storage API for ${title}:`, coverImage);
+          } else if (coverImage && coverImage.includes('/static/uploads/temp/')) {
+            console.error(`🚨 CRITICAL: Temp storage detected for ${title}:`, coverImage);
+            console.error(`📋 Image processing pipeline failed - check database and file system`);
+          } else {
+            console.log(`✅ Using external image for ${title}:`, coverImage);
+          }
         }
 
         // 🎫 FIXED: Use external_ticket_url from dashboard "Ticket Link" field
@@ -1560,12 +1569,21 @@ const FigmaMobile = () => {
             }
           }
 
-          // Enhanced image handling with better fallbacks
+          // Enhanced image handling with persistent storage validation
           let coverImage = null;
           if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
             // Convert relative URLs to absolute dashboard URLs
             coverImage = getDashboardImageUrl(event.cover_image.trim());
-            console.log(`✅ Homepage event "${title}" has cover image:`, coverImage);
+
+            // Validate persistent storage pipeline usage
+            if (coverImage && coverImage.includes('/api/images/serve/')) {
+              console.log(`✅ Homepage event "${title}" using persistent storage:`, coverImage);
+            } else if (coverImage && coverImage.includes('/static/uploads/temp/')) {
+              console.error(`🚨 CRITICAL: Homepage event "${title}" using temp storage:`, coverImage);
+              console.error(`📋 Image processing pipeline failed - requires investigation`);
+            } else {
+              console.log(`✅ Homepage event "${title}" using external image:`, coverImage);
+            }
           } else {
             console.log(`⚠️ Homepage event "${title}" has no cover image:`, event.cover_image);
           }
@@ -3632,6 +3650,14 @@ const FigmaMobile = () => {
                             console.log('❌ Homepage event image failed to load:', card.title, 'URL:', e.target.src);
                             console.log('🔄 Image fallback sequence starting for:', e.target.src);
                             console.log('🔍 Original card.coverImage:', card.coverImage);
+
+                            // Enhanced error logging for persistent storage pipeline
+                            if (e.target.src.includes('/api/images/serve/')) {
+                              console.error('🚨 API image serving failed - check persistent storage pipeline');
+                              console.error('📋 UUID extraction:', e.target.src.match(/\/api\/images\/serve\/([a-f0-9-]{36})/));
+                            } else if (e.target.src.includes('/static/uploads/temp/')) {
+                              console.error('🚨 CRITICAL: Temp storage path in production - pipeline failure');
+                            }
 
                             const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
                             console.log('🔍 Current attempt:', currentAttempt);
