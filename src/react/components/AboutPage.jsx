@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AboutPageMobile from './AboutPageMobile';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
+import Masonry from './ui/Masonry';
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -34,8 +35,8 @@ const AboutPage = () => {
       const userAgent = navigator.userAgent || '';
       const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-      // Device is mobile if either condition is true
-      const deviceIsMobile = isMobileByWidth || isMobileByUA;
+      // Device is mobile if either condition is true OR viewport is <= 768px
+      const deviceIsMobile = isMobileByWidth || isMobileByUA || viewportWidth <= 768;
 
       setIsMobile(deviceIsMobile);
       setIsLoading(false);
@@ -392,13 +393,13 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             style={{
               width: '100%',
               maxWidth: '800px',
-              margin: '64px auto 0 auto',
+              margin: '48px auto 0 auto',
               background: 'rgba(22, 22, 22, 0.8)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               border: '1px solid rgba(56, 56, 56, 0.3)',
               borderRadius: '24px',
-              padding: '48px',
+              padding: '40px',
               boxSizing: 'border-box'
             }}
           >
@@ -435,6 +436,92 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 )}
               </>
             )}
+          </div>
+
+          {/* Gallery Section - Masonry Layout */}
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '1000px',
+              margin: '48px auto 0 auto',
+              padding: '0 16px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div
+              style={{
+                color: '#FFFFFF',
+                fontFamily: 'Inter',
+                fontWeight: '600',
+                fontSize: '32px',
+                lineHeight: '1.3em',
+                marginBottom: '24px',
+                textAlign: 'center'
+              }}
+            >
+              Gallery
+            </div>
+
+            <Masonry
+              items={[
+                {
+                  id: "1",
+                  img: "https://picsum.photos/id/1015/600/900",
+                  url: "https://example.com/one",
+                  height: 400,
+                },
+                {
+                  id: "2",
+                  img: "https://picsum.photos/id/1011/600/750",
+                  url: "https://example.com/two",
+                  height: 250,
+                },
+                {
+                  id: "3",
+                  img: "https://picsum.photos/id/1020/600/800",
+                  url: "https://example.com/three",
+                  height: 300,
+                },
+                {
+                  id: "4",
+                  img: "https://picsum.photos/id/1025/600/700",
+                  url: "https://example.com/four",
+                  height: 350,
+                },
+                {
+                  id: "5",
+                  img: "https://picsum.photos/id/1035/600/650",
+                  url: "https://example.com/five",
+                  height: 280,
+                },
+                {
+                  id: "6",
+                  img: "https://picsum.photos/id/1040/600/850",
+                  url: "https://example.com/six",
+                  height: 420,
+                },
+                {
+                  id: "7",
+                  img: "https://picsum.photos/id/1050/600/600",
+                  url: "https://example.com/seven",
+                  height: 320,
+                },
+                {
+                  id: "8",
+                  img: "https://picsum.photos/id/1060/600/750",
+                  url: "https://example.com/eight",
+                  height: 380,
+                }
+              ]}
+              ease="power3.out"
+              duration={0.6}
+              stagger={0.05}
+              animateFrom="bottom"
+              scaleOnHover={true}
+              hoverScale={0.95}
+              blurToFocus={true}
+              colorShiftOnHover={false}
+            />
           </div>
         </div>
       </div>

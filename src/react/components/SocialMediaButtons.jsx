@@ -190,8 +190,8 @@ const SocialMediaButtons = () => {
             flexWrap: 'nowrap',
             justifyContent: 'space-between', // Match main container distribution
             alignItems: 'center',
-            width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
-            maxWidth: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
+            width: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
+            maxWidth: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
             padding: '0',
             boxSizing: 'border-box'
           }}
@@ -202,9 +202,11 @@ const SocialMediaButtons = () => {
               key={index}
               style={{
                 width: 'calc((100% - 30px) / 4)', // Match the actual button sizing
-                height: 'clamp(70px, 20vw, 85px)', // Match the actual button height
+                height: 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
                 minWidth: '70px',
                 maxWidth: '85px',
+                minHeight: '70px', // Minimum height to match width
+                maxHeight: '85px', // Maximum height to match width
                 borderRadius: '20px',
                 background: 'rgba(22, 22, 22, 0.4)',
                 backdropFilter: 'blur(12px)',
@@ -259,8 +261,8 @@ const SocialMediaButtons = () => {
           flexWrap: 'nowrap', // Prevent stacking
           justifyContent: 'space-between', // Use space-between for better edge alignment
           alignItems: 'center',
-          width: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
-          maxWidth: 'min(350px, calc(100vw - 60px))', // Adjusted to match hero card width exactly
+          width: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
+          maxWidth: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
           padding: '0', // No padding to maximize space
           boxSizing: 'border-box'
         }}
@@ -279,9 +281,11 @@ const SocialMediaButtons = () => {
               style={{
                 // Calculate button size to fill container width properly (4 buttons with gaps)
                 width: 'calc((100% - 30px) / 4)', // Divide available width by 4 buttons, accounting for gaps
-                height: 'clamp(70px, 20vw, 85px)', // Responsive height that scales well
+                height: 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
                 minWidth: '70px', // Minimum for usability
                 maxWidth: '85px', // Maximum to prevent oversizing
+                minHeight: '70px', // Minimum height to match width
+                maxHeight: '85px', // Maximum height to match width
                 borderRadius: '20px', // Optimized radius
                 background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect

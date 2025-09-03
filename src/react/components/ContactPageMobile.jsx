@@ -1,11 +1,35 @@
-import React from 'react';
-import MobileNavigation from './MobileNavigation';
+import React, { useState, useRef } from 'react';
+import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
+import SocialMediaButtons from './SocialMediaButtons';
 
 /**
  * Mobile-only Contact page component with shared navigation
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const ContactPageMobile = () => {
+  const [showMenu, setShowMenu] = useState(false);
+  const contentRef = useRef(null);
+
+  // Optimized scroll state for dynamic navigation
+  const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
+    threshold: 20,
+    throttleMs: 16 // 60fps for smooth navigation
+  });
+
+  // Toggle mobile menu
+  const toggleMenu = () => {
+    setShowMenu(!showMenu);
+  };
+
+  // Handle navigation
+  const handleNavigation = (path) => {
+    if (window.navigateWithTransition) {
+      window.navigateWithTransition(path);
+    } else {
+      window.location.href = path;
+    }
+    setShowMenu(false);
+  };
 
   // Handle contact actions
   const handleEmailClick = () => {

@@ -219,6 +219,7 @@ export const useSEO = () => {
  */
 export const SEODebug = () => {
   const { seoSettings, maintenanceStatus, lastUpdated, isLoading } = useSEO();
+  const [isVisible, setIsVisible] = useState(true);
 
   // Only show in development
   if (process.env.NODE_ENV === 'production') {
@@ -226,21 +227,56 @@ export const SEODebug = () => {
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: '10px',
-        right: '10px',
-        background: 'rgba(0, 0, 0, 0.9)',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '8px',
-        fontSize: '12px',
-        maxWidth: '300px',
-        zIndex: 9999,
-        fontFamily: 'monospace'
-      }}
-    >
+    <>
+      {/* Toggle Button */}
+      <button
+        onClick={() => setIsVisible(!isVisible)}
+        style={{
+          position: 'fixed',
+          top: '10px',
+          right: isVisible ? '320px' : '10px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          borderRadius: '6px',
+          padding: '8px 12px',
+          fontSize: '12px',
+          fontFamily: 'monospace',
+          cursor: 'pointer',
+          zIndex: 10000,
+          transition: 'all 0.3s ease',
+          backdropFilter: 'blur(10px)'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'rgba(0, 0, 0, 0.8)';
+        }}
+      >
+        {isVisible ? '🔍 Hide' : '🔍 SEO'}
+      </button>
+
+      {/* Debug Panel */}
+      {isVisible && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '10px',
+            right: '10px',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: 'white',
+            padding: '10px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            maxWidth: '300px',
+            zIndex: 9999,
+            fontFamily: 'monospace',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            transition: 'all 0.3s ease'
+          }}
+        >
       <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
         🔍 SEO Debug {isLoading && '(Loading...)'}
       </div>
@@ -270,7 +306,9 @@ export const SEODebug = () => {
           Last updated: {lastUpdated.toLocaleTimeString()}
         </div>
       )}
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 

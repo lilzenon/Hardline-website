@@ -647,6 +647,7 @@ const FigmaMobile = () => {
 
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
+  const [sectionsAnimated, setSectionsAnimated] = useState(false);
 
   // Image expansion state
   const [expandedImage, setExpandedImage] = useState(null);
@@ -1298,10 +1299,14 @@ const FigmaMobile = () => {
       const endTime = performance.now();
       console.log(`🚀 Mobile homepage data loaded in ${(endTime - startTime).toFixed(2)}ms`);
 
-      // Trigger card animations after data loads
+      // Trigger staggered animations for modern top-to-bottom cascade
       setTimeout(() => {
         setCardsAnimated(true);
-      }, 200); // Small delay for smooth transition
+      }, 100); // Reduced delay for snappier feel
+
+      setTimeout(() => {
+        setSectionsAnimated(true);
+      }, 200); // Stagger sections for smooth cascade
     });
   }, [fetchHomepageData]);
 
@@ -1431,7 +1436,7 @@ const FigmaMobile = () => {
 
   // Featured events processing for mobile (hero cards using original styling)
   const featuredEventCards = useMemo(() => {
-    return featuredEvents.map((event, index) => {
+    let processedEvents = featuredEvents.map((event, index) => {
       try {
         // Validate and parse event date
         let eventDate = new Date();
@@ -1516,14 +1521,33 @@ const FigmaMobile = () => {
         return null;
       }
     }).filter(Boolean);
-  }, [featuredEvents]);
+
+    // Sort featured events chronologically (earliest to latest)
+    processedEvents.sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    // Apply event filter based on toggle state
+    if (!showAllEvents) {
+      // Show only past events
+      const now = new Date();
+      processedEvents = processedEvents.filter(event => {
+        const eventDate = new Date(event.eventDate);
+        return eventDate < now;
+      });
+    }
+
+    return processedEvents;
+  }, [featuredEvents, showAllEvents]);
 
   // Homepage events processing for mobile (small cards)
   const homepageEventCards = useMemo(() => {
     // Filter out events that are already featured to avoid duplicates
     const featuredEventIds = new Set(featuredEvents.map(event => event.id));
 
-    return homepageEvents
+    let processedEvents = homepageEvents
       .filter(event => !featuredEventIds.has(event.id)) // Exclude featured events
       .map((event, index) => {
         try {
@@ -1612,7 +1636,26 @@ const FigmaMobile = () => {
         }
       })
       .filter(Boolean);
-  }, [homepageEvents, featuredEvents]);
+
+    // Sort homepage events chronologically (earliest to latest)
+    processedEvents.sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    // Apply event filter based on toggle state
+    if (!showAllEvents) {
+      // Show only past events
+      const now = new Date();
+      processedEvents = processedEvents.filter(event => {
+        const eventDate = new Date(event.eventDate);
+        return eventDate < now;
+      });
+    }
+
+    return processedEvents;
+  }, [homepageEvents, featuredEvents, showAllEvents]);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -1729,11 +1772,11 @@ const FigmaMobile = () => {
     const baseSpacing = parseInt(drawerHeight.replace('px', ''));
 
     if (isRealMobileDevice) {
-      // Real mobile device: Reduced spacing for better UX
-      return `calc(${drawerHeight} + 40px)`;
+      // Real mobile device: Drastically reduced spacing while keeping social buttons visible
+      return `calc(${drawerHeight} + 20px)`;
     } else {
       // Desktop browser mobile simulation: Minimal spacing
-      const reducedSpacing = Math.max(30, baseSpacing * 0.4); // Minimum 30px, or 40% of drawer height
+      const reducedSpacing = Math.max(15, baseSpacing * 0.2); // Minimum 15px, or 20% of drawer height
       return `calc(${drawerHeight} + ${reducedSpacing}px)`;
     }
   }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
@@ -2429,30 +2472,34 @@ const FigmaMobile = () => {
             transform: scale(1.02);
           }
 
-          /* Optimized fade-in animation - scroll-friendly */
-          @keyframes optimizedFadeIn {
+          /* Modern spring animation for cards - quick and engaging */
+          @keyframes modernCardSpring {
             0% {
               opacity: 0;
-              transform: translate3d(0, 8px, 0); /* Reduced movement to prevent scroll interference */
+              transform: translate3d(0, 20px, 0) scale(0.95);
+            }
+            60% {
+              opacity: 1;
+              transform: translate3d(0, -2px, 0) scale(1.01);
             }
             100% {
               opacity: 1;
-              transform: translate3d(0, 0, 0);
+              transform: translate3d(0, 0, 0) scale(1);
             }
           }
 
           .event-card-spring {
-            animation: optimizedFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; /* Faster, smoother animation */
-            will-change: auto; /* Let browser decide to prevent scroll conflicts */
+            animation: modernCardSpring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; /* Modern spring animation */
+            will-change: transform, opacity; /* Optimize for transform and opacity changes */
             backface-visibility: hidden;
-            transform-style: flat; /* Reduce 3D transforms that can cause scroll issues */
+            transform-style: flat;
             -webkit-font-smoothing: antialiased;
-            contain: layout style; /* Contain layout changes to prevent scroll reflow */
+            contain: layout style;
           }
 
           .event-card-hidden {
             opacity: 0;
-            transform: translate3d(0, 8px, 0); /* Match reduced movement */
+            transform: translate3d(0, 20px, 0) scale(0.95); /* More dramatic initial state */
             backface-visibility: hidden;
           }
 
@@ -2697,266 +2744,59 @@ const FigmaMobile = () => {
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '5px 0px 40px 0px', // Reduced top padding from 20px to 5px
+            padding: '2px 0px 40px 0px', // Drastically reduced top padding for tighter layout
             paddingBottom: getDynamicBottomSpacing(),
             boxSizing: 'border-box',
             overflow: 'auto',
             overflowX: 'hidden',
+            // Enhanced iOS Safari scrolling optimizations
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
+            WebkitOverscrollBehavior: 'contain',
             scrollBehavior: 'smooth',
-            // Remove transition that can interfere with scrolling
+            // Hardware acceleration for smooth scrolling
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'scroll-position',
+            // Optimize touch interactions
             touchAction: 'pan-y', // Allow only vertical scrolling
-            scrollSnapType: 'none' // Disable scroll snapping that can cause jitter
+            WebkitTouchCallout: 'none',
+            WebkitUserSelect: 'none',
+            // Disable scroll snapping that can cause jitter
+            scrollSnapType: 'none',
+            WebkitScrollSnapType: 'none',
+            // Prevent momentum scrolling issues
+            WebkitMomentumScrolling: 'touch',
+            // Optimize rendering
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            perspective: '1000px',
+            WebkitPerspective: '1000px'
           }}
         >
-          {/* Hero Video Section */}
-          <section
-            aria-labelledby="hero-video-title"
-            style={{ width: '100%', marginTop: '2px', marginBottom: '20px' }} // Reduced to almost nothing
-          >
-            <h1
-              id="hero-video-title"
-              style={{
-                position: 'absolute',
-                left: '-9999px',
-                width: '1px',
-                height: '1px',
-                overflow: 'hidden'
-              }}
-            >
-              BOUNCE2BOUNCE - Exclusive Live Music Events and Artist Performances
-            </h1>
-
-            <article
-              style={{
-                width: 'min(350px, calc(100vw - 50px))', // Adjusted to account for container padding (25px each side)
-                height: '200px', // Mobile-optimized height
-                position: 'relative',
-                flexShrink: 0,
-                margin: '0 auto', // Center the video
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'scale(1)',
-                borderRadius: '20px', // Slightly smaller radius for mobile
-                overflow: 'hidden'
-              }}
-              aria-label="Henry Fong live performance video"
-            >
-            {/* Video background container */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '0px',
-                top: '0px',
-                width: '100%',
-                height: '100%',
-                borderRadius: '20px',
-                overflow: 'hidden'
-              }}
-            >
-              {/* YouTube iframe wrapper */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '100%',
-                  height: '100%',
-                  overflow: 'hidden'
-                }}
-              >
-
-
-                {showYoutubeThumbnail ? (
-                  // Show thumbnail preloader for faster loading
-                  YouTubeThumbnail
-                ) : shouldLoadYoutube ? (
-                  // Show actual YouTube iframe
-                  <iframe
-                    src={buildYouTubeURL}
-                    title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture; web-share; fullscreen"
-                    allowFullScreen
-                    loading="lazy"
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '100%',
-                      height: '100%',
-                      transform: 'translate(-50%, -50%) scale(1.5)',
-                      pointerEvents: 'none',
-                      border: 'none',
-                      opacity: 1
-                    }}
-                  />
-                ) : (
-                  // Loading state (rarely shown)
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '100%',
-                      height: '100%',
-                      transform: 'translate(-50%, -50%)',
-                      background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                      border: 'none'
-                    }}
-                  />
-                )}
-              </div>
-
-              {/* Gradient overlay */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '0',
-                  left: '0',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
-                  borderRadius: '20px',
-                  zIndex: 1
-                }}
-              />
-            </div>
-
-            {/* Video text overlay - Non-intrusive */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '0px',
-                bottom: '16px', // Position from bottom
-                display: 'flex',
-                width: '100%',
-                height: '40px',
-                padding: '8px 16px',
-                justifyContent: 'space-between',
-                alignItems: 'flex-end',
-                gap: '12px',
-                zIndex: 2,
-                boxSizing: 'border-box',
-                pointerEvents: 'none' // Allow clicks to pass through to video
-              }}
-            >
-              {/* Left - Title and subtitle */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-end',
-                  gap: '2px',
-                  flex: '1'
-                }}
-              >
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '18px', // Mobile-optimized size
-                    fontWeight: '800',
-                    lineHeight: '1.1',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  Watch on YouTube
-                </div>
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '9px', // Mobile-optimized size
-                    fontWeight: '200',
-                    lineHeight: 'normal'
-                  }}
-                >
-                  Henry Fong full set live
-                </div>
-              </div>
-
-              {/* Right - CTA Button */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
-                }}
-                style={{
-                  display: 'flex',
-                  minWidth: '90px', // Mobile-optimized width
-                  height: '36px', // Mobile-optimized height
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  pointerEvents: 'auto', // Re-enable clicks for the button only
-                  borderRadius: '18px',
-                  background: 'rgba(38, 38, 38, 0.80)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  transform: 'scale(1)',
-                  boxSizing: 'border-box'
-                }}
-                onTouchStart={(e) => {
-                  e.stopPropagation();
-                  e.currentTarget.style.transform = 'scale(0.95)';
-                  e.currentTarget.style.background = 'rgba(58, 58, 58, 0.90)';
-                }}
-                onTouchEnd={(e) => {
-                  e.stopPropagation();
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
-                }}
-              >
-                <span
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '11px', // Mobile-optimized size
-                    fontWeight: '600',
-                    lineHeight: 'normal'
-                  }}
-                >
-                  Watch now
-                </span>
-              </div>
-            </div>
-          </article>
-          </section>
-
-          {/* Social Media Buttons Section */}
-          <section
-            style={{
-              width: '100%',
-              padding: '0', // Remove all padding
-              margin: '0', // Remove all margin
-              boxSizing: 'border-box',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-          >
-            <SocialMediaButtons />
-          </section>
-
-          {/* Events Section */}
+          {/* Events Section - Moved to top */}
           <section
             aria-labelledby="events-section-title"
             style={{
               width: '100%',
-              marginTop: '20px' // Add spacing between social buttons and events
+              marginTop: '2px', // Minimal top margin
+              marginBottom: '4px', // Drastically reduced spacing after events
+              // Modern load-in animation
+              opacity: sectionsAnimated ? 1 : 0,
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: '0ms' // First section loads immediately
             }}
           >
             {/* Events Title with Filter Toggle */}
             <div
               style={{
                 display: 'flex',
-                width: 'min(350px, calc(100vw - 50px))', // Adjusted to match hero card width exactly (25px each side)
+                width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '20px',
-                margin: '0 auto 20px auto', // Center the container
+                marginBottom: '8px', // Drastically reduced spacing
+                margin: '0 auto 8px auto', // Center the container with minimal spacing
                 boxSizing: 'border-box'
               }}
             >
@@ -2965,7 +2805,7 @@ const FigmaMobile = () => {
                 style={{
                   color: '#FFF',
                   fontFamily: 'Inter',
-                  fontSize: '28px', // Scaled up from 24px for mobile
+                  fontSize: '32px', // Increased for better visual balance with 34px toggle button
                   fontWeight: '800',
                   lineHeight: 'normal',
                   margin: 0,
@@ -3119,11 +2959,15 @@ const FigmaMobile = () => {
               style={{
                 width: '100%',
                 padding: '0', // Remove padding to let inner element control width
-                marginBottom: '20px',
+                marginBottom: '6px', // Slightly increased spacing between hero cards for better readability
                 boxSizing: 'border-box',
                 display: 'flex',
                 justifyContent: 'center', // Center the hero card
-                animationDelay: cardsAnimated ? `${heroIndex * 0.1}s` : '0s' // Stagger animations
+                // Modern staggered load-in animation
+                opacity: cardsAnimated ? 1 : 0,
+                transform: cardsAnimated ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
+                transition: 'all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                transitionDelay: cardsAnimated ? `${heroIndex * 80}ms` : '0s' // Quick stagger for modern feel
               }}
             >
             <div
@@ -3133,8 +2977,8 @@ const FigmaMobile = () => {
                 handleImageExpand(featuredEvent, imgElement);
               }}
               style={{
-                width: 'min(350px, calc(100vw - 50px))', // Adjusted to ensure consistent width across all elements (25px each side)
-                height: 'min(350px, calc(100vw - 50px))', // Maintain square aspect ratio
+                width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
+                height: 'min(324px, calc(100vw - 36px))', // Maintain square aspect ratio
                 position: 'relative',
                 margin: '0 auto', // Center the hero
                 cursor: 'pointer',
@@ -3263,11 +3107,11 @@ const FigmaMobile = () => {
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  bottom: '16px', // More space from bottom to prevent button cutoff
+                  bottom: '8px', // Positioned lower in the card for better visual balance
                   display: 'flex',
                   width: '100%',
                   justifyContent: 'space-between',
-                  padding: '0px 16px',
+                  padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
                   gap: '12px', // Reduced gap to make more room for wider button
                   boxSizing: 'border-box',
                   zIndex: 3,
@@ -3281,7 +3125,7 @@ const FigmaMobile = () => {
                     padding: '4px 0px',
                     flexDirection: 'column',
                     minWidth: 0,
-                    maxWidth: 'calc(100% - 122px)' // Reserve space for wider button (110px + 12px gap)
+                    maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
                   }}
                 >
                   {/* Date row - Enhanced styling */}
@@ -3358,59 +3202,72 @@ const FigmaMobile = () => {
                   </div>
                 </div>
 
-                {/* CTA Button - Wider and better positioned */}
+                {/* CTA Button - Enhanced styling and positioning */}
                 <div
                   style={{
                     display: 'flex',
-                    width: '110px', // Increased from 90px for better button size
-                    height: '40px', // Increased from 36px for better touch target
-                    padding: '2px', // Reduced padding to maximize button size
+                    width: '120px', // Increased width for better presence
+                    height: '44px', // Increased height for better touch target
+                    padding: '2px',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    flexShrink: 0, // Prevent button from shrinking
+                    flexShrink: 0,
                     zIndex: 3
                   }}
                 >
                   <div
                     style={{
                       display: 'flex',
-                      width: '106px', // Match container width minus padding
-                      height: '36px', // Good height for mobile touch
+                      width: '116px', // Match new container width minus padding
+                      height: '40px', // Increased height for better presence
                       justifyContent: 'center',
                       alignItems: 'center',
-                      gap: '6px', // Slightly reduced gap for better fit
-                      borderRadius: '20px', // More modern, less rounded
-                      background: 'rgba(56, 56, 56, 0.85)', // Slightly more opaque for better visibility
-                      border: '1px solid rgba(255, 255, 255, 0.15)', // Subtle border for definition
+                      gap: '8px',
+                      borderRadius: '22px', // More rounded for modern look
+                      background: 'rgba(15, 15, 15, 0.95)', // Darker, more opaque glassmorphism
+                      backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
+                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)', // More visible border
                       cursor: 'pointer',
-                      transition: 'all 0.3s ease',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       transform: 'scale(1)',
-                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)' // Add shadow for depth
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow with inset highlight
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation();
-                      e.target.style.transform = 'scale(0.96)';
-                      e.target.style.background = 'rgba(76, 76, 76, 0.90)';
-                      e.target.style.boxShadow = '0 1px 4px rgba(0, 0, 0, 0.4)';
+                      e.target.style.transform = 'scale(0.95)';
+                      e.target.style.background = 'rgba(35, 35, 35, 0.98)';
+                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
                     }}
                     onTouchEnd={(e) => {
                       e.stopPropagation();
                       e.target.style.transform = 'scale(1)';
-                      e.target.style.background = 'rgba(56, 56, 56, 0.85)';
-                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
+                      e.target.style.background = 'rgba(15, 15, 15, 0.95)';
+                      e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (featuredEvent.isRealEvent && featuredEvent.hasTicketLink) {
+                        console.log(`🎫 Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
+                        window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
+                      }
                     }}
                   >
                     <span
                       style={{
                         color: '#FFF',
                         fontFamily: 'Inter',
-                        fontSize: '14px', // Fixed size for mobile
-                        fontWeight: '400',
+                        fontSize: '15px', // Slightly larger for better readability
+                        fontWeight: '500', // Medium weight for better presence
                         lineHeight: 'normal',
-                        pointerEvents: 'none'
+                        pointerEvents: 'none',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
                       }}
                     >
-                      Events
+                      {featuredEvent.isRealEvent && featuredEvent.hasTicketLink ?
+                        (featuredEvent.buttonText || 'Get Tickets') :
+                        'View Event'
+                      }
                     </span>
                   </div>
                 </div>
@@ -3469,8 +3326,8 @@ const FigmaMobile = () => {
             >
               <div
                 style={{
-                  width: 'min(350px, calc(100vw - 50px))',
-                  height: 'min(350px, calc(100vw - 50px))',
+                  width: 'min(324px, calc(100vw - 36px))',
+                  height: 'min(324px, calc(100vw - 36px))',
                   position: 'relative',
                   margin: '0 auto',
                   borderRadius: '20px',
@@ -3530,14 +3387,14 @@ const FigmaMobile = () => {
             aria-label="Upcoming live music events"
             style={{
               display: 'flex',
-              width: 'min(350px, calc(100vw - 50px))', // Adjusted to match hero card width exactly (25px each side)
+              width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'stretch',
-              gap: '8px', // Reduced gap for tighter spacing
+              gap: '4px', // Slightly increased gap for better card separation
               flexShrink: 0,
               margin: '0 auto', // Center the container
-              marginBottom: '20px',
+              marginBottom: '4px', // Slightly increased spacing between small event cards for better readability
               boxSizing: 'border-box',
               minHeight: 'auto',
               overflow: 'visible',
@@ -3563,9 +3420,9 @@ const FigmaMobile = () => {
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                       position: 'relative',
-                      margin: '0 0 8px 0', // Reduced margin for tighter spacing
+                      margin: '0 0 4px 0', // Slightly increased margin for better card separation
                       padding: '2px', // Reduced to 2px maximum for compact design
-                      animationDelay: cardsAnimated ? `${0.1 + (index * 0.05)}s` : '0s',
+                      animationDelay: cardsAnimated ? `${200 + (index * 60)}ms` : '0s', // Stagger after hero cards for top-to-bottom flow
                       overflow: 'hidden',
                       boxSizing: 'border-box',
                       isolation: 'isolate',
@@ -3981,6 +3838,260 @@ const FigmaMobile = () => {
 
           </div>
           </section>
+
+          {/* Hero Video Section - Moved after Events */}
+          <section
+            aria-labelledby="hero-video-title"
+            style={{
+              width: '100%',
+              marginTop: '4px',
+              marginBottom: '4px', // Consistent 4px spacing above and below
+              // Modern load-in animation
+              opacity: sectionsAnimated ? 1 : 0,
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: '300ms' // Second section in cascade
+            }}
+          >
+            <h1
+              id="hero-video-title"
+              style={{
+                position: 'absolute',
+                left: '-9999px',
+                width: '1px',
+                height: '1px',
+                overflow: 'hidden'
+              }}
+            >
+              BOUNCE2BOUNCE - Exclusive Live Music Events and Artist Performances
+            </h1>
+
+            <article
+              style={{
+                width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
+                height: '200px', // Mobile-optimized height
+                position: 'relative',
+                flexShrink: 0,
+                margin: '0 auto', // Center the video
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: 'scale(1)',
+                borderRadius: '20px', // Slightly smaller radius for mobile
+                overflow: 'hidden'
+              }}
+              aria-label="Henry Fong live performance video"
+            >
+            {/* Video background container */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '0px',
+                top: '0px',
+                width: '100%',
+                height: '100%',
+                borderRadius: '20px',
+                overflow: 'hidden'
+              }}
+            >
+              {/* YouTube iframe wrapper */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden'
+                }}
+              >
+
+                {showYoutubeThumbnail ? (
+                  // Show thumbnail preloader for faster loading
+                  YouTubeThumbnail
+                ) : shouldLoadYoutube ? (
+                  // Show actual YouTube iframe
+                  <iframe
+                    src={buildYouTubeURL}
+                    title="Henry Fong YouTube Video - Adaptive Quality"
+                    allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture; web-share; fullscreen"
+                    allowFullScreen
+                    loading="lazy"
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '100%',
+                      height: '100%',
+                      transform: 'translate(-50%, -50%) scale(1.5)',
+                      pointerEvents: 'none',
+                      border: 'none',
+                      opacity: 1
+                    }}
+                  />
+                ) : (
+                  // Loading state (rarely shown)
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      width: '100%',
+                      height: '100%',
+                      transform: 'translate(-50%, -50%)',
+                      background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                      border: 'none'
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Gradient overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
+                  borderRadius: '20px',
+                  zIndex: 1
+                }}
+              />
+            </div>
+
+            {/* Video text overlay - Non-intrusive */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '0px',
+                bottom: '16px', // Position from bottom
+                display: 'flex',
+                width: '100%',
+                height: '40px',
+                padding: '8px 16px',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                gap: '12px',
+                zIndex: 2,
+                boxSizing: 'border-box',
+                pointerEvents: 'none' // Allow clicks to pass through to video
+              }}
+            >
+              {/* Left - Title and subtitle */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  gap: '2px',
+                  flex: '1'
+                }}
+              >
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '18px', // Mobile-optimized size
+                    fontWeight: '800',
+                    lineHeight: '1.1',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Watch on YouTube
+                </div>
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '9px', // Mobile-optimized size
+                    fontWeight: '200',
+                    lineHeight: 'normal'
+                  }}
+                >
+                  Henry Fong full set live
+                </div>
+              </div>
+
+              {/* Right - CTA Button */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                }}
+                style={{
+                  display: 'flex',
+                  minWidth: '90px', // Mobile-optimized width
+                  height: '36px', // Mobile-optimized height
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  pointerEvents: 'auto', // Re-enable clicks for the button only
+                  borderRadius: '18px',
+                  background: 'rgba(38, 38, 38, 0.80)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                  boxSizing: 'border-box'
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                  e.currentTarget.style.background = 'rgba(58, 58, 58, 0.90)';
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
+                }}
+              >
+                <span
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '11px', // Mobile-optimized size
+                    fontWeight: '600',
+                    lineHeight: 'normal'
+                  }}
+                >
+                  Watch now
+                </span>
+              </div>
+            </div>
+          </article>
+          </section>
+
+          {/* Social Media Buttons Section - Moved after YouTube */}
+          <section
+            style={{
+              width: '100%',
+              padding: '0',
+              margin: '0',
+              marginTop: '8px', // Increased spacing between YouTube video and social media buttons
+              boxSizing: 'border-box',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              // Modern load-in animation
+              opacity: sectionsAnimated ? 1 : 0,
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
+              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: '450ms' // Third section in cascade
+            }}
+          >
+            <div
+              style={{
+                width: 'min(324px, calc(100vw - 36px))', // Match exact width of other content elements
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                margin: '0 auto' // Center the container
+              }}
+            >
+              <SocialMediaButtons />
+            </div>
+          </section>
         </div>
 
         {/* Footer Section */}
@@ -4020,7 +4131,11 @@ const FigmaMobile = () => {
           transition: 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.2s ease-out',
           willChange: 'transform, height',
           backfaceVisibility: 'hidden',
-          zIndex: 1000
+          zIndex: 1000,
+          // Ensure glassmorphism transparency in all states
+          background: 'rgba(21, 21, 21, 0.8)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
         }}
         onClick={handleDrawerClick}
         onTouchStart={handleTouchStart}
@@ -4187,7 +4302,7 @@ const FigmaMobile = () => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Share Button - Consistent styling with View Event button */}
+          {/* Share Button - Modern glassmorphism styling */}
           <button
             onClick={() => {
               if (navigator.share) {
@@ -4203,8 +4318,10 @@ const FigmaMobile = () => {
               }
             }}
             style={{
-              background: 'rgba(22, 22, 22, 0.8)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: 'rgba(15, 15, 15, 0.95)', // Dark glassmorphism to match homepage
+              backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.2)', // Subtle white border
               borderRadius: '25px',
               padding: '12px 24px',
               color: '#FFFFFF',
@@ -4212,33 +4329,37 @@ const FigmaMobile = () => {
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              backdropFilter: 'blur(10px)',
-              WebkitBackdropFilter: 'blur(10px)',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth modern transition
               minWidth: '80px',
-              height: '44px'
+              height: '44px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)', // Enhanced shadow with inset highlight
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.background = 'rgba(60, 60, 60, 0.8)';
+              e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
               e.currentTarget.style.transform = 'scale(0.95)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
             }}
             onTouchEnd={(e) => {
-              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.8)';
+              e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
               e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(60, 60, 60, 0.8)';
+              e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
               e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.8)';
+              e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
               e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
             }}
           >
             Share
           </button>
 
-          {/* View Event Button - Styled to match Share button */}
+          {/* View Event Button - Modern glassmorphism styling */}
           {expandedImage.isRealEvent && expandedImage.hasTicketLink ? (
             <button
               onClick={() => {
@@ -4247,8 +4368,10 @@ const FigmaMobile = () => {
                 handleImageCollapse();
               }}
               style={{
-                background: 'rgba(49, 157, 255, 0.9)',
-                border: '1px solid rgba(49, 157, 255, 0.3)',
+                background: 'rgba(15, 15, 15, 0.95)', // Dark glassmorphism to match homepage
+                backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.2)', // Subtle white border
                 borderRadius: '25px',
                 padding: '12px 24px',
                 color: '#FFFFFF',
@@ -4256,27 +4379,31 @@ const FigmaMobile = () => {
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth modern transition
                 minWidth: '100px',
-                height: '44px'
+                height: '44px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)', // Enhanced shadow with inset highlight
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
               }}
               onTouchStart={(e) => {
-                e.currentTarget.style.background = 'rgba(49, 157, 255, 1)';
+                e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
                 e.currentTarget.style.transform = 'scale(0.95)';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
               }}
               onTouchEnd={(e) => {
-                e.currentTarget.style.background = 'rgba(49, 157, 255, 0.9)';
+                e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
                 e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(49, 157, 255, 1)';
+                e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
                 e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(49, 157, 255, 0.9)';
+                e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
                 e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
               }}
             >
               {expandedImage.buttonText || 'View Event'}
@@ -4289,26 +4416,33 @@ const FigmaMobile = () => {
       </div>
     )}
 
-    {/* Mobile Navigation Overlay */}
-    {showMenu && (
-      <div
-        style={{
-          position: 'fixed',
-          top: '0',
-          left: '0',
-          width: '100vw',
-          height: '100vh',
-          background: 'rgba(0, 0, 0, 0.95)',
-          zIndex: 1000,
-          display: 'flex',
-          flexDirection: 'column',
-          opacity: showMenu ? 1 : 0,
-          visibility: showMenu ? 'visible' : 'hidden',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)'
-        }}
-        onClick={() => setShowMenu(false)}
-      >
+    {/* Mobile Navigation Overlay - Always rendered to prevent DOM manipulation issues */}
+    <div
+      style={{
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(0, 0, 0, 0.95)',
+        zIndex: showMenu ? 1000 : -1,
+        display: 'flex',
+        flexDirection: 'column',
+        opacity: showMenu ? 1 : 0,
+        visibility: showMenu ? 'visible' : 'hidden',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)',
+        // Hardware acceleration for smooth overlay animations
+        transform: 'translateZ(0)',
+        WebkitTransform: 'translateZ(0)',
+        willChange: 'opacity, visibility, backdrop-filter',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        // Prevent pointer events when hidden
+        pointerEvents: showMenu ? 'auto' : 'none'
+      }}
+      onClick={() => setShowMenu(false)}
+    >
         {/* Navigation Bar in Menu */}
         <div
           style={{
@@ -4400,22 +4534,45 @@ const FigmaMobile = () => {
           />
         </div>
 
+        {/* Social Media Buttons in Navigation */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '10px 25px 0px 25px', // Reduced top padding
+            transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
+            opacity: showMenu ? 1 : 0,
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionDelay: showMenu ? '0.15s' : '0s',
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <SocialMediaButtons />
+        </div>
+
         {/* Navigation Menu Items */}
         <div
           style={{
-            flex: 1,
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
             alignItems: 'center',
             maxWidth: '430px',
             margin: '0 auto',
-            padding: '40px 25px',
+            padding: '8px 25px 40px 25px', // Tight spacing after social media buttons
             gap: '24px',
-            transform: showMenu ? 'translateY(0)' : 'translateY(-20px)',
+            // Enhanced animation with hardware acceleration
+            transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
             opacity: showMenu ? 1 : 0,
             transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDelay: showMenu ? '0.2s' : '0s'
+            transitionDelay: showMenu ? '0.2s' : '0s',
+            // Hardware acceleration for smooth animations
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -4431,9 +4588,17 @@ const FigmaMobile = () => {
               cursor: 'pointer',
               textAlign: 'center',
               opacity: 1,
-              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              // Enhanced animation with hardware acceleration
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
               transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-              transitionDelay: showMenu ? '0.3s' : '0s'
+              transitionDelay: showMenu ? '0.3s' : '0s',
+              // Hardware acceleration for smooth text animations
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              // Improve text rendering
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
             }}
           >
             Events
@@ -4450,9 +4615,17 @@ const FigmaMobile = () => {
               cursor: 'pointer',
               textAlign: 'center',
               opacity: 1,
-              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              // Enhanced animation with hardware acceleration
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
               transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-              transitionDelay: showMenu ? '0.4s' : '0s'
+              transitionDelay: showMenu ? '0.4s' : '0s',
+              // Hardware acceleration for smooth text animations
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              // Improve text rendering
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
             }}
           >
             About
@@ -4469,16 +4642,23 @@ const FigmaMobile = () => {
               cursor: 'pointer',
               textAlign: 'center',
               opacity: 1,
-              transform: showMenu ? 'translateX(0)' : 'translateX(-30px)',
+              // Enhanced animation with hardware acceleration
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
               transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-              transitionDelay: showMenu ? '0.5s' : '0s'
+              transitionDelay: showMenu ? '0.5s' : '0s',
+              // Hardware acceleration for smooth text animations
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              // Improve text rendering
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
             }}
           >
             Contact
           </div>
         </div>
       </div>
-    )}
     </>
   );
 };

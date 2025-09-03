@@ -31,8 +31,8 @@ const ContactPage = () => {
       const userAgent = navigator.userAgent || '';
       const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-      // Device is mobile if either condition is true
-      const deviceIsMobile = isMobileByWidth || isMobileByUA;
+      // Device is mobile if either condition is true OR viewport is <= 768px
+      const deviceIsMobile = isMobileByWidth || isMobileByUA || viewportWidth <= 768;
 
       setIsMobile(deviceIsMobile);
       setIsLoading(false);
