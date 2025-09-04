@@ -2,212 +2,26 @@ import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from '
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 import { useAnalytics } from '../hooks/useAnalytics';
+import TextUsSection from './TextUsSection';
 
-// Robust Laylo Iframe Component with Proper SDK Initialization and Content Detection
-const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
-  const [layloReady, setLayloReady] = useState(false);
-  const [iframeReady, setIframeReady] = useState(false);
-  const [contentLoaded, setContentLoaded] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const iframeRef = useRef(null);
-  const contentCheckInterval = useRef(null);
-  const maxRetries = 2;
-  const contentCheckTimeout = 2000; // 2 seconds to detect content (faster)
-
-  // Build Laylo URL with parameters
-  const layloUrl = useMemo(() => {
-    const params = new URLSearchParams({
-      dropId,
-      color,
-      theme,
-      background: background,
-      ...(minimal && { minimal: 'true' })
-    });
-    return `https://embed.laylo.com/?${params.toString()}`;
-  }, [dropId, color, theme, background, minimal]);
-
-  // Check if Laylo SDK is ready (simplified and faster)
-  const checkLayloSDKReady = useCallback(() => {
-    // Check for Laylo SDK script - if it exists, we're good to go
-    const sdkScript = document.querySelector('script[src*="laylo-sdk.js"]');
-    if (sdkScript) {
-      console.log('✅ Laylo SDK script found, proceeding with iframe');
-      return true;
-    }
-
-    return false;
-  }, []);
-
-  // Check if iframe content has loaded (phone form is visible)
-  const checkIframeContent = useCallback(() => {
-    if (!iframeRef.current) return false;
-
-    try {
-      // Try to access iframe content (may fail due to CORS)
-      const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-
-      if (iframeDoc) {
-        // Look for Laylo-specific elements
-        const hasPhoneInput = iframeDoc.querySelector('input[type="tel"]') ||
-                             iframeDoc.querySelector('input[placeholder*="phone"]') ||
-                             iframeDoc.querySelector('.phone-input') ||
-                             iframeDoc.querySelector('[data-testid*="phone"]');
-
-        const hasSubmitButton = iframeDoc.querySelector('button[type="submit"]') ||
-                               iframeDoc.querySelector('button:contains("RSVP")') ||
-                               iframeDoc.querySelector('.submit-button');
-
-        if (hasPhoneInput || hasSubmitButton) {
-          console.log('✅ Laylo iframe content detected (phone form visible)');
-          return true;
-        }
-
-        // Check for any meaningful content (not just empty body)
-        const bodyContent = iframeDoc.body?.innerHTML || '';
-        if (bodyContent.length > 100 && !bodyContent.includes('loading')) {
-          console.log('✅ Laylo iframe has meaningful content');
-          return true;
-        }
-      }
-    } catch (e) {
-      // CORS error is expected, but iframe might still be working
-      // Check iframe dimensions as a proxy for content
-      const iframe = iframeRef.current;
-      if (iframe && iframe.offsetHeight > 50) {
-        console.log('✅ Laylo iframe appears to have content (height check)');
-        return true;
-      }
-    }
-
-    return false;
-  }, []);
-
-  // Start content detection polling
-  const startContentDetection = useCallback(() => {
-    console.log('🔍 Starting Laylo content detection...');
-
-    const checkContent = () => {
-      if (checkIframeContent()) {
-        setContentLoaded(true);
-        if (contentCheckInterval.current) {
-          clearInterval(contentCheckInterval.current);
-          contentCheckInterval.current = null;
-        }
-        return;
-      }
-    };
-
-    // Check immediately
-    checkContent();
-
-    // Then check every 100ms (faster polling)
-    contentCheckInterval.current = setInterval(checkContent, 100);
-
-    // Timeout after 2 seconds (faster timeout)
-    setTimeout(() => {
-      if (contentCheckInterval.current && !contentLoaded) {
-        console.warn('⚠️ Laylo content detection timeout');
-        clearInterval(contentCheckInterval.current);
-        contentCheckInterval.current = null;
-
-        // Retry if we haven't exceeded max retries
-        if (retryCount < maxRetries) {
-          console.log(`🔄 Retrying Laylo iframe (${retryCount + 1}/${maxRetries})`);
-          setRetryCount(prev => prev + 1);
-          setIframeReady(false);
-          setContentLoaded(false);
-
-          // Recreate iframe after a shorter delay
-          setTimeout(() => {
-            if (iframeRef.current) {
-              iframeRef.current.src = layloUrl + '&_retry=' + Date.now();
-            }
-          }, 500);
-        }
-      }
-    }, contentCheckTimeout);
-  }, [checkIframeContent, contentLoaded, retryCount, maxRetries, layloUrl]);
-
-  // Handle iframe load
-  const handleIframeLoad = useCallback(() => {
-    console.log('📦 Laylo iframe element loaded');
-    setIframeReady(true);
-
-    // Start checking for content immediately (no delay)
-    startContentDetection();
-  }, [startContentDetection]);
-
-  // Wait for Laylo SDK to be fully ready
-  useEffect(() => {
-    if (layloReady) return;
-
-    const checkSDK = () => {
-      if (checkLayloSDKReady()) {
-        setLayloReady(true);
-        return true;
-      }
-      return false;
-    };
-
-    // Check immediately
-    if (checkSDK()) return;
-
-    // Poll every 50ms until SDK is ready (faster polling)
-    const interval = setInterval(() => {
-      if (checkSDK()) {
-        clearInterval(interval);
-      }
-    }, 50);
-
-    // Timeout after 3 seconds (much faster)
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      console.warn('⚠️ Laylo SDK initialization timeout, proceeding anyway');
-      setLayloReady(true);
-    }, 3000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [layloReady, checkLayloSDKReady]);
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (contentCheckInterval.current) {
-        clearInterval(contentCheckInterval.current);
-      }
-    };
-  }, []);
-
-  // Only render iframe when Laylo SDK is ready
-  if (!layloReady) {
-    return (
-      <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', opacity: 0.7 }}>
-        <span style={{ fontSize: '12px', color: '#666' }}>Loading Laylo...</span>
-      </div>
-    );
+// CSS for custom scrollbar styling
+const scrollbarStyles = `
+  .events-grid-scrollable::-webkit-scrollbar {
+    width: 4px;
   }
+  .events-grid-scrollable::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .events-grid-scrollable::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+  .events-grid-scrollable::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+`;
 
-  return (
-    <iframe
-      ref={iframeRef}
-      id={`laylo-drop-${dropId}`}
-      frameBorder="0"
-      scrolling="no"
-      allow="web-share"
-      onLoad={handleIframeLoad}
-      style={{
-        ...style,
-        opacity: contentLoaded ? 1 : 0.8,
-        transition: 'opacity 0.15s ease-out',
-        minHeight: '60px'
-      }}
-      src={layloUrl}
-    />
-  );
-});
+
 
 // Image helpers inlined to avoid external dependency during build
 const getOptimizedImageUrl = (originalUrl, width = null) => {
@@ -566,8 +380,55 @@ const EventCard = memo(({ card, scaledDimensions }) => {
 const FigmaDesktop = () => {
   console.log('🖥️ FIGMA DESKTOP COMPONENT RENDERING');
 
+  // Inject CSS for custom scrollbar styling
+  useEffect(() => {
+    const styleId = 'events-grid-scrollbar-styles';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.textContent = scrollbarStyles;
+      document.head.appendChild(style);
+    }
+    return () => {
+      const existingStyle = document.getElementById(styleId);
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, []);
+
   // Initialize analytics
   const { trackEvent, trackLinkClick } = useAnalytics();
+
+  // State for tracking scroll position and fade gradients
+  const [scrollState, setScrollState] = useState({
+    canScrollUp: false,
+    canScrollDown: false,
+    isScrollable: false
+  });
+  const gridScrollRef = useRef(null);
+
+  // Function to update scroll state for fade gradients
+  const updateScrollState = useCallback(() => {
+    const element = gridScrollRef.current;
+    if (!element) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = element;
+    const isScrollable = scrollHeight > clientHeight;
+    const canScrollUp = scrollTop > 0;
+    const canScrollDown = scrollTop < scrollHeight - clientHeight - 1; // -1 for rounding
+
+    setScrollState({
+      canScrollUp,
+      canScrollDown,
+      isScrollable
+    });
+  }, []);
+
+  // Update scroll state when content changes or on mount
+  useEffect(() => {
+    updateScrollState();
+  }, [updateScrollState]);
 
   // Autoplay YouTube on load per requirements (keep muted for autoplay policy)
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
@@ -642,7 +503,7 @@ const FigmaDesktop = () => {
     rightHeroWidth: 498,
     rightHeroHeight: 299,
     gap: 32,
-    containerWidth: 825,
+    containerWidth: 1192, // REDUCED by 8px (1200px - 8px) for tighter layout alignment
     // Fixed layout dimensions that should never scale
     eventsTextGap: 18,  // Always 18px gap between Events and Text us
     eventCardWidth: 220,  // Set to 220px as requested
@@ -662,9 +523,9 @@ const FigmaDesktop = () => {
     const baseRightHeroWidth = 498;
     const baseRightHeroHeight = 299;
     const baseGap = 32;
-    const baseContainerWidth = 825; // Fixed container width for alignment
-    const containerPadding = 32; // 16px on each side
-    const availableContainerWidth = baseContainerWidth - containerPadding; // 793px
+    const baseContainerWidth = 1192; // REDUCED by 8px (1200px - 8px) for tighter layout alignment
+    const containerPadding = 48; // Increased padding for larger container (24px on each side)
+    const availableContainerWidth = baseContainerWidth - containerPadding; // 1144px (1192px - 48px)
 
     // Calculate scale factor to fit both hero sections and events/text sections
     const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
@@ -677,18 +538,18 @@ const FigmaDesktop = () => {
     const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
     let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
 
-    // Apply constraints - keep minimum but add reasonable maximum for desktop
+    // Apply constraints - updated for modern desktop screens
     if (scale < 0.25) scale = 0.25;  // Minimum for small screens
-    if (scale > 1.25) scale = 1.25;    // Maximum for desktop (prevents oversized content)
+    if (scale > 1.8) scale = 1.8;    // INCREASED maximum scale from 1.25 to 1.8 for better large screen utilization
 
     const scaledDimensions = {
-      heroWidth: Math.round(baseHeroWidth * scale),
-      heroHeight: Math.round(baseHeroHeight * scale),
+      heroWidth: Math.round(baseHeroWidth * scale * 0.90), // Reduce hero size by 10% to align with smaller events section
+      heroHeight: Math.round(baseHeroHeight * scale * 0.90), // Reduce hero size by 10% to align with smaller events section
       rightHeroWidth: Math.round(baseRightHeroWidth * scale),
       rightHeroHeight: Math.round(baseRightHeroHeight * scale),
       gap: Math.round(baseGap * scale),
       // Container width stays fixed for alignment
-      containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
+      containerWidth: baseContainerWidth,  // Now 1192px for tighter layout alignment
       // Scale events and text sections to match hero scaling
       eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
       textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
@@ -703,7 +564,7 @@ const FigmaDesktop = () => {
     setIsMobile(currentViewportWidth <= 850);
 
     setScaledDimensions(scaledDimensions);
-    console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.25x)`, scaledDimensions);
+    console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.8x, container: 1200px)`, scaledDimensions);
   });
 
   // MEMORY OPTIMIZATION: Lazy load Laylo SDK with error handling
@@ -774,6 +635,7 @@ const FigmaDesktop = () => {
 
       // Use Vite proxy for API calls - routes to local dashboard in development
       const apiUrl = '/api/home-settings/homepage-data';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
 
       console.log('🔍 DESKTOP DEBUGGING API CALL:');
       console.log('  hostname:', window.location.hostname);
@@ -833,7 +695,7 @@ const FigmaDesktop = () => {
         return true;
       });
 
-      console.log(`✅ Homepage data loaded: ${validatedEvents.length} featured events`);
+      console.log(`✅ Homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
 
       // Cache the successful response
       apiCache.set(cacheKey, {
@@ -847,8 +709,8 @@ const FigmaDesktop = () => {
 
       // Use most recent event data for hero sections if available
       let heroFormattedDate = data.formattedDate || "March 29th, 9:00 P.M.";
-      if (validatedEvents.length > 0 && validatedEvents[0].event_date) {
-        const eventDate = new Date(validatedEvents[0].event_date);
+      if (validatedFeaturedEvents.length > 0 && validatedFeaturedEvents[0].event_date) {
+        const eventDate = new Date(validatedFeaturedEvents[0].event_date);
         const options = {
           month: 'long',
           day: 'numeric',
@@ -1456,15 +1318,15 @@ const FigmaDesktop = () => {
     return {
       position: 'absolute',
       left: leftPosition,
-      top: '4.15px',    // Scaled up by 15% (3.61 × 1.15)
+      top: '4.7px',     // Scaled up by 30% (3.61 × 1.30)
       display: 'flex',
-      width: '82.54px', // Scaled up by 15% (71.77 × 1.15)
-      height: '30.81px', // Scaled up by 15% (26.79 × 1.15)
-      padding: '13px 12px',
+      width: '93.3px',  // Scaled up by 30% (71.77 × 1.30) for better touch targets
+      height: '34.8px', // Scaled up by 30% (26.79 × 1.30) for better touch targets
+      padding: '15px 14px', // Increased padding for better touch area
       justifyContent: 'center',
       alignItems: 'center',
       gap: '10px',
-      borderRadius: '10px',
+      borderRadius: '12px', // Slightly increased border radius
       background: isActive ? '#000' : 'transparent',
       boxShadow: isActive ? '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' : 'none',
       cursor: 'pointer',
@@ -1480,7 +1342,7 @@ const FigmaDesktop = () => {
     return {
       color: '#FFF',
       fontFamily: 'Inter',
-      fontSize: '12px',
+      fontSize: '13px', // Increased from 12px to 13px for better readability
       fontWeight: isActive ? '300' : '400',
       lineHeight: 'normal',
       transition: 'font-weight 0.3s ease' // Smooth font weight transition
@@ -1617,6 +1479,12 @@ const FigmaDesktop = () => {
           }
         }
 
+        // Process title like mobile
+        const title = event.title || event.artist_name || 'Event Title';
+
+        // Process location like mobile
+        const location = event.event_address || event.venue_name || 'Location TBA';
+
         // Process cover image
         let coverImage = null;
         if (event.cover_image) {
@@ -1631,9 +1499,9 @@ const FigmaDesktop = () => {
 
         regularCards.push({
           id: event.id,
-          title: event.title || 'Event Title',
+          title: title, // Use processed title like mobile
           artist_name: event.artist_name || '',
-          location: event.event_address || 'Location TBA',
+          location: location, // Use processed location like mobile
           date: formattedDate,
           day: day,
           coverImage: coverImage,
@@ -1812,7 +1680,7 @@ const FigmaDesktop = () => {
             position: 'relative',
             background: '#000000',
             minHeight: '100vh',
-            padding: '0 16px',
+            padding: '0 20px', // INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
             boxSizing: 'border-box'
           }}
         >
@@ -1829,7 +1697,7 @@ const FigmaDesktop = () => {
           margin: '35px 0 0 0'
         }}
       >
-        {/* Group 4 - B2B Logo Nav - CLICKABLE */}
+        {/* Group 4 - B2B Logo Nav - CLICKABLE - INCREASED SIZE */}
         <img
           src="/images/figma-exact/b2b-logo-nav.svg"
           alt="B2B Logo"
@@ -1844,8 +1712,8 @@ const FigmaDesktop = () => {
             }
           }}
           style={{
-            width: '138.41px',
-            height: '43px',
+            width: '180px', // Increased from 138.41px for better desktop prominence
+            height: '56px', // Increased from 43px proportionally
             cursor: 'pointer',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: 'scale(1)'
@@ -1870,8 +1738,8 @@ const FigmaDesktop = () => {
         <div
           style={{
             position: 'relative',
-            width: '260.46px', // Scaled up by 15% (226.49 × 1.15)
-            height: '39.1px',  // Scaled up by 15% (34 × 1.15)
+            width: '294.45px', // Scaled up by 30% (226.49 × 1.30) for better prominence
+            height: '44.2px',  // Scaled up by 30% (34 × 1.30) for better touch targets
             gridColumn: '3',  // Place in third column (right side)
             justifySelf: 'end'  // Align to right edge of grid cell
           }}
@@ -1882,17 +1750,17 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '260.46px', // Scaled up by 15% (226.49 × 1.15)
-              height: '39.1px',  // Scaled up by 15% (34 × 1.15)
+              width: '294.45px', // Scaled up by 30% (226.49 × 1.30)
+              height: '44.2px',  // Scaled up by 30% (34 × 1.30)
               background: '#232323',
-              borderRadius: '12px',
+              borderRadius: '14px', // Slightly increased border radius
               boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
             }}
           />
 
-          {/* Events - Scaled up by 15% (3.24 × 1.15) */}
+          {/* Events - Scaled up by 30% (3.24 × 1.30) */}
           <div
-            style={getNavPillStyles('Events', '3.73px')}
+            style={getNavPillStyles('Events', '4.21px')}
             onClick={() => handleNavClick('Events')}
           >
             <span style={getNavTextStyles('Events')}>
@@ -1900,9 +1768,9 @@ const FigmaDesktop = () => {
             </span>
           </div>
 
-          {/* About - Scaled up by 15% (77.03 × 1.15) */}
+          {/* About - Scaled up by 30% (77.03 × 1.30) */}
           <div
-            style={getNavPillStyles('About', '88.58px')}
+            style={getNavPillStyles('About', '100.14px')}
             onClick={() => handleNavClick('About')}
           >
             <span style={getNavTextStyles('About')}>
@@ -1910,9 +1778,9 @@ const FigmaDesktop = () => {
             </span>
           </div>
 
-          {/* Contact - Scaled up by 15% (150.82 × 1.15) */}
+          {/* Contact - Scaled up by 30% (150.82 × 1.30) */}
           <div
-            style={getNavPillStyles('Contact', '173.44px')}
+            style={getNavPillStyles('Contact', '196.07px')}
             onClick={() => handleNavClick('Contact')}
           >
             <span style={getNavTextStyles('Contact')}>
@@ -1922,32 +1790,71 @@ const FigmaDesktop = () => {
         </div>
       </div>
 
-      {/* Dual Hero Section */}
+      {/* Desktop Layout: Hero Left + Events Right (1024px+) */}
       <div
         style={{
           position: 'relative',
           display: 'flex',
           width: '100%',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          margin: '20px 0 0 0',
+          margin: '24px 0 0 0', // Reduced from 32px to 24px for better visual flow
           padding: '0',
-          flexDirection: 'row'
+          flexDirection: scaledDimensions.containerWidth >= 1024 ? 'row' : 'column',
+          gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(24, Math.round(scaledDimensions.scale * 32))}px` : '20px', // Scale gap for desktop
+          alignItems: 'flex-start'
         }}
       >
-        {/* Left Hero */}
-        <div
-          onClick={() => handleNavClick('Events')}
-          style={{
-            width: `${scaledDimensions.heroWidth}px`,
-            height: `${scaledDimensions.heroHeight}px`,
-            position: 'relative',
-            flexShrink: 0,
-            margin: '0',
-            cursor: 'pointer',
+        {/* Left Side - Up Next Section (Desktop Only) */}
+        {scaledDimensions.containerWidth >= 1024 ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as events section
+              width: `${scaledDimensions.heroWidth}px`,
+              flexShrink: 0
+            }}
+          >
+            {/* Up Next Title - Scaled down for better proportion */}
+            <div
+              style={{
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced from 32px to 26px for better proportion
+                fontWeight: '800',
+                lineHeight: 'normal',
+                margin: '0',
+                padding: '0',
+                height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
+                display: 'flex',
+                alignItems: 'center' // Center text vertically within the height
+              }}
+            >
+              Up Next
+            </div>
+
+            {/* Hero Featured Event - Perfect Square */}
+            <div
+              onClick={(e) => {
+                // Navigate directly to ticket purchase page
+                if (mostRecentEvent?.external_ticket_url) {
+                  console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                  window.location.href = mostRecentEvent.external_ticket_url; // Same window navigation for seamless experience
+                } else {
+                  console.log('🎫 Desktop Featured Event: No ticket link available for', mostRecentEvent?.title);
+                }
+              }}
+              style={{
+                width: `${scaledDimensions.heroWidth}px`, // Use heroWidth for perfect square
+                height: `${scaledDimensions.heroWidth}px`, // Same as width for perfect square
+                position: 'relative',
+                flexShrink: 0,
+                margin: '0',
+                cursor: 'pointer',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: 'scale(1)',
-            borderRadius: '24px'
+            borderRadius: '20px',
+            overflow: 'hidden'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
@@ -1957,110 +1864,160 @@ const FigmaDesktop = () => {
             e.currentTarget.style.transform = 'scale(1) translateY(0px)';
             e.currentTarget.style.boxShadow = 'none';
           }}
-          onMouseDown={(e) => {
-            e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-          }}
+          role="button"
+          tabIndex={0}
+          aria-label="View featured event details"
         >
+          {/* Background Image with Gradient Overlay */}
           <div
             style={{
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${scaledDimensions.heroWidth}px`,
-              height: `${scaledDimensions.heroHeight}px`,
-              borderRadius: '24px',
+              width: '100%',
+              height: '100%',
+              borderRadius: '20px',
               overflow: 'hidden'
             }}
           >
-            <picture>
-              <source
-                srcSet="/images/optimized/hero-left-image-768w.avif 768w, /images/optimized/hero-left-image-1024w.avif 1024w, /images/optimized/hero-left-image-1280w.avif 1280w, /images/optimized/hero-left-image-1440w.avif 1440w"
-                sizes="(max-width: 1024px) 768px, (max-width: 1280px) 1024px, (max-width: 1440px) 1280px, 1440px"
-                type="image/avif"
-              />
-              <source
-                srcSet="/images/optimized/hero-left-image-768w.webp 768w, /images/optimized/hero-left-image-1024w.webp 1024w, /images/optimized/hero-left-image-1280w.webp 1280w, /images/optimized/hero-left-image-1440w.webp 1440w"
-                sizes="(max-width: 1024px) 768px, (max-width: 1280px) 1024px, (max-width: 1440px) 1280px, 1440px"
-                type="image/webp"
-              />
-              <img
-                src="/images/optimized/hero-left-image-fallback.jpg"
-                alt="Hero background"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-                onLoad={() => console.log('✅ DESKTOP HERO IMAGE LOADED SUCCESSFULLY (Optimized Responsive)')}
-                onError={(e) => console.error('❌ DESKTOP HERO IMAGE FAILED TO LOAD:', e.target.src)}
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center'
-                }}
-              />
-            </picture>
-            <div
-              style={{
-                position: 'absolute',
-                left: '0px',
-                top: '0px',
-                width: '100%',
-                height: '100%',
-                background: `linear-gradient(189deg, rgba(0, 0, 0, 0.00) 37.84%, rgba(0, 0, 0, 0.48) 55.87%, rgba(24, 24, 24, 0.96) 77.69%)`,
-                pointerEvents: 'none'
-              }}
-            />
+            {/* Dynamic Event Image or Fallback */}
+            {mostRecentEvent?.cover_image ? (
+              <picture>
+                <source
+                  srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/avif"
+                />
+                <source
+                  srcSet={getResponsiveSrcSet(mostRecentEvent.cover_image, 'hero')}
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/webp"
+                />
+                <img
+                  src={getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
+                  alt={`${mostRecentEvent.artist_name || mostRecentEvent.title} - Featured Event`}
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                  onLoad={() => console.log('✅ DESKTOP FEATURED EVENT HERO IMAGE LOADED:', mostRecentEvent.title)}
+                  onError={(e) => {
+                    console.error('❌ DESKTOP FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
+                    // Fallback to default hero image
+                    e.target.src = '/images/optimized/hero-left-image-375w.jpg';
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    zIndex: 1
+                  }}
+                />
+              </picture>
+            ) : (
+              /* Fallback to default hero image when no featured events */
+              <picture>
+                <source
+                  srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/avif"
+                />
+                <source
+                  srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/webp"
+                />
+                <img
+                  src="/images/optimized/hero-left-image-375w.jpg"
+                  alt="Default Hero Background"
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                  onLoad={() => console.log('✅ DESKTOP DEFAULT HERO IMAGE LOADED')}
+                  onError={(e) => console.error('❌ DESKTOP DEFAULT HERO IMAGE FAILED:', e.target.src)}
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    zIndex: 1
+                  }}
+                />
+              </picture>
+            )}
           </div>
 
-          {/* Bottom overlay with date and location */}
+          {/* Mobile-Optimized Gradient Overlay - Outside image container for better rendering */}
           <div
             style={{
               position: 'absolute',
               left: '0px',
-              top: `${scaledDimensions.heroHeight - 47}px`,
+              top: '0px',
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
+              borderRadius: '20px',
+              pointerEvents: 'none',
+              zIndex: 2,
+              // Desktop optimizations
+              WebkitTransform: 'translateZ(0)', // Force hardware acceleration
+              transform: 'translateZ(0)',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden'
+            }}
+          />
+
+          {/* Bottom overlay with date and location - Fixed positioning */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '0px',
+              bottom: '8px', // Positioned lower in the card for better visual balance
               display: 'flex',
-              width: `${scaledDimensions.heroWidth}px`,
+              width: '100%',
               justifyContent: 'space-between',
-              padding: '0px 12px',
-              gap: '16px',
-              boxSizing: 'border-box'
+              padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
+              gap: '12px', // Reduced gap to make more room for wider button
+              boxSizing: 'border-box',
+              zIndex: 3,
+              minHeight: '44px' // Ensure minimum height for button container
             }}
           >
             <div
               style={{
                 display: 'flex',
-                width: `${Math.min(157, scaledDimensions.heroWidth - 100)}px`,
-                height: '36px',
+                flex: '1',
                 padding: '4px 0px',
                 flexDirection: 'column',
-                gap: '2px',
-                minWidth: 0
+                minWidth: 0,
+                maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
               }}
             >
-              {/* Date row */}
+              {/* Date row - Enhanced styling */}
               <div
                 style={{
                   display: 'flex',
                   alignSelf: 'stretch',
                   alignItems: 'center',
-                  gap: '4px',
-                  minWidth: 0
+                  gap: '6px', // Slightly more gap for better readability
+                  minWidth: 0,
+                  marginBottom: '2px' // Small margin for separation
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
                 </svg>
                 <span
                   style={{
                     color: '#FFF',
                     fontFamily: 'Inter',
-                    fontSize: `${Math.max(8, Math.min(10, scaledDimensions.heroWidth * 0.04))}px`,  // Responsive font size
+                    fontSize: '12px', // Fixed size like mobile
                     fontWeight: '200',
                     lineHeight: 'normal',
                     overflow: 'hidden',
@@ -2070,7 +2027,16 @@ const FigmaDesktop = () => {
                     minWidth: 0
                   }}
                 >
-                  {formattedDate}
+                  {mostRecentEvent?.event_date
+                    ? new Date(mostRecentEvent.event_date).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      }).replace(',', 'th,')
+                    : formattedDate
+                  }
                 </span>
               </div>
 
@@ -2084,15 +2050,15 @@ const FigmaDesktop = () => {
                   minWidth: 0
                 }}
               >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
                   <circle cx="5" cy="4" r="1" fill="#FFF"/>
                 </svg>
                 <span
                   style={{
                     color: '#FFF',
                     fontFamily: 'Inter',
-                    fontSize: `${Math.max(8, Math.min(10, scaledDimensions.heroWidth * 0.04))}px`,  // Responsive font size
+                    fontSize: '12px', // Fixed size like mobile
                     fontWeight: '200',
                     lineHeight: 'normal',
                     overflow: 'hidden',
@@ -2102,83 +2068,91 @@ const FigmaDesktop = () => {
                     minWidth: 0
                   }}
                 >
-                  {formatLocation(mostRecentEvent?.event_address || homeSettings?.event_address)}
+                  {mostRecentEvent?.location || homeSettings?.event_location || "Asbury Park, NJ"}
                 </span>
               </div>
             </div>
 
-            {/* CTA Button */}
-            {scaledDimensions.heroWidth >= 250 && (
+            {/* CTA Button - Enhanced styling and positioning */}
+            <div
+              style={{
+                display: 'flex',
+                width: '120px', // Increased width for better presence
+                height: '44px', // Increased height for better touch target
+                padding: '2px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0,
+                zIndex: 3
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
-                  width: '90px',
-                  height: '36px',
-                  padding: '4px',
+                  width: '116px', // Match new container width minus padding
+                  height: '40px', // Increased height for better presence
                   justifyContent: 'center',
                   alignItems: 'center',
-                  gap: '4px'
+                  gap: '8px',
+                  borderRadius: '22px', // More rounded for modern look
+                  background: 'rgba(15, 15, 15, 0.95)', // Darker, more opaque glassmorphism
+                  backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)', // More visible border
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: 'scale(1)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow with inset highlight
+                }}
+                onMouseEnter={(e) => {
+                  e.stopPropagation();
+                  e.target.style.transform = 'scale(1.05)';
+                  e.target.style.background = 'rgba(35, 35, 35, 0.98)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.stopPropagation();
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.background = 'rgba(15, 15, 15, 0.95)';
+                  e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (mostRecentEvent?.external_ticket_url) {
+                    console.log(`🎫 Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                    window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer');
+                  }
                 }}
               >
-                <div
-                  onClick={() => handleNavClick('Events')}
+                <span
                   style={{
-                    display: 'flex',
-                    width: '90px',
-                    height: '36px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '8px',
-                    borderRadius: '29px',
-                    background: 'rgba(56, 56, 56, 0.80)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    transform: 'scale(1)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'scale(1.05)';
-                    e.target.style.background = 'rgba(76, 76, 76, 0.90)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'scale(1)';
-                    e.target.style.background = 'rgba(56, 56, 56, 0.80)';
-                  }}
-                  onMouseDown={(e) => {
-                    e.target.style.transform = 'scale(0.95)';
-                  }}
-                  onMouseUp={(e) => {
-                    e.target.style.transform = 'scale(1.05)';
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '15px', // Slightly larger for better readability
+                    fontWeight: '500', // Medium weight for better presence
+                    lineHeight: 'normal',
+                    pointerEvents: 'none',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
                   }}
                 >
-                  <span
-                    style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: `${Math.max(10, Math.min(14, scaledDimensions.heroWidth * 0.056))}px`,
-                      fontWeight: '400',
-                      lineHeight: 'normal',
-                      pointerEvents: 'none' // Prevent text from interfering with button events
-                    }}
-                  >
-                    Events
-                  </span>
-                </div>
+                  {mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event'}
+                </span>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Event title overlay */}
+          {/* Event title overlay - Responsive */}
           <div
             style={{
               position: 'absolute',
               left: '0px',
-              top: `${scaledDimensions.heroHeight - 95}px`, // Position 95px from bottom (47px for bottom overlay + 48px for title space)
+              bottom: '95px', // Use bottom positioning for consistency
               display: 'flex',
-              width: `${scaledDimensions.heroWidth}px`,
-              height: '48px', // Fixed height for consistent spacing
-              padding: '8px 12px',
+              width: '100%', // Use full width of responsive hero card
+              height: '48px',
+              padding: '8px 16px', // Slightly more padding
               justifyContent: 'flex-start',
-              alignItems: 'flex-end', // Align to bottom so text sits closer to date/location
+              alignItems: 'flex-end',
               gap: '10px',
               boxSizing: 'border-box'
             }}
@@ -2187,7 +2161,7 @@ const FigmaDesktop = () => {
               style={{
                 color: '#FFF',
                 fontFamily: 'Inter',
-                fontSize: `${Math.max(14, Math.min(24, scaledDimensions.heroWidth * 0.08))}px`,
+                fontSize: '24px', // Fixed size like mobile
                 fontWeight: '800',
                 lineHeight: '1.1',
                 flex: '1',
@@ -2200,45 +2174,708 @@ const FigmaDesktop = () => {
               {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
             </div>
           </div>
-        </div>
+            </div>
+          </div>
+        ) : (
+          /* Mobile/Tablet Layout - Original Hero Image */
+          <div
+            onClick={(e) => {
+              // Navigate directly to ticket purchase page
+              if (mostRecentEvent?.external_ticket_url) {
+                console.log(`🎫 Mobile Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                window.location.href = mostRecentEvent.external_ticket_url; // Same window navigation for seamless experience
+              } else {
+                console.log('🎫 Mobile Featured Event: No ticket link available for', mostRecentEvent?.title);
+              }
+            }}
+            style={{
+              width: '100%',
+              height: `${scaledDimensions.heroHeight}px`,
+              position: 'relative',
+              flexShrink: 0,
+              margin: '0',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              background: '#161616',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.005)';
+              e.target.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)';
+            }}
+          >
+            {/* Mobile Hero Content - Same as desktop hero content but without Up Next title */}
+            {/* Add mobile hero content here if needed */}
+          </div>
+        )}
 
-        {/* Right Hero */}
+        {/* Right Side - Events Section (Desktop 1024px+) */}
+        {scaledDimensions.containerWidth >= 1024 && (
+          <div
+            style={{
+              display: 'flex',
+              flex: '1',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              alignItems: 'stretch',
+              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap
+              minWidth: `${Math.max(450, Math.round(scaledDimensions.eventsWidth))}px`, // Scale with eventsWidth
+              maxWidth: `${Math.round(scaledDimensions.eventsWidth + 200)}px`, // Increase width to align rightmost edge with navigation pills
+              height: (() => {
+                // Calculate total height to match Up Next title + gap + square hero image
+                const titleHeight = Math.max(20, Math.round(scaledDimensions.scale * 26)); // Up Next title height (updated)
+                const sectionGap = Math.max(6, Math.round(scaledDimensions.scale * 8)); // Gap between title and hero
+                const squareHeroHeight = scaledDimensions.heroWidth; // Square hero uses heroWidth for height
+                const totalLeftSideHeight = titleHeight + sectionGap + squareHeroHeight;
+                return `${totalLeftSideHeight}px`; // Match total left side height
+              })(),
+              overflow: 'hidden' // Prevent any overflow
+            }}
+          >
+            {/* Events Title and Toggle - Aligned with Hero Top */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                margin: '0', // Remove margin to align with hero top
+                padding: '0'
+              }}
+            >
+              {/* Event Title - Scaled down to match Up Next Title */}
+              <div
+                style={{
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced to match Up Next title
+                  fontWeight: '800',
+                  lineHeight: 'normal',
+                  height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match Up Next title
+                  display: 'flex',
+                  alignItems: 'center' // Center text vertically within the height
+                }}
+              >
+                Events
+              </div>
+              {/* Event Filter Toggle - Responsive */}
+              <div
+                style={{
+                  display: 'flex',
+                  width: `${Math.max(75, Math.round(scaledDimensions.scale * 95))}px`, // Reduced from 118px to 95px for smaller size
+                  height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`, // Reduced from 34px to 28px for smaller size
+                  padding: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`, // Slightly reduced padding
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flexShrink: 0,
+                  borderRadius: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Slightly reduced border radius
+                  background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+                  position: 'relative',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  WebkitTapHighlightColor: 'transparent'
+                }}
+                onClick={() => setShowAllEvents(!showAllEvents)}
+                role="switch"
+                aria-checked={showAllEvents}
+                aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowAllEvents(!showAllEvents);
+                  }
+                }}
+              >
+                {/* Sliding Button Background - Responsive */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: `${Math.max(36, Math.round(scaledDimensions.scale * 46))}px`, // Reduced from 57px to 46px
+                    height: `${Math.max(19, Math.round(scaledDimensions.scale * 24))}px`, // Reduced from 30px to 24px
+                    borderRadius: `${Math.max(4, Math.round(scaledDimensions.scale * 6))}px`, // Reduced border radius
+                    border: '0.5px solid rgba(0, 0, 0, 0.04)',
+                    background: '#FFF',
+                    boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+                    left: showAllEvents ? `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px` : `${Math.max(37, Math.round(scaledDimensions.scale * 47))}px`, // Adjusted positions for smaller size
+                    top: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`, // Adjusted top position
+                    transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    zIndex: 1
+                  }}
+                />
+
+                {/* All Button - Responsive */}
+                <div
+                  style={{
+                    display: 'flex',
+                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`, // Scale padding
+                    alignItems: 'center',
+                    flex: '1 0 0',
+                    alignSelf: 'stretch',
+                    borderRadius: `${Math.max(5, Math.round(scaledDimensions.scale * 7))}px`, // Scale border radius
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                >
+                  <span
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 1,
+                      flex: '1 0 0',
+                      overflow: 'hidden',
+                      color: showAllEvents ? '#000' : '#FFF',
+                      textAlign: 'center',
+                      fontFeatureSettings: "'liga' off, 'clig' off",
+                      textOverflow: 'ellipsis',
+                      fontFamily: 'Inter',
+                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`, // Reduced from 13px to 11px
+                      fontStyle: 'normal',
+                      fontWeight: showAllEvents ? '590' : '400',
+                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`, // Reduced line height
+                      letterSpacing: '-0.08px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    All
+                  </span>
+                </div>
+
+                {/* Past Button - Responsive */}
+                <div
+                  style={{
+                    display: 'flex',
+                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`, // Scale padding
+                    alignItems: 'center',
+                    flex: '1 0 0',
+                    alignSelf: 'stretch',
+                    position: 'relative',
+                    zIndex: 2
+                  }}
+                >
+                  <span
+                    style={{
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: 1,
+                      flex: '1 0 0',
+                      overflow: 'hidden',
+                      color: !showAllEvents ? '#000' : '#FFF',
+                      textAlign: 'center',
+                      fontFeatureSettings: "'liga' off, 'clig' off",
+                      textOverflow: 'ellipsis',
+                      fontFamily: 'Inter',
+                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`, // Reduced from 13px to 11px
+                      fontStyle: 'normal',
+                      fontWeight: !showAllEvents ? '590' : '400',
+                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`, // Reduced line height
+                      letterSpacing: '-0.08px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}
+                  >
+                    Past
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Events Grid Container with Fade Gradients */}
+            <div
+              style={{
+                position: 'relative',
+                width: '100%',
+                height: (() => {
+                  // Simple calculation: match the hero image height exactly
+                  // The hero image height is scaledDimensions.heroWidth (since it's square and already scaled)
+                  const heroImageHeight = scaledDimensions.heroWidth;
+                  return `${heroImageHeight}px`; // Match hero height exactly for perfect alignment
+                })()
+              }}
+            >
+              {/* Scrollable Events Grid */}
+              <div
+                ref={gridScrollRef}
+                className="events-grid-scrollable"
+                onScroll={updateScrollState}
+                style={{
+                  position: 'relative',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)', // 2 columns
+                  gridAutoRows: 'min-content', // Allow natural content height instead of fixed 3 rows
+                  rowGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive row gap
+                  columnGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive column gap
+                  width: '100%',
+                  height: '100%',
+                  alignItems: 'stretch',
+                  // Scrolling properties
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
+                  // Firefox scrollbar styling
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
+                  // Modern CSS Mask-based Fade Effect - Much cleaner than overlay gradients
+                  maskImage: (() => {
+                    // Dynamic mask based on scroll state for optimal performance
+                    if (!scrollState.isScrollable) return 'none';
+
+                    const topFade = scrollState.canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
+                    const bottomFade = scrollState.canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
+
+                    return `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
+                  })(),
+                  WebkitMaskImage: (() => {
+                    // Safari support with same logic
+                    if (!scrollState.isScrollable) return 'none';
+
+                    const topFade = scrollState.canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
+                    const bottomFade = scrollState.canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
+
+                    return `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
+                  })()
+                }}
+              >
+              {(() => {
+                // Calculate available height per grid cell for responsive card scaling
+                const heroImageHeight = scaledDimensions.heroWidth; // Hero image height (square, already scaled)
+                const gridGap = Math.max(4, Math.round(scaledDimensions.scale * 8));
+                const availableHeightPerCell = (heroImageHeight - (2 * gridGap)) / 3; // 3 rows with 2 gaps
+                const baseCardHeight = 124; // Base card height for scaling reference
+                const cardScaleFactor = Math.min(1, availableHeightPerCell / baseCardHeight); // Never scale up, only down
+
+                return (
+                  <>
+                    {/* Show events or empty state */}
+                    {processedEventCards.regularCards.length === 0 && processedEventCards.featuredCards.length === 0 ? (
+                /* Empty State - Spans all grid cells */
+                <div
+                  style={{
+                    gridColumn: '1 / -1',
+                    gridRow: '1 / -1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '16px',
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    textAlign: 'center'
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      opacity: '0.8'
+                    }}
+                  >
+                    No Events Available
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: '400',
+                      opacity: '0.6',
+                      maxWidth: '300px',
+                      lineHeight: '1.4'
+                    }}
+                  >
+                    Events marked as "Show on Homepage" will appear here. Check the admin dashboard to feature events.
+                  </div>
+                </div>
+              ) : (
+                /* Event Cards - Show first 6 events in 3x2 grid */
+                [...processedEventCards.featuredCards, ...processedEventCards.regularCards]
+                  .slice(0, 6) // Limit to 6 events for 3x2 grid
+                  .map((card, index) => (
+                  <article
+                    key={`homepage-desktop-${card.id}`}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      height: '100%',
+                      minHeight: '90px', // Reduced from 128px to 90px
+                      borderRadius: '20px',
+                      background: 'rgba(15, 15, 15, 0.95)',
+                      backdropFilter: 'blur(20px) saturate(180%)',
+                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                      position: 'relative',
+                      margin: '0 0 4px 0',
+                      padding: '2px',
+                      overflow: 'hidden',
+                      boxSizing: 'border-box',
+                      isolation: 'isolate',
+                      transform: 'translateZ(0)',
+                      willChange: 'transform',
+                      zIndex: 1,
+                      clear: 'both'
+                    }}
+                  >
+                    {/* Desktop Event Card Content - Scaled to Fit Grid (Remove duplicate styling) */}
+                    <div
+                      style={{
+                        width: '100%',
+                        height: `${Math.max(87, Math.round(baseCardHeight * cardScaleFactor) - 6)}px`, // Scale card height based on available space, reduced by 6px total
+                        position: 'relative',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxSizing: 'border-box',
+                        padding: `${Math.max(6, Math.round(8 * cardScaleFactor))}px` // Scale padding with better minimum
+                      }}
+                    >
+                      {/* Image Section - Original Size with Fixed Rendering */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                          width: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
+                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
+                          flexShrink: 0,
+                          borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Back to original scale
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          zIndex: 100,
+                          transition: 'transform 0.1s ease',
+                          boxSizing: 'border-box'
+                        }}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          // Add image expand functionality if needed
+                        }}
+                      >
+                        {/* Event Background Image - Match Mobile Implementation */}
+                        <img
+                          src={card.coverImage || card.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K'}
+                          alt={`${card.title} event cover`}
+                          loading="lazy"
+                          onError={(e) => {
+                            // Match mobile fallback behavior
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                          }}
+                          onLoad={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                          }}
+                          style={{
+                            width: '100%', // Fill container
+                            height: '100%', // Fill container
+                            borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Match container border radius
+                            objectFit: 'cover',
+                            backgroundColor: '#2a2a2a',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            transform: 'scale(1)',
+                            boxShadow: 'none',
+                            pointerEvents: 'none'
+                          }}
+                        />
+                      </div>
+
+                      {/* Text Content Section - Better Spacing from Image */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          width: `calc(100% - ${Math.max(99, Math.round(125 * cardScaleFactor))}px)`, // More space for image + gap
+                          padding: `${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px ${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Better padding with 8px grid
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          position: 'absolute',
+                          left: `${Math.max(99, Math.round(125 * cardScaleFactor))}px`, // More space from image (image width + container padding + 8px gap)
+                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Scale height to match image
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        {/* Event Information */}
+                        <div
+                          style={{
+                            width: '100%',
+                            minHeight: `${Math.max(50, Math.round(84 * cardScaleFactor))}px`, // Scale minHeight
+                            height: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignSelf: 'stretch',
+                            flex: '1 1 auto'
+                          }}
+                        >
+                          {/* Event Title - Grid-Responsive Typography */}
+                          <h3
+                            style={{
+                              fontFamily: 'Inter',
+                              fontWeight: '700',
+                              fontSize: `${Math.max(10, Math.round(16 * cardScaleFactor))}px`, // Scale font size
+                              lineHeight: '1.25',
+                              textAlign: 'left',
+                              color: '#FFFFFF',
+                              width: '100%',
+                              minHeight: `${Math.max(12, Math.round(20 * cardScaleFactor))}px`, // Scale minHeight
+                              height: 'auto',
+                              margin: `0 0 ${Math.max(2, Math.round(4 * cardScaleFactor))}px 0`, // Scale margin
+                              padding: '0',
+                              overflow: 'visible',
+                              textOverflow: 'unset',
+                              whiteSpace: 'normal',
+                              wordWrap: 'break-word',
+                              hyphens: 'auto'
+                            }}
+                          >
+                            {card.title}
+                          </h3>
+
+                          {/* Event DateTime - Grid-Responsive with Icon */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              alignSelf: 'stretch',
+                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                              padding: `0px 0px 0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
+                            }}
+                          >
+                            <svg
+                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
+                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
+                              viewBox="0 0 10 10"
+                              fill="none"
+                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            >
+                              <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
+                            </svg>
+                            <span
+                              style={{
+                                fontFamily: 'Inter',
+                                fontWeight: '300',
+                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
+                                lineHeight: '1.4',
+                                textAlign: 'left',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                width: '100%',
+                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
+                                margin: '0',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {card.date}
+                            </span>
+                          </div>
+
+                          {/* Event Location - Grid-Responsive with Icon */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              alignSelf: 'stretch',
+                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                              padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
+                            }}
+                          >
+                            <svg
+                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
+                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            >
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                            </svg>
+                            <span
+                              style={{
+                                fontFamily: 'Inter',
+                                fontWeight: '300',
+                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
+                                lineHeight: '1.4',
+                                textAlign: 'left',
+                                color: 'rgba(255, 255, 255, 0.65)',
+                                width: '100%',
+                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
+                                margin: '0',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              {card.location}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Event Button - Grid-Responsive Aligned with Image Bottom Edge */}
+                        <div
+                          style={{
+                            width: '100%',
+                            height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'flex-start',
+                            alignItems: 'flex-end',
+                            gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                            padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px 0px 0px`, // Scale padding
+                            position: 'absolute',
+                            bottom: `calc(100% - ${Math.max(80, Math.round(105 * cardScaleFactor))}px)`, // Adjust button position - middle ground
+                            left: '0px'
+                          }}
+                        >
+                          {card.isRealEvent && card.hasTicketLink ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                                window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                              }}
+                              style={{
+                                background: 'rgba(23, 23, 23, 0.8)',
+                                borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`, // Scale border radius
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`, // Scale gap
+                                padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`, // Scale padding
+                                width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
+                                height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontFamily: 'Inter',
+                                fontWeight: '500',
+                                fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale font size
+                                lineHeight: '1.21',
+                                textAlign: 'center',
+                                color: '#FFFFFF',
+                                transition: 'all 0.2s ease',
+                                transform: 'scale(1)',
+                                boxSizing: 'border-box'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
+                              }}
+                            >
+                              {card.buttonText || 'View Event'}
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
+                  </>
+                );
+              })()}
+              </div>
+
+              {/* Modern CSS Mask-based Fade Effect - Applied directly to scrollable container */}
+            </div>
+            </div>
+        )}
+      </div>
+
+
+
+
+
+
+
+
+
+      {/* YouTube Video and Text Us Section - Side by Side Layout (Desktop 1024px+) */}
+      {scaledDimensions.containerWidth >= 1024 && (
         <div
-          onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
           style={{
-            width: `${scaledDimensions.rightHeroWidth}px`,
-            height: `${scaledDimensions.rightHeroHeight}px`,
             position: 'relative',
-            flexShrink: 0,
-            margin: '0',
-            cursor: 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: 'scale(1)',
-            borderRadius: '24px'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1) translateY(0px)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-          onMouseDown={(e) => {
-            e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+            display: 'flex',
+            width: '100%',
+            margin: '16px 0 0 0', // Reduced from 32px to 16px for better visual flow
+            padding: '0',
+            justifyContent: 'flex-start', // Changed from space-between to align items to the left
+            alignItems: 'flex-start',
+            gap: '32px', // Fixed gap for consistent spacing between video and text section
+            flexDirection: 'row'
           }}
         >
-          {/* Video background container */}
+          {/* Left Side - YouTube Video Section with Title */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as other sections
+              alignItems: 'flex-start'
+            }}
+          >
+            {/* Watch Title - Standardized Typography */}
+            <div
+              style={{
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Match Events/Up Next/Text us titles
+                fontWeight: '800',
+                lineHeight: 'normal',
+                letterSpacing: '-0.02em', // Match other titles
+                margin: '0',
+                padding: '0',
+                height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match other titles
+                display: 'flex',
+                alignItems: 'center' // Center text vertically within the height
+              }}
+            >
+              Watch
+            </div>
+
+            {/* YouTube Video Container */}
+            <div
+            onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
+            style={{
+              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.75)}px`, // Reduced by 25% for better balance
+              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.75)}px`, // Reduced by 25% proportionally
+              position: 'relative',
+              flexShrink: 0,
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)',
+              borderRadius: '24px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+            }}
+          >
+          {/* Video background container - UPDATED DIMENSIONS */}
           <div
             style={{
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${scaledDimensions.rightHeroWidth}px`,
-              height: `${scaledDimensions.rightHeroHeight}px`,
+              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.75)}px`, // Match reduced video size
+              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.75)}px`, // Match reduced video size
               borderRadius: '24px',
               overflow: 'hidden'
             }}
@@ -2286,25 +2923,25 @@ const FigmaDesktop = () => {
                 height: '100%',
                 background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
                 borderRadius: '24px',
-                zIndex: 1 // Ensure overlay is above video but below text
+                zIndex: 1
               }}
             />
           </div>
 
-          {/* Video Hero Text Box */}
+          {/* Video Hero Text Box - UPDATED POSITIONING */}
           <div
             style={{
               position: 'absolute',
               left: '0px',
-              top: `${Math.min(scaledDimensions.rightHeroHeight, 350) - 54}px`,
+              top: `${Math.min(Math.round(scaledDimensions.rightHeroHeight * 0.75), 350) - 54}px`, // Adjust for reduced video size
               display: 'flex',
-              width: '100%', // Fill the full width of the video hero card
+              width: '100%',
               height: '44px',
               padding: '8px 16px',
               justifyContent: 'space-between',
               alignItems: 'flex-end',
               gap: '16px',
-              zIndex: 2 // Ensure text appears above video and gradient overlay
+              zIndex: 2
             }}
           >
             {/* Left - Date and title */}
@@ -2327,13 +2964,12 @@ const FigmaDesktop = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: `${scaledDimensions.rightHeroWidth >= 300 ? scaledDimensions.rightHeroWidth - 150 : scaledDimensions.rightHeroWidth - 60}px`
+                  maxWidth: `${Math.round(scaledDimensions.rightHeroWidth * 0.75) >= 300 ? Math.round(scaledDimensions.rightHeroWidth * 0.75) - 150 : Math.round(scaledDimensions.rightHeroWidth * 0.75) - 60}px` // Adjust for reduced video size
                 }}
               >
                 Watch on YouTube
               </div>
 
-              {/* Date */}
               <div
                 style={{
                   color: '#FFF',
@@ -2347,25 +2983,25 @@ const FigmaDesktop = () => {
               </div>
             </div>
 
-            {/* Right - CTA */}
-            {scaledDimensions.rightHeroWidth >= 300 && (
+            {/* Right - CTA - UPDATED CONDITION */}
+            {Math.round(scaledDimensions.rightHeroWidth * 0.75) >= 300 && ( // Adjust condition for reduced video size
               <div
                 onClick={(e) => {
-                  e.stopPropagation(); // Prevent card click
+                  e.stopPropagation();
                   window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
                 }}
                 style={{
                   display: 'flex',
-                  minWidth: '112px', // Proper width for "Watch now" text with breathing room
-                  height: '44px',    // Minimum touch target height (44px)
+                  minWidth: '112px',
+                  height: '44px',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  borderRadius: '22px', // Half of height for pill shape
+                  borderRadius: '22px',
                   background: 'rgba(38, 38, 38, 0.80)',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   transform: 'scale(1)',
-                  boxSizing: 'border-box' // Ensure padding is included in dimensions
+                  boxSizing: 'border-box'
                 }}
                 onMouseEnter={(e) => {
                   e.target.style.transform = 'scale(1.05)';
@@ -2386,10 +3022,10 @@ const FigmaDesktop = () => {
                   style={{
                     color: '#FFF',
                     fontFamily: 'Inter',
-                    fontSize: '14px', // Fixed 14px for better readability in larger button
-                    fontWeight: '500', // Medium weight for better button text
+                    fontSize: '14px',
+                    fontWeight: '500',
                     lineHeight: '1.2',
-                    pointerEvents: 'none' // Prevent text from interfering with button events
+                    pointerEvents: 'none'
                   }}
                 >
                   Watch now
@@ -2398,20 +3034,46 @@ const FigmaDesktop = () => {
             )}
           </div>
         </div>
-      </div>
+        </div>
 
+        {/* Right Side - Text Us Section with Laylo */}
+        <TextUsSection
+          scaledDimensions={scaledDimensions}
+          phoneNumber={phoneNumber}
+          setPhoneNumber={setPhoneNumber}
+          phoneSubmitting={phoneSubmitting}
+          phoneSubmitted={phoneSubmitted}
+          phoneInputState={phoneInputState}
+          selectedCountryId={selectedCountryId}
+          setSelectedCountryId={setSelectedCountryId}
+          flagImageRef={flagImageRef}
+          phoneContainerRef={phoneContainerRef}
+          showVerification={showVerification}
+          verificationPhone={verificationPhone}
+          verificationCode={verificationCode}
+          setVerificationCode={setVerificationCode}
+          verificationSubmitting={verificationSubmitting}
+          verificationState={verificationState}
+          resendCountdown={resendCountdown}
+          canResend={canResend}
+          resendSubmitting={resendSubmitting}
+          handlePhoneSubmit={handlePhoneSubmit}
+          handleVerificationSubmit={handleVerificationSubmit}
+          handleResendCode={handleResendCode}
+          handlePhoneChange={handlePhoneChange}
+          handlePhoneKeyDown={handlePhoneKeyDown}
+          handleCountryChange={handleCountryChange}
+          handleVerificationChange={handleVerificationCodeChange}
+          handleBackToPhone={handleBackToPhone}
+        />
+        </div>
+      )}
 
-
-
-      
-
-
-      
-      {/* Events and Text Us Section */}
+      {/* Events and Text Us Section - Hidden on Desktop 1024px+, Visible on Mobile/Tablet */}
       <div
         style={{
           position: 'relative',
-          display: 'flex',
+          display: scaledDimensions.containerWidth >= 1024 ? 'none' : 'flex',
           width: '100%',
           margin: '8px 0 0 0',
           padding: '0',
@@ -2592,148 +3254,24 @@ const FigmaDesktop = () => {
               </div>
             </div>
           </div>
-          {/* EVENT LIST Grid */}
+          {/* EVENT LIST Grid - Updated for mobile-style cards */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              rowGap: '12px',
-              columnGap: '8px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', // Responsive grid for mobile-style cards
+              rowGap: '16px',
+              columnGap: '16px',
               alignSelf: 'stretch',
               alignItems: 'start',
-              justifyItems: 'start'  // Justify event cards to the left within grid
+              justifyItems: 'stretch', // Stretch cards to fill grid cells
+              width: '100%'
             }}
           >
-            {/* Featured Events Section - Large Hero Square Cards */}
-            {processedEventCards.featuredCards.length > 0 && (
-              <div style={{
-                gridColumn: '1 / -1', // Span all columns
-                marginBottom: '32px',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '20px'
-              }}>
-                <h2 style={{
-                  gridColumn: '1 / -1',
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '24px',
-                  fontWeight: '600',
-                  margin: '0 0 20px 0'
-                }}>
-                  Featured Events
-                </h2>
-                {processedEventCards.featuredCards.map((card, index) => (
-                  <div
-                    key={`featured-${card.id}`}
-                    onClick={() => {
-                      if (card.hasTicketLink && card.ticketsUrl) {
-                        console.log('🎫 Featured event clicked - opening ticket link:', card.title);
-                        window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                      }
-                    }}
-                    style={{
-                      aspectRatio: '1/1', // Square aspect ratio
-                      position: 'relative',
-                      background: 'rgba(22, 22, 22, 0.8)',
-                      backdropFilter: 'blur(20px)',
-                      border: '1px solid rgba(56, 56, 56, 0.3)',
-                      borderRadius: '20px',
-                      overflow: 'hidden',
-                      cursor: card.hasTicketLink ? 'pointer' : 'default',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    {/* Featured Event Image */}
-                    {card.coverImage && (
-                      <img
-                        src={getOptimizedImageUrl(card.coverImage, 400)}
-                        alt={`${card.title} - Featured Event`}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0
-                        }}
-                        onError={(e) => {
-                          e.target.style.backgroundColor = 'rgba(56, 56, 56, 0.3)';
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    )}
 
-                    {/* Featured Event Overlay */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      background: 'linear-gradient(transparent, rgba(0, 0, 0, 0.8))',
-                      padding: '40px 24px 24px 24px',
-                      color: '#FFF'
-                    }}>
-                      <h3 style={{
-                        fontFamily: 'Inter',
-                        fontSize: '28px',
-                        fontWeight: '700',
-                        margin: '0 0 8px 0',
-                        lineHeight: '1.2'
-                      }}>
-                        {card.title}
-                      </h3>
-                      {card.artist_name && (
-                        <p style={{
-                          fontFamily: 'Inter',
-                          fontSize: '18px',
-                          fontWeight: '400',
-                          margin: '0 0 16px 0',
-                          opacity: 0.9
-                        }}>
-                          {card.artist_name}
-                        </p>
-                      )}
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        fontSize: '16px',
-                        opacity: 0.8,
-                        marginBottom: '16px'
-                      }}>
-                        <span>{card.date}</span>
-                        <span>{card.location}</span>
-                      </div>
-                      {card.hasTicketLink && (
-                        <button
-                          style={{
-                            padding: '14px 28px',
-                            background: 'rgba(255, 255, 255, 0.9)',
-                            color: '#000',
-                            border: 'none',
-                            borderRadius: '25px',
-                            fontFamily: 'Inter',
-                            fontSize: '16px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease'
-                          }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                          }}
-                        >
-                          {card.buttonText}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            {/* Show regular events (small cards) or empty state */}
+
+
+            {/* Show all events (mobile-style cards) or empty state */}
             {processedEventCards.regularCards.length === 0 && processedEventCards.featuredCards.length === 0 ? (
               /* Empty State - No Events */
               <div
@@ -2772,323 +3310,182 @@ const FigmaDesktop = () => {
                 </div>
               </div>
             ) : (
-              /* Regular Event Cards - Small Cards (excluding featured events) */
-              processedEventCards.regularCards.map((card, index) => (
-              <div
-                key={card.id}
-                onClick={(e) => {
-                  // Only trigger if clicking on the card itself, not child elements
-                  if (e.target === e.currentTarget || e.target.closest('.card-clickable-area')) {
-                    if (card.isRealEvent && card.hasTicketLink) {
-                      console.log(`🎫 Desktop card: Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                      window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                    }
-                  }
-                }}
+              /* All Event Cards - Mobile-style Cards (including previously featured events) */
+              [...processedEventCards.featuredCards, ...processedEventCards.regularCards].map((card, index) => (
+              <article
+                key={`homepage-${card.id}`}
                 style={{
-                  display: 'flex',
-                  width: '220px',
-                  height: '85px',
-                  justifyContent: 'flex-start',  // Justify content to the left
-                  alignItems: 'center',
-                  borderRadius: '16px',
-                  background: 'rgba(35, 35, 35, 0.95)', // Enhanced background with reduced transparency for better visual separation
-                  border: '1px solid rgba(255, 255, 255, 0.08)', // Subtle border for glassmorphism effect
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)', // Enhanced shadow with inner highlight
+                  display: 'block', // Change to block to prevent flex issues
+                  width: '100%',
+                  minHeight: '128px', // Minimum height for layout stability
+                  height: 'auto', // Dynamic height to accommodate multi-line titles
+                  borderRadius: '20px',
+                  background: 'rgba(15, 15, 15, 0.95)',
+                  backdropFilter: 'blur(20px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                   position: 'relative',
-                  margin: '0',
-                  padding: '0',
-                  cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                    e.currentTarget.style.transform = 'scale(1.02)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  margin: '0 0 4px 0', // Slightly increased margin for better card separation
+                  padding: '2px', // Reduced to 2px maximum for compact design
+                  overflow: 'hidden',
+                  boxSizing: 'border-box',
+                  isolation: 'isolate',
+                  transform: 'translateZ(0)',
+                  willChange: 'transform',
+                  zIndex: 1, // Ensure proper stacking
+                  clear: 'both' // Prevent float issues
                 }}
               >
-                {/* Group 1 - Complete Event Card Content */}
+                {/* Mobile Event Card Content - Compact Horizontal Layout */}
                 <div
                   style={{
-                    width: '220px',
-                    height: '85px',
-                    position: 'relative'
+                    width: '100%',
+                    height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxSizing: 'border-box',
+                    padding: '2px' // Reduced padding for compact design
                   }}
                 >
-                  {/* Frame 6 - Image Section */}
+                  {/* Image Section - Compact Horizontal Layout */}
                   <div
                     style={{
                       position: 'absolute',
-                      width: '84px',
-                      height: '84px',
-                      left: '0px',
-                      top: '1px'
+                      left: '2px',
+                      top: '2px',
+                      width: '120px',
+                      height: '120px',
+                      flexShrink: 0,
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      zIndex: 100,
+                      transition: 'transform 0.1s ease',
+                      boxSizing: 'border-box'
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // Handle image expansion if needed
                     }}
                   >
-                    {/* Rectangle 2 - Event Background Image - Progressive Loading with AVIF/WebP/JPEG */}
-                    <picture>
-                      <source
-                        srcSet={getAVIFSrcSet(card.coverImage, 'event')}
-                        sizes="111px"
-                        type="image/avif"
-                      />
-                      <source
-                        srcSet={getResponsiveSrcSet(card.coverImage, 'event')}
-                        sizes="111px"
-                        type="image/webp"
-                      />
-                      <img
-                        src={getOptimizedImageUrl(card.coverImage, 111)}
-                        alt={`${card.title} event cover`}
-                        {...getImageLoadingStrategy(index, false)}
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent interference with card interactions
-                          if (card.isRealEvent && card.hasTicketLink) {
-                            console.log(`🎫 Desktop image: Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                          }
-                        }}
-                        onMouseEnter={(e) => {
-                          if (card.isRealEvent && card.hasTicketLink) {
-                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
-                            e.target.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.target.style.transform = 'scale(1) translateY(0px)';
-                          e.target.style.boxShadow = 'none';
-                        }}
-                        onMouseDown={(e) => {
-                          if (card.isRealEvent && card.hasTicketLink) {
-                            e.target.style.transform = 'scale(0.995) translateY(0px)';
-                          }
-                        }}
-                        onMouseUp={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.target.style.transform = 'scale(1.015) translateY(-2px)';
-                          }
-                        }}
-                        onError={(e) => {
-                          e.target.style.backgroundColor = 'lightgray';
-                          e.target.style.display = 'block';
-                        }}
-                        style={{
-                          position: 'absolute',
-                          left: '3px',
-                          top: '2px',
-                          width: '79.04px',
-                          height: '79.04px',
-                          borderRadius: '14px',
-                          objectFit: 'cover',
-                          backgroundColor: 'lightgray',
-                          cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default',
-                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                          transform: 'scale(1) translateY(0px)',
-                          boxShadow: 'none'
-                        }}
-                      />
-                    </picture>
-
-                    {/* Frame 7 - Date Badge Container */}
-                    <div
+                    {/* Event Background Image */}
+                    <img
+                      src={getOptimizedImageUrl(card.coverImage, 120)}
+                      alt={`${card.title} event cover`}
+                      loading="lazy"
+                      onError={(e) => {
+                        console.log('❌ Homepage event image failed to load:', card.title, 'URL:', e.target.src);
+                        // Use placeholder
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                      }}
+                      onLoad={(e) => {
+                        console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);
+                        e.target.style.backgroundColor = 'transparent';
+                      }}
                       style={{
                         position: 'absolute',
-                        left: '54px',
-                        top: '5px',
-                        width: '24px',
-                        height: '24px'
+                        left: '4px',
+                        top: '4px',
+                        width: '112px',
+                        height: '112px',
+                        borderRadius: '17px',
+                        objectFit: 'cover',
+                        backgroundColor: '#2a2a2a',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: 'scale(1)',
+                        boxShadow: 'none',
+                        pointerEvents: 'none'
                       }}
-                    >
-                      {/* Rectangle 1 - White Badge Background */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: '0px',
-                          top: '-1px',
-                          width: '24px',
-                          height: '24px',
-                          borderRadius: '4px',
-                          background: '#FFF'
-                        }}
-                      />
-
-                      {/* Date Badge Content */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: '2px',
-                          top: '2px',
-                          display: 'flex',
-                          width: '20px',
-                          height: '18px',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: '1px'
-                        }}
-                      >
-                        {/* DAY Number */}
-                        <span
-                          style={{
-                            color: '#000',
-                            textAlign: 'center',
-                            fontFamily: 'Inter',
-                            fontSize: '10px',
-                            fontWeight: '600',
-                            lineHeight: 'normal'
-                          }}
-                        >
-                          {card.day}
-                        </span>
-
-                        {/* MONTH Abbreviation */}
-                        <span
-                          style={{
-                            color: '#000',
-                            textAlign: 'center',
-                            fontFamily: 'Inter',
-                            fontSize: '6px',
-                            fontWeight: '600',
-                            lineHeight: 'normal'
-                          }}
-                        >
-                          {card.month}
-                        </span>
-                      </div>
-                    </div>
+                    />
                   </div>
 
-                  {/* Frame 4 - Text Content Section */}
+                  {/* Text Content Section - Compact Horizontal Layout */}
                   <div
-                    className="card-clickable-area"
                     style={{
-                      position: 'absolute',
-                      left: '94px',
-                      top: '0px',
                       display: 'flex',
-                      width: '126px',  // Adjusted for 220px card width (220-94=126)
-                      height: '85px',
-                      padding: '3px 0px',
+                      width: 'calc(100% - 130px)',
+                      padding: '2px 2px 2px 4px',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
-                      alignItems: 'flex-start',  // Justify content to the left
-                      gap: '12px',
-                      cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#' ? 'pointer' : 'default'
+                      alignItems: 'flex-start',
+                      position: 'absolute',
+                      left: '126px',
+                      top: '2px',
+                      height: '120px',
+                      boxSizing: 'border-box'
                     }}
                   >
-                    {/* Frame 3 - Event Information */}
+                    {/* Event Information */}
                     <div
                       style={{
+                        width: '100%',
+                        minHeight: '84px',
+                        height: 'auto',
                         display: 'flex',
-                        height: '50px',
                         flexDirection: 'column',
-                        alignItems: 'flex-start',
                         alignSelf: 'stretch',
-                        gap: '1px',
-                        justifyContent: 'space-between'
+                        flex: '1 1 auto'
                       }}
                     >
                       {/* Event Title */}
-                      <div
+                      <h3
                         style={{
-                          display: 'flex',
-                          width: '150px',
-                          height: '16px',
-                          flexDirection: 'column',
-                          justifyContent: 'center',
-                          color: '#FFF',
                           fontFamily: 'Inter',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          lineHeight: '1.0',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          fontWeight: '700',
+                          fontSize: '16px',
+                          lineHeight: '1.25',
+                          textAlign: 'left',
+                          color: '#FFFFFF',
+                          width: '100%',
+                          minHeight: '20px',
+                          height: 'auto',
+                          margin: '0 0 4px 0',
+                          padding: '0',
+                          overflow: 'visible',
+                          textOverflow: 'unset',
+                          whiteSpace: 'normal',
+                          wordWrap: 'break-word',
+                          hyphens: 'auto'
                         }}
                       >
                         {card.title}
-                      </div>
+                      </h3>
 
-                      {/* DATE Information Row */}
+                      {/* Event DateTime */}
                       <div
-                        onClick={() => {
-                          // Create calendar event
-                          const eventTitle = encodeURIComponent(card.title);
-                          const eventLocation = encodeURIComponent(card.location);
-                          const eventDate = card.date;
-
-                          // Parse date string to create proper calendar format
-                          // Assuming card.date format like "Thu @ Jul 03 10:00PM"
-                          const now = new Date();
-                          const currentYear = now.getFullYear();
-
-                          // Extract date parts (this is a simplified parser)
-                          const dateMatch = eventDate.match(/(\w{3})\s+@\s+(\w{3})\s+(\d{1,2})\s+(\d{1,2}):(\d{2})(AM|PM)/);
-
-                          if (dateMatch) {
-                            const [, , month, day, hour, minute, ampm] = dateMatch;
-                            const monthMap = {
-                              'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
-                              'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
-                            };
-
-                            let hour24 = parseInt(hour);
-                            if (ampm === 'PM' && hour24 !== 12) hour24 += 12;
-                            if (ampm === 'AM' && hour24 === 12) hour24 = 0;
-
-                            const eventDateTime = new Date(currentYear, monthMap[month], parseInt(day), hour24, parseInt(minute));
-                            const endDateTime = new Date(eventDateTime.getTime() + 3 * 60 * 60 * 1000); // 3 hours later
-
-                            // Format for calendar URL
-                            const startTime = eventDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-                            const endTime = endDateTime.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-
-                            // Try different calendar methods
-                            const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&dates=${startTime}/${endTime}&location=${eventLocation}&details=Event%20details`;
-
-                            window.open(calendarUrl, '_blank');
-                          }
-                        }}
                         style={{
                           display: 'flex',
-                          height: '12px',
-                          paddingLeft: '1px',
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          gap: '3px',
                           alignSelf: 'stretch',
-                          cursor: 'pointer',
-                          transition: 'opacity 0.2s ease-in-out'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.opacity = '0.7';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.opacity = '1';
+                          gap: '6px',
+                          padding: '0px 0px 0px 2px'
                         }}
                       >
-                        {/* Calendar Icon SVG */}
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="1"/>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 10 10"
+                          fill="none"
+                          style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        >
+                          <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
                         </svg>
-
-                        {/* Date Text */}
                         <span
                           style={{
-                            display: 'flex',
-                            width: '140px',
-                            height: '10px',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: '9px',
-                            fontWeight: '100',
-                            lineHeight: '1.0',
+                            fontWeight: '300',
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            textAlign: 'left',
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            width: '100%',
+                            height: '14px',
+                            margin: '0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
@@ -3098,62 +3495,37 @@ const FigmaDesktop = () => {
                         </span>
                       </div>
 
-                      {/* LOCATION Information Row */}
+                      {/* Event Location */}
                       <div
-                        onClick={() => {
-                          const address = encodeURIComponent(card.location);
-                          const userAgent = navigator.userAgent || '';
-
-                          // Detect iOS
-                          if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-                            window.open(`maps://maps.apple.com/?q=${address}`, '_blank');
-                          }
-                          // Detect Android
-                          else if (/android/i.test(userAgent)) {
-                            window.open(`geo:0,0?q=${address}`, '_blank');
-                          }
-                          // Default to Google Maps for web browsers
-                          else {
-                            window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
-                          }
-                        }}
                         style={{
                           display: 'flex',
-                          height: '12px',
-                          padding: '0px 1px',
-                          marginTop: '2px',
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          gap: '3px',
                           alignSelf: 'stretch',
-                          cursor: 'pointer',
-                          transition: 'opacity 0.2s ease-in-out'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.opacity = '0.7';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.opacity = '1';
+                          gap: '6px',
+                          padding: '0px 2px'
                         }}
                       >
-                        {/* Location Icon SVG */}
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                          <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="1"/>
-                          <circle cx="5" cy="4" r="1" fill="#FFF"/>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                        >
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
                         </svg>
-
-                        {/* Location Text */}
                         <span
                           style={{
-                            display: 'flex',
-                            width: '140px',
-                            height: '10px',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: '9px',
-                            fontWeight: '100',
-                            lineHeight: '1.0',
+                            fontWeight: '300',
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            textAlign: 'left',
+                            color: 'rgba(255, 255, 255, 0.65)',
+                            width: '100%',
+                            height: '14px',
+                            margin: '0',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
@@ -3164,169 +3536,74 @@ const FigmaDesktop = () => {
                       </div>
                     </div>
 
-                    {/* Frame 9 - Action Buttons Section */}
+                    {/* Event Button - Aligned with image bottom edge */}
                     <div
                       style={{
-                        position: 'absolute',
-                        left: '0px',
-                        top: '45px', // Position to align button bottom with image bottom
+                        width: '100%',
+                        height: '32px',
                         display: 'flex',
-                        width: '156px',
-                        height: '36px',
+                        flexDirection: 'row',
                         justifyContent: 'flex-start',
-                        alignItems: 'flex-end'
+                        alignItems: 'flex-end',
+                        gap: '6px',
+                        padding: '0px 2px 0px 0px',
+                        position: 'absolute',
+                        bottom: '4px', // Fine-tuned to perfectly align button bottom with image bottom edge
+                        left: '0px'
                       }}
                     >
-                      {/* Get Tickets Button */}
-                      <div
-                        onClick={() => {
-                          if (card.isRealEvent && card.hasTicketLink) {
-                            console.log(`🎫 Desktop button: Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                      {card.isRealEvent && card.hasTicketLink ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
                             window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                          }
-                        }}
-                        style={{
-                          display: 'flex',
-                          width: '120px',
-                          height: '20px',
-                          padding: '8px 10px',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: '6px',
-                          borderRadius: '20px',
-                          background: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? 'rgba(35, 35, 35, 0.95)' // Enhanced contrast with reduced transparency
-                            : 'rgba(23, 23, 23, 0.40)',
-                          border: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? '1px solid rgba(255, 255, 255, 0.15)' // Subtle border for better definition
-                            : '1px solid rgba(255, 255, 255, 0.05)',
-                          boxShadow: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? '0 3px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow and inner highlight
-                            : 'none',
-                          cursor: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? 'pointer'
-                            : 'default',
-                          opacity: card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#'
-                            ? 1
-                            : 0.6,
-                          transition: 'all 0.3s ease',
-                          transform: 'scale(1)'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.currentTarget.style.transform = 'scale(1.05)';
-                            e.currentTarget.style.background = 'rgba(76, 76, 76, 0.90)'; // Lighter color similar to watch now button
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.currentTarget.style.transform = 'scale(1)';
-                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.80)';
-                          }
-                        }}
-                        onMouseDown={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.currentTarget.style.transform = 'scale(0.95)';
-                          }
-                        }}
-                        onMouseUp={(e) => {
-                          if (card.isRealEvent && card.ticketsUrl && card.ticketsUrl !== '#') {
-                            e.currentTarget.style.transform = 'scale(1.05)';
-                          }
-                        }}
-                      >
-                        <span
+                          }}
                           style={{
-                            color: '#FFF',
+                            background: 'rgba(23, 23, 23, 0.8)',
+                            borderRadius: '46px',
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '16px 15px',
+                            width: 'calc(100% - 4px)',
+                            height: '32px',
+                            border: 'none',
+                            cursor: 'pointer',
                             fontFamily: 'Inter',
-                            fontSize: '10px',
-                            fontWeight: '300',
-                            lineHeight: 'normal',
-                            pointerEvents: 'none'
+                            fontWeight: '500',
+                            fontSize: '14px',
+                            lineHeight: '1.21',
+                            textAlign: 'center',
+                            color: '#FFFFFF',
+                            transition: 'all 0.2s ease',
+                            transform: 'scale(1)',
+                            boxSizing: 'border-box'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.transform = 'scale(1.02)';
+                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
                           }}
                         >
-                          Get Tickets
-                        </span>
-                      </div>
+                          {card.buttonText || 'View Event'}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
-              </div>
+              </article>
             ))
             )}
           </div>
         </div>
 
-        {/* Text Us Section */}
-        <div
-          style={{
-            display: 'flex',
-            width: `${scaledDimensions.textUsWidth}px`,
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-            alignItems: 'stretch',
-            gap: '8px',
-            flexShrink: 0,
-            paddingTop: '8px',
-            paddingBottom: '8px'
-          }}
-        >
-          {/* Text us Title */}
-          <div
-            style={{
-              display: 'flex',
-              height: '17px',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignSelf: 'stretch',
-              color: '#FFF',
-              fontFamily: 'Inter',
-              fontSize: '24px',
-              fontWeight: '800',
-              lineHeight: 'normal',
-              marginBottom: '0px'
-            }}
-          >
-            Text us
-          </div>
 
-          {/* Subtext */}
-          <div
-            style={{
-              display: 'flex',
-              height: '11px',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignSelf: 'stretch',
-              color: '#FFF',
-              fontFamily: 'Inter',
-              fontSize: '10px',
-              fontWeight: '300',
-              lineHeight: 'normal',
-              marginBottom: '0px'
-            }}
-          >
-            Exclusive events, contests, and more
-          </div>
-          {/* Laylo Iframe - Official SDK Integration with Robust Loading */}
-          <LayloIframe
-            dropId="1nTsX"
-            color="ff0409"
-            theme="dark"
-            background="solid"
-            minimal={true}
-            style={{
-              width: '1px',
-              minWidth: '100%',
-              maxWidth: '1000px',
-              border: 'none',
-              borderRadius: '8px',
-              background: 'transparent'
-            }}
-          />
-
-          {/* Disclaimer Text - Removed, replaced by Laylo iframe */}
-        </div>
       </div>
 
       {/* B2B LOGO - Bottom */}
@@ -3355,9 +3632,9 @@ const FigmaDesktop = () => {
           }}
         />
       </div>
-          </div>
-        </div>
-      </div>
+    </div>
+    </div>
+    </div>
     </div>
   );
 };

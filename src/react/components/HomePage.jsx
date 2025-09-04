@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 
-// MEMORY OPTIMIZATION: Lazy load large components to reduce initial bundle size
-const FigmaDesktop = lazy(() => import('./FigmaDesktop'));
+// TEMPORARY: Direct import for debugging - replace with lazy loading after fix
+import FigmaDesktop from './FigmaDesktop';
 const FigmaMobile = lazy(() => import('./FigmaMobile'));
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 import { useAnalytics } from '../hooks/useAnalytics';

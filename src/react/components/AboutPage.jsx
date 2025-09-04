@@ -26,11 +26,9 @@ const AboutPage = () => {
     textUsWidth: 299
   });
 
-  // Mobile detection effect
+  // Mobile detection effect - FIXED: Added proper dependencies
   useEffect(() => {
     const detectDevice = () => {
-      // FIXED: Use viewport dimensions from hook instead of direct window access
-
       // Check user agent for mobile devices
       const userAgent = navigator.userAgent || '';
       const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
@@ -49,20 +47,9 @@ const AboutPage = () => {
       });
     };
 
-    // Initial detection
+    // Run detection whenever viewport dimensions change
     detectDevice();
-
-    // Listen for viewport changes
-    const handleResize = () => {
-      detectDevice();
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+  }, [isMobileByWidth, viewportWidth]); // FIXED: Added dependencies to trigger on viewport changes
 
   // FIXED: Use viewport dimensions from useViewportDimensions hook for responsive calculations
   useEffect(() => {

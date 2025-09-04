@@ -4534,25 +4534,7 @@ const FigmaMobile = () => {
           />
         </div>
 
-        {/* Social Media Buttons in Navigation */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '10px 25px 0px 25px', // Reduced top padding
-            transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
-            opacity: showMenu ? 1 : 0,
-            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDelay: showMenu ? '0.15s' : '0s',
-            willChange: 'transform, opacity',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <SocialMediaButtons />
-        </div>
+
 
         {/* Navigation Menu Items */}
         <div
@@ -4656,6 +4638,26 @@ const FigmaMobile = () => {
             }}
           >
             Contact
+          </div>
+
+          {/* Social Media Buttons in Navigation - MOVED BELOW navigation links */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: '40px 25px 0px 25px', // Added top padding for spacing after navigation
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
+              opacity: showMenu ? 1 : 0,
+              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.6s' : '0s', // Delayed to appear after Contact link
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SocialMediaButtons />
           </div>
         </div>
       </div>
