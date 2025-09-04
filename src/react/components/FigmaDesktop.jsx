@@ -1836,12 +1836,17 @@ const FigmaDesktop = () => {
             {/* Hero Featured Event - Perfect Square */}
             <div
               onClick={(e) => {
-                // Navigate directly to ticket purchase page
+                console.log('🔍 Desktop Featured Event: Click detected!', e.target);
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Navigate directly to ticket purchase page in new tab
                 if (mostRecentEvent?.external_ticket_url) {
                   console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                  window.location.href = mostRecentEvent.external_ticket_url; // Same window navigation for seamless experience
+                  window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
                 } else {
                   console.log('🎫 Desktop Featured Event: No ticket link available for', mostRecentEvent?.title);
+                  console.log('🔍 Desktop Featured Event data:', mostRecentEvent);
                 }
               }}
               style={{
@@ -2180,10 +2185,10 @@ const FigmaDesktop = () => {
           /* Mobile/Tablet Layout - Original Hero Image */
           <div
             onClick={(e) => {
-              // Navigate directly to ticket purchase page
+              // Navigate directly to ticket purchase page in new tab
               if (mostRecentEvent?.external_ticket_url) {
                 console.log(`🎫 Mobile Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                window.location.href = mostRecentEvent.external_ticket_url; // Same window navigation for seamless experience
+                window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
               } else {
                 console.log('🎫 Mobile Featured Event: No ticket link available for', mostRecentEvent?.title);
               }

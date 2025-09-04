@@ -9,7 +9,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  */
 export const useOptimizedScroll = (element = null, options = {}) => {
   const {
-    throttleMs = 16, // ~60fps
+    throttleMs = 32, // Reduced frequency to 30fps for better mobile performance
     threshold = 20,
     passive = true
   } = options;
@@ -30,15 +30,20 @@ export const useOptimizedScroll = (element = null, options = {}) => {
   const isThrottled = useRef(false);
 
   const handleScroll = useCallback((event) => {
+    // 📱 MOBILE SCROLL FIX: Ultra-passive approach to prevent scroll interference
     if (isThrottled.current) return;
-    
+
+    // FIXED: Never prevent default or interfere with native scrolling
+    // event.preventDefault() and event.stopPropagation() are completely avoided
+
     isThrottled.current = true;
-    
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-    }
-    
-    rafId.current = requestAnimationFrame(() => {
+
+    // Use setTimeout instead of RAF for less aggressive handling on mobile
+    const isMobile = window.innerWidth <= 767;
+
+    if (isMobile) {
+      // Mobile: Use setTimeout for less interference
+      setTimeout(() => {
       const now = performance.now();
       const target = event.target === document ? document.documentElement : event.target;
       
@@ -75,11 +80,60 @@ export const useOptimizedScroll = (element = null, options = {}) => {
       lastTimestamp.current = now;
       lastVelocity.current = smoothedVelocity;
       
-      // Reset throttle after delay
-      setTimeout(() => {
-        isThrottled.current = false;
+        // Reset throttle after delay
+        setTimeout(() => {
+          isThrottled.current = false;
+        }, throttleMs);
       }, throttleMs);
-    });
+    } else {
+      // Desktop: Use RAF for smoother performance
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current);
+      }
+
+      rafId.current = requestAnimationFrame(() => {
+        const now = performance.now();
+        const target = event.target === document ? document.documentElement : event.target;
+
+        // Batch DOM reads
+        const currentScrollY = target.scrollTop || window.pageYOffset || 0;
+        const currentScrollX = target.scrollLeft || window.pageXOffset || 0;
+
+        // Calculate direction and velocity
+        const deltaY = currentScrollY - lastScrollY.current;
+        const deltaX = currentScrollX - lastScrollX.current;
+        const deltaTime = now - lastTimestamp.current;
+
+        let direction = 'none';
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+          direction = deltaY > 0 ? 'down' : deltaY < 0 ? 'up' : 'none';
+        } else if (Math.abs(deltaX) > 0) {
+          direction = deltaX > 0 ? 'right' : 'left';
+        }
+
+        // Smooth velocity calculation to prevent jitter
+        const rawVelocity = deltaTime > 0 ? Math.abs(deltaY) / deltaTime : 0;
+        const smoothedVelocity = rawVelocity * 0.3 + lastVelocity.current * 0.7;
+
+        setScrollState({
+          scrollY: currentScrollY,
+          scrollX: currentScrollX,
+          isScrolled: currentScrollY > threshold,
+          direction,
+          velocity: smoothedVelocity
+        });
+
+        lastScrollY.current = currentScrollY;
+        lastScrollX.current = currentScrollX;
+        lastTimestamp.current = now;
+        lastVelocity.current = smoothedVelocity;
+
+        // Reset throttle after delay
+        setTimeout(() => {
+          isThrottled.current = false;
+        }, throttleMs);
+      });
+    }
   }, [throttleMs, threshold]);
 
   useEffect(() => {

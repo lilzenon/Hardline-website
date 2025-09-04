@@ -732,10 +732,11 @@ const FigmaMobile = () => {
   const drawerRef = useRef(null);
   const contentRef = useRef(null);
 
-  // Optimized scroll state for dynamic navigation
+  // 📱 MOBILE SCROLL FIX: Ultra-passive scroll state to prevent interference
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
     threshold: 20,
-    throttleMs: 16 // 60fps for smooth navigation
+    throttleMs: 100, // Increased throttling to reduce interference with native scrolling
+    passive: true // Ensure completely passive event handling
   });
 
   // Simplified phone number formatting handler without cursor management
@@ -1509,6 +1510,7 @@ const FigmaMobile = () => {
           location: location,
           coverImage: coverImage,
           ticketsUrl: ticketsUrl,
+          external_ticket_url: event.external_ticket_url, // Add for consistency with desktop
           hasTicketLink: hasTicketLink,
           buttonText: event.buy_button_text || 'View Event',
           isRealEvent: true,
@@ -1657,10 +1659,57 @@ const FigmaMobile = () => {
     return processedEvents;
   }, [homepageEvents, featuredEvents, showAllEvents]);
 
+  // 📱 REFINED EXPANDABLE EVENT CARDS STATE
+  const [isEventSectionExpanded, setIsEventSectionExpanded] = useState(false);
+  const [isExpanding, setIsExpanding] = useState(false);
+
   // Toggle mobile menu
   const toggleMenu = () => {
     setShowMenu(!showMenu);
   };
+
+  // Enhanced toggle expandable event section with animation state
+  const toggleEventSection = () => {
+    if (!isEventSectionExpanded) {
+      // Expanding: trigger animation state
+      setIsExpanding(true);
+      setIsEventSectionExpanded(true);
+      // Reset animation state after animation completes
+      setTimeout(() => setIsExpanding(false), 600);
+    } else {
+      // Collapsing: immediate state change
+      setIsEventSectionExpanded(false);
+      setIsExpanding(false);
+    }
+  };
+
+  // 🔧 ENHANCED: Current page detection for active state styling
+  const getCurrentPage = () => {
+    const pathname = window.location.pathname;
+    if (pathname === '/' || pathname === '') return 'events';
+    if (pathname.startsWith('/about')) return 'about';
+    if (pathname.startsWith('/contact')) return 'contact';
+    return 'events'; // Default fallback
+  };
+
+  const [currentPage, setCurrentPage] = useState(getCurrentPage());
+
+  // Update current page when navigation occurs
+  useEffect(() => {
+    const updateCurrentPage = () => {
+      setCurrentPage(getCurrentPage());
+    };
+
+    // Listen for navigation changes
+    window.addEventListener('popstate', updateCurrentPage);
+
+    // Check on mount and when location changes
+    updateCurrentPage();
+
+    return () => {
+      window.removeEventListener('popstate', updateCurrentPage);
+    };
+  }, []);
 
   // Handle navigation
   const handleNavigation = (path) => {
@@ -1670,6 +1719,8 @@ const FigmaMobile = () => {
       window.location.href = path;
     }
     setShowMenu(false);
+    // Update current page immediately for better UX
+    setTimeout(() => setCurrentPage(getCurrentPage()), 100);
   };
 
   // Handle phone input focus - expand drawer and show disclaimer
@@ -2152,9 +2203,27 @@ const FigmaMobile = () => {
 
   return (
     <>
-      {/* Mobile-specific CSS */}
+      {/* 📱 MOBILE SCROLL PERFORMANCE FIX */}
+      <link rel="stylesheet" href="/css/mobile-scroll-fix.css" />
+
+      {/* Mobile-specific CSS with dynamic background matching */}
       <style>
         {`
+          /* 📱 CSS CUSTOM PROPERTIES FOR PERFECT BACKGROUND MATCHING & ULTRA-SMOOTH ANIMATIONS */
+          :root {
+            --mobile-bg-primary: #161616;
+            --mobile-bg-secondary: #000000;
+            --mobile-bg-rgba-primary: 22, 22, 22;
+            --mobile-bg-rgba-secondary: 0, 0, 0;
+            /* Ultra-smooth animation timing variables */
+            --ultra-smooth-duration: 2.8s;
+            --ultra-smooth-easing: cubic-bezier(0.25, 0.1, 0.25, 1.0);
+            --smooth-easing-fast: cubic-bezier(0.4, 0, 0.2, 1);
+            /* Performance optimization variables */
+            --gpu-acceleration: translateZ(0);
+            --smooth-rendering: antialiased;
+          }
+
           /* Mobile device specific fixes for real device compatibility */
           html, body {
             -webkit-text-size-adjust: 100%;
@@ -2193,37 +2262,40 @@ const FigmaMobile = () => {
             -moz-osx-font-smoothing: grayscale;
           }
 
-          /* Enhanced iOS Safari scrolling optimization */
+          /* 📱 MOBILE SCROLL PERFORMANCE FIX - Ultra-stable approach */
           html, body {
-            -webkit-overflow-scrolling: touch;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            /* Prevent scroll bounce and improve momentum */
-            overscroll-behavior: contain;
-            -webkit-overscroll-behavior: contain;
-            /* Optimize scroll performance */
-            scroll-behavior: smooth;
-            touch-action: manipulation; /* Improve touch responsiveness */
+            /* Remove problematic smooth scrolling */
+            scroll-behavior: auto;
+            /* Enable native momentum scrolling */
+            -webkit-overflow-scrolling: auto;
+            /* Essential mobile optimizations only */
+            -webkit-text-size-adjust: 100%;
+            touch-action: manipulation;
+            /* Remove forced hardware acceleration */
+            transform: none;
+            will-change: auto;
+            /* FIXED: Prevent any scroll position manipulation */
+            scroll-snap-type: none;
+            -webkit-scroll-snap-type: none;
+            /* Ensure stable layout during scroll */
+            contain: layout;
           }
 
-          /* Prevent iOS Safari bounce scroll while allowing normal scrolling */
+          /* Fix mobile viewport without breaking scroll */
           html, body {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-            overscroll-behavior: none;
+            overflow: visible; /* Allow natural scrolling */
+            overscroll-behavior: contain; /* Prevent scroll chaining only */
           }
 
-          /* Fix iOS Safari viewport issues */
+          /* Mobile container - relative positioning for natural scroll */
           .mobile-container {
-            position: fixed;
-            top: 0;
-            left: 0;
+            position: relative; /* Changed from fixed to allow natural scroll */
             width: 100vw;
             height: 100vh;
             height: -webkit-fill-available;
-            overflow: hidden;
+            overflow: visible; /* Allow content to scroll naturally */
           }
 
           /* Optimize touch interactions for iOS */
@@ -2273,18 +2345,36 @@ const FigmaMobile = () => {
             background: rgba(255, 255, 255, 0.5);
           }
 
-          /* Enhanced iOS-style momentum scrolling */
+          /* 📱 ULTRA-STABLE MOBILE NAVIGATION */
+          .mobile-navigation-header {
+            /* Prevent any layout shifts from navigation changes */
+            contain: strict;
+            /* Isolate navigation animations from scroll */
+            isolation: isolate;
+            /* Prevent reflow during scroll state changes */
+            will-change: background-color, backdrop-filter;
+          }
+
+          /* 📱 OPTIMIZED MOBILE SCROLL CONTAINER */
           .mobile-content-container {
+            /* Native iOS momentum scrolling */
             -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
+            /* Remove problematic smooth scrolling */
+            scroll-behavior: auto;
+            /* Prevent scroll chaining */
             overscroll-behavior: contain;
             -webkit-overscroll-behavior: contain;
-            /* Improve scroll performance and stability */
-            scroll-snap-type: none; /* Disable snap scrolling that can cause jitter */
-            touch-action: pan-y; /* Only allow vertical scrolling */
-            /* Optimize rendering during scroll */
+            /* Disable scroll snapping that causes jitter */
+            scroll-snap-type: none;
+            /* Allow only vertical scrolling */
+            touch-action: pan-y;
+            /* Minimal rendering optimization */
             contain: layout style;
-            will-change: scroll-position;
+            /* Remove will-change to prevent unnecessary compositing */
+            will-change: auto;
+            /* Minimal hardware acceleration */
+            transform: translateZ(0);
+            backface-visibility: hidden;
           }
 
           .mobile-phone-input::placeholder {
@@ -2303,15 +2393,63 @@ const FigmaMobile = () => {
           .mobile-nav-item {
             transition: all 0.15s ease-out;
           }
+          /* 🔧 FIXED: Consistent menu button hover state - maintain position */
           .mobile-menu-button:hover {
             opacity: 0.8;
-            transform: translateY(-50%) scale(1.1);
+            /* Keep same translateY to prevent position drift */
+            transform: translateY(-50%) scale(1.05);
             transition: all 0.2s ease;
           }
 
-          /* Menu button animation states */
+          /* Active/pressed state for menu button */
+          .mobile-menu-button:active {
+            /* Maintain exact same position during press */
+            transform: translateY(-50%) scale(0.95);
+            opacity: 0.7;
+          }
+
+          /* 🔧 FIXED: Menu button animation states - prevent position drift */
           .mobile-menu-button {
             transition: transform 0.2s ease;
+            /* Ensure consistent positioning during animation */
+            transform-origin: center center;
+            /* Prevent any layout shifts during state changes */
+            contain: layout style;
+          }
+
+          /* Enhanced active state styling for navigation items */
+          .mobile-nav-item {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 16px 32px;
+            border-radius: 20px;
+            margin: 8px 0;
+            /* Glassmorphism background for better contrast */
+            background: transparent;
+            backdrop-filter: blur(0px);
+            border: 2px solid transparent;
+          }
+
+          /* Active page state styling */
+          .mobile-nav-item.active {
+            /* Enhanced glassmorphism effect for active state */
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            /* Subtle glow effect */
+            box-shadow:
+              0 8px 32px rgba(255, 255, 255, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            /* Slightly larger text for emphasis */
+            transform: scale(1.02);
+          }
+
+          /* Hover state for non-active items */
+          .mobile-nav-item:not(.active):hover {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            transform: scale(1.01);
           }
 
           /* Navigation overlay animations */
@@ -2346,6 +2484,266 @@ const FigmaMobile = () => {
           }
           .shake {
             animation: shake 0.4s ease-in-out;
+          }
+
+          /* 📱 ULTRA-SMOOTH EXPANDABLE EVENT CARDS SECTION */
+          .mobile-event-cards-container {
+            position: relative;
+            overflow: hidden;
+            background: #000000; /* Match main page background - pure black */
+            /* GPU-accelerated smooth animation with ultra-slow timing using CSS variables */
+            transition:
+              max-height var(--ultra-smooth-duration) var(--ultra-smooth-easing),
+              transform var(--ultra-smooth-duration) var(--ultra-smooth-easing),
+              opacity var(--ultra-smooth-duration) var(--ultra-smooth-easing);
+            /* GPU acceleration for buttery smooth performance */
+            will-change: max-height, transform, opacity;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            /* Optimize rendering for ultra-smooth performance */
+            contain: layout style paint;
+            transform-style: preserve-3d;
+            /* Additional performance optimizations */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            /* Prevent layout thrashing during animation */
+            overflow-anchor: none;
+          }
+
+          .mobile-event-cards-container.collapsed {
+            /* Show exactly 3 complete cards with improved gradient space */
+            max-height: calc(3 * 136px + 100px); /* 3 cards (408px) + gradient space for smooth transition (100px) */
+            /* Additional smoothness optimizations for collapsed state */
+            transform: scale3d(1, 1, 1);
+            opacity: 1;
+          }
+
+          .mobile-event-cards-container.expanded {
+            max-height: 2000px; /* Large enough for all cards */
+            /* Additional smoothness optimizations for expanded state */
+            transform: scale3d(1, 1, 1);
+            opacity: 1;
+          }
+
+          /* Ultra-smooth professional gradient overlay */
+          .mobile-event-cards-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px; /* Increased height for more gradual fade effect */
+            /* Ultra-smooth gradient with 10 stops to eliminate banding */
+            background: linear-gradient(
+              to bottom,
+              /* Extended transparent area at top to show more of third card */
+              transparent 0%,
+              transparent 40%,
+              /* More gradual fade progression for smoother visual flow */
+              rgba(0, 0, 0, 0.05) 42%,
+              rgba(0, 0, 0, 0.12) 45%,
+              rgba(0, 0, 0, 0.22) 48%,
+              rgba(0, 0, 0, 0.35) 52%,
+              rgba(0, 0, 0, 0.50) 56%,
+              rgba(0, 0, 0, 0.65) 60%,
+              rgba(0, 0, 0, 0.78) 65%,
+              rgba(0, 0, 0, 0.90) 70%,
+              rgba(0, 0, 0, 0.96) 75%,
+              /* Solid black area for button placement */
+              #000000 78%,
+              #000000 100%
+            );
+            /* Minimal blur for performance while maintaining quality */
+            backdrop-filter: blur(0.5px);
+            -webkit-backdrop-filter: blur(0.5px);
+            pointer-events: none;
+            /* Ultra-smooth, slow transition matching container animation */
+            transition:
+              opacity 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0),
+              transform 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+            /* GPU acceleration for smooth overlay animation */
+            will-change: opacity, transform;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+            z-index: 2;
+          }
+
+          /* Refined progressive blur overlay for smooth transitions */
+          .mobile-event-cards-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Ultra-smooth blur mask matching main gradient progression */
+            background: linear-gradient(
+              to bottom,
+              /* Top 30%: No blur mask for clear visibility */
+              transparent 0%,
+              transparent 30%,
+              /* Smooth blur progression from 30% to 70% */
+              rgba(0, 0, 0, 0.03) 35%,
+              rgba(0, 0, 0, 0.06) 40%,
+              rgba(0, 0, 0, 0.10) 45%,
+              rgba(0, 0, 0, 0.14) 50%,
+              rgba(0, 0, 0, 0.18) 55%,
+              rgba(0, 0, 0, 0.22) 60%,
+              rgba(0, 0, 0, 0.26) 65%,
+              rgba(0, 0, 0, 0.28) 68%,
+              /* Consistent blur for bottom 30% solid area */
+              rgba(0, 0, 0, 0.30) 70%,
+              rgba(0, 0, 0, 0.30) 100%
+            );
+            /* Optimized blur for smooth performance */
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            pointer-events: none;
+            z-index: 1;
+          }
+
+
+
+          .mobile-event-cards-overlay.hidden {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+
+          /* Modern expand/collapse handle - matching View Event button style */
+          .mobile-expand-handle {
+            position: absolute;
+            bottom: 12px; /* Default position for collapsed state */
+            left: 50%;
+            transform: translateX(-50%) translateZ(0); /* Center horizontally + GPU acceleration */
+            z-index: 5; /* Above all gradient layers */
+            width: 120px; /* Wider to match button proportions */
+            height: 32px; /* Consistent with View Event button height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 46px; /* Match View Event button border radius */
+            /* Dark glassmorphism matching View Event buttons */
+            background: rgba(23, 23, 23, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: none; /* Clean look like View Event buttons */
+            /* Typography matching View Event buttons */
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            font-size: 14px;
+            color: #FFFFFF;
+            text-align: center;
+            /* Only animate background color - keep button position stable */
+            transition: background-color 0.2s ease;
+            /* GPU acceleration for smooth rendering */
+            backface-visibility: hidden;
+            touch-action: manipulation;
+            box-sizing: border-box;
+          }
+
+          .mobile-expand-handle:hover {
+            background: rgba(23, 23, 23, 0.9);
+            /* No transform changes - keep button position stable */
+          }
+
+          .mobile-expand-handle:active {
+            background: rgba(23, 23, 23, 0.7);
+            /* No transform changes - keep button position stable */
+          }
+
+          /* Expanded state positioning - move button below all cards */
+          .mobile-expand-handle.expanded {
+            position: relative;
+            bottom: auto;
+            margin: 12px auto 0 auto; /* Reduced from 16px to 12px (~25% reduction) for closer positioning */
+            transform: translateZ(0); /* Keep GPU acceleration, no other transforms */
+            left: auto;
+          }
+
+          /* Modern centered chevron icon - ultra-smooth animation */
+          .mobile-expand-chevron {
+            width: 12px;
+            height: 12px;
+            border-right: 2px solid rgba(255, 255, 255, 0.9);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.9);
+            border-radius: 0 1px 0 0;
+            transform: rotate(45deg);
+            /* Ultra-smooth chevron rotation with GPU acceleration */
+            transition:
+              transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1.0),
+              border-color 0.6s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+            will-change: transform, border-color;
+            backface-visibility: hidden;
+            transform-origin: center;
+            margin: 0;
+            position: relative;
+            top: -1px;
+          }
+
+          .mobile-expand-chevron.expanded {
+            transform: rotate(-135deg);
+            border-color: rgba(255, 255, 255, 1);
+            top: 1px;
+          }
+
+          /* Simplified event card styling - no individual animations during expand/collapse */
+          .mobile-event-card-item {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+
+          /* Advanced smooth animation keyframes for ultra-fluid motion */
+          @keyframes ultraSmoothExpand {
+            0% {
+              transform: scale3d(1, 0.3, 1);
+              opacity: 0.8;
+            }
+            50% {
+              transform: scale3d(1, 0.65, 1);
+              opacity: 0.9;
+            }
+            100% {
+              transform: scale3d(1, 1, 1);
+              opacity: 1;
+            }
+          }
+
+          @keyframes ultraSmoothCollapse {
+            0% {
+              transform: scale3d(1, 1, 1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale3d(1, 0.65, 1);
+              opacity: 0.9;
+            }
+            100% {
+              transform: scale3d(1, 0.3, 1);
+              opacity: 0.8;
+            }
+          }
+
+          /* Enhanced animation classes for ultra-smooth transitions */
+          .mobile-event-cards-container.animating-expand {
+            animation: ultraSmoothExpand 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+          }
+
+          .mobile-event-cards-container.animating-collapse {
+            animation: ultraSmoothCollapse 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+          }
+
+          /* Respect user motion preferences */
+          @media (prefers-reduced-motion: reduce) {
+            .mobile-event-cards-container,
+            .mobile-event-cards-overlay,
+            .mobile-expand-handle,
+            .mobile-expand-chevron,
+            .mobile-event-card-item {
+              transition: none !important;
+              animation: none !important;
+            }
           }
 
           /* Mobile country selector styling */
@@ -2610,45 +3008,52 @@ const FigmaMobile = () => {
           background: '#000000',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden', // Prevent viewport scrolling
+          overflow: 'visible', // Allow natural scrolling
           // Mobile-specific viewport fixes
           minHeight: '100vh',
           minWidth: '100vw',
           isolation: 'isolate', // Create new stacking context
-          transform: 'translateZ(0)', // Force hardware acceleration
-          willChange: 'auto', // Let browser optimize to prevent scroll conflicts
-          WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-          WebkitTransform: 'translateZ(0)', // iOS Safari optimization
-          // Enhanced scroll optimization
-          touchAction: 'pan-y', // Only allow vertical scrolling
-          overscrollBehavior: 'contain' // Prevent scroll chaining
+          transform: 'none', // Remove forced hardware acceleration
+          willChange: 'auto', // Let browser optimize naturally
+          WebkitOverflowScrolling: 'auto', // Use native scrolling
+          WebkitTransform: 'none', // Remove iOS forced optimization
+          // Essential mobile optimizations only
+          touchAction: 'manipulation', // Improve touch responsiveness
+          overscrollBehavior: 'contain' // Prevent scroll chaining only
         }}
         aria-label="Mobile homepage content"
       >
-        {/* Navigation Bar - Fixed Header in Flexbox Layout */}
+        {/* Navigation Bar - Fixed Header with Stable Layout */}
         <header
           role="banner"
+          className="mobile-navigation-header"
           style={{
-            position: 'sticky', // Changed to sticky for better mobile behavior
+            position: 'sticky',
             top: '0px',
-            width: 'calc(100% - 40px)', // Reduced width by additional 20px (total 40px reduction)
-            height: isScrolled ? '70px' : '97px',
+            width: 'calc(100% - 40px)',
+            /* FIXED: Use fixed height to prevent layout shifts */
+            height: '97px', // Always use expanded height
+            minHeight: '97px', // Ensure consistent height
             background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000',
             backdropFilter: isScrolled ? 'blur(10px)' : 'none',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 15px', // Reduced padding from 20px to 15px
-            margin: '0 20px', // Increased margin to center the further reduced nav bar
+            padding: '0 15px',
+            margin: '0 20px',
             boxSizing: 'border-box',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            /* FIXED: Only animate visual properties, not layout properties */
+            transition: 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: 200,
             borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-            flexShrink: 0 // Prevent header from shrinking
+            flexShrink: 0,
+            /* FIXED: Prevent any layout shifts */
+            contain: 'layout style',
+            willChange: 'background-color, backdrop-filter'
           }}
           aria-label="Main navigation"
         >
-          {/* Menu Button - Right Side */}
+          {/* 🔧 FIXED: Menu Button - Consistent positioning */}
           <div
             onClick={toggleMenu}
             className="mobile-menu-button"
@@ -2656,7 +3061,7 @@ const FigmaMobile = () => {
               position: 'absolute',
               right: '15px', // Adjusted to match reduced nav bar padding
               top: '50%',
-              transform: 'translateY(-50%)',
+              transform: 'translateY(-50%)', // Consistent base transform
               width: '34px',
               height: '34px',
               cursor: 'pointer',
@@ -2665,7 +3070,12 @@ const FigmaMobile = () => {
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              gap: '4px'
+              gap: '4px',
+              // Prevent layout shifts during animation
+              transformOrigin: 'center center',
+              contain: 'layout style',
+              // Smooth transitions
+              transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease'
             }}
           >
             {/* Animated Menu Lines */}
@@ -2704,21 +3114,26 @@ const FigmaMobile = () => {
             />
           </div>
 
-          {/* B2B Logo - Dynamic Scroll-Responsive */}
+          {/* B2B Logo - Scroll-Responsive with Transform Scaling */}
           <img
             onClick={() => handleNavigation('/')}
             src="/images/mobile-figma/b2b-logo-mobile.svg"
             alt="B2B Logo"
             style={{
-              width: isScrolled ? '110px' : '138.41px', // Shrink when scrolled
-              height: isScrolled ? '34px' : '43px', // Proportional height
+              /* FIXED: Use fixed dimensions and scale with transform to prevent layout shifts */
+              width: '138.41px', // Fixed width
+              height: '43px', // Fixed height
               position: 'absolute',
               left: '50%',
               top: '50%',
-              transform: 'translate(-50%, -50%)',
+              /* FIXED: Use transform scale instead of changing dimensions */
+              transform: `translate(-50%, -50%) scale(${isScrolled ? 0.795 : 1})`, // 0.795 = 110/138.41
               cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
-              userSelect: 'none'
+              /* FIXED: Only animate transform to prevent layout shifts */
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: 'none',
+              /* Performance optimization */
+              willChange: 'transform'
             }}
             onMouseDown={(e) => {
               e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
@@ -2749,29 +3164,25 @@ const FigmaMobile = () => {
             boxSizing: 'border-box',
             overflow: 'auto',
             overflowX: 'hidden',
-            // Enhanced iOS Safari scrolling optimizations
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
+            // 📱 MOBILE SCROLL PERFORMANCE FIX - Simplified optimizations
+            WebkitOverflowScrolling: 'touch', // Native iOS momentum
+            overscrollBehavior: 'contain', // Prevent scroll chaining
             WebkitOverscrollBehavior: 'contain',
-            scrollBehavior: 'smooth',
-            // Hardware acceleration for smooth scrolling
+            scrollBehavior: 'auto', // Remove problematic smooth scrolling
+            // Minimal hardware acceleration
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
-            willChange: 'scroll-position',
-            // Optimize touch interactions
+            willChange: 'auto', // Remove scroll-position to prevent compositing issues
+            // Essential touch optimizations
             touchAction: 'pan-y', // Allow only vertical scrolling
             WebkitTouchCallout: 'none',
             WebkitUserSelect: 'none',
-            // Disable scroll snapping that can cause jitter
+            // Disable scroll snapping that causes jitter
             scrollSnapType: 'none',
             WebkitScrollSnapType: 'none',
-            // Prevent momentum scrolling issues
-            WebkitMomentumScrolling: 'touch',
-            // Optimize rendering
+            // Essential rendering optimizations only
             backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            perspective: '1000px',
-            WebkitPerspective: '1000px'
+            WebkitBackfaceVisibility: 'hidden'
           }}
         >
           {/* Events Section - Moved to top */}
@@ -2792,7 +3203,7 @@ const FigmaMobile = () => {
             <div
               style={{
                 display: 'flex',
-                width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
+                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '8px', // Drastically reduced spacing
@@ -2972,13 +3383,23 @@ const FigmaMobile = () => {
             >
             <div
               onClick={(e) => {
-                // Navigate to featured event image expansion
-                const imgElement = e.currentTarget.querySelector('img');
-                handleImageExpand(featuredEvent, imgElement);
+                console.log('🔍 Mobile Featured Event: Click detected!', e.target);
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Navigate directly to ticket purchase page in new tab
+                if (featuredEvent?.ticketsUrl && featuredEvent.ticketsUrl !== '#') {
+                  console.log(`🎫 Mobile Featured Event: Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
+                  window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                } else {
+                  console.log('🎫 Mobile Featured Event: No ticket link available for', featuredEvent?.title);
+                  console.log('🔍 Mobile Featured Event data:', featuredEvent);
+                  console.log('🔍 Available fields:', Object.keys(featuredEvent || {}));
+                }
               }}
               style={{
-                width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
-                height: 'min(324px, calc(100vw - 36px))', // Maintain square aspect ratio
+                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
+                height: 'min(324px, calc(100vw - 24px))', // Maintain square aspect ratio
                 position: 'relative',
                 margin: '0 auto', // Center the hero
                 cursor: 'pointer',
@@ -3326,8 +3747,8 @@ const FigmaMobile = () => {
             >
               <div
                 style={{
-                  width: 'min(324px, calc(100vw - 36px))',
-                  height: 'min(324px, calc(100vw - 36px))',
+                  width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
+                  height: 'min(324px, calc(100vw - 24px))', // Maintain square aspect ratio
                   position: 'relative',
                   margin: '0 auto',
                   borderRadius: '20px',
@@ -3381,37 +3802,55 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* Events List - Vertical Stack */}
+          {/* 📱 REFINED EXPANDABLE EVENTS SECTION */}
           <div
-            role="list"
-            aria-label="Upcoming live music events"
             style={{
-              display: 'flex',
-              width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
-              flexDirection: 'column',
-              justifyContent: 'flex-start',
-              alignItems: 'stretch',
-              gap: '4px', // Slightly increased gap for better card separation
-              flexShrink: 0,
-              margin: '0 auto', // Center the container
-              marginBottom: '4px', // Slightly increased spacing between small event cards for better readability
-              boxSizing: 'border-box',
-              minHeight: 'auto',
-              overflow: 'visible',
+              width: 'min(324px, calc(100vw - 24px))',
+              margin: '0 auto',
               position: 'relative',
-              zIndex: 1
+              paddingBottom: homepageEventCards.length > 3 ? '12px' : '0', // Space for improved gradient and button
+              background: '#000000' // Match main page background - pure black
             }}
           >
-            {/* Homepage Event Cards - Small Layout */}
+            {/* Events List Container with Expandable Functionality */}
+            <div
+              className={`mobile-event-cards-container ${isEventSectionExpanded ? 'expanded' : 'collapsed'}`}
+              style={{
+                width: '100%',
+                position: 'relative',
+                background: '#000000' // Match main page background - pure black
+              }}
+            >
+              {/* Events List - Vertical Stack */}
+              <div
+                role="list"
+                aria-label="Upcoming live music events"
+                style={{
+                  display: 'flex',
+                  width: '100%',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  alignItems: 'stretch',
+                  gap: '4px', // Slightly increased gap for better card separation
+                  flexShrink: 0,
+                  marginBottom: '4px', // Slightly increased spacing between small event cards for better readability
+                  boxSizing: 'border-box',
+                  minHeight: 'auto',
+                  overflow: 'visible',
+                  position: 'relative',
+                  zIndex: 1
+                }}
+              >
+            {/* Homepage Event Cards - Enhanced Layout with Refined Animations */}
             {homepageEventCards.length > 0 ? (
-              homepageEventCards.map((card, index) => (
+              homepageEventCards.map((card, index) => {
+                return (
                   <article
                     key={`homepage-${card.id}`}
-                    className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
+                    className={`mobile-event-card-item ${cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}`}
                     style={{
-                      display: 'block', // Change to block to prevent flex issues
                       width: '100%',
-                      minHeight: '128px', // Minimum height for layout stability
+                      minHeight: '132px', // Consistent height for better layout calculation
                       height: 'auto', // Dynamic height to accommodate multi-line titles
                       borderRadius: '20px',
                       background: 'rgba(15, 15, 15, 0.95)',
@@ -3420,16 +3859,17 @@ const FigmaMobile = () => {
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                       position: 'relative',
-                      margin: '0 0 4px 0', // Slightly increased margin for better card separation
-                      padding: '2px', // Reduced to 2px maximum for compact design
-                      animationDelay: cardsAnimated ? `${200 + (index * 60)}ms` : '0s', // Stagger after hero cards for top-to-bottom flow
+                      margin: '0 0 4px 0', // Consistent spacing
+                      padding: '2px', // Compact design
+                      // No animation delay for cleaner expand/collapse
                       overflow: 'hidden',
                       boxSizing: 'border-box',
                       isolation: 'isolate',
                       transform: 'translateZ(0)',
-                      willChange: 'transform',
+                      willChange: 'transform, opacity',
                       zIndex: 1, // Ensure proper stacking
-                      clear: 'both' // Prevent float issues
+                      clear: 'both', // Prevent float issues
+                      // No transition delay for cleaner expand/collapse animation
                     }}
                   >
                     {/* Mobile Event Card Content - Compact Horizontal Layout */}
@@ -3798,7 +4238,8 @@ const FigmaMobile = () => {
                       </div>
                     </div>
                   </article>
-                ))
+                );
+              })
             ) : (
               /* Empty State - No Events */
               <div
@@ -3836,15 +4277,53 @@ const FigmaMobile = () => {
               </div>
             )}
 
+              </div>
+
+              {/* 📱 GLASSMORPHISM GRADIENT OVERLAY - Only show when collapsed and has more than 3 cards */}
+              {!isEventSectionExpanded && homepageEventCards.length > 3 && (
+                <div
+                  className="mobile-event-cards-overlay"
+                  aria-hidden="true"
+                />
+              )}
+            </div>
+
+            {/* 📱 ENHANCED EXPAND/COLLAPSE HANDLE - Positioned within gradient overlay */}
+            {homepageEventCards.length > 3 && (
+              <div
+                className={`mobile-expand-handle ${isEventSectionExpanded ? 'expanded' : ''}`}
+                onClick={toggleEventSection}
+                role="button"
+                tabIndex={0}
+                aria-label={isEventSectionExpanded ? "Show fewer events" : "Show more events"}
+                aria-expanded={isEventSectionExpanded}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleEventSection();
+                  }
+                }}
+                style={{
+                  // Ensure handle is always visible and properly positioned
+                  opacity: 1,
+                  visibility: 'visible'
+                }}
+              >
+                <div
+                  className={`mobile-expand-chevron ${isEventSectionExpanded ? 'expanded' : ''}`}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
           </div>
           </section>
 
-          {/* Hero Video Section - Moved after Events */}
+          {/* Follow Us Section - YouTube Video */}
           <section
-            aria-labelledby="hero-video-title"
+            aria-labelledby="follow-us-section-title"
             style={{
               width: '100%',
-              marginTop: '4px',
+              marginTop: '2px', // Reduced by ~50% (from 4px to 2px) to bring closer to expand button
               marginBottom: '4px', // Consistent 4px spacing above and below
               // Modern load-in animation
               opacity: sectionsAnimated ? 1 : 0,
@@ -3853,22 +4332,35 @@ const FigmaMobile = () => {
               transitionDelay: '300ms' // Second section in cascade
             }}
           >
-            <h1
-              id="hero-video-title"
+            {/* Follow Us Section Title */}
+            <div
               style={{
-                position: 'absolute',
-                left: '-9999px',
-                width: '1px',
-                height: '1px',
-                overflow: 'hidden'
+                width: 'min(324px, calc(100vw - 24px))',
+                marginBottom: '8px', // Consistent spacing with Events section
+                margin: '0 auto 8px auto', // Center the container with minimal spacing
+                boxSizing: 'border-box'
               }}
             >
-              BOUNCE2BOUNCE - Exclusive Live Music Events and Artist Performances
-            </h1>
+              <h2
+                id="follow-us-section-title"
+                style={{
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: '32px', // Match Events section title
+                  fontWeight: '800', // Match Events section title
+                  lineHeight: '1.2', // Match Events section title
+                  margin: 0,
+                  textAlign: 'left' // Match Events section title
+                }}
+              >
+                Follow Us
+              </h2>
+            </div>
+
 
             <article
               style={{
-                width: 'min(324px, calc(100vw - 36px))', // Slightly increased width with 18px padding each side
+                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
                 height: '200px', // Mobile-optimized height
                 position: 'relative',
                 flexShrink: 0,
@@ -4082,7 +4574,7 @@ const FigmaMobile = () => {
           >
             <div
               style={{
-                width: 'min(324px, calc(100vw - 36px))', // Match exact width of other content elements
+                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -4560,7 +5052,7 @@ const FigmaMobile = () => {
         >
           <div
             onClick={() => handleNavigation('/')}
-            className="mobile-nav-item"
+            className={`mobile-nav-item ${currentPage === 'events' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
@@ -4572,7 +5064,7 @@ const FigmaMobile = () => {
               opacity: 1,
               // Enhanced animation with hardware acceleration
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out, background 0.3s ease, backdrop-filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
               transitionDelay: showMenu ? '0.3s' : '0s',
               // Hardware acceleration for smooth text animations
               willChange: 'transform, opacity',
@@ -4587,7 +5079,7 @@ const FigmaMobile = () => {
           </div>
           <div
             onClick={() => handleNavigation('/about')}
-            className="mobile-nav-item"
+            className={`mobile-nav-item ${currentPage === 'about' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
@@ -4599,7 +5091,7 @@ const FigmaMobile = () => {
               opacity: 1,
               // Enhanced animation with hardware acceleration
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out, background 0.3s ease, backdrop-filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
               transitionDelay: showMenu ? '0.4s' : '0s',
               // Hardware acceleration for smooth text animations
               willChange: 'transform, opacity',
@@ -4614,7 +5106,7 @@ const FigmaMobile = () => {
           </div>
           <div
             onClick={() => handleNavigation('/contact')}
-            className="mobile-nav-item"
+            className={`mobile-nav-item ${currentPage === 'contact' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
@@ -4626,7 +5118,7 @@ const FigmaMobile = () => {
               opacity: 1,
               // Enhanced animation with hardware acceleration
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out, background 0.3s ease, backdrop-filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
               transitionDelay: showMenu ? '0.5s' : '0s',
               // Hardware acceleration for smooth text animations
               willChange: 'transform, opacity',
