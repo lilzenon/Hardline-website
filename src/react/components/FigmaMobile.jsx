@@ -3158,7 +3158,7 @@ const FigmaMobile = () => {
             />
           </div>
 
-          {/* B2B Logo - Scroll-Responsive with Transform Scaling */}
+          {/* B2B Logo - Dynamic Scroll-Responsive Scaling */}
           <img
             onClick={() => handleNavigation('/')}
             src="/images/mobile-figma/b2b-logo-mobile.svg"
@@ -3170,11 +3170,22 @@ const FigmaMobile = () => {
               position: 'absolute',
               left: '50%',
               top: '50%',
-              /* FIXED: Use transform scale instead of changing dimensions */
-              transform: `translate(-50%, -50%) scale(${isScrolled ? 0.795 : 1})`, // 0.795 = 110/138.41
+              /* ENHANCED: Dynamic scaling based on scroll position */
+              transform: `translate(-50%, -50%) scale(${(() => {
+                // Calculate dynamic scale based on scroll position
+                const maxScale = 1; // Full size at top
+                const minScale = 0.795; // Minimum size (110/138.41)
+                const scrollThreshold = 100; // Pixels to complete transition
+
+                // Calculate scale factor based on scroll position
+                const scrollProgress = Math.min(scrollY / scrollThreshold, 1);
+                const currentScale = maxScale - (scrollProgress * (maxScale - minScale));
+
+                return currentScale;
+              })()})`,
               cursor: 'pointer',
-              /* FIXED: Only animate transform to prevent layout shifts */
-              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              /* ENHANCED: Smoother transition for dynamic scaling */
+              transition: 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)',
               userSelect: 'none',
               /* Performance optimization */
               willChange: 'transform'
@@ -5090,13 +5101,13 @@ const FigmaMobile = () => {
             margin: '0 auto',
             padding: '8px 25px 40px 25px', // Tight spacing after social media buttons
             gap: '24px',
-            // Enhanced animation with hardware acceleration
-            transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
+            // FIXED: Slower, calmer container animation with centered positioning
+            transform: 'translate3d(0, 0, 0)', // Always centered, no movement
             opacity: showMenu ? 1 : 0,
-            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDelay: showMenu ? '0.2s' : '0s',
+            transition: 'opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, smoother fade
+            transitionDelay: showMenu ? '0.4s' : '0s', // Longer delay for calmer feel
             // Hardware acceleration for smooth animations
-            willChange: 'transform, opacity',
+            willChange: 'opacity',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden'
           }}
@@ -5114,12 +5125,13 @@ const FigmaMobile = () => {
               cursor: 'pointer',
               textAlign: 'center',
               opacity: 1,
-              // Enhanced animation with hardware acceleration
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out, background 0.3s ease, backdrop-filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
-              transitionDelay: showMenu ? '0.3s' : '0s',
+              // ENHANCED: Sequential fade-in animation - Home (1st item)
+              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
+              opacity: showMenu ? 1 : 0,
+              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
+              transitionDelay: showMenu ? '0.5s' : '0s', // First item - shortest delay
               // Hardware acceleration for smooth text animations
-              willChange: 'transform, opacity',
+              willChange: 'opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               // Improve text rendering
@@ -5141,12 +5153,13 @@ const FigmaMobile = () => {
               cursor: 'pointer',
               textAlign: 'center',
               opacity: 1,
-              // Enhanced animation with hardware acceleration
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out, background 0.3s ease, backdrop-filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
-              transitionDelay: showMenu ? '0.4s' : '0s',
+              // ENHANCED: Sequential fade-in animation - Events (2nd item)
+              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
+              opacity: showMenu ? 1 : 0,
+              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
+              transitionDelay: showMenu ? '0.9s' : '0s', // Second item - moderate delay
               // Hardware acceleration for smooth text animations
-              willChange: 'transform, opacity',
+              willChange: 'opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               // Improve text rendering
@@ -5167,13 +5180,13 @@ const FigmaMobile = () => {
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
-              opacity: 1,
-              // Enhanced animation with hardware acceleration
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-              transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out, background 0.3s ease, backdrop-filter 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
-              transitionDelay: showMenu ? '0.5s' : '0s',
+              // ENHANCED: Sequential fade-in animation - Contact (4th item)
+              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
+              opacity: showMenu ? 1 : 0,
+              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
+              transitionDelay: showMenu ? '1.7s' : '0s', // Fourth item - even longer delay
               // Hardware acceleration for smooth text animations
-              willChange: 'transform, opacity',
+              willChange: 'opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
               // Improve text rendering
@@ -5191,11 +5204,12 @@ const FigmaMobile = () => {
               justifyContent: 'center',
               alignItems: 'center',
               padding: '40px 25px 0px 25px', // Added top padding for spacing after navigation
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
+              // ENHANCED: Sequential fade-in animation - Social Media (5th item)
+              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
               opacity: showMenu ? 1 : 0,
-              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.6s' : '0s', // Delayed to appear after Contact link
-              willChange: 'transform, opacity',
+              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
+              transitionDelay: showMenu ? '2.1s' : '0s', // Final element with longest delay for cascading effect
+              willChange: 'opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden'
             }}
