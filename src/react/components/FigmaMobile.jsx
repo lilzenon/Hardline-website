@@ -5125,9 +5125,9 @@ const FigmaMobile = () => {
               cursor: 'pointer',
               textAlign: 'center',
               opacity: 1,
-              // ENHANCED: Sequential fade-in animation - Home (1st item)
+              // FIXED: Sequential fade-in animation - Home (1st item)
               transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-              opacity: showMenu ? 1 : 0,
+              opacity: showMenu ? 1 : 0, // Start hidden, fade in when menu opens
               transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
               transitionDelay: showMenu ? '0.5s' : '0s', // First item - shortest delay
               // Hardware acceleration for smooth text animations
@@ -5152,12 +5152,11 @@ const FigmaMobile = () => {
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
-              opacity: 1,
-              // ENHANCED: Sequential fade-in animation - Events (2nd item)
+              // FIXED: Sequential fade-in animation - About (3rd item)
               transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-              opacity: showMenu ? 1 : 0,
+              opacity: showMenu ? 1 : 0, // Start hidden, fade in when menu opens
               transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
-              transitionDelay: showMenu ? '0.9s' : '0s', // Second item - moderate delay
+              transitionDelay: showMenu ? '1.3s' : '0s', // Third item - longer delay
               // Hardware acceleration for smooth text animations
               willChange: 'opacity',
               backfaceVisibility: 'hidden',
