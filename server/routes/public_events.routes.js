@@ -109,7 +109,7 @@ router.get(
         if (isQRAccess && foundEvent.qr_code_enabled) {
             try {
                 const { UAParser } = require('ua-parser-js');
-                const geoip = require('geoip-lite');
+                const geoip = require('geoip-country'); // 🔧 FIXED: Updated from deprecated geoip-lite
 
                 const userAgent = req.get('User-Agent');
                 const ipAddress = req.ip || req.connection.remoteAddress;

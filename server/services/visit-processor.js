@@ -4,7 +4,7 @@
  */
 
 const UAParser = require("ua-parser-js");
-const geoip = require("geoip-lite");
+const geoip = require("geoip-country"); // 🔧 FIXED: Updated from deprecated geoip-lite
 const URL = require("url");
 const query = require("../queries");
 const utils = require("../utils");

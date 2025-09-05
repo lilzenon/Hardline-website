@@ -57,7 +57,7 @@
         "express-rate-limit": "8.0.1",
         "express-session": "^1.18.2",
         "express-validator": "7.2.1",
-        "geoip-lite": "^1.4.10",
+        "geoip-country": "^5.0.202509022342",
         "gsap": "^3.13.0",
         "hbs": "4.2.0",
         "helmet": "8.1.0",

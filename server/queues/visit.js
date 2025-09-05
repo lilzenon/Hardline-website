@@ -1,5 +1,5 @@
 const { UAParser } = require("ua-parser-js");
-const geoip = require("geoip-lite");
+const geoip = require("geoip-country"); // 🔧 FIXED: Updated from deprecated geoip-lite
 const URL = require("node:url");
 
 const { removeWww } = require("../utils");

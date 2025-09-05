@@ -562,13 +562,23 @@ const FigmaMobile = () => {
 
   // Add useEffect for Laylo SDK initialization
   useEffect(() => {
-    // Load Laylo SDK script only once
+    // Load Laylo SDK script only once with proper error handling
     if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
       const layloScript = document.createElement('script');
       layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
       layloScript.async = true;
+      layloScript.defer = true; // 🔧 FIXED: Add defer to prevent blocking
+
+      // 🔧 FIXED: Add error handling to prevent crashes
+      layloScript.onerror = (error) => {
+        console.warn('⚠️ Laylo SDK failed to load in FigmaMobile:', error);
+      };
+
+      layloScript.onload = () => {
+        console.log('✅ Laylo SDK script loaded successfully in FigmaMobile');
+      };
+
       document.head.appendChild(layloScript);
-      console.log('✅ Laylo SDK script loaded');
     }
   }, []);
 

@@ -103,65 +103,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         format: 'es',
-        // 🚀 PERFORMANCE: Independent page chunks for optimal loading
-        manualChunks: (id) => {
-          // Core React libraries (essential, loaded first)
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-            return 'react-core';
-          }
-
-          // 🎯 OPTIMIZED: Independent page component chunks
-          if (id.includes('/FigmaMobile.jsx') || id.includes('\\FigmaMobile.jsx')) {
-            return 'homepage-mobile';
-          }
-          if (id.includes('/FigmaDesktop.jsx') || id.includes('\\FigmaDesktop.jsx')) {
-            return 'homepage-desktop';
-          }
-          if (id.includes('/AboutPageMobile.jsx') || id.includes('\\AboutPageMobile.jsx')) {
-            return 'about-mobile';
-          }
-          if ((id.includes('/AboutPage.jsx') || id.includes('\\AboutPage.jsx')) && !id.includes('Mobile')) {
-            return 'about-desktop';
-          }
-          if (id.includes('/ContactPageMobile.jsx') || id.includes('\\ContactPageMobile.jsx')) {
-            return 'contact-mobile';
-          }
-          if ((id.includes('/ContactPage.jsx') || id.includes('\\ContactPage.jsx')) && !id.includes('Mobile')) {
-            return 'contact-desktop';
-          }
-
-          // Shared components (small, can be bundled together)
-          if (id.includes('MobileNavigation') || id.includes('MobileDrawer')) {
-            return 'mobile-components';
-          }
-
-          // Large UI libraries (separate for caching)
-          if (id.includes('lucide-react')) {
-            return 'icons';
-          }
-
-          // Analytics and tracking (defer loading)
-          if (id.includes('analytics') || id.includes('beacon')) {
-            return 'analytics';
-          }
-
-          // Utilities and hooks (shared, small)
-          if (id.includes('/utils/') || id.includes('/hooks/')) {
-            return 'utils';
-          }
-
-          // Node modules vendor splitting
-          if (id.includes('node_modules')) {
-            // Split large libraries into separate chunks
-            if (id.includes('gsap')) {
-              return 'animations';
-            }
-            if (id.includes('date-fns')) {
-              return 'date-utils';
-            }
-            return 'vendor';
-          }
-        },
+        // 🔧 FIXED: Disable manual chunks to prevent module loading issues
+        // manualChunks: undefined, // Let Vite handle chunking automatically
         // Optimize asset naming for better caching
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

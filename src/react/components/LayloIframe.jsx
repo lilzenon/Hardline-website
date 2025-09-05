@@ -32,6 +32,12 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       return true;
     }
 
+    // 🔧 FIXED: Also check if Laylo global object exists
+    if (typeof window !== 'undefined' && window.Laylo) {
+      console.log('✅ Laylo global object found, proceeding with iframe');
+      return true;
+    }
+
     return false;
   }, []);
 
@@ -93,6 +99,16 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   const handleIframeLoad = useCallback(() => {
     console.log('📡 Iframe load event fired');
     setIframeReady(true);
+
+    // 🔧 FIXED: Notify Laylo SDK that iframe is ready
+    if (typeof window !== 'undefined' && window.Laylo && window.Laylo.init) {
+      try {
+        console.log('🔄 Notifying Laylo SDK of iframe readiness');
+        window.Laylo.init();
+      } catch (error) {
+        console.warn('⚠️ Laylo SDK init failed:', error);
+      }
+    }
 
     // Start checking for content
     if (contentCheckInterval.current) {
@@ -165,12 +181,14 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   return (
     <iframe
       ref={iframeRef}
+      id={`laylo-drop-${dropId}`} // 🔧 FIXED: Add required ID for Laylo SDK
       title="Laylo Signup"
       width="100%"
       height="100%"
       frameBorder="0"
       scrolling="no"
       onLoad={handleIframeLoad}
+      allow="web-share" // 🔧 FIXED: Add required permissions
       style={{
         ...style,
         opacity: contentLoaded ? 1 : 0.8,

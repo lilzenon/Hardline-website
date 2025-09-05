@@ -508,7 +508,7 @@ async function getLocationFromIP(ipAddress) {
 
     try {
         // Simple IP-based location detection
-        const geoip = require('geoip-lite');
+        const geoip = require('geoip-country'); // 🔧 FIXED: Updated from deprecated geoip-lite
         const geo = geoip.lookup(ipAddress);
 
         if (geo) {
