@@ -2,11 +2,19 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 import path from 'path'
+import { preloadOptimization } from './vite-plugins/preload-optimization'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    // ENHANCED: Advanced preload optimization for critical resources
+    preloadOptimization({
+      criticalChunks: ['react-core', 'router', 'index'],
+      prefetchChunks: ['figma-mobile', 'figma-desktop', 'about-page', 'contact-page'],
+      preloadFonts: true,
+      preloadCriticalCSS: true
+    }),
     // Aggressive Gzip compression for production builds
     viteCompression({
       algorithm: 'gzip',
@@ -37,13 +45,13 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3006, // Updated to match Vite's auto-selected port
+    port: 3001, // 🔧 FIXED: Use available port for Vite dev server
     host: true, // Allow external connections
     cors: {
       origin: [
-        'http://localhost:3006',
-        'http://localhost:3005',
+        'http://localhost:3001',
         'http://localhost:3000',
+        'http://localhost:3005',
         'https://admin.b2b.click',
         'https://b2b.click'
       ],
@@ -53,7 +61,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: 'http://localhost:3002', // 🔧 FIXED: Dashboard API server port
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
@@ -95,19 +103,64 @@ export default defineConfig({
     rollupOptions: {
       output: {
         format: 'es',
-        // MEMORY OPTIMIZATION: Aggressive chunk splitting for 512MB RAM limit
-        manualChunks: {
-          // Core React (keep minimal)
-          'react-core': ['react', 'react-dom'],
-          // Analytics (lazy load to save initial memory)
-          'analytics': ['./src/lib/analytics/beacon'],
-          // Utilities (separate to allow lazy loading)
-          'utils': ['./src/utils/cleanup', './src/utils/mobileOptimization'],
-          // Large components (lazy load to save memory)
-          'figma-desktop': ['./src/react/components/FigmaDesktop'],
-          'figma-mobile': ['./src/react/components/FigmaMobile'],
-          // Hooks (separate for better tree shaking)
-          'hooks': ['./src/react/hooks/useAnalytics', './src/react/hooks/useMobileLifecycle']
+        // 🚀 PERFORMANCE: Independent page chunks for optimal loading
+        manualChunks: (id) => {
+          // Core React libraries (essential, loaded first)
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+            return 'react-core';
+          }
+
+          // 🎯 OPTIMIZED: Independent page component chunks
+          if (id.includes('/FigmaMobile.jsx') || id.includes('\\FigmaMobile.jsx')) {
+            return 'homepage-mobile';
+          }
+          if (id.includes('/FigmaDesktop.jsx') || id.includes('\\FigmaDesktop.jsx')) {
+            return 'homepage-desktop';
+          }
+          if (id.includes('/AboutPageMobile.jsx') || id.includes('\\AboutPageMobile.jsx')) {
+            return 'about-mobile';
+          }
+          if ((id.includes('/AboutPage.jsx') || id.includes('\\AboutPage.jsx')) && !id.includes('Mobile')) {
+            return 'about-desktop';
+          }
+          if (id.includes('/ContactPageMobile.jsx') || id.includes('\\ContactPageMobile.jsx')) {
+            return 'contact-mobile';
+          }
+          if ((id.includes('/ContactPage.jsx') || id.includes('\\ContactPage.jsx')) && !id.includes('Mobile')) {
+            return 'contact-desktop';
+          }
+
+          // Shared components (small, can be bundled together)
+          if (id.includes('MobileNavigation') || id.includes('MobileDrawer')) {
+            return 'mobile-components';
+          }
+
+          // Large UI libraries (separate for caching)
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+
+          // Analytics and tracking (defer loading)
+          if (id.includes('analytics') || id.includes('beacon')) {
+            return 'analytics';
+          }
+
+          // Utilities and hooks (shared, small)
+          if (id.includes('/utils/') || id.includes('/hooks/')) {
+            return 'utils';
+          }
+
+          // Node modules vendor splitting
+          if (id.includes('node_modules')) {
+            // Split large libraries into separate chunks
+            if (id.includes('gsap')) {
+              return 'animations';
+            }
+            if (id.includes('date-fns')) {
+              return 'date-utils';
+            }
+            return 'vendor';
+          }
         },
         // Optimize asset naming for better caching
         chunkFileNames: 'assets/[name]-[hash].js',
@@ -120,30 +173,56 @@ export default defineConfig({
         moduleSideEffects: false
       }
     },
-    // Optimize terser for production
+    // ENHANCED: Maximum terser optimization for production
     terserOptions: {
       compress: {
-        // Enable aggressive optimizations for smaller bundles
-        drop_console: true, // Remove console.log in production
+        // Aggressive console and debug removal
+        drop_console: true,
         drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info'],
-        // Enable safe optimizations
+        pure_funcs: ['console.log', 'console.debug', 'console.info', 'console.warn'],
+
+        // Advanced code optimization
         hoist_funs: true,
         reduce_vars: true,
         collapse_vars: true,
-        // Remove unused code
+        inline: 2, // Aggressive function inlining
+        passes: 3, // Multiple optimization passes
+
+        // Remove unused code aggressively
         dead_code: true,
-        unused: true
+        unused: true,
+        side_effects: false,
+
+        // String and number optimizations
+        join_vars: true,
+        sequences: true,
+        properties: true,
+
+        // Conditional optimizations
+        conditionals: true,
+        comparisons: true,
+        evaluate: true,
+        booleans: true,
+        loops: true,
+        if_return: true,
+
+        // Advanced optimizations (removed unsupported options)
+        negate_iife: true
       },
       mangle: {
-        // Mangle all names for smaller bundles
+        // Maximum name mangling
         toplevel: true,
-        safari10: true
+        safari10: true,
+        properties: {
+          regex: /^_/ // Mangle properties starting with underscore
+        }
       },
       format: {
-        // Remove comments and optimize formatting
+        // Minimal formatting for smallest size
         comments: false,
-        ascii_only: true
+        ascii_only: true,
+        beautify: false,
+        semicolons: false
       }
     }
   },

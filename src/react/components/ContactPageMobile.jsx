@@ -1,34 +1,53 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
-import SocialMediaButtons from './SocialMediaButtons';
+import MobileNavigation from './MobileNavigation';
+import MobileDrawer from './MobileDrawer';
 
 /**
  * Mobile-only Contact page component with shared navigation
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const ContactPageMobile = () => {
-  const [showMenu, setShowMenu] = useState(false);
+  // REMOVED: showMenu state - no longer needed with shared MobileNavigation component
   const contentRef = useRef(null);
 
-  // Optimized scroll state for dynamic navigation
+  // Viewport context state for dynamic spacing (matching FigmaMobile.jsx)
+  const [viewportContext, setViewportContext] = useState(0);
+
+  // 📱 MOBILE SCROLL FIX: Ultra-passive scroll state to prevent interference (matching homepage)
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
     threshold: 20,
-    throttleMs: 16 // 60fps for smooth navigation
+    throttleMs: 100, // Increased throttling to reduce interference with native scrolling
+    passive: true // Ensure completely passive event handling
   });
 
-  // Toggle mobile menu
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
+  // Handle viewport changes for dynamic spacing (matching FigmaMobile.jsx)
+  useEffect(() => {
+    const handleViewportChange = () => {
+      // Force re-calculation of dynamic spacing when viewport changes
+      setViewportContext(prev => prev + 1);
+    };
 
-  // Handle navigation
+    // Listen for resize events that might indicate viewport context changes
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('orientationchange', handleViewportChange);
+
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('orientationchange', handleViewportChange);
+    };
+  }, []);
+
+  // 🚀 INSTANT: Direct navigation without any delays
   const handleNavigation = (path) => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition(path);
-    } else {
-      window.location.href = path;
+    if (path === '/contact') {
+      // Already on contact page, just scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
-    setShowMenu(false);
+
+    // INSTANT navigation - no loading states, no delays
+    window.location.href = path;
   };
 
   // Handle contact actions
@@ -54,20 +73,7 @@ const ContactPageMobile = () => {
       {/* Mobile-specific CSS */}
       <style>
         {`
-          .mobile-nav-item:hover {
-            opacity: 0.8;
-            transform: translateX(10px) !important;
-            transition: all 0.3s ease;
-          }
-          .mobile-menu-button:hover {
-            opacity: 0.8;
-            transform: translateY(-50%) scale(1.1);
-            transition: all 0.2s ease;
-          }
-          
-          .mobile-menu-button {
-            transition: transform 0.2s ease;
-          }
+          /* REMOVED: Mobile navigation CSS - now handled by shared MobileNavigation component */
           
           .mobile-content-fade {
             animation: fadeInUp 0.6s ease-out;
@@ -114,7 +120,11 @@ const ContactPageMobile = () => {
           }}
         >
           {/* Shared Mobile Navigation */}
-          <MobileNavigation currentPage="contact" />
+          <MobileNavigation
+            currentPage="contact"
+            scrollY={scrollY}
+            onNavigate={handleNavigation}
+          />
 
           {/* Main Content Area - Contact Page */}
           <div
@@ -406,6 +416,16 @@ const ContactPageMobile = () => {
             </div>
           </div>
         </div>
+        {/* REFACTORED: Using Shared Mobile Components - MobileNavigation already rendered above */}
+
+        <MobileDrawer
+          contentRef={contentRef}
+          viewportContext={viewportContext}
+          onStateChange={(drawerState) => {
+            console.log('Contact page drawer state changed:', drawerState);
+          }}
+        />
+
       </div>
     </>
   );

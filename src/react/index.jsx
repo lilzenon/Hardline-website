@@ -12,19 +12,23 @@ const ContactPage = lazy(() => import('./components/ContactPage'));
 // Import any additional CSS if needed
 import './styles.css';
 
-// Loading component for lazy-loaded pages
+// 🚀 PERFORMANCE: Minimal loading component for fast page transitions
 const PageLoader = () => (
   <div
     style={{
-      width: '100vw',
-      height: '100vh',
-      background: '#000',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      color: '#FFF',
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      background: 'rgba(0, 0, 0, 0.8)',
+      color: '#FFFFFF',
+      padding: '8px 16px',
+      borderRadius: '20px',
       fontFamily: 'Inter, sans-serif',
-      fontSize: '18px',
+      fontSize: '14px',
+      zIndex: 9999,
+      backdropFilter: 'blur(10px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      opacity: 0.9
     }}
   >
     Loading...
@@ -33,56 +37,22 @@ const PageLoader = () => (
 
 const App = () => {
   console.log('⚛️ REACT APP COMPONENT RENDERING');
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const currentPath = window.location.pathname;
   console.log('📍 CURRENT PATH:', currentPath);
 
-  // Modern page transition handler
-  const handlePageTransition = useCallback((newPath) => {
-    // Check if View Transitions API is supported (Chrome 111+)
-    if ('startViewTransition' in document) {
-      document.startViewTransition(() => {
-        setCurrentPath(newPath);
-        window.history.pushState({}, '', newPath);
-      });
-    } else {
-      // Fallback: CSS transition
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentPath(newPath);
-        window.history.pushState({}, '', newPath);
-        setTimeout(() => setIsTransitioning(false), 50);
-      }, 150);
-    }
-  }, []);
-
-  // Listen for browser back/forward navigation
-  useEffect(() => {
-    const handlePopState = () => {
-      handlePageTransition(window.location.pathname);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [handlePageTransition]);
-
-  // Expose navigation function globally for components
-  useEffect(() => {
-    window.navigateWithTransition = handlePageTransition;
-  }, [handlePageTransition]);
+  // 🚀 INSTANT: No client-side routing, just render based on current server path
+  // This ensures instant navigation without any loading states or transitions
 
   const renderPage = () => {
     if (currentPath === '/about') {
       return (
-        <Suspense fallback={<PageLoader />}
-        >
+        <Suspense fallback={<PageLoader />}>
           <AboutPage />
         </Suspense>
       );
     } else if (currentPath === '/contact') {
       return (
-        <Suspense fallback={<PageLoader />}
-        >
+        <Suspense fallback={<PageLoader />}>
           <ContactPage />
         </Suspense>
       );
@@ -94,10 +64,7 @@ const App = () => {
   return (
     <SEOProvider>
       <MaintenanceMode />
-      <div
-        className={`app-container ${isTransitioning ? 'transitioning' : ''}`}
-        style={{ '--transition-duration': '300ms' }}
-      >
+      <div className="app-container">
         {renderPage()}
       </div>
       <SEODebug />

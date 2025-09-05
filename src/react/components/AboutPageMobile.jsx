@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
-import SocialMediaButtons from './SocialMediaButtons';
 import Masonry from './ui/Masonry';
+import MobileNavigation from './MobileNavigation';
+import MobileDrawer from './MobileDrawer';
 
 /**
  * Mobile-only About page component with shared navigation
@@ -11,35 +12,35 @@ const AboutPageMobile = () => {
   const [aboutContent, setAboutContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showMenu, setShowMenu] = useState(false);
+  // REMOVED: showMenu state - no longer needed after removing old navigation
   const contentRef = useRef(null);
 
-  // Optimized scroll state for dynamic navigation
+  // Viewport context state for dynamic spacing (matching FigmaMobile.jsx)
+  const [viewportContext, setViewportContext] = useState(0);
+
+  // 📱 MOBILE SCROLL FIX: Ultra-passive scroll state to prevent interference (matching homepage)
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
     threshold: 20,
-    throttleMs: 16 // 60fps for smooth navigation
-  }) || { scrollY: 0, isScrolled: false };
+    throttleMs: 100, // Increased throttling to reduce interference with native scrolling
+    passive: true // Ensure completely passive event handling
+  });
 
-  // Alternative scroll detection using useEffect if hook doesn't work
-  const [scrolled, setScrolled] = useState(false);
-
+  // Handle viewport changes for dynamic spacing (matching FigmaMobile.jsx)
   useEffect(() => {
-    const handleScroll = () => {
-      if (contentRef.current) {
-        const scrollTop = contentRef.current.scrollTop;
-        setScrolled(scrollTop > 20);
-      }
+    const handleViewportChange = () => {
+      // Force re-calculation of dynamic spacing when viewport changes
+      setViewportContext(prev => prev + 1);
     };
 
-    const scrollContainer = contentRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
+    // Listen for resize events that might indicate viewport context changes
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('orientationchange', handleViewportChange);
 
-  // Use either hook result or fallback scroll detection
-  const finalIsScrolled = isScrolled || scrolled;
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('orientationchange', handleViewportChange);
+    };
+  }, []);
 
   useEffect(() => {
     fetchAboutContent();
@@ -105,19 +106,16 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
     ));
   };
 
-  // Toggle mobile menu
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
-
-  // Handle navigation
+  // 🚀 INSTANT: Direct navigation without any delays
   const handleNavigation = (path) => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition(path);
-    } else {
-      window.location.href = path;
+    if (path === '/about') {
+      // Already on about page, just scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
-    setShowMenu(false);
+
+    // INSTANT navigation - no loading states, no delays
+    window.location.href = path;
   };
 
   return (
@@ -140,58 +138,13 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
             }
           }
 
-          /* Optimize touch interactions for iOS */
-          .mobile-menu-button, button, input {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-          }
+          /* REMOVED: Mobile navigation CSS - now handled by shared MobileNavigation component */
 
-          /* Enable hardware acceleration */
-          .mobile-nav-overlay {
-            -webkit-transform: translateZ(0);
-            transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-          }
+          /* REMOVED: Mobile nav item CSS - now handled by shared MobileNavigation component */
 
-          .mobile-nav-item:hover {
-            opacity: 0.8;
-            transform: translateX(10px) !important;
-            transition: all 0.15s ease-out;
-          }
+          /* REMOVED: Mobile menu button CSS - now handled by shared MobileNavigation component */
 
-          .mobile-nav-item {
-            transition: all 0.15s ease-out;
-          }
-
-          .mobile-menu-button:hover {
-            opacity: 0.8;
-            transform: translateY(-50%) scale(1.1);
-            transition: all 0.2s ease;
-          }
-
-          .mobile-menu-button {
-            transition: transform 0.2s ease;
-          }
-
-          /* Navigation overlay animations */
-          .mobile-nav-overlay {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .mobile-nav-overlay.entering {
-            opacity: 0;
-            visibility: hidden;
-            backdrop-filter: blur(0px);
-          }
-
-          .mobile-nav-overlay.entered {
-            opacity: 1;
-            visibility: visible;
-            backdrop-filter: blur(10px);
-          }
+          /* REMOVED: Navigation overlay CSS - now handled by shared MobileNavigation component */
 
           /* Scrolling optimizations */
           .mobile-content-container {
@@ -239,112 +192,14 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
           }}
           aria-label="Mobile about page content"
         >
-          {/* Navigation Bar - Fixed Header in Flexbox Layout */}
-          <header
-            role="banner"
-            style={{
-              position: 'sticky', // Changed to sticky for better mobile behavior
-              top: '0px',
-              width: 'calc(100% - 40px)', // Reduced width by additional 20px (total 40px reduction)
-              height: finalIsScrolled ? '70px' : '97px',
-              background: finalIsScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000',
-              backdropFilter: finalIsScrolled ? 'blur(10px)' : 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 15px', // Reduced padding from 20px to 15px
-              margin: '0 20px', // Increased margin to center the further reduced nav bar
-              boxSizing: 'border-box',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              zIndex: 200,
-              borderBottom: finalIsScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-              flexShrink: 0 // Prevent header from shrinking
-            }}
-            aria-label="Main navigation"
-          >
-            {/* Menu Button - Right Side */}
-            <div
-              onClick={toggleMenu}
-              className="mobile-menu-button"
-              style={{
-                position: 'absolute',
-                right: '15px', // Adjusted to match reduced nav bar padding
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '34px',
-                height: '34px',
-                cursor: 'pointer',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              {/* Animated Menu Lines */}
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
-                  transformOrigin: 'center'
-                }}
-              />
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: showMenu ? 0 : 1,
-                  transform: showMenu ? 'scale(0)' : 'scale(1)'
-                }}
-              />
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
-                  transformOrigin: 'center'
-                }}
-              />
-            </div>
+          {/* REFACTORED: Using Shared Mobile Navigation Component */}
+          <MobileNavigation
+            currentPage="about"
+            scrollY={scrollY}
+            onNavigate={handleNavigation}
+          />
 
-            {/* B2B Logo - Dynamic Scroll-Responsive */}
-            <img
-              onClick={() => handleNavigation('/')}
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
-              alt="B2B Logo"
-              style={{
-                width: finalIsScrolled ? '110px' : '138.41px', // Shrink when scrolled
-                height: finalIsScrolled ? '34px' : '43px', // Proportional height
-                position: 'absolute',
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth transition
-                userSelect: 'none'
-              }}
-              onMouseDown={(e) => {
-                e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
-              }}
-              onMouseUp={(e) => {
-                e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-              }}
-            />
-          </header>
+          {/* OLD NAVIGATION COMPLETELY REMOVED - Now using shared MobileNavigation component above */}
 
           {/* Main Content Area - Scrollable Flex Container */}
           <div
@@ -536,7 +391,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                 Join our community and never miss an exclusive opportunity again.
               </div>
               <button
-                onClick={() => handleNavigation('/')}
+                onClick={() => window.location.href = '/'}
                 style={{
                   background: '#00FF40',
                   color: '#000000',
@@ -559,238 +414,15 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
           </div>
         </div>
 
-        {/* Mobile Navigation Overlay - Always rendered to prevent DOM manipulation issues */}
-        <div
-          style={{
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0, 0, 0, 0.95)',
-            zIndex: showMenu ? 1000 : -1,
-            display: 'flex',
-            flexDirection: 'column',
-            opacity: showMenu ? 1 : 0,
-            visibility: showMenu ? 'visible' : 'hidden',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)',
-            transform: 'translateZ(0)',
-            WebkitTransform: 'translateZ(0)',
-            willChange: 'opacity, visibility, backdrop-filter',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            pointerEvents: showMenu ? 'auto' : 'none'
+        {/* OLD NAVIGATION OVERLAY COMPLETELY REMOVED - Now using shared MobileNavigation component above */}
+
+        <MobileDrawer
+          contentRef={contentRef}
+          viewportContext={viewportContext}
+          onStateChange={(drawerState) => {
+            console.log('About page drawer state changed:', drawerState);
           }}
-          onClick={() => setShowMenu(false)}
-        >
-          {/* Navigation Bar in Menu */}
-          <div
-            style={{
-              width: '100%',
-              height: '97px',
-              maxWidth: '100vw',
-              margin: '0 auto',
-              position: 'relative',
-              background: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0 20px',
-              boxSizing: 'border-box'
-            }}
-          >
-            {/* Close Button (X) */}
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMenu(false);
-              }}
-              style={{
-                position: 'absolute',
-                right: '15px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                width: '34px',
-                height: '34px',
-                cursor: 'pointer',
-                zIndex: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              {/* X Icon */}
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: 'rotate(45deg) translateY(6px)',
-                  transformOrigin: 'center'
-                }}
-              />
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: 0,
-                  transform: 'scale(0)'
-                }}
-              />
-              <div
-                style={{
-                  width: '24px',
-                  height: '2px',
-                  background: '#FFFFFF',
-                  borderRadius: '1px',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: 'rotate(-45deg) translateY(-6px)',
-                  transformOrigin: 'center'
-                }}
-              />
-            </div>
-
-            {/* Logo in Menu */}
-            <img
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
-              alt="B2B Logo"
-              style={{
-                width: '138.41px',
-                height: '43px',
-                cursor: 'pointer',
-                userSelect: 'none'
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleNavigation('/');
-              }}
-            />
-          </div>
-
-
-
-          {/* Navigation Menu Items */}
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              maxWidth: '430px',
-              margin: '0 auto',
-              padding: '8px 25px 40px 25px',
-              gap: '24px',
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
-              opacity: showMenu ? 1 : 0,
-              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.2s' : '0s',
-              willChange: 'transform, opacity',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              onClick={() => handleNavigation('/')}
-              className="mobile-nav-item"
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '64px',
-                lineHeight: '1.21em',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                textAlign: 'center',
-                opacity: 1,
-                transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-                transitionDelay: showMenu ? '0.3s' : '0s',
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale'
-              }}
-            >
-              Events
-            </div>
-            <div
-              onClick={() => handleNavigation('/about')}
-              className="mobile-nav-item"
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '64px',
-                lineHeight: '1.21em',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                textAlign: 'center',
-                opacity: 0.6, // Dimmed for current page
-                transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-                transitionDelay: showMenu ? '0.4s' : '0s',
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale'
-              }}
-            >
-              About
-            </div>
-            <div
-              onClick={() => handleNavigation('/contact')}
-              className="mobile-nav-item"
-              style={{
-                fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '64px',
-                lineHeight: '1.21em',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                textAlign: 'center',
-                opacity: 1,
-                transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(-30px, 0, 0)',
-                transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
-                transitionDelay: showMenu ? '0.5s' : '0s',
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale'
-              }}
-            >
-              Contact
-            </div>
-
-            {/* Social Media Buttons in Navigation - MOVED BELOW navigation links */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: '40px 25px 0px 25px', // Added top padding for spacing after navigation
-                transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
-                opacity: showMenu ? 1 : 0,
-                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                transitionDelay: showMenu ? '0.6s' : '0s', // Delayed to appear after Contact link
-                willChange: 'transform, opacity',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden'
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <SocialMediaButtons />
-            </div>
-          </div>
-        </div>
+        />
 
       </div>
     </>

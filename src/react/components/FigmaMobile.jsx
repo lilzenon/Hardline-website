@@ -3,43 +3,11 @@ import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
 import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
-import useMobileLifecycle from '../hooks/useMobileLifecycle';
-import { mobileDebounce, mobileThrottle, memoryManager } from '../../utils/mobileOptimization';
+import MobileNavigation from './MobileNavigation';
+import MobileDrawer from './MobileDrawer';
+import LayloIframe from './LayloIframe';
 
-// Simple and Working Laylo Iframe Component - RESTORED from working commit
-const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
-  // Simple Laylo URL generation - RESTORED from working implementation
-  const layloUrl = useMemo(() => {
-    const params = new URLSearchParams({
-      dropId,
-      color,
-      theme,
-      background,
-      ...(minimal && { minimal: 'true' })
-    });
-    return `https://embed.laylo.com/?${params.toString()}`;
-  }, [dropId, color, theme, background, minimal]);
-
-  // Simple iframe render with scroll isolation
-  return (
-    <iframe
-      id={`laylo-drop-${dropId}`}
-      src={layloUrl}
-      className="mobile-drawer"
-      style={{
-        ...style,
-        border: 'none',
-        /* FIXED: Iframe scroll isolation */
-        overscrollBehavior: 'contain',
-        WebkitOverscrollBehavior: 'contain',
-        width: '100%',
-        height: '100%'
-      }}
-      allow="web-share"
-      title="Laylo Signup Form"
-    />
-  );
-});
+// REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
 
 
 
@@ -555,8 +523,7 @@ const FigmaMobile = () => {
   // Initialize analytics
   const { trackEvent, trackLinkClick } = useAnalytics();
 
-  // Initialize mobile lifecycle management for the main component
-  const mobileLifecycle = useMobileLifecycle();
+  // REMOVED: Mobile lifecycle management - using standard timers instead
 
   // Privacy consent state
   const [consentGiven, setConsentGiven] = useState(false);
@@ -580,8 +547,8 @@ const FigmaMobile = () => {
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
 
   useEffect(() => {
-    // Start with thumbnail for faster loading, then auto-load video after delay - using mobile lifecycle
-    mobileLifecycle.createTimer(() => {
+    // Start with thumbnail for faster loading, then auto-load video after delay
+    setTimeout(() => {
       setShowYoutubeThumbnail(false);
       setShouldLoadYoutube(true);
     }, 2000); // Load actual video after 2 seconds for better perceived performance
@@ -605,7 +572,8 @@ const FigmaMobile = () => {
     }
   }, []);
 
-  const [showMenu, setShowMenu] = useState(false);
+  // REMOVED: showMenu state - now handled by MobileNavigation component
+  // TEMPORARY: Keep old drawer state variables until migration is complete
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
@@ -622,10 +590,20 @@ const FigmaMobile = () => {
   const [iframeExpanded, setIframeExpanded] = useState(false); // Track iframe interaction
   const [iframeHasLoadedOnce, setIframeHasLoadedOnce] = useState(false); // Track if iframe has been loaded to persist state
 
-  // Resend countdown state
+  // TEMPORARY: Keep resend countdown state until migration is complete
   const [resendCountdown, setResendCountdown] = useState(0);
   const [canResend, setCanResend] = useState(false);
   const [resendSubmitting, setResendSubmitting] = useState(false);
+
+  // TEMPORARY: Keep touch state until migration is complete
+  const [touchState, setTouchState] = useState({
+    isActive: false,
+    startY: 0,
+    currentY: 0,
+    startTime: 0,
+    isDragging: false,
+    initialDrawerState: false
+  });
 
   // Events data state - Two-tier system
   const [featuredEvents, setFeaturedEvents] = useState([]);
@@ -639,15 +617,7 @@ const FigmaMobile = () => {
   // Viewport context state for dynamic spacing
   const [viewportContext, setViewportContext] = useState(0); // Force re-render when viewport context changes
 
-  // Touch gesture state for swipe controls
-  const [touchState, setTouchState] = useState({
-    isActive: false,
-    startY: 0,
-    currentY: 0,
-    startTime: 0,
-    isDragging: false,
-    initialDrawerState: false
-  });
+  // REMOVED: Duplicate touchState declaration - using the one above
 
   // Animation state for cards
   const [cardsAnimated, setCardsAnimated] = useState(false);
@@ -739,7 +709,7 @@ const FigmaMobile = () => {
   // 📱 MOBILE SCROLL FIX: Ultra-passive scroll state to prevent interference
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
     threshold: 20,
-    throttleMs: 100, // Increased throttling to reduce interference with native scrolling
+    throttleMs: 16, // OPTIMIZED: Reduced throttling for smoother logo scaling (60fps)
     passive: true // Ensure completely passive event handling
   });
 
@@ -1355,12 +1325,12 @@ const FigmaMobile = () => {
 
   // Animate drawer to collapsed state after component mounts (show text only, no iframe)
   useEffect(() => {
-    const timer = mobileLifecycle.createTimer(() => {
+    const timer = setTimeout(() => {
       setDrawerFullyClosed(false);
       setDrawerExpanded(false); // Start in collapsed state - text only, no iframe
     }, 500); // Wait 500ms then animate to collapsed state
 
-    return () => mobileLifecycle.clearTimer(timer);
+    return () => clearTimeout(timer);
   }, []);
 
   // Detect connection speed for adaptive video quality
@@ -1705,10 +1675,7 @@ const FigmaMobile = () => {
   const [isEventSectionExpanded, setIsEventSectionExpanded] = useState(false);
   const [isExpanding, setIsExpanding] = useState(false);
 
-  // Toggle mobile menu
-  const toggleMenu = () => {
-    setShowMenu(!showMenu);
-  };
+  // REMOVED: toggleMenu function - now handled by MobileNavigation component
 
   // Enhanced toggle expandable event section with animation state
   const toggleEventSection = () => {
@@ -1753,16 +1720,16 @@ const FigmaMobile = () => {
     };
   }, []);
 
-  // Handle navigation
+  // 🚀 INSTANT: Direct navigation without any delays or loading states
   const handleNavigation = (path) => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition(path);
-    } else {
-      window.location.href = path;
+    if (path === '/') {
+      // Already on homepage, just scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
-    setShowMenu(false);
-    // Update current page immediately for better UX
-    setTimeout(() => setCurrentPage(getCurrentPage()), 100);
+
+    // INSTANT navigation - no transitions, no loading states, no delays
+    window.location.href = path;
   };
 
   // Handle phone input focus - expand drawer and show disclaimer
@@ -2134,8 +2101,8 @@ const FigmaMobile = () => {
       if (rafId) cancelAnimationFrame(rafId);
       if (timeoutId) clearTimeout(timeoutId);
 
-      // Debounce viewport changes to prevent excessive reflows - using mobile lifecycle
-      timeoutId = mobileLifecycle.createTimer(() => {
+      // Debounce viewport changes to prevent excessive reflows
+      timeoutId = setTimeout(() => {
         rafId = requestAnimationFrame(() => {
           const vh = window.innerHeight * 0.01;
           document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -2344,7 +2311,7 @@ const FigmaMobile = () => {
           }
 
           /* Optimize touch interactions for iOS */
-          .mobile-drawer, .mobile-menu-button, button, input {
+          .mobile-drawer, button, input {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
@@ -2352,7 +2319,7 @@ const FigmaMobile = () => {
           }
 
           /* Enable hardware acceleration */
-          .mobile-drawer, .mobile-nav-overlay {
+          .mobile-drawer {
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
             -webkit-backface-visibility: hidden;
@@ -2434,90 +2401,12 @@ const FigmaMobile = () => {
             outline: none;
             font-size: 16px !important;
           }
-          .mobile-nav-item:hover {
-            opacity: 0.8;
-            transform: translateX(10px) !important;
-            transition: all 0.15s ease-out;
-          }
 
-          .mobile-nav-item {
-            transition: all 0.15s ease-out;
-          }
-          /* 🔧 FIXED: Consistent menu button hover state - maintain position */
-          .mobile-menu-button:hover {
-            opacity: 0.8;
-            /* Keep same translateY to prevent position drift */
-            transform: translateY(-50%) scale(1.05);
-            transition: all 0.2s ease;
-          }
+          /* REMOVED: Mobile menu button CSS - now handled by shared MobileNavigation component */
 
-          /* Active/pressed state for menu button */
-          .mobile-menu-button:active {
-            /* Maintain exact same position during press */
-            transform: translateY(-50%) scale(0.95);
-            opacity: 0.7;
-          }
+          /* REMOVED: All mobile navigation CSS - now handled by shared MobileNavigation component */
 
-          /* 🔧 FIXED: Menu button animation states - prevent position drift */
-          .mobile-menu-button {
-            transition: transform 0.2s ease;
-            /* Ensure consistent positioning during animation */
-            transform-origin: center center;
-            /* Prevent any layout shifts during state changes */
-            contain: layout style;
-          }
-
-          /* Enhanced active state styling for navigation items */
-          .mobile-nav-item {
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 16px 32px;
-            border-radius: 20px;
-            margin: 8px 0;
-            /* Glassmorphism background for better contrast */
-            background: transparent;
-            backdrop-filter: blur(0px);
-            border: 2px solid transparent;
-          }
-
-          /* Active page state styling */
-          .mobile-nav-item.active {
-            /* Enhanced glassmorphism effect for active state */
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            /* Subtle glow effect */
-            box-shadow:
-              0 8px 32px rgba(255, 255, 255, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            /* Slightly larger text for emphasis */
-            transform: scale(1.02);
-          }
-
-          /* Hover state for non-active items */
-          .mobile-nav-item:not(.active):hover {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.08);
-            transform: scale(1.01);
-          }
-
-          /* Navigation overlay animations */
-          .mobile-nav-overlay {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .mobile-nav-overlay.entering {
-            opacity: 0;
-            visibility: hidden;
-            backdrop-filter: blur(0px);
-          }
-
-          .mobile-nav-overlay.entered {
-            opacity: 1;
-            visibility: visible;
-            backdrop-filter: blur(10px);
-          }
+          /* REMOVED: Navigation overlay CSS - now handled by shared MobileNavigation component */
           .mobile-send-button:hover:not(:disabled) {
             transform: scale(1.05);
             transition: transform 0.2s ease;
@@ -2563,8 +2452,8 @@ const FigmaMobile = () => {
           }
 
           .mobile-event-cards-container.collapsed {
-            /* Show exactly 3 complete cards with improved gradient space */
-            max-height: calc(3 * 136px + 100px); /* 3 cards (408px) + gradient space for smooth transition (100px) */
+            /* Show exactly 3 complete cards with balanced vertical spacing */
+            max-height: calc(3 * 136px + 16px + 100px); /* 3 cards (408px) + padding (16px) + gradient space (100px) */
             /* Additional smoothness optimizations for collapsed state */
             transform: scale3d(1, 1, 1);
             opacity: 1;
@@ -2784,7 +2673,7 @@ const FigmaMobile = () => {
             animation: ultraSmoothCollapse 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
           }
 
-          /* Respect user motion preferences */
+          /* Respect user motion preferences - FIXED: Only disable event card animations, not navigation */
           @media (prefers-reduced-motion: reduce) {
             .mobile-event-cards-container,
             .mobile-event-cards-overlay,
@@ -2794,6 +2683,7 @@ const FigmaMobile = () => {
               transition: none !important;
               animation: none !important;
             }
+            /* IMPORTANT: Do NOT disable navigation animations - they are essential for UX */
           }
 
           /* Mobile country selector styling */
@@ -2891,7 +2781,7 @@ const FigmaMobile = () => {
             contain: layout style; /* Layout containment for smooth animations */
           }
 
-          /* ENHANCED: Complete drawer scroll isolation for iOS Safari */
+          /* ENHANCED: Complete drawer scroll isolation with hidden scrollbars */
           .mobile-drawer-content {
             /* Complete scroll isolation from main page */
             overscroll-behavior: contain;
@@ -2899,6 +2789,9 @@ const FigmaMobile = () => {
             /* iOS Safari specific scroll containment */
             overflow: auto;
             -webkit-overflow-scrolling: touch;
+            /* FIXED: Hide scrollbars while maintaining functionality */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
             /* Strict touch action for drawer content only */
             touch-action: pan-y pinch-zoom;
             /* Complete containment isolation */
@@ -2911,24 +2804,54 @@ const FigmaMobile = () => {
             transform: translateZ(0);
           }
 
-          /* ENHANCED: Complete iframe scroll isolation for iOS Safari */
-          .mobile-drawer iframe {
-            /* Completely isolate iframe scrolling */
-            overscroll-behavior: contain;
-            -webkit-overscroll-behavior: contain;
-            /* Allow iframe internal scrolling only */
-            touch-action: auto;
-            /* Isolate iframe interactions */
-            contain: strict;
-            /* Enable iframe scrolling while preventing bleed */
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
+          /* FIXED: Hide WebKit scrollbars */
+          .mobile-drawer-content::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+            background: transparent;
           }
 
-          /* ENHANCED: Body scroll lock when drawer is active */
+          /* CRITICAL: Disable ONLY drawer content interaction when collapsed, keep handle clickable */
+          .mobile-drawer.collapsed .mobile-drawer-content {
+            pointer-events: none !important;
+            touch-action: none !important;
+            overflow: hidden !important;
+            -webkit-overflow-scrolling: auto !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
+          }
+
+          /* ENSURE: Drawer handle remains clickable even when collapsed */
+          .mobile-drawer.collapsed {
+            pointer-events: auto !important; /* Allow clicks on the drawer container */
+          }
+
+          .mobile-drawer.collapsed > * {
+            pointer-events: none !important; /* Disable all children */
+          }
+
+          .mobile-drawer.collapsed .drawer-handle,
+          .mobile-drawer.collapsed [role="dialog"] {
+            pointer-events: auto !important; /* Re-enable handle and dialog clicks */
+          }
+
+          /* CRITICAL: Disable drawer content interaction when parent is collapsed */
+          .mobile-drawer.collapsed .mobile-drawer-content {
+            pointer-events: none !important;
+            touch-action: none !important;
+            overflow: hidden !important;
+            -webkit-overflow-scrolling: auto !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
+          }
+
+
+
+          /* ENHANCED: Body scroll lock when drawer is active - FIXED: Don't interfere with navigation */
           body.drawer-scroll-lock {
             overflow: hidden !important;
-            position: fixed !important;
+            /* REMOVED: position: fixed - this was interfering with navigation animations */
             width: 100% !important;
             height: 100% !important;
             /* iOS Safari specific scroll lock */
@@ -2946,12 +2869,29 @@ const FigmaMobile = () => {
             -webkit-overscroll-behavior: none !important;
           }
 
+          /* 🚨 CRITICAL: Ensure navigation overlay is never affected by page-level styles */
+          div[style*="position: fixed"][style*="z-index"][style*="opacity"] {
+            position: fixed !important;
+            z-index: 1000 !important;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+
           .mobile-drawer.collapsed {
             transform: translate3d(0, calc(100% - 80px), 0);
+            /* CRITICAL: Disable content interaction when collapsed, but allow handle clicks */
+            overflow: hidden !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
           }
 
           .mobile-drawer.expanded {
             transform: translate3d(0, 0, 0);
+            /* Enable interaction when expanded */
+            pointer-events: auto;
+            touch-action: pan-y;
+            overflow: visible;
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
           }
 
           /* Disclaimer peek effect */
@@ -3134,148 +3074,14 @@ const FigmaMobile = () => {
         }}
         aria-label="Mobile homepage content"
       >
-        {/* Navigation Bar - Fixed Header with Stable Layout */}
-        <header
-          role="banner"
-          className="mobile-navigation-header"
-          onTouchMove={(e) => {
-            // FIXED: Prevent navigation bar scroll from affecting main page
-            e.stopPropagation();
-          }}
-          onWheel={(e) => {
-            // FIXED: Prevent navigation bar scroll from affecting main page
-            e.stopPropagation();
-          }}
-          style={{
-            position: 'sticky',
-            top: '0px',
-            width: 'calc(100% - 40px)',
-            /* FIXED: Use fixed height to prevent layout shifts */
-            height: '97px', // Always use expanded height
-            minHeight: '97px', // Ensure consistent height
-            background: isScrolled ? 'rgba(0, 0, 0, 0.95)' : '#000000',
-            backdropFilter: isScrolled ? 'blur(10px)' : 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 15px',
-            margin: '0 20px',
-            boxSizing: 'border-box',
-            /* FIXED: Only animate visual properties, not layout properties */
-            transition: 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            zIndex: 200,
-            borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : 'none',
-            flexShrink: 0,
-            /* FIXED: Prevent any layout shifts */
-            contain: 'layout style',
-            willChange: 'background-color, backdrop-filter'
-          }}
-          aria-label="Main navigation"
-        >
-          {/* 🔧 FIXED: Menu Button - Consistent positioning */}
-          <div
-            onClick={toggleMenu}
-            className="mobile-menu-button"
-            style={{
-              position: 'absolute',
-              right: '15px', // Adjusted to match reduced nav bar padding
-              top: '50%',
-              transform: 'translateY(-50%)', // Consistent base transform
-              width: '34px',
-              height: '34px',
-              cursor: 'pointer',
-              zIndex: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '4px',
-              // Prevent layout shifts during animation
-              transformOrigin: 'center center',
-              contain: 'layout style',
-              // Smooth transitions
-              transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease'
-            }}
-          >
-            {/* Animated Menu Lines */}
-            <div
-              style={{
-                width: '24px',
-                height: '2px',
-                background: '#FFFFFF',
-                borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
-                transformOrigin: 'center'
-              }}
-            />
-            <div
-              style={{
-                width: '24px',
-                height: '2px',
-                background: '#FFFFFF',
-                borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: showMenu ? 0 : 1,
-                transform: showMenu ? 'scale(0)' : 'scale(1)'
-              }}
-            />
-            <div
-              style={{
-                width: '24px',
-                height: '2px',
-                background: '#FFFFFF',
-                borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
-                transformOrigin: 'center'
-              }}
-            />
-          </div>
+        {/* REFACTORED: Using Shared Mobile Navigation Component */}
+        <MobileNavigation
+          currentPage={currentPage}
+          scrollY={scrollY}
+          onNavigate={handleNavigation}
+        />
 
-          {/* B2B Logo - Dynamic Scroll-Responsive Scaling */}
-          <img
-            onClick={() => handleNavigation('/')}
-            src="/images/mobile-figma/b2b-logo-mobile.svg"
-            alt="B2B Logo"
-            style={{
-              /* FIXED: Use fixed dimensions and scale with transform to prevent layout shifts */
-              width: '138.41px', // Fixed width
-              height: '43px', // Fixed height
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              /* ENHANCED: Dynamic scaling based on scroll position */
-              transform: `translate(-50%, -50%) scale(${(() => {
-                // Calculate dynamic scale based on scroll position
-                const maxScale = 1; // Full size at top
-                const minScale = 0.795; // Minimum size (110/138.41)
-                const scrollThreshold = 100; // Pixels to complete transition
-
-                // Calculate scale factor based on scroll position
-                const scrollProgress = Math.min(scrollY / scrollThreshold, 1);
-                const currentScale = maxScale - (scrollProgress * (maxScale - minScale));
-
-                return currentScale;
-              })()})`,
-              cursor: 'pointer',
-              /* ENHANCED: Smoother transition for dynamic scaling */
-              transition: 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)',
-              userSelect: 'none',
-              /* Performance optimization */
-              willChange: 'transform'
-            }}
-            onMouseDown={(e) => {
-              e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
-            }}
-            onMouseUp={(e) => {
-              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-            }}
-          />
-        </header>
+        {/* OLD NAVIGATION REMOVED - Now using shared MobileNavigation component above */}
 
         {/* Main Content Area - Scrollable Flex Container */}
         <div
@@ -3325,7 +3131,7 @@ const FigmaMobile = () => {
               // Modern load-in animation
               opacity: sectionsAnimated ? 1 : 0,
               transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: '0ms' // First section loads immediately
             }}
           >
@@ -3333,7 +3139,7 @@ const FigmaMobile = () => {
             <div
               style={{
                 display: 'flex',
-                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
+                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 marginBottom: '8px', // Drastically reduced spacing
@@ -3528,8 +3334,8 @@ const FigmaMobile = () => {
                 }
               }}
               style={{
-                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
-                height: 'min(324px, calc(100vw - 24px))', // Maintain square aspect ratio
+                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
                 position: 'relative',
                 margin: '0 auto', // Center the hero
                 cursor: 'pointer',
@@ -3877,8 +3683,8 @@ const FigmaMobile = () => {
             >
               <div
                 style={{
-                  width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
-                  height: 'min(324px, calc(100vw - 24px))', // Maintain square aspect ratio
+                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
                   position: 'relative',
                   margin: '0 auto',
                   borderRadius: '20px',
@@ -3935,7 +3741,7 @@ const FigmaMobile = () => {
           {/* 📱 REFINED EXPANDABLE EVENTS SECTION */}
           <div
             style={{
-              width: 'min(324px, calc(100vw - 24px))',
+              width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
               margin: '0 auto',
               position: 'relative',
               paddingBottom: homepageEventCards.length > 3 ? '12px' : '0', // Space for improved gradient and button
@@ -3959,11 +3765,11 @@ const FigmaMobile = () => {
                   display: 'flex',
                   width: '100%',
                   flexDirection: 'column',
-                  justifyContent: 'flex-start',
+                  justifyContent: 'center', // FIXED: Center cards vertically for even spacing
                   alignItems: 'stretch',
                   gap: '4px', // Slightly increased gap for better card separation
                   flexShrink: 0,
-                  marginBottom: '4px', // Slightly increased spacing between small event cards for better readability
+                  padding: '8px 0', // FIXED: Equal padding top and bottom for balanced spacing
                   boxSizing: 'border-box',
                   minHeight: 'auto',
                   overflow: 'visible',
@@ -4458,14 +4264,14 @@ const FigmaMobile = () => {
               // Modern load-in animation
               opacity: sectionsAnimated ? 1 : 0,
               transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: '300ms' // Second section in cascade
             }}
           >
             {/* Follow Us Section Title */}
             <div
               style={{
-                width: 'min(324px, calc(100vw - 24px))',
+                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
                 marginBottom: '8px', // Consistent spacing with Events section
                 margin: '0 auto 8px auto', // Center the container with minimal spacing
                 boxSizing: 'border-box'
@@ -4490,7 +4296,7 @@ const FigmaMobile = () => {
 
             <article
               style={{
-                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
+                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
                 height: '200px', // Mobile-optimized height
                 position: 'relative',
                 flexShrink: 0,
@@ -4698,13 +4504,13 @@ const FigmaMobile = () => {
               // Modern load-in animation
               opacity: sectionsAnimated ? 1 : 0,
               transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: '450ms' // Third section in cascade
             }}
           >
             <div
               style={{
-                width: 'min(324px, calc(100vw - 24px))', // 🔧 REDUCED: 12px padding each side (was 18px)
+                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -4743,24 +4549,24 @@ const FigmaMobile = () => {
       <div
         ref={drawerRef}
         className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
-        onTouchStart={(e) => {
-          // ENHANCED: Complete scroll isolation for iOS Safari
+        onTouchStart={drawerExpanded ? (e) => {
+          // ENHANCED: Complete scroll isolation for iOS Safari - ONLY when expanded
           e.stopPropagation();
-        }}
-        onTouchMove={(e) => {
-          // ENHANCED: Prevent drawer scroll from affecting main page with iOS Safari support
+        } : undefined}
+        onTouchMove={drawerExpanded ? (e) => {
+          // ENHANCED: Prevent drawer scroll from affecting main page with iOS Safari support - ONLY when expanded
           e.stopPropagation();
           e.preventDefault(); // Critical for iOS Safari scroll isolation
-        }}
-        onTouchEnd={(e) => {
-          // ENHANCED: Complete touch event isolation
+        } : undefined}
+        onTouchEnd={drawerExpanded ? (e) => {
+          // ENHANCED: Complete touch event isolation - ONLY when expanded
           e.stopPropagation();
-        }}
-        onWheel={(e) => {
-          // ENHANCED: Prevent drawer scroll from affecting main page
+        } : undefined}
+        onWheel={drawerExpanded ? (e) => {
+          // ENHANCED: Prevent drawer scroll from affecting main page - ONLY when expanded
           e.stopPropagation();
           e.preventDefault(); // Prevent scroll bleed on desktop/trackpad
-        }}
+        } : undefined}
         style={{
           height: getDrawerHeight(),
           transform: drawerFullyClosed
@@ -4778,15 +4584,13 @@ const FigmaMobile = () => {
           WebkitBackdropFilter: 'blur(10px)'
         }}
         onClick={handleDrawerClick}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
         role="dialog"
         aria-label="Contact form drawer"
         aria-expanded={drawerExpanded}
       >
         {/* Drawer Handle */}
         <div
+          className="drawer-handle"
           style={{
             width: '40px',
             height: '4px',
@@ -4801,12 +4605,12 @@ const FigmaMobile = () => {
         {/* Drawer Content */}
         <div
           className={`drawer-content mobile-drawer-content ${showVerification ? 'verification-mode' : ''}`}
-          onTouchStart={(e) => {
-            // Allow drawer content scrolling while preventing bleed
+          onTouchStart={drawerExpanded ? (e) => {
+            // Allow drawer content scrolling while preventing bleed - ONLY when expanded
             e.stopPropagation();
-          }}
-          onTouchMove={(e) => {
-            // ENHANCED: Allow internal scrolling but prevent bleed to main page
+          } : undefined}
+          onTouchMove={drawerExpanded ? (e) => {
+            // ENHANCED: Allow internal scrolling but prevent bleed to main page - ONLY when expanded
             const element = e.currentTarget;
             const { scrollTop, scrollHeight, clientHeight } = element;
 
@@ -4821,18 +4625,21 @@ const FigmaMobile = () => {
             }
 
             e.stopPropagation();
-          }}
-          onTouchEnd={(e) => {
+          } : undefined}
+          onTouchEnd={drawerExpanded ? (e) => {
             e.stopPropagation();
-          }}
+          } : undefined}
           style={{
             padding: '0 20px 20px',
             opacity: drawerFullyClosed ? 0 : 1,
             transition: 'opacity 0.2s ease',
-            /* ENHANCED: Enable internal scrolling with iOS Safari support */
+            /* ENHANCED: Conditional scrolling based on drawer state */
             height: '100%',
-            overflowY: 'auto',
-            WebkitOverflowScrolling: 'touch'
+            overflowY: drawerExpanded ? 'auto' : 'hidden',
+            WebkitOverflowScrolling: drawerExpanded ? 'touch' : 'auto',
+            /* CRITICAL: Disable interaction when collapsed */
+            pointerEvents: drawerExpanded ? 'auto' : 'none',
+            touchAction: drawerExpanded ? 'pan-y' : 'none'
           }}
         >
           {/* Text Us Group - Hidden during verification */}
@@ -4842,7 +4649,7 @@ const FigmaMobile = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '2px',
-                marginBottom: '12px',
+                marginBottom: '4px', // Reduced to bring iframe closer
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 2
@@ -4879,8 +4686,8 @@ const FigmaMobile = () => {
             <div
               onClick={handleIframeClick}
               style={{
-                width: '100%', // Match text content width exactly
-                margin: '8px 0 0 0', // Remove auto margins to align with text content
+                width: 'calc(100% + 40px)', // Extend container to full drawer width
+                margin: '0px -20px 0 -20px', // Minimal top margin to bring iframe very close to text
                 cursor: 'pointer',
                 borderRadius: '8px',
                 overflow: 'visible',
@@ -4894,7 +4701,7 @@ const FigmaMobile = () => {
                 background="solid"
                 minimal={true}
                 style={{
-                  width: '100%', // Match text content width exactly
+                  width: '100%', // Full width of the extended container
                   height: iframeExpanded ? '200px' : '160px',
                   border: 'none',
                   borderRadius: '8px',
@@ -4908,6 +4715,16 @@ const FigmaMobile = () => {
           )}
         </div>
       </div>
+
+      {/* REFACTORED: Using Shared Mobile Drawer Component */}
+      <MobileDrawer
+        contentRef={contentRef}
+        viewportContext={viewportContext}
+        onStateChange={(drawerState) => {
+          // Handle drawer state changes if needed
+          console.log('Drawer state changed:', drawerState);
+        }}
+      />
     </div>
 
     {/* Expanded Image Modal */}
@@ -5084,253 +4901,12 @@ const FigmaMobile = () => {
       </div>
     )}
 
-    {/* Mobile Navigation Overlay - Always rendered to prevent DOM manipulation issues */}
-    <div
-      style={{
-        position: 'fixed',
-        top: '0',
-        left: '0',
-        width: '100vw',
-        height: '100vh',
-        background: 'rgba(0, 0, 0, 0.95)',
-        zIndex: showMenu ? 1000 : -1,
-        display: 'flex',
-        flexDirection: 'column',
-        opacity: showMenu ? 1 : 0,
-        visibility: showMenu ? 'visible' : 'hidden',
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)',
-        // Hardware acceleration for smooth overlay animations
-        transform: 'translateZ(0)',
-        WebkitTransform: 'translateZ(0)',
-        willChange: 'opacity, visibility, backdrop-filter',
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-        // Prevent pointer events when hidden
-        pointerEvents: showMenu ? 'auto' : 'none'
-      }}
-      onClick={() => setShowMenu(false)}
-    >
-        {/* Navigation Bar in Menu */}
-        <div
-          style={{
-            width: '100%',
-            height: '97px',
-            maxWidth: '100vw',
-            margin: '0 auto',
-            position: 'relative',
-            background: 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 20px',
-            boxSizing: 'border-box'
-          }}
-        >
-          {/* Close Button (X) */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowMenu(false);
-            }}
-            style={{
-              position: 'absolute',
-              right: '15px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '34px',
-              height: '34px',
-              cursor: 'pointer',
-              zIndex: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            {/* X Icon */}
-            <div
-              style={{
-                width: '24px',
-                height: '2px',
-                background: '#FFFFFF',
-                borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'rotate(45deg) translateY(6px)',
-                transformOrigin: 'center'
-              }}
-            />
-            <div
-              style={{
-                width: '24px',
-                height: '2px',
-                background: '#FFFFFF',
-                borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: 0,
-                transform: 'scale(0)'
-              }}
-            />
-            <div
-              style={{
-                width: '24px',
-                height: '2px',
-                background: '#FFFFFF',
-                borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'rotate(-45deg) translateY(-6px)',
-                transformOrigin: 'center'
-              }}
-            />
-          </div>
-
-          {/* Logo in Menu */}
-          <img
-            src="/images/mobile-figma/b2b-logo-mobile.svg"
-            alt="B2B Logo"
-            style={{
-              width: '138.41px',
-              height: '43px',
-              cursor: 'pointer',
-              userSelect: 'none'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNavigation('/');
-            }}
-          />
-        </div>
+    {/* OLD NAVIGATION OVERLAY REMOVED - Now using shared MobileNavigation component */}
 
 
 
-        {/* Navigation Menu Items */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            maxWidth: '430px',
-            margin: '0 auto',
-            padding: '8px 25px 40px 25px', // Tight spacing after social media buttons
-            gap: '24px',
-            // FIXED: Slower, calmer container animation with centered positioning
-            transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-            opacity: showMenu ? 1 : 0,
-            transition: 'opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, smoother fade
-            transitionDelay: showMenu ? '0.4s' : '0s', // Longer delay for calmer feel
-            // Hardware acceleration for smooth animations
-            willChange: 'opacity',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div
-            onClick={() => handleNavigation('/')}
-            className={`mobile-nav-item ${currentPage === 'events' ? 'active' : ''}`}
-            style={{
-              fontFamily: 'Inter',
-              fontWeight: '800',
-              fontSize: '64px',
-              lineHeight: '1.21em',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              textAlign: 'center',
-              opacity: 1,
-              // FIXED: Sequential fade-in animation - Home (1st item)
-              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-              opacity: showMenu ? 1 : 0, // Start hidden, fade in when menu opens
-              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
-              transitionDelay: showMenu ? '0.5s' : '0s', // First item - shortest delay
-              // Hardware acceleration for smooth text animations
-              willChange: 'opacity',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              // Improve text rendering
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale'
-            }}
-          >
-            Events
-          </div>
-          <div
-            onClick={() => handleNavigation('/about')}
-            className={`mobile-nav-item ${currentPage === 'about' ? 'active' : ''}`}
-            style={{
-              fontFamily: 'Inter',
-              fontWeight: '800',
-              fontSize: '64px',
-              lineHeight: '1.21em',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              textAlign: 'center',
-              // FIXED: Sequential fade-in animation - About (3rd item)
-              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-              opacity: showMenu ? 1 : 0, // Start hidden, fade in when menu opens
-              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
-              transitionDelay: showMenu ? '1.3s' : '0s', // Third item - longer delay
-              // Hardware acceleration for smooth text animations
-              willChange: 'opacity',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              // Improve text rendering
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale'
-            }}
-          >
-            About
-          </div>
-          <div
-            onClick={() => handleNavigation('/contact')}
-            className={`mobile-nav-item ${currentPage === 'contact' ? 'active' : ''}`}
-            style={{
-              fontFamily: 'Inter',
-              fontWeight: '800',
-              fontSize: '64px',
-              lineHeight: '1.21em',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              textAlign: 'center',
-              // ENHANCED: Sequential fade-in animation - Contact (4th item)
-              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-              opacity: showMenu ? 1 : 0,
-              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
-              transitionDelay: showMenu ? '1.7s' : '0s', // Fourth item - even longer delay
-              // Hardware acceleration for smooth text animations
-              willChange: 'opacity',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              // Improve text rendering
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale'
-            }}
-          >
-            Contact
-          </div>
 
-          {/* Social Media Buttons in Navigation - MOVED BELOW navigation links */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: '40px 25px 0px 25px', // Added top padding for spacing after navigation
-              // ENHANCED: Sequential fade-in animation - Social Media (5th item)
-              transform: 'translate3d(0, 0, 0)', // Always centered, no movement
-              opacity: showMenu ? 1 : 0,
-              transition: 'opacity 1.8s cubic-bezier(0.25, 0.1, 0.25, 1)', // Slower, elegant fade
-              transitionDelay: showMenu ? '2.1s' : '0s', // Final element with longest delay for cascading effect
-              willChange: 'opacity',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <SocialMediaButtons />
-          </div>
-        </div>
-      </div>
+
     </>
   );
 };

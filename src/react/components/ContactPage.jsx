@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ContactPageMobile from './ContactPageMobile';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 
 const ContactPage = () => {
@@ -182,9 +181,33 @@ const ContactPage = () => {
     );
   }
 
-  // Serve appropriate component based on device detection
+  // 🚀 FIXED: Render mobile component directly instead of redirecting
   if (isMobile) {
-    return <ContactPageMobile />;
+    // Import and render mobile component directly to avoid infinite redirects
+    const ContactPageMobile = React.lazy(() => import('./ContactPageMobile'));
+    return (
+      <React.Suspense fallback={
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: '#FFFFFF',
+          padding: '8px 16px',
+          borderRadius: '20px',
+          fontFamily: 'Inter, sans-serif',
+          fontSize: '14px',
+          zIndex: 9999,
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          opacity: 0.9
+        }}>
+          Loading contact page...
+        </div>
+      }>
+        <ContactPageMobile />
+      </React.Suspense>
+    );
   }
 
   // Desktop content

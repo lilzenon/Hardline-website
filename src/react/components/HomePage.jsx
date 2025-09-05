@@ -1,17 +1,17 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-
-// TEMPORARY: Direct import for debugging - replace with lazy loading after fix
-import FigmaDesktop from './FigmaDesktop';
-const FigmaMobile = lazy(() => import('./FigmaMobile'));
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useSEO } from '../hooks/useSEO';
 import useMobileLifecycle from '../hooks/useMobileLifecycle';
 import { initializeMobileOptimizations, isMobileDevice } from '../../utils/mobileOptimization';
 
+// 🚀 PERFORMANCE: Optimized lazy loading with immediate desktop, lazy mobile
+import FigmaDesktop from './FigmaDesktop';
+const FigmaMobile = lazy(() => import('./FigmaMobile'));
+
 /**
- * Homepage component that automatically serves mobile or desktop version
- * based on viewport width and user agent detection
+ * Homepage component with optimized performance and fast loading
+ * Provides immediate desktop rendering and optimized mobile loading
  */
 const HomePage = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -87,7 +87,7 @@ const HomePage = () => {
     initializeHomepage();
   }, [viewportWidth, isMobileByWidth]);
 
-  // Loading state
+  // 🚀 PERFORMANCE: Minimal loading state - only show for very brief periods
   if (isLoading) {
     return (
       <div
@@ -100,7 +100,8 @@ const HomePage = () => {
           alignItems: 'center',
           color: '#FFF',
           fontFamily: 'Inter, sans-serif',
-          fontSize: '18px'
+          fontSize: '16px',
+          opacity: 0.8
         }}
       >
         Loading...
@@ -108,20 +109,25 @@ const HomePage = () => {
     );
   }
 
-  // MEMORY OPTIMIZATION: Wrap lazy components in Suspense with loading fallback
+  // 🚀 PERFORMANCE: Optimized component rendering with fast fallback
   return (
     <Suspense fallback={
       <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        background: '#000',
-        color: '#FFF',
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        background: 'rgba(0, 0, 0, 0.8)',
+        color: '#FFFFFF',
+        padding: '8px 16px',
+        borderRadius: '20px',
         fontFamily: 'Inter, sans-serif',
-        fontSize: '18px'
+        fontSize: '14px',
+        zIndex: 9999,
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        opacity: 0.9
       }}>
-        Loading component...
+        Loading...
       </div>
     }>
       {isMobile ? <FigmaMobile /> : <FigmaDesktop />}
