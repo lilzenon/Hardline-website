@@ -743,6 +743,44 @@ const FigmaMobile = () => {
     passive: true // Ensure completely passive event handling
   });
 
+  // 📱 ENHANCED: Body scroll lock when drawer is expanded (iOS Safari support)
+  useEffect(() => {
+    const body = document.body;
+    const contentContainer = contentRef.current;
+
+    if (drawerExpanded) {
+      // Lock main page scroll when drawer is expanded
+      const scrollY = window.scrollY;
+      body.classList.add('drawer-scroll-lock');
+      body.style.top = `-${scrollY}px`;
+
+      if (contentContainer) {
+        contentContainer.classList.add('drawer-active');
+      }
+    } else {
+      // Restore main page scroll when drawer is collapsed
+      body.classList.remove('drawer-scroll-lock');
+      const scrollY = body.style.top;
+      body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+
+      if (contentContainer) {
+        contentContainer.classList.remove('drawer-active');
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      body.classList.remove('drawer-scroll-lock');
+      body.style.top = '';
+      if (contentContainer) {
+        contentContainer.classList.remove('drawer-active');
+      }
+    };
+  }, [drawerExpanded]);
+
   // Simplified phone number formatting handler without cursor management
   const handlePhoneChange = useCallback((e) => {
     const rawValue = e.target.value;
@@ -2827,12 +2865,18 @@ const FigmaMobile = () => {
             will-change: auto; /* Let browser optimize to prevent main scroll conflicts */
             backface-visibility: hidden;
             perspective: 1000px;
-            /* Enhanced touch interaction */
-            touch-action: pan-y;
+            /* ENHANCED: Complete scroll isolation for iOS Safari */
+            touch-action: none; /* Prevent any touch scrolling on drawer container */
             user-select: none;
             -webkit-user-select: none;
-            /* Isolate drawer interactions from main scroll */
-            contain: layout style;
+            /* Complete containment isolation */
+            contain: strict;
+            /* iOS Safari specific optimizations */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            /* Prevent scroll bleed completely */
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
           }
 
           /* Fast momentum animation for flick gestures - scroll optimized */
@@ -2847,28 +2891,59 @@ const FigmaMobile = () => {
             contain: layout style; /* Layout containment for smooth animations */
           }
 
-          /* FIXED: Drawer scroll isolation to prevent main page scroll interference */
+          /* ENHANCED: Complete drawer scroll isolation for iOS Safari */
           .mobile-drawer-content {
-            /* Isolate drawer scrolling from main page */
+            /* Complete scroll isolation from main page */
             overscroll-behavior: contain;
             -webkit-overscroll-behavior: contain;
-            /* Prevent scroll chaining to parent */
-            touch-action: pan-y;
-            /* Contain drawer interactions */
-            contain: layout style;
+            /* iOS Safari specific scroll containment */
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            /* Strict touch action for drawer content only */
+            touch-action: pan-y pinch-zoom;
+            /* Complete containment isolation */
+            contain: strict;
+            /* Prevent any scroll events from bubbling */
+            position: relative;
+            z-index: 1000;
+            /* iOS momentum scrolling optimization */
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
           }
 
-          /* FIXED: Iframe scroll isolation */
+          /* ENHANCED: Complete iframe scroll isolation for iOS Safari */
           .mobile-drawer iframe {
             /* Completely isolate iframe scrolling */
             overscroll-behavior: contain;
             -webkit-overscroll-behavior: contain;
-            /* Prevent iframe scroll from affecting parent */
+            /* Allow iframe internal scrolling only */
             touch-action: auto;
             /* Isolate iframe interactions */
             contain: strict;
-            /* Prevent scroll bleed */
-            overflow: hidden;
+            /* Enable iframe scrolling while preventing bleed */
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          /* ENHANCED: Body scroll lock when drawer is active */
+          body.drawer-scroll-lock {
+            overflow: hidden !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+            /* iOS Safari specific scroll lock */
+            -webkit-overflow-scrolling: none !important;
+            touch-action: none !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
+          }
+
+          /* Prevent main content scroll when drawer is expanded */
+          .mobile-content-container.drawer-active {
+            overflow: hidden !important;
+            touch-action: none !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
           }
 
           .mobile-drawer.collapsed {
@@ -4668,13 +4743,23 @@ const FigmaMobile = () => {
       <div
         ref={drawerRef}
         className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
+        onTouchStart={(e) => {
+          // ENHANCED: Complete scroll isolation for iOS Safari
+          e.stopPropagation();
+        }}
         onTouchMove={(e) => {
-          // FIXED: Prevent drawer scroll from affecting main page
+          // ENHANCED: Prevent drawer scroll from affecting main page with iOS Safari support
+          e.stopPropagation();
+          e.preventDefault(); // Critical for iOS Safari scroll isolation
+        }}
+        onTouchEnd={(e) => {
+          // ENHANCED: Complete touch event isolation
           e.stopPropagation();
         }}
         onWheel={(e) => {
-          // FIXED: Prevent drawer scroll from affecting main page
+          // ENHANCED: Prevent drawer scroll from affecting main page
           e.stopPropagation();
+          e.preventDefault(); // Prevent scroll bleed on desktop/trackpad
         }}
         style={{
           height: getDrawerHeight(),
@@ -4716,10 +4801,38 @@ const FigmaMobile = () => {
         {/* Drawer Content */}
         <div
           className={`drawer-content mobile-drawer-content ${showVerification ? 'verification-mode' : ''}`}
+          onTouchStart={(e) => {
+            // Allow drawer content scrolling while preventing bleed
+            e.stopPropagation();
+          }}
+          onTouchMove={(e) => {
+            // ENHANCED: Allow internal scrolling but prevent bleed to main page
+            const element = e.currentTarget;
+            const { scrollTop, scrollHeight, clientHeight } = element;
+
+            // Check if we're at scroll boundaries
+            const isAtTop = scrollTop === 0;
+            const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+
+            // Prevent scroll bleed at boundaries for iOS Safari
+            if ((isAtTop && e.touches[0].clientY > e.touches[0].pageY) ||
+                (isAtBottom && e.touches[0].clientY < e.touches[0].pageY)) {
+              e.preventDefault();
+            }
+
+            e.stopPropagation();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+          }}
           style={{
             padding: '0 20px 20px',
             opacity: drawerFullyClosed ? 0 : 1,
-            transition: 'opacity 0.2s ease'
+            transition: 'opacity 0.2s ease',
+            /* ENHANCED: Enable internal scrolling with iOS Safari support */
+            height: '100%',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch'
           }}
         >
           {/* Text Us Group - Hidden during verification */}
