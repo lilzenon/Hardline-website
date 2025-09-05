@@ -1,5 +1,14 @@
 import React from 'react';
-import DOMPurify from 'dompurify';
+
+// 🔧 OPTIMIZED: Lazy load DOMPurify for smaller initial bundle
+let DOMPurify = null;
+const loadDOMPurify = async () => {
+  if (!DOMPurify) {
+    const DOMPurifyModule = await import('dompurify');
+    DOMPurify = DOMPurifyModule.default;
+  }
+  return DOMPurify;
+};
 
 /**
  * Frontend XSS Protection Utilities
@@ -70,6 +79,26 @@ const EVENT_DESCRIPTION_CONFIG = {
 };
 
 /**
+ * Basic HTML sanitization fallback (without DOMPurify)
+ * @param {string} dirty - The potentially unsafe HTML string
+ * @returns {string} - Basic sanitized string
+ */
+function basicSanitize(dirty) {
+    if (!dirty || typeof dirty !== 'string') {
+        return '';
+    }
+
+    // Basic HTML entity encoding as fallback
+    return dirty
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/\//g, '&#x2F;');
+}
+
+/**
  * Sanitize HTML content with default configuration
  * @param {string} dirty - The potentially unsafe HTML string
  * @param {Object} config - Optional DOMPurify configuration
@@ -80,12 +109,26 @@ export function sanitizeHtml(dirty, config = DEFAULT_CONFIG) {
         return '';
     }
 
-    try {
-        return DOMPurify.sanitize(dirty, config);
-    } catch (error) {
-        console.error('HTML sanitization error:', error);
-        return ''; // Return empty string on error for safety
+    // If DOMPurify is already loaded, use it
+    if (DOMPurify) {
+        try {
+            return DOMPurify.sanitize(dirty, config);
+        } catch (error) {
+            console.error('HTML sanitization error:', error);
+            return basicSanitize(dirty);
+        }
     }
+
+    // Load DOMPurify asynchronously and use basic sanitization as fallback
+    loadDOMPurify().then((DOMPurifyInstance) => {
+        // DOMPurify is now loaded for future calls
+        console.log('✅ DOMPurify loaded for future sanitization');
+    }).catch((error) => {
+        console.warn('⚠️ Failed to load DOMPurify, using basic sanitization:', error);
+    });
+
+    // Return basic sanitization immediately
+    return basicSanitize(dirty);
 }
 
 /**

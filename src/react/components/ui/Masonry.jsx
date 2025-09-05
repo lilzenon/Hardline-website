@@ -1,5 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+
+// 🔧 OPTIMIZED: Lazy load GSAP for smaller initial bundle
+let gsap = null;
+const loadGSAP = async () => {
+  if (!gsap) {
+    const gsapModule = await import('gsap');
+    gsap = gsapModule.gsap || gsapModule.default;
+  }
+  return gsap;
+};
 
 const useMedia = (queries, values, defaultValue) => {
   const get = () => values[queries.findIndex(q => matchMedia(q).matches)] ?? defaultValue;
@@ -127,45 +136,61 @@ const Masonry = ({
   useLayoutEffect(() => {
     if (!imagesReady) return;
 
-    grid.forEach((item, index) => {
-      const selector = `[data-key="${item.id}"]`;
-      const animationProps = {
-        x: item.x,
-        y: item.y,
-        width: item.w,
-        height: item.h
-      };
-
-      if (!hasMounted.current) {
-        const initialPos = getInitialPosition(item, index);
-        const initialState = {
-          opacity: 0,
-          x: initialPos.x,
-          y: initialPos.y,
+    // 🔧 OPTIMIZED: Load GSAP only when animations are needed
+    loadGSAP().then((gsapInstance) => {
+      grid.forEach((item, index) => {
+        const selector = `[data-key="${item.id}"]`;
+        const animationProps = {
+          x: item.x,
+          y: item.y,
           width: item.w,
-          height: item.h,
-          ...(blurToFocus && { filter: 'blur(10px)' })
+          height: item.h
         };
 
-        gsap.fromTo(selector, initialState, {
-          opacity: 1,
-          ...animationProps,
-          ...(blurToFocus && { filter: 'blur(0px)' }),
-          duration: 0.8,
-          ease: 'power3.out',
-          delay: index * stagger
-        });
-      } else {
-        gsap.to(selector, {
-          ...animationProps,
-          duration: duration,
-          ease: ease,
-          overwrite: 'auto'
-        });
-      }
-    });
+        if (!hasMounted.current) {
+          const initialPos = getInitialPosition(item, index);
+          const initialState = {
+            opacity: 0,
+            x: initialPos.x,
+            y: initialPos.y,
+            width: item.w,
+            height: item.h,
+            ...(blurToFocus && { filter: 'blur(10px)' })
+          };
 
-    hasMounted.current = true;
+          gsapInstance.fromTo(selector, initialState, {
+            opacity: 1,
+            ...animationProps,
+            ...(blurToFocus && { filter: 'blur(0px)' }),
+            duration: 0.8,
+            ease: 'power3.out',
+            delay: index * stagger
+          });
+        } else {
+          gsapInstance.to(selector, {
+            ...animationProps,
+            duration: duration,
+            ease: ease,
+            overwrite: 'auto'
+          });
+        }
+      });
+
+      hasMounted.current = true;
+    }).catch((error) => {
+      console.warn('⚠️ GSAP failed to load, falling back to CSS animations:', error);
+      // Fallback to CSS animations if GSAP fails to load
+      grid.forEach((item, index) => {
+        const element = document.querySelector(`[data-key="${item.id}"]`);
+        if (element) {
+          element.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
+          element.style.width = `${item.w}px`;
+          element.style.height = `${item.h}px`;
+          element.style.transition = 'all 0.6s ease-out';
+        }
+      });
+      hasMounted.current = true;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grid, imagesReady, stagger, animateFrom, blurToFocus, duration, ease]);
 
@@ -173,46 +198,64 @@ const Masonry = ({
     const element = e.currentTarget;
     const selector = `[data-key="${item.id}"]`;
 
-    if (scaleOnHover) {
-      gsap.to(selector, {
-        scale: hoverScale,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-    }
-
-    if (colorShiftOnHover) {
-      const overlay = element.querySelector('.color-overlay');
-      if (overlay) {
-        gsap.to(overlay, {
-          opacity: 0.3,
-          duration: 0.3
+    // 🔧 OPTIMIZED: Use lazy-loaded GSAP for hover animations
+    loadGSAP().then((gsapInstance) => {
+      if (scaleOnHover) {
+        gsapInstance.to(selector, {
+          scale: hoverScale,
+          duration: 0.3,
+          ease: 'power2.out'
         });
       }
-    }
+
+      if (colorShiftOnHover) {
+        const overlay = element.querySelector('.color-overlay');
+        if (overlay) {
+          gsapInstance.to(overlay, {
+            opacity: 0.3,
+            duration: 0.3
+          });
+        }
+      }
+    }).catch(() => {
+      // Fallback to CSS animations
+      if (scaleOnHover) {
+        element.style.transform = `scale(${hoverScale})`;
+        element.style.transition = 'transform 0.3s ease-out';
+      }
+    });
   };
 
   const handleMouseLeave = (e, item) => {
     const element = e.currentTarget;
     const selector = `[data-key="${item.id}"]`;
 
-    if (scaleOnHover) {
-      gsap.to(selector, {
-        scale: 1,
-        duration: 0.3,
-        ease: 'power2.out'
-      });
-    }
-
-    if (colorShiftOnHover) {
-      const overlay = element.querySelector('.color-overlay');
-      if (overlay) {
-        gsap.to(overlay, {
-          opacity: 0,
-          duration: 0.3
+    // 🔧 OPTIMIZED: Use lazy-loaded GSAP for hover animations
+    loadGSAP().then((gsapInstance) => {
+      if (scaleOnHover) {
+        gsapInstance.to(selector, {
+          scale: 1,
+          duration: 0.3,
+          ease: 'power2.out'
         });
       }
-    }
+
+      if (colorShiftOnHover) {
+        const overlay = element.querySelector('.color-overlay');
+        if (overlay) {
+          gsapInstance.to(overlay, {
+            opacity: 0,
+            duration: 0.3
+          });
+        }
+      }
+    }).catch(() => {
+      // Fallback to CSS animations
+      if (scaleOnHover) {
+        element.style.transform = 'scale(1)';
+        element.style.transition = 'transform 0.3s ease-out';
+      }
+    });
   };
 
   return (

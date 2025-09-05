@@ -50,7 +50,7 @@
         "cookie-parser": "1.4.7",
         "cors": "2.8.5",
         "css-loader": "^7.1.2",
-        "date-fns": "4.1.0",
+        "dayjs": "^1.11.10",
         "dotenv": "17.2.1",
         "envalid": "8.1.0",
         "express": "^5.1.0",
@@ -81,7 +81,7 @@
         "passport-localapikey-update": "0.6.0",
         "pg": "8.16.3",
         "pg-query-stream": "4.10.3",
-        "puppeteer": "^24.16.0",
+
         "qrcode": "^1.5.4",
         "rate-limit-redis": "4.2.1",
         "react": "18.3.1",
@@ -90,16 +90,14 @@
         "react-hook-form": "^7.62.0",
         "react-router-dom": "^7.8.0",
         "session-file-store": "^1.5.0",
-        "sharp": "^0.34.3",
+
         "speakeasy": "^2.0.0",
         "style-loader": "^4.0.0",
         "terser": "^5.43.1",
         "twilio": "5.8.0",
         "ua-parser-js": "^2.0.4",
         "uuid": "^11.1.0",
-        "webpack": "^5.101.0",
-        "webpack-cli": "^6.0.1",
-        "webpack-dev-server": "^5.2.2",
+
         "zustand": "^5.0.7"
     },
     "devDependencies": {
@@ -126,6 +124,11 @@
         "tailwindcss": "3.4.17",
         "typescript": "^5.9.2",
         "vite": "^7.1.1",
-        "vite-plugin-compression": "^0.5.1"
+        "vite-plugin-compression": "^0.5.1",
+        "puppeteer": "^24.16.0",
+        "sharp": "^0.34.3",
+        "webpack": "^5.101.0",
+        "webpack-cli": "^6.0.1",
+        "webpack-dev-server": "^5.2.2"
     }
 }
