@@ -1,0 +1,199 @@
+/**
+ * 📱 MOBILE SCROLL PERFORMANCE FIX
+ * 
+ * Comprehensive solution for jittery mobile scrolling issues
+ * Targets iOS Safari and Android Chrome specifically
+ * 
+ * Issues Fixed:
+ * 1. Conflicting scroll behaviors between CSS and JS
+ * 2. Over-optimization causing performance degradation
+ * 3. Missing critical mobile-specific properties
+ * 4. Improper hardware acceleration usage
+ */
+
+/* ===== RESET PROBLEMATIC SCROLL OPTIMIZATIONS ===== */
+
+/* Remove conflicting scroll behaviors that cause jitter */
+html, body {
+    /* Remove problematic smooth scrolling that conflicts with native momentum */
+    scroll-behavior: auto !important;
+    
+    /* Reset over-optimized properties */
+    -webkit-overflow-scrolling: auto !important;
+    overflow-scrolling: auto !important;
+    
+    /* Keep essential mobile optimizations */
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+    
+    /* Remove forced hardware acceleration from global elements */
+    transform: none !important;
+    -webkit-transform: none !important;
+    will-change: auto !important;
+}
+
+/* ===== MOBILE-SPECIFIC SCROLL CONTAINER OPTIMIZATION ===== */
+
+/* Target the main mobile content container specifically */
+.mobile-content-container {
+    /* Enable native iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch !important;
+    
+    /* Prevent scroll chaining and bounce */
+    overscroll-behavior: contain !important;
+    -webkit-overscroll-behavior: contain !important;
+    
+    /* Optimize touch interactions */
+    touch-action: pan-y !important;
+    
+    /* Remove problematic properties that cause jitter */
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+    -webkit-scroll-snap-type: none !important;
+    
+    /* Optimize rendering without forcing layers */
+    contain: layout style !important;
+    
+    /* Remove will-change to prevent unnecessary compositing */
+    will-change: auto !important;
+    
+    /* Keep minimal hardware acceleration */
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    
+    /* Optimize backface visibility */
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
+}
+
+/* ===== iOS SAFARI SPECIFIC FIXES ===== */
+
+/* Target iOS Safari specifically */
+@supports (-webkit-touch-callout: none) {
+    .mobile-content-container {
+        /* Enhanced iOS momentum scrolling */
+        -webkit-overflow-scrolling: touch !important;
+        
+        /* Prevent iOS scroll bounce issues */
+        -webkit-overscroll-behavior: contain !important;
+        
+        /* Optimize iOS touch handling */
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        
+        /* Remove problematic iOS optimizations */
+        -webkit-momentum-scrolling: auto !important;
+    }
+    
+    /* Fix iOS viewport height issues */
+    html, body {
+        height: 100% !important;
+        overflow: visible !important;
+    }
+    
+    /* Ensure proper iOS container behavior */
+    .mobile-container {
+        position: relative !important;
+        height: 100vh !important;
+        height: -webkit-fill-available !important;
+        overflow: visible !important;
+    }
+}
+
+/* ===== ANDROID CHROME SPECIFIC FIXES ===== */
+
+/* Target Android Chrome */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    .mobile-content-container {
+        /* Optimize for Android scrolling */
+        overscroll-behavior: contain !important;
+        
+        /* Improve Android touch responsiveness */
+        touch-action: pan-y !important;
+        
+        /* Reduce Android scroll lag */
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ===== REMOVE CONFLICTING ANIMATIONS DURING SCROLL ===== */
+
+/* Disable problematic animations on mobile during scroll */
+@media (max-width: 767px) {
+    /* Reduce animation complexity that interferes with scrolling */
+    * {
+        animation-duration: 0.1s !important;
+        transition-duration: 0.1s !important;
+    }
+    
+    /* Exception for essential UI animations */
+    .mobile-drawer,
+    .mobile-nav,
+    button:active {
+        animation-duration: 0.2s !important;
+        transition-duration: 0.2s !important;
+    }
+    
+    /* Remove will-change from elements that don't need it */
+    .mobile-content-container * {
+        will-change: auto !important;
+    }
+    
+    /* Optimize card animations to not interfere with scroll */
+    .mobile-event-card {
+        transition: transform 0.1s ease !important;
+        will-change: auto !important;
+    }
+}
+
+/* ===== SCROLL PERFORMANCE DEBUGGING ===== */
+
+/* Development mode - uncomment to debug scroll issues */
+/*
+.mobile-content-container {
+    outline: 2px solid red !important;
+}
+
+.mobile-content-container * {
+    outline: 1px solid blue !important;
+}
+*/
+
+/* ===== ACCESSIBILITY COMPLIANCE ===== */
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    .mobile-content-container {
+        scroll-behavior: auto !important;
+        -webkit-overflow-scrolling: auto !important;
+    }
+    
+    * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        will-change: auto !important;
+    }
+}
+
+/* ===== CRITICAL MOBILE VIEWPORT FIXES ===== */
+
+/* Ensure proper mobile viewport behavior */
+@media (max-width: 767px) {
+    /* Fix viewport units on mobile */
+    html {
+        height: 100%;
+        height: -webkit-fill-available;
+    }
+    
+    body {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+    }
+    
+    /* Prevent horizontal scroll issues */
+    html, body {
+        overflow-x: hidden !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}

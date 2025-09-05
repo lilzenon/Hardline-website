@@ -20,14 +20,18 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     return `https://embed.laylo.com/?${params.toString()}`;
   }, [dropId, color, theme, background, minimal]);
 
-  // Simple iframe render - no complex loading states
+  // Simple iframe render with scroll isolation
   return (
     <iframe
       id={`laylo-drop-${dropId}`}
       src={layloUrl}
+      className="mobile-drawer"
       style={{
         ...style,
         border: 'none',
+        /* FIXED: Iframe scroll isolation */
+        overscrollBehavior: 'contain',
+        WebkitOverscrollBehavior: 'contain',
         width: '100%',
         height: '100%'
       }}
@@ -2289,13 +2293,16 @@ const FigmaMobile = () => {
             overscroll-behavior: contain; /* Prevent scroll chaining only */
           }
 
-          /* Mobile container - relative positioning for natural scroll */
+          /* FIXED: Mobile container with proper overflow control */
           .mobile-container {
-            position: relative; /* Changed from fixed to allow natural scroll */
+            position: relative;
             width: 100vw;
             height: 100vh;
             height: -webkit-fill-available;
-            overflow: visible; /* Allow content to scroll naturally */
+            /* FIXED: Control overflow to prevent hidden elements from showing */
+            overflow: hidden;
+            /* Ensure proper scroll containment */
+            overscroll-behavior: contain;
           }
 
           /* Optimize touch interactions for iOS */
@@ -2345,7 +2352,7 @@ const FigmaMobile = () => {
             background: rgba(255, 255, 255, 0.5);
           }
 
-          /* 📱 ULTRA-STABLE MOBILE NAVIGATION */
+          /* 📱 ULTRA-STABLE MOBILE NAVIGATION WITH SCROLL ISOLATION */
           .mobile-navigation-header {
             /* Prevent any layout shifts from navigation changes */
             contain: strict;
@@ -2353,6 +2360,11 @@ const FigmaMobile = () => {
             isolation: isolate;
             /* Prevent reflow during scroll state changes */
             will-change: background-color, backdrop-filter;
+            /* FIXED: Prevent scroll events on navigation from affecting main page */
+            touch-action: none;
+            pointer-events: auto;
+            /* Ensure navigation doesn't interfere with main scroll */
+            overscroll-behavior: contain;
           }
 
           /* 📱 OPTIMIZED MOBILE SCROLL CONTAINER */
@@ -2835,6 +2847,30 @@ const FigmaMobile = () => {
             contain: layout style; /* Layout containment for smooth animations */
           }
 
+          /* FIXED: Drawer scroll isolation to prevent main page scroll interference */
+          .mobile-drawer-content {
+            /* Isolate drawer scrolling from main page */
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
+            /* Prevent scroll chaining to parent */
+            touch-action: pan-y;
+            /* Contain drawer interactions */
+            contain: layout style;
+          }
+
+          /* FIXED: Iframe scroll isolation */
+          .mobile-drawer iframe {
+            /* Completely isolate iframe scrolling */
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
+            /* Prevent iframe scroll from affecting parent */
+            touch-action: auto;
+            /* Isolate iframe interactions */
+            contain: strict;
+            /* Prevent scroll bleed */
+            overflow: hidden;
+          }
+
           .mobile-drawer.collapsed {
             transform: translate3d(0, calc(100% - 80px), 0);
           }
@@ -3008,7 +3044,7 @@ const FigmaMobile = () => {
           background: '#000000',
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'visible', // Allow natural scrolling
+          overflow: 'hidden', // FIXED: Prevent hidden elements from becoming visible
           // Mobile-specific viewport fixes
           minHeight: '100vh',
           minWidth: '100vw',
@@ -3027,6 +3063,14 @@ const FigmaMobile = () => {
         <header
           role="banner"
           className="mobile-navigation-header"
+          onTouchMove={(e) => {
+            // FIXED: Prevent navigation bar scroll from affecting main page
+            e.stopPropagation();
+          }}
+          onWheel={(e) => {
+            // FIXED: Prevent navigation bar scroll from affecting main page
+            e.stopPropagation();
+          }}
           style={{
             position: 'sticky',
             top: '0px',
@@ -4613,6 +4657,14 @@ const FigmaMobile = () => {
       <div
         ref={drawerRef}
         className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
+        onTouchMove={(e) => {
+          // FIXED: Prevent drawer scroll from affecting main page
+          e.stopPropagation();
+        }}
+        onWheel={(e) => {
+          // FIXED: Prevent drawer scroll from affecting main page
+          e.stopPropagation();
+        }}
         style={{
           height: getDrawerHeight(),
           transform: drawerFullyClosed
@@ -4652,7 +4704,7 @@ const FigmaMobile = () => {
 
         {/* Drawer Content */}
         <div
-          className={`drawer-content ${showVerification ? 'verification-mode' : ''}`}
+          className={`drawer-content mobile-drawer-content ${showVerification ? 'verification-mode' : ''}`}
           style={{
             padding: '0 20px 20px',
             opacity: drawerFullyClosed ? 0 : 1,
