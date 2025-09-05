@@ -1,4 +1,5 @@
-const { addMilliseconds } = require("date-fns");
+// 🔧 OPTIMIZED: Replace date-fns with dayjs for bundle optimization
+const dayjs = require("dayjs");
 const { body, param, query: queryValidator } = require("express-validator");
 const promisify = require("node:util").promisify;
 const bcrypt = require("bcryptjs");
@@ -93,7 +94,7 @@ const createLink = [
     .customSanitizer(ms)
     .custom(value => value >= ms("1m"))
     .withMessage("Expire time should be more than 1 minute.")
-    .customSanitizer(value => utils.dateToUTC(addMilliseconds(new Date(), value))),
+    .customSanitizer(value => utils.dateToUTC(dayjs().add(value, 'millisecond').toDate())),
     body("domain")
     .optional({ nullable: true, checkFalsy: true })
     .customSanitizer(value => value === env.DEFAULT_DOMAIN ? null : value)
@@ -156,7 +157,7 @@ const editLink = [
     .customSanitizer(ms)
     .custom(value => value >= ms("1m"))
     .withMessage("Expire time should be more than 1 minute.")
-    .customSanitizer(value => utils.dateToUTC(addMilliseconds(new Date(), value))),
+    .customSanitizer(value => utils.dateToUTC(dayjs().add(value, 'millisecond').toDate())),
     body("description")
     .optional({ nullable: true, checkFalsy: true })
     .isString()

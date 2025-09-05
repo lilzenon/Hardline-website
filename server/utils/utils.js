@@ -1,4 +1,5 @@
-const { differenceInDays, differenceInHours, differenceInMonths, differenceInMilliseconds, addDays, subHours, subDays, subMonths, subYears, format } = require("date-fns");
+// 🔧 OPTIMIZED: Replace date-fns with dayjs for bundle optimization
+const dayjs = require("dayjs");
 const { customAlphabet } = require("nanoid");
 const JWT = require("jsonwebtoken");
 const path = require("node:path");
@@ -42,7 +43,7 @@ function signToken(user) {
             iss: "ApiAuth",
             sub: user.id,
             iat: parseInt((new Date().getTime() / 1000).toFixed(0)),
-            exp: parseInt((addDays(new Date(), 7).getTime() / 1000).toFixed(0))
+            exp: parseInt((dayjs().add(7, 'day').valueOf() / 1000).toFixed(0))
         },
         env.JWT_SECRET
     )
@@ -117,10 +118,10 @@ function statsObjectToArray(obj) {
 }
 
 function getDifferenceFunction(type) {
-    if (type === "lastDay") return differenceInHours;
-    if (type === "lastWeek") return differenceInDays;
-    if (type === "lastMonth") return differenceInDays;
-    if (type === "lastYear") return differenceInMonths;
+    if (type === "lastDay") return (date1, date2) => dayjs(date1).diff(dayjs(date2), 'hour');
+    if (type === "lastWeek") return (date1, date2) => dayjs(date1).diff(dayjs(date2), 'day');
+    if (type === "lastMonth") return (date1, date2) => dayjs(date1).diff(dayjs(date2), 'day');
+    if (type === "lastYear") return (date1, date2) => dayjs(date1).diff(dayjs(date2), 'month');
     throw new Error("Unknown type.");
 }
 
@@ -146,7 +147,7 @@ function dateToUTC(date) {
 
     // mysql doesn't save time in utc, so format the date in local timezone instead
     if (knex.isMySQL) {
-        return format(new Date(date), "yyyy-MM-dd HH:mm:ss");
+        return dayjs(date).format("YYYY-MM-DD HH:mm:ss");
     }
 
     // return unformatted utc string for postgres
@@ -155,10 +156,10 @@ function dateToUTC(date) {
 
 function getStatsPeriods(now) {
     return [
-        ["lastDay", subHours(now, 24)],
-        ["lastWeek", subDays(now, 7)],
-        ["lastMonth", subDays(now, 30)],
-        ["lastYear", subMonths(now, 12)],
+        ["lastDay", dayjs(now).subtract(24, 'hour').toDate()],
+        ["lastWeek", dayjs(now).subtract(7, 'day').toDate()],
+        ["lastMonth", dayjs(now).subtract(30, 'day').toDate()],
+        ["lastYear", dayjs(now).subtract(12, 'month').toDate()],
     ]
 }
 
@@ -317,7 +318,7 @@ const sanitize = {
             banned: !!link.banned,
             id: link.uuid,
             relative_created_at: getTimeAgo(timestamps.created_at),
-            relative_expire_in: link.expire_in && ms(differenceInMilliseconds(parseDatetime(link.expire_in), new Date()), { long: true }),
+            relative_expire_in: link.expire_in && ms(dayjs(parseDatetime(link.expire_in)).diff(dayjs(), 'millisecond'), { long: true }),
             password: !!link.password,
             visit_count: link.visit_count.toLocaleString("en-US"),
             link: getShortURL(link.address, link.domain),
@@ -331,7 +332,7 @@ const sanitize = {
             domain: link.domain || env.DEFAULT_DOMAIN,
             id: link.uuid,
             relative_created_at: getTimeAgo(timestamps.created_at),
-            relative_expire_in: link.expire_in && ms(differenceInMilliseconds(parseDatetime(link.expire_in), new Date()), { long: true }),
+            relative_expire_in: link.expire_in && ms(dayjs(parseDatetime(link.expire_in)).diff(dayjs(), 'millisecond'), { long: true }),
             password: !!link.password,
             visit_count: link.visit_count.toLocaleString("en-US"),
             link: getShortURL(link.address, link.domain)
@@ -415,11 +416,19 @@ function registerHandlebarsHelpers() {
 
             // Use a simple, safe default format
             if (formatString && typeof formatString === 'string') {
-                return format(parsedDate, formatString);
+                // Convert date-fns format to dayjs format
+                const dayjsFormat = formatString
+                    .replace(/yyyy/g, 'YYYY')
+                    .replace(/dd/g, 'DD')
+                    .replace(/MMM/g, 'MMM')
+                    .replace(/HH/g, 'HH')
+                    .replace(/mm/g, 'mm')
+                    .replace(/ss/g, 'ss');
+                return dayjs(parsedDate).format(dayjsFormat);
             }
 
             // Default format - simple and safe
-            return format(parsedDate, "MMM d, yyyy");
+            return dayjs(parsedDate).format("MMM D, YYYY");
         } catch (error) {
             console.error("Date formatting error:", error, "for date:", date);
             // Fallback to basic date string

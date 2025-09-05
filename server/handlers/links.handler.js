@@ -1,4 +1,5 @@
-const { differenceInSeconds } = require("date-fns");
+// 🔧 OPTIMIZED: Replace date-fns with dayjs for bundle optimization
+const dayjs = require("dayjs");
 const promisify = require("node:util").promisify;
 const bcrypt = require("bcryptjs");
 const { isbot } = require("isbot");
@@ -219,7 +220,7 @@ async function edit(req, res) {
             return;
         }
         if (name === "expire_in" && link.expire_in)
-            if (Math.abs(differenceInSeconds(utils.parseDatetime(value), utils.parseDatetime(link.expire_in))) < 60)
+            if (Math.abs(dayjs(utils.parseDatetime(value)).diff(dayjs(utils.parseDatetime(link.expire_in)), 'second')) < 60)
                 return;
         if (name === "password")
             if (value && value.replace(/•/ig, "").length === 0) {
@@ -338,7 +339,7 @@ async function editAdmin(req, res) {
             return;
         }
         if (name === "expire_in" && link.expire_in)
-            if (Math.abs(differenceInSeconds(utils.parseDatetime(value), utils.parseDatetime(link.expire_in))) < 60)
+            if (Math.abs(dayjs(utils.parseDatetime(value)).diff(dayjs(utils.parseDatetime(link.expire_in)), 'second')) < 60)
                 return;
         if (name === "password")
             if (value && value.replace(/•/ig, "").length === 0) {

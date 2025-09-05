@@ -1,4 +1,5 @@
-const { isAfter, subDays, subHours, set, format } = require("date-fns");
+// 🔧 OPTIMIZED: Replace date-fns with dayjs for bundle optimization
+const dayjs = require("dayjs");
 
 const utils = require("../utils");
 const redis = require("../redis");
@@ -158,7 +159,7 @@ async function find(match, total) {
     try {
         for await (const visit of visitsStream) {
             periods.forEach(([type, fromDate]) => {
-                const isIncluded = isAfter(utils.parseDatetime(visit.created_at), fromDate);
+                const isIncluded = dayjs(utils.parseDatetime(visit.created_at)).isAfter(dayjs(fromDate));
                 if (!isIncluded) return;
                 const diffFunction = utils.getDifferenceFunction(type);
                 const diff = diffFunction(now, utils.parseDatetime(visit.created_at));

@@ -1,4 +1,5 @@
-const { differenceInDays, addMinutes } = require("date-fns");
+// 🔧 OPTIMIZED: Replace date-fns with dayjs for bundle optimization
+const dayjs = require("dayjs");
 const { nanoid } = require("nanoid");
 const passport = require("passport");
 const { randomUUID } = require("node:crypto");
@@ -61,7 +62,7 @@ function authenticate(type, error, isStrict, redirect) {
                 // renew token if it's been at least one day since the token has been created
                 // only do it for html page requests not api requests
                 if (info && info.exp && req.isHTML && redirect === "page") {
-                    const diff = Math.abs(differenceInDays(new Date(info.exp * 1000), new Date()));
+                    const diff = Math.abs(dayjs(new Date(info.exp * 1000)).diff(dayjs(), 'day'));
                     if (diff < 6) {
                         const token = utils.signToken(user);
                         utils.deleteCurrentToken(res);
@@ -511,7 +512,7 @@ async function generateApiKey(req, res) {
 async function resetPassword(req, res) {
     const user = await query.user.update({ email: req.body.email }, {
         reset_password_token: randomUUID(),
-        reset_password_expires: utils.dateToUTC(addMinutes(new Date(), 30))
+        reset_password_expires: utils.dateToUTC(dayjs().add(30, 'minute').toDate())
     });
 
     if (user) {
@@ -576,7 +577,7 @@ async function changeEmailRequest(req, res) {
     const updatedUser = await query.user.update({ id: req.user.id }, {
         change_email_address: email,
         change_email_token: randomUUID(),
-        change_email_expires: utils.dateToUTC(addMinutes(new Date(), 30))
+        change_email_expires: utils.dateToUTC(dayjs().add(30, 'minute').toDate())
     });
 
     if (updatedUser) {

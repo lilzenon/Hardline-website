@@ -1,4 +1,5 @@
-const { addMinutes } = require("date-fns");
+// 🔧 OPTIMIZED: Replace date-fns with dayjs for bundle optimization
+const dayjs = require("dayjs");
 const { randomUUID } = require("node:crypto");
 
 const { ROLES } = require("../consts");
@@ -43,7 +44,7 @@ async function add(params, user) {
         ...(params.role && { role: params.role }),
         ...(params.verified !== undefined && { verified: params.verified }),
         verification_token: randomUUID(),
-        verification_expires: utils.dateToUTC(addMinutes(new Date(), 60))
+        verification_expires: utils.dateToUTC(dayjs().add(60, 'minute').toDate())
     };
 
     if (user) {
