@@ -1550,12 +1550,9 @@ const FigmaMobile = () => {
     // Apply event filter based on toggle state
     const now = new Date();
     if (showAllEvents) {
-      // Show only upcoming events (future events)
-      processedEvents = processedEvents.filter(event => {
-        const eventDate = new Date(event.eventDate);
-        return eventDate >= now;
-      });
-      // Sort upcoming events chronologically (earliest first)
+      // Show all events (both upcoming and past) - FIXED to match Desktop logic
+      // No filtering needed, show all events
+      // Sort all events chronologically (earliest first)
       processedEvents.sort((a, b) => {
         const dateA = new Date(a.eventDate);
         const dateB = new Date(b.eventDate);
@@ -1676,12 +1673,9 @@ const FigmaMobile = () => {
     // Apply event filter based on toggle state
     const now = new Date();
     if (showAllEvents) {
-      // Show only upcoming events (future events)
-      processedEvents = processedEvents.filter(event => {
-        const eventDate = new Date(event.eventDate);
-        return eventDate >= now;
-      });
-      // Sort upcoming events chronologically (earliest first)
+      // Show all events (both upcoming and past) - FIXED to match Desktop logic
+      // No filtering needed, show all events
+      // Sort all events chronologically (earliest first)
       processedEvents.sort((a, b) => {
         const dateA = new Date(a.eventDate);
         const dateB = new Date(b.eventDate);
