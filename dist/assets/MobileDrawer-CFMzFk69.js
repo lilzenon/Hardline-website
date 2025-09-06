@@ -1,4 +1,4 @@
-import{r as n,j as e}from"./index-C56oPf-g.js"
+import{r as n,j as e}from"./index-bmrjfExS.js"
 const t=(e=null,t={})=>{const{throttleMs:i=32,threshold:o=20,passive:a=!0}=t,[r,l]=n.useState({scrollY:0,scrollX:0,isScrolled:!1,direction:"none",velocity:0}),s=n.useRef(0),c=n.useRef(0),d=n.useRef(0),p=n.useRef(0),m=n.useRef(null),h=n.useRef(!1),b=n.useCallback(n=>{h.current||(h.current=!0,window.innerWidth<=767?setTimeout(()=>{const e=performance.now(),t=n.target===document?document.documentElement:n.target,a=t.scrollTop||window.pageYOffset||0,r=t.scrollLeft||window.pageXOffset||0,m=a-s.current,b=r-c.current,u=e-d.current
 let g="none"
 Math.abs(m)>Math.abs(b)?g=m>0?"down":m<0?"up":"none":Math.abs(b)>0&&(g=b>0?"right":"left")

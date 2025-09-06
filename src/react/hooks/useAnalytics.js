@@ -15,7 +15,7 @@ export const useAnalytics = () => {
     // Track page view on mount (only if not already tracked globally)
     useEffect(() => {
         const analytics = getAnalyticsInstance();
-        if (!hasTrackedPageView.current && analytics && analytics.isEnabled()) {
+        if (!hasTrackedPageView.current && analytics && typeof analytics.isEnabled === 'function' && analytics.isEnabled()) {
             // Page view is already tracked by global initialization
             // This just marks it as tracked for this component
             hasTrackedPageView.current = true;
@@ -31,7 +31,7 @@ export const useAnalytics = () => {
     // Track external link clicks
     const trackLinkClick = useCallback((url, linkText = '') => {
         const analytics = getAnalyticsInstance();
-        if (analytics && analytics.isEnabled()) {
+        if (analytics && typeof analytics.isEnabled === 'function' && analytics.isEnabled()) {
             analytics.trackLinkClick(url, linkText);
         }
     }, []);
@@ -39,7 +39,7 @@ export const useAnalytics = () => {
     // Track custom events - FIXED to use proper analytics beacon
     const trackEvent = useCallback((eventName, eventData = {}) => {
         const analytics = getAnalyticsInstance();
-        if (analytics && analytics.isEnabled()) {
+        if (analytics && typeof analytics.isEnabled === 'function' && analytics.isEnabled()) {
             // Use the analytics beacon's sendEvent method instead of creating duplicate page views
             analytics.sendEvent({
                 event: eventName,
@@ -55,7 +55,7 @@ export const useAnalytics = () => {
         track,
         trackLinkClick,
         trackEvent,
-        isTrackingEnabled: analytics ? analytics.isEnabled() : false
+        isTrackingEnabled: analytics && typeof analytics.isEnabled === 'function' ? analytics.isEnabled() : false
     };
 };
 

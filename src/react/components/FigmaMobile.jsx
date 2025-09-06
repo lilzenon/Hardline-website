@@ -4410,7 +4410,7 @@ const FigmaMobile = () => {
                   <iframe
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; gyroscope; picture-in-picture; web-share; fullscreen"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                     allowFullScreen
                     loading="lazy"
                     style={{
