@@ -1322,14 +1322,15 @@ const FigmaMobile = () => {
       const endTime = performance.now();
       console.log(`🚀 Mobile homepage data loaded in ${(endTime - startTime).toFixed(2)}ms`);
 
-      // Trigger staggered animations for modern top-to-bottom cascade
+      // 🎬 OPTIMIZED: Modern staggered animations with proper timing
+      // Based on Material Design and Apple HIG best practices
       setTimeout(() => {
         setCardsAnimated(true);
-      }, 100); // Reduced delay for snappier feel
+      }, 150); // Optimal delay for perceived performance
 
       setTimeout(() => {
         setSectionsAnimated(true);
-      }, 200); // Stagger sections for smooth cascade
+      }, 300); // Proper stagger timing (150ms between elements)
     });
   }, [fetchHomepageData]);
 
@@ -1546,20 +1547,31 @@ const FigmaMobile = () => {
       }
     }).filter(Boolean);
 
-    // Sort featured events chronologically (earliest to latest)
-    processedEvents.sort((a, b) => {
-      const dateA = new Date(a.eventDate);
-      const dateB = new Date(b.eventDate);
-      return dateA.getTime() - dateB.getTime();
-    });
-
     // Apply event filter based on toggle state
-    if (!showAllEvents) {
+    const now = new Date();
+    if (showAllEvents) {
+      // Show only upcoming events (future events)
+      processedEvents = processedEvents.filter(event => {
+        const eventDate = new Date(event.eventDate);
+        return eventDate >= now;
+      });
+      // Sort upcoming events chronologically (earliest first)
+      processedEvents.sort((a, b) => {
+        const dateA = new Date(a.eventDate);
+        const dateB = new Date(b.eventDate);
+        return dateA.getTime() - dateB.getTime();
+      });
+    } else {
       // Show only past events
-      const now = new Date();
       processedEvents = processedEvents.filter(event => {
         const eventDate = new Date(event.eventDate);
         return eventDate < now;
+      });
+      // Sort past events in reverse chronological order (most recent first)
+      processedEvents.sort((a, b) => {
+        const dateA = new Date(a.eventDate);
+        const dateB = new Date(b.eventDate);
+        return dateB.getTime() - dateA.getTime();
       });
     }
 
@@ -1661,20 +1673,31 @@ const FigmaMobile = () => {
       })
       .filter(Boolean);
 
-    // Sort homepage events chronologically (earliest to latest)
-    processedEvents.sort((a, b) => {
-      const dateA = new Date(a.eventDate);
-      const dateB = new Date(b.eventDate);
-      return dateA.getTime() - dateB.getTime();
-    });
-
     // Apply event filter based on toggle state
-    if (!showAllEvents) {
+    const now = new Date();
+    if (showAllEvents) {
+      // Show only upcoming events (future events)
+      processedEvents = processedEvents.filter(event => {
+        const eventDate = new Date(event.eventDate);
+        return eventDate >= now;
+      });
+      // Sort upcoming events chronologically (earliest first)
+      processedEvents.sort((a, b) => {
+        const dateA = new Date(a.eventDate);
+        const dateB = new Date(b.eventDate);
+        return dateA.getTime() - dateB.getTime();
+      });
+    } else {
       // Show only past events
-      const now = new Date();
       processedEvents = processedEvents.filter(event => {
         const eventDate = new Date(event.eventDate);
         return eventDate < now;
+      });
+      // Sort past events in reverse chronological order (most recent first)
+      processedEvents.sort((a, b) => {
+        const dateA = new Date(a.eventDate);
+        const dateB = new Date(b.eventDate);
+        return dateB.getTime() - dateA.getTime();
       });
     }
 
@@ -2190,15 +2213,14 @@ const FigmaMobile = () => {
     });
   }, [trackEvent]);
 
-  // YouTube thumbnail component for preloading
+  // YouTube thumbnail component for preloading - FIXED: Simplified positioning
   const YouTubeThumbnail = useMemo(() => (
     <div
       onClick={handleYoutubeThumbnailClick}
       style={{
         position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+        top: '0',
+        left: '0',
         width: '100%',
         height: '100%',
         cursor: 'pointer',
@@ -2206,16 +2228,26 @@ const FigmaMobile = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
+        // FIXED: Optimize for mobile scroll performance
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
         transition: 'transform 0.2s ease-out'
       }}
       onMouseDown={(e) => {
-        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(0.98)';
+        e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
       }}
       onMouseUp={(e) => {
-        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+        e.currentTarget.style.transform = 'translateZ(0) scale(1)';
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+        e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+      }}
+      onTouchStart={(e) => {
+        e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+      }}
+      onTouchEnd={(e) => {
+        e.currentTarget.style.transform = 'translateZ(0) scale(1)';
       }}
     />
   ), [handleYoutubeThumbnailClick]);
@@ -2234,13 +2266,38 @@ const FigmaMobile = () => {
             --mobile-bg-secondary: #000000;
             --mobile-bg-rgba-primary: 22, 22, 22;
             --mobile-bg-rgba-secondary: 0, 0, 0;
-            /* Ultra-smooth animation timing variables */
-            --ultra-smooth-duration: 2.8s;
-            --ultra-smooth-easing: cubic-bezier(0.25, 0.1, 0.25, 1.0);
-            --smooth-easing-fast: cubic-bezier(0.4, 0, 0.2, 1);
+            /* 🎬 OPTIMIZED: Modern animation timing based on best practices */
+            --animation-duration-fast: 200ms;
+            --animation-duration-normal: 300ms;
+            --animation-duration-slow: 400ms;
+            --animation-easing-standard: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --animation-easing-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+            --animation-easing-accelerate: cubic-bezier(0.4, 0.0, 1, 1);
+            --animation-stagger-delay: 100ms;
+            /* Legacy support - gradually migrate away from these */
+            --ultra-smooth-duration: var(--animation-duration-normal);
+            --ultra-smooth-easing: var(--animation-easing-standard);
+            --smooth-easing-fast: var(--animation-easing-decelerate);
             /* Performance optimization variables */
             --gpu-acceleration: translateZ(0);
             --smooth-rendering: antialiased;
+          }
+
+          /* 🎯 ACCESSIBILITY: Respect user's motion preferences */
+          @media (prefers-reduced-motion: reduce) {
+            :root {
+              --animation-duration-fast: 0ms;
+              --animation-duration-normal: 0ms;
+              --animation-duration-slow: 0ms;
+              --animation-stagger-delay: 0ms;
+              --ultra-smooth-duration: 0ms;
+            }
+            *, *::before, *::after {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+              scroll-behavior: auto !important;
+            }
           }
 
           /* Mobile device specific fixes for real device compatibility */
@@ -2440,13 +2497,13 @@ const FigmaMobile = () => {
             position: relative;
             overflow: hidden;
             background: #000000; /* Match main page background - pure black */
-            /* GPU-accelerated smooth animation with ultra-slow timing using CSS variables */
+            /* 🎬 OPTIMIZED: Smooth animation with reasonable timing */
             transition:
-              max-height var(--ultra-smooth-duration) var(--ultra-smooth-easing),
-              transform var(--ultra-smooth-duration) var(--ultra-smooth-easing),
-              opacity var(--ultra-smooth-duration) var(--ultra-smooth-easing);
-            /* GPU acceleration for buttery smooth performance */
-            will-change: max-height, transform, opacity;
+              max-height var(--animation-duration-slow) var(--animation-easing-standard),
+              transform var(--animation-duration-slow) var(--animation-easing-standard),
+              opacity var(--animation-duration-slow) var(--animation-easing-standard);
+            /* GPU acceleration for smooth performance */
+            will-change: auto; /* Let browser optimize */
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             transform: translateZ(0);
@@ -2507,12 +2564,12 @@ const FigmaMobile = () => {
             backdrop-filter: blur(0.5px);
             -webkit-backdrop-filter: blur(0.5px);
             pointer-events: none;
-            /* Ultra-smooth, slow transition matching container animation */
+            /* 🎬 OPTIMIZED: Reasonable transition timing for better performance */
             transition:
-              opacity 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0),
-              transform 2.8s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+              opacity var(--animation-duration-normal) var(--animation-easing-standard),
+              transform var(--animation-duration-normal) var(--animation-easing-standard);
             /* GPU acceleration for smooth overlay animation */
-            will-change: opacity, transform;
+            will-change: auto; /* Let browser optimize */
             backface-visibility: hidden;
             transform: translateZ(0);
             z-index: 2;
@@ -2931,15 +2988,15 @@ const FigmaMobile = () => {
             transform: scale(1.02);
           }
 
-          /* Modern spring animation for cards - quick and engaging */
+          /* 🎬 OPTIMIZED: Modern card animation with subtle, natural motion */
           @keyframes modernCardSpring {
             0% {
               opacity: 0;
-              transform: translate3d(0, 20px, 0) scale(0.95);
+              transform: translate3d(0, 16px, 0) scale(0.96);
             }
             60% {
               opacity: 1;
-              transform: translate3d(0, -2px, 0) scale(1.01);
+              transform: translate3d(0, -1px, 0) scale(1.005);
             }
             100% {
               opacity: 1;
@@ -2948,8 +3005,8 @@ const FigmaMobile = () => {
           }
 
           .event-card-spring {
-            animation: modernCardSpring 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; /* Modern spring animation */
-            will-change: transform, opacity; /* Optimize for transform and opacity changes */
+            animation: modernCardSpring var(--animation-duration-normal) var(--animation-easing-standard) forwards;
+            will-change: transform, opacity; /* Only when animating */
             backface-visibility: hidden;
             transform-style: flat;
             -webkit-font-smoothing: antialiased;
@@ -3138,10 +3195,10 @@ const FigmaMobile = () => {
               width: '100%',
               marginTop: '2px', // Minimal top margin
               marginBottom: '4px', // Drastically reduced spacing after events
-              // Modern load-in animation
+              // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
               opacity: sectionsAnimated ? 1 : 0,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
               transitionDelay: '0ms' // First section loads immediately
             }}
           >
@@ -3320,11 +3377,11 @@ const FigmaMobile = () => {
                 boxSizing: 'border-box',
                 display: 'flex',
                 justifyContent: 'center', // Center the hero card
-                // Modern staggered load-in animation
+                // 🎬 OPTIMIZED: Modern staggered load-in animation
                 opacity: cardsAnimated ? 1 : 0,
-                transform: cardsAnimated ? 'translateY(0) scale(1)' : 'translateY(30px) scale(0.95)',
-                transition: 'all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                transitionDelay: cardsAnimated ? `${heroIndex * 80}ms` : '0s' // Quick stagger for modern feel
+                transform: cardsAnimated ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
+                transition: 'opacity var(--animation-duration-slow) var(--animation-easing-standard), transform var(--animation-duration-slow) var(--animation-easing-standard)',
+                transitionDelay: cardsAnimated ? `${heroIndex * 120}ms` : '0s' // Optimal stagger timing
               }}
             >
             <div
@@ -4271,11 +4328,11 @@ const FigmaMobile = () => {
               width: '100%',
               marginTop: '2px', // Reduced by ~50% (from 4px to 2px) to bring closer to expand button
               marginBottom: '4px', // Consistent 4px spacing above and below
-              // Modern load-in animation
+              // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
               opacity: sectionsAnimated ? 1 : 0,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: '300ms' // Second section in cascade
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+              transitionDelay: '150ms' // Second section in cascade
             }}
           >
             {/* Follow Us Section Title */}
@@ -4330,16 +4387,18 @@ const FigmaMobile = () => {
                 overflow: 'hidden'
               }}
             >
-              {/* YouTube iframe wrapper */}
+              {/* YouTube iframe wrapper - FIXED: Simplified positioning to prevent scroll glitches */}
               <div
                 style={{
                   position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
+                  top: '0',
+                  left: '0',
                   width: '100%',
                   height: '100%',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  // FIXED: Remove complex transforms that cause scroll issues
+                  transform: 'translateZ(0)', // Only GPU acceleration
+                  willChange: 'auto' // Let browser optimize
                 }}
               >
 
@@ -4347,7 +4406,7 @@ const FigmaMobile = () => {
                   // Show thumbnail preloader for faster loading
                   YouTubeThumbnail
                 ) : shouldLoadYoutube ? (
-                  // Show actual YouTube iframe
+                  // Show actual YouTube iframe - FIXED: Simplified positioning
                   <iframe
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
@@ -4356,34 +4415,38 @@ const FigmaMobile = () => {
                     loading="lazy"
                     style={{
                       position: 'absolute',
-                      top: '50%',
-                      left: '50%',
+                      top: '0',
+                      left: '0',
                       width: '100%',
                       height: '100%',
-                      transform: 'translate(-50%, -50%) scale(1.5)',
+                      // FIXED: Remove problematic scale and complex transforms
+                      transform: 'translateZ(0)',
                       pointerEvents: 'none',
                       border: 'none',
-                      opacity: 1
+                      opacity: 1,
+                      // FIXED: Ensure stable rendering during scroll
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden'
                     }}
                   />
                 ) : (
-                  // Loading state (rarely shown)
+                  // Loading state (rarely shown) - FIXED: Simplified positioning
                   <div
                     style={{
                       position: 'absolute',
-                      top: '50%',
-                      left: '50%',
+                      top: '0',
+                      left: '0',
                       width: '100%',
                       height: '100%',
-                      transform: 'translate(-50%, -50%)',
                       background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                      border: 'none'
+                      border: 'none',
+                      transform: 'translateZ(0)'
                     }}
                   />
                 )}
               </div>
 
-              {/* Gradient overlay */}
+              {/* Gradient overlay - FIXED: Stable positioning and optimized for mobile scroll */}
               <div
                 style={{
                   position: 'absolute',
@@ -4393,12 +4456,18 @@ const FigmaMobile = () => {
                   height: '100%',
                   background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
                   borderRadius: '20px',
-                  zIndex: 1
+                  zIndex: 1,
+                  // FIXED: Optimize for mobile scroll performance
+                  transform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  willChange: 'auto', // Let browser optimize
+                  pointerEvents: 'none' // Ensure clicks pass through to video
                 }}
               />
             </div>
 
-            {/* Video text overlay - Non-intrusive */}
+            {/* Video text overlay - FIXED: Stable positioning for mobile scroll */}
             <div
               style={{
                 position: 'absolute',
@@ -4413,7 +4482,12 @@ const FigmaMobile = () => {
                 gap: '12px',
                 zIndex: 2,
                 boxSizing: 'border-box',
-                pointerEvents: 'none' // Allow clicks to pass through to video
+                pointerEvents: 'none', // Allow clicks to pass through to video
+                // FIXED: Optimize for mobile scroll performance
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                willChange: 'auto' // Let browser optimize
               }}
             >
               {/* Left - Title and subtitle */}
@@ -4511,11 +4585,11 @@ const FigmaMobile = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              // Modern load-in animation
+              // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
               opacity: sectionsAnimated ? 1 : 0,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(20px)',
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: '450ms' // Third section in cascade
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+              transitionDelay: '300ms' // Third section in cascade
             }}
           >
             <div
@@ -4555,176 +4629,8 @@ const FigmaMobile = () => {
         </footer>
       </main>
 
-      {/* Mobile Drawer - Enhanced Animation Component */}
-      <div
-        ref={drawerRef}
-        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
-        onTouchStart={drawerExpanded ? (e) => {
-          // ENHANCED: Complete scroll isolation for iOS Safari - ONLY when expanded
-          e.stopPropagation();
-        } : undefined}
-        onTouchMove={drawerExpanded ? (e) => {
-          // ENHANCED: Prevent drawer scroll from affecting main page with iOS Safari support - ONLY when expanded
-          e.stopPropagation();
-          e.preventDefault(); // Critical for iOS Safari scroll isolation
-        } : undefined}
-        onTouchEnd={drawerExpanded ? (e) => {
-          // ENHANCED: Complete touch event isolation - ONLY when expanded
-          e.stopPropagation();
-        } : undefined}
-        onWheel={drawerExpanded ? (e) => {
-          // ENHANCED: Prevent drawer scroll from affecting main page - ONLY when expanded
-          e.stopPropagation();
-          e.preventDefault(); // Prevent scroll bleed on desktop/trackpad
-        } : undefined}
-        style={{
-          height: getDrawerHeight(),
-          transform: drawerFullyClosed
-            ? 'translate3d(0, 100%, 0)'
-            : drawerExpanded
-              ? 'translate3d(0, 0, 0)'
-              : 'translate3d(0, calc(100% - 80px), 0)',
-          transition: 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.2s ease-out',
-          willChange: 'transform, height',
-          backfaceVisibility: 'hidden',
-          zIndex: 1000,
-          // Ensure glassmorphism transparency in all states
-          background: 'rgba(21, 21, 21, 0.8)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)'
-        }}
-        onClick={handleDrawerClick}
-        role="dialog"
-        aria-label="Contact form drawer"
-        aria-expanded={drawerExpanded}
-      >
-        {/* Drawer Handle */}
-        <div
-          className="drawer-handle"
-          style={{
-            width: '40px',
-            height: '4px',
-            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            borderRadius: '2px',
-            margin: '8px auto 16px',
-            cursor: 'pointer'
-          }}
-          aria-hidden="true"
-        />
+      {/* REMOVED: Duplicate inline drawer implementation - now using MobileDrawer component */}
 
-        {/* Drawer Content */}
-        <div
-          className={`drawer-content mobile-drawer-content ${showVerification ? 'verification-mode' : ''}`}
-          onTouchStart={drawerExpanded ? (e) => {
-            // Allow drawer content scrolling while preventing bleed - ONLY when expanded
-            e.stopPropagation();
-          } : undefined}
-          onTouchMove={drawerExpanded ? (e) => {
-            // ENHANCED: Allow internal scrolling but prevent bleed to main page - ONLY when expanded
-            const element = e.currentTarget;
-            const { scrollTop, scrollHeight, clientHeight } = element;
-
-            // Check if we're at scroll boundaries
-            const isAtTop = scrollTop === 0;
-            const isAtBottom = scrollTop + clientHeight >= scrollHeight;
-
-            // Prevent scroll bleed at boundaries for iOS Safari
-            if ((isAtTop && e.touches[0].clientY > e.touches[0].pageY) ||
-                (isAtBottom && e.touches[0].clientY < e.touches[0].pageY)) {
-              e.preventDefault();
-            }
-
-            e.stopPropagation();
-          } : undefined}
-          onTouchEnd={drawerExpanded ? (e) => {
-            e.stopPropagation();
-          } : undefined}
-          style={{
-            padding: '0 20px 20px',
-            opacity: drawerFullyClosed ? 0 : 1,
-            transition: 'opacity 0.2s ease',
-            /* ENHANCED: Conditional scrolling based on drawer state */
-            height: '100%',
-            overflowY: drawerExpanded ? 'auto' : 'hidden',
-            WebkitOverflowScrolling: drawerExpanded ? 'touch' : 'auto',
-            /* CRITICAL: Disable interaction when collapsed */
-            pointerEvents: drawerExpanded ? 'auto' : 'none',
-            touchAction: drawerExpanded ? 'pan-y' : 'none'
-          }}
-        >
-          {/* Text Us Group - Hidden during verification */}
-          {!drawerFullyClosed && !showVerification && (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '2px',
-                marginBottom: '4px', // Reduced to bring iframe closer
-                flexShrink: 0,
-                position: 'relative',
-                zIndex: 2
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: 'Inter',
-                  fontWeight: '800',
-                  fontSize: '20px',
-                  lineHeight: '1.2em',
-                  color: '#FFFFFF'
-                }}
-              >
-                Text us
-              </div>
-              <div
-                style={{
-                  fontFamily: 'Inter',
-                  fontWeight: '300',
-                  fontSize: '12px',
-                  lineHeight: '1.3em',
-                  color: '#FFFFFF',
-                  opacity: 0.8
-                }}
-              >
-                Exclusive events, contests, and more
-              </div>
-            </div>
-          )}
-
-          {/* Laylo Integration - RESTORED to working configuration */}
-          {!drawerFullyClosed && !showVerification && (
-            <div
-              onClick={handleIframeClick}
-              style={{
-                width: 'calc(100% + 40px)', // Extend container to full drawer width
-                margin: '0px -20px 0 -20px', // Minimal top margin to bring iframe very close to text
-                cursor: 'pointer',
-                borderRadius: '8px',
-                overflow: 'visible',
-                flexShrink: 0
-              }}
-            >
-              <LayloIframe
-                dropId="1nTsX"
-                color="ff0409"
-                theme="dark"
-                background="solid"
-                minimal={true}
-                style={{
-                  width: '100%', // Full width of the extended container
-                  height: iframeExpanded ? '200px' : '160px',
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: 'transparent',
-                  display: 'block',
-                  transition: 'opacity 0.3s ease, height 0.3s ease',
-                  pointerEvents: 'auto'
-                }}
-              />
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* REFACTORED: Using Shared Mobile Drawer Component */}
       <MobileDrawer

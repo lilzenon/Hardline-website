@@ -282,10 +282,13 @@ const MobileDrawer = ({
     }
   }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
 
-  // Touch gesture handlers for swipe controls
+  // 🔧 ENHANCED: Touch gesture handlers for swipe controls with improved responsiveness
   const handleTouchStart = useCallback((e) => {
-    // Don't interfere with form interactions
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('iframe')) {
+    // Don't interfere with form interactions or iframe content
+    if (e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.closest('iframe') ||
+        e.target.closest('.mobile-drawer-content')) {
       return;
     }
 
@@ -300,13 +303,19 @@ const MobileDrawer = ({
       isDragging: false,
       initialDrawerState: drawerExpanded
     });
+
+    // Prevent default to ensure we capture the gesture
+    e.preventDefault();
   }, [drawerExpanded]);
 
   const handleTouchMove = useCallback((e) => {
     if (!touchState.isActive) return;
 
-    // Don't interfere with form interactions
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.closest('iframe')) {
+    // Don't interfere with form interactions or iframe content
+    if (e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.closest('iframe') ||
+        e.target.closest('.mobile-drawer-content')) {
       return;
     }
 
@@ -314,8 +323,8 @@ const MobileDrawer = ({
     const deltaY = touchState.startY - touch.clientY; // Positive = swipe up, Negative = swipe down
     const absDeltaY = Math.abs(deltaY);
 
-    // Start dragging if moved more than 10px
-    if (!touchState.isDragging && absDeltaY > 10) {
+    // Start dragging if moved more than 5px (reduced threshold for better responsiveness)
+    if (!touchState.isDragging && absDeltaY > 5) {
       setTouchState(prev => ({ ...prev, isDragging: true }));
       e.preventDefault(); // Prevent scrolling when dragging
     }
@@ -323,6 +332,7 @@ const MobileDrawer = ({
     if (touchState.isDragging) {
       setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
       e.preventDefault();
+      e.stopPropagation();
     }
   }, [touchState]);
 
@@ -334,10 +344,10 @@ const MobileDrawer = ({
     const duration = Date.now() - touchState.startTime;
     const velocity = absDeltaY / duration; // pixels per millisecond
 
-    // Gesture thresholds
-    const minSwipeDistance = 30;
-    const minFlickVelocity = 0.5;
-    const snapThreshold = 15;
+    // 🔧 IMPROVED: More responsive gesture thresholds
+    const minSwipeDistance = 20; // Reduced from 30px for better responsiveness
+    const minFlickVelocity = 0.3; // Reduced from 0.5 for easier flick gestures
+    const snapThreshold = 10; // Reduced from 15px for better snap behavior
 
     let shouldToggleDrawer = false;
 
@@ -373,12 +383,31 @@ const MobileDrawer = ({
           if (!drawerExpanded) {
             setDrawerExpanded(true);
             setDrawerFullyClosed(false);
+            console.log('🔄 Drawer opened via swipe up');
           }
         } else {
           // Swipe down - close/collapse drawer
           if (drawerExpanded) {
             setDrawerExpanded(false);
+            console.log('🔄 Drawer closed via swipe down');
           }
+        }
+      }
+    } else {
+      // Handle tap gesture on drawer handle area
+      const rect = drawerRef.current?.getBoundingClientRect();
+      if (rect && touchState.startY > rect.top && touchState.startY < rect.top + 50) {
+        // Tap on handle area - toggle drawer
+        if (drawerFullyClosed) {
+          setDrawerFullyClosed(false);
+          setDrawerExpanded(true);
+          console.log('🔄 Drawer opened via tap');
+        } else if (!drawerExpanded) {
+          setDrawerExpanded(true);
+          console.log('🔄 Drawer expanded via tap');
+        } else {
+          setDrawerExpanded(false);
+          console.log('🔄 Drawer collapsed via tap');
         }
       }
     }
@@ -392,7 +421,7 @@ const MobileDrawer = ({
       isDragging: false,
       initialDrawerState: false
     });
-  }, [touchState, drawerExpanded]);
+  }, [touchState, drawerExpanded, drawerFullyClosed]);
 
   // Handle drawer click to fully open when closed
   const handleDrawerClick = useCallback(() => {
@@ -573,15 +602,9 @@ const MobileDrawer = ({
       <div
         ref={drawerRef}
         className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
-        onTouchStart={(e) => {
-          // ENHANCED: Complete scroll isolation for iOS Safari
-          e.stopPropagation();
-        }}
-        onTouchMove={(e) => {
-          // ENHANCED: Complete scroll isolation for iOS Safari
-          e.stopPropagation();
-          e.preventDefault(); // Prevent scroll bleed
-        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onWheel={(e) => {
           // ENHANCED: Complete scroll isolation for iOS Safari
           e.stopPropagation();
