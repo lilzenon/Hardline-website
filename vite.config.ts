@@ -125,8 +125,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         format: 'es',
-        // 🔧 FIXED: Disable manual chunks to prevent module loading issues
-        // manualChunks: undefined, // Let Vite handle chunking automatically
+        // 🚀 OPTIMIZED: Strategic code splitting for actually used dependencies
+        manualChunks: {
+          // Core React libraries (largest chunk)
+          'react-vendor': ['react', 'react-dom'],
+
+          // Animation libraries (GSAP is large)
+          'animations': ['gsap'],
+
+          // Icon library (Lucide React is large)
+          'icons': ['lucide-react'],
+
+          // Security libraries
+          'security': ['dompurify']
+        },
         // Optimize asset naming for better caching
         chunkFileNames: 'assets/[name]-[hash].js',
         entryFileNames: 'assets/[name]-[hash].js',

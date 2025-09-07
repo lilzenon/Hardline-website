@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { useHomepageData } from '../hooks/useHomepageData';
 import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
@@ -234,8 +235,7 @@ const handleImageFallbackAttempt3 = (imgElement, card) => {
   }
 };
 
-// Simple cache for API responses
-const apiCache = new Map();
+// API caching now handled by useHomepageData hook
 
 // Helper function to convert image URLs to working dashboard endpoints
 const getDashboardImageUrl = (imageUrl) => {
@@ -278,10 +278,7 @@ const getDashboardImageUrl = (imageUrl) => {
 
   return imageUrl;
 };
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-
-// Cache for formatted dates to avoid repeated calculations
-const dateFormatCache = new Map();
+// Cache duration and date formatting now handled by useHomepageData hook
 
 // Country codes and phone patterns for international support with flag SVGs
 const COUNTRIES = [
@@ -615,14 +612,18 @@ const FigmaMobile = () => {
     initialDrawerState: false
   });
 
-  // Events data state - Two-tier system
-  const [featuredEvents, setFeaturedEvents] = useState([]);
-  const [homepageEvents, setHomepageEvents] = useState([]);
-  const [homeSettings, setHomeSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Homepage data managed by useHomepageData hook
+  const {
+    loading,
+    error,
+    homeSettings,
+    showAllEvents,
+    setShowAllEvents,
+    filteredFeaturedEvents,
+    filteredHomepageEvents
+  } = useHomepageData();
 
-  // Event Filter Toggle State
-  const [showAllEvents, setShowAllEvents] = useState(true); // true = "All", false = "Past"
+  // Event Filter Toggle State - now managed by useHomepageData hook
 
   // Viewport context state for dynamic spacing
   const [viewportContext, setViewportContext] = useState(0); // Force re-render when viewport context changes
@@ -1101,97 +1102,7 @@ const FigmaMobile = () => {
     }
   }, [verificationCode, verificationSubmitting, verificationPhone]);
 
-  // Fetch homepage data including events
-  const fetchHomepageData = useCallback(async () => {
-    try {
-      setLoading(true);
-
-      // Check cache first
-      const cacheKey = 'homepage-data-v2';
-      const cached = apiCache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log('📦 Using cached homepage data');
-        setHomeSettings(cached.data.homeSettings);
-        setFeaturedEvents(cached.data.featuredEvents || []);
-        setHomepageEvents(cached.data.homepageEvents || []);
-        setLoading(false);
-        return;
-      }
-
-      // Environment-aware API URL construction
-      const apiBaseUrl = window.location.hostname === 'localhost'
-        ? '' // Development: use Vite proxy
-        : 'https://admin.b2b.click'; // Production: use dashboard server directly
-
-      const response = await fetch(`${apiBaseUrl}/api/home-settings/homepage-data`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
-      }
-
-      const data = await response.json();
-
-      // Validate API response structure
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid API response format');
-      }
-
-      // Validate home settings
-      const homeSettings = data.homeSettings || {};
-
-      // Validate featured events and homepage events
-      const featuredEvents = Array.isArray(data.featuredEvents) ? data.featuredEvents : [];
-      const homepageEvents = Array.isArray(data.homepageEvents) ? data.homepageEvents : [];
-
-      // Validate each featured event has required fields
-      const validatedFeaturedEvents = featuredEvents.filter(event => {
-        if (!event || typeof event !== 'object') return false;
-        if (!event.id || !event.title) {
-          console.warn('Featured event missing required fields:', event);
-          return false;
-        }
-        return true;
-      });
-
-      // Validate each homepage event has required fields
-      const validatedHomepageEvents = homepageEvents.filter(event => {
-        if (!event || typeof event !== 'object') return false;
-        if (!event.id || !event.title) {
-          console.warn('Homepage event missing required fields:', event);
-          return false;
-        }
-        return true;
-      });
-
-      console.log(`✅ Mobile homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
-
-      // Cache the successful response
-      apiCache.set(cacheKey, {
-        data: data,
-        timestamp: Date.now()
-      });
-
-      setHomeSettings(homeSettings);
-      setFeaturedEvents(validatedFeaturedEvents);
-      setHomepageEvents(validatedHomepageEvents);
-
-    } catch (err) {
-      console.error('❌ Error fetching mobile homepage data:', err);
-
-      // Fallback to default values
-      setHomeSettings({
-        event_title: "EVENT TITLE",
-        artist_name: "Artist Name",
-        event_address: "101 Address Drive, Asbury Park, NJ",
-        event_image: null,
-        tickets_url: null
-      });
-      setFeaturedEvents([]);
-      setHomepageEvents([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Data fetching now handled by useHomepageData hook
 
   // Start resend countdown timer
   const startResendCountdown = useCallback(() => {
@@ -1314,14 +1225,10 @@ const FigmaMobile = () => {
     }
   }, [showVerification, verificationPhone, startResendCountdown]);
 
-  // Fetch homepage data on component mount
+  // Data fetching and performance monitoring now handled by useHomepageData hook
+  // Animate cards and sections after data loads
   useEffect(() => {
-    const startTime = performance.now();
-
-    fetchHomepageData().finally(() => {
-      const endTime = performance.now();
-      console.log(`🚀 Mobile homepage data loaded in ${(endTime - startTime).toFixed(2)}ms`);
-
+    if (!loading) {
       // 🎬 OPTIMIZED: Modern staggered animations with proper timing
       // Based on Material Design and Apple HIG best practices
       setTimeout(() => {
@@ -1331,8 +1238,8 @@ const FigmaMobile = () => {
       setTimeout(() => {
         setSectionsAnimated(true);
       }, 300); // Proper stagger timing (150ms between elements)
-    });
-  }, [fetchHomepageData]);
+    }
+  }, [loading]);
 
   // Animate drawer to collapsed state after component mounts (show text only, no iframe)
   useEffect(() => {
@@ -1414,13 +1321,13 @@ const FigmaMobile = () => {
 
   // Preload critical above-the-fold images for instant loading
   useEffect(() => {
-    if (featuredEvents && featuredEvents.length > 0) {
+    if (filteredFeaturedEvents && filteredFeaturedEvents.length > 0) {
       console.log('🚀 Preloading critical event images for instant display...');
 
       // Preload first 2 event images (above-the-fold on mobile)
       const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
-      featuredEvents.slice(0, 2).forEach((event, index) => {
+      filteredFeaturedEvents.slice(0, 2).forEach((event, index) => {
         if (event.coverImage) {
           // Skip AVIF preloading for Safari mobile, go straight to WebP
           if (!isSafariMobile) {
@@ -1454,249 +1361,27 @@ const FigmaMobile = () => {
         }
       });
     }
-  }, [featuredEvents]);
+  }, [filteredFeaturedEvents]);
 
   // Scroll handling now optimized with useOptimizedScroll hook
 
-  // Featured events processing for mobile (hero cards using original styling)
-  const featuredEventCards = useMemo(() => {
-    let processedEvents = featuredEvents.map((event, index) => {
-      try {
-        // Validate and parse event date
-        let eventDate = new Date();
-        let formattedDate = 'Tue, Sep 02 @ 10:00PM';
+  // Featured events processing now handled by useHomepageData hook
+  // Using filteredFeaturedEvents directly
 
-        if (event.event_date) {
-          const cacheKey = event.event_date;
-          let cachedFormat = dateFormatCache.get(cacheKey);
 
-          if (!cachedFormat) {
-            const parsedDate = new Date(event.event_date);
-            if (!isNaN(parsedDate.getTime())) {
-              eventDate = parsedDate;
-              formattedDate = eventDate.toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: '2-digit'
-              }).replace(',', ' @') + ' 10:00PM';
-              cachedFormat = { formattedDate, eventDate };
-              dateFormatCache.set(cacheKey, cachedFormat);
-            }
-          } else {
-            ({ formattedDate, eventDate } = cachedFormat);
-          }
-        }
 
-        // Validate and process event data
-        const title = event.title || event.artist_name || `Event ${index + 1}`;
 
-        // Process location to show only venue name and city
-        let location = 'Venue Address';
-        if (event.event_address) {
-          const addressParts = event.event_address.split(',').map(part => part.trim());
-          if (addressParts.length >= 2) {
-            location = `${addressParts[0]}, ${addressParts[1]}`;
-            if (location.length > 25 && addressParts.length >= 3) {
-              location = `${addressParts[1]}, ${addressParts[2]}`;
-            }
-          } else {
-            location = event.event_address;
-          }
-        }
 
-        // Enhanced image handling with better fallbacks
-        let coverImage = null;
 
-        if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
-          // Valid image URL provided - convert to absolute dashboard URL
-          coverImage = getDashboardImageUrl(event.cover_image.trim());
 
-          // Validate that we're using the persistent storage pipeline
-          if (coverImage && coverImage.includes('/api/images/serve/')) {
-            console.log(`✅ Using persistent storage API for ${title}:`, coverImage);
-          } else if (coverImage && coverImage.includes('/static/uploads/temp/')) {
-            console.error(`🚨 CRITICAL: Temp storage detected for ${title}:`, coverImage);
-            console.error(`📋 Image processing pipeline failed - check database and file system`);
-          } else {
-            console.log(`✅ Using external image for ${title}:`, coverImage);
-          }
-        }
 
-        // 🎫 FIXED: Use external_ticket_url from dashboard "Ticket Link" field
-        const ticketsUrl = event.external_ticket_url || event.posh_embed_url || '#';
-        const hasTicketLink = event.display_tickets && ticketsUrl && ticketsUrl !== '#';
+  // Homepage events processing now handled by useHomepageData hook
+  // Using filteredHomepageEvents directly
 
-        return {
-          id: `event-${event.id}`,
-          title: title,
-          date: formattedDate,
-          location: location,
-          coverImage: coverImage,
-          ticketsUrl: ticketsUrl,
-          external_ticket_url: event.external_ticket_url, // Add for consistency with desktop
-          hasTicketLink: hasTicketLink,
-          buttonText: event.buy_button_text || 'View Event',
-          isRealEvent: true,
-          showOnHomepage: event.show_on_homepage,
-          eventData: event,
-          eventDate: eventDate
-        };
-      } catch (error) {
-        console.warn(`Error processing mobile event ${event.id}:`, error);
-        return null;
-      }
-    }).filter(Boolean);
 
-    // Apply event filter based on toggle state
-    const now = new Date();
-    if (showAllEvents) {
-      // Show all events (both upcoming and past) - FIXED to match Desktop logic
-      // No filtering needed, show all events
-      // Sort all events chronologically (earliest first)
-      processedEvents.sort((a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateA.getTime() - dateB.getTime();
-      });
-    } else {
-      // Show only past events
-      processedEvents = processedEvents.filter(event => {
-        const eventDate = new Date(event.eventDate);
-        return eventDate < now;
-      });
-      // Sort past events in reverse chronological order (most recent first)
-      processedEvents.sort((a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateB.getTime() - dateA.getTime();
-      });
-    }
 
-    return processedEvents;
-  }, [featuredEvents, showAllEvents]);
 
-  // Homepage events processing for mobile (small cards)
-  const homepageEventCards = useMemo(() => {
-    // Filter out events that are already featured to avoid duplicates
-    const featuredEventIds = new Set(featuredEvents.map(event => event.id));
 
-    let processedEvents = homepageEvents
-      .filter(event => !featuredEventIds.has(event.id)) // Exclude featured events
-      .map((event, index) => {
-        try {
-          // Validate and parse event date
-          let eventDate = new Date();
-          let formattedDate = 'Tue, Sep 02 @ 10:00PM';
-
-          if (event.event_date) {
-            const cacheKey = event.event_date;
-            let cachedFormat = dateFormatCache.get(cacheKey);
-
-            if (!cachedFormat) {
-              const parsedDate = new Date(event.event_date);
-              if (!isNaN(parsedDate.getTime())) {
-                eventDate = parsedDate;
-                formattedDate = eventDate.toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: '2-digit'
-                }).replace(',', ' @') + ' 10:00PM';
-                cachedFormat = { formattedDate, eventDate };
-                dateFormatCache.set(cacheKey, cachedFormat);
-              }
-            } else {
-              ({ formattedDate, eventDate } = cachedFormat);
-            }
-          }
-
-          // Validate and process event data
-          const title = event.title || event.artist_name || `Event ${index + 1}`;
-
-          // Process location to show only venue name and city
-          let location = 'Venue Address';
-          if (event.event_address) {
-            const addressParts = event.event_address.split(',').map(part => part.trim());
-            if (addressParts.length >= 2) {
-              location = `${addressParts[0]}, ${addressParts[1]}`;
-              if (location.length > 25 && addressParts.length >= 3) {
-                location = `${addressParts[1]}, ${addressParts[2]}`;
-              }
-            } else {
-              location = event.event_address;
-            }
-          }
-
-          // Enhanced image handling with persistent storage validation
-          let coverImage = null;
-          if (event.cover_image && typeof event.cover_image === 'string' && event.cover_image.trim() !== '') {
-            // Convert relative URLs to absolute dashboard URLs
-            coverImage = getDashboardImageUrl(event.cover_image.trim());
-
-            // Validate persistent storage pipeline usage
-            if (coverImage && coverImage.includes('/api/images/serve/')) {
-              console.log(`✅ Homepage event "${title}" using persistent storage:`, coverImage);
-            } else if (coverImage && coverImage.includes('/static/uploads/temp/')) {
-              console.error(`🚨 CRITICAL: Homepage event "${title}" using temp storage:`, coverImage);
-              console.error(`📋 Image processing pipeline failed - requires investigation`);
-            } else {
-              console.log(`✅ Homepage event "${title}" using external image:`, coverImage);
-            }
-          } else {
-            console.log(`⚠️ Homepage event "${title}" has no cover image:`, event.cover_image);
-          }
-
-          // 🎫 Use external_ticket_url from dashboard "Ticket Link" field
-          const ticketsUrl = event.external_ticket_url || event.posh_embed_url || '#';
-          const hasTicketLink = event.display_tickets && ticketsUrl && ticketsUrl !== '#';
-
-          return {
-            id: `homepage-event-${event.id}`,
-            title: title,
-            date: formattedDate,
-            location: location,
-            coverImage: coverImage,
-            ticketsUrl: ticketsUrl,
-            hasTicketLink: hasTicketLink,
-            buttonText: event.buy_button_text || 'View Event',
-            isRealEvent: true,
-            showOnHomepage: event.show_on_homepage,
-            eventData: event,
-            eventDate: eventDate
-          };
-        } catch (error) {
-          console.warn(`Error processing homepage event ${event.id}:`, error);
-          return null;
-        }
-      })
-      .filter(Boolean);
-
-    // Apply event filter based on toggle state
-    const now = new Date();
-    if (showAllEvents) {
-      // Show all events (both upcoming and past) - FIXED to match Desktop logic
-      // No filtering needed, show all events
-      // Sort all events chronologically (earliest first)
-      processedEvents.sort((a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateA.getTime() - dateB.getTime();
-      });
-    } else {
-      // Show only past events
-      processedEvents = processedEvents.filter(event => {
-        const eventDate = new Date(event.eventDate);
-        return eventDate < now;
-      });
-      // Sort past events in reverse chronological order (most recent first)
-      processedEvents.sort((a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateB.getTime() - dateA.getTime();
-      });
-    }
-
-    return processedEvents;
-  }, [homepageEvents, featuredEvents, showAllEvents]);
 
   // 📱 REFINED EXPANDABLE EVENT CARDS STATE
   const [isEventSectionExpanded, setIsEventSectionExpanded] = useState(false);
@@ -3360,7 +3045,7 @@ const FigmaMobile = () => {
             </div>
 
           {/* Featured Events - Multiple Hero Cards using original styling */}
-          {featuredEventCards.length > 0 && featuredEventCards.map((featuredEvent, heroIndex) => (
+          {filteredFeaturedEvents.length > 0 && filteredFeaturedEvents.map((featuredEvent, heroIndex) => (
             <div
               key={`hero-${featuredEvent.id}`}
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
@@ -3730,7 +3415,7 @@ const FigmaMobile = () => {
           ))}
 
           {/* Fallback Hero when no featured events */}
-          {featuredEventCards.length === 0 && (
+          {filteredFeaturedEvents.length === 0 && (
             <div
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
               style={{
@@ -3805,7 +3490,7 @@ const FigmaMobile = () => {
               width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
               margin: '0 auto',
               position: 'relative',
-              paddingBottom: homepageEventCards.length > 3 ? '12px' : '0', // Space for improved gradient and button
+              paddingBottom: filteredHomepageEvents.length > 3 ? '12px' : '0', // Space for improved gradient and button
               background: '#000000' // Match main page background - pure black
             }}
           >
@@ -3839,8 +3524,8 @@ const FigmaMobile = () => {
                 }}
               >
             {/* Homepage Event Cards - Enhanced Layout with Refined Animations */}
-            {homepageEventCards.length > 0 ? (
-              homepageEventCards.map((card, index) => {
+            {filteredHomepageEvents.length > 0 ? (
+              filteredHomepageEvents.map((card, index) => {
                 return (
                   <article
                     key={`homepage-${card.id}`}
@@ -4277,7 +3962,7 @@ const FigmaMobile = () => {
               </div>
 
               {/* 📱 GLASSMORPHISM GRADIENT OVERLAY - Only show when collapsed and has more than 3 cards */}
-              {!isEventSectionExpanded && homepageEventCards.length > 3 && (
+              {!isEventSectionExpanded && filteredHomepageEvents.length > 3 && (
                 <div
                   className="mobile-event-cards-overlay"
                   aria-hidden="true"
@@ -4286,7 +3971,7 @@ const FigmaMobile = () => {
             </div>
 
             {/* 📱 ENHANCED EXPAND/COLLAPSE HANDLE - Positioned within gradient overlay */}
-            {homepageEventCards.length > 3 && (
+            {filteredHomepageEvents.length > 3 && (
               <div
                 className={`mobile-expand-handle ${isEventSectionExpanded ? 'expanded' : ''}`}
                 onClick={toggleEventSection}

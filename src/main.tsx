@@ -3,33 +3,49 @@
 
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
-import HomePage from './react/components/HomePage';
-import AdminLogin from './react/components/AdminLoginFigma';
+
+// 🚀 OPTIMIZED: Lazy load ALL page components for better code splitting
+const HomePage = lazy(() => import('./react/components/HomePage'));
+const AdminLogin = lazy(() => import('./react/components/AdminLoginFigma'));
 import { initializeFrontendSecurity } from './react/utils/security';
 import { SEOProvider, MaintenanceMode, SEODebug } from './react/contexts/SEOContext';
 
-// Initialize consolidated analytics system FIRST
-import { initializeAnalytics } from './lib/analytics/beacon';
-import { initializeCleanup } from './utils/cleanup';
-import { initializeMobileOptimizations } from './utils/mobileOptimization';
+// 🚀 OPTIMIZED: Dynamic imports for utilities to reduce main bundle size
+const initializeUtilities = async () => {
+  // Only load utilities when needed
+  const [
+    { initializeAnalytics },
+    { initializeCleanup },
+    { initializeMobileOptimizations }
+  ] = await Promise.all([
+    import('./lib/analytics/beacon'),
+    import('./utils/cleanup'),
+    import('./utils/mobileOptimization')
+  ]);
 
-// Initialize cleanup utilities to remove old blob URLs
-initializeCleanup();
+  // Initialize cleanup utilities to remove old blob URLs
+  initializeCleanup();
 
-// Initialize mobile optimizations for better mobile performance
-initializeMobileOptimizations();
+  // Initialize mobile optimizations for better mobile performance
+  initializeMobileOptimizations();
 
-// Initialize memory monitoring for production optimization
-import memoryMonitor from './utils/memoryMonitor';
+  // Initialize analytics with proper configuration
+  initializeAnalytics({
+    trackingId: 'kutt-homepage',
+    enableGDPR: true,
+    enableRealTime: true,
+    sessionTimeout: 30,
+    debug: import.meta.env.DEV
+  });
 
-// Initialize analytics with proper configuration
-initializeAnalytics({
-  trackingId: 'kutt-homepage',
-  enableGDPR: true,
-  enableRealTime: true,
-  sessionTimeout: 30,
-  debug: import.meta.env.DEV
-});
+  // Load memory monitor only in production
+  if (!import.meta.env.DEV) {
+    import('./utils/memoryMonitor');
+  }
+};
+
+// Initialize utilities after DOM is ready
+initializeUtilities();
 
 // Lazy load About and Contact pages for better performance
 const AboutPage = lazy(() => import('./react/components/AboutPage'));
@@ -123,10 +139,18 @@ const App = () => {
           </Suspense>
         );
       case '/admin/login':
-        return <AdminLogin />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <AdminLogin />
+          </Suspense>
+        );
       case '/':
       default:
-        return <HomePage />;
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <HomePage />
+          </Suspense>
+        );
     }
   };
 

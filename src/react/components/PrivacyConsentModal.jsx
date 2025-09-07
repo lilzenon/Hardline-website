@@ -1,11 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// 🔧 OPTIMIZED: Tree-shaken icon imports for smaller bundle size
-import Shield from 'lucide-react/dist/esm/icons/shield';
-import Eye from 'lucide-react/dist/esm/icons/eye';
-import Database from 'lucide-react/dist/esm/icons/database';
-import Globe from 'lucide-react/dist/esm/icons/globe';
-import X from 'lucide-react/dist/esm/icons/x';
-import Check from 'lucide-react/dist/esm/icons/check';
+// 🚀 OPTIMIZED: Use centralized icon imports for better tree shaking
+import { X, Check, Shield, Eye, Database, Globe } from '../utils/icons';
 
 /**
  * Modern Privacy Consent Modal Component
