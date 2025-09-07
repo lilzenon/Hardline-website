@@ -761,12 +761,23 @@ try {
                 message: 'Unable to connect to dashboard server',
                 timestamp: new Date().toISOString()
             });
-        },
-        onProxyReq: (proxyReq, req, res) => {
-            console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
-        },
-        onProxyRes: (proxyRes, req, res) => {
-            console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
+        }
+    }));
+
+    // Proxy home-settings endpoints to dashboard API
+    app.use('/api/home-settings', createProxyMiddleware({
+        target: dashboardApiUrl,
+        changeOrigin: true,
+        secure: env.NODE_ENV === 'production',
+        timeout: 10000,
+        proxyTimeout: 10000,
+        onError: (err, req, res) => {
+            console.error('🚨 Proxy error for /api/home-settings:', err.message);
+            res.status(500).json({
+                error: 'Dashboard API unavailable',
+                message: 'Unable to connect to dashboard server',
+                timestamp: new Date().toISOString()
+            });
         }
     }));
 

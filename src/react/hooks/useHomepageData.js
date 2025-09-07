@@ -285,6 +285,8 @@ export const useHomepageData = () => {
       const validatedHomepageEvents = validateEvents(data.homepageEvents || [], 'Homepage');
 
       console.log(`✅ Homepage data loaded: ${validatedFeaturedEvents.length} featured events, ${validatedHomepageEvents.length} homepage events`);
+      console.log('🔍 Featured events:', validatedFeaturedEvents);
+      console.log('🔍 Homepage events:', validatedHomepageEvents);
 
       // Generate formatted date for hero sections
       let heroFormattedDate = data.formattedDate || "March 29th, 9:00 P.M.";
@@ -307,7 +309,7 @@ export const useHomepageData = () => {
         timestamp: Date.now()
       });
 
-      setHomeSettings(homeSettings);
+      setHomeSettings(data.homeSettings || {});
       setFeaturedEvents(validatedFeaturedEvents);
       setHomepageEvents(validatedHomepageEvents);
       setFormattedDate(heroFormattedDate);
@@ -343,25 +345,38 @@ export const useHomepageData = () => {
 
   // Process and filter featured events
   const processedFeaturedEvents = useMemo(() => {
+    console.log('🔍 Processing featured events:', featuredEvents.length, 'showAllEvents:', showAllEvents);
     const normalized = featuredEvents
       .map(event => normalizeEvent(event, 'event', false))
       .filter(Boolean);
-    
+    console.log('🔍 Normalized featured events:', normalized.length);
+
     const filtered = filterEvents(normalized, showAllEvents);
-    return sortEvents(filtered, showAllEvents);
+    console.log('🔍 Filtered featured events:', filtered.length);
+    const sorted = sortEvents(filtered, showAllEvents);
+    console.log('🔍 Final featured events:', sorted.length);
+    return sorted;
   }, [featuredEvents, showAllEvents, normalizeEvent, filterEvents, sortEvents]);
 
   // Process and filter homepage events (exclude featured events to avoid duplicates)
   const processedHomepageEvents = useMemo(() => {
+    console.log('🔍 Processing homepage events:', homepageEvents.length, 'showAllEvents:', showAllEvents);
     const featuredEventIds = new Set(featuredEvents.map(event => event.id));
-    
-    const normalized = homepageEvents
-      .filter(event => !featuredEventIds.has(event.id)) // Exclude featured events
+    console.log('🔍 Featured event IDs to exclude:', featuredEventIds);
+
+    const afterDeduplication = homepageEvents.filter(event => !featuredEventIds.has(event.id));
+    console.log('🔍 Homepage events after deduplication:', afterDeduplication.length);
+
+    const normalized = afterDeduplication
       .map(event => normalizeEvent(event, 'homepage-event', true))
       .filter(Boolean);
-    
+    console.log('🔍 Normalized homepage events:', normalized.length);
+
     const filtered = filterEvents(normalized, showAllEvents);
-    return sortEvents(filtered, showAllEvents);
+    console.log('🔍 Filtered homepage events:', filtered.length);
+    const sorted = sortEvents(filtered, showAllEvents);
+    console.log('🔍 Final homepage events:', sorted.length);
+    return sorted;
   }, [homepageEvents, featuredEvents, showAllEvents, normalizeEvent, filterEvents, sortEvents]);
 
   return {

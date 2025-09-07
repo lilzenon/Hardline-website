@@ -47,7 +47,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       }
 
       // Always use dashboard domain for image serving - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
@@ -63,7 +63,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (typeof originalUrl === 'string' && originalUrl.startsWith('http')) {
     const encodedUrl = encodeURIComponent(originalUrl);
     // Use dashboard server for image optimization (publicly accessible) - with fallback for development
-    const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
     const baseUrl = `${dashboardDomain}/images/proxy-optimized?url=${encodedUrl}`;
     return width ? `${baseUrl}&w=${width}` : baseUrl;
   }
@@ -78,7 +78,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
     if (uuidMatch) {
       const uuid = uuidMatch[1];
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       // Use medium variant for event cards
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
@@ -128,7 +128,14 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     return ''; // Return empty to skip AVIF source entirely
   }
 
-  const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+  // For internal API images, don't use proxy-optimized (causes CORS issues)
+  // Instead, skip AVIF for internal images and let WebP handle it
+  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
+    return ''; // Skip AVIF for internal API images to avoid CORS issues
+  }
+
+  // Only use proxy-optimized for external URLs
+  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
     .join(', ');
@@ -759,7 +766,7 @@ const FigmaDesktop = () => {
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
       // Use the new homepage phone submission endpoint - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
       const response = await fetch(`${dashboardDomain}/api/home-settings/submit-phone`, {
         method: 'POST',
         headers: {
@@ -1225,14 +1232,17 @@ const FigmaDesktop = () => {
       // Preload featured event images first
       filteredFeaturedEvents.forEach((card, index) => {
         if (card.coverImage) {
-          // Preload AVIF version for modern browsers
-          const avifLink = document.createElement('link');
-          avifLink.rel = 'preload';
-          avifLink.as = 'image';
-          avifLink.type = 'image/avif';
-          const dashboardDomain = window.location.hostname === 'localhost' ? 'https://admin.b2b.click' : 'https://admin.b2b.click';
-          avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(card.coverImage)}&w=111&format=avif`;
-          document.head.appendChild(avifLink);
+          // Skip AVIF preload for internal API images to avoid CORS issues
+          if (!card.coverImage.includes('/api/images/serve/')) {
+            // Preload AVIF version for modern browsers (external images only)
+            const avifLink = document.createElement('link');
+            avifLink.rel = 'preload';
+            avifLink.as = 'image';
+            avifLink.type = 'image/avif';
+            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+            avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(card.coverImage)}&w=111&format=avif`;
+            document.head.appendChild(avifLink);
+          }
 
           // Preload WebP fallback
           const webpLink = document.createElement('link');

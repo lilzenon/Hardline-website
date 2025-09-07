@@ -142,6 +142,13 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     return ''; // Return empty to skip AVIF source entirely
   }
 
+  // For internal API images, don't use proxy-optimized (causes CORS issues)
+  // Instead, skip AVIF for internal images and let WebP handle it
+  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
+    return ''; // Skip AVIF for internal API images to avoid CORS issues
+  }
+
+  // Only use proxy-optimized for external URLs
   const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
   return responsiveSizes(context)
     .map((size) => `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(originalUrl)}&w=${size}&format=avif ${size}w`)
@@ -1329,8 +1336,8 @@ const FigmaMobile = () => {
 
       filteredFeaturedEvents.slice(0, 2).forEach((event, index) => {
         if (event.coverImage) {
-          // Skip AVIF preloading for Safari mobile, go straight to WebP
-          if (!isSafariMobile) {
+          // Skip AVIF preloading for Safari mobile and internal API images, go straight to WebP
+          if (!isSafariMobile && !event.coverImage.includes('/api/images/serve/')) {
             const avifLink = document.createElement('link');
             avifLink.rel = 'preload';
             avifLink.as = 'image';
