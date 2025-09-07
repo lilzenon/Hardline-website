@@ -125,19 +125,32 @@ export default defineConfig({
     rollupOptions: {
       output: {
         format: 'es',
-        // 🚀 OPTIMIZED: Strategic code splitting for actually used dependencies
-        manualChunks: {
-          // Core React libraries (largest chunk)
-          'react-vendor': ['react', 'react-dom'],
+        // 🚀 OPTIMIZED: Strategic code splitting with proper React handling
+        manualChunks: (id) => {
+          // Keep React in the main bundle to prevent loading order issues
+          if (id.includes('react') || id.includes('react-dom')) {
+            return undefined; // Let React stay in main bundle
+          }
 
           // Animation libraries (GSAP is large)
-          'animations': ['gsap'],
+          if (id.includes('gsap')) {
+            return 'animations';
+          }
 
           // Icon library (Lucide React is large)
-          'icons': ['lucide-react'],
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
 
           // Security libraries
-          'security': ['dompurify']
+          if (id.includes('dompurify')) {
+            return 'security';
+          }
+
+          // Other vendor dependencies
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
         },
         // Optimize asset naming for better caching
         chunkFileNames: 'assets/[name]-[hash].js',

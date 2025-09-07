@@ -170,7 +170,9 @@ if (container) {
   try {
     const root = createRoot(container);
     root.render(
-      React.createElement(ErrorBoundary, null, React.createElement(App))
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
     );
   } catch (error) {
     console.error('React mounting error:', error);
@@ -179,7 +181,3 @@ if (container) {
 
 // Initialize frontend security measures
 initializeFrontendSecurity();
-
-// Export for global access if needed
-window.React = React;
-window.ReactApp = App;
