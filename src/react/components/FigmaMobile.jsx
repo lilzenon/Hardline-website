@@ -34,8 +34,8 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     if (uuidMatch) {
       const uuid = uuidMatch[1];
 
-      // Build optimized URL using the dashboard domain - with local proxy for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+      // Build optimized URL using the dashboard domain - FIXED: use proper localhost URL
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       // Use appropriate variant based on width with optimized size selection
       let variant = 'small'; // Default to small for event cards (111px display) - OPTIMIZED
@@ -91,7 +91,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
     if (uuidMatch) {
       const uuid = uuidMatch[1];
-      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       // Use medium variant for event cards
       const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
@@ -216,7 +216,7 @@ const handleImageFallbackAttempt3 = (imgElement, card) => {
     const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
     if (uuidMatch) {
       const uuid = uuidMatch[1];
-      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
       const thumbnailUrl = `${dashboardDomain}/api/images/serve/${uuid}/thumbnail`;
       console.log('🔄 Attempt 3: Trying thumbnail variant for new image system:', thumbnailUrl);
       imgElement.src = thumbnailUrl;
@@ -651,7 +651,7 @@ const FigmaMobile = () => {
 
     // If we have a dashboard domain, construct the full-size image URL
     if (imageUrl && !imageUrl.startsWith('http')) {
-      const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
       imageUrl = `${dashboardDomain}${imageUrl}`;
     }
 
@@ -3650,7 +3650,7 @@ const FigmaMobile = () => {
                                 const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
                                 if (uuidMatch) {
                                   const uuid = uuidMatch[1];
-                                  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+                                  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
                                   const fallbackUrl = `${dashboardDomain}/api/images/serve/${uuid}/small`;
                                   console.log('🔄 Trying small variant for new image system:', fallbackUrl);
                                   e.target.src = fallbackUrl;
@@ -3671,7 +3671,7 @@ const FigmaMobile = () => {
                                 const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
                                 if (uuidMatch) {
                                   const uuid = uuidMatch[1];
-                                  const dashboardDomain = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+                                  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
                                   const fallbackUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
                                   console.log('🔄 Trying medium variant for new image system:', fallbackUrl);
                                   e.target.src = fallbackUrl;

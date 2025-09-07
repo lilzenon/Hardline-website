@@ -57,23 +57,16 @@ import ErrorBoundary from './react/components/ErrorBoundary';
 // Import any additional CSS if needed
 import './react/styles.css';
 
+// Import the new branded loader
+import BrandedLoader from './react/components/BrandedLoader';
+
 // Loading component for lazy-loaded pages
 const PageLoader = () => (
-  <div
-    style={{
-      width: '100vw',
-      height: '100vh',
-      background: '#000',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      color: '#FFF',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '18px',
-    }}
-  >
-    Loading...
-  </div>
+  <BrandedLoader
+    message="Loading page"
+    fullScreen={true}
+    minDisplayTime={500}
+  />
 );
 
 const App = () => {

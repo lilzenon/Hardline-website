@@ -12,27 +12,16 @@ const ContactPage = lazy(() => import('./components/ContactPage'));
 // Import any additional CSS if needed
 import './styles.css';
 
-// 🚀 PERFORMANCE: Minimal loading component for fast page transitions
+// Import the new branded loader
+import BrandedLoader from './components/BrandedLoader';
+
+// 🚀 PERFORMANCE: Branded loading component for page transitions
 const PageLoader = () => (
-  <div
-    style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      background: 'rgba(0, 0, 0, 0.8)',
-      color: '#FFFFFF',
-      padding: '8px 16px',
-      borderRadius: '20px',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '14px',
-      zIndex: 9999,
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      opacity: 0.9
-    }}
-  >
-    Loading...
-  </div>
+  <BrandedLoader
+    message="Loading page"
+    fullScreen={false}
+    minDisplayTime={300}
+  />
 );
 
 const App = () => {
