@@ -61,14 +61,18 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3002', // 🔧 FIXED: Dashboard API server port
+        target: 'http://localhost:3002', // Dashboard API server
         changeOrigin: true,
         secure: false,
         ws: true, // Enable WebSocket proxying
+        timeout: 10000, // 10 second timeout
         headers: {
-          'Origin': 'http://localhost:3002',
-          'Referer': 'http://localhost:3002',
+          'Origin': 'http://localhost:3001', // Use actual Vite dev server origin
+          'Referer': 'http://localhost:3001',
           'User-Agent': 'Mozilla/5.0 (compatible; Vite-Dev-Server)',
+          'X-Forwarded-For': '127.0.0.1',
+          'X-Forwarded-Proto': 'http',
+          'X-Forwarded-Host': 'localhost:3001'
         },
         rewrite: (path) => {
           // Handle proxy paths for static files
@@ -80,13 +84,31 @@ export default defineConfig({
           return path;
         },
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
-            console.log('🚨 Proxy error connecting to dashboard API:', err.message);
+          proxy.on('error', (err, req, res) => {
+            console.error('🚨 Proxy error connecting to dashboard API:', err.message);
+            // Send a proper error response instead of hanging
+            if (!res.headersSent) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                success: false,
+                error: 'Dashboard API unavailable',
+                message: 'The dashboard API server is not responding. Please ensure it is running on port 3002.'
+              }));
+            }
           });
           proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Add additional headers for better cross-domain support
+            proxyReq.setHeader('X-Requested-With', 'XMLHttpRequest');
+            proxyReq.setHeader('Accept', 'application/json');
             console.log('📡 Proxying to dashboard:', req.method, req.url, '→ http://localhost:3002' + req.url);
           });
-          proxy.on('proxyRes', (proxyRes, req, _res) => {
+          proxy.on('proxyRes', (proxyRes, req, res) => {
+            // Add CORS headers to proxied responses
+            res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+            res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
+
             console.log('✅ Response from dashboard:', proxyRes.statusCode, req.url);
           });
         },

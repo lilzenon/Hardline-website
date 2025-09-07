@@ -1,30 +1,9 @@
 /**
  * SEO Service - Fetches SEO settings from dashboard API
- * Handles dynamic meta tag updates for the homepage
+ * Enhanced with robust error handling and fallback mechanisms
  */
 
-// API endpoints configuration
-const API_CONFIG = {
-    // Dashboard API endpoint for SEO settings
-    DASHBOARD_API: (() => {
-        // DEVELOPMENT: Use Vite proxy for development environment
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return '/api/settings/seo';
-        }
-        // PRODUCTION: Use production API for production domains
-        return 'https://admin.b2b.click/api/settings/seo';
-    })(),
-
-    // Maintenance status endpoint (public)
-    MAINTENANCE_API: (() => {
-        // DEVELOPMENT: Use Vite proxy for development environment
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return '/api/settings/maintenance-status';
-        }
-        // PRODUCTION: Use production API for production domains
-        return 'https://admin.b2b.click/api/settings/maintenance-status';
-    })()
-};
+import { apiClient } from '../../lib/api-client';
 
 // Default SEO settings fallback
 export const DEFAULT_SEO_SETTINGS = {
@@ -71,41 +50,16 @@ export const fetchSEOSettings = async() => {
             return seoCache;
         }
 
-        // PERFORMANCE OPTIMIZATION: Minimal logging in production
-        if (process.env.NODE_ENV !== 'production') {
-            console.log('🔍 Fetching SEO settings from dashboard API...');
+        // ENHANCED: Use new API client with retry logic and fallbacks
+        console.log('🔍 Fetching SEO settings from dashboard API...');
+
+        const apiResponse = await apiClient.getSEOSettings();
+
+        if (!apiResponse.success) {
+            throw new Error(apiResponse.error || 'Failed to fetch SEO settings');
         }
 
-        // PERFORMANCE OPTIMIZATION: Reduced timeout to match backend optimizations
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout to match backend
-
-        const response = await fetch(API_CONFIG.DASHBOARD_API, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            // Don't include credentials for cross-origin requests
-            mode: 'cors',
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            console.warn(`⚠️ SEO API returned ${response.status}: ${response.statusText}`);
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        // Check if response is actually JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            console.warn('⚠️ SEO API returned non-JSON response:', contentType);
-            throw new Error('API returned HTML instead of JSON - possible routing issue');
-        }
-
-        const data = await response.json();
+        const data = apiResponse.data;
 
         if (data.success && data.settings) {
             const duration = Date.now() - startTime;
@@ -164,21 +118,15 @@ export const fetchMaintenanceStatus = async() => {
     try {
         console.log('🔍 Checking maintenance mode status...');
 
-        const response = await fetch(API_CONFIG.MAINTENANCE_API, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            mode: 'cors'
-        });
+        // Use enhanced API client
+        const apiResponse = await apiClient.getMaintenanceStatus();
 
-        if (!response.ok) {
-            console.warn(`⚠️ Maintenance API returned ${response.status}: ${response.statusText}`);
+        if (!apiResponse.success) {
+            console.warn('⚠️ Maintenance API request failed:', apiResponse.error);
             return { maintenance_mode: false };
         }
 
-        const data = await response.json();
+        const data = apiResponse.data;
 
         if (data.success !== undefined) {
             console.log('✅ Maintenance status fetched:', { maintenance_mode: data.maintenance_mode });

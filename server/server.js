@@ -67,6 +67,9 @@ const path = require("node:path");
 const fs = require("node:fs");
 const mime = require("mime-types");
 const hbs = require("hbs");
+
+// CROSS-DOMAIN API INTEGRATION: Proxy middleware for dashboard API
+const { createProxyMiddleware } = require('http-proxy-middleware');
 console.log('✅ Core dependencies loaded successfully');
 
 console.log('✅ Step 4: Loading services and middleware...');
@@ -693,6 +696,8 @@ app.get("/test-route", (req, res) => {
 
 // CRITICAL FIX: Add error handling for route registration
 try {
+
+
     console.log('🔍 Registering render routes...');
     app.use("/", global.appRoutes.render);
     console.log('✅ Render routes registered successfully');
@@ -709,6 +714,63 @@ try {
     app.use("/api/v2", global.appRoutes.api);
     app.use("/api", global.appRoutes.api);
     console.log('✅ API routes registered successfully');
+
+    console.log('🔍 Setting up cross-domain API proxy...');
+    // CROSS-DOMAIN API INTEGRATION: Proxy specific API endpoints to dashboard server
+    // IMPORTANT: This must come AFTER general API routes to ensure proxy takes precedence
+    const dashboardApiUrl = env.NODE_ENV === 'production'
+        ? 'https://admin.b2b.click'
+        : 'http://localhost:3002';
+
+    console.log(`📡 Proxying API calls to dashboard server: ${dashboardApiUrl}`);
+
+    // Proxy settings endpoints to dashboard API
+    app.use('/api/settings', createProxyMiddleware({
+        target: dashboardApiUrl,
+        changeOrigin: true,
+        secure: env.NODE_ENV === 'production',
+        timeout: 10000,
+        proxyTimeout: 10000,
+        onError: (err, req, res) => {
+            console.error('🚨 Proxy error for /api/settings:', err.message);
+            res.status(500).json({
+                error: 'Dashboard API unavailable',
+                message: 'Unable to connect to dashboard server',
+                timestamp: new Date().toISOString()
+            });
+        },
+        onProxyReq: (proxyReq, req, res) => {
+            console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
+        },
+        onProxyRes: (proxyRes, req, res) => {
+            console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
+        }
+    }));
+
+    // Proxy analytics endpoints to dashboard API (only track endpoint)
+    app.use('/api/analytics/track', createProxyMiddleware({
+        target: dashboardApiUrl,
+        changeOrigin: true,
+        secure: env.NODE_ENV === 'production',
+        timeout: 10000,
+        proxyTimeout: 10000,
+        onError: (err, req, res) => {
+            console.error('🚨 Proxy error for /api/analytics/track:', err.message);
+            res.status(500).json({
+                error: 'Dashboard API unavailable',
+                message: 'Unable to connect to dashboard server',
+                timestamp: new Date().toISOString()
+            });
+        },
+        onProxyReq: (proxyReq, req, res) => {
+            console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
+        },
+        onProxyRes: (proxyRes, req, res) => {
+            console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
+        }
+    }));
+
+    console.log('✅ Cross-domain API proxy configured successfully');
 
 } catch (error) {
     console.error('🚨 CRITICAL ERROR during route registration:', error);
@@ -752,9 +814,10 @@ try {
             res.sendFile(path.join(__dirname, '../dist/index.html'));
         });
 
-        // Handle sub-routes (e.g., /events/123/edit, /settings/seo)
+        // Handle sub-routes (e.g., /events/123/edit, /settings/seo) but EXCLUDE API paths
         // CRITICAL FIX: Use regex pattern to avoid path-to-regexp issues with /*
-        const subRoutePattern = new RegExp(`^${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/.*`);
+        // IMPORTANT: Exclude /api/* paths to prevent interference with proxy middleware
+        const subRoutePattern = new RegExp(`^${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/(?!api/).*`);
         console.log(`🔍 Registering dashboard sub-route with regex: ${subRoutePattern}`);
         app.get(subRoutePattern, (req, res) => {
             console.log(`📱 Serving React SPA for sub-route: ${req.path}`);
@@ -808,9 +871,9 @@ try {
     // finally, redirect the short link to the target
     // CRITICAL FIX: Use simple parameter pattern to avoid path-to-regexp errors
     app.get("/:id", (req, res, next) => {
-        // Skip asset requests - let them be handled by static middleware
-        if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/')) {
-            console.log(`🔍 DEBUG: Skipping /:id route for asset: ${req.path}`);
+        // Skip asset requests and API requests - let them be handled by other middleware
+        if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/') || req.path.startsWith('/api/')) {
+            console.log(`🔍 DEBUG: Skipping /:id route for: ${req.path}`);
             return next();
         }
 
