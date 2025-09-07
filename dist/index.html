@@ -9,10 +9,8 @@
     <meta name="theme-color" content="#000000" />
     <title>BOUNCE2BOUNCE</title>
 
-    <!-- Preload critical local fonts for instant rendering -->
+    <!-- Preload only critical font weight for optimal performance -->
     <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin />
 
     <!-- Defer YouTube preconnect until after LCP to reduce contention -->
     <script>
@@ -29,8 +27,8 @@
         });
     </script>
 
-    <!-- Local fonts for optimal performance -->
-    <link rel="stylesheet" href="/css/fonts.css" />
+    <!-- Optimized local fonts for performance -->
+    <link rel="stylesheet" href="/css/fonts-optimized.css" />
 
     <!-- Splash styles to avoid CLS -->
     <style>body,html{background:#000;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;margin:0;padding:0}#root{min-height:100vh}</style>

@@ -98,17 +98,13 @@ function compressionOptimization() {
  */
 function resourceHints() {
     return (req, res, next) => {
-        // Add resource hints for critical resources
+        // Add resource hints for critical resources (Google Fonts removed for local fonts)
         if (req.path === '/' || req.path === '/home') {
             res.set({
                 'Link': [
-                    // DNS prefetch for external resources only
-                    '//fonts.googleapis.com; rel=dns-prefetch',
-                    '//fonts.gstatic.com; rel=dns-prefetch',
-
-                    // Preconnect to critical origins
-                    'https://fonts.googleapis.com; rel=preconnect; crossorigin',
-                    'https://fonts.gstatic.com; rel=preconnect; crossorigin'
+                    // DNS prefetch for analytics only
+                    '//www.google-analytics.com; rel=dns-prefetch',
+                    '//www.googletagmanager.com; rel=dns-prefetch'
                 ].join(', ')
             });
         }

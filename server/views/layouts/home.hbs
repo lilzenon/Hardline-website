@@ -6,11 +6,9 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>{{title}}</title>
-    <!-- Optimized Inter Font Loading - Only Critical Weights -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=optional" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=optional"></noscript>
+    <!-- Local Inter fonts for optimal performance -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/css/fonts-optimized.css" />
 
     <!-- Google Fonts CSS handles font preloading automatically -->
     <style>
@@ -84,11 +82,7 @@
     <link rel="apple-touch-icon" sizes="57x57" href="/images/apple-touch-icon-57x57.png" />
     <link rel="mask-icon" href="/images/favicon.svg" color="#000000" />
 
-    <!-- Performance Optimization: Resource Hints -->
-    <link rel="dns-prefetch" href="//fonts.gstatic.com">
-    <link rel="dns-prefetch" href="//api.fontshare.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <!-- Performance Optimization: Resource Hints (removed Google Fonts) -->
 
     <!-- Preload critical resources for Core Web Vitals -->
     <link rel="preload" href="/images/bounce-logo.svg" as="image" type="image/svg+xml" fetchpriority="high">
