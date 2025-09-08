@@ -128,10 +128,15 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     return ''; // Return empty to skip AVIF source entirely
   }
 
-  // For internal API images, don't use proxy-optimized (causes CORS issues)
+  // CRITICAL FIX: For internal API images, don't use proxy-optimized (causes request loops)
   // Instead, skip AVIF for internal images and let WebP handle it
-  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
-    return ''; // Skip AVIF for internal API images to avoid CORS issues
+  if (typeof originalUrl === 'string' && (
+    originalUrl.includes('/api/images/serve/') ||
+    originalUrl.includes('/api/settings/serve/') ||
+    originalUrl.startsWith('/api/')
+  )) {
+    console.log('🚫 Skipping AVIF for internal API URL to prevent loop:', originalUrl);
+    return ''; // Skip AVIF for internal API images to avoid request loops
   }
 
   // Only use proxy-optimized for external URLs

@@ -3,9 +3,9 @@
  * Implements caching strategies for performance optimization
  */
 
-const CACHE_NAME = 'bounce2bounce-v6-csp-fix-' + Date.now();
-const STATIC_CACHE = 'bounce2bounce-static-v6-csp-fix-' + Date.now();
-const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v6-csp-fix-' + Date.now();
+const CACHE_NAME = 'bounce2bounce-v7-react-fix-' + Date.now();
+const STATIC_CACHE = 'bounce2bounce-static-v7-react-fix-' + Date.now();
+const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v7-react-fix-' + Date.now();
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -22,7 +22,7 @@ const STATIC_ASSETS = [
 
 // Install event - cache static assets and force immediate activation
 self.addEventListener('install', event => {
-    console.log('Service Worker: Installing v5 - Force clearing old caches...');
+    console.log('Service Worker: Installing v7 - Force clearing old caches...');
 
     event.waitUntil(
         Promise.all([
@@ -30,7 +30,7 @@ self.addEventListener('install', event => {
             caches.keys().then(cacheNames => {
                 return Promise.all(
                     cacheNames.map(cacheName => {
-                        if (cacheName.includes('bounce2bounce') && !cacheName.includes('v5')) {
+                        if (cacheName.includes('bounce2bounce') && !cacheName.includes('v7-react-fix')) {
                             console.log('Service Worker: Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
                         }
@@ -54,7 +54,7 @@ self.addEventListener('install', event => {
 
 // Activate event - aggressively clean up old caches and take control
 self.addEventListener('activate', event => {
-    console.log('Service Worker: Activating v5 - Aggressive cache cleanup...');
+    console.log('Service Worker: Activating v7 - Aggressive cache cleanup...');
 
     event.waitUntil(
         caches.keys()
@@ -70,7 +70,7 @@ self.addEventListener('activate', event => {
             );
         })
         .then(() => {
-            console.log('Service Worker: v5 Activated - Taking control of all clients');
+            console.log('Service Worker: v7 Activated - Taking control of all clients');
             // Force immediate control of all clients (including existing ones)
             return self.clients.claim();
         })
@@ -79,7 +79,7 @@ self.addEventListener('activate', event => {
             return self.clients.matchAll().then(clients => {
                 clients.forEach(client => {
                     console.log('Service Worker: Sending reload message to client');
-                    client.postMessage({ type: 'CACHE_UPDATED', version: 'v5' });
+                    client.postMessage({ type: 'CACHE_UPDATED', version: 'v7' });
                 });
             });
         })
