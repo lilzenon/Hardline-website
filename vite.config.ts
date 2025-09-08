@@ -45,13 +45,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3001, // 🔧 FIXED: Use available port for Vite dev server
+    port: 3005, // 🚨 CRITICAL FIX: Match your local homepage port
     host: true, // Allow external connections
     cors: {
       origin: [
+        'http://localhost:3005', // 🚨 CRITICAL FIX: Match actual homepage port
         'http://localhost:3001',
         'http://localhost:3000',
-        'http://localhost:3005',
+        'http://localhost:3002', // 🚨 CRITICAL FIX: Add dashboard port
         'https://admin.b2b.click',
         'https://b2b.click'
       ],
@@ -67,12 +68,12 @@ export default defineConfig({
         ws: true, // Enable WebSocket proxying
         timeout: 10000, // 10 second timeout
         headers: {
-          'Origin': 'http://localhost:3001', // Use actual Vite dev server origin
-          'Referer': 'http://localhost:3001',
+          'Origin': 'http://localhost:3005', // 🚨 CRITICAL FIX: Match actual homepage port
+          'Referer': 'http://localhost:3005',
           'User-Agent': 'Mozilla/5.0 (compatible; Vite-Dev-Server)',
           'X-Forwarded-For': '127.0.0.1',
           'X-Forwarded-Proto': 'http',
-          'X-Forwarded-Host': 'localhost:3001'
+          'X-Forwarded-Host': 'localhost:3005' // 🚨 CRITICAL FIX: Match actual homepage port
         },
         rewrite: (path) => {
           // Handle proxy paths for static files
@@ -104,7 +105,7 @@ export default defineConfig({
           });
           proxy.on('proxyRes', (proxyRes, req, res) => {
             // Add CORS headers to proxied responses
-            res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3001');
+            res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3005'); // 🚨 CRITICAL FIX: Match homepage port
             res.setHeader('Access-Control-Allow-Credentials', 'true');
             res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
             res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control');
