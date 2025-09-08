@@ -157,10 +157,25 @@ export const useHomepageData = () => {
       const location = formatLocation(event.event_address || event.venue_name);
       const ticketInfo = getTicketInfo(event);
       
-      // Process cover image
+      // Process cover image - convert relative URLs to absolute URLs
       let coverImage = event.cover_image;
-      if (coverImage && !coverImage.startsWith('http') && !coverImage.startsWith('/')) {
-        coverImage = `/${coverImage}`;
+      if (coverImage) {
+        // If already absolute URL, use as-is
+        if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
+          // Already absolute, use as-is
+        } else if (coverImage.startsWith('/api/images/serve/')) {
+          // 🚨 CRITICAL FIX: Convert relative API URLs to absolute URLs
+          const dashboardDomain = window.location.hostname === 'localhost'
+            ? 'http://localhost:3002'
+            : 'https://admin.b2b.click';
+          coverImage = `${dashboardDomain}${coverImage}`;
+        } else if (coverImage.startsWith('/')) {
+          // Other relative URLs - ensure they start with /
+          // These will be handled by the image optimization system
+        } else {
+          // URLs without leading slash - add it
+          coverImage = `/${coverImage}`;
+        }
       }
       
       // Fallback image if none provided
