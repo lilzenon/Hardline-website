@@ -3146,8 +3146,15 @@ const FigmaMobile = () => {
                       onLoad={() => console.log('✅ MOBILE FEATURED EVENT HERO IMAGE LOADED:', featuredEvent.title)}
                       onError={(e) => {
                         console.error('❌ MOBILE FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
-                        // Fallback to default hero image
-                        e.target.src = '/images/optimized/hero-left-image-375w.jpg';
+                        // Prevent infinite loops with circuit breaker
+                        if (!e.target.dataset.heroFallbackAttempted) {
+                          e.target.dataset.heroFallbackAttempted = 'true';
+                          e.target.src = '/images/optimized/hero-left-image-375w.jpg';
+                        } else {
+                          // Remove error handler to prevent further attempts
+                          e.target.removeAttribute('onError');
+                          console.error('❌ Hero fallback also failed, removing error handler');
+                        }
                       }}
                       style={{
                         position: 'absolute',
@@ -3640,79 +3647,68 @@ const FigmaMobile = () => {
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           onError={(e) => {
-                            console.log('❌ Homepage event image failed to load:', card.title, 'URL:', e.target.src);
-                            console.log('🔄 Image fallback sequence starting for:', e.target.src);
-                            console.log('🔍 Original card.coverImage:', card.coverImage);
+                            // 🚨 CRITICAL FIX: Enhanced circuit breaker to prevent infinite loops
+                            const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
+                            const maxAttempts = 2; // Reduced from 3 to 2 for faster fallback
+                            const imageUrl = e.target.src;
+                            const cardId = card.id || card.title;
+
+                            // Global circuit breaker: track failed images to prevent repeated attempts
+                            if (!window.failedImages) window.failedImages = new Set();
+
+                            // If this exact URL has failed before, skip to final fallback immediately
+                            if (window.failedImages.has(imageUrl)) {
+                              console.log('🛑 Global circuit breaker: Image URL previously failed, using placeholder immediately');
+                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                              e.target.dataset.fallbackAttempt = 'final';
+                              e.target.removeAttribute('onError'); // Prevent further error events
+                              return;
+                            }
+
+                            // Circuit breaker: prevent infinite loops
+                            if (currentAttempt >= maxAttempts) {
+                              console.log(`🛑 Circuit breaker: Max fallback attempts (${maxAttempts}) reached for ${cardId}, using placeholder`);
+                              window.failedImages.add(imageUrl); // Remember this failed URL
+                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                              e.target.dataset.fallbackAttempt = 'final';
+                              e.target.removeAttribute('onError'); // Prevent further error events
+                              return;
+                            }
+
+                            console.log(`❌ Homepage event image failed (attempt ${currentAttempt + 1}/${maxAttempts}):`, cardId, 'URL:', imageUrl);
+
+                            // Add failed URL to tracking set
+                            window.failedImages.add(imageUrl);
 
                             // Enhanced error logging for persistent storage pipeline
-                            if (e.target.src.includes('/api/images/serve/')) {
+                            if (imageUrl.includes('/api/images/serve/')) {
                               console.error('🚨 API image serving failed - check persistent storage pipeline');
-                              console.error('📋 UUID extraction:', e.target.src.match(/\/api\/images\/serve\/([a-f0-9-]{36})/));
-                            } else if (e.target.src.includes('/static/uploads/temp/')) {
-                              console.error('🚨 CRITICAL: Temp storage path in production - pipeline failure');
+                              console.error('📋 UUID extraction:', imageUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})/));
                             }
 
-                            const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
-                            console.log('🔍 Current attempt:', currentAttempt);
-
-                            // Enhanced fallback sequence with new image system support
+                            // 🚨 CRITICAL FIX: Simplified fallback sequence to prevent loops
                             if (currentAttempt === 0) {
-                              // First fallback: try different variant for new image system
-                              if (card.coverImage && card.coverImage.includes('/api/images/serve/')) {
-                                const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
-                                if (uuidMatch) {
-                                  const uuid = uuidMatch[1];
-                                  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-                                  const fallbackUrl = `${dashboardDomain}/api/images/serve/${uuid}/small`;
-                                  console.log('🔄 Trying small variant for new image system:', fallbackUrl);
-                                  e.target.src = fallbackUrl;
-                                  e.target.dataset.fallbackAttempt = '1';
-                                  return;
-                                }
-                              } else if (card.coverImage) {
-                                // Old system fallback
-                                const fallbackUrl = card.coverImage.replace(/\?.*$/, '') + '?w=120&h=120&fit=crop&auto=format';
-                                console.log('🔄 Trying optimized fallback:', fallbackUrl);
-                                e.target.src = fallbackUrl;
-                                e.target.dataset.fallbackAttempt = '1';
-                                return;
-                              }
+                              // First fallback: try placeholder from dashboard
+                              const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+                              const placeholderUrl = `${dashboardDomain}/api/images/placeholder`;
+                              console.log('🔄 Trying dashboard placeholder:', placeholderUrl);
+                              e.target.src = placeholderUrl;
+                              e.target.dataset.fallbackAttempt = '1';
+                              return;
                             } else if (currentAttempt === 1) {
-                              // Second fallback: try medium variant for new image system or original URL
-                              if (card.coverImage && card.coverImage.includes('/api/images/serve/')) {
-                                const uuidMatch = card.coverImage.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
-                                if (uuidMatch) {
-                                  const uuid = uuidMatch[1];
-                                  const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-                                  const fallbackUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
-                                  console.log('🔄 Trying medium variant for new image system:', fallbackUrl);
-                                  e.target.src = fallbackUrl;
-                                  e.target.dataset.fallbackAttempt = '2';
-                                  return;
-                                }
-                              } else if (card.coverImage) {
-                                // Old system fallback
-                                console.log('🔄 Trying original URL without optimization');
-                                e.target.src = card.coverImage.replace(/\?.*$/, '');
-                                e.target.dataset.fallbackAttempt = '2';
-                                return;
-                              }
-                            } else if (currentAttempt === 2) {
-                              // Third fallback: try JPEG version
-                              if (card.coverImage) {
-                                const jpegUrl = card.coverImage.replace(/\.(webp|avif|png)(\?.*)?$/i, '.jpg$2');
-                                if (jpegUrl !== card.coverImage) {
-                                  console.log('🔄 Trying JPEG version:', jpegUrl);
-                                  e.target.src = jpegUrl;
-                                  e.target.dataset.fallbackAttempt = '3';
-                                  return;
-                                }
-                              }
+                              // Second fallback: use inline SVG placeholder immediately
+                              console.log('🔄 Using final inline SVG placeholder');
+                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                              e.target.dataset.fallbackAttempt = 'final';
+                              e.target.removeAttribute('onError'); // Prevent further error events
+                              return;
                             }
 
-                            // Final fallback: use placeholder
-                            console.log('🔄 Using final placeholder');
+                            // Fallback safety: should never reach here, but just in case
+                            console.log('🔄 Safety fallback: Using inline SVG placeholder');
                             e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                            e.target.dataset.fallbackAttempt = 'final';
+                            e.target.removeAttribute('onError'); // Prevent further error events
                           }}
                           onLoad={(e) => {
                             // Clear fallback tracking on successful load
