@@ -3,6 +3,7 @@ import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
+import { loadImageWithCircuitBreaker } from '../../lib/circuit-breaker';
 import TextUsSection from './TextUsSection';
 
 // CSS for custom scrollbar styling
