@@ -262,11 +262,13 @@ const getDashboardImageUrl = (imageUrl) => {
   if (imageUrl.startsWith('/')) {
     // Check if it's a working API endpoint (preferred method)
     if (imageUrl.startsWith('/api/images/serve/')) {
+      // 🚨 CRITICAL FIX: Always use admin domain in production
       // For development: use proxy path
       // For production: use production dashboard domain
       if (window.location.hostname === 'localhost') {
         return imageUrl; // Vite proxy will handle /api/* routes
       } else {
+        // PRODUCTION: Always use admin domain to avoid 500 errors
         return `https://admin.b2b.click${imageUrl}`;
       }
     }
