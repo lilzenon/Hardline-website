@@ -1,3 +1,7 @@
+---
+type: "manual"
+---
+
 # KUTT B2B Development Quick Reference
 ## Essential Rules for Every Development Session
 

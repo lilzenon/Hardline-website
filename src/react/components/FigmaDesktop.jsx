@@ -1359,6 +1359,8 @@ const FigmaDesktop = () => {
       >
         {/* Group 4 - B2B Logo Nav - CLICKABLE - INCREASED SIZE */}
         <img
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
           src="/images/figma-exact/b2b-logo-nav.svg"
           alt="B2B Logo"
           loading="lazy"
@@ -1559,6 +1561,8 @@ const FigmaDesktop = () => {
                   type="image/webp"
                 />
                 <img
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
                   src={getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
                   alt={`${mostRecentEvent.artist_name || mostRecentEvent.title} - Featured Event`}
                   loading="eager"
@@ -2222,6 +2226,8 @@ const FigmaDesktop = () => {
                       >
                         {/* Event Background Image - Match Mobile Implementation */}
                         <img
+                          crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
                           src={card.coverImage || card.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K'}
                           alt={`${card.title} event cover`}
                           loading="lazy"
@@ -3039,6 +3045,8 @@ const FigmaDesktop = () => {
                   >
                     {/* Event Background Image */}
                     <img
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
                       src={getOptimizedImageUrl(card.coverImage, 120)}
                       alt={`${card.title} event cover`}
                       loading="lazy"
@@ -3283,6 +3291,8 @@ const FigmaDesktop = () => {
         }}
       >
         <img
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
           src="/images/figma-exact/b2b-logo-bottom.svg"
           alt="B2B LOGO"
           loading="lazy"

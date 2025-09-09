@@ -3140,6 +3140,8 @@ const FigmaMobile = () => {
                       type="image/webp"
                     />
                     <img
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
                       src={getOptimizedImageUrl(featuredEvent.coverImage, 375)}
                       alt={`${featuredEvent.title} - Featured Event`}
                       loading="eager"
@@ -3184,6 +3186,8 @@ const FigmaMobile = () => {
                       type="image/webp"
                     />
                     <img
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
                       src="/images/optimized/hero-left-image-375w.jpg"
                       alt="Default Hero Background"
                       loading="eager"
@@ -3460,6 +3464,8 @@ const FigmaMobile = () => {
                 }}
               >
                 <img
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
                   src="/images/optimized/hero-left-image-375w.jpg"
                   alt="Default Hero Background"
                   style={{
@@ -3635,6 +3641,8 @@ const FigmaMobile = () => {
                       >
                         {/* Event Background Image */}
                         <img
+                          crossOrigin="anonymous"
+                          referrerPolicy="no-referrer"
                           src={(() => {
                             const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
                             console.log(`🖼️ Loading homepage image for "${card.title}":`, {
@@ -4372,6 +4380,8 @@ const FigmaMobile = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <img
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
             src={expandedImage.imageUrl}
             alt={expandedImage.title}
             style={{
