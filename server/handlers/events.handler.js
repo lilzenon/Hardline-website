@@ -1984,6 +1984,17 @@ async function handleCoverImageUpload(req, res) {
                 throw new Error(`Failed to update event: ${updateError.message}`);
             }
 
+            // 🚨 CRITICAL FIX: Invalidate cache to ensure cross-device consistency
+            try {
+                console.log(`🧹 Invalidating cache for uploaded image UUID: ${processedImage.uuid}`);
+                const { invalidateImageCache } = require('../routes/images.routes');
+                await invalidateImageCache(processedImage.uuid);
+                console.log(`✅ Cache invalidated successfully for ${processedImage.uuid}`);
+            } catch (cacheError) {
+                console.warn(`⚠️ Cache invalidation failed for ${processedImage.uuid}:`, cacheError.message);
+                // Don't fail the upload if cache invalidation fails
+            }
+
             console.log(`✅ Cover image uploaded successfully for event ${id}`);
 
             res.json({
@@ -2014,21 +2025,42 @@ async function handleCoverImageUpload(req, res) {
                 filename: processedImage.filename,
                 size: req.file.size,
                 processingStatus: processedImage.processing_status,
-                eventUpdated: true
+                eventUpdated: true,
+                // 🚨 CRITICAL FIX: Signal frontend to invalidate cache
+                invalidateCache: true,
+                cacheInvalidationTimestamp: Date.now()
             });
 
         } catch (processingError) {
             console.error('❌ Image processing failed:', processingError.message);
 
-            // Fallback: Simple file storage
+            // 🚨 CRITICAL FIX: Use persistent storage for fallback, not ephemeral paths
             const crypto = require('crypto');
             const uuid = crypto.randomUUID();
             const timestamp = Date.now();
             const extension = path.extname(req.file.originalname);
             const filename = `${timestamp}-${crypto.randomBytes(6).toString('hex')}${extension}`;
 
-            // Simple URL for fallback
-            const imageUrl = `/static/uploads/temp/${req.file.filename}`;
+            // 🔧 FIXED: Use persistent storage path for fallback
+            const fallbackDir = path.join(env.STATIC_UPLOADS_DIR, 'images', 'fallback');
+            const fallbackPath = path.join(fallbackDir, filename);
+
+            try {
+                // Ensure fallback directory exists
+                await fs.mkdir(fallbackDir, { recursive: true });
+
+                // Move file to persistent storage
+                await fs.copyFile(req.file.path, fallbackPath);
+                await fs.unlink(req.file.path); // Clean up temp file
+
+                console.log(`📁 Fallback file stored at: ${fallbackPath}`);
+            } catch (fallbackError) {
+                console.error('❌ Fallback storage failed:', fallbackError.message);
+                throw new Error(`Both primary and fallback storage failed: ${fallbackError.message}`);
+            }
+
+            // Generate persistent URL for fallback
+            const imageUrl = `/api/images/serve-fallback/${filename}`;
 
             // Update event with fallback URL
             try {
@@ -2041,11 +2073,11 @@ async function handleCoverImageUpload(req, res) {
 
             res.json({
                 success: true,
-                message: "Cover image uploaded (fallback mode)",
+                message: "Cover image uploaded (fallback mode - using persistent storage)",
                 imageUrl: imageUrl,
-                filename: req.file.filename,
+                filename: filename,
                 size: req.file.size,
-                warning: "Used fallback storage - full processing unavailable",
+                warning: "Used fallback storage - full processing unavailable but file is persistent",
                 eventUpdated: true
             });
         }

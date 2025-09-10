@@ -4,6 +4,20 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 const apiCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+// 🚨 CRITICAL FIX: Cache invalidation mechanism for image uploads
+// This allows external components to force cache refresh when images are uploaded
+window.invalidateHomepageCache = () => {
+  console.log('🧹 Invalidating frontend homepage cache due to image upload');
+  apiCache.delete('homepage-data-v2');
+  // Also clear any other related cache keys
+  for (const [key] of apiCache.entries()) {
+    if (key.includes('homepage') || key.includes('events')) {
+      apiCache.delete(key);
+      console.log(`🗑️ Cleared frontend cache: ${key}`);
+    }
+  }
+};
+
 // Cache for formatted dates to avoid repeated calculations
 const dateFormatCache = new Map();
 
@@ -169,6 +183,16 @@ export const useHomepageData = () => {
             ? 'http://localhost:3002'
             : 'https://admin.b2b.click';
           coverImage = `${dashboardDomain}${coverImage}`;
+
+          // 🚨 CRITICAL FIX: Add cache-busting parameter for recently uploaded images
+          // This ensures new uploads are immediately visible across all devices
+          const imageAge = Date.now() - new Date(event.updated_at || event.created_at).getTime();
+          const isRecentUpload = imageAge < 300000; // 5 minutes
+          if (isRecentUpload) {
+            const separator = coverImage.includes('?') ? '&' : '?';
+            coverImage = `${coverImage}${separator}_t=${Date.now()}`;
+            console.log(`🕐 Added cache-busting to recent upload: ${event.title} (${Math.round(imageAge/1000)}s old)`);
+          }
         } else if (coverImage.startsWith('/')) {
           // Other relative URLs - ensure they start with /
           // These will be handled by the image optimization system
@@ -356,6 +380,19 @@ export const useHomepageData = () => {
   // Fetch data on mount
   useEffect(() => {
     fetchHomepageData();
+  }, [fetchHomepageData]);
+
+  // 🚨 CRITICAL FIX: Expose refresh function globally for cache invalidation
+  useEffect(() => {
+    window.refreshHomepageData = () => {
+      console.log('🔄 Force refreshing homepage data due to external trigger');
+      apiCache.delete('homepage-data-v2');
+      fetchHomepageData();
+    };
+
+    return () => {
+      delete window.refreshHomepageData;
+    };
   }, [fetchHomepageData]);
 
   // Process and filter featured events
