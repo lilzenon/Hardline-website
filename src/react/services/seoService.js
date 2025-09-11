@@ -11,7 +11,7 @@ export const DEFAULT_SEO_SETTINGS = {
     default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
     default_keywords: 'events, tickets, entertainment, concerts, festivals',
     default_author: 'BOUNCE2BOUNCE',
-    default_og_image: '/images/og-image.png',
+    default_og_image: 'https://b2b.click/images/og-image.png',
     twitter_handle: '@bounce2bounce',
     google_analytics_id: '',
     google_search_console_id: ''
@@ -168,12 +168,28 @@ export const generateMetaTags = (seoSettings, options = {}) => {
 
     // Ensure URLs are absolute for Open Graph
     const getAbsoluteImageUrl = (imageUrl) => {
-        if (!imageUrl) return 'https://admin.b2b.click/images/og-image.png';
-        if (imageUrl.startsWith('http')) return imageUrl;
-        if (imageUrl.startsWith('/uploads/')) {
+        // If no image URL provided, use the default OG image from homepage
+        if (!imageUrl || imageUrl.trim() === '') {
+            return 'https://b2b.click/images/og-image.png';
+        }
+
+        // If already absolute URL, return as-is
+        if (imageUrl.startsWith('http')) {
+            return imageUrl;
+        }
+
+        // If it's an uploaded image from dashboard, serve from admin domain
+        if (imageUrl.startsWith('/uploads/') || imageUrl.startsWith('/static/uploads/')) {
             return `https://admin.b2b.click${imageUrl}`;
         }
-        return `https://b2b.click${imageUrl}`;
+
+        // For static images (like /images/og-image.png), serve from homepage domain
+        if (imageUrl.startsWith('/images/') || imageUrl.startsWith('/static/images/')) {
+            return `https://b2b.click${imageUrl}`;
+        }
+
+        // Default to homepage domain for relative paths
+        return `https://b2b.click${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
     };
 
     const ogImage = getAbsoluteImageUrl(settings.default_og_image);
