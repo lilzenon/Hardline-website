@@ -25,8 +25,13 @@ router.use((req, res, next) => {
     next();
 });
 
-// Handle CORS preflight requests
-router.options('*', (req, res) => {
+// Handle CORS preflight requests for specific routes
+router.options('/serve/:uuid/:variant?', (req, res) => {
+    setCORSHeaders(req, res);
+    res.status(200).end();
+});
+
+router.options('/health', (req, res) => {
     setCORSHeaders(req, res);
     res.status(200).end();
 });
@@ -55,10 +60,10 @@ router.get('/health', (req, res) => {
 });
 
 // Catch-all for other image routes - redirect to dashboard
-router.use('*', (req, res) => {
+router.use((req, res) => {
     const dashboardDomain = 'https://admin.b2b.click';
     const redirectUrl = `${dashboardDomain}/api/images${req.originalUrl.replace('/api/images', '')}`;
-    
+
     console.log(`🔄 Homepage: Redirecting unknown image request to dashboard: ${redirectUrl}`);
     res.redirect(redirectUrl);
 });
