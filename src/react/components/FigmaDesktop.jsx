@@ -29,20 +29,18 @@ const scrollbarStyles = `
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) return originalUrl;
 
-  // Handle new image system URLs (/api/images/serve/{uuid}) - ENHANCED: Add desktop cache-busting
+  // Handle new image system URLs (/api/images/serve/{uuid}) - PRESERVE EXISTING CACHE-BUSTING
   if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
     console.log('🔄 Processing new image system URL for desktop:', originalUrl);
 
-    // 🚨 CRITICAL FIX: Add aggressive cache-busting for desktop browsers
-    let processedUrl = originalUrl;
-    if (!processedUrl.includes('_cb=') && !processedUrl.includes('_t=')) {
-      const separator = processedUrl.includes('?') ? '&' : '?';
-      processedUrl = `${processedUrl}${separator}_desktop=1&_t=${Date.now()}`;
-      console.log('🖥️ Added desktop cache-busting to image URL:', processedUrl);
-    }
+    // 🚨 CRITICAL FIX: Preserve existing cache-busting parameters from useHomepageData
+    // Extract existing query parameters to preserve cache-busting
+    const urlParts = originalUrl.split('?');
+    const baseUrl = urlParts[0];
+    const existingParams = urlParts[1] || '';
 
-    // Extract UUID and variant from the URL
-    const match = originalUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})(?:\/(\w+))?/);
+    // Extract UUID and variant from the base URL
+    const match = baseUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})(?:\/(\w+))?/);
     if (match) {
       const uuid = match[1];
       const existingVariant = match[2] || 'medium'; // Default to medium if no variant specified
@@ -58,14 +56,20 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       // Always use dashboard domain for image serving - with fallback for development
       const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
-      // 🚨 CRITICAL FIX: Apply cache-busting to the final optimized URL for desktop
+      // 🚨 CRITICAL FIX: Build URL preserving existing cache-busting parameters
       let optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
-      // Add cache-busting for desktop browsers
-      const separator = optimizedUrl.includes('?') ? '&' : '?';
-      optimizedUrl = `${optimizedUrl}${separator}_desktop=1&_t=${Date.now()}`;
+      // Preserve existing cache-busting parameters from useHomepageData
+      if (existingParams) {
+        optimizedUrl = `${optimizedUrl}?${existingParams}`;
+        console.log('✅ Preserved existing cache-busting parameters:', existingParams);
+      } else {
+        // Only add new cache-busting if none exists
+        optimizedUrl = `${optimizedUrl}?_desktop=1&_t=${Date.now()}`;
+        console.log('🖥️ Added new desktop cache-busting parameters');
+      }
 
-      console.log('✅ Generated cache-busted desktop URL:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
+      console.log('✅ Generated desktop URL with preserved cache-busting:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
       return optimizedUrl;
     }
   }
@@ -2251,18 +2255,32 @@ const FigmaDesktop = () => {
                           // Add image expand functionality if needed
                         }}
                       >
-                        {/* Event Background Image - Match Mobile Implementation */}
+                        {/* Event Background Image - Use optimized URL with cache-busting */}
                         <img
                           crossOrigin="anonymous"
                           referrerPolicy="no-referrer"
-                          src={card.coverImage || card.image_url || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K'}
+                          src={(() => {
+                            const imageUrl = card.coverImage || card.image_url;
+                            if (!imageUrl || imageUrl.startsWith('data:')) {
+                              return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                            }
+                            const optimizedUrl = getOptimizedImageUrl(imageUrl, 111);
+                            console.log(`🖼️ DESKTOP FEATURED: Loading featured event image for "${card.title}":`, {
+                              original: imageUrl,
+                              optimized: optimizedUrl,
+                              isNewImageSystem: imageUrl?.includes('/api/images/serve/'),
+                              hasExistingCacheBusting: imageUrl?.includes('_cb=') || imageUrl?.includes('_t=')
+                            });
+                            return optimizedUrl;
+                          })()}
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           onError={(e) => {
-                            // Match mobile fallback behavior
+                            console.error(`❌ DESKTOP FEATURED: Featured event image failed to load for "${card.title}":`, e.target.src);
                             e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                           }}
                           onLoad={(e) => {
+                            console.log('✅ DESKTOP FEATURED: Featured event image loaded successfully:', card.title, e.target.src);
                             e.target.style.backgroundColor = 'transparent';
                           }}
                           style={{
@@ -3074,12 +3092,31 @@ const FigmaDesktop = () => {
                     <img
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
-                      src={getOptimizedImageUrl(card.coverImage, 120)}
+                      src={(() => {
+                        const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
+                        console.log(`🖼️ DESKTOP: Loading homepage image for "${card.title}":`, {
+                          original: card.coverImage,
+                          optimized: optimizedUrl,
+                          isDataUrl: card.coverImage?.startsWith('data:'),
+                          isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
+                          hasExistingCacheBusting: card.coverImage?.includes('_cb=') || card.coverImage?.includes('_t='),
+                          hostname: window.location.hostname
+                        });
+                        return optimizedUrl;
+                      })()}
                       alt={`${card.title} event cover`}
                       loading="lazy"
                       onError={(e) => {
                         const img = e.target;
                         const url = img?.src || '';
+                        console.error(`❌ DESKTOP: Homepage event image failed to load for "${card.title}":`, {
+                          url: url,
+                          originalCoverImage: card.coverImage,
+                          errorEvent: e,
+                          networkState: img.networkState,
+                          readyState: img.readyState
+                        });
+
                         if (img && !img.dataset.fallbackTried) {
                           img.dataset.fallbackTried = '1';
                           if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
@@ -3090,11 +3127,11 @@ const FigmaDesktop = () => {
                             return;
                           }
                         }
-                        console.log('❌ Homepage event image failed to load (using placeholder):', card.title, 'URL:', url);
+                        console.log('❌ DESKTOP: Using placeholder for:', card.title);
                         img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                       }}
                       onLoad={(e) => {
-                        console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);
+                        console.log('✅ DESKTOP: Homepage event image loaded successfully:', card.title, e.target.src);
                         e.target.style.backgroundColor = 'transparent';
                       }}
                       style={{
