@@ -26,7 +26,12 @@ router.use((req, res, next) => {
 });
 
 // Handle CORS preflight requests for specific routes
-router.options('/serve/:uuid/:variant?', (req, res) => {
+router.options('/serve/:uuid/:variant', (req, res) => {
+    setCORSHeaders(req, res);
+    res.status(200).end();
+});
+
+router.options('/serve/:uuid', (req, res) => {
     setCORSHeaders(req, res);
     res.status(200).end();
 });
@@ -36,14 +41,22 @@ router.options('/health', (req, res) => {
     res.status(200).end();
 });
 
-// Redirect image serving requests to dashboard
-router.get('/serve/:uuid/:variant?', (req, res) => {
+// Redirect image serving requests to dashboard (with variant)
+router.get('/serve/:uuid/:variant', (req, res) => {
     const { uuid, variant } = req.params;
     const dashboardDomain = 'https://admin.b2b.click';
-    const redirectUrl = variant 
-        ? `${dashboardDomain}/api/images/serve/${uuid}/${variant}`
-        : `${dashboardDomain}/api/images/serve/${uuid}`;
-    
+    const redirectUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
+
+    console.log(`🔄 Homepage: Redirecting image request with variant to dashboard: ${redirectUrl}`);
+    res.redirect(redirectUrl);
+});
+
+// Redirect image serving requests to dashboard (without variant)
+router.get('/serve/:uuid', (req, res) => {
+    const { uuid } = req.params;
+    const dashboardDomain = 'https://admin.b2b.click';
+    const redirectUrl = `${dashboardDomain}/api/images/serve/${uuid}`;
+
     console.log(`🔄 Homepage: Redirecting image request to dashboard: ${redirectUrl}`);
     res.redirect(redirectUrl);
 });
