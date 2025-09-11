@@ -29,9 +29,17 @@ const scrollbarStyles = `
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) return originalUrl;
 
-  // Handle new image system URLs (/api/images/serve/{uuid}) - FIXED: Handle both absolute and relative URLs
+  // Handle new image system URLs (/api/images/serve/{uuid}) - ENHANCED: Add desktop cache-busting
   if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
-    console.log('🔄 Processing new image system URL:', originalUrl);
+    console.log('🔄 Processing new image system URL for desktop:', originalUrl);
+
+    // 🚨 CRITICAL FIX: Add aggressive cache-busting for desktop browsers
+    let processedUrl = originalUrl;
+    if (!processedUrl.includes('_cb=') && !processedUrl.includes('_t=')) {
+      const separator = processedUrl.includes('?') ? '&' : '?';
+      processedUrl = `${processedUrl}${separator}_desktop=1&_t=${Date.now()}`;
+      console.log('🖥️ Added desktop cache-busting to image URL:', processedUrl);
+    }
 
     // Extract UUID and variant from the URL
     const match = originalUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})(?:\/(\w+))?/);
@@ -50,9 +58,14 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       // Always use dashboard domain for image serving - with fallback for development
       const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
-      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
+      // 🚨 CRITICAL FIX: Apply cache-busting to the final optimized URL for desktop
+      let optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
-      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
+      // Add cache-busting for desktop browsers
+      const separator = optimizedUrl.includes('?') ? '&' : '?';
+      optimizedUrl = `${optimizedUrl}${separator}_desktop=1&_t=${Date.now()}`;
+
+      console.log('✅ Generated cache-busted desktop URL:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
       return optimizedUrl;
     }
   }
@@ -1250,13 +1263,15 @@ const FigmaDesktop = () => {
             document.head.appendChild(avifLink);
           }
 
-          // Preload WebP fallback
-          const webpLink = document.createElement('link');
-          webpLink.rel = 'preload';
-          webpLink.as = 'image';
-          webpLink.type = 'image/webp';
-          webpLink.href = getOptimizedImageUrl(card.coverImage, 111);
-          document.head.appendChild(webpLink);
+          // Preload WebP fallback (skip internal /api images to avoid any desktop-only interference)
+          if (!card.coverImage.includes('/api/images/serve/')) {
+            const webpLink = document.createElement('link');
+            webpLink.rel = 'preload';
+            webpLink.as = 'image';
+            webpLink.type = 'image/webp';
+            webpLink.href = getOptimizedImageUrl(card.coverImage, 111);
+            document.head.appendChild(webpLink);
+          }
 
           console.log(`✅ Preloaded desktop featured event image ${index + 1}: ${card.title}`);
         }
@@ -1570,9 +1585,21 @@ const FigmaDesktop = () => {
                   fetchpriority="high"
                   onLoad={() => console.log('✅ DESKTOP FEATURED EVENT HERO IMAGE LOADED:', mostRecentEvent.title)}
                   onError={(e) => {
-                    console.error('❌ DESKTOP FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
-                    // Fallback to default hero image
-                    e.target.src = '/images/optimized/hero-left-image-375w.jpg';
+                    const img = e.target;
+                    const url = img?.src || '';
+                    if (img && !img.dataset.fallbackTried) {
+                      img.dataset.fallbackTried = '1';
+                      if (url.includes('/event_hero')) { img.src = url.replace('/event_hero', '/medium'); return; }
+                      if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
+                      if (url.includes('/medium')) { img.src = url.replace('/medium', '/small'); return; }
+                      if (url.includes('/small')) { img.src = url.replace('/small', '/thumbnail'); return; }
+                      if (url.includes('/api/images/serve/')) {
+                        img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
+                        return;
+                      }
+                    }
+                    console.warn('⚠️ Falling back to static hero placeholder:', url);
+                    img.src = '/images/optimized/hero-left-image-375w.jpg';
                   }}
                   style={{
                     position: 'absolute',
@@ -3051,9 +3078,20 @@ const FigmaDesktop = () => {
                       alt={`${card.title} event cover`}
                       loading="lazy"
                       onError={(e) => {
-                        console.log('❌ Homepage event image failed to load:', card.title, 'URL:', e.target.src);
-                        // Use placeholder
-                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                        const img = e.target;
+                        const url = img?.src || '';
+                        if (img && !img.dataset.fallbackTried) {
+                          img.dataset.fallbackTried = '1';
+                          if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
+                          if (url.includes('/medium')) { img.src = url.replace('/medium', '/small'); return; }
+                          if (url.includes('/small')) { img.src = url.replace('/small', '/thumbnail'); return; }
+                          if (url.includes('/api/images/serve/')) {
+                            img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
+                            return;
+                          }
+                        }
+                        console.log('❌ Homepage event image failed to load (using placeholder):', card.title, 'URL:', url);
+                        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                       }}
                       onLoad={(e) => {
                         console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);

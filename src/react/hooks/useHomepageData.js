@@ -184,14 +184,22 @@ export const useHomepageData = () => {
             : 'https://admin.b2b.click';
           coverImage = `${dashboardDomain}${coverImage}`;
 
-          // 🚨 CRITICAL FIX: Add cache-busting parameter for recently uploaded images
-          // This ensures new uploads are immediately visible across all devices
+          // 🚨 CRITICAL FIX: Enhanced cache-busting for cross-device consistency
+          // Desktop browsers cache more aggressively than mobile Safari
           const imageAge = Date.now() - new Date(event.updated_at || event.created_at).getTime();
-          const isRecentUpload = imageAge < 300000; // 5 minutes
-          if (isRecentUpload) {
+          const isRecentUpload = imageAge < 3600000; // 1 hour (increased from 5 minutes)
+
+          // Detect if we're on desktop browser (more aggressive caching)
+          const isDesktopBrowser = !(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+          const isDesktopViewport = window.innerWidth >= 1024;
+
+          // Apply cache-busting more liberally for desktop browsers and recent uploads
+          if (isRecentUpload || isDesktopBrowser || isDesktopViewport) {
             const separator = coverImage.includes('?') ? '&' : '?';
-            coverImage = `${coverImage}${separator}_t=${Date.now()}`;
-            console.log(`🕐 Added cache-busting to recent upload: ${event.title} (${Math.round(imageAge/1000)}s old)`);
+            // Use event updated_at timestamp for consistent cache-busting across devices
+            const cacheKey = new Date(event.updated_at || event.created_at).getTime();
+            coverImage = `${coverImage}${separator}_cb=${cacheKey}&_t=${Date.now()}`;
+            console.log(`🕐 Added enhanced cache-busting: ${event.title} (age: ${Math.round(imageAge/1000)}s, desktop: ${isDesktopBrowser}, viewport: ${isDesktopViewport})`);
           }
         } else if (coverImage.startsWith('/')) {
           // Other relative URLs - ensure they start with /

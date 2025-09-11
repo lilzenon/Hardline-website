@@ -55,9 +55,13 @@ console.log('🔍 About to require contact-book routes...');
 const contactBook = require("./api/contact-book.routes");
 console.log('✅ Contact-book routes loaded');
 
-console.log('🔍 About to require images.route...');
-const images = require("./images.route");
-console.log('✅ Images routes required successfully:', typeof images);
+console.log('🔍 About to require images.routes (DB-backed image server)...');
+const imagesDB = require("./images.routes");
+console.log('✅ images.routes (DB-backed) loaded');
+
+console.log('🔍 About to require images.route (static optimizer/proxy)...');
+const imagesOptim = require("./images.route");
+console.log('✅ images.route (optimizer) loaded');
 
 const homeSettings = require("./home_settings.routes");
 const monitoring = require("./monitoring.routes");
@@ -84,7 +88,10 @@ apiRouter.use("/links", links);
 apiRouter.use("/events", events);
 apiRouter.use("/sms", sms);
 apiRouter.use("/contact-book", contactBook);
-apiRouter.use("/images", images);
+// Mount DB-backed image routes first (serve/upload/debug)
+apiRouter.use("/images", imagesDB);
+// Mount static optimizer/proxy routes second (optimized/srcset/proxy-optimized)
+apiRouter.use("/images", imagesOptim);
 apiRouter.use("/home-settings", homeSettings);
 apiRouter.use("/monitoring", monitoring);
 apiRouter.use("/visit-health", require("./visit-health.routes"));

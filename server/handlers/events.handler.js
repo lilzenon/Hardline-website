@@ -98,6 +98,42 @@ const geoip = require('geoip-country'); // 🔧 FIXED: Updated from deprecated g
 const path = require("path");
 const fs = require("fs").promises;
 const env = require("../env");
+// Inlined image URL normalization helpers (avoid external dependency to new file)
+function getDashboardBase(req) {
+    try {
+        const host = (req.get && req.get("host")) ? String(req.get("host")).toLowerCase() : "";
+        if (host.includes("localhost") || host.includes("127.0.0.1")) {
+            return "http://localhost:3002";
+        }
+        return "https://admin.b2b.click";
+    } catch (_) {
+        return process.env.NODE_ENV === "development" ? "http://localhost:3002" : "https://admin.b2b.click";
+    }
+}
+function buildImageUrl(uuid, variant, req) {
+    if (!uuid) return null;
+    const base = getDashboardBase(req);
+    const v = variant && typeof variant === "string" ? variant : "medium";
+    return `${base}/api/images/serve/${uuid}/${v}`;
+}
+function extractUuidFromCoverImage(coverImage) {
+    try {
+        if (!coverImage) return null;
+        const idx = coverImage.indexOf("/api/images/serve/");
+        if (idx === -1) return null;
+        const parts = coverImage.substring(idx).split("/");
+        const uuid = parts[4];
+        return uuid && uuid.length >= 8 ? uuid : null;
+    } catch (_) {
+        return null;
+    }
+}
+function withCoverImageUrl(eventRow, req, variant = "event_card") {
+    if (!eventRow || typeof eventRow !== "object") return eventRow;
+    const uuid = eventRow.cover_image_uuid || extractUuidFromCoverImage(eventRow.cover_image);
+    const cover_image_url = uuid ? buildImageUrl(uuid, variant, req) : null;
+    return { ...eventRow, cover_image_url };
+}
 const seo = require("../utils/seo.utils");
 
 // Configure multer for social preview image uploads
@@ -670,9 +706,14 @@ async function getUserEvents(req, res) {
         offset: parseInt(offset)
     });
 
+    // Normalize cover image URL for each event (server-side, environment-aware)
+    const normalized = Array.isArray(drops)
+        ? drops.map((e) => withCoverImageUrl(e, req, "event_card"))
+        : [];
+
     res.json({
         success: true,
-        data: drops
+        data: normalized
     });
 }
 
@@ -689,9 +730,12 @@ async function getEvent(req, res) {
 
 
 
+    // Normalize cover image URL for the single event (use medium for edit preview)
+    const normalizedEvent = withCoverImageUrl(foundEvent, req, "medium");
+
     res.json({
         success: true,
-        data: foundEvent
+        data: normalizedEvent
     });
 }
 
