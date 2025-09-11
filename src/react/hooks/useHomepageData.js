@@ -78,8 +78,30 @@ export const useHomepageData = () => {
     let cachedFormat = dateFormatCache.get(cacheKey);
 
     if (!cachedFormat) {
-      const parsedDate = new Date(eventDate);
-      if (isNaN(parsedDate.getTime())) {
+      // 🚨 ENHANCED DATE PARSING: Handle multiple date formats
+      let parsedDate;
+
+      if (eventDate instanceof Date) {
+        parsedDate = eventDate;
+      } else if (typeof eventDate === 'string') {
+        // Try parsing as ISO string first, then fallback to Date constructor
+        parsedDate = new Date(eventDate);
+
+        // If that fails, try parsing common formats
+        if (isNaN(parsedDate.getTime())) {
+          // Try parsing YYYY-MM-DD format
+          const isoMatch = eventDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (isoMatch) {
+            parsedDate = new Date(isoMatch[0]);
+          }
+        }
+      } else {
+        parsedDate = new Date(eventDate);
+      }
+
+      // Final validation
+      if (!parsedDate || isNaN(parsedDate.getTime())) {
+        console.warn('🚨 Invalid event date:', eventDate, 'using fallback');
         return {
           eventDate: new Date(),
           formattedDate: 'Tue, Sep 02 @ 10:00PM',
@@ -244,23 +266,31 @@ export const useHomepageData = () => {
    */
   const sortEvents = useCallback((events, showAll) => {
     const sortedEvents = [...events];
-    
-    if (showAll) {
-      // Show all events - sort chronologically (earliest first)
-      sortedEvents.sort((a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateA.getTime() - dateB.getTime();
-      });
-    } else {
-      // Sort past events in reverse chronological order (most recent first)
-      sortedEvents.sort((a, b) => {
-        const dateA = new Date(a.eventDate);
-        const dateB = new Date(b.eventDate);
-        return dateB.getTime() - dateA.getTime();
-      });
-    }
-    
+
+    // 🚨 CRITICAL FIX: Both "ALL" and "Past" should show most recent events first
+    // Sort in reverse chronological order (most recent first) for both cases
+    sortedEvents.sort((a, b) => {
+      const dateA = new Date(a.eventDate);
+      const dateB = new Date(b.eventDate);
+
+      // Validate dates to handle edge cases
+      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) {
+        return 0; // Both invalid, maintain order
+      }
+      if (isNaN(dateA.getTime())) {
+        return 1; // Invalid dateA goes to end
+      }
+      if (isNaN(dateB.getTime())) {
+        return -1; // Invalid dateB goes to end
+      }
+
+      // Most recent first (descending order)
+      return dateB.getTime() - dateA.getTime();
+    });
+
+    console.log(`🔍 Sorted ${sortedEvents.length} events (${showAll ? 'ALL' : 'Past'}) - most recent first:`,
+      sortedEvents.slice(0, 3).map(e => ({ title: e.title, date: e.eventDate })));
+
     return sortedEvents;
   }, []);
 
@@ -406,6 +436,16 @@ export const useHomepageData = () => {
   // Process and filter featured events
   const processedFeaturedEvents = useMemo(() => {
     console.log('🔍 Processing featured events:', featuredEvents.length, 'showAllEvents:', showAllEvents);
+
+    // Log raw event dates for debugging
+    if (featuredEvents.length > 0) {
+      console.log('🔍 Raw featured event dates:', featuredEvents.map(e => ({
+        id: e.id,
+        title: e.title || e.artist_name,
+        event_date: e.event_date
+      })));
+    }
+
     const normalized = featuredEvents
       .map(event => normalizeEvent(event, 'event', false))
       .filter(Boolean);
@@ -415,6 +455,16 @@ export const useHomepageData = () => {
     console.log('🔍 Filtered featured events:', filtered.length);
     const sorted = sortEvents(filtered, showAllEvents);
     console.log('🔍 Final featured events:', sorted.length);
+
+    // Log final sorted order for debugging
+    if (sorted.length > 0) {
+      console.log('🔍 Final featured events order:', sorted.map(e => ({
+        title: e.title,
+        eventDate: e.eventDate,
+        formattedDate: e.date
+      })));
+    }
+
     return sorted;
   }, [featuredEvents, showAllEvents, normalizeEvent, filterEvents, sortEvents]);
 
@@ -427,6 +477,15 @@ export const useHomepageData = () => {
     const afterDeduplication = homepageEvents.filter(event => !featuredEventIds.has(event.id));
     console.log('🔍 Homepage events after deduplication:', afterDeduplication.length);
 
+    // Log raw event dates for debugging
+    if (afterDeduplication.length > 0) {
+      console.log('🔍 Raw homepage event dates:', afterDeduplication.map(e => ({
+        id: e.id,
+        title: e.title || e.artist_name,
+        event_date: e.event_date
+      })));
+    }
+
     const normalized = afterDeduplication
       .map(event => normalizeEvent(event, 'homepage-event', true))
       .filter(Boolean);
@@ -436,6 +495,16 @@ export const useHomepageData = () => {
     console.log('🔍 Filtered homepage events:', filtered.length);
     const sorted = sortEvents(filtered, showAllEvents);
     console.log('🔍 Final homepage events:', sorted.length);
+
+    // Log final sorted order for debugging
+    if (sorted.length > 0) {
+      console.log('🔍 Final homepage events order:', sorted.map(e => ({
+        title: e.title,
+        eventDate: e.eventDate,
+        formattedDate: e.date
+      })));
+    }
+
     return sorted;
   }, [homepageEvents, featuredEvents, showAllEvents, normalizeEvent, filterEvents, sortEvents]);
 
