@@ -3071,8 +3071,20 @@ const FigmaMobile = () => {
               </div>
             </div>
 
-          {/* Featured Events - Multiple Hero Cards using original styling */}
-          {filteredFeaturedEvents.length > 0 && filteredFeaturedEvents.map((featuredEvent, heroIndex) => (
+          {/* 🚀 ENHANCED: Featured Events - Completely hidden in "Past" mode with smooth transitions */}
+          {showAllEvents && filteredFeaturedEvents.length > 0 && (
+            <div
+              style={{
+                width: '100%',
+                // 🚀 ENHANCED: Smooth transition for layout changes
+                transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: showAllEvents ? 1 : 0,
+                transform: showAllEvents ? 'translateY(0)' : 'translateY(-20px)',
+                marginBottom: showAllEvents ? '20px' : '0px',
+                overflow: 'hidden'
+              }}
+            >
+              {filteredFeaturedEvents.map((featuredEvent, heroIndex) => (
             <div
               key={`hero-${featuredEvent.id}`}
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
@@ -3432,8 +3444,9 @@ const FigmaMobile = () => {
               >
                 <div
                   style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
+                    // 🚀 ENHANCED: Improved text visibility for iPhone devices
+                    color: '#FFFFFF', // Pure white for maximum contrast
+                    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                     fontSize: '24px', // Fixed size for mobile
                     fontWeight: '800',
                     lineHeight: '1.1',
@@ -3442,7 +3455,16 @@ const FigmaMobile = () => {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     maxWidth: '100%', // Use full available width within padding
-                    margin: '0px 0px 8px 0px' // Added margin as requested
+                    margin: '0px 0px 8px 0px', // Added margin as requested
+                    // 🚀 ENHANCED: iOS Safari specific text rendering optimizations
+                    WebkitFontSmoothing: 'antialiased',
+                    MozOsxFontSmoothing: 'grayscale',
+                    textRendering: 'optimizeLegibility',
+                    // 🚀 ENHANCED: Text shadow for better contrast on iPhone
+                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6)',
+                    // 🚀 ENHANCED: Force hardware acceleration for better rendering
+                    transform: 'translateZ(0)',
+                    willChange: 'transform'
                   }}
                 >
                   {featuredEvent.title || "FEATURED EVENT"}
@@ -3450,10 +3472,12 @@ const FigmaMobile = () => {
               </div>
             </div>
           </div>
-          ))}
+              ))}
+            </div>
+          )}
 
-          {/* Fallback Hero when no featured events */}
-          {filteredFeaturedEvents.length === 0 && (
+          {/* 🚀 ENHANCED: Fallback Hero when no featured events - only in "ALL" mode */}
+          {showAllEvents && filteredFeaturedEvents.length === 0 && (
             <div
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
               style={{

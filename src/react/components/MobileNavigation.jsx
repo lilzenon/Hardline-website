@@ -204,9 +204,29 @@ const MobileNavigation = ({
           width: 'min(324px, calc(100vw - 24px))', // Same as main content: 12px padding each side
           maxWidth: '324px', // Ensure consistent max width
           margin: '0 auto', // Center like main content
-          /* FIXED: Use fixed height to prevent layout shifts */
-          height: '97px', // Always use expanded height
-          minHeight: '97px', // Ensure consistent height
+          /* 🚀 ENHANCED: Dynamic height scaling that matches logo scaling */
+          height: (() => {
+            const maxHeight = 97; // Full height at top
+            const minHeight = 73; // Minimum height when scrolled (25% reduction, matching logo scale)
+            const scrollThreshold = 40; // Same threshold as logo scaling
+
+            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
+            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
+            const currentHeight = maxHeight - (easedProgress * (maxHeight - minHeight));
+
+            return `${Math.round(currentHeight)}px`;
+          })(),
+          minHeight: (() => {
+            const maxHeight = 97;
+            const minHeight = 73;
+            const scrollThreshold = 40;
+
+            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
+            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
+            const currentHeight = maxHeight - (easedProgress * (maxHeight - minHeight));
+
+            return `${Math.round(currentHeight)}px`;
+          })(),
           background: 'rgba(0, 0, 0, 0.95)',
           backdropFilter: 'blur(10px)',
           display: 'flex',
@@ -214,14 +234,14 @@ const MobileNavigation = ({
           justifyContent: 'center',
           padding: '0', // REMOVED: No padding to allow menu button to align with content edge
           boxSizing: 'border-box',
-          /* FIXED: Only animate visual properties, not layout properties */
-          transition: 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          /* 🚀 ENHANCED: Smooth transitions for height and other properties */
+          transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 200,
           /* REMOVED: Bottom border for cleaner look */
           flexShrink: 0,
-          /* FIXED: Prevent any layout shifts */
+          /* 🚀 ENHANCED: Include height in will-change for smooth scaling */
           contain: 'layout style',
-          willChange: 'background-color, backdrop-filter'
+          willChange: 'height, background-color, backdrop-filter'
         }}
 
       >

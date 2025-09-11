@@ -282,7 +282,7 @@ const MobileDrawer = ({
     }
   }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
 
-  // 🔧 ENHANCED: Touch gesture handlers for swipe controls with improved responsiveness
+  // 🚀 ENHANCED: Touch gesture handlers with improved swipe-down reliability
   const handleTouchStart = useCallback((e) => {
     // Don't interfere with form interactions or iframe content
     if (e.target.tagName === 'INPUT' ||
@@ -304,8 +304,9 @@ const MobileDrawer = ({
       initialDrawerState: drawerExpanded
     });
 
-    // Prevent default to ensure we capture the gesture
+    // 🚀 ENHANCED: More aggressive event capture for better gesture detection
     e.preventDefault();
+    e.stopPropagation();
   }, [drawerExpanded]);
 
   const handleTouchMove = useCallback((e) => {
@@ -323,10 +324,17 @@ const MobileDrawer = ({
     const deltaY = touchState.startY - touch.clientY; // Positive = swipe up, Negative = swipe down
     const absDeltaY = Math.abs(deltaY);
 
-    // Start dragging if moved more than 5px (reduced threshold for better responsiveness)
-    if (!touchState.isDragging && absDeltaY > 5) {
+    // 🚀 ENHANCED: More sensitive threshold for better swipe detection
+    if (!touchState.isDragging && absDeltaY > 3) { // Reduced from 5px to 3px for better sensitivity
       setTouchState(prev => ({ ...prev, isDragging: true }));
       e.preventDefault(); // Prevent scrolling when dragging
+      e.stopPropagation(); // Prevent event bubbling
+    }
+
+    // 🚀 ENHANCED: Always prevent default during active touch to improve gesture capture
+    if (touchState.isDragging) {
+      e.preventDefault();
+      e.stopPropagation();
     }
 
     if (touchState.isDragging) {
@@ -344,10 +352,10 @@ const MobileDrawer = ({
     const duration = Date.now() - touchState.startTime;
     const velocity = absDeltaY / duration; // pixels per millisecond
 
-    // 🔧 IMPROVED: More responsive gesture thresholds
-    const minSwipeDistance = 20; // Reduced from 30px for better responsiveness
-    const minFlickVelocity = 0.3; // Reduced from 0.5 for easier flick gestures
-    const snapThreshold = 10; // Reduced from 15px for better snap behavior
+    // 🚀 ENHANCED: More sensitive gesture thresholds for improved swipe-down detection
+    const minSwipeDistance = 15; // Further reduced from 20px for better responsiveness
+    const minFlickVelocity = 0.2; // Further reduced from 0.3 for easier flick gestures
+    const snapThreshold = 8; // Further reduced from 10px for better snap behavior
 
     let shouldToggleDrawer = false;
 
@@ -489,14 +497,18 @@ const MobileDrawer = ({
             background: rgb(21 21 21 / 80%);
             backdrop-filter: blur(10px);
             border-radius: 24px 24px 0px 0px;
-            transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            /* 🚀 ENHANCED: Mirrored opening/closing animation with consistent timing */
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-origin: bottom center;
             z-index: 100;
             will-change: auto; /* Let browser optimize to prevent main scroll conflicts */
             backface-visibility: hidden;
             perspective: 1000px;
-            /* ENHANCED: Complete scroll isolation for iOS Safari */
-            touch-action: none; /* Prevent any touch scrolling on drawer container */
+            /* 🚀 ENHANCED: Complete scroll isolation and improved touch handling for iOS Safari */
+            touch-action: pan-y; /* Allow vertical panning for better swipe detection */
+            -webkit-touch-callout: none; /* Disable iOS callout menu */
+            -webkit-user-select: none; /* Disable text selection */
+            user-select: none;
             user-select: none;
             -webkit-user-select: none;
             /* Complete containment isolation */
@@ -617,7 +629,8 @@ const MobileDrawer = ({
             : drawerExpanded
               ? 'translate3d(0, 0, 0)'
               : 'translate3d(0, calc(100% - 80px), 0)',
-          transition: 'transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.2s ease-out',
+          // 🚀 ENHANCED: Mirrored opening/closing animation with same duration and easing
+          transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           willChange: 'transform, height',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden'
