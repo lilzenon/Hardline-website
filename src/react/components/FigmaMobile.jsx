@@ -7,6 +7,7 @@ import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
 import LayloIframe from './LayloIframe';
+import BrandedLoader from './BrandedLoader';
 
 // REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
 
@@ -1944,6 +1945,18 @@ const FigmaMobile = () => {
       }}
     />
   ), [handleYoutubeThumbnailClick]);
+
+  // Show smooth branded loading state for mobile
+  if (loading) {
+    return (
+      <BrandedLoader
+        message={error ? "Loading with fallback data..." : "Loading mobile experience..."}
+        fullScreen={true}
+        minDisplayTime={600}
+        showMessage={true}
+      />
+    );
+  }
 
   return (
     <>

@@ -5,6 +5,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
 import { loadImageWithCircuitBreaker } from '../../lib/circuit-breaker';
 import TextUsSection from './TextUsSection';
+import BrandedLoader from './BrandedLoader';
 
 // CSS for custom scrollbar styling
 const scrollbarStyles = `
@@ -1300,44 +1301,15 @@ const FigmaDesktop = () => {
     return filteredFeaturedEvents && filteredFeaturedEvents.length > 0 ? filteredFeaturedEvents[0] : null;
   }, [filteredFeaturedEvents]);
 
-  // Show loading state while maintaining Figma layout
+  // Show smooth branded loading state
   if (loading) {
     return (
-      <div className="homepage-root">
-        <div className="homepage-content">
-          <div
-            className="desktop-container"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '100vh'
-            }}
-          >
-            <div style={{
-              color: '#FFF',
-              fontSize: '18px',
-              fontFamily: 'Inter',
-              textAlign: 'center'
-            }}>
-              <div>Loading homepage data...</div>
-              {error && (
-                <div style={{
-                  color: '#FF6B6B',
-                  fontSize: '14px',
-                  marginTop: '10px',
-                  opacity: 0.8
-                }}>
-                  {error}
-                  <div style={{ fontSize: '12px', marginTop: '5px', opacity: 0.7 }}>
-                    Falling back to default content...
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <BrandedLoader
+        message={error ? "Loading with fallback data..." : "Loading homepage data..."}
+        fullScreen={true}
+        minDisplayTime={600}
+        showMessage={true}
+      />
     );
   }
 

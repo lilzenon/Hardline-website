@@ -4,6 +4,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { useSEO } from '../hooks/useSEO';
 import useMobileLifecycle from '../hooks/useMobileLifecycle';
 import { initializeMobileOptimizations, isMobileDevice } from '../../utils/mobileOptimization';
+import BrandedLoader from './BrandedLoader';
 
 // 🚀 PERFORMANCE: Optimized lazy loading with immediate desktop, lazy mobile
 import FigmaDesktop from './FigmaDesktop';
@@ -87,48 +88,27 @@ const HomePage = () => {
     initializeHomepage();
   }, [viewportWidth, isMobileByWidth]);
 
-  // 🚀 PERFORMANCE: Minimal loading state - only show for very brief periods
+  // 🚀 PERFORMANCE: Smooth branded loading state with fade transitions
   if (isLoading) {
     return (
-      <div
-        style={{
-          width: '100vw',
-          height: '100vh',
-          background: '#000',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          color: '#FFF',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '16px',
-          opacity: 0.8
-        }}
-      >
-        Loading...
-      </div>
+      <BrandedLoader
+        message="Initializing homepage"
+        fullScreen={true}
+        minDisplayTime={800}
+        showMessage={true}
+      />
     );
   }
 
-  // 🚀 PERFORMANCE: Optimized component rendering with fast fallback
+  // 🚀 PERFORMANCE: Optimized component rendering with smooth branded fallback
   return (
     <Suspense fallback={
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        background: 'rgba(0, 0, 0, 0.8)',
-        color: '#FFFFFF',
-        padding: '8px 16px',
-        borderRadius: '20px',
-        fontFamily: 'Inter, sans-serif',
-        fontSize: '14px',
-        zIndex: 9999,
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        opacity: 0.9
-      }}>
-        Loading...
-      </div>
+      <BrandedLoader
+        message="Loading component"
+        fullScreen={false}
+        minDisplayTime={300}
+        showMessage={false}
+      />
     }>
       {isMobile ? <FigmaMobile /> : <FigmaDesktop />}
     </Suspense>
