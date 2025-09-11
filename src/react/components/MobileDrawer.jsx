@@ -282,7 +282,7 @@ const MobileDrawer = ({
     }
   }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
 
-  // 🚀 ENHANCED: Touch gesture handlers with improved swipe-down reliability
+  // 🚀 CRITICAL FIX: iOS Safari compatible touch handlers with proper scroll preservation
   const handleTouchStart = useCallback((e) => {
     // Don't interfere with form interactions or iframe content
     if (e.target.tagName === 'INPUT' ||
@@ -304,9 +304,13 @@ const MobileDrawer = ({
       initialDrawerState: drawerExpanded
     });
 
-    // 🚀 ENHANCED: More aggressive event capture for better gesture detection
-    e.preventDefault();
-    e.stopPropagation();
+    // 🚀 CRITICAL FIX: Only prevent default on drawer handle area, preserve main page scroll
+    const rect = drawerRef.current?.getBoundingClientRect();
+    if (rect && touch.clientY > rect.top && touch.clientY < rect.top + 50) {
+      // Only prevent default for handle area touches
+      e.preventDefault();
+    }
+    // Remove stopPropagation to allow proper event bubbling
   }, [drawerExpanded]);
 
   const handleTouchMove = useCallback((e) => {
@@ -324,23 +328,26 @@ const MobileDrawer = ({
     const deltaY = touchState.startY - touch.clientY; // Positive = swipe up, Negative = swipe down
     const absDeltaY = Math.abs(deltaY);
 
-    // 🚀 ENHANCED: More sensitive threshold for better swipe detection
-    if (!touchState.isDragging && absDeltaY > 3) { // Reduced from 5px to 3px for better sensitivity
-      setTouchState(prev => ({ ...prev, isDragging: true }));
-      e.preventDefault(); // Prevent scrolling when dragging
-      e.stopPropagation(); // Prevent event bubbling
+    // 🚀 CRITICAL FIX: Only start dragging for significant movement and only on drawer handle
+    if (!touchState.isDragging && absDeltaY > 8) { // Increased threshold to prevent accidental triggers
+      const rect = drawerRef.current?.getBoundingClientRect();
+      if (rect && touch.clientY > rect.top && touch.clientY < rect.top + 50) {
+        // Only start dragging if touch is in handle area
+        setTouchState(prev => ({ ...prev, isDragging: true }));
+        e.preventDefault(); // Only prevent default for drawer gestures
+      }
     }
 
-    // 🚀 ENHANCED: Always prevent default during active touch to improve gesture capture
+    // 🚀 CRITICAL FIX: Only prevent default for confirmed drawer gestures in handle area
     if (touchState.isDragging) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    if (touchState.isDragging) {
+      const rect = drawerRef.current?.getBoundingClientRect();
+      if (rect && touch.clientY > rect.top && touch.clientY < rect.top + 50) {
+        e.preventDefault(); // Only prevent for handle area
+        setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
+      }
+    } else {
+      // Always update touch position for tracking
       setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
-      e.preventDefault();
-      e.stopPropagation();
     }
   }, [touchState]);
 
@@ -352,10 +359,10 @@ const MobileDrawer = ({
     const duration = Date.now() - touchState.startTime;
     const velocity = absDeltaY / duration; // pixels per millisecond
 
-    // 🚀 ENHANCED: More sensitive gesture thresholds for improved swipe-down detection
-    const minSwipeDistance = 15; // Further reduced from 20px for better responsiveness
-    const minFlickVelocity = 0.2; // Further reduced from 0.3 for easier flick gestures
-    const snapThreshold = 8; // Further reduced from 10px for better snap behavior
+    // 🚀 CRITICAL FIX: Balanced gesture thresholds for reliable swipe detection
+    const minSwipeDistance = 25; // Increased for more reliable detection
+    const minFlickVelocity = 0.3; // Restored for better flick detection
+    const snapThreshold = 15; // Increased for more intentional gestures
 
     let shouldToggleDrawer = false;
 
@@ -485,7 +492,7 @@ const MobileDrawer = ({
       {/* EXTRACTED: Complete Mobile Drawer CSS - Identical to FigmaMobile.jsx */}
       <style>
         {`
-          /* Enhanced drawer animations with momentum support */
+          /* 🚀 CRITICAL FIX: Enhanced drawer positioning to prevent black bars */
           .mobile-drawer {
             position: fixed;
             bottom: 0;
@@ -494,9 +501,13 @@ const MobileDrawer = ({
             margin: 0 auto;
             width: calc(100% - 50px);
             max-width: 390px;
+            min-height: 60vh; /* Ensure minimum height */
+            max-height: 60vh; /* Prevent overflow beyond viewport */
             background: rgb(21 21 21 / 80%);
             backdrop-filter: blur(10px);
             border-radius: 24px 24px 0px 0px;
+            /* CRITICAL FIX: Ensure drawer stays anchored to bottom */
+            transform-origin: bottom center;
             /* 🚀 ENHANCED: Mirrored opening/closing animation with consistent timing */
             transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-origin: bottom center;
@@ -504,18 +515,16 @@ const MobileDrawer = ({
             will-change: auto; /* Let browser optimize to prevent main scroll conflicts */
             backface-visibility: hidden;
             perspective: 1000px;
-            /* 🚀 ENHANCED: Complete scroll isolation and improved touch handling for iOS Safari */
-            touch-action: pan-y; /* Allow vertical panning for better swipe detection */
+            /* 🚀 CRITICAL FIX: Minimal touch interference - preserve main page scroll */
+            touch-action: manipulation; /* Allow native scrolling, minimal interference */
             -webkit-touch-callout: none; /* Disable iOS callout menu */
             -webkit-user-select: none; /* Disable text selection */
             user-select: none;
-            user-select: none;
-            -webkit-user-select: none;
-            /* Complete containment isolation */
-            contain: strict;
-            /* Prevent scroll chaining */
-            overscroll-behavior: contain;
-            -webkit-overscroll-behavior: contain;
+            /* CRITICAL FIX: Remove strict containment that causes positioning issues */
+            contain: layout style;
+            /* CRITICAL FIX: Allow natural scroll behavior, prevent only when needed */
+            overscroll-behavior: auto;
+            -webkit-overscroll-behavior: auto;
           }
 
           /* Fast momentum animation for flick gestures - scroll optimized */
@@ -555,25 +564,29 @@ const MobileDrawer = ({
             background: transparent;
           }
 
-          /* ENHANCED: Body scroll lock when drawer is active */
+          /* 🚀 CRITICAL FIX: Minimal body scroll lock to preserve main page scroll */
           body.drawer-scroll-lock {
-            overflow: hidden !important;
-            position: fixed !important;
-            width: 100% !important;
-            height: 100% !important;
-            /* iOS Safari specific scroll lock */
-            -webkit-overflow-scrolling: none !important;
-            touch-action: none !important;
-            overscroll-behavior: none !important;
-            -webkit-overscroll-behavior: none !important;
+            /* Only prevent overscroll, don't lock completely */
+            overscroll-behavior: contain;
+            -webkit-overscroll-behavior: contain;
+            /* Preserve natural scrolling behavior */
+            overflow: visible;
+            position: static;
+            /* Allow touch interactions */
+            touch-action: manipulation;
           }
 
+          /* 🚀 CRITICAL FIX: Proper drawer positioning to prevent black bars */
           .mobile-drawer.collapsed {
             transform: translate3d(0, calc(100% - 80px), 0);
+            /* Ensure drawer stays within viewport bounds */
+            bottom: 0;
           }
 
           .mobile-drawer.expanded {
             transform: translate3d(0, 0, 0);
+            /* Ensure drawer stays anchored to bottom */
+            bottom: 0;
           }
 
           /* Disclaimer peek effect */
@@ -618,9 +631,19 @@ const MobileDrawer = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onWheel={(e) => {
-          // ENHANCED: Complete scroll isolation for iOS Safari
-          e.stopPropagation();
-          e.preventDefault(); // Prevent scroll bleed on desktop/trackpad
+          // 🚀 CRITICAL FIX: Only prevent wheel events when drawer is expanded
+          if (drawerExpanded) {
+            e.stopPropagation();
+            // Only prevent default if scrolling would affect main page
+            const element = e.currentTarget;
+            const { scrollTop, scrollHeight, clientHeight } = element;
+            const isAtTop = scrollTop === 0;
+            const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+
+            if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+              e.preventDefault(); // Prevent scroll bleed only at boundaries
+            }
+          }
         }}
         style={{
           height: getDrawerHeight(),
@@ -661,20 +684,23 @@ const MobileDrawer = ({
             e.stopPropagation();
           }}
           onTouchMove={(e) => {
-            // ENHANCED: Allow internal scrolling but prevent bleed to main page
+            // 🚀 CRITICAL FIX: Minimal interference with drawer content scrolling
             const element = e.currentTarget;
             const { scrollTop, scrollHeight, clientHeight } = element;
 
-            // Check if we're at scroll boundaries
-            const isAtTop = scrollTop === 0;
-            const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+            // Only prevent scroll bleed at boundaries and only when drawer is expanded
+            if (drawerExpanded) {
+              const isAtTop = scrollTop === 0;
+              const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+              const deltaY = e.touches[0].clientY - (e.touches[0].pageY || e.touches[0].clientY);
 
-            // Prevent scroll bleed at boundaries for iOS Safari
-            if ((isAtTop && e.touches[0].clientY > e.touches[0].pageY) ||
-                (isAtBottom && e.touches[0].clientY < e.touches[0].pageY)) {
-              e.preventDefault();
+              // Only prevent at boundaries to avoid scroll bleed
+              if ((isAtTop && deltaY > 0) || (isAtBottom && deltaY < 0)) {
+                e.preventDefault();
+              }
             }
 
+            // Only stop propagation for drawer content, not main page
             e.stopPropagation();
           }}
           onWheel={(e) => {
