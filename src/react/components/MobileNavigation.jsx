@@ -52,20 +52,43 @@ const MobileNavigation = ({
 
   return (
     <>
-      {/* EXTRACTED: Complete Mobile Navigation CSS - Identical to FigmaMobile.jsx */}
+      {/* 🚀 JITTER FIX: Optimized Mobile Navigation CSS for smooth scrolling */}
       <style>
         {`
-          /* 🚨 CRITICAL: Force navigation animations with maximum specificity to override any conflicts */
-          div[style*="opacity"][style*="transition"][style*="transitionDelay"] {
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          /* 🚀 JITTER FIX: Prevent layout shifts and optimize for smooth scrolling */
+          .mobile-navigation-header {
+            /* Hardware acceleration for smooth transforms */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            perspective: 1000px;
+
+            /* Optimize rendering */
+            contain: layout style paint;
+            will-change: transform;
+
+            /* Prevent subpixel rendering issues */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
           }
 
-          /* 🔧 CRITICAL: Smooth logo scaling transitions */
+          /* 🚀 JITTER FIX: Optimize logo scaling for smooth performance */
           .mobile-navigation-logo {
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            /* Prevent image resampling during scale */
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+          }
+
+          /* 🚀 JITTER FIX: Optimize menu overlay animations */
+          div[style*="opacity"][style*="transition"][style*="transitionDelay"] {
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
           }
 
           /* 📱 ULTRA-STABLE MOBILE NAVIGATION WITH SCROLL ISOLATION */
@@ -200,33 +223,13 @@ const MobileNavigation = ({
         style={{
           position: 'sticky',
           top: '0px',
-          /* FIXED: Match main content width pattern for consistency */
-          width: 'min(324px, calc(100vw - 24px))', // Same as main content: 12px padding each side
-          maxWidth: '324px', // Ensure consistent max width
-          margin: '0 auto', // Center like main content
-          /* 🚀 ENHANCED: Dynamic height scaling that matches logo scaling */
-          height: (() => {
-            const maxHeight = 97; // Full height at top
-            const minHeight = 73; // Minimum height when scrolled (25% reduction, matching logo scale)
-            const scrollThreshold = 40; // Same threshold as logo scaling
-
-            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-            const currentHeight = maxHeight - (easedProgress * (maxHeight - minHeight));
-
-            return `${Math.round(currentHeight)}px`;
-          })(),
-          minHeight: (() => {
-            const maxHeight = 97;
-            const minHeight = 73;
-            const scrollThreshold = 40;
-
-            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-            const currentHeight = maxHeight - (easedProgress * (maxHeight - minHeight));
-
-            return `${Math.round(currentHeight)}px`;
-          })(),
+          /* 🚀 JITTER FIX: Use fixed width to prevent layout shifts during scroll */
+          width: '100%', // Full width to prevent horizontal layout shifts
+          maxWidth: '100%', // Ensure no width constraints cause reflows
+          margin: '0', // Remove auto margin that can cause layout calculations
+          /* 🚀 JITTER FIX: Use transform instead of height for smooth scaling */
+          height: '97px', // Fixed height to prevent layout reflows
+          minHeight: '97px', // Consistent height
           background: 'rgba(0, 0, 0, 0.95)',
           backdropFilter: 'blur(10px)',
           display: 'flex',
@@ -234,19 +237,51 @@ const MobileNavigation = ({
           justifyContent: 'center',
           padding: '0', // REMOVED: No padding to allow menu button to align with content edge
           boxSizing: 'border-box',
-          /* 🚀 ENHANCED: Smooth transitions for height and other properties */
-          transition: 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          /* 🚀 JITTER FIX: Use transform for scaling instead of height transitions */
+          transform: (() => {
+            const maxScale = 1; // Full scale at top
+            const minScale = 0.75; // Minimum scale when scrolled (25% reduction)
+            const scrollThreshold = 40; // Same threshold as logo scaling
+
+            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
+            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
+            const currentScale = maxScale - (easedProgress * (maxScale - minScale));
+
+            return `scaleY(${Math.round(currentScale * 1000) / 1000})`;
+          })(),
+          transformOrigin: 'top center', // Scale from top to maintain position
+          /* 🚀 JITTER FIX: Remove layout-affecting transitions, use only transform */
+          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 200,
           /* REMOVED: Bottom border for cleaner look */
           flexShrink: 0,
-          /* 🚀 ENHANCED: Include height in will-change for smooth scaling */
-          contain: 'layout style',
-          willChange: 'height, background-color, backdrop-filter'
+          /* 🚀 JITTER FIX: Optimize for transform-only animations */
+          contain: 'layout style paint',
+          willChange: 'transform',
+          /* 🚀 JITTER FIX: Hardware acceleration for smooth transforms */
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          perspective: '1000px'
         }}
 
       >
-        {/* EXTRACTED: Hamburger Menu Button */}
+        {/* 🚀 JITTER FIX: Content wrapper to maintain width constraints without affecting container */}
         <div
+          style={{
+            width: 'min(324px, calc(100vw - 24px))', // Constrain content width, not container
+            maxWidth: '324px',
+            margin: '0 auto', // Center the content
+            position: 'relative',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            /* 🚀 JITTER FIX: No transitions on content wrapper */
+            contain: 'layout style'
+          }}
+        >
+          {/* EXTRACTED: Hamburger Menu Button */}
+          <div
           onClick={toggleMenu}
           className="mobile-menu-button"
           style={{
@@ -368,6 +403,7 @@ const MobileNavigation = ({
             e.target.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
           }}
         />
+        </div> {/* Close content wrapper */}
       </header>
 
       {/* EXTRACTED: Mobile Navigation Overlay - Complete Menu System */}

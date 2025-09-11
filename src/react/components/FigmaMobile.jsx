@@ -732,10 +732,10 @@ const FigmaMobile = () => {
   const drawerRef = useRef(null);
   const contentRef = useRef(null);
 
-  // 📱 MOBILE SCROLL FIX: Ultra-passive scroll state to prevent interference
+  // 🚀 JITTER FIX: Optimized scroll state to prevent navigation jitter
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
     threshold: 20,
-    throttleMs: 16, // OPTIMIZED: Reduced throttling for smoother logo scaling (60fps)
+    throttleMs: 32, // 🚀 JITTER FIX: Increased throttling to 30fps to reduce navigation jitter
     passive: true // Ensure completely passive event handling
   });
 
