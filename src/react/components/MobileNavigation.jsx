@@ -73,15 +73,21 @@ const MobileNavigation = ({
             -moz-osx-font-smoothing: grayscale;
           }
 
-          /* 🚀 JITTER FIX: Optimize logo scaling for smooth performance */
+          /* 🚀 PROPORTIONAL SCALING FIX: Optimize logo for aspect ratio preservation */
           .mobile-navigation-logo {
             transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
             will-change: transform;
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            /* Prevent image resampling during scale */
+            /* 🎯 ASPECT RATIO PRESERVATION: Ensure proportional scaling */
+            object-fit: contain; /* Maintain aspect ratio */
+            object-position: center; /* Center the logo */
+            /* Prevent image resampling during scale for crisp rendering */
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
+            /* Ensure no distortion during container scaling */
+            flex-shrink: 0;
+            flex-grow: 0;
           }
 
           /* 🚀 JITTER FIX: Optimize menu overlay animations */
@@ -237,7 +243,7 @@ const MobileNavigation = ({
           justifyContent: 'center',
           padding: '0', // REMOVED: No padding to allow menu button to align with content edge
           boxSizing: 'border-box',
-          /* 🚀 JITTER FIX: Use transform for scaling instead of height transitions */
+          /* 🚀 PROPORTIONAL SCALING FIX: Use uniform scale() to match logo scaling */
           transform: (() => {
             const maxScale = 1; // Full scale at top
             const minScale = 0.75; // Minimum scale when scrolled (25% reduction)
@@ -247,7 +253,7 @@ const MobileNavigation = ({
             const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
             const currentScale = maxScale - (easedProgress * (maxScale - minScale));
 
-            return `scaleY(${Math.round(currentScale * 1000) / 1000})`;
+            return `scale(${Math.round(currentScale * 1000) / 1000})`;
           })(),
           transformOrigin: 'top center', // Scale from top to maintain position
           /* 🚀 JITTER FIX: Remove layout-affecting transitions, use only transform */
@@ -265,7 +271,7 @@ const MobileNavigation = ({
         }}
 
       >
-        {/* 🚀 JITTER FIX: Content wrapper to maintain width constraints without affecting container */}
+        {/* 🚀 PROPORTIONAL SCALING FIX: Content wrapper optimized for uniform scaling */}
         <div
           style={{
             width: 'min(324px, calc(100vw - 24px))', // Constrain content width, not container
@@ -276,8 +282,12 @@ const MobileNavigation = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            /* 🚀 JITTER FIX: No transitions on content wrapper */
-            contain: 'layout style'
+            /* 🎯 PROPORTIONAL SCALING: Ensure content scales uniformly with container */
+            contain: 'layout style',
+            /* Prevent any interference with logo proportions */
+            overflow: 'visible', // Allow logo to scale naturally
+            flexShrink: 0, // Prevent compression
+            flexGrow: 0 // Prevent expansion
           }}
         >
           {/* EXTRACTED: Hamburger Menu Button */}
