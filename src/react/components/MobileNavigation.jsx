@@ -78,32 +78,30 @@ const MobileNavigation = ({
             -webkit-transform-style: preserve-3d;
           }
 
-          /* 🚀 ULTRA-SMOOTH LOGO SCALING: Perfect synchronization with navigation */
+          /* 🎯 PROPORTIONAL LOGO SCALING: Logo scales naturally with container */
           .mobile-navigation-logo {
-            /* 🎯 SYNCHRONIZED TRANSITIONS: Match navigation bar timing for harmony */
-            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-            will-change: transform;
+            /* 🎯 INTERACTION TRANSITIONS: Only for click/hover effects */
+            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            will-change: auto; /* No individual scaling needed */
 
-            /* 🎯 ADVANCED HARDWARE ACCELERATION: Maximum GPU optimization */
+            /* 🎯 HARDWARE ACCELERATION: Optimized for container-based scaling */
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
-            transform-style: preserve-3d;
-            -webkit-transform-style: preserve-3d;
 
-            /* 🎯 ASPECT RATIO PRESERVATION: Ensure proportional scaling */
+            /* 🎯 ASPECT RATIO PRESERVATION: Maintain proportions during container scaling */
             object-fit: contain; /* Maintain aspect ratio */
             object-position: center; /* Center the logo */
 
-            /* 🎯 CRISP SCALING: Optimize image rendering during scale */
+            /* 🎯 CRISP RENDERING: Optimize image quality during container scaling */
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
             -webkit-image-rendering: -webkit-optimize-contrast;
 
-            /* 🎯 LAYOUT STABILITY: Prevent distortion during container scaling */
+            /* 🎯 LAYOUT STABILITY: Fixed size - container handles proportional scaling */
             flex-shrink: 0;
             flex-grow: 0;
 
-            /* 🎯 PERFORMANCE: Complete isolation for smooth scaling */
+            /* 🎯 PERFORMANCE: Optimized for container-based scaling */
             contain: layout style;
           }
 
@@ -385,69 +383,40 @@ const MobileNavigation = ({
           />
         </div>
 
-        {/* B2B Logo - Dynamic Scroll-Responsive Scaling */}
+        {/* 🎯 B2B LOGO - PROPORTIONAL SCALING FIX: Logo scales naturally with container */}
         <img
           onClick={() => onNavigate('/')}
           src="/images/mobile-figma/b2b-logo-mobile.svg"
           alt="B2B Logo"
           className="mobile-navigation-logo"
           style={{
-            /* ENHANCED: Larger initial logo size for better visibility */
-            width: '160px', // INCREASED: Larger initial width (was 138.41px)
-            height: '50px', // INCREASED: Larger initial height (was 43px)
+            /* 🎯 PROPORTIONAL SCALING FIX: Fixed size - scales naturally with container */
+            width: '160px', // Fixed size - container scaling handles the proportional reduction
+            height: '50px', // Fixed size - container scaling handles the proportional reduction
             position: 'absolute',
             left: '50%',
             top: '50%',
-            /* 🚀 ULTRA-SMOOTH SYNCHRONIZED SCALING: Perfect navigation-logo harmony */
-            transform: `translate(-50%, -50%) scale(${(() => {
-              // 🎯 SYNCHRONIZED PARAMETERS: Exact match with navigation bar scaling
-              const maxScale = 1; // Full size at top (100%)
-              const minScale = 0.75; // Minimum scale when scrolled (75% - 25% reduction)
-              const scrollThreshold = 40; // Exact same threshold as navigation for perfect sync
-
-              // 🎯 PERFORMANCE: Optimized calculations for smooth 60fps
-              const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-
-              // 🎯 SMOOTH EASING: Identical easing function as navigation for perfect synchronization
-              const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-              const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-
-              // 🎯 PRECISION: High-precision rounding for smooth scaling (matches navigation)
-              return Math.round(currentScale * 10000) / 10000;
-            })()})`,
+            /* 🚀 SIMPLIFIED TRANSFORM: Only positioning, no scaling (container handles scaling) */
+            transform: 'translate(-50%, -50%)', // Only center positioning - no scale()
             cursor: 'pointer',
-            userSelect: 'none'
+            userSelect: 'none',
+            /* 🎯 PERFORMANCE: Optimized for container-based scaling */
+            willChange: 'auto', // No individual scaling needed
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
             /* CSS transitions now handled by .mobile-navigation-logo class */
           }}
           onMouseDown={(e) => {
-            // 🎯 SYNCHRONIZED INTERACTION: Preserve dynamic scaling with high precision
-            const maxScale = 1;
-            const minScale = 0.75; // Exact match with navigation scaling
-            const scrollThreshold = 40;
-            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-            const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-            e.target.style.transform = `translate(-50%, -50%) scale(${Math.round((currentScale * 0.95) * 10000) / 10000})`;
+            // 🎯 SIMPLIFIED INTERACTION: Simple scale effect (container handles main scaling)
+            e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
           }}
           onMouseUp={(e) => {
-            // 🎯 SYNCHRONIZED INTERACTION: Restore to current dynamic scale with high precision
-            const maxScale = 1;
-            const minScale = 0.75; // Exact match with navigation scaling
-            const scrollThreshold = 40;
-            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-            const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-            e.target.style.transform = `translate(-50%, -50%) scale(${Math.round(currentScale * 10000) / 10000})`;
+            // 🎯 SIMPLIFIED INTERACTION: Restore to normal (container handles main scaling)
+            e.target.style.transform = 'translate(-50%, -50%) scale(1)';
           }}
           onMouseLeave={(e) => {
-            // 🎯 SYNCHRONIZED INTERACTION: Restore to current dynamic scale with high precision
-            const maxScale = 1;
-            const minScale = 0.75; // Exact match with navigation scaling
-            const scrollThreshold = 40;
-            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-            const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-            e.target.style.transform = `translate(-50%, -50%) scale(${Math.round(currentScale * 10000) / 10000})`;
+            // 🎯 SIMPLIFIED INTERACTION: Restore to normal (container handles main scaling)
+            e.target.style.transform = 'translate(-50%, -50%) scale(1)';
           }}
         />
         </div> {/* Close content wrapper */}
