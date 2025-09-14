@@ -55,39 +55,56 @@ const MobileNavigation = ({
       {/* 🚀 JITTER FIX: Optimized Mobile Navigation CSS for smooth scrolling */}
       <style>
         {`
-          /* 🚀 JITTER FIX: Prevent layout shifts and optimize for smooth scrolling */
+          /* 🚀 ULTRA-SMOOTH NAVIGATION SCALING: Optimized for 60fps performance */
           .mobile-navigation-header {
-            /* Hardware acceleration for smooth transforms */
+            /* Advanced hardware acceleration for smooth transforms */
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
             perspective: 1000px;
 
-            /* Optimize rendering */
-            contain: layout style paint;
-            will-change: transform;
+            /* 🎯 PERFORMANCE: Optimize rendering pipeline for smooth scaling */
+            contain: strict; /* Complete isolation for better performance */
+            will-change: transform; /* Hint browser for GPU optimization */
 
-            /* Prevent subpixel rendering issues */
+            /* 🎯 SMOOTH SCALING: Prevent subpixel rendering issues during scale */
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            image-rendering: -webkit-optimize-contrast;
+
+            /* 🎯 JITTER PREVENTION: Stable rendering during transforms */
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
           }
 
-          /* 🚀 PROPORTIONAL SCALING FIX: Optimize logo for aspect ratio preservation */
+          /* 🚀 ULTRA-SMOOTH LOGO SCALING: Perfect synchronization with navigation */
           .mobile-navigation-logo {
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            /* 🎯 SYNCHRONIZED TRANSITIONS: Match navigation bar timing for harmony */
+            transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
             will-change: transform;
+
+            /* 🎯 ADVANCED HARDWARE ACCELERATION: Maximum GPU optimization */
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+
             /* 🎯 ASPECT RATIO PRESERVATION: Ensure proportional scaling */
             object-fit: contain; /* Maintain aspect ratio */
             object-position: center; /* Center the logo */
-            /* Prevent image resampling during scale for crisp rendering */
+
+            /* 🎯 CRISP SCALING: Optimize image rendering during scale */
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
-            /* Ensure no distortion during container scaling */
+            -webkit-image-rendering: -webkit-optimize-contrast;
+
+            /* 🎯 LAYOUT STABILITY: Prevent distortion during container scaling */
             flex-shrink: 0;
             flex-grow: 0;
+
+            /* 🎯 PERFORMANCE: Complete isolation for smooth scaling */
+            contain: layout style;
           }
 
           /* 🚀 JITTER FIX: Optimize menu overlay animations */
@@ -243,31 +260,42 @@ const MobileNavigation = ({
           justifyContent: 'center',
           padding: '0', // REMOVED: No padding to allow menu button to align with content edge
           boxSizing: 'border-box',
-          /* 🚀 PROPORTIONAL SCALING FIX: Use uniform scale() to match logo scaling */
+          /* 🚀 ULTRA-SMOOTH SYNCHRONIZED SCALING: Perfect logo-navigation harmony */
           transform: (() => {
-            const maxScale = 1; // Full scale at top
-            const minScale = 0.75; // Minimum scale when scrolled (25% reduction)
-            const scrollThreshold = 40; // Same threshold as logo scaling
+            // 🎯 SYNCHRONIZED PARAMETERS: Exact match with logo scaling
+            const maxScale = 1; // Full scale at top (100%)
+            const minScale = 0.75; // Minimum scale when scrolled (75% - 25% reduction)
+            const scrollThreshold = 40; // Exact same threshold as logo for perfect sync
 
+            // 🎯 PERFORMANCE: Optimized calculations for smooth 60fps
             const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
+
+            // 🎯 SMOOTH EASING: Identical easing function as logo for perfect synchronization
             const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
             const currentScale = maxScale - (easedProgress * (maxScale - minScale));
 
-            return `scale(${Math.round(currentScale * 1000) / 1000})`;
+            // 🎯 PRECISION: High-precision rounding for smooth scaling
+            return `scale(${Math.round(currentScale * 10000) / 10000})`;
           })(),
           transformOrigin: 'top center', // Scale from top to maintain position
-          /* 🚀 JITTER FIX: Remove layout-affecting transitions, use only transform */
-          transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          /* 🚀 ULTRA-SMOOTH TRANSITIONS: Optimized for jitter-free performance */
+          transition: 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 200,
           /* REMOVED: Bottom border for cleaner look */
           flexShrink: 0,
-          /* 🚀 JITTER FIX: Optimize for transform-only animations */
-          contain: 'layout style paint',
-          willChange: 'transform',
-          /* 🚀 JITTER FIX: Hardware acceleration for smooth transforms */
+          /* 🚀 ULTRA-SMOOTH PERFORMANCE: Advanced GPU optimization for 60fps scaling */
+          contain: 'strict', // Complete isolation for maximum performance
+          willChange: 'transform', // GPU layer promotion for smooth scaling
+          /* 🚀 ADVANCED HARDWARE ACCELERATION: Eliminate any rendering bottlenecks */
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
-          perspective: '1000px'
+          perspective: '1000px',
+          /* 🎯 SMOOTH SCALING OPTIMIZATION: Prevent visual artifacts during scale */
+          transformStyle: 'preserve-3d',
+          WebkitTransformStyle: 'preserve-3d',
+          /* 🎯 RENDERING OPTIMIZATION: Crisp scaling at all levels */
+          imageRendering: '-webkit-optimize-contrast',
+          WebkitImageRendering: '-webkit-optimize-contrast'
         }}
 
       >
@@ -364,53 +392,56 @@ const MobileNavigation = ({
             position: 'absolute',
             left: '50%',
             top: '50%',
-            /* ENHANCED: Optimized dynamic scaling with smooth responsive thresholds */
+            /* 🚀 ULTRA-SMOOTH SYNCHRONIZED SCALING: Perfect navigation-logo harmony */
             transform: `translate(-50%, -50%) scale(${(() => {
-              // OPTIMIZED: Adjusted scaling for larger initial logo size
-              const maxScale = 1; // Full size at top
-              const minScale = 0.75; // Adjusted minimum scale for larger logo (160px -> 120px)
-              const scrollThreshold = 40; // REDUCED: Much more responsive threshold (was 100px)
+              // 🎯 SYNCHRONIZED PARAMETERS: Exact match with navigation bar scaling
+              const maxScale = 1; // Full size at top (100%)
+              const minScale = 0.75; // Minimum scale when scrolled (75% - 25% reduction)
+              const scrollThreshold = 40; // Exact same threshold as navigation for perfect sync
 
-              // ENHANCED: Smooth easing calculation for natural feel
+              // 🎯 PERFORMANCE: Optimized calculations for smooth 60fps
               const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-              const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress); // Smooth step function
+
+              // 🎯 SMOOTH EASING: Identical easing function as navigation for perfect synchronization
+              const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
               const currentScale = maxScale - (easedProgress * (maxScale - minScale));
 
-              return Math.round(currentScale * 1000) / 1000; // Round to 3 decimal places for performance
+              // 🎯 PRECISION: High-precision rounding for smooth scaling (matches navigation)
+              return Math.round(currentScale * 10000) / 10000;
             })()})`,
             cursor: 'pointer',
             userSelect: 'none'
             /* CSS transitions now handled by .mobile-navigation-logo class */
           }}
           onMouseDown={(e) => {
-            // OPTIMIZED: Preserve dynamic scaling during mouse interactions with new thresholds
+            // 🎯 SYNCHRONIZED INTERACTION: Preserve dynamic scaling with high precision
             const maxScale = 1;
-            const minScale = 0.75; // Updated to match main scaling logic
+            const minScale = 0.75; // Exact match with navigation scaling
             const scrollThreshold = 40;
             const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
             const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
             const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-            e.target.style.transform = `translate(-50%, -50%) scale(${currentScale * 0.95})`;
+            e.target.style.transform = `translate(-50%, -50%) scale(${Math.round((currentScale * 0.95) * 10000) / 10000})`;
           }}
           onMouseUp={(e) => {
-            // OPTIMIZED: Restore to current dynamic scale with new calculations
+            // 🎯 SYNCHRONIZED INTERACTION: Restore to current dynamic scale with high precision
             const maxScale = 1;
-            const minScale = 0.75; // Updated to match main scaling logic
+            const minScale = 0.75; // Exact match with navigation scaling
             const scrollThreshold = 40;
             const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
             const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
             const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-            e.target.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+            e.target.style.transform = `translate(-50%, -50%) scale(${Math.round(currentScale * 10000) / 10000})`;
           }}
           onMouseLeave={(e) => {
-            // OPTIMIZED: Restore to current dynamic scale with new calculations
+            // 🎯 SYNCHRONIZED INTERACTION: Restore to current dynamic scale with high precision
             const maxScale = 1;
-            const minScale = 0.75; // Updated to match main scaling logic
+            const minScale = 0.75; // Exact match with navigation scaling
             const scrollThreshold = 40;
             const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
             const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
             const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-            e.target.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+            e.target.style.transform = `translate(-50%, -50%) scale(${Math.round(currentScale * 10000) / 10000})`;
           }}
         />
         </div> {/* Close content wrapper */}
