@@ -161,11 +161,10 @@ html, body {
 
 /* ===== MOBILE DRAWER SCROLL ISOLATION ===== */
 
-/* 🚨 CRITICAL FIX: Enhanced drawer scroll lock to prevent footer text visibility */
-.drawer-scroll-lock {
+/* 🚨 FIXED: Conditional drawer scroll lock - ONLY when drawer is expanded */
+body.drawer-scroll-lock {
     position: fixed !important;
     width: 100% !important;
-    height: 100vh !important;
     overflow: hidden !important;
     /* Prevent iOS Safari bounce */
     -webkit-overflow-scrolling: none !important;
@@ -174,21 +173,15 @@ html, body {
     touch-action: none !important;
 }
 
-/* Enhanced scroll isolation for HTML element */
-html.drawer-scroll-lock,
-html:has(.drawer-scroll-lock) {
+/* 🚨 FIXED: Only lock HTML when body has drawer-scroll-lock class */
+body.drawer-scroll-lock ~ html,
+html:has(body.drawer-scroll-lock) {
     overflow: hidden !important;
-    position: fixed !important;
-    width: 100% !important;
-    height: 100% !important;
 }
 
-/* Prevent main content scroll when drawer is active */
+/* 🚨 FIXED: Only prevent content scroll when drawer is specifically active */
 .mobile-content-container.drawer-active {
     overflow: hidden !important;
-    position: fixed !important;
-    width: 100% !important;
-    height: 100vh !important;
     touch-action: none !important;
     overscroll-behavior: none !important;
     -webkit-overscroll-behavior: none !important;

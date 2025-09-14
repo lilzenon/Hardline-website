@@ -101,12 +101,12 @@ const MobileDrawer = ({
     const contentContainer = contentRef?.current;
 
     if (drawerExpanded) {
-      // Lock main page scroll when drawer is expanded
+      // 🚨 FIXED: Only lock scroll when drawer is actually expanded
       const scrollY = window.scrollY;
       body.classList.add('drawer-scroll-lock');
       body.style.top = `-${scrollY}px`;
 
-      /* 🚨 CRITICAL FIX: Enhanced scroll isolation to prevent footer text visibility */
+      /* Enhanced scroll isolation - but only when drawer is expanded */
       body.style.position = 'fixed';
       body.style.width = '100%';
       body.style.overflow = 'hidden';
@@ -114,32 +114,32 @@ const MobileDrawer = ({
 
       if (contentContainer) {
         contentContainer.classList.add('drawer-active');
-        /* 🚨 CRITICAL FIX: Prevent any scrolling on main content */
+        /* Prevent scrolling on main content only when drawer is active */
         contentContainer.style.overflow = 'hidden';
-        contentContainer.style.position = 'fixed';
-        contentContainer.style.width = '100%';
-        contentContainer.style.height = '100vh';
+        contentContainer.style.touchAction = 'none';
       }
     } else {
-      // Restore main page scroll when drawer is collapsed
+      // 🚨 FIXED: Properly restore normal scrolling when drawer is closed
       body.classList.remove('drawer-scroll-lock');
       const scrollY = body.style.top;
+
+      // Clear all scroll lock styles
       body.style.top = '';
       body.style.position = '';
       body.style.width = '';
       body.style.overflow = '';
       html.style.overflow = '';
 
+      // Restore scroll position
       if (scrollY) {
         window.scrollTo(0, parseInt(scrollY || '0') * -1);
       }
 
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
+        // Clear all content container overrides
         contentContainer.style.overflow = '';
-        contentContainer.style.position = '';
-        contentContainer.style.width = '';
-        contentContainer.style.height = '';
+        contentContainer.style.touchAction = '';
       }
     }
 
