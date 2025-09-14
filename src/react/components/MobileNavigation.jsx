@@ -134,39 +134,45 @@ const MobileNavigation = ({
             contain: layout style;
           }
 
-          /* FIXED: Fast, responsive hover effects for navigation items */
+          /* 🎭 ELEGANT MENU ITEMS: Smooth interactions with enhanced glassmorphism */
           .mobile-nav-item {
             position: relative;
-            transition: all 0.15s ease-out; /* Much faster hover response */
-            padding: 16px 32px;
-            border-radius: 20px;
-            margin: 8px 0;
-            /* Glassmorphism background for better contrast */
+            /* 🎯 SMOOTH INTERACTIONS: Elegant hover response */
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            padding: 20px 40px; /* Increased padding for better touch targets */
+            border-radius: 24px; /* Larger radius for modern feel */
+            margin: 12px 0; /* Increased margin for better spacing */
+            /* 🎨 GLASSMORPHISM: Enhanced background for better contrast */
             background: transparent;
             backdrop-filter: blur(0px);
             border: 2px solid transparent;
+            /* 🎯 OVERRIDE PROTECTION: Prevent global CSS interference */
+            transform: none !important; /* Prevent global transform conflicts */
+            animation: none !important; /* Prevent global animation conflicts */
           }
 
-          /* Active page state styling */
+          /* 🎨 ACTIVE STATE: Enhanced glassmorphism for current page */
           .mobile-nav-item.active {
             /* Enhanced glassmorphism effect for active state */
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            /* Subtle glow effect */
+            background: rgba(255, 255, 255, 0.12) !important;
+            backdrop-filter: blur(25px) !important;
+            border: 2px solid rgba(255, 255, 255, 0.2) !important;
+            /* Enhanced glow effect */
             box-shadow:
-              0 8px 32px rgba(255, 255, 255, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            /* Slightly larger text for emphasis */
-            transform: scale(1.02);
+              0 12px 40px rgba(255, 255, 255, 0.15),
+              inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+            /* Slightly larger for emphasis */
+            transform: scale(1.03) !important;
           }
 
-          /* Hover state for non-active items */
+          /* 🎯 HOVER STATE: Smooth interaction for non-active items */
           .mobile-nav-item:not(.active):hover {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.08);
-            transform: scale(1.01);
+            background: rgba(255, 255, 255, 0.06) !important;
+            backdrop-filter: blur(15px) !important;
+            border: 2px solid rgba(255, 255, 255, 0.12) !important;
+            transform: scale(1.02) !important;
+            /* Subtle glow on hover */
+            box-shadow: 0 8px 32px rgba(255, 255, 255, 0.08) !important;
           }
 
           /* 🔧 FIXED: Consistent menu button hover state - maintain position */
@@ -566,23 +572,24 @@ const MobileNavigation = ({
           />
         </div>
 
-        {/* Navigation Menu Items */}
+        {/* 🎭 ELEGANT MENU ITEMS: Smooth animations with proper positioning */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            maxWidth: '430px',
+            /* 🎯 POSITIONING FIX: Better alignment with navigation bar */
+            maxWidth: '390px', // Reduced from 430px for better alignment
             margin: '0 auto',
-            padding: '8px 25px 40px 25px',
-            gap: '24px',
-            // FIXED: Container positioning only - individual items handle their own opacity
-            transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -20px, 0)',
+            padding: '8px 40px 40px 25px', // Increased right padding for better alignment
+            gap: '32px', // Increased gap for more elegant spacing
+            /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
+            transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
             opacity: 1, // Always visible - let children control their own opacity
-            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-            transitionDelay: showMenu ? '0.2s' : '0s',
-            // Hardware acceleration for smooth animations
-            willChange: 'opacity',
+            transition: 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Slower, more elegant
+            transitionDelay: showMenu ? '0.15s' : '0s', // Slightly faster start
+            /* 🎯 PERFORMANCE: Hardware acceleration for smooth animations */
+            willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden'
           }}
@@ -599,16 +606,16 @@ const MobileNavigation = ({
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
-              // FIXED: Smooth float/ease animation - Events (1st item) - ENHANCED SPECIFICITY
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 0, 0)',
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Events (1st item) */
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.3s' : '0s',
-              // Hardware acceleration for smooth text animations
-              willChange: 'opacity',
+              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
+              transitionDelay: showMenu ? '0.4s' : '0s', // Longer delay for staggered effect
+              /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
+              willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              // Improve text rendering
+              /* 🎨 CRISP TEXT: Improve text rendering */
               WebkitFontSmoothing: 'antialiased',
               MozOsxFontSmoothing: 'grayscale'
             }}
@@ -626,16 +633,16 @@ const MobileNavigation = ({
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
-              // FIXED: Smooth float/ease animation - About (2nd item) - ENHANCED SPECIFICITY
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 0, 0)',
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - About (2nd item) */
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.4s' : '0s',
-              // Hardware acceleration for smooth text animations
-              willChange: 'opacity',
+              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
+              transitionDelay: showMenu ? '0.6s' : '0s', // Staggered timing for sequential appearance
+              /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
+              willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              // Improve text rendering
+              /* 🎨 CRISP TEXT: Improve text rendering */
               WebkitFontSmoothing: 'antialiased',
               MozOsxFontSmoothing: 'grayscale'
             }}
@@ -653,16 +660,16 @@ const MobileNavigation = ({
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
-              // FIXED: Smooth float/ease animation - Contact (3rd item) - ENHANCED SPECIFICITY
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 0, 0)',
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Contact (3rd item) */
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.5s' : '0s',
-              // Hardware acceleration for smooth text animations
-              willChange: 'opacity',
+              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
+              transitionDelay: showMenu ? '0.8s' : '0s', // Staggered timing for sequential appearance
+              /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
+              willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden',
-              // Improve text rendering
+              /* 🎨 CRISP TEXT: Improve text rendering */
               WebkitFontSmoothing: 'antialiased',
               MozOsxFontSmoothing: 'grayscale'
             }}
@@ -670,19 +677,20 @@ const MobileNavigation = ({
             Contact
           </div>
 
-          {/* Social Media Buttons in Navigation */}
+          {/* 🎭 SOCIAL MEDIA BUTTONS: Elegant final entrance */}
           <div
             style={{
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: '0px 25px 0px 25px', // FIXED: Reduced top padding to push buttons higher
-              // FIXED: Smooth float/ease animation - Social Media (4th item) - ENHANCED SPECIFICITY
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 0, 0)',
+              padding: '0px 25px 0px 25px', // Consistent padding
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Social Media (4th item) */
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.6s' : '0s',
-              willChange: 'opacity',
+              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
+              transitionDelay: showMenu ? '1.0s' : '0s', // Final staggered entrance
+              /* 🎯 PERFORMANCE: Hardware acceleration */
+              willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden'
             }}
