@@ -124,16 +124,6 @@ const MobileDrawer = ({
     };
   }, [drawerExpanded, contentRef]);
 
-    // Cleanup on unmount
-    return () => {
-      body.classList.remove('drawer-scroll-lock');
-      body.style.top = '';
-      if (contentContainer) {
-        contentContainer.classList.remove('drawer-active');
-      }
-    };
-  }, [drawerExpanded, contentRef]);
-
   // Enhanced state preservation including iframe content state
   const saveCurrentDrawerState = useCallback(() => {
     setPreviousDrawerState({
