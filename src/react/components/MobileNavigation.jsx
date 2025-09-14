@@ -644,7 +644,7 @@ const MobileNavigation = ({
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
               transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
-              transitionDelay: showMenu ? '1.0s' : '0s', // Final staggered entrance
+              transitionDelay: showMenu ? '0.85s' : '0s', // FIXED: Better sync with other items (was 1.0s)
               /* 🎯 PERFORMANCE: Hardware acceleration */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',

@@ -5,6 +5,7 @@ import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
 import { loadImageWithCircuitBreaker } from '../../lib/circuit-breaker';
 import TextUsSection from './TextUsSection';
+import SocialMediaButtons from './SocialMediaButtons';
 import BrandedLoader from './BrandedLoader';
 
 // CSS for custom scrollbar styling
@@ -561,9 +562,9 @@ const FigmaDesktop = () => {
     // Calculate scale factor to fit both hero sections and events/text sections
     const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
     const baseEventsWidth = 440;  // Reduced from 507px to 440px as requested
-    const baseTextUsWidth = 299;
+    const baseTextUsWidth = 420;  // Increased from 299px to 420px for wider Text Us section
     const baseEventsTextGap = 50;  // Increased gap for visible separation
-    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 789px
+    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 910px
 
     // Use the more restrictive constraint to ensure both sections fit
     const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
@@ -2724,36 +2725,57 @@ const FigmaDesktop = () => {
         </div>
         </div>
 
-        {/* Right Side - Text Us Section with Laylo */}
-        <TextUsSection
-          scaledDimensions={scaledDimensions}
-          phoneNumber={phoneNumber}
-          setPhoneNumber={setPhoneNumber}
-          phoneSubmitting={phoneSubmitting}
-          phoneSubmitted={phoneSubmitted}
-          phoneInputState={phoneInputState}
-          selectedCountryId={selectedCountryId}
-          setSelectedCountryId={setSelectedCountryId}
-          flagImageRef={flagImageRef}
-          phoneContainerRef={phoneContainerRef}
-          showVerification={showVerification}
-          verificationPhone={verificationPhone}
-          verificationCode={verificationCode}
-          setVerificationCode={setVerificationCode}
-          verificationSubmitting={verificationSubmitting}
-          verificationState={verificationState}
-          resendCountdown={resendCountdown}
-          canResend={canResend}
-          resendSubmitting={resendSubmitting}
-          handlePhoneSubmit={handlePhoneSubmit}
-          handleVerificationSubmit={handleVerificationSubmit}
-          handleResendCode={handleResendCode}
-          handlePhoneChange={handlePhoneChange}
-          handlePhoneKeyDown={handlePhoneKeyDown}
-          handleCountryChange={handleCountryChange}
-          handleVerificationChange={handleVerificationCodeChange}
-          handleBackToPhone={handleBackToPhone}
-        />
+        {/* Right Side - Text Us Section with Laylo and Social Media Buttons */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px', // Space between TextUsSection and SocialMediaButtons
+            alignItems: 'flex-start'
+          }}
+        >
+          <TextUsSection
+            scaledDimensions={scaledDimensions}
+            phoneNumber={phoneNumber}
+            setPhoneNumber={setPhoneNumber}
+            phoneSubmitting={phoneSubmitting}
+            phoneSubmitted={phoneSubmitted}
+            phoneInputState={phoneInputState}
+            selectedCountryId={selectedCountryId}
+            setSelectedCountryId={setSelectedCountryId}
+            flagImageRef={flagImageRef}
+            phoneContainerRef={phoneContainerRef}
+            showVerification={showVerification}
+            verificationPhone={verificationPhone}
+            verificationCode={verificationCode}
+            setVerificationCode={setVerificationCode}
+            verificationSubmitting={verificationSubmitting}
+            verificationState={verificationState}
+            resendCountdown={resendCountdown}
+            canResend={canResend}
+            resendSubmitting={resendSubmitting}
+            handlePhoneSubmit={handlePhoneSubmit}
+            handleVerificationSubmit={handleVerificationSubmit}
+            handleResendCode={handleResendCode}
+            handlePhoneChange={handlePhoneChange}
+            handlePhoneKeyDown={handlePhoneKeyDown}
+            handleCountryChange={handleCountryChange}
+            handleVerificationChange={handleVerificationCodeChange}
+            handleBackToPhone={handleBackToPhone}
+          />
+
+          {/* Social Media Buttons - Desktop Integration */}
+          <div
+            style={{
+              width: `${scaledDimensions.textUsWidth}px`, // Match TextUsSection width
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}
+          >
+            <SocialMediaButtons />
+          </div>
+        </div>
         </div>
       )}
 
