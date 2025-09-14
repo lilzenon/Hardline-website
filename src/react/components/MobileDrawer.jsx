@@ -94,54 +94,35 @@ const MobileDrawer = ({
     }
   }, []);
 
-  // 📱 ENHANCED: Body scroll lock when drawer is expanded (iOS Safari support)
+  // 📱 MINIMAL: Very conservative scroll management - only when absolutely necessary
   useEffect(() => {
     const body = document.body;
-    const html = document.documentElement;
     const contentContainer = contentRef?.current;
 
     if (drawerExpanded) {
-      // 🚨 FIXED: Only lock scroll when drawer is actually expanded
-      const scrollY = window.scrollY;
+      // 🚨 MINIMAL: Only add class for CSS targeting, no aggressive locking
       body.classList.add('drawer-scroll-lock');
-      body.style.top = `-${scrollY}px`;
-
-      /* Enhanced scroll isolation - but only when drawer is expanded */
-      body.style.position = 'fixed';
-      body.style.width = '100%';
-      body.style.overflow = 'hidden';
-      html.style.overflow = 'hidden';
 
       if (contentContainer) {
         contentContainer.classList.add('drawer-active');
-        /* Prevent scrolling on main content only when drawer is active */
-        contentContainer.style.overflow = 'hidden';
-        contentContainer.style.touchAction = 'none';
       }
     } else {
-      // 🚨 FIXED: Properly restore normal scrolling when drawer is closed
+      // 🚨 MINIMAL: Just remove the class, let normal scrolling work
       body.classList.remove('drawer-scroll-lock');
-      const scrollY = body.style.top;
-
-      // Clear all scroll lock styles
-      body.style.top = '';
-      body.style.position = '';
-      body.style.width = '';
-      body.style.overflow = '';
-      html.style.overflow = '';
-
-      // Restore scroll position
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
 
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
-        // Clear all content container overrides
-        contentContainer.style.overflow = '';
-        contentContainer.style.touchAction = '';
       }
     }
+
+    // Cleanup on unmount
+    return () => {
+      body.classList.remove('drawer-scroll-lock');
+      if (contentContainer) {
+        contentContainer.classList.remove('drawer-active');
+      }
+    };
+  }, [drawerExpanded, contentRef]);
 
     // Cleanup on unmount
     return () => {

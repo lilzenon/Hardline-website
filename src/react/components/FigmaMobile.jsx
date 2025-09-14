@@ -739,28 +739,21 @@ const FigmaMobile = () => {
     passive: true // Ensure completely passive event handling
   });
 
-  // 📱 ENHANCED: Body scroll lock when drawer is expanded (iOS Safari support)
+  // 📱 MINIMAL: Very conservative scroll management - only when absolutely necessary
   useEffect(() => {
     const body = document.body;
     const contentContainer = contentRef.current;
 
     if (drawerExpanded) {
-      // Lock main page scroll when drawer is expanded
-      const scrollY = window.scrollY;
+      // 🚨 MINIMAL: Only add class for CSS targeting, no aggressive locking
       body.classList.add('drawer-scroll-lock');
-      body.style.top = `-${scrollY}px`;
 
       if (contentContainer) {
         contentContainer.classList.add('drawer-active');
       }
     } else {
-      // Restore main page scroll when drawer is collapsed
+      // 🚨 MINIMAL: Just remove the class, let normal scrolling work
       body.classList.remove('drawer-scroll-lock');
-      const scrollY = body.style.top;
-      body.style.top = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
 
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
@@ -770,7 +763,6 @@ const FigmaMobile = () => {
     // Cleanup on unmount
     return () => {
       body.classList.remove('drawer-scroll-lock');
-      body.style.top = '';
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
       }
@@ -2621,18 +2613,8 @@ const FigmaMobile = () => {
 
 
 
-          /* ENHANCED: Body scroll lock when drawer is active - FIXED: Don't interfere with navigation */
-          body.drawer-scroll-lock {
-            overflow: hidden !important;
-            /* REMOVED: position: fixed - this was interfering with navigation animations */
-            width: 100% !important;
-            height: 100% !important;
-            /* iOS Safari specific scroll lock */
-            -webkit-overflow-scrolling: none !important;
-            touch-action: none !important;
-            overscroll-behavior: none !important;
-            -webkit-overscroll-behavior: none !important;
-          }
+          /* 🚨 REMOVED: Aggressive scroll lock that was preventing normal page scrolling */
+          /* body.drawer-scroll-lock rules removed to restore normal scrolling */
 
           /* Prevent main content scroll when drawer is expanded */
           .mobile-content-container.drawer-active {

@@ -161,28 +161,9 @@ html, body {
 
 /* ===== MOBILE DRAWER SCROLL ISOLATION ===== */
 
-/* 🚨 FIXED: Conditional drawer scroll lock - ONLY when drawer is expanded */
+/* 🚨 MINIMAL: Very conservative drawer scroll lock - only basic prevention */
 body.drawer-scroll-lock {
-    position: fixed !important;
-    width: 100% !important;
-    overflow: hidden !important;
-    /* Prevent iOS Safari bounce */
-    -webkit-overflow-scrolling: none !important;
-    overscroll-behavior: none !important;
-    -webkit-overscroll-behavior: none !important;
-    touch-action: none !important;
-}
-
-/* 🚨 FIXED: Only lock HTML when body has drawer-scroll-lock class */
-body.drawer-scroll-lock ~ html,
-html:has(body.drawer-scroll-lock) {
-    overflow: hidden !important;
-}
-
-/* 🚨 FIXED: Only prevent content scroll when drawer is specifically active */
-.mobile-content-container.drawer-active {
-    overflow: hidden !important;
-    touch-action: none !important;
+    /* Only prevent overscroll, don't lock position */
     overscroll-behavior: none !important;
     -webkit-overscroll-behavior: none !important;
 }
