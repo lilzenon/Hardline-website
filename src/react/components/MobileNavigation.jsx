@@ -264,39 +264,20 @@ const MobileNavigation = ({
           justifyContent: 'center',
           padding: '0', // REMOVED: No padding to allow menu button to align with content edge
           boxSizing: 'border-box',
-          /* 🚀 ULTRA-SMOOTH SYNCHRONIZED SCALING: Perfect logo-navigation harmony */
-          transform: (() => {
-            // 🎯 SYNCHRONIZED PARAMETERS: Exact match with logo scaling
-            const maxScale = 1; // Full scale at top (100%)
-            const minScale = 0.75; // Minimum scale when scrolled (75% - 25% reduction)
-            const scrollThreshold = 40; // Exact same threshold as logo for perfect sync
-
-            // 🎯 PERFORMANCE: Optimized calculations for smooth 60fps
-            const scrollProgress = Math.min(Math.max(scrollY / scrollThreshold, 0), 1);
-
-            // 🎯 SMOOTH EASING: Identical easing function as logo for perfect synchronization
-            const easedProgress = scrollProgress * scrollProgress * (3 - 2 * scrollProgress);
-            const currentScale = maxScale - (easedProgress * (maxScale - minScale));
-
-            // 🎯 PRECISION: High-precision rounding for smooth scaling
-            return `scale(${Math.round(currentScale * 10000) / 10000})`;
-          })(),
-          transformOrigin: 'top center', // Scale from top to maintain position
-          /* 🚀 ULTRA-SMOOTH TRANSITIONS: Optimized for jitter-free performance */
-          transition: 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94), background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          /* 🚨 FIXED: Navigation container remains at fixed size and position */
+          transform: 'none', // No scaling - container stays fixed
+          transformOrigin: 'top center', // Keep for consistency but no scaling applied
+          /* 🚨 FIXED: Simplified transitions - no transform scaling */
+          transition: 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 200,
           /* REMOVED: Bottom border for cleaner look */
           flexShrink: 0,
-          /* 🚀 ULTRA-SMOOTH PERFORMANCE: Advanced GPU optimization for 60fps scaling */
-          contain: 'strict', // Complete isolation for maximum performance
-          willChange: 'transform', // GPU layer promotion for smooth scaling
-          /* 🚀 ADVANCED HARDWARE ACCELERATION: Eliminate any rendering bottlenecks */
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          perspective: '1000px',
-          /* 🎯 SMOOTH SCALING OPTIMIZATION: Prevent visual artifacts during scale */
-          transformStyle: 'preserve-3d',
-          WebkitTransformStyle: 'preserve-3d',
+          /* 🚨 FIXED: Minimal performance properties - no scaling optimizations needed */
+          contain: 'layout style', // Basic containment only
+          willChange: 'auto', // No transform changes expected
+          /* 🚨 FIXED: Standard rendering - no 3D transforms */
+          backfaceVisibility: 'visible',
+          WebkitBackfaceVisibility: 'visible',
           /* 🎯 RENDERING OPTIMIZATION: Crisp scaling at all levels */
           imageRendering: '-webkit-optimize-contrast',
           WebkitImageRendering: '-webkit-optimize-contrast'
