@@ -409,18 +409,10 @@ const MobileNavigation = ({
             WebkitBackfaceVisibility: 'hidden'
             /* CSS transitions now handled by .mobile-navigation-logo class */
           }}
-          onMouseDown={(e) => {
-            // 🎯 SIMPLIFIED INTERACTION: Simple scale effect (container handles main scaling)
-            e.target.style.transform = 'translate(-50%, -50%) scale(0.95)';
-          }}
-          onMouseUp={(e) => {
-            // 🎯 SIMPLIFIED INTERACTION: Restore to normal (container handles main scaling)
-            e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-          }}
-          onMouseLeave={(e) => {
-            // 🎯 SIMPLIFIED INTERACTION: Restore to normal (container handles main scaling)
-            e.target.style.transform = 'translate(-50%, -50%) scale(1)';
-          }}
+          /* 🚨 CRITICAL FIX: Remove all mouse events that could trigger scaling */
+          onMouseDown={undefined}
+          onMouseUp={undefined}
+          onMouseLeave={undefined}
         />
         </div> {/* Close content wrapper */}
       </header>
@@ -528,7 +520,7 @@ const MobileNavigation = ({
             />
           </div>
 
-          {/* Logo in Menu - FIXED: Same size as main navigation logo */}
+          {/* Logo in Menu - FIXED: Static size, no scaling effects */}
           <img
             src="/images/mobile-figma/b2b-logo-mobile.svg"
             alt="B2B Logo"
@@ -536,12 +528,21 @@ const MobileNavigation = ({
               width: '160px', // FIXED: Match main navigation logo size exactly
               height: '50px', // FIXED: Match main navigation logo size exactly
               cursor: 'pointer',
-              userSelect: 'none'
+              userSelect: 'none',
+              /* 🚨 CRITICAL FIX: Remove all scaling effects to maintain consistent size */
+              transform: 'none', // No transforms
+              transition: 'none', // No transitions that could affect size
+              flexShrink: 0, // Prevent compression
+              flexGrow: 0 // Prevent expansion
             }}
             onClick={(e) => {
               e.stopPropagation();
               onNavigate('/');
             }}
+            /* 🚨 CRITICAL FIX: Remove all mouse events that could trigger scaling */
+            onMouseDown={undefined}
+            onMouseUp={undefined}
+            onMouseLeave={undefined}
           />
         </div>
 

@@ -4340,13 +4340,16 @@ const FigmaMobile = () => {
           </section>
         </div>
 
-        {/* Footer Section */}
+        {/* Footer Section - FIXED: Hidden when drawer is active to prevent scroll visibility */}
         <footer
           style={{
             width: '100%',
             padding: '40px 16px 20px',
             textAlign: 'center',
-            background: 'transparent'
+            background: 'transparent',
+            /* 🚨 CRITICAL FIX: Hide footer when drawer is active to prevent unwanted text visibility */
+            display: drawerExpanded ? 'none' : 'block',
+            visibility: drawerExpanded ? 'hidden' : 'visible'
           }}
         >
           <div

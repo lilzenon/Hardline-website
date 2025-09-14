@@ -97,6 +97,7 @@ const MobileDrawer = ({
   // 📱 ENHANCED: Body scroll lock when drawer is expanded (iOS Safari support)
   useEffect(() => {
     const body = document.body;
+    const html = document.documentElement;
     const contentContainer = contentRef?.current;
 
     if (drawerExpanded) {
@@ -105,20 +106,40 @@ const MobileDrawer = ({
       body.classList.add('drawer-scroll-lock');
       body.style.top = `-${scrollY}px`;
 
+      /* 🚨 CRITICAL FIX: Enhanced scroll isolation to prevent footer text visibility */
+      body.style.position = 'fixed';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
+      html.style.overflow = 'hidden';
+
       if (contentContainer) {
         contentContainer.classList.add('drawer-active');
+        /* 🚨 CRITICAL FIX: Prevent any scrolling on main content */
+        contentContainer.style.overflow = 'hidden';
+        contentContainer.style.position = 'fixed';
+        contentContainer.style.width = '100%';
+        contentContainer.style.height = '100vh';
       }
     } else {
       // Restore main page scroll when drawer is collapsed
       body.classList.remove('drawer-scroll-lock');
       const scrollY = body.style.top;
       body.style.top = '';
+      body.style.position = '';
+      body.style.width = '';
+      body.style.overflow = '';
+      html.style.overflow = '';
+
       if (scrollY) {
         window.scrollTo(0, parseInt(scrollY || '0') * -1);
       }
 
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
+        contentContainer.style.overflow = '';
+        contentContainer.style.position = '';
+        contentContainer.style.width = '';
+        contentContainer.style.height = '';
       }
     }
 
