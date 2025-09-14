@@ -2495,7 +2495,7 @@ const FigmaDesktop = () => {
             width: '100%',
             margin: '16px 0 0 0', // Reduced from 32px to 16px for better visual flow
             padding: '0',
-            justifyContent: 'flex-start', // Changed from space-between to align items to the left
+            justifyContent: 'space-between', // Space between Watch section and Follow Us section
             alignItems: 'flex-start',
             gap: '32px', // Fixed gap for consistent spacing between video and text section
             flexDirection: 'row'
