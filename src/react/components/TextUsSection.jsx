@@ -8,12 +8,12 @@ const TextUsSection = ({ scaledDimensions }) => {
     <div
       style={{
         display: 'flex',
-        width: `${calculatedWidth}px`,
+        width: '100%', // Use full width of parent container for responsive behavior
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'stretch',
         gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap to match other sections
-        flexShrink: 0,
+        flexShrink: 1, // Allow shrinking for responsive behavior
         paddingTop: '8px',
         paddingBottom: '8px'
       }}
@@ -44,7 +44,7 @@ const TextUsSection = ({ scaledDimensions }) => {
         style={{
           width: 'calc(100% + 32px)', // Extend width to compensate for internal padding
           height: '60px',
-          maxWidth: `calc(${calculatedWidth}px + 32px)`, // Use calculated width for proper proportions
+          maxWidth: 'none', // Remove fixed max width for responsive behavior
           border: 'none',
           borderRadius: '8px',
           background: 'transparent',

@@ -66,8 +66,9 @@ const SOCIAL_PLATFORMS = {
  * Follows exact Figma design specifications
  * @param {boolean} isDesktop - Whether this is being rendered on desktop layout
  * @param {number} containerWidth - The width of the container (for desktop sizing)
+ * @param {boolean} responsive - Whether to use responsive sizing that scales with container
  */
-const SocialMediaButtons = ({ isDesktop = false, containerWidth = null }) => {
+const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsive = false }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -192,8 +193,8 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null }) => {
             flexWrap: 'nowrap',
             justifyContent: 'space-between', // Match main container distribution
             alignItems: 'center',
-            width: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
-            maxWidth: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
+            width: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
+            maxWidth: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
             padding: '0',
             boxSizing: 'border-box'
           }}
@@ -263,8 +264,8 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null }) => {
           flexWrap: 'nowrap', // Prevent stacking
           justifyContent: 'space-between', // Use space-between for better edge alignment
           alignItems: 'center',
-          width: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
-          maxWidth: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
+          width: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
+          maxWidth: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
           padding: '0', // No padding to maximize space
           boxSizing: 'border-box'
         }}
