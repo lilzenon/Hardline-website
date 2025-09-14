@@ -2731,7 +2731,9 @@ const FigmaDesktop = () => {
             display: 'flex',
             flexDirection: 'column',
             gap: '16px', // Space between TextUsSection and SocialMediaButtons
-            alignItems: 'flex-start'
+            alignItems: 'flex-start',
+            maxWidth: `${Math.round(scaledDimensions.eventsWidth)}px`, // Constrain to Events section width
+            width: `${Math.round(scaledDimensions.eventsWidth)}px` // Set explicit width to match Events section
           }}
         >
           <TextUsSection
@@ -2767,14 +2769,14 @@ const FigmaDesktop = () => {
           {/* Social Media Buttons - Desktop Integration with Full Width */}
           <div
             style={{
-              width: `${Math.round(scaledDimensions.eventsWidth + 4)}px`, // Slightly wider than Events section to reduce gap with video
+              width: `${Math.round(scaledDimensions.eventsWidth)}px`, // Match Events section width exactly
               display: 'flex',
               justifyContent: 'center', // Center the social media buttons
               alignItems: 'center',
               padding: '0' // Remove padding to use full width
             }}
           >
-            <SocialMediaButtons isDesktop={true} containerWidth={Math.round(scaledDimensions.eventsWidth + 4)} />
+            <SocialMediaButtons isDesktop={true} containerWidth={Math.round(scaledDimensions.eventsWidth)} />
           </div>
         </div>
         </div>
