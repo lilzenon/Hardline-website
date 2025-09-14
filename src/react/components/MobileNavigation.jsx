@@ -306,8 +306,8 @@ const MobileNavigation = ({
         {/* 🚀 PROPORTIONAL SCALING FIX: Content wrapper optimized for uniform scaling */}
         <div
           style={{
-            width: 'min(324px, calc(100vw - 24px))', // Constrain content width, not container
-            maxWidth: '324px',
+            width: 'min(360px, calc(100vw - 16px))', // FIXED: Match menu width for consistency
+            maxWidth: '360px', // FIXED: Match menu max width
             margin: '0 auto', // Center the content
             position: 'relative',
             height: '100%',
@@ -322,7 +322,7 @@ const MobileNavigation = ({
             flexGrow: 0 // Prevent expansion
           }}
         >
-          {/* EXTRACTED: Hamburger Menu Button */}
+          {/* 🎯 HAMBURGER MENU BUTTON - CONSISTENT POSITIONING */}
           <div
           onClick={toggleMenu}
           className="mobile-menu-button"
@@ -334,16 +334,17 @@ const MobileNavigation = ({
             width: '34px', // Match original size
             height: '34px', // Match original size
             cursor: 'pointer',
-            zIndex: 10,
+            /* 🎯 LAYERING FIX: Ensure menu button stays visible above overlay */
+            zIndex: 1002, // Higher than logo (1001) and overlay (1000)
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             gap: '4px', // Match original gap
-            // Prevent layout shifts during animation
+            /* 🎯 CONSISTENT POSITIONING: Prevent layout shifts during animation */
             transformOrigin: 'center center',
             contain: 'layout style',
-            // Smooth transitions
+            /* 🎯 SMOOTH TRANSITIONS: Consistent animation timing */
             transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease'
           }}
 
@@ -383,23 +384,25 @@ const MobileNavigation = ({
           />
         </div>
 
-        {/* 🎯 B2B LOGO - PROPORTIONAL SCALING FIX: Logo scales naturally with container */}
+        {/* 🎯 B2B LOGO - CONSISTENT POSITIONING: Same appearance whether menu is open or closed */}
         <img
           onClick={() => onNavigate('/')}
           src="/images/mobile-figma/b2b-logo-mobile.svg"
           alt="B2B Logo"
           className="mobile-navigation-logo"
           style={{
-            /* 🎯 PROPORTIONAL SCALING FIX: Fixed size - scales naturally with container */
+            /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
             width: '160px', // Fixed size - container scaling handles the proportional reduction
             height: '50px', // Fixed size - container scaling handles the proportional reduction
             position: 'absolute',
             left: '50%',
             top: '50%',
-            /* 🚀 SIMPLIFIED TRANSFORM: Only positioning, no scaling (container handles scaling) */
+            /* 🚀 CONSISTENT TRANSFORM: Only positioning, no scaling (container handles scaling) */
             transform: 'translate(-50%, -50%)', // Only center positioning - no scale()
             cursor: 'pointer',
             userSelect: 'none',
+            /* 🎯 LAYERING FIX: Ensure logo stays visible above menu overlay */
+            zIndex: 1001, // Higher than menu overlay (1000) to stay visible
             /* 🎯 PERFORMANCE: Optimized for container-based scaling */
             willChange: 'auto', // No individual scaling needed
             backfaceVisibility: 'hidden',
@@ -452,9 +455,9 @@ const MobileNavigation = ({
         {/* Navigation Bar in Menu */}
         <div
           style={{
-            /* FIXED: Match main content width pattern for consistency */
-            width: 'min(324px, calc(100vw - 24px))', // Same as main content: 12px padding each side
-            maxWidth: '324px', // Ensure consistent max width
+            /* FIXED: Use wider content width to fill the space properly */
+            width: 'min(360px, calc(100vw - 16px))', // FIXED: Wider width with 8px padding each side
+            maxWidth: '360px', // FIXED: Increased max width to fill space
             margin: '0 auto', // Center like main content
             height: '97px',
             position: 'relative',
@@ -466,7 +469,7 @@ const MobileNavigation = ({
             boxSizing: 'border-box'
           }}
         >
-          {/* Close Button (X) */}
+          {/* 🎯 CLOSE BUTTON (X) - CONSISTENT POSITIONING */}
           <div
             onClick={(e) => {
               e.stopPropagation();
@@ -480,7 +483,8 @@ const MobileNavigation = ({
               width: '34px', // Match original size
               height: '34px', // Match original size
               cursor: 'pointer',
-              zIndex: 10,
+              /* 🎯 LAYERING FIX: Ensure close button stays visible */
+              zIndex: 1002, // Same as hamburger menu button for consistency
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
@@ -524,13 +528,13 @@ const MobileNavigation = ({
             />
           </div>
 
-          {/* Logo in Menu */}
+          {/* Logo in Menu - FIXED: Same size as main navigation logo */}
           <img
             src="/images/mobile-figma/b2b-logo-mobile.svg"
             alt="B2B Logo"
             style={{
-              width: '138.41px',
-              height: '43px',
+              width: '160px', // FIXED: Match main navigation logo size exactly
+              height: '50px', // FIXED: Match main navigation logo size exactly
               cursor: 'pointer',
               userSelect: 'none'
             }}
@@ -547,10 +551,11 @@ const MobileNavigation = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            /* 🎯 POSITIONING FIX: Better alignment with navigation bar */
-            maxWidth: '390px', // Reduced from 430px for better alignment
-            margin: '0 auto',
-            padding: '8px 40px 40px 25px', // Increased right padding for better alignment
+            /* 🎯 POSITIONING FIX: Fill the space and align with page content */
+            width: 'min(360px, calc(100vw - 16px))', // FIXED: Match navigation bar width exactly
+            maxWidth: '360px', // FIXED: Match navigation bar max width
+            margin: '0 auto', // Center like main content
+            padding: '8px 8px 40px 8px', // FIXED: Minimal padding to maximize content width
             gap: '32px', // Increased gap for more elegant spacing
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
