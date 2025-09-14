@@ -3348,35 +3348,6 @@ const FigmaDesktop = () => {
 
 
       </div>
-
-      {/* B2B LOGO - Bottom */}
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          justifyContent: 'center',
-          width: '100%',
-          margin: '32px auto 0 auto',
-          padding: '0'
-        }}
-      >
-        <img
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-          src="/images/figma-exact/b2b-logo-bottom.svg"
-          alt="B2B LOGO"
-          loading="lazy"
-          decoding="async"
-          fetchpriority="low"
-          style={{
-            width: '100%',
-            maxWidth: '901px',
-            height: 'auto',
-            fill: '#101010',
-            filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))'
-          }}
-        />
-      </div>
     </div>
     </div>
     </div>
