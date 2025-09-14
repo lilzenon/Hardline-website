@@ -561,10 +561,10 @@ const FigmaDesktop = () => {
 
     // Calculate scale factor to fit both hero sections and events/text sections
     const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
-    const baseEventsWidth = 440;  // Reduced from 507px to 440px as requested
-    const baseTextUsWidth = 420;  // Increased from 299px to 420px for wider Text Us section
-    const baseEventsTextGap = 50;  // Increased gap for visible separation
-    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 910px
+    const baseEventsWidth = 380;  // Further reduced to make it more compact
+    const baseTextUsWidth = 380;  // Match Events section base width exactly
+    const baseEventsTextGap = 40;  // Reduced gap slightly
+    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 800px
 
     // Use the more restrictive constraint to ensure both sections fit
     const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
@@ -2764,16 +2764,17 @@ const FigmaDesktop = () => {
             handleBackToPhone={handleBackToPhone}
           />
 
-          {/* Social Media Buttons - Desktop Integration */}
+          {/* Social Media Buttons - Desktop Integration with Full Width */}
           <div
             style={{
-              width: `${scaledDimensions.textUsWidth}px`, // Match TextUsSection width
+              width: `${Math.round(scaledDimensions.eventsWidth)}px`, // Match Events section actual rendered width exactly
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center'
+              justifyContent: 'center', // Center the social media buttons
+              alignItems: 'center',
+              padding: '0' // Remove padding to use full width
             }}
           >
-            <SocialMediaButtons />
+            <SocialMediaButtons isDesktop={true} containerWidth={Math.round(scaledDimensions.eventsWidth)} />
           </div>
         </div>
         </div>

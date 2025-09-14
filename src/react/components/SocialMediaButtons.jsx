@@ -64,8 +64,10 @@ const SOCIAL_PLATFORMS = {
  * Social Media Buttons Component
  * Displays social media buttons with authentic brand styling and animations
  * Follows exact Figma design specifications
+ * @param {boolean} isDesktop - Whether this is being rendered on desktop layout
+ * @param {number} containerWidth - The width of the container (for desktop sizing)
  */
-const SocialMediaButtons = () => {
+const SocialMediaButtons = ({ isDesktop = false, containerWidth = null }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -190,8 +192,8 @@ const SocialMediaButtons = () => {
             flexWrap: 'nowrap',
             justifyContent: 'space-between', // Match main container distribution
             alignItems: 'center',
-            width: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
-            maxWidth: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
+            width: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
+            maxWidth: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
             padding: '0',
             boxSizing: 'border-box'
           }}
@@ -261,8 +263,8 @@ const SocialMediaButtons = () => {
           flexWrap: 'nowrap', // Prevent stacking
           justifyContent: 'space-between', // Use space-between for better edge alignment
           alignItems: 'center',
-          width: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
-          maxWidth: 'min(324px, calc(100vw - 36px))', // Match other content elements width exactly
+          width: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
+          maxWidth: isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))', // Use full container width on desktop
           padding: '0', // No padding to maximize space
           boxSizing: 'border-box'
         }}
@@ -280,12 +282,12 @@ const SocialMediaButtons = () => {
               aria-label={`Follow us on ${platform.name}`}
               style={{
                 // Calculate button size to fill container width properly (4 buttons with gaps)
-                width: 'calc((100% - 30px) / 4)', // Divide available width by 4 buttons, accounting for gaps
-                height: 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
-                minWidth: '70px', // Minimum for usability
-                maxWidth: '85px', // Maximum to prevent oversizing
-                minHeight: '70px', // Minimum height to match width
-                maxHeight: '85px', // Maximum height to match width
+                width: isDesktop ? 'calc((100% - 45px) / 4)' : 'calc((100% - 30px) / 4)', // Larger gaps on desktop
+                height: isDesktop ? 'calc((100% - 45px) / 4)' : 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
+                minWidth: isDesktop ? '85px' : '70px', // Larger minimum on desktop
+                maxWidth: isDesktop ? '120px' : '85px', // Larger maximum on desktop
+                minHeight: isDesktop ? '85px' : '70px', // Larger minimum height on desktop
+                maxHeight: isDesktop ? '120px' : '85px', // Larger maximum height on desktop
                 borderRadius: '20px', // Optimized radius
                 background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect
@@ -338,8 +340,8 @@ const SocialMediaButtons = () => {
               {/* Social Media Icon */}
               <div
                 style={{
-                  width: '40px', // Slightly larger icon size for better visibility
-                  height: '40px', // Slightly larger icon size for better visibility
+                  width: isDesktop ? '50px' : '40px', // Larger icons on desktop
+                  height: isDesktop ? '50px' : '40px', // Larger icons on desktop
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center'

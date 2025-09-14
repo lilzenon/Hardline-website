@@ -1,11 +1,14 @@
 import React from 'react';
 
 const TextUsSection = ({ scaledDimensions }) => {
+  // Calculate width to match Events section actual rendered width exactly
+  const calculatedWidth = Math.round(scaledDimensions.eventsWidth);
+
   return (
     <div
       style={{
         display: 'flex',
-        width: `${scaledDimensions.textUsWidth}px`,
+        width: `${calculatedWidth}px`,
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'stretch',
@@ -57,7 +60,7 @@ const TextUsSection = ({ scaledDimensions }) => {
         style={{
           width: 'calc(100% + 32px)', // Extend width to compensate for internal padding
           height: '60px',
-          maxWidth: 'calc(1000px + 32px)', // Extend maxWidth proportionally
+          maxWidth: `calc(${calculatedWidth}px + 32px)`, // Use calculated width for proper proportions
           border: 'none',
           borderRadius: '8px',
           background: 'transparent',
