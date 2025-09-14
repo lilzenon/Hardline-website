@@ -2533,8 +2533,8 @@ const FigmaDesktop = () => {
             <div
             onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
             style={{
-              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.75)}px`, // Reduced by 25% for better balance
-              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.75)}px`, // Reduced by 25% proportionally
+              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.9)}px`, // Increased to 90% for wider video
+              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.9)}px`, // Increased to 90% proportionally
               position: 'relative',
               flexShrink: 0,
               cursor: 'pointer',
@@ -2563,8 +2563,8 @@ const FigmaDesktop = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.75)}px`, // Match reduced video size
-              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.75)}px`, // Match reduced video size
+              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.9)}px`, // Match wider video size
+              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.9)}px`, // Match wider video size
               borderRadius: '24px',
               overflow: 'hidden'
             }}
@@ -2653,7 +2653,7 @@ const FigmaDesktop = () => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: `${Math.round(scaledDimensions.rightHeroWidth * 0.75) >= 300 ? Math.round(scaledDimensions.rightHeroWidth * 0.75) - 150 : Math.round(scaledDimensions.rightHeroWidth * 0.75) - 60}px` // Adjust for reduced video size
+                  maxWidth: `${Math.round(scaledDimensions.rightHeroWidth * 0.9) >= 300 ? Math.round(scaledDimensions.rightHeroWidth * 0.9) - 150 : Math.round(scaledDimensions.rightHeroWidth * 0.9) - 60}px` // Adjust for wider video size
                 }}
               >
                 Watch on YouTube
@@ -2673,7 +2673,7 @@ const FigmaDesktop = () => {
             </div>
 
             {/* Right - CTA - UPDATED CONDITION */}
-            {Math.round(scaledDimensions.rightHeroWidth * 0.75) >= 300 && ( // Adjust condition for reduced video size
+            {Math.round(scaledDimensions.rightHeroWidth * 0.9) >= 300 && ( // Adjust condition for wider video size
               <div
                 onClick={(e) => {
                   e.stopPropagation();
@@ -2767,14 +2767,14 @@ const FigmaDesktop = () => {
           {/* Social Media Buttons - Desktop Integration with Full Width */}
           <div
             style={{
-              width: `${Math.round(scaledDimensions.eventsWidth)}px`, // Match Events section actual rendered width exactly
+              width: `${Math.round(scaledDimensions.eventsWidth + 4)}px`, // Slightly wider than Events section to reduce gap with video
               display: 'flex',
               justifyContent: 'center', // Center the social media buttons
               alignItems: 'center',
               padding: '0' // Remove padding to use full width
             }}
           >
-            <SocialMediaButtons isDesktop={true} containerWidth={Math.round(scaledDimensions.eventsWidth)} />
+            <SocialMediaButtons isDesktop={true} containerWidth={Math.round(scaledDimensions.eventsWidth + 4)} />
           </div>
         </div>
         </div>

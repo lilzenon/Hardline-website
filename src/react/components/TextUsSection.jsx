@@ -1,8 +1,8 @@
 import React from 'react';
 
 const TextUsSection = ({ scaledDimensions }) => {
-  // Calculate width to match Events section actual rendered width exactly
-  const calculatedWidth = Math.round(scaledDimensions.eventsWidth);
+  // Calculate width slightly wider than Events section to reduce gap with video section
+  const calculatedWidth = Math.round(scaledDimensions.eventsWidth + 4);
 
   return (
     <div
