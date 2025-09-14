@@ -12,13 +12,13 @@ const TextUsSection = ({ scaledDimensions }) => {
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'stretch',
-        gap: '8px',
+        gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap to match other sections
         flexShrink: 0,
         paddingTop: '8px',
         paddingBottom: '8px'
       }}
     >
-      {/* Text us Title - Standardized Typography */}
+      {/* Follow Us Title - Standardized Typography */}
       <div
         style={{
           color: '#FFF',
@@ -34,23 +34,7 @@ const TextUsSection = ({ scaledDimensions }) => {
           alignItems: 'center' // Center text vertically within the height
         }}
       >
-        Text us
-      </div>
-
-      {/* Subtext - Standardized Typography */}
-      <div
-        style={{
-          color: '#FFF',
-          fontFamily: 'Inter',
-          fontSize: `${Math.max(10, Math.round(scaledDimensions.scale * 12))}px`, // Proportional scaling
-          fontWeight: '300',
-          lineHeight: 'normal',
-          margin: '0',
-          padding: '0',
-          opacity: 0.8 // Subtle opacity for hierarchy
-        }}
-      >
-        Exclusive events, contests, and more
+        Follow Us
       </div>
 
       {/* Laylo Iframe - Compensated for Internal Padding */}
