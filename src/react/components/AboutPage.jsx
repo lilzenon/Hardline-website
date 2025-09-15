@@ -26,30 +26,6 @@ const AboutPage = () => {
     scale: 1
   });
 
-  // 🚨 HOMEPAGE CONSISTENCY: Device detection using viewport width from usePerformantResize
-  useEffect(() => {
-    const detectDevice = () => {
-      // Check user agent for mobile devices
-      const userAgent = navigator.userAgent || '';
-      const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-
-      // Device is mobile if viewport is <= 768px OR user agent indicates mobile
-      const deviceIsMobile = viewportWidth <= 768 || isMobileByUA;
-
-      setIsMobile(deviceIsMobile);
-      setIsLoading(false);
-
-      console.log('📱 About Page Device Detection:', {
-        viewportWidth,
-        isMobileByUA,
-        finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
-      });
-    };
-
-    // Run detection whenever viewport dimensions change
-    detectDevice();
-  }, [viewportWidth]); // 🚨 HOMEPAGE CONSISTENCY: Depend on viewportWidth from usePerformantResize
-
   // 🚨 HOMEPAGE CONSISTENCY: Use exact same responsive scaling system as homepage
   const { width: viewportWidth } = usePerformantResize((dimensions) => {
     const { width: currentViewportWidth } = dimensions;
@@ -97,12 +73,21 @@ const AboutPage = () => {
       scale: scale
     };
 
-    // 🚨 MATCH HOMEPAGE: Update mobile state based on whether events list can fit alongside text us section
-    // Events list needs ~440px + Text us needs ~299px + gap ~50px = ~789px minimum
-    setIsMobile(currentViewportWidth <= 850);
+    // 🚨 HOMEPAGE CONSISTENCY: Device detection using viewport width
+    const userAgent = navigator.userAgent || '';
+    const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const deviceIsMobile = currentViewportWidth <= 768 || isMobileByUA;
 
+    setIsMobile(deviceIsMobile);
+    setIsLoading(false);
     setScaledDimensions(scaledDimensions);
+
     console.log(`🎯 About page responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.8x, container: 1192px)`, scaledDimensions);
+    console.log('📱 About Page Device Detection:', {
+      viewportWidth: currentViewportWidth,
+      isMobileByUA,
+      finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
+    });
   });
 
   // Fetch About page content and gallery from API
