@@ -262,11 +262,11 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'nowrap', // Prevent stacking
-          justifyContent: 'space-between', // Use space-between for better edge alignment
+          justifyContent: 'space-evenly', // 🚨 FIX: Use space-evenly for more controlled spacing
           alignItems: 'center',
           width: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
           maxWidth: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
-          padding: '0', // No padding to maximize space
+          padding: '0 8px', // 🚨 FIX: Add small horizontal padding to prevent edge overflow
           boxSizing: 'border-box'
         }}
       >
@@ -282,13 +282,13 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               rel="noopener noreferrer"
               aria-label={`Follow us on ${platform.name}`}
               style={{
-                // Calculate button size to fill container width properly (4 buttons with gaps)
-                width: isDesktop ? 'calc((100% - 45px) / 4)' : 'calc((100% - 30px) / 4)', // Larger gaps on desktop
-                height: isDesktop ? 'calc((100% - 45px) / 4)' : 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
-                minWidth: isDesktop ? '85px' : '70px', // Larger minimum on desktop
-                maxWidth: isDesktop ? '120px' : '85px', // Larger maximum on desktop
-                minHeight: isDesktop ? '85px' : '70px', // Larger minimum height on desktop
-                maxHeight: isDesktop ? '120px' : '85px', // Larger maximum height on desktop
+                // 🚨 FIX: Optimized button size to fit within container with padding
+                width: isDesktop ? 'calc((100% - 80px) / 4)' : 'calc((100% - 30px) / 4)', // Account for container padding
+                height: isDesktop ? 'calc((100% - 80px) / 4)' : 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
+                minWidth: isDesktop ? '65px' : '70px', // Slightly smaller minimum for desktop
+                maxWidth: isDesktop ? '85px' : '85px', // 🚨 FIX: Conservative max width to ensure no overflow
+                minHeight: isDesktop ? '65px' : '70px', // Match minimum width
+                maxHeight: isDesktop ? '85px' : '85px', // 🚨 FIX: Match max width for perfect squares
                 borderRadius: '20px', // Optimized radius
                 background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect

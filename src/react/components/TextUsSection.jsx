@@ -14,8 +14,8 @@ const TextUsSection = ({ scaledDimensions }) => {
         alignItems: 'stretch',
         gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap to match other sections
         flexShrink: 1, // Allow shrinking for responsive behavior
-        paddingTop: '8px',
-        paddingBottom: '8px'
+        paddingTop: '0', // 🚨 FIX: Remove top padding to align with YouTube video section
+        paddingBottom: '0' // 🚨 FIX: Remove bottom padding for cleaner layout
       }}
     >
       {/* Follow Us Title - Standardized Typography */}
@@ -42,20 +42,21 @@ const TextUsSection = ({ scaledDimensions }) => {
         style={{
           position: 'relative',
           width: '100%', // 🚨 FIX: Use full width without extending beyond container
-          height: '60px',
+          height: '85px', // 🚨 FIX: Increased height significantly to show full iframe content including disclosure
           marginLeft: '0', // 🚨 FIX: Remove negative margins that cause overlap
           marginRight: '0', // 🚨 FIX: Remove negative margins that cause overlap
+          marginBottom: '16px', // 🚨 FIX: Add bottom margin for extra separation from social buttons
           borderRadius: '8px',
-          overflow: 'hidden', // Hide any content that extends beyond container
+          overflow: 'visible', // 🚨 FIX: Changed to visible to show all iframe content
           background: 'transparent'
         }}
       >
         <iframe
           id="laylo-drop-1nTsX"
-          src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true&hideFooter=true&compact=true"
+          src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true&hideFooter=false&compact=false"
           style={{
             width: '100%',
-            height: '80px', // Slightly taller to accommodate content but footer will be hidden by container
+            height: '85px', // 🚨 FIX: Match container height to show full content including disclosure
             border: 'none',
             borderRadius: '8px',
             background: 'transparent',
@@ -66,20 +67,6 @@ const TextUsSection = ({ scaledDimensions }) => {
           scrolling="no" // Disable scrolling to prevent footer access
           allow="web-share"
           title="Laylo Signup Form"
-        />
-
-        {/* Footer Mask - Hide any footer content that might appear */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '0px',
-            left: '0px',
-            right: '0px',
-            height: '20px', // Mask the bottom 20px where footer might appear
-            background: 'transparent',
-            pointerEvents: 'none', // Allow clicks to pass through
-            zIndex: 1
-          }}
         />
       </div>
     </div>
