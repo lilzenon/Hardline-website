@@ -125,7 +125,7 @@ const AboutPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include'
+        // Don't include credentials for public endpoint
       });
 
       if (!response.ok) {

@@ -739,21 +739,32 @@ const FigmaMobile = () => {
     passive: true // Ensure completely passive event handling
   });
 
-  // 📱 MINIMAL: Very conservative scroll management - only when absolutely necessary
+  // 📱 ENHANCED: Proper mobile drawer scroll lock with position preservation
   useEffect(() => {
     const body = document.body;
     const contentContainer = contentRef.current;
 
     if (drawerExpanded) {
-      // 🚨 MINIMAL: Only add class for CSS targeting, no aggressive locking
+      // Store current scroll position before locking
+      const scrollY = window.scrollY;
+
+      // Apply body scroll lock with position preservation
       body.classList.add('drawer-scroll-lock');
+      body.style.top = `-${scrollY}px`;
 
       if (contentContainer) {
         contentContainer.classList.add('drawer-active');
       }
     } else {
-      // 🚨 MINIMAL: Just remove the class, let normal scrolling work
+      // Restore scroll position when unlocking
+      const scrollY = body.style.top;
       body.classList.remove('drawer-scroll-lock');
+      body.style.top = '';
+
+      // Restore scroll position
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
 
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
@@ -763,6 +774,7 @@ const FigmaMobile = () => {
     // Cleanup on unmount
     return () => {
       body.classList.remove('drawer-scroll-lock');
+      body.style.top = '';
       if (contentContainer) {
         contentContainer.classList.remove('drawer-active');
       }
@@ -2065,14 +2077,17 @@ const FigmaMobile = () => {
 
           /* FIXED: Mobile container with proper overflow control */
           .mobile-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            height: -webkit-fill-available;
-            /* FIXED: Control overflow to prevent hidden elements from showing */
-            overflow: hidden;
+            position: relative !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+            /* 🚨 CRITICAL: Control overflow to prevent footer/hidden elements from showing */
+            overflow: hidden !important;
             /* Ensure proper scroll containment */
-            overscroll-behavior: contain;
+            overscroll-behavior: contain !important;
+            -webkit-overscroll-behavior: contain !important;
+            /* 🚨 CRITICAL: Prevent any content from escaping container bounds */
+            isolation: isolate !important;
           }
 
           /* Optimize touch interactions for iOS */
@@ -2504,28 +2519,32 @@ const FigmaMobile = () => {
 
           /* Enhanced drawer animations with momentum support */
           .mobile-drawer {
-            position: fixed;
-            bottom: 0;
-            left: 25px;
-            right: 25px;
-            margin: 0 auto;
-            width: calc(100% - 50px);
-            max-width: 390px;
-            background: rgb(21 21 21 / 80%);
-            backdrop-filter: blur(10px);
-            border-radius: 24px 24px 0px 0px;
-            transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            transform-origin: bottom center;
-            z-index: 100;
-            will-change: auto; /* Let browser optimize to prevent main scroll conflicts */
-            backface-visibility: hidden;
-            perspective: 1000px;
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 25px !important;
+            right: 25px !important;
+            margin: 0 auto !important;
+            width: calc(100% - 50px) !important;
+            max-width: 390px !important;
+            background: rgb(21 21 21 / 80%) !important;
+            backdrop-filter: blur(10px) !important;
+            border-radius: 24px 24px 0px 0px !important;
+            transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            transform-origin: bottom center !important;
+            /* 🚨 CRITICAL: Highest z-index to ensure drawer stays above all content */
+            z-index: 9999 !important;
+            will-change: auto !important;
+            backface-visibility: hidden !important;
+            perspective: 1000px !important;
             /* ENHANCED: Complete scroll isolation for iOS Safari */
-            touch-action: none; /* Prevent any touch scrolling on drawer container */
-            user-select: none;
-            -webkit-user-select: none;
+            touch-action: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
             /* Complete containment isolation */
-            contain: strict;
+            contain: strict !important;
+            /* 🚨 CRITICAL: Ensure drawer maintains fixed position on mobile */
+            -webkit-transform: translateZ(0) !important;
+            transform: translateZ(0) !important;
             /* iOS Safari specific optimizations */
             -webkit-transform: translateZ(0);
             transform: translateZ(0);
@@ -2613,8 +2632,22 @@ const FigmaMobile = () => {
 
 
 
-          /* 🚨 REMOVED: Aggressive scroll lock that was preventing normal page scrolling */
-          /* body.drawer-scroll-lock rules removed to restore normal scrolling */
+          /* 🚨 CRITICAL: Proper body scroll lock for mobile drawer positioning */
+          body.drawer-scroll-lock {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            height: 100% !important;
+            touch-action: none !important;
+            overscroll-behavior: none !important;
+            -webkit-overscroll-behavior: none !important;
+            /* Prevent iOS Safari address bar issues */
+            -webkit-overflow-scrolling: auto !important;
+          }
 
           /* Prevent main content scroll when drawer is expanded */
           .mobile-content-container.drawer-active {

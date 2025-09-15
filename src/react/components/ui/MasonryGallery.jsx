@@ -195,6 +195,12 @@ const MasonryImage = ({ image, isLoaded, onLoad, onClick }) => {
         <img
           ref={imgRef}
           src={image.src}
+          srcSet={image.srcSet ? `
+            ${image.srcSet.small} 400w,
+            ${image.srcSet.medium} 600w,
+            ${image.srcSet.large} 800w
+          `.trim() : undefined}
+          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           alt={image.alt || 'Gallery image'}
           loading="lazy"
           onLoad={handleImageLoad}
