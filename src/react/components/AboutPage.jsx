@@ -1,8 +1,5 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
-
-// Lazy load the gallery component for better performance
-const DomeGallery = lazy(() => import('./ui/DomeGallery'));
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -450,109 +447,8 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             )}
           </div>
 
-          {/* Gallery Section - Dome Gallery - Full Width Optimized */}
-          <div
-            style={{
-              width: '100vw',
-              position: 'relative',
-              left: '50%',
-              right: '50%',
-              marginLeft: '-50vw',
-              marginRight: '-50vw',
-              marginTop: '48px',
-              background: '#000000'
-            }}
-          >
-            <div
-              style={{
-                color: '#FFFFFF',
-                fontFamily: 'Inter',
-                fontWeight: '600',
-                fontSize: '32px',
-                lineHeight: '1.3em',
-                marginBottom: '32px',
-                textAlign: 'center',
-                padding: '0 16px'
-              }}
-            >
-              Gallery
-            </div>
 
-            <div style={{
-              height: '70vh',
-              minHeight: '500px',
-              maxHeight: '800px',
-              width: '100%',
-              position: 'relative'
-            }}>
-              <Suspense fallback={
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '16px',
-                  opacity: 0.7,
-                  background: 'rgba(22, 22, 22, 0.8)',
-                  margin: '0 16px',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(56, 56, 56, 0.3)'
-                }}>
-                  Loading gallery...
-                </div>
-              }>
-                <DomeGallery
-                  images={[
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23319DFF;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230AFF4B;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Ccircle cx='200' cy='150' r='80' fill='url(%23g1)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='24' font-weight='600'%3EEvents%3C/text%3E%3C/svg%3E",
-                      alt: "Event Highlights"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FF6B6B;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23FFE66D;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpolygon points='200,70 250,170 150,170' fill='url(%23g2)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3EPerformances%3C/text%3E%3C/svg%3E",
-                      alt: "Live Performances"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23A8E6CF;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2388D8C0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Crect x='120' y='80' width='160' height='120' rx='20' fill='url(%23g3)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='22' font-weight='600'%3EVenue%3C/text%3E%3C/svg%3E",
-                      alt: "Venue Atmosphere"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g4' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FFB74D;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23FF8A65;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpath d='M150,80 Q200,50 250,80 Q250,150 200,180 Q150,150 150,80 Z' fill='url(%23g4)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='18' font-weight='600'%3EBehind Scenes%3C/text%3E%3C/svg%3E",
-                      alt: "Behind the Scenes"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g5' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23CE93D8;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23F8BBD9;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Ccircle cx='170' cy='120' r='30' fill='url(%23g5)' opacity='0.8'/%3E%3Ccircle cx='230' cy='120' r='30' fill='url(%23g5)' opacity='0.8'/%3E%3Ccircle cx='200' cy='170' r='30' fill='url(%23g5)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3ECommunity%3C/text%3E%3C/svg%3E",
-                      alt: "Community"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g6' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2381C784;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234FC3F7;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpolygon points='200,60 280,140 200,220 120,140' fill='url(%23g6)' opacity='0.8'/%3E%3Ctext x='200' y='260' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3EProduction%3C/text%3E%3C/svg%3E",
-                      alt: "Production"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g7' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FFD54F;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23FFAB40;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpath d='M200,70 L250,120 L220,180 L180,180 L150,120 Z' fill='url(%23g7)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='18' font-weight='600'%3ESpecial Moments%3C/text%3E%3C/svg%3E",
-                      alt: "Special Moments"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g8' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23B39DDB;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2390CAF9;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cellipse cx='200' cy='140' rx='80' ry='50' fill='url(%23g8)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3EFuture Events%3C/text%3E%3C/svg%3E",
-                      alt: "Future Events"
-                    }
-                  ]}
-                  segments={34}
-                  fit={0.8}
-                  fitBasis="width"
-                  minRadius={300}
-                  maxRadius={1200}
-                  overlayBlurColor="rgba(22, 22, 22, 0.8)"
-                  imageBorderRadius="16px"
-                  openedImageBorderRadius="16px"
-                  openedImageWidth="500px"
-                  openedImageHeight="600px"
-                  grayscale={false}
-                />
-              </Suspense>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

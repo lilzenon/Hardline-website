@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
-
-// Lazy load the gallery component for better mobile performance
-const DomeGallery = lazy(() => import('./ui/DomeGallery'));
 
 /**
  * Mobile-only About page component with shared navigation
@@ -293,89 +290,6 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               )}
             </div>
 
-            {/* Gallery Section - Dome Gallery */}
-            <div
-              style={{
-                color: '#FFFFFF',
-                fontFamily: 'Inter',
-                fontWeight: '600',
-                fontSize: '20px',
-                lineHeight: '1.3em',
-                marginBottom: '20px',
-                marginTop: '24px',
-                textAlign: 'center'
-              }}
-            >
-              Gallery
-            </div>
-            </div>
-
-            {/* Gallery Container - Full Width */}
-            <div style={{
-              marginBottom: '24px',
-              height: '60vh',
-              minHeight: '350px',
-              maxHeight: '500px',
-              width: '100%',
-              position: 'relative'
-            }}>
-              <Suspense fallback={
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  height: '100%',
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter, sans-serif',
-                  fontSize: '14px',
-                  opacity: 0.7,
-                  background: 'rgba(22, 22, 22, 0.8)',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(56, 56, 56, 0.3)'
-                }}>
-                  Loading gallery...
-                </div>
-              }>
-                <DomeGallery
-                  images={[
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23319DFF;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230AFF4B;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Ccircle cx='200' cy='150' r='80' fill='url(%23g1)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='24' font-weight='600'%3EEvents%3C/text%3E%3C/svg%3E",
-                      alt: "Event Highlights"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FF6B6B;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23FFE66D;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpolygon points='200,70 250,170 150,170' fill='url(%23g2)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3EPerformances%3C/text%3E%3C/svg%3E",
-                      alt: "Live Performances"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23A8E6CF;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2388D8C0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Crect x='120' y='80' width='160' height='120' rx='20' fill='url(%23g3)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='22' font-weight='600'%3EVenue%3C/text%3E%3C/svg%3E",
-                      alt: "Venue Atmosphere"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g4' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FFB74D;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23FF8A65;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpath d='M150,80 Q200,50 250,80 Q250,150 200,180 Q150,150 150,80 Z' fill='url(%23g4)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='18' font-weight='600'%3EBehind Scenes%3C/text%3E%3C/svg%3E",
-                      alt: "Behind the Scenes"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g5' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23CE93D8;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23F8BBD9;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Ccircle cx='170' cy='120' r='30' fill='url(%23g5)' opacity='0.8'/%3E%3Ccircle cx='230' cy='120' r='30' fill='url(%23g5)' opacity='0.8'/%3E%3Ccircle cx='200' cy='170' r='30' fill='url(%23g5)' opacity='0.8'/%3E%3Ctext x='200' y='240' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3ECommunity%3C/text%3E%3C/svg%3E",
-                      alt: "Community"
-                    },
-                    {
-                      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='g6' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%2381C784;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%234FC3F7;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='%23161616'/%3E%3Cpolygon points='200,60 280,140 200,220 120,140' fill='url(%23g6)' opacity='0.8'/%3E%3Ctext x='200' y='260' text-anchor='middle' fill='white' font-family='Inter' font-size='20' font-weight='600'%3EProduction%3C/text%3E%3C/svg%3E",
-                      alt: "Production"
-                    }
-                  ]}
-                  segments={34}
-                  fit={0.7}
-                  fitBasis="width"
-                  minRadius={200}
-                  maxRadius={400}
-                  overlayBlurColor="rgba(22, 22, 22, 0.8)"
-                  imageBorderRadius="12px"
-                  openedImageBorderRadius="12px"
-                  openedImageWidth="300px"
-                  openedImageHeight="400px"
-                  grayscale={false}
-                />
-              </Suspense>
             </div>
 
             {/* Content Wrapper Continued */}
