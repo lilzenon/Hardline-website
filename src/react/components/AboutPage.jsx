@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
+import MasonryGallery from './ui/MasonryGallery';
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -447,7 +448,110 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             )}
           </div>
 
+          {/* Gallery Section - Masonry Layout */}
+          <div
+            style={{
+              marginTop: '48px',
+              marginBottom: '32px'
+            }}
+          >
+            <div
+              style={{
+                color: '#FFFFFF',
+                fontFamily: 'Inter',
+                fontWeight: '600',
+                fontSize: '32px',
+                lineHeight: '1.3em',
+                marginBottom: '32px',
+                textAlign: 'center'
+              }}
+            >
+              Gallery
+            </div>
 
+            <MasonryGallery
+              images={[
+                {
+                  src: "https://picsum.photos/400/600?random=1",
+                  alt: "Gallery Image 1",
+                  title: "Event Highlights",
+                  aspectRatio: 1.5
+                },
+                {
+                  src: "https://picsum.photos/400/500?random=2",
+                  alt: "Gallery Image 2",
+                  title: "Behind the Scenes",
+                  aspectRatio: 1.25
+                },
+                {
+                  src: "https://picsum.photos/400/700?random=3",
+                  alt: "Gallery Image 3",
+                  title: "Team Moments",
+                  aspectRatio: 1.75
+                },
+                {
+                  src: "https://picsum.photos/400/450?random=4",
+                  alt: "Gallery Image 4",
+                  title: "Venue Setup",
+                  aspectRatio: 1.125
+                },
+                {
+                  src: "https://picsum.photos/400/650?random=5",
+                  alt: "Gallery Image 5",
+                  title: "Live Performance",
+                  aspectRatio: 1.625
+                },
+                {
+                  src: "https://picsum.photos/400/550?random=6",
+                  alt: "Gallery Image 6",
+                  title: "Community",
+                  aspectRatio: 1.375
+                },
+                {
+                  src: "https://picsum.photos/400/480?random=7",
+                  alt: "Gallery Image 7",
+                  title: "Production",
+                  aspectRatio: 1.2
+                },
+                {
+                  src: "https://picsum.photos/400/620?random=8",
+                  alt: "Gallery Image 8",
+                  title: "Special Moments",
+                  aspectRatio: 1.55
+                },
+                {
+                  src: "https://picsum.photos/400/520?random=9",
+                  alt: "Gallery Image 9",
+                  title: "Networking",
+                  aspectRatio: 1.3
+                },
+                {
+                  src: "https://picsum.photos/400/680?random=10",
+                  alt: "Gallery Image 10",
+                  title: "Innovation",
+                  aspectRatio: 1.7
+                },
+                {
+                  src: "https://picsum.photos/400/460?random=11",
+                  alt: "Gallery Image 11",
+                  title: "Collaboration",
+                  aspectRatio: 1.15
+                },
+                {
+                  src: "https://picsum.photos/400/590?random=12",
+                  alt: "Gallery Image 12",
+                  title: "Future Vision",
+                  aspectRatio: 1.475
+                }
+              ]}
+              columns={{ desktop: 4, tablet: 3, mobile: 2 }}
+              gap={16}
+              onImageClick={(image) => {
+                // Future: Implement lightbox or modal
+                console.log('Image clicked:', image);
+              }}
+            />
+          </div>
 
         </div>
       </div>

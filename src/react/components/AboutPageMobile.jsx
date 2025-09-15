@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
+import MasonryGallery from './ui/MasonryGallery';
 
 /**
  * Mobile-only About page component with shared navigation
@@ -290,6 +291,87 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               )}
             </div>
 
+            </div>
+
+            {/* Gallery Section - Mobile Masonry */}
+            <div
+              style={{
+                marginTop: '32px',
+                marginBottom: '24px',
+                padding: '0 16px'
+              }}
+            >
+              <div
+                style={{
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontWeight: '600',
+                  fontSize: '24px',
+                  lineHeight: '1.3em',
+                  marginBottom: '24px',
+                  textAlign: 'center'
+                }}
+              >
+                Gallery
+              </div>
+
+              <MasonryGallery
+                images={[
+                  {
+                    src: "https://picsum.photos/300/450?random=1",
+                    alt: "Gallery Image 1",
+                    title: "Event Highlights",
+                    aspectRatio: 1.5
+                  },
+                  {
+                    src: "https://picsum.photos/300/375?random=2",
+                    alt: "Gallery Image 2",
+                    title: "Behind the Scenes",
+                    aspectRatio: 1.25
+                  },
+                  {
+                    src: "https://picsum.photos/300/525?random=3",
+                    alt: "Gallery Image 3",
+                    title: "Team Moments",
+                    aspectRatio: 1.75
+                  },
+                  {
+                    src: "https://picsum.photos/300/340?random=4",
+                    alt: "Gallery Image 4",
+                    title: "Venue Setup",
+                    aspectRatio: 1.125
+                  },
+                  {
+                    src: "https://picsum.photos/300/490?random=5",
+                    alt: "Gallery Image 5",
+                    title: "Live Performance",
+                    aspectRatio: 1.625
+                  },
+                  {
+                    src: "https://picsum.photos/300/410?random=6",
+                    alt: "Gallery Image 6",
+                    title: "Community",
+                    aspectRatio: 1.375
+                  },
+                  {
+                    src: "https://picsum.photos/300/360?random=7",
+                    alt: "Gallery Image 7",
+                    title: "Production",
+                    aspectRatio: 1.2
+                  },
+                  {
+                    src: "https://picsum.photos/300/465?random=8",
+                    alt: "Gallery Image 8",
+                    title: "Special Moments",
+                    aspectRatio: 1.55
+                  }
+                ]}
+                columns={{ desktop: 3, tablet: 2, mobile: 2 }}
+                gap={12}
+                onImageClick={(image) => {
+                  console.log('Mobile image clicked:', image);
+                }}
+              />
             </div>
 
             {/* Content Wrapper Continued */}
