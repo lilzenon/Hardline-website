@@ -71,8 +71,24 @@ const MasonryGallery = ({
 
   // Handle image click for expansion
   const handleImageClick = useCallback((image, index) => {
-    setExpandedImage({ ...image, index });
-    document.body.style.overflow = 'hidden'; // Prevent background scroll
+    console.log('🖼️ Image clicked:', image);
+    console.log('🔍 Image properties:', Object.keys(image));
+
+    // Ensure we have a valid image URL
+    const imageUrl = image.url || image.src || image.image_url || image.file_url;
+    console.log('🔗 Image URL found:', imageUrl);
+
+    if (imageUrl) {
+      setExpandedImage({
+        ...image,
+        url: imageUrl, // Normalize the URL property
+        index
+      });
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
+    } else {
+      console.error('❌ No valid image URL found in image object:', image);
+    }
+
     if (onImageClick) onImageClick(image);
   }, [onImageClick]);
 
@@ -301,14 +317,21 @@ const MasonryGallery = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={expandedImage.url}
-              alt={expandedImage.alt || 'Gallery image'}
+              src={expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
+              alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
                 borderRadius: '12px',
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
+              }}
+              onError={(e) => {
+                console.error('❌ Modal image failed to load:', expandedImage);
+                e.target.style.display = 'none';
+              }}
+              onLoad={() => {
+                console.log('✅ Modal image loaded successfully');
               }}
             />
             <button
@@ -419,14 +442,14 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
       {!imageError ? (
         <img
           ref={imgRef}
-          src={image.url || image.src}
+          src={image.url || image.src || image.image_url || image.file_url}
           srcSet={image.srcSet ? `
             ${image.srcSet.small} 400w,
             ${image.srcSet.medium} 600w,
             ${image.srcSet.large} 800w
           `.trim() : undefined}
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          alt={image.alt || 'Gallery image'}
+          alt={image.alt || image.title || 'Gallery image'}
           loading="lazy"
           onLoadStart={handleImageLoadStart}
           onLoad={handleImageLoad}

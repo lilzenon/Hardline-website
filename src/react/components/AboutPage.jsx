@@ -168,6 +168,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
         const data = await response.json();
         console.log('🔍 Gallery API Response:', JSON.stringify(data, null, 2));
         if (data.success && Array.isArray(data.data)) {
+          console.log('🖼️ First image structure:', data.data[0]);
           setGalleryImages(data.data);
         } else {
           console.warn('Invalid gallery response format:', data);
@@ -396,7 +397,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
         `}
       </style>
 
-      <div className="homepage-content">
+      <div className="homepage-content" style={{ minHeight: 'auto' }}>
       <div
         className="desktop-container"
         style={{
@@ -405,7 +406,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
           margin: '0 auto',
           position: 'relative',
           background: '#000000',
-          minHeight: '100vh',
+          minHeight: 'auto', // 🚨 CRITICAL FIX: Removed 100vh to prevent forced spacing
           padding: '0 20px', // 🚨 MATCH HOMEPAGE: INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
           boxSizing: 'border-box'
         }}
@@ -583,7 +584,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
           {/* Gallery Section - Masonry Layout with Optimized Spacing */}
           <div
             style={{
-              marginTop: isMobile ? '24px' : '32px', // Reduced mobile spacing to fix blank space
+              marginTop: isMobile ? '0px' : '24px', // CRITICAL FIX: Eliminated mobile spacing completely
               marginBottom: '32px'
             }}
           >
@@ -594,7 +595,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 fontWeight: '600',
                 fontSize: isMobile ? '24px' : '32px',
                 lineHeight: '1.3em',
-                marginBottom: isMobile ? '16px' : '24px', // Reduced mobile spacing
+                marginBottom: isMobile ? '8px' : '16px', // CRITICAL FIX: Further reduced spacing
                 textAlign: 'center',
                 opacity: 0,
                 animation: 'fadeInUp 0.6s ease-out 0.3s forwards'
@@ -607,10 +608,6 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               images={galleryImages}
               columns={{ desktop: 4, tablet: 3, mobile: 2 }}
               gap={isMobile ? 12 : 16}
-              onImageClick={(image) => {
-                // Future: Implement lightbox or modal
-                console.log('Image clicked:', image);
-              }}
             />
           </div>
 
