@@ -265,9 +265,8 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               style={{
                 width: '100%',
                 maxWidth: '430px',
-                padding: '40px 24px 80px 24px', // Added bottom padding for scroll space
-                boxSizing: 'border-box',
-                minHeight: '100%' // Ensure content takes full height
+                padding: '40px 24px 0px 24px', // Removed bottom padding
+                boxSizing: 'border-box'
               }}
             >
             {/* Page Title */}
@@ -293,7 +292,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                 fontWeight: '400',
                 fontSize: '16px',
                 lineHeight: '1.5em',
-                marginBottom: '20px',
+                marginBottom: '0px',
                 textAlign: 'left'
               }}
             >
@@ -333,7 +332,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
             {/* Gallery Section - Mobile Masonry */}
             <div
               style={{
-                marginTop: '32px',
+                marginTop: '0px',
                 marginBottom: '24px',
                 padding: '0 16px'
               }}

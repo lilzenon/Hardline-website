@@ -1,50 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import Dither from './ui/Dither';
 
 /**
- * Modern 404 Not Found Page with Dither Effect Background
+ * Minimalist 404 Not Found Page with Dither Effect Background
  * 
  * Features:
- * - Full-screen dither effect background with mouse interaction
- * - Glassmorphism design system consistency
- * - Responsive typography and layout
- * - Smooth animations and transitions
- * - Auto-redirect countdown option
+ * - Full-screen dither effect background
+ * - Ultra-transparent glassmorphism card
+ * - BOUNCE2BOUNCE logo positioning
+ * - Minimalist design with subtle button
+ * - Responsive layout
  * - Accessibility compliant
  */
 export default function NotFoundPage() {
-  const navigate = useNavigate();
-  const [countdown, setCountdown] = useState(10);
-  const [showCountdown, setShowCountdown] = useState(false);
-
-  useEffect(() => {
-    // Start countdown after 3 seconds
-    const startTimer = setTimeout(() => {
-      setShowCountdown(true);
-    }, 3000);
-
-    return () => clearTimeout(startTimer);
-  }, []);
-
-  useEffect(() => {
-    if (!showCountdown) return;
-
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          navigate('/');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [showCountdown, navigate]);
-
+  // Simple navigation function
   const handleGoHome = () => {
-    navigate('/');
+    if (window.navigateWithTransition) {
+      window.navigateWithTransition('/');
+    } else {
+      window.location.href = '/';
+    }
   };
 
   return (
@@ -54,12 +29,13 @@ export default function NotFoundPage() {
       height: '100vh',
       overflow: 'hidden',
       background: '#000000',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif'
+      justifyContent: 'center'
     }}>
-      {/* Dither Effect Background */}
+      {/* Dither Background Effect */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -69,190 +45,136 @@ export default function NotFoundPage() {
         zIndex: 1
       }}>
         <Dither
-          waveColor={[0.3, 0.3, 0.4]}
-          disableAnimation={false}
-          enableMouseInteraction={true}
-          mouseRadius={0.4}
-          colorNum={6}
-          waveAmplitude={0.2}
-          waveFrequency={2}
-          waveSpeed={0.03}
+          waveSpeed={0.05}
+          waveFrequency={19}
+          waveAmplitude={0.51}
+          waveColor={[0.5, 0.5, 0.5]}
+          colorNum={2.5}
           pixelSize={3}
+          disableAnimation={false}
+          enableMouseInteraction={false}
+          mouseRadius={0.3}
         />
       </div>
 
-      {/* Content Container */}
+
+
+      {/* Minimalist 404 Card */}
       <div style={{
         position: 'relative',
-        zIndex: 2,
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         textAlign: 'center',
-        padding: '40px',
-        maxWidth: '600px',
-        width: '100%'
+        padding: '40px 40px',
+        borderRadius: '16px',
+        background: 'rgba(22, 22, 22, 0.12)',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        maxWidth: '400px',
+        width: '90%'
       }}>
-        {/* Glassmorphism Card */}
+        {/* BOUNCE2BOUNCE Logo */}
         <div style={{
-          background: 'rgba(22, 22, 22, 0.85)',
-          border: '1px solid rgba(56, 56, 56, 0.4)',
-          borderRadius: '24px',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          padding: '48px 32px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          animation: 'fadeInUp 0.8s ease-out forwards',
-          opacity: 0
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px'
         }}>
-          {/* 404 Title */}
-          <h1 style={{
-            fontSize: 'clamp(4rem, 8vw, 8rem)',
-            fontWeight: '800',
-            color: '#FFFFFF',
-            margin: '0 0 16px 0',
-            lineHeight: '1',
-            letterSpacing: '-0.02em',
-            background: 'linear-gradient(135deg, #FFFFFF 0%, #B0B0B0 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            animation: 'glitch 2s infinite alternate'
-          }}>
-            404
-          </h1>
-
-          {/* Subtitle */}
-          <h2 style={{
-            fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
-            fontWeight: '600',
-            color: '#FFFFFF',
-            margin: '0 0 24px 0',
-            lineHeight: '1.2',
-            opacity: 0,
-            animation: 'fadeInUp 0.8s ease-out 0.3s forwards'
-          }}>
-            Page Not Found
-          </h2>
-
-          {/* Description */}
-          <p style={{
-            fontSize: 'clamp(1rem, 2.5vw, 1.25rem)',
-            color: 'rgba(255, 255, 255, 0.8)',
-            margin: '0 0 40px 0',
-            lineHeight: '1.6',
-            opacity: 0,
-            animation: 'fadeInUp 0.8s ease-out 0.6s forwards'
-          }}>
-            The page you're looking for doesn't exist or has been moved.
-            <br />
-            Let's get you back to where the music lives.
-          </p>
-
-          {/* Action Buttons */}
+          <img
+            src="/images/figma-exact/b2b-logo-nav.svg"
+            alt="BOUNCE2BOUNCE"
+            style={{
+              height: '48px',
+              width: 'auto',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              opacity: 0.95,
+              filter: 'brightness(0) invert(1)'
+            }}
+            onClick={handleGoHome}
+            onError={(e) => {
+              // Fallback to text if logo fails to load
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            alignItems: 'center',
-            opacity: 0,
-            animation: 'fadeInUp 0.8s ease-out 0.9s forwards'
+            display: 'none',
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '18px',
+            fontWeight: '600',
+            letterSpacing: '0.5px'
           }}>
-            {/* Primary Button */}
-            <button
-              onClick={handleGoHome}
-              style={{
-                background: 'linear-gradient(135deg, #319DFF 0%, #1E88E5 100%)',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '16px 32px',
-                fontSize: '1.1rem',
-                fontWeight: '600',
-                color: '#FFFFFF',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: '0 4px 16px rgba(49, 157, 255, 0.3)',
-                minWidth: '200px',
-                fontFamily: 'inherit'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 8px 24px rgba(49, 157, 255, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 16px rgba(49, 157, 255, 0.3)';
-              }}
-            >
-              Take Me Home
-            </button>
-
-            {/* Countdown Display */}
-            {showCountdown && (
-              <p style={{
-                fontSize: '0.9rem',
-                color: 'rgba(255, 255, 255, 0.6)',
-                margin: '16px 0 0 0',
-                animation: 'fadeIn 0.5s ease-out forwards'
-              }}>
-                Redirecting automatically in {countdown} seconds...
-              </p>
-            )}
+            BOUNCE2BOUNCE
           </div>
         </div>
+
+        {/* 404 Title */}
+        <h1 style={{
+          fontSize: 'clamp(4rem, 8vw, 6rem)',
+          fontWeight: '800',
+          color: 'rgba(255, 255, 255, 0.95)',
+          margin: '0 0 16px 0',
+          lineHeight: '1',
+          letterSpacing: '-0.02em',
+          textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+        }}>
+          404
+        </h1>
+
+        {/* Subtitle */}
+        <h2 style={{
+          fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)',
+          fontWeight: '500',
+          color: 'rgba(255, 255, 255, 0.8)',
+          margin: '0 0 32px 0',
+          lineHeight: '1.2'
+        }}>
+          Not Found
+        </h2>
+
+        {/* Minimalist Button */}
+        <button
+          onClick={handleGoHome}
+          style={{
+            padding: '14px 28px',
+            fontSize: '1rem',
+            fontWeight: '500',
+            color: 'rgba(255, 255, 255, 0.9)',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(2px)',
+            transform: 'translateY(0)',
+            outline: 'none'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.12)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+            e.target.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            e.target.style.transform = 'translateY(0)';
+          }}
+          onFocus={(e) => {
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+          }}
+          onBlur={(e) => {
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+          }}
+          aria-label="Go back to homepage"
+        >
+          Go Home
+        </button>
       </div>
-
-      {/* CSS Animations */}
-      <style>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes glitch {
-          0% {
-            text-shadow: 0 0 0 transparent;
-          }
-          2% {
-            text-shadow: 2px 0 0 #ff0000, -2px 0 0 #00ffff;
-          }
-          4% {
-            text-shadow: 0 0 0 transparent;
-          }
-          100% {
-            text-shadow: 0 0 0 transparent;
-          }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-          .dither-container {
-            height: 100vh;
-            height: 100dvh; /* Dynamic viewport height for mobile */
-          }
-        }
-
-        /* Accessibility - Respect reduced motion preference */
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

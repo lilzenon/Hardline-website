@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
  */
 const BrandedLoader = ({
   message = "Loading...",
-  showMessage = true,
+  showMessage = false, // Default to false for minimalist design
   fullScreen = true,
   minDisplayTime = 800 // Minimum time to show loader for smooth UX
 }) => {
@@ -51,14 +51,12 @@ const BrandedLoader = ({
     left: 0,
     width: '100%',
     height: fullScreen ? '100vh' : '100%',
-    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(22, 22, 22, 0.98) 100%)',
+    background: '#000000', // Plain black background, no gradient
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)', // Safari support
     fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     opacity: fadeOut ? 0 : 1,
     transition: shouldAnimate ? 'opacity 0.3s ease-out, transform 0.3s ease-out' : 'none',
@@ -68,7 +66,7 @@ const BrandedLoader = ({
 
   const logoContainerStyle = {
     position: 'relative',
-    marginBottom: showMessage ? '32px' : '0',
+    marginBottom: '0', // Always 0 for minimalist design
     transform: shouldAnimate && !fadeOut ? 'scale(1)' : 'scale(0.9)',
     animation: shouldAnimate && !fadeOut ? 'brandedLoaderPulse 2.5s ease-in-out infinite' : 'none',
     transition: shouldAnimate ? 'transform 0.3s ease-out' : 'none'
@@ -77,8 +75,7 @@ const BrandedLoader = ({
   const logoStyle = {
     width: '120px',
     height: 'auto',
-    filter: 'drop-shadow(0 4px 20px rgba(49, 157, 255, 0.3))',
-    transition: shouldAnimate ? 'filter 0.3s ease' : 'none'
+    transition: shouldAnimate ? 'transform 0.3s ease' : 'none'
   };
 
   const messageStyle = {
@@ -106,11 +103,9 @@ const BrandedLoader = ({
       @keyframes brandedLoaderPulse {
         0%, 100% {
           transform: scale(1);
-          filter: drop-shadow(0 4px 20px rgba(49, 157, 255, 0.3));
         }
         50% {
           transform: scale(1.03);
-          filter: drop-shadow(0 6px 25px rgba(49, 157, 255, 0.4));
         }
       }
 
