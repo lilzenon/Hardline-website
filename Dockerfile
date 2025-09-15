@@ -49,7 +49,7 @@ COPY . .
 ENV NODE_ENV=production
 RUN --mount=type=cache,target=/root/.npm \
     npm run build && \
-    npm prune --omit=dev && \
+    npm prune --omit=dev --legacy-peer-deps && \
     npm cache clean --force
 
 # Production stage
