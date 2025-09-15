@@ -4,7 +4,7 @@ import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
 
 // Lazy load the gallery component for better mobile performance
-const SimpleDomeGallery = lazy(() => import('./ui/SimpleDomeGallery'));
+const DomeGallery = lazy(() => import('./ui/DomeGallery'));
 
 /**
  * Mobile-only About page component with shared navigation
@@ -326,39 +326,43 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                   Loading gallery...
                 </div>
               }>
-                <SimpleDomeGallery
-                  items={[
+                <DomeGallery
+                  images={[
                     {
-                      id: "1",
-                      img: "https://picsum.photos/id/1015/600/900",
-                      url: "https://example.com/one",
-                      title: "Event Highlights",
-                      description: "Memorable moments"
+                      src: "https://picsum.photos/id/1015/600/900",
+                      alt: "Event Highlights"
                     },
                     {
-                      id: "2",
-                      img: "https://picsum.photos/id/1011/600/750",
-                      url: "https://example.com/two",
-                      title: "Live Performances",
-                      description: "Artists in action"
+                      src: "https://picsum.photos/id/1011/600/750",
+                      alt: "Live Performances"
                     },
                     {
-                      id: "3",
-                      img: "https://picsum.photos/id/1020/600/800",
-                      url: "https://example.com/three",
-                      title: "Venue Atmosphere",
-                      description: "The energy"
+                      src: "https://picsum.photos/id/1020/600/800",
+                      alt: "Venue Atmosphere"
                     },
                     {
-                      id: "4",
-                      img: "https://picsum.photos/id/1025/600/700",
-                      url: "https://example.com/four",
-                      title: "Behind the Scenes",
-                      description: "Event production"
+                      src: "https://picsum.photos/id/1025/600/700",
+                      alt: "Behind the Scenes"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1035/600/650",
+                      alt: "Community"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1040/600/850",
+                      alt: "Production"
                     }
                   ]}
-                  autoRotate={true}
-                  autoRotateSpeed={40}
+                  segments={34}
+                  fit={0.7}
+                  minRadius={300}
+                  maxRadius={500}
+                  overlayBlurColor="rgba(22, 22, 22, 0.8)"
+                  imageBorderRadius="12px"
+                  openedImageBorderRadius="12px"
+                  openedImageWidth="350px"
+                  openedImageHeight="450px"
+                  grayscale={false}
                 />
               </Suspense>
             </div>

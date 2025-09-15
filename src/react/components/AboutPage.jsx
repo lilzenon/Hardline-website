@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
 
 // Lazy load the gallery component for better performance
-const SimpleDomeGallery = lazy(() => import('./ui/SimpleDomeGallery'));
+const DomeGallery = lazy(() => import('./ui/DomeGallery'));
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -491,53 +491,51 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 Loading gallery...
               </div>
             }>
-              <SimpleDomeGallery
-                items={[
+              <DomeGallery
+                images={[
                   {
-                    id: "1",
-                    img: "https://picsum.photos/id/1015/600/900",
-                    url: "https://example.com/one",
-                    title: "Event Highlights",
-                    description: "Memorable moments from our events"
+                    src: "https://picsum.photos/id/1015/600/900",
+                    alt: "Event Highlights"
                   },
                   {
-                    id: "2",
-                    img: "https://picsum.photos/id/1011/600/750",
-                    url: "https://example.com/two",
-                    title: "Live Performances",
-                    description: "Artists in action"
+                    src: "https://picsum.photos/id/1011/600/750",
+                    alt: "Live Performances"
                   },
                   {
-                    id: "3",
-                    img: "https://picsum.photos/id/1020/600/800",
-                    url: "https://example.com/three",
-                    title: "Venue Atmosphere",
-                    description: "The energy of our venues"
+                    src: "https://picsum.photos/id/1020/600/800",
+                    alt: "Venue Atmosphere"
                   },
                   {
-                    id: "4",
-                    img: "https://picsum.photos/id/1025/600/700",
-                    url: "https://example.com/four",
-                    title: "Behind the Scenes",
-                    description: "What goes into our events"
+                    src: "https://picsum.photos/id/1025/600/700",
+                    alt: "Behind the Scenes"
                   },
                   {
-                    id: "5",
-                    img: "https://picsum.photos/id/1035/600/650",
-                    url: "https://example.com/five",
-                    title: "Community",
-                    description: "Our amazing audience"
+                    src: "https://picsum.photos/id/1035/600/650",
+                    alt: "Community"
                   },
                   {
-                    id: "6",
-                    img: "https://picsum.photos/id/1040/600/850",
-                    url: "https://example.com/six",
-                    title: "Production",
-                    description: "Technical excellence"
+                    src: "https://picsum.photos/id/1040/600/850",
+                    alt: "Production"
+                  },
+                  {
+                    src: "https://picsum.photos/id/1050/600/600",
+                    alt: "Special Moments"
+                  },
+                  {
+                    src: "https://picsum.photos/id/1060/600/750",
+                    alt: "Future Events"
                   }
                 ]}
-                autoRotate={true}
-                autoRotateSpeed={50}
+                segments={34}
+                fit={0.6}
+                minRadius={400}
+                maxRadius={800}
+                overlayBlurColor="rgba(22, 22, 22, 0.8)"
+                imageBorderRadius="16px"
+                openedImageBorderRadius="16px"
+                openedImageWidth="500px"
+                openedImageHeight="600px"
+                grayscale={false}
               />
             </Suspense>
           </div>
