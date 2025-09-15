@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useViewportDimensions } from '../hooks/usePerformantResize';
+import { usePerformantResize } from '../hooks/usePerformantResize';
 
 const ContactPage = () => {
-  // FIXED: Use useViewportDimensions to avoid circular dependency
-  const { isMobile: isMobileByWidth, width: viewportWidth } = useViewportDimensions();
+  // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeNavTab, setActiveNavTab] = useState('Contact');
@@ -13,30 +12,30 @@ const ContactPage = () => {
     rightHeroWidth: 498,
     rightHeroHeight: 299,
     gap: 32,
-    containerWidth: 825,
+    containerWidth: 1192, // 🚨 MATCH HOMEPAGE: Updated from 825px to 1192px for consistency
     eventsTextGap: 18,
     eventCardWidth: 220,
     eventCardHeight: 85,
-    eventsWidth: 440,
-    textUsWidth: 299
+    eventsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 440px to 380px
+    textUsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 299px to 380px
+    scale: 1
   });
 
-  // Mobile detection effect - FIXED: Added proper dependencies
+  // 🚨 HOMEPAGE CONSISTENCY: Device detection using viewport width from usePerformantResize
   useEffect(() => {
     const detectDevice = () => {
       // Check user agent for mobile devices
       const userAgent = navigator.userAgent || '';
       const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
 
-      // Device is mobile if either condition is true OR viewport is <= 768px
-      const deviceIsMobile = isMobileByWidth || isMobileByUA || viewportWidth <= 768;
+      // Device is mobile if viewport is <= 768px OR user agent indicates mobile
+      const deviceIsMobile = viewportWidth <= 768 || isMobileByUA;
 
       setIsMobile(deviceIsMobile);
       setIsLoading(false);
 
       console.log('📱 Contact Page Device Detection:', {
         viewportWidth,
-        isMobileByWidth,
         isMobileByUA,
         finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
       });
@@ -44,59 +43,62 @@ const ContactPage = () => {
 
     // Run detection whenever viewport dimensions change
     detectDevice();
-  }, [isMobileByWidth, viewportWidth]); // FIXED: Added dependencies to trigger on viewport changes
+  }, [viewportWidth]); // 🚨 HOMEPAGE CONSISTENCY: Depend on viewportWidth from usePerformantResize
 
-  // FIXED: Use viewport dimensions from useViewportDimensions hook for responsive calculations
-  useEffect(() => {
-    const updateScaling = () => {
-      // Base dimensions for scaling calculations
-      const availableWidth = viewportWidth - 32; // Account for 16px padding on each side
-      const baseHeroWidth = 299;
-      const baseHeroHeight = 299;
-      const baseRightHeroWidth = 498;
-      const baseRightHeroHeight = 299;
-      const baseGap = 32;
-      const baseContainerWidth = 825; // Fixed container width for alignment
-      const containerPadding = 32; // 16px on each side
-      const availableContainerWidth = baseContainerWidth - containerPadding; // 793px
+  // 🚨 HOMEPAGE CONSISTENCY: Use exact same responsive scaling system as homepage
+  const { width: viewportWidth } = usePerformantResize((dimensions) => {
+    const { width: currentViewportWidth } = dimensions;
+    const padding = currentViewportWidth <= 360 ? 16 : currentViewportWidth <= 480 ? 24 : 32;
+    const availableWidth = currentViewportWidth - padding;
 
-      // Calculate scale factor to fit both hero sections and events/text sections
-      const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
-      const baseEventsWidth = 440;  // Reduced from 507px to 440px as requested
-      const baseTextUsWidth = 299;
-      const baseEventsTextGap = 50;  // Increased gap for visible separation
-      const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 789px
+    // 🚨 MATCH HOMEPAGE: Base dimensions from homepage FigmaDesktop.jsx
+    const baseHeroWidth = 299;
+    const baseHeroHeight = 299;
+    const baseRightHeroWidth = 498;
+    const baseRightHeroHeight = 299;
+    const baseGap = 32;
+    const baseContainerWidth = 1192; // 🚨 MATCH HOMEPAGE: Same as homepage
+    const containerPadding = 48; // 🚨 MATCH HOMEPAGE: Increased padding for larger container (24px on each side)
+    const availableContainerWidth = baseContainerWidth - containerPadding; // 1144px (1192px - 48px)
 
-      // Use the more restrictive constraint to ensure both sections fit
-      const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
-      let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
+    // 🚨 MATCH HOMEPAGE: Calculate scale factor to fit both hero sections and events/text sections
+    const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
+    const baseEventsWidth = 380;  // 🚨 MATCH HOMEPAGE: Further reduced to make it more compact
+    const baseTextUsWidth = 380;  // 🚨 MATCH HOMEPAGE: Match Events section base width exactly
+    const baseEventsTextGap = 40;  // 🚨 MATCH HOMEPAGE: Reduced gap slightly
+    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 800px
 
-      // Apply constraints - keep minimum but add reasonable maximum for desktop
-      if (scale < 0.25) scale = 0.25;  // Minimum for small screens
-      if (scale > 1.25) scale = 1.25;    // Maximum for desktop (prevents oversized content)
+    // Use the more restrictive constraint to ensure both sections fit
+    const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
+    let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
 
-      const scaledDimensions = {
-        heroWidth: Math.round(baseHeroWidth * scale),
-        heroHeight: Math.round(baseHeroHeight * scale),
-        rightHeroWidth: Math.round(baseRightHeroWidth * scale),
-        rightHeroHeight: Math.round(baseRightHeroHeight * scale),
-        gap: Math.round(baseGap * scale),
-        // Container width stays fixed for alignment
-        containerWidth: baseContainerWidth,  // Always 825px for perfect alignment
-        // Scale events and text sections to match hero scaling
-        eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
-        textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
-        eventsTextGap: 18,  // Always 18px gap between Events and Text us
-        eventCardWidth: 220,  // Set to 220px as requested
-        eventCardHeight: 85   // Always 85px event card height
-      };
+    // 🚨 MATCH HOMEPAGE: Cap scale at 1.8x to prevent oversized content
+    scale = Math.min(scale, 1.8);
 
-    setScaledDimensions(scaledDimensions);
-    console.log(`🎯 Contact page scaling: ${scale.toFixed(3)} for viewport ${viewportWidth}px (max 1.25x)`, scaledDimensions);
+    const scaledDimensions = {
+      heroWidth: Math.round(baseHeroWidth * scale * 0.90), // 🚨 MATCH HOMEPAGE: Reduce hero size by 10% to align with smaller events section
+      heroHeight: Math.round(baseHeroHeight * scale * 0.90), // 🚨 MATCH HOMEPAGE: Reduce hero size by 10% to align with smaller events section
+      rightHeroWidth: Math.round(baseRightHeroWidth * scale),
+      rightHeroHeight: Math.round(baseRightHeroHeight * scale),
+      gap: Math.round(baseGap * scale),
+      // Container width stays fixed for alignment
+      containerWidth: baseContainerWidth,  // 🚨 MATCH HOMEPAGE: Now 1192px for tighter layout alignment
+      // Scale events and text sections to match hero scaling
+      eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
+      textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
+      eventsTextGap: Math.round(baseEventsTextGap * scale),  // Scale gap between Events and Text us
+      eventCardWidth: 220,  // Set to 220px as requested
+      eventCardHeight: 85,   // Always 85px event card height
+      scale: scale
     };
 
-    updateScaling();
-  }, [viewportWidth]); // Depend on viewportWidth from useViewportDimensions
+    // 🚨 MATCH HOMEPAGE: Update mobile state based on whether events list can fit alongside text us section
+    // Events list needs ~440px + Text us needs ~299px + gap ~50px = ~789px minimum
+    setIsMobile(currentViewportWidth <= 850);
+
+    setScaledDimensions(scaledDimensions);
+    console.log(`🎯 Contact page responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.8x, container: 1192px)`, scaledDimensions);
+  });
 
   const handleNavClick = (tab) => {
     setActiveNavTab(tab);
@@ -222,7 +224,7 @@ const ContactPage = () => {
           position: 'relative',
           background: '#000000',
           minHeight: '100vh',
-          padding: '0 16px',
+          padding: '0 20px', // 🚨 MATCH HOMEPAGE: INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
           boxSizing: 'border-box'
         }}
       >
