@@ -303,59 +303,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               }}
             >
 
-            {/* Call to Action */}
-            <div
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '16px',
-                padding: '24px',
-                textAlign: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
-              }}
-            >
-              <div
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter',
-                  fontWeight: '600',
-                  fontSize: '18px',
-                  lineHeight: '1.3em',
-                  marginBottom: '12px'
-                }}
-              >
-                Ready to Get Started?
-              </div>
-              <div
-                style={{
-                  color: 'rgba(255, 255, 255, 0.8)',
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
-                  lineHeight: '1.4em',
-                  marginBottom: '20px'
-                }}
-              >
-                Join our community and never miss an exclusive opportunity again.
-              </div>
-              <button
-                onClick={() => window.location.href = '/'}
-                style={{
-                  background: '#00FF40',
-                  color: '#000000',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '12px 24px',
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-              >
-                Get Started
-              </button>
-            </div>
+
             </div>
           </div>
         </div>
