@@ -221,16 +221,13 @@ main.sphere-main {
   .sphere-root {
     --viewer-pad: 20px;
   }
-  
+
   .item__image {
     inset: 8px;
-  }
-  
-  .viewer .enlarge {
     border-radius: 12px;
   }
-  
-  .item__image {
+
+  .viewer .enlarge {
     border-radius: 12px;
   }
 }
@@ -239,5 +236,17 @@ main.sphere-main {
 @media (max-width: 1023px) and (min-width: 768px) {
   .sphere-root {
     --viewer-pad: 40px;
+  }
+}
+
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .item__image,
+  .sphere,
+  .viewer .enlarge,
+  .viewer .scrim {
+    transition: none !important;
+    animation: none !important;
   }
 }

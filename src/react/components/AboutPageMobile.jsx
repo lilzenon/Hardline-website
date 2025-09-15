@@ -308,7 +308,12 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               Gallery
             </div>
 
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{
+              marginBottom: '24px',
+              height: '400px',
+              width: '100%',
+              position: 'relative'
+            }}>
               <Suspense fallback={
                 <div style={{
                   display: 'flex',
@@ -354,9 +359,9 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                     }
                   ]}
                   segments={34}
-                  fit={0.7}
+                  fit={0.5}
                   minRadius={300}
-                  maxRadius={500}
+                  maxRadius={600}
                   overlayBlurColor="rgba(22, 22, 22, 0.8)"
                   imageBorderRadius="12px"
                   openedImageBorderRadius="12px"

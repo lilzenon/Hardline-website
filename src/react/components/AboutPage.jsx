@@ -474,70 +474,76 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               Gallery
             </div>
 
-            <Suspense fallback={
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '450px',
-                color: '#FFFFFF',
-                fontFamily: 'Inter, sans-serif',
-                fontSize: '16px',
-                opacity: 0.7,
-                background: 'rgba(22, 22, 22, 0.8)',
-                borderRadius: '16px',
-                border: '1px solid rgba(56, 56, 56, 0.3)'
-              }}>
-                Loading gallery...
-              </div>
-            }>
-              <DomeGallery
-                images={[
-                  {
-                    src: "https://picsum.photos/id/1015/600/900",
-                    alt: "Event Highlights"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1011/600/750",
-                    alt: "Live Performances"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1020/600/800",
-                    alt: "Venue Atmosphere"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1025/600/700",
-                    alt: "Behind the Scenes"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1035/600/650",
-                    alt: "Community"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1040/600/850",
-                    alt: "Production"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1050/600/600",
-                    alt: "Special Moments"
-                  },
-                  {
-                    src: "https://picsum.photos/id/1060/600/750",
-                    alt: "Future Events"
-                  }
-                ]}
-                segments={34}
-                fit={0.6}
-                minRadius={400}
-                maxRadius={800}
-                overlayBlurColor="rgba(22, 22, 22, 0.8)"
-                imageBorderRadius="16px"
-                openedImageBorderRadius="16px"
-                openedImageWidth="500px"
-                openedImageHeight="600px"
-                grayscale={false}
-              />
-            </Suspense>
+            <div style={{
+              height: '500px',
+              width: '100%',
+              position: 'relative'
+            }}>
+              <Suspense fallback={
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '450px',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '16px',
+                  opacity: 0.7,
+                  background: 'rgba(22, 22, 22, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(56, 56, 56, 0.3)'
+                }}>
+                  Loading gallery...
+                </div>
+              }>
+                <DomeGallery
+                  images={[
+                    {
+                      src: "https://picsum.photos/id/1015/600/900",
+                      alt: "Event Highlights"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1011/600/750",
+                      alt: "Live Performances"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1020/600/800",
+                      alt: "Venue Atmosphere"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1025/600/700",
+                      alt: "Behind the Scenes"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1035/600/650",
+                      alt: "Community"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1040/600/850",
+                      alt: "Production"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1050/600/600",
+                      alt: "Special Moments"
+                    },
+                    {
+                      src: "https://picsum.photos/id/1060/600/750",
+                      alt: "Future Events"
+                    }
+                  ]}
+                  segments={34}
+                  fit={0.6}
+                  minRadius={400}
+                  maxRadius={800}
+                  overlayBlurColor="rgba(22, 22, 22, 0.8)"
+                  imageBorderRadius="16px"
+                  openedImageBorderRadius="16px"
+                  openedImageWidth="500px"
+                  openedImageHeight="600px"
+                  grayscale={false}
+                />
+              </Suspense>
+            </div>
           </div>
         </div>
       </div>
