@@ -450,14 +450,17 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             )}
           </div>
 
-          {/* Gallery Section - Dome Gallery */}
+          {/* Gallery Section - Dome Gallery - Full Width Optimized */}
           <div
             style={{
-              width: '100%',
-              maxWidth: '1200px',
-              margin: '48px auto 0 auto',
-              padding: '0 16px',
-              boxSizing: 'border-box'
+              width: '100vw',
+              position: 'relative',
+              left: '50%',
+              right: '50%',
+              marginLeft: '-50vw',
+              marginRight: '-50vw',
+              marginTop: '48px',
+              background: '#000000'
             }}
           >
             <div
@@ -468,14 +471,17 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 fontSize: '32px',
                 lineHeight: '1.3em',
                 marginBottom: '32px',
-                textAlign: 'center'
+                textAlign: 'center',
+                padding: '0 16px'
               }}
             >
               Gallery
             </div>
 
             <div style={{
-              height: '500px',
+              height: '70vh',
+              minHeight: '500px',
+              maxHeight: '800px',
               width: '100%',
               position: 'relative'
             }}>
@@ -484,12 +490,13 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: '450px',
+                  height: '100%',
                   color: '#FFFFFF',
                   fontFamily: 'Inter, sans-serif',
                   fontSize: '16px',
                   opacity: 0.7,
                   background: 'rgba(22, 22, 22, 0.8)',
+                  margin: '0 16px',
                   borderRadius: '16px',
                   border: '1px solid rgba(56, 56, 56, 0.3)'
                 }}>
@@ -532,9 +539,10 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                     }
                   ]}
                   segments={34}
-                  fit={0.6}
-                  minRadius={400}
-                  maxRadius={800}
+                  fit={0.8}
+                  fitBasis="width"
+                  minRadius={300}
+                  maxRadius={1200}
                   overlayBlurColor="rgba(22, 22, 22, 0.8)"
                   imageBorderRadius="16px"
                   openedImageBorderRadius="16px"

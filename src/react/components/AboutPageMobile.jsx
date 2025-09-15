@@ -302,15 +302,20 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                 fontSize: '20px',
                 lineHeight: '1.3em',
                 marginBottom: '20px',
-                marginTop: '24px'
+                marginTop: '24px',
+                textAlign: 'center'
               }}
             >
               Gallery
             </div>
+            </div>
 
+            {/* Gallery Container - Full Width */}
             <div style={{
               marginBottom: '24px',
-              height: '400px',
+              height: '60vh',
+              minHeight: '350px',
+              maxHeight: '500px',
               width: '100%',
               position: 'relative'
             }}>
@@ -319,7 +324,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  height: '350px',
+                  height: '100%',
                   color: '#FFFFFF',
                   fontFamily: 'Inter, sans-serif',
                   fontSize: '14px',
@@ -359,18 +364,30 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                     }
                   ]}
                   segments={34}
-                  fit={0.5}
-                  minRadius={300}
-                  maxRadius={600}
+                  fit={0.7}
+                  fitBasis="width"
+                  minRadius={200}
+                  maxRadius={400}
                   overlayBlurColor="rgba(22, 22, 22, 0.8)"
                   imageBorderRadius="12px"
                   openedImageBorderRadius="12px"
-                  openedImageWidth="350px"
-                  openedImageHeight="450px"
+                  openedImageWidth="300px"
+                  openedImageHeight="400px"
                   grayscale={false}
                 />
               </Suspense>
             </div>
+
+            {/* Content Wrapper Continued */}
+            <div
+              style={{
+                width: '100%',
+                maxWidth: '430px',
+                padding: '0 24px 80px 24px',
+                boxSizing: 'border-box',
+                margin: '0 auto'
+              }}
+            >
 
             {/* Call to Action */}
             <div
@@ -424,6 +441,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               >
                 Get Started
               </button>
+            </div>
             </div>
             </div>
           </div>
