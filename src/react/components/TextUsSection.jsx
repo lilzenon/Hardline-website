@@ -1,30 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { usePerformantResize } from '../hooks/usePerformantResize';
 
 const TextUsSection = ({ scaledDimensions }) => {
   // Calculate width to match Events section exactly for proper alignment
   const calculatedWidth = Math.round(scaledDimensions.eventsWidth);
 
-  // 🚨 RESPONSIVE IFRAME HEIGHT CALCULATION
-  // Calculate responsive iframe height based on container width to account for text wrapping
-  const getResponsiveIframeHeight = () => {
+  // 🚨 DYNAMIC RESPONSIVE IFRAME HEIGHT STATE
+  // State to track iframe height that updates on viewport resize
+  const [iframeHeight, setIframeHeight] = useState(85);
+
+  // 🚨 AGGRESSIVE RESPONSIVE IFRAME HEIGHT CALCULATION
+  // Calculate responsive iframe height with more aggressive scaling to prevent text wrapping overlap
+  const calculateResponsiveIframeHeight = useCallback(() => {
     const containerWidth = scaledDimensions.eventsWidth * 1.2; // Match parent container width
 
     // Base height for wide screens where text doesn't wrap
     const baseHeight = 85;
 
-    // Add extra height for narrower screens where disclaimer text wraps
-    if (containerWidth < 400) {
-      return baseHeight + 25; // Extra height for very narrow screens (mobile)
-    } else if (containerWidth < 500) {
-      return baseHeight + 15; // Extra height for narrow screens (small tablet)
-    } else if (containerWidth < 600) {
-      return baseHeight + 10; // Extra height for medium screens
+    // 🚨 AGGRESSIVE HEIGHT SCALING: Add substantial extra height for text wrapping scenarios
+    if (containerWidth < 350) {
+      return baseHeight + 45; // Very aggressive for very narrow screens (mobile portrait)
+    } else if (containerWidth < 450) {
+      return baseHeight + 35; // Aggressive for narrow screens (mobile landscape)
+    } else if (containerWidth < 550) {
+      return baseHeight + 25; // Substantial for small tablet screens
+    } else if (containerWidth < 650) {
+      return baseHeight + 15; // Moderate for medium tablet screens
+    } else if (containerWidth < 750) {
+      return baseHeight + 8; // Small adjustment for larger tablet screens
     }
 
-    return baseHeight; // Default height for wide screens
-  };
+    return baseHeight; // Default height for wide desktop screens
+  }, [scaledDimensions.eventsWidth]);
 
-  const responsiveIframeHeight = getResponsiveIframeHeight();
+  // 🚨 DYNAMIC RESIZE HANDLER
+  // Update iframe height when viewport changes
+  const handleResize = useCallback(() => {
+    const newHeight = calculateResponsiveIframeHeight();
+    setIframeHeight(newHeight);
+  }, [calculateResponsiveIframeHeight]);
+
+  // 🚨 USE PERFORMANT RESIZE HOOK
+  // Debounced resize listener for optimal performance
+  usePerformantResize(handleResize);
+
+  // 🚨 INITIAL HEIGHT CALCULATION
+  // Set initial iframe height on component mount and when scaledDimensions change
+  useEffect(() => {
+    const initialHeight = calculateResponsiveIframeHeight();
+    setIframeHeight(initialHeight);
+  }, [calculateResponsiveIframeHeight]);
 
   return (
     <div
@@ -59,12 +84,12 @@ const TextUsSection = ({ scaledDimensions }) => {
         Follow Us
       </div>
 
-      {/* Laylo Iframe - Responsive Height to Prevent Overlap */}
+      {/* Laylo Iframe - Dynamic Responsive Height to Prevent Overlap */}
       <div
         style={{
           position: 'relative',
           width: 'calc(100% + 10px)', // 🚨 FIX: Increased width by 10px as requested
-          height: `${responsiveIframeHeight}px`, // 🚨 RESPONSIVE: Dynamic height based on container width to prevent text wrapping overlap
+          height: `${iframeHeight}px`, // 🚨 DYNAMIC: State-based height that updates on viewport resize
           minHeight: '85px', // 🚨 RESPONSIVE: Minimum height constraint
           marginLeft: '-5px', // 🚨 FIX: Center the wider iframe by offsetting half the extra width
           marginRight: '-5px', // 🚨 FIX: Center the wider iframe by offsetting half the extra width
@@ -73,11 +98,10 @@ const TextUsSection = ({ scaledDimensions }) => {
           borderRadius: '8px',
           overflow: 'visible', // 🚨 FIX: Changed to visible to show all iframe content including wrapped text
           background: 'transparent',
+          // 🚨 SMOOTH TRANSITIONS: Add transition for height changes during resize
+          transition: 'height 0.2s ease-out',
           // 🚨 RESPONSIVE: Container query support for modern browsers
-          containerType: 'inline-size', // Enable container queries for width-based responsive behavior
-          '@container (max-width: 400px)': {
-            height: '110px' // Extra height for very narrow containers
-          }
+          containerType: 'inline-size' // Enable container queries for width-based responsive behavior
         }}
       >
         <iframe
@@ -85,14 +109,16 @@ const TextUsSection = ({ scaledDimensions }) => {
           src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true&hideFooter=false&compact=false"
           style={{
             width: '100%',
-            height: `${responsiveIframeHeight}px`, // 🚨 RESPONSIVE: Match container height dynamically to show full content including wrapped text
+            height: `${iframeHeight}px`, // 🚨 DYNAMIC: State-based height that updates on viewport resize
             minHeight: '85px', // 🚨 RESPONSIVE: Minimum height constraint
             border: 'none',
             borderRadius: '8px',
             background: 'transparent',
             transform: 'translateX(0)',
             position: 'relative',
-            top: '0px' // Ensure proper positioning to show main content
+            top: '0px', // Ensure proper positioning to show main content
+            // 🚨 SMOOTH TRANSITIONS: Add transition for height changes during resize
+            transition: 'height 0.2s ease-out'
           }}
           scrolling="no" // Disable scrolling to prevent footer access
           allow="web-share"

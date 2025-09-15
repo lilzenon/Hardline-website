@@ -191,10 +191,11 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'nowrap',
-            justifyContent: 'space-between', // Match main container distribution
+            justifyContent: 'center', // 🚨 FIX: Center skeleton buttons with consistent gap
             alignItems: 'center',
-            width: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
-            maxWidth: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
+            gap: isDesktop ? '20px' : '10px', // 🚨 FIX: Fixed gap between skeleton buttons
+            width: 'auto', // 🚨 FIX: Auto width for skeleton container
+            maxWidth: '100%', // 🚨 FIX: Allow natural sizing
             padding: '0',
             boxSizing: 'border-box'
           }}
@@ -204,12 +205,12 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
             <div
               key={index}
               style={{
-                width: 'calc((100% - 30px) / 4)', // Match the actual button sizing
-                height: 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
-                minWidth: '70px',
-                maxWidth: '85px',
-                minHeight: '70px', // Minimum height to match width
-                maxHeight: '85px', // Maximum height to match width
+                width: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed skeleton button size to match actual buttons
+                height: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed height for perfect squares
+                minWidth: isDesktop ? '75px' : '70px',
+                maxWidth: isDesktop ? '75px' : '70px',
+                minHeight: isDesktop ? '75px' : '70px',
+                maxHeight: isDesktop ? '75px' : '70px',
                 borderRadius: '20px',
                 background: 'rgba(22, 22, 22, 0.4)',
                 backdropFilter: 'blur(12px)',
@@ -262,10 +263,11 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'nowrap', // Prevent stacking
-          justifyContent: 'space-between', // 🚨 FIX: Use space-between to align with iframe edges
+          justifyContent: 'center', // 🚨 FIX: Center buttons with consistent gap instead of space-between
           alignItems: 'center',
-          width: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
-          maxWidth: responsive ? '100%' : (isDesktop && containerWidth ? `${containerWidth}px` : 'min(324px, calc(100vw - 36px))'), // Responsive or fixed width
+          gap: isDesktop ? '20px' : '10px', // 🚨 FIX: Fixed gap between buttons for consistent spacing
+          width: 'auto', // 🚨 FIX: Auto width to fit content with consistent gaps
+          maxWidth: '100%', // 🚨 FIX: Allow natural sizing with max constraint
           padding: '0', // 🚨 FIX: Remove padding to align buttons with iframe edges
           boxSizing: 'border-box'
         }}
@@ -282,13 +284,13 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               rel="noopener noreferrer"
               aria-label={`Follow us on ${platform.name}`}
               style={{
-                // 🚨 FIX: Larger buttons with space-between alignment to match iframe boundaries
-                width: isDesktop ? 'calc((100% - 60px) / 4)' : 'calc((100% - 30px) / 4)', // Larger buttons with controlled gaps
-                height: isDesktop ? 'calc((100% - 60px) / 4)' : 'calc((100% - 30px) / 4)', // Match width exactly for perfect 1:1 squares
-                minWidth: isDesktop ? '68px' : '70px', // 🚨 FIX: Reduced by ~2px proportionally
-                maxWidth: isDesktop ? '93px' : '85px', // 🚨 FIX: Reduced by ~2px proportionally
-                minHeight: isDesktop ? '68px' : '70px', // 🚨 FIX: Reduced by ~2px proportionally to match width
-                maxHeight: isDesktop ? '93px' : '85px', // 🚨 FIX: Reduced by ~2px proportionally for perfect squares
+                // 🚨 FIX: Fixed button sizes with consistent dimensions regardless of container width
+                width: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed width for consistent button sizing
+                height: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed height to match width for perfect squares
+                minWidth: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed minimum size
+                maxWidth: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed maximum size
+                minHeight: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed minimum height
+                maxHeight: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed maximum height
                 borderRadius: '20px', // Optimized radius
                 background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect
