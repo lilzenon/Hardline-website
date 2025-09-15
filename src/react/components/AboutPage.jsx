@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
-import SimpleDomeGallery from './ui/SimpleDomeGallery';
+
+// Lazy load the gallery component for better performance
+const SimpleDomeGallery = lazy(() => import('./ui/SimpleDomeGallery'));
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -472,54 +474,72 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               Gallery
             </div>
 
-            <SimpleDomeGallery
-              items={[
-                {
-                  id: "1",
-                  img: "https://picsum.photos/id/1015/600/900",
-                  url: "https://example.com/one",
-                  title: "Event Highlights",
-                  description: "Memorable moments from our events"
-                },
-                {
-                  id: "2",
-                  img: "https://picsum.photos/id/1011/600/750",
-                  url: "https://example.com/two",
-                  title: "Live Performances",
-                  description: "Artists in action"
-                },
-                {
-                  id: "3",
-                  img: "https://picsum.photos/id/1020/600/800",
-                  url: "https://example.com/three",
-                  title: "Venue Atmosphere",
-                  description: "The energy of our venues"
-                },
-                {
-                  id: "4",
-                  img: "https://picsum.photos/id/1025/600/700",
-                  url: "https://example.com/four",
-                  title: "Behind the Scenes",
-                  description: "What goes into our events"
-                },
-                {
-                  id: "5",
-                  img: "https://picsum.photos/id/1035/600/650",
-                  url: "https://example.com/five",
-                  title: "Community",
-                  description: "Our amazing audience"
-                },
-                {
-                  id: "6",
-                  img: "https://picsum.photos/id/1040/600/850",
-                  url: "https://example.com/six",
-                  title: "Production",
-                  description: "Technical excellence"
-                }
-              ]}
-              autoRotate={true}
-              autoRotateSpeed={50}
-            />
+            <Suspense fallback={
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '450px',
+                color: '#FFFFFF',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '16px',
+                opacity: 0.7,
+                background: 'rgba(22, 22, 22, 0.8)',
+                borderRadius: '16px',
+                border: '1px solid rgba(56, 56, 56, 0.3)'
+              }}>
+                Loading gallery...
+              </div>
+            }>
+              <SimpleDomeGallery
+                items={[
+                  {
+                    id: "1",
+                    img: "https://picsum.photos/id/1015/600/900",
+                    url: "https://example.com/one",
+                    title: "Event Highlights",
+                    description: "Memorable moments from our events"
+                  },
+                  {
+                    id: "2",
+                    img: "https://picsum.photos/id/1011/600/750",
+                    url: "https://example.com/two",
+                    title: "Live Performances",
+                    description: "Artists in action"
+                  },
+                  {
+                    id: "3",
+                    img: "https://picsum.photos/id/1020/600/800",
+                    url: "https://example.com/three",
+                    title: "Venue Atmosphere",
+                    description: "The energy of our venues"
+                  },
+                  {
+                    id: "4",
+                    img: "https://picsum.photos/id/1025/600/700",
+                    url: "https://example.com/four",
+                    title: "Behind the Scenes",
+                    description: "What goes into our events"
+                  },
+                  {
+                    id: "5",
+                    img: "https://picsum.photos/id/1035/600/650",
+                    url: "https://example.com/five",
+                    title: "Community",
+                    description: "Our amazing audience"
+                  },
+                  {
+                    id: "6",
+                    img: "https://picsum.photos/id/1040/600/850",
+                    url: "https://example.com/six",
+                    title: "Production",
+                    description: "Technical excellence"
+                  }
+                ]}
+                autoRotate={true}
+                autoRotateSpeed={50}
+              />
+            </Suspense>
           </div>
         </div>
       </div>

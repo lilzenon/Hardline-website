@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
  * Simple Dome Gallery Component
  * A lightweight, reliable 3D gallery with glassmorphism styling
  */
-const SimpleDomeGallery = ({
+const SimpleDomeGallery = React.memo(({
   items = [],
   autoRotate = false,
   autoRotateSpeed = 30
@@ -14,6 +14,7 @@ const SimpleDomeGallery = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(0);
   const [lastRotation, setLastRotation] = useState(0);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
@@ -22,22 +23,53 @@ const SimpleDomeGallery = ({
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 767);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-rotation
+  // Preload images for better performance
   useEffect(() => {
-    if (!autoRotate || isDragging) return;
+    if (!items.length) return;
+
+    let mounted = true;
+    const timeout = setTimeout(() => {
+      if (mounted) setImagesLoaded(true);
+    }, 2000); // Show gallery after 2 seconds even if images aren't loaded
+
+    const imagePromises = items.map(item => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = resolve; // Continue even if image fails
+        img.src = item.img;
+      });
+    });
+
+    Promise.all(imagePromises).then(() => {
+      if (mounted) {
+        clearTimeout(timeout);
+        setImagesLoaded(true);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
+  }, [items]);
+
+  // Auto-rotation (only after images are loaded)
+  useEffect(() => {
+    if (!autoRotate || isDragging || !imagesLoaded) return;
 
     const interval = setInterval(() => {
       setRotation(prev => (prev + 1) % 360);
     }, autoRotateSpeed);
 
     return () => clearInterval(interval);
-  }, [autoRotate, autoRotateSpeed, isDragging]);
+  }, [autoRotate, autoRotateSpeed, isDragging, imagesLoaded]);
 
   // Mouse/Touch handlers
   const handleStart = useCallback((clientX) => {
@@ -130,11 +162,31 @@ const SimpleDomeGallery = ({
         perspective: '1000px',
         overflow: 'hidden',
         cursor: isDragging ? 'grabbing' : 'grab',
-        userSelect: 'none'
+        userSelect: 'none',
+        opacity: imagesLoaded ? 1 : 0.7,
+        transition: 'opacity 0.5s ease'
       }}
       onMouseDown={(e) => handleStart(e.clientX)}
       onTouchStart={(e) => handleStart(e.touches[0].clientX)}
     >
+      {/* Loading indicator */}
+      {!imagesLoaded && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#FFFFFF',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: isMobile ? '14px' : '16px',
+            opacity: 0.7,
+            zIndex: 10
+          }}
+        >
+          Loading images...
+        </div>
+      )}
       {/* 3D Container */}
       <div
         style={{
@@ -299,6 +351,8 @@ const SimpleDomeGallery = ({
       </div>
     </div>
   );
-};
+});
+
+SimpleDomeGallery.displayName = 'SimpleDomeGallery';
 
 export default SimpleDomeGallery;

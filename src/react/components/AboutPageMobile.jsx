@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
-import SimpleDomeGallery from './ui/SimpleDomeGallery';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
+
+// Lazy load the gallery component for better mobile performance
+const SimpleDomeGallery = lazy(() => import('./ui/SimpleDomeGallery'));
 
 /**
  * Mobile-only About page component with shared navigation
@@ -307,40 +309,58 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <SimpleDomeGallery
-                items={[
-                  {
-                    id: "1",
-                    img: "https://picsum.photos/id/1015/600/900",
-                    url: "https://example.com/one",
-                    title: "Event Highlights",
-                    description: "Memorable moments"
-                  },
-                  {
-                    id: "2",
-                    img: "https://picsum.photos/id/1011/600/750",
-                    url: "https://example.com/two",
-                    title: "Live Performances",
-                    description: "Artists in action"
-                  },
-                  {
-                    id: "3",
-                    img: "https://picsum.photos/id/1020/600/800",
-                    url: "https://example.com/three",
-                    title: "Venue Atmosphere",
-                    description: "The energy"
-                  },
-                  {
-                    id: "4",
-                    img: "https://picsum.photos/id/1025/600/700",
-                    url: "https://example.com/four",
-                    title: "Behind the Scenes",
-                    description: "Event production"
-                  }
-                ]}
-                autoRotate={true}
-                autoRotateSpeed={40}
-              />
+              <Suspense fallback={
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  height: '350px',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '14px',
+                  opacity: 0.7,
+                  background: 'rgba(22, 22, 22, 0.8)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(56, 56, 56, 0.3)'
+                }}>
+                  Loading gallery...
+                </div>
+              }>
+                <SimpleDomeGallery
+                  items={[
+                    {
+                      id: "1",
+                      img: "https://picsum.photos/id/1015/600/900",
+                      url: "https://example.com/one",
+                      title: "Event Highlights",
+                      description: "Memorable moments"
+                    },
+                    {
+                      id: "2",
+                      img: "https://picsum.photos/id/1011/600/750",
+                      url: "https://example.com/two",
+                      title: "Live Performances",
+                      description: "Artists in action"
+                    },
+                    {
+                      id: "3",
+                      img: "https://picsum.photos/id/1020/600/800",
+                      url: "https://example.com/three",
+                      title: "Venue Atmosphere",
+                      description: "The energy"
+                    },
+                    {
+                      id: "4",
+                      img: "https://picsum.photos/id/1025/600/700",
+                      url: "https://example.com/four",
+                      title: "Behind the Scenes",
+                      description: "Event production"
+                    }
+                  ]}
+                  autoRotate={true}
+                  autoRotateSpeed={40}
+                />
+              </Suspense>
             </div>
 
             {/* Call to Action */}
