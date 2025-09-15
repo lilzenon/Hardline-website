@@ -2730,7 +2730,21 @@ const FigmaDesktop = () => {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '40px', // 🚨 FIX: Significantly increased gap to prevent social buttons from blocking iframe
+            gap: (() => {
+              // 🚨 RESPONSIVE: Dynamic gap calculation based on container width to prevent overlap
+              const containerWidth = scaledDimensions.eventsWidth * 1.2;
+
+              // Increase gap for narrower screens where iframe content wraps and takes more height
+              if (containerWidth < 400) {
+                return '70px'; // Extra gap for very narrow screens
+              } else if (containerWidth < 500) {
+                return '65px'; // Extra gap for narrow screens
+              } else if (containerWidth < 600) {
+                return '60px'; // Extra gap for medium screens
+              }
+
+              return '52px'; // Default gap for wide screens
+            })(),
             alignItems: 'flex-start',
             flex: '1 1 auto', // Allow growing and shrinking
             minWidth: '320px', // Increased minimum width for better scaling
