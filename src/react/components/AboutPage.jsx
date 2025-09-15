@@ -11,6 +11,7 @@ const AboutPage = () => {
   const [aboutContent, setAboutContent] = useState('');
   const [contentLoading, setContentLoading] = useState(true);
   const [contentError, setContentError] = useState(null);
+  const [galleryImages, setGalleryImages] = useState([]);
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
     heroHeight: 299,
@@ -102,9 +103,10 @@ const AboutPage = () => {
     updateScaling();
   }, [viewportWidth]); // Depend on viewportWidth from useViewportDimensions
 
-  // Fetch About page content from API
+  // Fetch About page content and gallery from API
   useEffect(() => {
     fetchAboutContent();
+    fetchGalleryImages();
   }, []);
 
   const fetchAboutContent = async () => {
@@ -152,6 +154,41 @@ At BOUNCE2BOUNCE, we believe that great music deserves great experiences. That's
 Join our community of music enthusiasts and discover your next favorite artist, your next unforgettable night, and your next reason to fall in love with live music all over again.`);
     } finally {
       setContentLoading(false);
+    }
+  };
+
+  const fetchGalleryImages = async () => {
+    try {
+      // Determine API base URL based on environment
+      const isDevelopment = window.location.hostname === 'localhost';
+      const apiBaseUrl = isDevelopment
+        ? 'http://localhost:3002'
+        : 'https://admin.b2b.click';
+
+      const response = await fetch(`${apiBaseUrl}/api/settings/about/gallery/public`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Don't include credentials for public endpoint
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          setGalleryImages(data.data);
+        } else {
+          console.warn('Invalid gallery response format:', data);
+          setGalleryImages([]);
+        }
+      } else {
+        console.warn('Failed to fetch gallery images:', response.status);
+        setGalleryImages([]);
+      }
+
+    } catch (error) {
+      console.error('❌ Error fetching gallery images:', error);
+      setGalleryImages([]);
     }
   };
 
@@ -470,80 +507,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             </div>
 
             <MasonryGallery
-              images={[
-                {
-                  src: "https://picsum.photos/400/600?random=1",
-                  alt: "Gallery Image 1",
-                  title: "Event Highlights",
-                  aspectRatio: 1.5
-                },
-                {
-                  src: "https://picsum.photos/400/500?random=2",
-                  alt: "Gallery Image 2",
-                  title: "Behind the Scenes",
-                  aspectRatio: 1.25
-                },
-                {
-                  src: "https://picsum.photos/400/700?random=3",
-                  alt: "Gallery Image 3",
-                  title: "Team Moments",
-                  aspectRatio: 1.75
-                },
-                {
-                  src: "https://picsum.photos/400/450?random=4",
-                  alt: "Gallery Image 4",
-                  title: "Venue Setup",
-                  aspectRatio: 1.125
-                },
-                {
-                  src: "https://picsum.photos/400/650?random=5",
-                  alt: "Gallery Image 5",
-                  title: "Live Performance",
-                  aspectRatio: 1.625
-                },
-                {
-                  src: "https://picsum.photos/400/550?random=6",
-                  alt: "Gallery Image 6",
-                  title: "Community",
-                  aspectRatio: 1.375
-                },
-                {
-                  src: "https://picsum.photos/400/480?random=7",
-                  alt: "Gallery Image 7",
-                  title: "Production",
-                  aspectRatio: 1.2
-                },
-                {
-                  src: "https://picsum.photos/400/620?random=8",
-                  alt: "Gallery Image 8",
-                  title: "Special Moments",
-                  aspectRatio: 1.55
-                },
-                {
-                  src: "https://picsum.photos/400/520?random=9",
-                  alt: "Gallery Image 9",
-                  title: "Networking",
-                  aspectRatio: 1.3
-                },
-                {
-                  src: "https://picsum.photos/400/680?random=10",
-                  alt: "Gallery Image 10",
-                  title: "Innovation",
-                  aspectRatio: 1.7
-                },
-                {
-                  src: "https://picsum.photos/400/460?random=11",
-                  alt: "Gallery Image 11",
-                  title: "Collaboration",
-                  aspectRatio: 1.15
-                },
-                {
-                  src: "https://picsum.photos/400/590?random=12",
-                  alt: "Gallery Image 12",
-                  title: "Future Vision",
-                  aspectRatio: 1.475
-                }
-              ]}
+              images={galleryImages}
               columns={{ desktop: 4, tablet: 3, mobile: 2 }}
               gap={16}
               onImageClick={(image) => {

@@ -12,6 +12,7 @@ const AboutPageMobile = () => {
   const [aboutContent, setAboutContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [galleryImages, setGalleryImages] = useState([]);
   // REMOVED: showMenu state - no longer needed after removing old navigation
   const contentRef = useRef(null);
 
@@ -44,6 +45,7 @@ const AboutPageMobile = () => {
 
   useEffect(() => {
     fetchAboutContent();
+    fetchGalleryImages();
   }, []);
 
   const fetchAboutContent = async () => {
@@ -89,6 +91,41 @@ Our platform brings together event organizers, brands, and participants to creat
 Join thousands of members who trust Bounce2Bounce to discover and participate in exclusive events, win amazing prizes, and connect with like-minded individuals.`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchGalleryImages = async () => {
+    try {
+      // Determine API base URL based on environment
+      const isDevelopment = window.location.hostname === 'localhost';
+      const apiBaseUrl = isDevelopment
+        ? 'http://localhost:3002'
+        : 'https://admin.b2b.click';
+
+      const response = await fetch(`${apiBaseUrl}/api/settings/about/gallery/public`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // Don't include credentials for public endpoint
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          setGalleryImages(data.data);
+        } else {
+          console.warn('Invalid gallery response format:', data);
+          setGalleryImages([]);
+        }
+      } else {
+        console.warn('Failed to fetch gallery images:', response.status);
+        setGalleryImages([]);
+      }
+
+    } catch (error) {
+      console.error('❌ Error fetching gallery images:', error);
+      setGalleryImages([]);
     }
   };
 
@@ -316,56 +353,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               </div>
 
               <MasonryGallery
-                images={[
-                  {
-                    src: "https://picsum.photos/300/450?random=1",
-                    alt: "Gallery Image 1",
-                    title: "Event Highlights",
-                    aspectRatio: 1.5
-                  },
-                  {
-                    src: "https://picsum.photos/300/375?random=2",
-                    alt: "Gallery Image 2",
-                    title: "Behind the Scenes",
-                    aspectRatio: 1.25
-                  },
-                  {
-                    src: "https://picsum.photos/300/525?random=3",
-                    alt: "Gallery Image 3",
-                    title: "Team Moments",
-                    aspectRatio: 1.75
-                  },
-                  {
-                    src: "https://picsum.photos/300/340?random=4",
-                    alt: "Gallery Image 4",
-                    title: "Venue Setup",
-                    aspectRatio: 1.125
-                  },
-                  {
-                    src: "https://picsum.photos/300/490?random=5",
-                    alt: "Gallery Image 5",
-                    title: "Live Performance",
-                    aspectRatio: 1.625
-                  },
-                  {
-                    src: "https://picsum.photos/300/410?random=6",
-                    alt: "Gallery Image 6",
-                    title: "Community",
-                    aspectRatio: 1.375
-                  },
-                  {
-                    src: "https://picsum.photos/300/360?random=7",
-                    alt: "Gallery Image 7",
-                    title: "Production",
-                    aspectRatio: 1.2
-                  },
-                  {
-                    src: "https://picsum.photos/300/465?random=8",
-                    alt: "Gallery Image 8",
-                    title: "Special Moments",
-                    aspectRatio: 1.55
-                  }
-                ]}
+                images={galleryImages}
                 columns={{ desktop: 3, tablet: 2, mobile: 2 }}
                 gap={12}
                 onImageClick={(image) => {
