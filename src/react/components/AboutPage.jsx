@@ -317,7 +317,86 @@ Join our community of music enthusiasts and discover your next favorite artist, 
 
   // Desktop content
   return (
-    <div className="homepage-content">
+    <>
+      {/* Modern CSS Animations */}
+      <style>
+        {`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+
+          @keyframes slideInFromLeft {
+            from {
+              opacity: 0;
+              transform: translateX(-50px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          @keyframes slideInFromRight {
+            from {
+              opacity: 0;
+              transform: translateX(50px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          @keyframes shimmer {
+            0% {
+              background-position: -200px 0;
+            }
+            100% {
+              background-position: calc(200px + 100%) 0;
+            }
+          }
+
+          .skeleton-shimmer {
+            background: linear-gradient(90deg,
+              rgba(22, 22, 22, 0.8) 25%,
+              rgba(56, 56, 56, 0.4) 50%,
+              rgba(22, 22, 22, 0.8) 75%
+            );
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+          }
+
+          .image-hover-scale {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+
+          .image-hover-scale:hover {
+            transform: scale(1.05);
+          }
+
+          @media (prefers-reduced-motion: reduce) {
+            * {
+              animation-duration: 0.01ms !important;
+              animation-iteration-count: 1 !important;
+              transition-duration: 0.01ms !important;
+            }
+          }
+        `}
+      </style>
+
+      <div className="homepage-content">
       <div
         className="desktop-container"
         style={{
@@ -441,7 +520,9 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             fontSize: '48px',
             fontWeight: '800',
             textAlign: 'center',
-            marginTop: '64px'
+            marginTop: '64px',
+            opacity: 0,
+            animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
           }}
         >
           About Us
@@ -459,7 +540,9 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               border: '1px solid rgba(56, 56, 56, 0.3)',
               borderRadius: '24px',
               padding: '40px',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              opacity: 0,
+              animation: 'fadeInUp 0.8s ease-out 0.4s forwards'
             }}
           >
             {contentLoading ? (
@@ -497,10 +580,10 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             )}
           </div>
 
-          {/* Gallery Section - Masonry Layout */}
+          {/* Gallery Section - Masonry Layout with Optimized Spacing */}
           <div
             style={{
-              marginTop: '48px',
+              marginTop: isMobile ? '24px' : '32px', // Reduced mobile spacing to fix blank space
               marginBottom: '32px'
             }}
           >
@@ -509,10 +592,12 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 color: '#FFFFFF',
                 fontFamily: 'Inter',
                 fontWeight: '600',
-                fontSize: '32px',
+                fontSize: isMobile ? '24px' : '32px',
                 lineHeight: '1.3em',
-                marginBottom: '32px',
-                textAlign: 'center'
+                marginBottom: isMobile ? '16px' : '24px', // Reduced mobile spacing
+                textAlign: 'center',
+                opacity: 0,
+                animation: 'fadeInUp 0.6s ease-out 0.3s forwards'
               }}
             >
               Gallery
@@ -521,7 +606,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             <MasonryGallery
               images={galleryImages}
               columns={{ desktop: 4, tablet: 3, mobile: 2 }}
-              gap={16}
+              gap={isMobile ? 12 : 16}
               onImageClick={(image) => {
                 // Future: Implement lightbox or modal
                 console.log('Image clicked:', image);
@@ -532,6 +617,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
         </div>
       </div>
     </div>
+    </>
   );
 
 
