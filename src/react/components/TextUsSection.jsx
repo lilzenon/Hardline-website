@@ -37,25 +37,51 @@ const TextUsSection = ({ scaledDimensions }) => {
         Follow Us
       </div>
 
-      {/* Laylo Iframe - Compensated for Internal Padding */}
-      <iframe
-        id="laylo-drop-1nTsX"
-        src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true"
+      {/* Laylo Iframe - Optimized to Hide Footer Content */}
+      <div
         style={{
-          width: 'calc(100% + 32px)', // Extend width to compensate for internal padding
+          position: 'relative',
+          width: 'calc(100% + 32px)',
           height: '60px',
-          maxWidth: 'none', // Remove fixed max width for responsive behavior
-          border: 'none',
+          marginLeft: '-16px',
+          marginRight: '-16px',
           borderRadius: '8px',
-          background: 'transparent',
-          marginLeft: '-16px', // Negative margin to center the extended width
-          marginRight: '-16px', // Negative margin to center the extended width
-          transform: 'translateX(0)', // Ensure proper positioning
-          overflow: 'hidden' // Hide any overflow from the extended width
+          overflow: 'hidden', // Hide any content that extends beyond container
+          background: 'transparent'
         }}
-        allow="web-share"
-        title="Laylo Signup Form"
-      />
+      >
+        <iframe
+          id="laylo-drop-1nTsX"
+          src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true&hideFooter=true&compact=true"
+          style={{
+            width: '100%',
+            height: '80px', // Slightly taller to accommodate content but footer will be hidden by container
+            border: 'none',
+            borderRadius: '8px',
+            background: 'transparent',
+            transform: 'translateX(0)',
+            position: 'relative',
+            top: '0px' // Ensure proper positioning to show main content
+          }}
+          scrolling="no" // Disable scrolling to prevent footer access
+          allow="web-share"
+          title="Laylo Signup Form"
+        />
+
+        {/* Footer Mask - Hide any footer content that might appear */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '0px',
+            left: '0px',
+            right: '0px',
+            height: '20px', // Mask the bottom 20px where footer might appear
+            background: 'transparent',
+            pointerEvents: 'none', // Allow clicks to pass through
+            zIndex: 1
+          }}
+        />
+      </div>
     </div>
   );
 };
