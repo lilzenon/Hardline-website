@@ -1954,10 +1954,9 @@ const FigmaMobile = () => {
   if (loading) {
     return (
       <BrandedLoader
-        message={error ? "Loading with fallback data..." : "Loading mobile experience..."}
         fullScreen={true}
         minDisplayTime={600}
-        showMessage={true}
+        showMessage={false}
       />
     );
   }

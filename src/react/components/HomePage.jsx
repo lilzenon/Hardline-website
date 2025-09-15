@@ -92,10 +92,9 @@ const HomePage = () => {
   if (isLoading) {
     return (
       <BrandedLoader
-        message="Initializing homepage"
         fullScreen={true}
         minDisplayTime={800}
-        showMessage={true}
+        showMessage={false}
       />
     );
   }
@@ -104,8 +103,7 @@ const HomePage = () => {
   return (
     <Suspense fallback={
       <BrandedLoader
-        message="Loading component"
-        fullScreen={false}
+        fullScreen={true}
         minDisplayTime={300}
         showMessage={false}
       />

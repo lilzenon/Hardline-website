@@ -64,9 +64,9 @@ import BrandedLoader from './react/components/BrandedLoader';
 // Loading component for lazy-loaded pages
 const PageLoader = () => (
   <BrandedLoader
-    message="Loading page"
     fullScreen={true}
     minDisplayTime={500}
+    showMessage={false}
   />
 );
 

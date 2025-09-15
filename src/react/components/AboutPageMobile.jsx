@@ -296,34 +296,19 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                 textAlign: 'left'
               }}
             >
-              {loading ? (
+              {formatContent(aboutContent)}
+              {error && (
                 <div style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  minHeight: '100px',
-                  fontSize: '14px',
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: 'rgba(255, 0, 0, 0.1)',
+                  border: '1px solid rgba(255, 0, 0, 0.3)',
+                  borderRadius: '8px',
+                  fontSize: '12px',
                   color: 'rgba(255, 255, 255, 0.7)'
                 }}>
-                  Loading content...
+                  Note: Using fallback content due to connection issue.
                 </div>
-              ) : (
-                <>
-                  {formatContent(aboutContent)}
-                  {error && (
-                    <div style={{
-                      marginTop: '16px',
-                      padding: '12px',
-                      background: 'rgba(255, 0, 0, 0.1)',
-                      border: '1px solid rgba(255, 0, 0, 0.3)',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      color: 'rgba(255, 255, 255, 0.7)'
-                    }}>
-                      Note: Using fallback content due to connection issue.
-                    </div>
-                  )}
-                </>
               )}
             </div>
 

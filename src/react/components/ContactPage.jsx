@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
+import BrandedLoader from './BrandedLoader';
 
 const ContactPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -150,21 +151,11 @@ const ContactPage = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div
-        style={{
-          width: '100vw',
-          height: '100vh',
-          background: '#000',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          color: '#FFF',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '18px'
-        }}
-      >
-        Loading...
-      </div>
+      <BrandedLoader
+        fullScreen={true}
+        minDisplayTime={800}
+        showMessage={false}
+      />
     );
   }
 
@@ -174,23 +165,11 @@ const ContactPage = () => {
     const ContactPageMobile = React.lazy(() => import('./ContactPageMobile'));
     return (
       <React.Suspense fallback={
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: '#FFFFFF',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '14px',
-          zIndex: 9999,
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          opacity: 0.9
-        }}>
-          Loading contact page...
-        </div>
+        <BrandedLoader
+          fullScreen={true}
+          minDisplayTime={300}
+          showMessage={false}
+        />
       }>
         <ContactPageMobile />
       </React.Suspense>

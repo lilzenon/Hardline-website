@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import MasonryGallery from './ui/MasonryGallery';
+import BrandedLoader from './BrandedLoader';
 
 const AboutPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -8,7 +9,6 @@ const AboutPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeNavTab, setActiveNavTab] = useState('About');
   const [aboutContent, setAboutContent] = useState('');
-  const [contentLoading, setContentLoading] = useState(true);
   const [contentError, setContentError] = useState(null);
   const [galleryImages, setGalleryImages] = useState([]);
   const [scaledDimensions, setScaledDimensions] = useState({
@@ -98,7 +98,6 @@ const AboutPage = () => {
 
   const fetchAboutContent = async () => {
     try {
-      setContentLoading(true);
       setContentError(null);
 
       // Determine API base URL based on environment
@@ -140,7 +139,7 @@ At BOUNCE2BOUNCE, we believe that great music deserves great experiences. That's
 
 Join our community of music enthusiasts and discover your next favorite artist, your next unforgettable night, and your next reason to fall in love with live music all over again.`);
     } finally {
-      setContentLoading(false);
+      // Content loading is now handled by main loading state
     }
   };
 
@@ -269,21 +268,11 @@ Join our community of music enthusiasts and discover your next favorite artist, 
   // Loading state
   if (isLoading) {
     return (
-      <div
-        style={{
-          width: '100vw',
-          height: '100vh',
-          background: '#000',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          color: '#FFF',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '18px'
-        }}
-      >
-        Loading...
-      </div>
+      <BrandedLoader
+        fullScreen={true}
+        minDisplayTime={800}
+        showMessage={false}
+      />
     );
   }
 
@@ -293,23 +282,11 @@ Join our community of music enthusiasts and discover your next favorite artist, 
     const AboutPageMobile = React.lazy(() => import('./AboutPageMobile'));
     return (
       <React.Suspense fallback={
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: '#FFFFFF',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontFamily: 'Inter, sans-serif',
-          fontSize: '14px',
-          zIndex: 9999,
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          opacity: 0.9
-        }}>
-          Loading about page...
-        </div>
+        <BrandedLoader
+          fullScreen={true}
+          minDisplayTime={300}
+          showMessage={false}
+        />
       }>
         <AboutPageMobile />
       </React.Suspense>
@@ -546,38 +523,23 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               animation: 'fadeInUp 0.8s ease-out 0.4s forwards'
             }}
           >
-            {contentLoading ? (
+            <div style={{
+              textAlign: 'left'
+            }}>
+              {formatContent(aboutContent)}
+            </div>
+            {contentError && (
               <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '200px',
-                fontSize: '16px',
+                marginTop: '24px',
+                padding: '16px',
+                background: 'rgba(255, 0, 0, 0.1)',
+                border: '1px solid rgba(255, 0, 0, 0.3)',
+                borderRadius: '12px',
+                fontSize: '14px',
                 color: 'rgba(255, 255, 255, 0.7)'
               }}>
-                Loading content...
+                Note: Using fallback content due to connection issue.
               </div>
-            ) : (
-              <>
-                <div style={{
-                  textAlign: 'left'
-                }}>
-                  {formatContent(aboutContent)}
-                </div>
-                {contentError && (
-                  <div style={{
-                    marginTop: '24px',
-                    padding: '16px',
-                    background: 'rgba(255, 0, 0, 0.1)',
-                    border: '1px solid rgba(255, 0, 0, 0.3)',
-                    borderRadius: '12px',
-                    fontSize: '14px',
-                    color: 'rgba(255, 255, 255, 0.7)'
-                  }}>
-                    Note: Using fallback content due to connection issue.
-                  </div>
-                )}
-              </>
             )}
           </div>
 
