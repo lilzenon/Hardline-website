@@ -50,6 +50,7 @@ initializeUtilities();
 // Lazy load About and Contact pages for better performance
 const AboutPage = lazy(() => import('./react/components/AboutPage'));
 const ContactPage = lazy(() => import('./react/components/ContactPage'));
+const NotFoundPage = lazy(() => import('./react/components/NotFoundPage'));
 
 // Import Error Boundary for graceful error handling
 import ErrorBoundary from './react/components/ErrorBoundary';
@@ -119,6 +120,12 @@ const App = () => {
     }
 
     switch (currentPath) {
+      case '/':
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <HomePage />
+          </Suspense>
+        );
       case '/about':
         return (
           <Suspense fallback={<PageLoader />}>
@@ -137,11 +144,11 @@ const App = () => {
             <AdminLogin />
           </Suspense>
         );
-      case '/':
       default:
+        // Handle all unknown routes with modern React 404 page
         return (
           <Suspense fallback={<PageLoader />}>
-            <HomePage />
+            <NotFoundPage />
           </Suspense>
         );
     }

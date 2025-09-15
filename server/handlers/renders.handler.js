@@ -71,11 +71,7 @@ async function createAdmin(req, res) {
     });
 }
 
-function notFound(req, res) {
-    res.render("404", {
-        title: "404 - Not found"
-    });
-}
+// REMOVED: notFound function - 404 pages now handled by React SPA routing
 
 function settings(req, res) {
     res.render("settings", {
@@ -715,7 +711,7 @@ module.exports = {
     linkEdit,
     linkEditAdmin,
     logout,
-    notFound,
+    // REMOVED: notFound - 404 pages now handled by React SPA routing
     reactHomepage,
     resetPassword,
     resetPasswordSetNewPassword,

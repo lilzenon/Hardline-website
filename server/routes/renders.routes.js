@@ -97,12 +97,7 @@ router.get(
     asyncHandler(renders.createAdmin)
 );
 
-router.get(
-    "/404",
-    asyncHandler(auth.jwtLoosePage),
-    asyncHandler(locals.user),
-    asyncHandler(renders.notFound)
-);
+// REMOVED: Old Handlebars 404 route - now handled by React SPA routing
 
 // Settings Routes (Main Settings Hub)
 router.get(
