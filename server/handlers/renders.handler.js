@@ -463,6 +463,11 @@ async function eventEdit(req, res) {
 
 // 🚀 REACT HOMEPAGE - Serve React app with dynamic SEO meta tags
 async function reactHomepage(req, res) {
+    console.log('🚀🚀🚀 REACT HOMEPAGE FUNCTION CALLED - Dynamic SEO meta tags processing started');
+    console.log('📍 Request path:', req.path);
+    console.log('📍 Request URL:', req.url);
+    console.log('📍 NODE_ENV:', process.env.NODE_ENV);
+
     try {
         const env = require('../env');
         const path = require('path');

@@ -478,41 +478,50 @@ app.use("/css", express.static("custom/css", {
 // Consolidated MIME type processing for better performance
 
 
-// Fallback: Standard express.static for other files (images, fonts, etc.) with proper MIME types
-app.use(express.static("dist", {
-    index: false,
-    dotfiles: 'ignore',
-    etag: true,
-    extensions: false,
-    fallthrough: true,
-    immutable: false,
-    lastModified: true,
-    maxAge: process.env.NODE_ENV === 'production' ? 86400000 : 0, // 1 day in production
-    redirect: true,
-    setHeaders: (res, filePath) => {
-        // CRITICAL: Set proper MIME types to fix mobile browser issues
-        if (filePath.endsWith('.css')) {
-            res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        } else if (filePath.endsWith('.js')) {
-            res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        } else if (filePath.endsWith('.svg')) {
-            res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
-        } else if (filePath.endsWith('.png')) {
-            res.setHeader('Content-Type', 'image/png');
-        } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-            res.setHeader('Content-Type', 'image/jpeg');
-        } else if (filePath.endsWith('.webp')) {
-            res.setHeader('Content-Type', 'image/webp');
-        } else if (filePath.endsWith('.woff')) {
-            res.setHeader('Content-Type', 'font/woff');
-        } else if (filePath.endsWith('.woff2')) {
-            res.setHeader('Content-Type', 'font/woff2');
-        }
-
-        // Set security headers
-        res.setHeader('X-Content-Type-Options', 'nosniff');
+// CRITICAL FIX: Static middleware with root path exclusion for dynamic SEO meta tags
+// This middleware serves static files but excludes the root path to allow server-side rendering
+app.use((req, res, next) => {
+    // Skip static serving for root path to allow dynamic meta tag injection
+    if (req.path === '/' || req.path === '/index.html') {
+        return next();
     }
-}));
+
+    // Use express.static for all other paths
+    express.static("dist", {
+        index: false,
+        dotfiles: 'ignore',
+        etag: true,
+        extensions: false,
+        fallthrough: true,
+        immutable: false,
+        lastModified: true,
+        maxAge: process.env.NODE_ENV === 'production' ? 86400000 : 0, // 1 day in production
+        redirect: true,
+        setHeaders: (res, filePath) => {
+            // CRITICAL: Set proper MIME types to fix mobile browser issues
+            if (filePath.endsWith('.css')) {
+                res.setHeader('Content-Type', 'text/css; charset=utf-8');
+            } else if (filePath.endsWith('.js')) {
+                res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+            } else if (filePath.endsWith('.svg')) {
+                res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+            } else if (filePath.endsWith('.png')) {
+                res.setHeader('Content-Type', 'image/png');
+            } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+                res.setHeader('Content-Type', 'image/jpeg');
+            } else if (filePath.endsWith('.webp')) {
+                res.setHeader('Content-Type', 'image/webp');
+            } else if (filePath.endsWith('.woff')) {
+                res.setHeader('Content-Type', 'font/woff');
+            } else if (filePath.endsWith('.woff2')) {
+                res.setHeader('Content-Type', 'font/woff2');
+            }
+
+            // Set security headers
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+        }
+    })(req, res, next);
+});
 
 // Legacy /react static removed: Vite-only serving
 
@@ -523,6 +532,7 @@ app.use(express.static("dist", {
 // Add image optimization for static images
 app.use(imageOptimization.optimizedImageMiddleware());
 app.use(express.static("static", {
+    index: false, // CRITICAL: Prevent serving index.html to allow dynamic SEO meta tags
     setHeaders: (res, path) => {
         // Set correct MIME types first
         if (path.endsWith('.css')) {

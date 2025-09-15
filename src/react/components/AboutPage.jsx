@@ -152,16 +152,21 @@ Join our community of music enthusiasts and discover your next favorite artist, 
         ? 'http://localhost:3002'
         : 'https://admin.b2b.click';
 
-      const response = await fetch(`${apiBaseUrl}/api/settings/about/gallery/public`, {
+      const galleryUrl = `${apiBaseUrl}/api/settings/about/gallery/public`;
+      console.log('🔍 Fetching gallery from:', galleryUrl);
+
+      const response = await fetch(galleryUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        // Don't include credentials for public endpoint
+        // 🚨 FIX: Disable caching to ensure fresh data
+        cache: 'no-cache'
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 Gallery API Response:', JSON.stringify(data, null, 2));
         if (data.success && Array.isArray(data.data)) {
           setGalleryImages(data.data);
         } else {
