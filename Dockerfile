@@ -37,8 +37,9 @@ COPY package*.json ./
 
 # Install dependencies with BuildKit cache mount for faster rebuilds
 # Use npm install since package-lock.json is excluded by .dockerignore
+# Use --legacy-peer-deps to handle React 19 compatibility issues with react-helmet-async
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --include=dev --prefer-offline
+    npm install --include=dev --prefer-offline --legacy-peer-deps
 
 # Copy source code (excluding files in .dockerignore)
 COPY . .
