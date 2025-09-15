@@ -443,7 +443,6 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               </button>
             </div>
             </div>
-            </div>
           </div>
         </div>
 
