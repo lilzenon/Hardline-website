@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useMedia } from 'react-use';
 
 /**
  * Custom Dome Gallery Component
@@ -16,7 +15,7 @@ import { useMedia } from 'react-use';
  * @param {boolean} enableTouchControl - Enable touch gestures (default: true)
  * @param {string} perspective - CSS perspective value (default: '1000px')
  */
-const DomeGallery = ({
+const DomeGallery = React.memo(({
   items = [],
   radius = 300,
   itemWidth = 200,
@@ -28,8 +27,7 @@ const DomeGallery = ({
   perspective = '1000px'
 }) => {
   // Responsive adjustments
-  const isMobile = useMedia('(max-width: 767px)');
-  const isTablet = useMedia('(max-width: 1023px)');
+  const { isMobile, isTablet } = useResponsive();
   
   // Responsive sizing
   const responsiveRadius = useMemo(() => {
@@ -86,53 +84,73 @@ const DomeGallery = ({
     });
   }, [items, rotation, responsiveRadius]);
 
-  // Preload images
+  // Preload images with timeout and error handling
   useEffect(() => {
     if (!items.length) return;
 
+    let mounted = true;
+    const timeout = setTimeout(() => {
+      if (mounted) {
+        setImagesLoaded(true); // Show gallery even if images are slow
+      }
+    }, 3000); // 3 second timeout
+
     const imagePromises = items.map(item => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         const img = new Image();
         img.onload = resolve;
-        img.onerror = reject;
+        img.onerror = resolve; // Resolve even on error to continue
         img.src = item.img;
+
+        // Individual image timeout
+        setTimeout(resolve, 1000);
       });
     });
 
     Promise.all(imagePromises)
-      .then(() => setImagesLoaded(true))
-      .catch(error => {
-        console.warn('Some images failed to load:', error);
-        setImagesLoaded(true); // Continue anyway
+      .then(() => {
+        if (mounted) {
+          clearTimeout(timeout);
+          setImagesLoaded(true);
+        }
       });
+
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
   }, [items]);
 
-  // Auto-rotation effect
+  // Auto-rotation effect with performance optimization
   useEffect(() => {
-    if (!autoRotate || isDragging) return;
+    if (!autoRotate || isDragging || !imagesLoaded) return;
 
-    const startAutoRotation = () => {
-      const startTime = Date.now();
-      const startRotation = rotation;
+    const startTime = Date.now();
+    const startRotation = rotation;
+    let lastTime = startTime;
 
-      const animate = () => {
-        const elapsed = (Date.now() - startTime) / 1000;
-        const newRotation = startRotation + (360 / autoRotateSpeed) * elapsed;
-        setRotation(newRotation % 360);
+    const animate = (currentTime) => {
+      // Throttle to 60fps max
+      if (currentTime - lastTime < 16) {
         autoRotateRef.current = requestAnimationFrame(animate);
-      };
+        return;
+      }
 
+      lastTime = currentTime;
+      const elapsed = (currentTime - startTime) / 1000;
+      const newRotation = startRotation + (360 / autoRotateSpeed) * elapsed;
+      setRotation(newRotation % 360);
       autoRotateRef.current = requestAnimationFrame(animate);
     };
 
-    startAutoRotation();
+    autoRotateRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (autoRotateRef.current) {
         cancelAnimationFrame(autoRotateRef.current);
       }
     };
-  }, [autoRotate, autoRotateSpeed, isDragging, rotation]);
+  }, [autoRotate, autoRotateSpeed, isDragging, imagesLoaded]);
 
   // Mouse control handlers
   const handleMouseDown = useCallback((e) => {
@@ -229,19 +247,72 @@ const DomeGallery = ({
     setSelectedIndex(index);
   }, []);
 
+  // Error boundary and fallback
   if (!items.length) {
     return (
       <div style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '400px',
+        height: isMobile ? '300px' : '400px',
         color: '#FFFFFF',
         fontFamily: 'Inter, sans-serif',
         fontSize: '16px',
-        opacity: 0.7
+        opacity: 0.7,
+        background: 'rgba(22, 22, 22, 0.8)',
+        borderRadius: '16px',
+        border: '1px solid rgba(56, 56, 56, 0.3)'
       }}>
         No images to display
+      </div>
+    );
+  }
+
+  // Simple fallback for browsers that don't support 3D transforms
+  const supports3D = typeof window !== 'undefined' &&
+    'transform' in document.documentElement.style &&
+    'perspective' in document.documentElement.style;
+
+  if (!supports3D) {
+    return (
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '16px',
+        padding: '20px'
+      }}>
+        {items.slice(0, 6).map((item, index) => (
+          <div
+            key={item.id || index}
+            style={{
+              background: 'rgba(22, 22, 22, 0.8)',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              cursor: 'pointer'
+            }}
+            onClick={() => item.url && window.open(item.url, '_blank')}
+          >
+            <img
+              src={item.img}
+              alt={item.title || `Gallery image ${index + 1}`}
+              style={{
+                width: '100%',
+                height: '200px',
+                objectFit: 'cover'
+              }}
+            />
+            {item.title && (
+              <div style={{
+                padding: '12px',
+                color: '#FFFFFF',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '14px'
+              }}>
+                {item.title}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     );
   }
@@ -322,11 +393,7 @@ const DomeGallery = ({
                 overflow: 'hidden',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s ease',
-                transform: selectedIndex === index ? 'scale(1.05)' : 'scale(1)',
-                ':hover': {
-                  transform: 'scale(1.02)',
-                  border: '1px solid rgba(49, 157, 255, 0.5)'
-                }
+                transform: selectedIndex === index ? 'scale(1.05)' : 'scale(1)'
               }}
             >
               {/* Image */}
@@ -445,6 +512,8 @@ const DomeGallery = ({
       </div>
     </div>
   );
-};
+});
+
+DomeGallery.displayName = 'DomeGallery';
 
 export default DomeGallery;

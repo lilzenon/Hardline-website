@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
-import DomeGallery from './ui/DomeGallery';
+import SimpleDomeGallery from './ui/SimpleDomeGallery';
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -472,7 +472,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               Gallery
             </div>
 
-            <DomeGallery
+            <SimpleDomeGallery
               items={[
                 {
                   id: "1",
@@ -515,30 +515,10 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                   url: "https://example.com/six",
                   title: "Production",
                   description: "Technical excellence"
-                },
-                {
-                  id: "7",
-                  img: "https://picsum.photos/id/1050/600/600",
-                  url: "https://example.com/seven",
-                  title: "Special Moments",
-                  description: "Unforgettable experiences"
-                },
-                {
-                  id: "8",
-                  img: "https://picsum.photos/id/1060/600/750",
-                  url: "https://example.com/eight",
-                  title: "Future Events",
-                  description: "What's coming next"
                 }
               ]}
-              radius={320}
-              itemWidth={220}
-              itemHeight={320}
               autoRotate={true}
-              autoRotateSpeed={30}
-              enableMouseControl={true}
-              enableTouchControl={true}
-              perspective="1200px"
+              autoRotateSpeed={50}
             />
           </div>
         </div>

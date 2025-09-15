@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
-import DomeGallery from './ui/DomeGallery';
+import SimpleDomeGallery from './ui/SimpleDomeGallery';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
 
@@ -307,7 +307,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
             </div>
 
             <div style={{ marginBottom: '24px' }}>
-              <DomeGallery
+              <SimpleDomeGallery
                 items={[
                   {
                     id: "1",
@@ -336,30 +336,10 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                     url: "https://example.com/four",
                     title: "Behind the Scenes",
                     description: "Event production"
-                  },
-                  {
-                    id: "5",
-                    img: "https://picsum.photos/id/1035/600/650",
-                    url: "https://example.com/five",
-                    title: "Community",
-                    description: "Our audience"
-                  },
-                  {
-                    id: "6",
-                    img: "https://picsum.photos/id/1040/600/850",
-                    url: "https://example.com/six",
-                    title: "Production",
-                    description: "Technical excellence"
                   }
                 ]}
-                radius={200}
-                itemWidth={160}
-                itemHeight={240}
                 autoRotate={true}
-                autoRotateSpeed={25}
-                enableMouseControl={true}
-                enableTouchControl={true}
-                perspective="800px"
+                autoRotateSpeed={40}
               />
             </div>
 
