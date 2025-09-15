@@ -2002,11 +2002,29 @@ const FigmaMobile = () => {
               --animation-stagger-delay: 0ms;
               --ultra-smooth-duration: 0ms;
             }
-            *, *::before, *::after {
+            /* 🚨 FIXED: Only target page content, NOT navigation elements */
+            .mobile-content-container *,
+            .mobile-content-container *::before,
+            .mobile-content-container *::after,
+            .mobile-event-cards-container *,
+            .mobile-event-cards-container *::before,
+            .mobile-event-cards-container *::after {
               animation-duration: 0.01ms !important;
               animation-iteration-count: 1 !important;
               transition-duration: 0.01ms !important;
               scroll-behavior: auto !important;
+            }
+            /* 🚨 CRITICAL: Preserve navigation animations for UX */
+            .mobile-navigation-header,
+            .mobile-navigation-header *,
+            .mobile-nav-overlay,
+            .mobile-nav-overlay *,
+            .mobile-nav-item,
+            .mobile-nav-item *,
+            .mobile-menu-button,
+            .mobile-menu-button * {
+              animation-duration: initial !important;
+              transition-duration: initial !important;
             }
           }
 
@@ -2137,20 +2155,8 @@ const FigmaMobile = () => {
             background: rgba(255, 255, 255, 0.5);
           }
 
-          /* 📱 ULTRA-STABLE MOBILE NAVIGATION WITH SCROLL ISOLATION */
-          .mobile-navigation-header {
-            /* Prevent any layout shifts from navigation changes */
-            contain: strict;
-            /* Isolate navigation animations from scroll */
-            isolation: isolate;
-            /* Prevent reflow during scroll state changes */
-            will-change: background-color, backdrop-filter;
-            /* FIXED: Prevent scroll events on navigation from affecting main page */
-            touch-action: none;
-            pointer-events: auto;
-            /* Ensure navigation doesn't interfere with main scroll */
-            overscroll-behavior: contain;
-          }
+          /* 🚨 REMOVED: Mobile navigation CSS - now handled by shared MobileNavigation component */
+          /* This prevents conflicts with the MobileNavigation component's own CSS */
 
           /* 📱 OPTIMIZED MOBILE SCROLL CONTAINER */
           .mobile-content-container {
@@ -2657,11 +2663,11 @@ const FigmaMobile = () => {
             -webkit-overscroll-behavior: none !important;
           }
 
-          /* 🚨 CRITICAL: Ensure navigation overlay is never affected by page-level styles */
-          div[style*="position: fixed"][style*="z-index"][style*="opacity"] {
+          /* 🚨 FIXED: Only target drawer elements, NOT navigation overlays */
+          .mobile-drawer[style*="position: fixed"][style*="z-index"] {
             position: fixed !important;
-            z-index: 1000 !important;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            z-index: 9999 !important;
+            /* Let MobileDrawer component control its own transitions */
           }
 
           .mobile-drawer.collapsed {
