@@ -2730,7 +2730,7 @@ const FigmaDesktop = () => {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px', // Space between TextUsSection and SocialMediaButtons
+            gap: '24px', // 🚨 FIX: Increased gap for better visual separation between Laylo and social buttons
             alignItems: 'flex-start',
             flex: '1 1 auto', // Allow growing and shrinking
             minWidth: '320px', // Increased minimum width for better scaling

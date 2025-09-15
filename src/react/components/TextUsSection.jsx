@@ -41,10 +41,10 @@ const TextUsSection = ({ scaledDimensions }) => {
       <div
         style={{
           position: 'relative',
-          width: 'calc(100% + 32px)',
+          width: '100%', // 🚨 FIX: Use full width without extending beyond container
           height: '60px',
-          marginLeft: '-16px',
-          marginRight: '-16px',
+          marginLeft: '0', // 🚨 FIX: Remove negative margins that cause overlap
+          marginRight: '0', // 🚨 FIX: Remove negative margins that cause overlap
           borderRadius: '8px',
           overflow: 'hidden', // Hide any content that extends beyond container
           background: 'transparent'
