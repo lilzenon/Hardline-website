@@ -110,21 +110,21 @@ const ContactPage = () => {
     }
   };
 
-  // Get navigation pill styles based on active state - EXACT MATCH to FigmaDesktop
+  // 🚨 HOMEPAGE CONSISTENCY: Get navigation pill styles - EXACT MATCH to FigmaDesktop (30% scaling)
   const getNavPillStyles = (tabName, leftPosition) => {
     const isActive = activeNavTab === tabName;
     return {
       position: 'absolute',
       left: leftPosition,
-      top: '4.15px',    // Scaled up by 15% (3.61 × 1.15)
+      top: '4.7px',     // 🚨 MATCH HOMEPAGE: Scaled up by 30% (3.61 × 1.30)
       display: 'flex',
-      width: '82.54px', // Scaled up by 15% (71.77 × 1.15)
-      height: '30.81px', // Scaled up by 15% (26.79 × 1.15)
-      padding: '13px 12px',
+      width: '93.3px',  // 🚨 MATCH HOMEPAGE: Scaled up by 30% (71.77 × 1.30) for better touch targets
+      height: '34.8px', // 🚨 MATCH HOMEPAGE: Scaled up by 30% (26.79 × 1.30) for better touch targets
+      padding: '15px 14px', // 🚨 MATCH HOMEPAGE: Increased padding for better touch area
       justifyContent: 'center',
       alignItems: 'center',
       gap: '10px',
-      borderRadius: '10px',
+      borderRadius: '12px', // 🚨 MATCH HOMEPAGE: Slightly increased border radius
       background: isActive ? '#000' : 'transparent',
       boxShadow: isActive ? '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' : 'none',
       cursor: 'pointer',
@@ -134,13 +134,13 @@ const ContactPage = () => {
     };
   };
 
-  // Get navigation text styles based on active state - EXACT MATCH to FigmaDesktop
+  // 🚨 HOMEPAGE CONSISTENCY: Get navigation text styles - EXACT MATCH to FigmaDesktop
   const getNavTextStyles = (tabName) => {
     const isActive = activeNavTab === tabName;
     return {
       color: '#FFF',
       fontFamily: 'Inter',
-      fontSize: '12px',
+      fontSize: '13px', // 🚨 MATCH HOMEPAGE: Increased from 12px to 13px for better readability
       fontWeight: isActive ? '300' : '400',
       lineHeight: 'normal',
       transition: 'font-weight 0.3s ease' // Smooth font weight transition
@@ -226,25 +226,45 @@ const ContactPage = () => {
             margin: '35px 0 0 0'
           }}
         >
-          {/* Group 4 - B2B Logo Nav */}
+          {/* Group 4 - B2B Logo Nav - 🚨 HOMEPAGE CONSISTENCY: Match logo size */}
           <img
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
             src="/images/figma-exact/b2b-logo-nav.svg"
             alt="B2B Logo"
             loading="lazy"
             decoding="async"
             fetchpriority="high"
+            onClick={() => {
+              if (window.navigateWithTransition) {
+                window.navigateWithTransition('/');
+              } else {
+                window.location.href = '/';
+              }
+            }}
             style={{
-              width: '138.41px',
-              height: '43px'
+              width: '180px', // 🚨 MATCH HOMEPAGE: Increased from 138.41px for better desktop prominence
+              height: '56px', // 🚨 MATCH HOMEPAGE: Increased from 43px proportionally
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.filter = 'brightness(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.filter = 'brightness(1)';
             }}
           />
 
-          {/* Group 5 - Navigation Pills */}
+          {/* Group 5 - Navigation Pills - 🚨 HOMEPAGE CONSISTENCY: Match 30% scaling */}
           <div
             style={{
               position: 'relative',
-              width: '260.46px', // Scaled up by 15% (226.49 × 1.15)
-              height: '39.1px',  // Scaled up by 15% (34 × 1.15)
+              width: '294.45px', // 🚨 MATCH HOMEPAGE: Scaled up by 30% (226.49 × 1.30) for better prominence
+              height: '44.2px',  // 🚨 MATCH HOMEPAGE: Scaled up by 30% (34 × 1.30) for better touch targets
               gridColumn: '3',  // Place in third column (right side)
               justifySelf: 'end'  // Align to right edge of grid cell
             }}
@@ -255,17 +275,17 @@ const ContactPage = () => {
               position: 'absolute',
               left: '0px',
               top: '0px',
-              width: '260.46px', // Scaled up by 15% (226.49 × 1.15)
-              height: '39.1px',  // Scaled up by 15% (34 × 1.15)
+              width: '294.45px', // 🚨 MATCH HOMEPAGE: Scaled up by 30% (226.49 × 1.30)
+              height: '44.2px',  // 🚨 MATCH HOMEPAGE: Scaled up by 30% (34 × 1.30)
               background: '#232323',
-              borderRadius: '12px',
+              borderRadius: '14px', // 🚨 MATCH HOMEPAGE: Slightly increased border radius
               boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
             }}
           />
 
-          {/* Events - Scaled up by 15% (3.24 × 1.15) */}
+          {/* Events - 🚨 MATCH HOMEPAGE: Scaled up by 30% (3.24 × 1.30) */}
           <div
-            style={getNavPillStyles('Events', '3.73px')}
+            style={getNavPillStyles('Events', '4.21px')}
             onClick={() => handleNavClick('Events')}
           >
             <span style={getNavTextStyles('Events')}>
@@ -273,9 +293,9 @@ const ContactPage = () => {
             </span>
           </div>
 
-          {/* About - Scaled up by 15% (77.03 × 1.15) */}
+          {/* About - 🚨 MATCH HOMEPAGE: Scaled up by 30% (77.03 × 1.30) */}
           <div
-            style={getNavPillStyles('About', '88.58px')}
+            style={getNavPillStyles('About', '100.14px')}
             onClick={() => handleNavClick('About')}
           >
             <span style={getNavTextStyles('About')}>
@@ -283,9 +303,9 @@ const ContactPage = () => {
             </span>
           </div>
 
-          {/* Contact - Scaled up by 15% (150.82 × 1.15) */}
+          {/* Contact - 🚨 MATCH HOMEPAGE: Scaled up by 30% (150.82 × 1.30) */}
           <div
-            style={getNavPillStyles('Contact', '173.44px')}
+            style={getNavPillStyles('Contact', '196.07px')}
             onClick={() => handleNavClick('Contact')}
           >
             <span style={getNavTextStyles('Contact')}>
