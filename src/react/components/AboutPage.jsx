@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useViewportDimensions } from '../hooks/usePerformantResize';
-import Masonry from './ui/Masonry';
+import DomeGallery from './ui/DomeGallery';
 
 const AboutPage = () => {
   // FIXED: Use useViewportDimensions to avoid circular dependency
@@ -448,11 +448,11 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             )}
           </div>
 
-          {/* Gallery Section - Masonry Layout */}
+          {/* Gallery Section - Dome Gallery */}
           <div
             style={{
               width: '100%',
-              maxWidth: '1000px',
+              maxWidth: '1200px',
               margin: '48px auto 0 auto',
               padding: '0 16px',
               boxSizing: 'border-box'
@@ -465,72 +465,80 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 fontWeight: '600',
                 fontSize: '32px',
                 lineHeight: '1.3em',
-                marginBottom: '24px',
+                marginBottom: '32px',
                 textAlign: 'center'
               }}
             >
               Gallery
             </div>
 
-            <Masonry
+            <DomeGallery
               items={[
                 {
                   id: "1",
                   img: "https://picsum.photos/id/1015/600/900",
                   url: "https://example.com/one",
-                  height: 400,
+                  title: "Event Highlights",
+                  description: "Memorable moments from our events"
                 },
                 {
                   id: "2",
                   img: "https://picsum.photos/id/1011/600/750",
                   url: "https://example.com/two",
-                  height: 250,
+                  title: "Live Performances",
+                  description: "Artists in action"
                 },
                 {
                   id: "3",
                   img: "https://picsum.photos/id/1020/600/800",
                   url: "https://example.com/three",
-                  height: 300,
+                  title: "Venue Atmosphere",
+                  description: "The energy of our venues"
                 },
                 {
                   id: "4",
                   img: "https://picsum.photos/id/1025/600/700",
                   url: "https://example.com/four",
-                  height: 350,
+                  title: "Behind the Scenes",
+                  description: "What goes into our events"
                 },
                 {
                   id: "5",
                   img: "https://picsum.photos/id/1035/600/650",
                   url: "https://example.com/five",
-                  height: 280,
+                  title: "Community",
+                  description: "Our amazing audience"
                 },
                 {
                   id: "6",
                   img: "https://picsum.photos/id/1040/600/850",
                   url: "https://example.com/six",
-                  height: 420,
+                  title: "Production",
+                  description: "Technical excellence"
                 },
                 {
                   id: "7",
                   img: "https://picsum.photos/id/1050/600/600",
                   url: "https://example.com/seven",
-                  height: 320,
+                  title: "Special Moments",
+                  description: "Unforgettable experiences"
                 },
                 {
                   id: "8",
                   img: "https://picsum.photos/id/1060/600/750",
                   url: "https://example.com/eight",
-                  height: 380,
+                  title: "Future Events",
+                  description: "What's coming next"
                 }
               ]}
-              ease="power3.out"
-              duration={0.6}
-              stagger={0.05}
-              animateFrom="bottom"
-              scaleOnHover={true}
-              hoverScale={0.95}
-              blurToFocus={true}
-              colorShiftOnHover={false}
+              radius={320}
+              itemWidth={220}
+              itemHeight={320}
+              autoRotate={true}
+              autoRotateSpeed={30}
+              enableMouseControl={true}
+              enableTouchControl={true}
+              perspective="1200px"
             />
           </div>
         </div>
