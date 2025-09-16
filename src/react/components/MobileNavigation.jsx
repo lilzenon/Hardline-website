@@ -135,8 +135,8 @@ const MobileNavigation = ({
           /* 🎭 ELEGANT MENU ITEMS: Smooth interactions with enhanced glassmorphism */
           .mobile-nav-item {
             position: relative;
-            /* 🎯 SMOOTH INTERACTIONS: Elegant hover response */
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            /* 🎯 SMOOTH INTERACTIONS: Elegant hover response (25% faster) */
+            transition: all 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
             padding: 20px 40px; /* Increased padding for better touch targets */
             border-radius: 24px; /* Larger radius for modern feel */
             margin: 12px 0; /* Increased margin for better spacing */
@@ -195,9 +195,9 @@ const MobileNavigation = ({
             contain: layout style;
           }
 
-          /* Navigation overlay animations */
+          /* Navigation overlay animations (25% faster) */
           .mobile-nav-overlay {
-            transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.21s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.21s cubic-bezier(0.4, 0, 0.2, 1);
           }
 
           .mobile-nav-overlay.entering {
@@ -267,8 +267,8 @@ const MobileNavigation = ({
           /* 🚨 FIXED: Navigation container remains at fixed size and position */
           transform: 'none', // No scaling - container stays fixed
           transformOrigin: 'top center', // Keep for consistency but no scaling applied
-          /* 🚨 FIXED: Simplified transitions - no transform scaling */
-          transition: 'background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          /* 🚨 FIXED: Simplified transitions - no transform scaling (25% faster) */
+          transition: 'background-color 0.225s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.225s cubic-bezier(0.4, 0, 0.2, 1)',
           zIndex: 200,
           /* REMOVED: Bottom border for cleaner look */
           flexShrink: 0,
@@ -412,7 +412,7 @@ const MobileNavigation = ({
           flexDirection: 'column',
           opacity: showMenu ? 1 : 0,
           visibility: showMenu ? 'visible' : 'hidden',
-          transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'opacity 0.21s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
           backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)',
           // Hardware acceleration for smooth overlay animations
           transform: 'translateZ(0)',
@@ -472,7 +472,7 @@ const MobileNavigation = ({
                 height: '2px',
                 background: '#FFFFFF',
                 borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.225s cubic-bezier(0.4, 0, 0.2, 1)',
                 transform: 'rotate(45deg) translateY(6px)',
                 transformOrigin: 'center'
               }}
@@ -483,7 +483,7 @@ const MobileNavigation = ({
                 height: '2px',
                 background: '#FFFFFF',
                 borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.225s cubic-bezier(0.4, 0, 0.2, 1)',
                 opacity: 0,
                 transform: 'scale(0)'
               }}
@@ -494,7 +494,7 @@ const MobileNavigation = ({
                 height: '2px',
                 background: '#FFFFFF',
                 borderRadius: '1px',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: 'all 0.225s cubic-bezier(0.4, 0, 0.2, 1)',
                 transform: 'rotate(-45deg) translateY(-6px)',
                 transformOrigin: 'center'
               }}
@@ -542,7 +542,7 @@ const MobileNavigation = ({
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
             opacity: 1, // Always visible - let children control their own opacity
-            transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'transform 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
             transitionDelay: showMenu ? '0.05s' : '0s',
             /* 🎯 PERFORMANCE: Hardware acceleration for smooth animations */
             willChange: 'transform, opacity',
@@ -565,7 +565,7 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Events (1st item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: showMenu ? '0.10s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
               willChange: 'transform, opacity',
@@ -592,7 +592,7 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - About (2nd item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: showMenu ? '0.15s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
               willChange: 'transform, opacity',
@@ -619,7 +619,7 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Contact (3rd item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: showMenu ? '0.20s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
               willChange: 'transform, opacity',
@@ -643,7 +643,7 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Social Media (4th item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
               transitionDelay: showMenu ? '0.25s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration */
               willChange: 'transform, opacity',

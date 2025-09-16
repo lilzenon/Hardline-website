@@ -678,8 +678,8 @@ const MobileDrawer = ({
             : drawerExpanded
               ? 'translate3d(0, 0, 0)'
               : 'translate3d(0, calc(100% - 80px), 0)',
-          // 🚀 ENHANCED: Mirrored opening/closing animation with same duration and easing
-          transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+          // 🚀 ENHANCED: Mirrored opening/closing animation with same duration and easing (25% faster)
+          transition: 'transform 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
           willChange: 'transform, height',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden'
