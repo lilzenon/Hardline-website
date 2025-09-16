@@ -1,11 +1,13 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useEffect, forwardRef, Suspense } from 'react';
+import { useRef, useEffect, forwardRef, Suspense, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
 import * as THREE from 'three';
 
 import './Dither.css';
+import { isThreeJSCompatible, logWebGLInfo } from '../../utils/webglDetection';
+import ThreeJSErrorBoundary from '../ThreeJSErrorBoundary';
 
 const waveVertexShader = `
 precision highp float;
@@ -276,23 +278,51 @@ function DitheredWaves({
   );
 }
 
-// Fallback component for when Three.js fails to load
-function DitherFallback() {
+// Enhanced fallback component for when Three.js fails to load
+function DitherFallback({ reason = 'unknown' }) {
+  useEffect(() => {
+    console.warn(`🎮 Dither fallback activated. Reason: ${reason}`);
+    if (reason === 'webgl-unsupported') {
+      logWebGLInfo();
+    }
+  }, [reason]);
+
   return (
     <div
       className="dither-container"
       style={{
         background: 'linear-gradient(45deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
         backgroundSize: '20px 20px',
-        animation: 'ditherFallback 3s ease-in-out infinite alternate'
+        animation: 'ditherFallback 3s ease-in-out infinite alternate',
+        position: 'relative'
       }}
     >
       <style>{`
         @keyframes ditherFallback {
-          0% { opacity: 0.8; }
-          100% { opacity: 0.6; }
+          0% {
+            opacity: 0.8;
+            filter: hue-rotate(0deg) brightness(1.1);
+          }
+          100% {
+            opacity: 0.6;
+            filter: hue-rotate(15deg) brightness(0.9);
+          }
         }
       `}</style>
+
+      {/* Optional debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '10px',
+          color: '#666',
+          fontSize: '12px',
+          fontFamily: 'monospace'
+        }}>
+          Dither Fallback: {reason}
+        </div>
+      )}
     </div>
   );
 }
@@ -308,36 +338,85 @@ export default function Dither({
   enableMouseInteraction = true,
   mouseRadius = 1
 }) {
+  const [isCompatible, setIsCompatible] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Check compatibility after component mounts
+  useEffect(() => {
+    setMounted(true);
+
+    // Delay compatibility check to ensure DOM is ready
+    const checkCompatibility = () => {
+      const compatible = isThreeJSCompatible();
+      setIsCompatible(compatible);
+
+      if (!compatible) {
+        console.warn('🎮 Three.js not compatible with current environment');
+        logWebGLInfo();
+      }
+    };
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(checkCompatibility);
+  }, []);
+
+  // Don't render anything until we've checked compatibility
+  if (!mounted || isCompatible === null) {
+    return <DitherFallback reason="initializing" />;
+  }
+
+  // Use fallback if Three.js is not compatible
+  if (!isCompatible) {
+    return <DitherFallback reason="webgl-unsupported" />;
+  }
+
+  // Render Three.js component with error boundary
   try {
     return (
-      <Canvas
-        className="dither-container"
-        camera={{ position: [0, 0, 6] }}
-        dpr={1}
-        gl={{ antialias: true, preserveDrawingBuffer: true }}
-        onCreated={(state) => {
-          // Ensure WebGL context is properly initialized
-          state.gl.setSize(state.size.width, state.size.height);
-        }}
-        fallback={<DitherFallback />}
-      >
-        <Suspense fallback={null}>
-          <DitheredWaves
-            waveSpeed={waveSpeed}
-            waveFrequency={waveFrequency}
-            waveAmplitude={waveAmplitude}
-            waveColor={waveColor}
-            colorNum={colorNum}
-            pixelSize={pixelSize}
-            disableAnimation={disableAnimation}
-            enableMouseInteraction={enableMouseInteraction}
-            mouseRadius={mouseRadius}
-          />
-        </Suspense>
-      </Canvas>
+      <ThreeJSErrorBoundary fallback={() => <DitherFallback reason="runtime-error" />}>
+        <Canvas
+          className="dither-container"
+          camera={{ position: [0, 0, 6] }}
+          dpr={Math.min(window.devicePixelRatio || 1, 2)} // Limit DPR for performance
+          gl={{
+            antialias: true,
+            preserveDrawingBuffer: true,
+            powerPreference: "high-performance",
+            failIfMajorPerformanceCaveat: false // Don't fail on slower devices
+          }}
+          onCreated={(state) => {
+            try {
+              // Ensure WebGL context is properly initialized
+              state.gl.setSize(state.size.width, state.size.height);
+              console.log('🎮 Three.js Canvas created successfully');
+            } catch (error) {
+              console.error('🚨 Canvas creation failed:', error);
+              throw error;
+            }
+          }}
+          onError={(error) => {
+            console.error('🚨 Canvas error:', error);
+          }}
+          fallback={<DitherFallback reason="canvas-fallback" />}
+        >
+          <Suspense fallback={null}>
+            <DitheredWaves
+              waveSpeed={waveSpeed}
+              waveFrequency={waveFrequency}
+              waveAmplitude={waveAmplitude}
+              waveColor={waveColor}
+              colorNum={colorNum}
+              pixelSize={pixelSize}
+              disableAnimation={disableAnimation}
+              enableMouseInteraction={enableMouseInteraction}
+              mouseRadius={mouseRadius}
+            />
+          </Suspense>
+        </Canvas>
+      </ThreeJSErrorBoundary>
     );
   } catch (error) {
-    console.warn('Dither component failed to render, using fallback:', error);
-    return <DitherFallback />;
+    console.warn('🚨 Dither component failed to render, using fallback:', error);
+    return <DitherFallback reason="component-error" />;
   }
 }

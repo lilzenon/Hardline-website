@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Dither from './ui/Dither';
+import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
 
 /**
  * Minimalist 404 Not Found Page with Dither Effect Background
@@ -13,6 +14,14 @@ import Dither from './ui/Dither';
  * - Accessibility compliant
  */
 export default function NotFoundPage() {
+  // Log environment info in production for debugging
+  useEffect(() => {
+    if (isProductionEnvironment()) {
+      console.log('🔍 NotFoundPage loaded in production environment');
+      logEnvironmentInfo();
+    }
+  }, []);
+
   // Simple navigation function
   const handleGoHome = () => {
     if (window.navigateWithTransition) {
