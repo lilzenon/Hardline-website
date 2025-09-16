@@ -97,20 +97,19 @@ class DitherErrorBoundary extends React.Component {
   }
 
   render() {
-    // Only use fallback for critical errors that prevent Three.js from working
+    // Only use fallback for truly critical WebGL errors
     if (this.state.hasError && this.state.error) {
-      const isCriticalError = this.state.error.message.includes('WebGL') ||
-                             this.state.error.message.includes('Canvas') ||
-                             this.state.error.message.includes('THREE') ||
-                             (this.state.error.name === 'TypeError' && !this.state.error.message.includes('ReactCurrentOwner'));
+      const isCriticalWebGLError = this.state.error.message.includes('WebGL context lost') ||
+                                  this.state.error.message.includes('WebGL not supported') ||
+                                  this.state.error.message.includes('CONTEXT_LOST_WEBGL');
 
-      if (isCriticalError) {
-        console.warn('🎮 Using CSS fallback due to critical Three.js error');
+      if (isCriticalWebGLError) {
+        console.warn('🎮 Critical WebGL error - using CSS fallback');
         return <CSSFallbackBackground />;
       } else {
-        console.log('🎮 Non-critical error, allowing component to retry');
-        // Reset error state to allow retry
-        this.setState({ hasError: false, error: null });
+        // For all other errors, let React Three Fiber handle them internally
+        console.log('🎮 Non-critical error, letting React Three Fiber handle internally');
+        return this.props.children;
       }
     }
     return this.props.children;
@@ -159,19 +158,17 @@ export default function NotFoundPage() {
         height: '100%',
         zIndex: 1
       }}>
-        <DitherErrorBoundary>
-          <Dither
-            waveSpeed={0.05}
-            waveFrequency={19}
-            waveAmplitude={0.51}
-            waveColor={[0.5, 0.5, 0.5]}
-            colorNum={2.5}
-            pixelSize={3}
-            disableAnimation={false}
-            enableMouseInteraction={false}
-            mouseRadius={0.3}
-          />
-        </DitherErrorBoundary>
+        <Dither
+          waveSpeed={0.05}
+          waveFrequency={19}
+          waveAmplitude={0.51}
+          waveColor={[0.5, 0.5, 0.5]}
+          colorNum={2.5}
+          pixelSize={3}
+          disableAnimation={false}
+          enableMouseInteraction={false}
+          mouseRadius={0.3}
+        />
       </div>
 
 

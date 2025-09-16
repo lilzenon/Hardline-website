@@ -338,88 +338,45 @@ export default function Dither({
   enableMouseInteraction = true,
   mouseRadius = 1
 }) {
-  const [isCompatible, setIsCompatible] = useState(null);
-  const [mounted, setMounted] = useState(false);
-
-  // Check compatibility after component mounts
+  // Log initialization for debugging
   useEffect(() => {
-    setMounted(true);
-
-    // Delay compatibility check to ensure DOM is ready
-    const checkCompatibility = () => {
-      // Check WebGL and Three.js compatibility (let React Three Fiber handle React 19 internally)
-      const compatible = isThreeJSCompatible();
-      setIsCompatible(compatible);
-
-      if (!compatible) {
-        console.warn('🎮 Three.js not compatible with current environment');
-        logWebGLInfo();
-      } else {
-        console.log('🎮 Three.js compatibility check passed - initializing dither effect');
-      }
-    };
-
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(checkCompatibility);
+    console.log('🎮 Dither component initializing - loading Three.js canvas directly');
   }, []);
 
-  // Don't render anything until we've checked compatibility
-  if (!mounted || isCompatible === null) {
-    return <DitherFallback reason="initializing" />;
-  }
-
-  // Use fallback if Three.js is not compatible
-  if (!isCompatible) {
-    return <DitherFallback reason="webgl-unsupported" />;
-  }
-
-  // Render Three.js component with error boundary
-  try {
-    return (
-      <ThreeJSErrorBoundary fallback={() => <DitherFallback reason="runtime-error" />}>
-        <Canvas
-          className="dither-container"
-          camera={{ position: [0, 0, 6] }}
-          dpr={Math.min(window.devicePixelRatio || 1, 2)} // Limit DPR for performance
-          gl={{
-            antialias: true,
-            preserveDrawingBuffer: true,
-            powerPreference: "high-performance",
-            failIfMajorPerformanceCaveat: false // Don't fail on slower devices
-          }}
-          onCreated={(state) => {
-            try {
-              // Ensure WebGL context is properly initialized
-              state.gl.setSize(state.size.width, state.size.height);
-              console.log('🎮 Three.js Canvas created successfully');
-            } catch (error) {
-              console.error('🚨 Canvas creation failed:', error);
-              throw error;
-            }
-          }}
-          onError={(error) => {
-            console.error('🚨 Canvas error:', error);
-          }}
-          fallback={<DitherFallback reason="canvas-fallback" />}
-        >
-          <Suspense fallback={null}>
-            <DitheredWaves
-              waveSpeed={waveSpeed}
-              waveFrequency={waveFrequency}
-              waveAmplitude={waveAmplitude}
-              waveColor={waveColor}
-              colorNum={colorNum}
-              pixelSize={pixelSize}
-              disableAnimation={disableAnimation}
-              enableMouseInteraction={enableMouseInteraction}
-              mouseRadius={mouseRadius}
-            />
-          </Suspense>
-        </Canvas>
-      </ThreeJSErrorBoundary>
-    );
-  } catch (error) {
-    console.warn('🚨 Dither component failed to render, using fallback:', error);
-    return <DitherFallback reason="component-error" />;
-  }
+  // Render Three.js component directly
+  return (
+    <Canvas
+      className="dither-container"
+      camera={{ position: [0, 0, 6] }}
+      dpr={Math.min(window.devicePixelRatio || 1, 2)} // Limit DPR for performance
+      gl={{
+        antialias: true,
+        preserveDrawingBuffer: true,
+        powerPreference: "high-performance",
+        failIfMajorPerformanceCaveat: false // Don't fail on slower devices
+      }}
+      onCreated={(state) => {
+        // Ensure WebGL context is properly initialized
+        state.gl.setSize(state.size.width, state.size.height);
+        console.log('🎮 Three.js Canvas created successfully');
+      }}
+      onError={(error) => {
+        console.error('🚨 Canvas error:', error);
+      }}
+    >
+      <Suspense fallback={null}>
+        <DitheredWaves
+          waveSpeed={waveSpeed}
+          waveFrequency={waveFrequency}
+          waveAmplitude={waveAmplitude}
+          waveColor={waveColor}
+          colorNum={colorNum}
+          pixelSize={pixelSize}
+          disableAnimation={disableAnimation}
+          enableMouseInteraction={enableMouseInteraction}
+          mouseRadius={mouseRadius}
+        />
+      </Suspense>
+    </Canvas>
+  );
 }
