@@ -1,19 +1,125 @@
-import React, { useEffect } from 'react';
-import Dither from './ui/Dither';
+import React, { useEffect, useState, Suspense } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
+import Dither from './ui/Dither';
 
 /**
  * Minimalist 404 Not Found Page with Dither Effect Background
- * 
+ *
  * Features:
- * - Full-screen dither effect background
+ * - Full-screen dither effect background with React 19 compatibility
+ * - CSS fallback for when Three.js fails
  * - Ultra-transparent glassmorphism card
  * - BOUNCE2BOUNCE logo positioning
  * - Minimalist design with subtle button
  * - Responsive layout
  * - Accessibility compliant
+ * - Robust error handling
  */
+
+// CSS-only fallback background that matches the dither effect
+const CSSFallbackBackground = () => (
+  <div style={{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 1,
+    background: `
+      radial-gradient(circle at 20% 30%, rgba(128, 128, 128, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(128, 128, 128, 0.08) 0%, transparent 50%),
+      radial-gradient(circle at 40% 80%, rgba(128, 128, 128, 0.06) 0%, transparent 50%),
+      linear-gradient(45deg, #000000 0%, #0a0a0a 25%, #000000 50%, #0a0a0a 75%, #000000 100%)
+    `,
+    backgroundSize: '400px 400px, 600px 600px, 300px 300px, 20px 20px',
+    animation: 'cssWaveAnimation 8s ease-in-out infinite alternate'
+  }}>
+    <style>{`
+      @keyframes cssWaveAnimation {
+        0% {
+          opacity: 0.8;
+          filter: hue-rotate(0deg) brightness(1);
+          background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%;
+        }
+        50% {
+          opacity: 0.6;
+          filter: hue-rotate(5deg) brightness(1.1);
+          background-position: 20% 20%, 80% 80%, 30% 70%, 10% 10%;
+        }
+        100% {
+          opacity: 0.7;
+          filter: hue-rotate(10deg) brightness(0.9);
+          background-position: 40% 10%, 60% 90%, 70% 30%, 20% 20%;
+        }
+      }
+    `}</style>
+  </div>
+);
+
+// Error boundary specifically for the Dither component
+class DitherErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Only use fallback for actual critical errors, not React 19 compatibility issues
+    const isCriticalError = error.message.includes('WebGL') ||
+                           error.message.includes('Canvas') ||
+                           error.message.includes('THREE') ||
+                           error.name === 'TypeError' && !error.message.includes('ReactCurrentOwner');
+
+    console.warn('🎮 Dither component error:', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      isCriticalError,
+      willUseFallback: isCriticalError
+    });
+
+    // Only track truly critical errors
+    if (window.gtag && isCriticalError) {
+      window.gtag('event', 'exception', {
+        description: `Three.js Critical Error: ${error.message}`,
+        fatal: false
+      });
+    }
+
+    // For React 19 compatibility issues, let React Three Fiber handle them
+    if (!isCriticalError) {
+      console.log('🎮 Non-critical error detected, allowing React Three Fiber to handle internally');
+    }
+  }
+
+  render() {
+    // Only use fallback for critical errors that prevent Three.js from working
+    if (this.state.hasError && this.state.error) {
+      const isCriticalError = this.state.error.message.includes('WebGL') ||
+                             this.state.error.message.includes('Canvas') ||
+                             this.state.error.message.includes('THREE') ||
+                             (this.state.error.name === 'TypeError' && !this.state.error.message.includes('ReactCurrentOwner'));
+
+      if (isCriticalError) {
+        console.warn('🎮 Using CSS fallback due to critical Three.js error');
+        return <CSSFallbackBackground />;
+      } else {
+        console.log('🎮 Non-critical error, allowing component to retry');
+        // Reset error state to allow retry
+        this.setState({ hasError: false, error: null });
+      }
+    }
+    return this.props.children;
+  }
+}
+
 export default function NotFoundPage() {
+  const [ditherFailed, setDitherFailed] = useState(false);
+
   // Log environment info in production for debugging
   useEffect(() => {
     if (isProductionEnvironment()) {
@@ -44,7 +150,7 @@ export default function NotFoundPage() {
       alignItems: 'center',
       justifyContent: 'center'
     }}>
-      {/* Dither Background Effect */}
+      {/* Dither Background Effect with Error Boundary */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -53,17 +159,19 @@ export default function NotFoundPage() {
         height: '100%',
         zIndex: 1
       }}>
-        <Dither
-          waveSpeed={0.05}
-          waveFrequency={19}
-          waveAmplitude={0.51}
-          waveColor={[0.5, 0.5, 0.5]}
-          colorNum={2.5}
-          pixelSize={3}
-          disableAnimation={false}
-          enableMouseInteraction={false}
-          mouseRadius={0.3}
-        />
+        <DitherErrorBoundary>
+          <Dither
+            waveSpeed={0.05}
+            waveFrequency={19}
+            waveAmplitude={0.51}
+            waveColor={[0.5, 0.5, 0.5]}
+            colorNum={2.5}
+            pixelSize={3}
+            disableAnimation={false}
+            enableMouseInteraction={false}
+            mouseRadius={0.3}
+          />
+        </DitherErrorBoundary>
       </div>
 
 

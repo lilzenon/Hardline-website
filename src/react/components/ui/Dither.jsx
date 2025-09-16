@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useEffect, forwardRef, Suspense, useState } from 'react';
+import React, { useRef, useEffect, forwardRef, Suspense, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
@@ -347,12 +347,15 @@ export default function Dither({
 
     // Delay compatibility check to ensure DOM is ready
     const checkCompatibility = () => {
+      // Check WebGL and Three.js compatibility (let React Three Fiber handle React 19 internally)
       const compatible = isThreeJSCompatible();
       setIsCompatible(compatible);
 
       if (!compatible) {
         console.warn('🎮 Three.js not compatible with current environment');
         logWebGLInfo();
+      } else {
+        console.log('🎮 Three.js compatibility check passed - initializing dither effect');
       }
     };
 
