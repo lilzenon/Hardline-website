@@ -118,7 +118,10 @@ const MasonryGallery = ({
     if (e) {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
+      // Use stopImmediatePropagation only if available
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
+      }
     }
 
     // Set closing state to prevent immediate reopening
@@ -141,7 +144,10 @@ const MasonryGallery = ({
     if (e.target === e.currentTarget) {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
+      // Use stopImmediatePropagation only if available
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
+      }
       closeExpandedImage(e);
     }
   }, [closeExpandedImage]);
@@ -152,7 +158,10 @@ const MasonryGallery = ({
     if (e.target === e.currentTarget) {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
+      // Use stopImmediatePropagation only if available
+      if (typeof e.stopImmediatePropagation === 'function') {
+        e.stopImmediatePropagation();
+      }
       closeExpandedImage(e);
     }
   }, [closeExpandedImage]);
@@ -416,12 +425,18 @@ const MasonryGallery = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              e.stopImmediatePropagation();
+              // Use stopImmediatePropagation only if available
+              if (typeof e.stopImmediatePropagation === 'function') {
+                e.stopImmediatePropagation();
+              }
             }}
             onTouchEnd={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              e.stopImmediatePropagation();
+              // Use stopImmediatePropagation only if available
+              if (typeof e.stopImmediatePropagation === 'function') {
+                e.stopImmediatePropagation();
+              }
             }}
           >
             <img
@@ -463,13 +478,19 @@ const MasonryGallery = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
+                // Use stopImmediatePropagation only if available
+                if (typeof e.stopImmediatePropagation === 'function') {
+                  e.stopImmediatePropagation();
+                }
                 closeExpandedImage(e);
               }}
               onTouchEnd={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
+                // Use stopImmediatePropagation only if available
+                if (typeof e.stopImmediatePropagation === 'function') {
+                  e.stopImmediatePropagation();
+                }
                 closeExpandedImage(e);
               }}
               aria-label="Close image"
