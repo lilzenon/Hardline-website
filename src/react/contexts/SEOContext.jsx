@@ -315,7 +315,7 @@ export const MaintenanceMode = () => {
   const { maintenanceStatus } = useSEO();
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detect mobile viewport
+  // Detect mobile viewport and load Laylo SDK
   useEffect(() => {
     const checkMobile = () => {
       const width = window.innerWidth;
@@ -326,10 +326,37 @@ export const MaintenanceMode = () => {
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
-  if (!maintenanceStatus.maintenance_mode) {
+    // Load Laylo SDK if maintenance mode is active
+    if (maintenanceStatus.maintenance_mode) {
+      const script = document.createElement('script');
+      script.src = 'https://embed.laylo.com/laylo-sdk.js';
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+      // Cleanup script on unmount
+      const existingScript = document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, [maintenanceStatus.maintenance_mode]);
+
+  // Don't show this overlay if we're on the dedicated maintenance page
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const isMaintenancePage = currentPath === '/maintenance';
+
+  console.log('🔍 MaintenanceMode overlay check:', {
+    maintenanceMode: maintenanceStatus.maintenance_mode,
+    currentPath,
+    isMaintenancePage,
+    shouldRender: maintenanceStatus.maintenance_mode && !isMaintenancePage
+  });
+
+  if (!maintenanceStatus.maintenance_mode || isMaintenancePage) {
     return null;
   }
 
@@ -408,6 +435,36 @@ export const MaintenanceMode = () => {
       <p style={messageStyle}>
         {maintenanceStatus.maintenance_message || 'We are currently performing scheduled maintenance. Please check back soon.'}
       </p>
+
+      {/* Laylo Iframe */}
+      <div style={{
+        width: '100%',
+        maxWidth: isMobile ? '320px' : '500px',
+        margin: isMobile ? '20px 0' : '32px 0',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: isMobile ? '16px' : '24px'
+      }}>
+        <iframe
+          id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
+          frameBorder="0"
+          scrolling="no"
+          allow="web-share"
+          allowTransparency="true"
+          style={{
+            width: '1px',
+            minWidth: '100%',
+            maxWidth: '1000px',
+            height: 'auto',
+            border: 'none'
+          }}
+          src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
+          title="Stay updated with BOUNCE2BOUNCE"
+        />
+      </div>
 
       {maintenanceStatus.estimated_downtime && (
         <div style={downtimeStyle}>

@@ -129,6 +129,20 @@ export default function MaintenancePage({
       console.log('🔍 MaintenancePage loaded in production environment');
       logEnvironmentInfo();
     }
+
+    // Load Laylo SDK
+    const script = document.createElement('script');
+    script.src = 'https://embed.laylo.com/laylo-sdk.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup script on unmount
+      const existingScript = document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
   }, []);
 
   // Simple navigation function
@@ -229,26 +243,6 @@ export default function MaintenancePage({
           </div>
         </div>
 
-        {/* Maintenance Icon */}
-        <div style={{
-          width: '64px',
-          height: '64px',
-          margin: '0 auto 24px',
-          borderRadius: '50%',
-          background: 'rgba(255, 193, 7, 0.2)',
-          border: '2px solid rgba(255, 193, 7, 0.3)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            background: 'rgba(255, 193, 7, 0.8)',
-            borderRadius: '50%'
-          }} />
-        </div>
-
         {/* Maintenance Title */}
         <h1 style={{
           fontSize: 'clamp(1.5rem, 4vw, 2rem)',
@@ -273,13 +267,38 @@ export default function MaintenancePage({
           {message}
         </p>
 
+        {/* Laylo Iframe */}
+        <div style={{
+          width: '100%',
+          margin: '24px 0',
+          borderRadius: '8px',
+          overflow: 'hidden'
+        }}>
+          <iframe
+            id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
+            frameBorder="0"
+            scrolling="no"
+            allow="web-share"
+            allowTransparency="true"
+            style={{
+              width: '1px',
+              minWidth: '100%',
+              maxWidth: '1000px',
+              height: 'auto',
+              border: 'none'
+            }}
+            src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
+            title="Stay updated with BOUNCE2BOUNCE"
+          />
+        </div>
+
         {/* Estimated Downtime */}
         {estimatedDowntime && (
           <p style={{
             fontSize: '0.875rem',
             fontWeight: '500',
             color: 'rgba(255, 193, 7, 0.9)',
-            margin: '0 0 24px 0'
+            margin: '0 0 16px 0'
           }}>
             Estimated downtime: {estimatedDowntime}
           </p>
