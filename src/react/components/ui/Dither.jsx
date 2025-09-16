@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unknown-property */
-import { useRef, useEffect, forwardRef } from 'react';
+import { useRef, useEffect, forwardRef, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
@@ -178,7 +178,18 @@ function DitheredWaves({
 }) {
   const mesh = useRef(null);
   const mouseRef = useRef(new THREE.Vector2());
-  const { viewport, size, gl } = useThree();
+
+  // Add error handling for useThree hook
+  let viewport, size, gl;
+  try {
+    const threeState = useThree();
+    viewport = threeState.viewport;
+    size = threeState.size;
+    gl = threeState.gl;
+  } catch (error) {
+    console.warn('Failed to get Three.js state:', error);
+    return null;
+  }
 
   const waveUniformsRef = useRef({
     time: new THREE.Uniform(0),
@@ -245,9 +256,12 @@ function DitheredWaves({
         />
       </mesh>
 
-      <EffectComposer>
-        <RetroEffect colorNum={colorNum} pixelSize={pixelSize} />
-      </EffectComposer>
+      {/* Wrap EffectComposer in error boundary since it's prone to React 19 compatibility issues */}
+      <Suspense fallback={null}>
+        <EffectComposer>
+          <RetroEffect colorNum={colorNum} pixelSize={pixelSize} />
+        </EffectComposer>
+      </Suspense>
 
       <mesh
         onPointerMove={handlePointerMove}
@@ -262,6 +276,27 @@ function DitheredWaves({
   );
 }
 
+// Fallback component for when Three.js fails to load
+function DitherFallback() {
+  return (
+    <div
+      className="dither-container"
+      style={{
+        background: 'linear-gradient(45deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
+        backgroundSize: '20px 20px',
+        animation: 'ditherFallback 3s ease-in-out infinite alternate'
+      }}
+    >
+      <style>{`
+        @keyframes ditherFallback {
+          0% { opacity: 0.8; }
+          100% { opacity: 0.6; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function Dither({
   waveSpeed = 0.05,
   waveFrequency = 3,
@@ -273,24 +308,36 @@ export default function Dither({
   enableMouseInteraction = true,
   mouseRadius = 1
 }) {
-  return (
-    <Canvas
-      className="dither-container"
-      camera={{ position: [0, 0, 6] }}
-      dpr={1}
-      gl={{ antialias: true, preserveDrawingBuffer: true }}
-    >
-      <DitheredWaves
-        waveSpeed={waveSpeed}
-        waveFrequency={waveFrequency}
-        waveAmplitude={waveAmplitude}
-        waveColor={waveColor}
-        colorNum={colorNum}
-        pixelSize={pixelSize}
-        disableAnimation={disableAnimation}
-        enableMouseInteraction={enableMouseInteraction}
-        mouseRadius={mouseRadius}
-      />
-    </Canvas>
-  );
+  try {
+    return (
+      <Canvas
+        className="dither-container"
+        camera={{ position: [0, 0, 6] }}
+        dpr={1}
+        gl={{ antialias: true, preserveDrawingBuffer: true }}
+        onCreated={(state) => {
+          // Ensure WebGL context is properly initialized
+          state.gl.setSize(state.size.width, state.size.height);
+        }}
+        fallback={<DitherFallback />}
+      >
+        <Suspense fallback={null}>
+          <DitheredWaves
+            waveSpeed={waveSpeed}
+            waveFrequency={waveFrequency}
+            waveAmplitude={waveAmplitude}
+            waveColor={waveColor}
+            colorNum={colorNum}
+            pixelSize={pixelSize}
+            disableAnimation={disableAnimation}
+            enableMouseInteraction={enableMouseInteraction}
+            mouseRadius={mouseRadius}
+          />
+        </Suspense>
+      </Canvas>
+    );
+  } catch (error) {
+    console.warn('Dither component failed to render, using fallback:', error);
+    return <DitherFallback />;
+  }
 }
