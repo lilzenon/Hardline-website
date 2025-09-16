@@ -424,7 +424,7 @@ const MobileDrawer = ({
       }
     }
 
-      if (shouldToggleDrawer) {
+    if (shouldToggleDrawer) {
         // Add momentum class for smooth animation
         if (velocity > minFlickVelocity) {
           drawerRef.current?.classList.add('momentum-fast');
@@ -452,7 +452,6 @@ const MobileDrawer = ({
             console.log('🔄 Drawer closed via swipe down');
           }
         }
-      }
     } else {
       // ENHANCED: Handle tap gesture on expanded swipe zone
       const rect = drawerRef.current?.getBoundingClientRect();
