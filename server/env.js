@@ -79,6 +79,9 @@ const spec = {
     DASHBOARD_URL: str({ example: "https://admin.your-domain.com", default: "http://localhost:3002" }),
     API_URL: str({ example: "https://api.your-domain.com", default: "http://localhost:3001" }),
 
+    // 🧩 DASHBOARD PROXY TOGGLE (for development)
+    DASHBOARD_PROXY_ENABLED: bool({ default: true }),
+
     // 🌐 DOMAIN CONFIGURATION
     PRODUCTION_HOMEPAGE_URL: str({ example: "https://bounce2bounce.com", default: "" }),
     PRODUCTION_SHORTLINK_DOMAIN: str({ example: "https://b2b.click", default: "" }),

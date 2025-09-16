@@ -726,72 +726,74 @@ try {
     console.log('✅ API routes registered successfully');
 
     console.log('🔍 Setting up cross-domain API proxy...');
-    // CROSS-DOMAIN API INTEGRATION: Proxy specific API endpoints to dashboard server
-    // IMPORTANT: This must come AFTER general API routes to ensure proxy takes precedence
     const dashboardApiUrl = env.NODE_ENV === 'production'
         ? 'https://admin.b2b.click'
         : 'http://localhost:3002';
 
-    console.log(`📡 Proxying API calls to dashboard server: ${dashboardApiUrl}`);
+    if (env.DASHBOARD_PROXY_ENABLED) {
+      console.log(`📡 Proxy ENABLED: forwarding API calls to dashboard server: ${dashboardApiUrl}`);
 
-    // Proxy settings endpoints to dashboard API
-    app.use('/api/settings', createProxyMiddleware({
-        target: dashboardApiUrl,
-        changeOrigin: true,
-        secure: env.NODE_ENV === 'production',
-        timeout: 10000,
-        proxyTimeout: 10000,
-        onError: (err, req, res) => {
-            console.error('🚨 Proxy error for /api/settings:', err.message);
-            res.status(500).json({
-                error: 'Dashboard API unavailable',
-                message: 'Unable to connect to dashboard server',
-                timestamp: new Date().toISOString()
-            });
-        },
-        onProxyReq: (proxyReq, req, res) => {
-            console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
-        },
-        onProxyRes: (proxyRes, req, res) => {
-            console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
-        }
-    }));
+      // Proxy settings endpoints to dashboard API
+      app.use('/api/settings', createProxyMiddleware({
+          target: dashboardApiUrl,
+          changeOrigin: true,
+          secure: env.NODE_ENV === 'production',
+          timeout: 10000,
+          proxyTimeout: 10000,
+          onError: (err, req, res) => {
+              console.error('🚨 Proxy error for /api/settings:', err.message);
+              res.status(500).json({
+                  error: 'Dashboard API unavailable',
+                  message: 'Unable to connect to dashboard server',
+                  timestamp: new Date().toISOString()
+              });
+          },
+          onProxyReq: (proxyReq, req, res) => {
+              console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
+          },
+          onProxyRes: (proxyRes, req, res) => {
+              console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
+          }
+      }));
 
-    // Proxy analytics endpoints to dashboard API (only track endpoint)
-    app.use('/api/analytics/track', createProxyMiddleware({
-        target: dashboardApiUrl,
-        changeOrigin: true,
-        secure: env.NODE_ENV === 'production',
-        timeout: 10000,
-        proxyTimeout: 10000,
-        onError: (err, req, res) => {
-            console.error('🚨 Proxy error for /api/analytics/track:', err.message);
-            res.status(500).json({
-                error: 'Dashboard API unavailable',
-                message: 'Unable to connect to dashboard server',
-                timestamp: new Date().toISOString()
-            });
-        }
-    }));
+      // Proxy analytics endpoints to dashboard API (only track endpoint)
+      app.use('/api/analytics/track', createProxyMiddleware({
+          target: dashboardApiUrl,
+          changeOrigin: true,
+          secure: env.NODE_ENV === 'production',
+          timeout: 10000,
+          proxyTimeout: 10000,
+          onError: (err, req, res) => {
+              console.error('🚨 Proxy error for /api/analytics/track:', err.message);
+              res.status(500).json({
+                  error: 'Dashboard API unavailable',
+                  message: 'Unable to connect to dashboard server',
+                  timestamp: new Date().toISOString()
+              });
+          }
+      }));
 
-    // Proxy home-settings endpoints to dashboard API
-    app.use('/api/home-settings', createProxyMiddleware({
-        target: dashboardApiUrl,
-        changeOrigin: true,
-        secure: env.NODE_ENV === 'production',
-        timeout: 10000,
-        proxyTimeout: 10000,
-        onError: (err, req, res) => {
-            console.error('🚨 Proxy error for /api/home-settings:', err.message);
-            res.status(500).json({
-                error: 'Dashboard API unavailable',
-                message: 'Unable to connect to dashboard server',
-                timestamp: new Date().toISOString()
-            });
-        }
-    }));
+      // Proxy home-settings endpoints to dashboard API
+      app.use('/api/home-settings', createProxyMiddleware({
+          target: dashboardApiUrl,
+          changeOrigin: true,
+          secure: env.NODE_ENV === 'production',
+          timeout: 10000,
+          proxyTimeout: 10000,
+          onError: (err, req, res) => {
+              console.error('🚨 Proxy error for /api/home-settings:', err.message);
+              res.status(500).json({
+                  error: 'Dashboard API unavailable',
+                  message: 'Unable to connect to dashboard server',
+                  timestamp: new Date().toISOString()
+              });
+          }
+      }));
 
-    console.log('✅ Cross-domain API proxy configured successfully');
+      console.log('✅ Cross-domain API proxy configured successfully');
+    } else {
+      console.log('🛑 Proxy DISABLED via DASHBOARD_PROXY_ENABLED=false. Using local /api routes for settings and analytics.');
+    }
 
 } catch (error) {
     console.error('🚨 CRITICAL ERROR during route registration:', error);
@@ -812,56 +814,7 @@ try {
     process.exit(1);
 }
 
-// React SPA catch-all routes for dashboard (must come after API routes but before /:id)
-const dashboardRoutes = [
-    '/dashboard',
-    '/events',
-    '/users',
-    '/sms',
-    '/settings',
-    '/analytics',
-    '/links',
-    '/messages',
-    '/contacts'
-];
-
-// CRITICAL FIX: Add error handling for dashboard route registration
-try {
-    console.log('🔍 Registering dashboard SPA routes...');
-    dashboardRoutes.forEach(route => {
-        console.log(`🔍 Registering dashboard route: ${route}`);
-        app.get(route, (req, res) => {
-            console.log(`📱 Serving React SPA for route: ${req.path}`);
-            res.sendFile(path.join(__dirname, '../dist/index.html'));
-        });
-
-        // Handle sub-routes (e.g., /events/123/edit, /settings/seo) but EXCLUDE API paths
-        // CRITICAL FIX: Use regex pattern to avoid path-to-regexp issues with /*
-        // IMPORTANT: Exclude /api/* paths to prevent interference with proxy middleware
-        const subRoutePattern = new RegExp(`^${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/(?!api/).*`);
-        console.log(`🔍 Registering dashboard sub-route with regex: ${subRoutePattern}`);
-        app.get(subRoutePattern, (req, res) => {
-            console.log(`📱 Serving React SPA for sub-route: ${req.path}`);
-            res.sendFile(path.join(__dirname, '../dist/index.html'));
-        });
-    });
-    console.log('✅ Dashboard SPA routes registered successfully');
-} catch (error) {
-    console.error('🚨 CRITICAL ERROR during dashboard route registration:', error);
-    console.error('Stack trace:', error.stack);
-
-    // If this is a path-to-regexp error, provide specific guidance
-    if (error.message && error.message.includes('Missing parameter name')) {
-        console.error('🔍 PATH-TO-REGEXP ERROR IN DASHBOARD ROUTES:');
-        console.error('   This error occurs in dashboard route patterns');
-        const positionMatch = error.message.match(/at (\d+)/);
-        const position = positionMatch ? positionMatch[1] : 'unknown';
-        console.error('   Error position:', position);
-    }
-
-    // Exit the process to prevent further issues
-    process.exit(1);
-}
+// Note: Dashboard routes removed - using separate React dashboard app
 
 // Static routes (after API routes to prevent conflicts)
 // Serve custom images directly without optimization middleware (for uploaded logos, etc.)
@@ -927,7 +880,8 @@ try {
     process.exit(1);
 }
 
-
+// Note: React SPA catch-all removed due to path-to-regexp conflicts
+// 404 pages will be handled by the notFoundHandler middleware
 
 // Database error handling
 app.use(secureErrorHandler.handleDatabaseError);

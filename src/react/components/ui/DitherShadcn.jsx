@@ -2,7 +2,7 @@
 'use client';
 
 import { useRef, useState, useEffect, forwardRef } from "react";
-import { Canvas, useFrame, useThree, ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer, wrapEffect } from "@react-three/postprocessing";
 import { Effect } from "postprocessing";
 import * as THREE from "three";
@@ -137,33 +137,35 @@ void mainImage(in vec4 inputColor, in vec2 uv, out vec4 outputColor) {
 class RetroEffectImpl extends Effect {
   constructor() {
     const uniforms = new Map([
-      ['colorNum', new THREE.Uniform(4.0)],
-      ['pixelSize', new THREE.Uniform(2.0)]
+      ["colorNum", new THREE.Uniform(4.0)],
+      ["pixelSize", new THREE.Uniform(2.0)],
     ]);
-    super('RetroEffect', ditherFragmentShader, { uniforms });
+    super("RetroEffect", ditherFragmentShader, { uniforms });
     this.uniforms = uniforms;
   }
-  set colorNum(v) {
-    this.uniforms.get('colorNum').value = v;
+  set colorNum(value) {
+    this.uniforms.get("colorNum").value = value;
   }
   get colorNum() {
-    return this.uniforms.get('colorNum').value;
+    return this.uniforms.get("colorNum").value;
   }
-  set pixelSize(v) {
-    this.uniforms.get('pixelSize').value = v;
+  set pixelSize(value) {
+    this.uniforms.get("pixelSize").value = value;
   }
   get pixelSize() {
-    return this.uniforms.get('pixelSize').value;
+    return this.uniforms.get("pixelSize").value;
   }
 }
 
-const WrappedRetro = wrapEffect(RetroEffectImpl);
-
 const RetroEffect = forwardRef((props, ref) => {
   const { colorNum, pixelSize } = props;
-  return <WrappedRetro ref={ref} colorNum={colorNum} pixelSize={pixelSize} />;
+  const WrappedRetroEffect = wrapEffect(RetroEffectImpl);
+  return (
+    <WrappedRetroEffect ref={ref} colorNum={colorNum} pixelSize={pixelSize} />
+  );
 });
-RetroEffect.displayName = 'RetroEffect';
+
+RetroEffect.displayName = "RetroEffect";
 
 function DitheredWaves({
   waveSpeed,
@@ -174,22 +176,11 @@ function DitheredWaves({
   pixelSize,
   disableAnimation,
   enableMouseInteraction,
-  mouseRadius
+  mouseRadius,
 }) {
   const mesh = useRef(null);
   const mouseRef = useRef(new THREE.Vector2());
-
-  // Add error handling for useThree hook
-  let viewport, size, gl;
-  try {
-    const threeState = useThree();
-    viewport = threeState.viewport;
-    size = threeState.size;
-    gl = threeState.gl;
-  } catch (error) {
-    console.warn('Failed to get Three.js state:', error);
-    return null;
-  }
+  const { viewport, size, gl } = useThree();
 
   const waveUniformsRef = useRef({
     time: new THREE.Uniform(0),
@@ -200,16 +191,16 @@ function DitheredWaves({
     waveColor: new THREE.Uniform(new THREE.Color(...waveColor)),
     mousePos: new THREE.Uniform(new THREE.Vector2(0, 0)),
     enableMouseInteraction: new THREE.Uniform(enableMouseInteraction ? 1 : 0),
-    mouseRadius: new THREE.Uniform(mouseRadius)
+    mouseRadius: new THREE.Uniform(mouseRadius),
   });
 
   useEffect(() => {
     const dpr = gl.getPixelRatio();
-    const w = Math.floor(size.width * dpr),
-      h = Math.floor(size.height * dpr);
-    const res = waveUniformsRef.current.resolution.value;
-    if (res.x !== w || res.y !== h) {
-      res.set(w, h);
+    const newWidth = Math.floor(size.width * dpr);
+    const newHeight = Math.floor(size.height * dpr);
+    const currentRes = waveUniformsRef.current.resolution.value;
+    if (currentRes.x !== newWidth || currentRes.y !== newHeight) {
+      currentRes.set(newWidth, newHeight);
     }
   }, [size, gl]);
 
@@ -222,8 +213,10 @@ function DitheredWaves({
     }
 
     if (u.waveSpeed.value !== waveSpeed) u.waveSpeed.value = waveSpeed;
-    if (u.waveFrequency.value !== waveFrequency) u.waveFrequency.value = waveFrequency;
-    if (u.waveAmplitude.value !== waveAmplitude) u.waveAmplitude.value = waveAmplitude;
+    if (u.waveFrequency.value !== waveFrequency)
+      u.waveFrequency.value = waveFrequency;
+    if (u.waveAmplitude.value !== waveAmplitude)
+      u.waveAmplitude.value = waveAmplitude;
 
     if (!prevColor.current.every((v, i) => v === waveColor[i])) {
       u.waveColor.value.set(...waveColor);
@@ -238,11 +231,14 @@ function DitheredWaves({
     }
   });
 
-  const handlePointerMove = e => {
+  const handlePointerMove = (e) => {
     if (!enableMouseInteraction) return;
     const rect = gl.domElement.getBoundingClientRect();
     const dpr = gl.getPixelRatio();
-    mouseRef.current.set((e.clientX - rect.left) * dpr, (e.clientY - rect.top) * dpr);
+    mouseRef.current.set(
+      (e.clientX - rect.left) * dpr,
+      (e.clientY - rect.top) * dpr
+    );
   };
 
   return (
@@ -256,12 +252,9 @@ function DitheredWaves({
         />
       </mesh>
 
-      {/* Wrap EffectComposer in error boundary since it's prone to React 19 compatibility issues */}
-      <Suspense fallback={null}>
-        <EffectComposer>
-          <RetroEffect colorNum={colorNum} pixelSize={pixelSize} />
-        </EffectComposer>
-      </Suspense>
+      <EffectComposer>
+        <RetroEffect colorNum={colorNum} pixelSize={pixelSize} />
+      </EffectComposer>
 
       <mesh
         onPointerMove={handlePointerMove}
@@ -276,93 +269,33 @@ function DitheredWaves({
   );
 }
 
-// Enhanced fallback component for when Three.js fails to load
-function DitherFallback({ reason = 'unknown' }) {
-  useEffect(() => {
-    console.warn(`🎮 Dither fallback activated. Reason: ${reason}`);
-    if (reason === 'webgl-unsupported') {
-      logWebGLInfo();
-    }
-  }, [reason]);
+export const Dither = forwardRef((props, ref) => {
+  const {
+    className,
+    waveSpeed = 0.05,
+    waveFrequency = 3,
+    waveAmplitude = 0.3,
+    waveColor = [0.5, 0.5, 0.5],
+    colorNum = 4,
+    pixelSize = 2,
+    disableAnimation = false,
+    enableMouseInteraction = true,
+    mouseRadius = 1,
+    ...domProps
+  } = props;
 
   return (
     <div
-      className="dither-container"
-      style={{
-        background: 'linear-gradient(45deg, #1a1a1a 0%, #2a2a2a 50%, #1a1a1a 100%)',
-        backgroundSize: '20px 20px',
-        animation: 'ditherFallback 3s ease-in-out infinite alternate',
-        position: 'relative'
-      }}
+      ref={ref}
+      className={`w-full h-full ${className || ''}`}
+      {...domProps}
     >
-      <style>{`
-        @keyframes ditherFallback {
-          0% {
-            opacity: 0.8;
-            filter: hue-rotate(0deg) brightness(1.1);
-          }
-          100% {
-            opacity: 0.6;
-            filter: hue-rotate(15deg) brightness(0.9);
-          }
-        }
-      `}</style>
-
-      {/* Optional debug info in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          position: 'absolute',
-          bottom: '10px',
-          left: '10px',
-          color: '#666',
-          fontSize: '12px',
-          fontFamily: 'monospace'
-        }}>
-          Dither Fallback: {reason}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function Dither({
-  waveSpeed = 0.05,
-  waveFrequency = 3,
-  waveAmplitude = 0.3,
-  waveColor = [0.5, 0.5, 0.5],
-  colorNum = 4,
-  pixelSize = 2,
-  disableAnimation = false,
-  enableMouseInteraction = true,
-  mouseRadius = 1
-}) {
-  // Log initialization for debugging
-  useEffect(() => {
-    console.log('🎮 Dither component initializing - loading Three.js canvas directly');
-  }, []);
-
-  // Render Three.js component directly
-  return (
-    <Canvas
-      className="dither-container"
-      camera={{ position: [0, 0, 6] }}
-      dpr={Math.min(window.devicePixelRatio || 1, 2)} // Limit DPR for performance
-      gl={{
-        antialias: true,
-        preserveDrawingBuffer: true,
-        powerPreference: "high-performance",
-        failIfMajorPerformanceCaveat: false // Don't fail on slower devices
-      }}
-      onCreated={(state) => {
-        // Ensure WebGL context is properly initialized
-        state.gl.setSize(state.size.width, state.size.height);
-        console.log('🎮 Three.js Canvas created successfully');
-      }}
-      onError={(error) => {
-        console.error('🚨 Canvas error:', error);
-      }}
-    >
-      <Suspense fallback={null}>
+      <Canvas
+        className="w-full h-full relative"
+        camera={{ position: [0, 0, 6] }}
+        dpr={typeof window !== 'undefined' ? window.devicePixelRatio : 1}
+        gl={{ antialias: true, preserveDrawingBuffer: true }}
+      >
         <DitheredWaves
           waveSpeed={waveSpeed}
           waveFrequency={waveFrequency}
@@ -374,7 +307,11 @@ export default function Dither({
           enableMouseInteraction={enableMouseInteraction}
           mouseRadius={mouseRadius}
         />
-      </Suspense>
-    </Canvas>
+      </Canvas>
+    </div>
   );
-}
+});
+
+Dither.displayName = 'Dither';
+
+export default Dither;

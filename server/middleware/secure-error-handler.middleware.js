@@ -216,13 +216,26 @@ function asyncErrorHandler(fn) {
 }
 
 /**
- * Handle 404 errors securely
+ * Handle 404 errors securely - serve React SPA for non-API routes
  */
 function notFoundHandler(req, res, next) {
-    const error = new CustomError('Resource not found', 404);
-    // Mark as low severity to prevent security escalation
-    error.severity = 'low';
-    next(error);
+    // For API routes and static assets, return 404 error
+    if (req.path.startsWith('/api/') ||
+        req.path.startsWith('/assets/') ||
+        req.path.startsWith('/images/') ||
+        req.path.startsWith('/js/') ||
+        req.path.startsWith('/css/') ||
+        req.path.match(/\.(js|css|woff|woff2|ttf|eot|svg|png|jpg|jpeg|gif|ico|map|webmanifest)$/i)) {
+        console.log(`⚠️ API/Static asset not found: ${req.path}`);
+        const error = new CustomError('Resource not found', 404);
+        error.severity = 'low';
+        return next(error);
+    }
+
+    // For all other routes, serve React SPA (including 404 pages)
+    console.log(`📱 Serving React SPA for 404/unknown route: ${req.path}`);
+    const path = require('path');
+    res.sendFile(path.join(__dirname, '../../dist/index.html'));
 }
 
 /**

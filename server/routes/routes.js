@@ -70,6 +70,8 @@ const privacy = require("./privacy.routes");
 // Note: integrations routes migrated to dashboard
 const seoTest = require("./seo-test.routes");
 const webhooks = require("./webhooks.routes");
+const settingsRoutes = require("./api/settings.routes");
+const analyticsRoutes = require("./api/analytics.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -100,6 +102,10 @@ apiRouter.use("/privacy", privacy);
 // Note: /integrations routes migrated to dashboard
 apiRouter.use("/webhooks", webhooks);
 apiRouter.use("/seo-test", seoTest);
+// Enable local settings endpoints for development
+apiRouter.use("/settings", settingsRoutes);
+// Enable local analytics endpoints (bypass proxy in dev)
+apiRouter.use("/analytics", analyticsRoutes);
 
 module.exports = {
     api: apiRouter,

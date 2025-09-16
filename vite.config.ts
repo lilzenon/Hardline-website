@@ -119,7 +119,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false, // Disable sourcemaps in production for smaller files
-    minify: 'terser',
+    minify: 'esbuild',
     target: 'es2020',
     chunkSizeWarningLimit: 250, // CRITICAL: Much smaller chunks for 512MB RAM limit
     reportCompressedSize: false, // Disable to save build memory
@@ -128,9 +128,9 @@ export default defineConfig({
         format: 'es',
         // 🚀 OPTIMIZED: Strategic code splitting with proper React handling
         manualChunks: (id) => {
-          // Keep React in the main bundle to prevent loading order issues
-          if (id.includes('react') || id.includes('react-dom')) {
-            return undefined; // Let React stay in main bundle
+          // Keep React and React Three Fiber in the main bundle to prevent loading order issues
+          if (id.includes('react') || id.includes('react-dom') || id.includes('@react-three/fiber') || id.includes('three')) {
+            return undefined; // Let React and Three.js stay in main bundle
           }
 
           // Animation libraries (GSAP is large)
@@ -164,60 +164,15 @@ export default defineConfig({
         moduleSideEffects: false
       }
     },
-    // ENHANCED: Maximum terser optimization for production
-    terserOptions: {
-      compress: {
-        // Aggressive console and debug removal
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info', 'console.warn'],
-
-        // Advanced code optimization
-        hoist_funs: true,
-        reduce_vars: true,
-        collapse_vars: true,
-        inline: 2, // Aggressive function inlining
-        passes: 3, // Multiple optimization passes
-
-        // Remove unused code aggressively
-        dead_code: true,
-        unused: true,
-        side_effects: false,
-
-        // String and number optimizations
-        join_vars: true,
-        sequences: true,
-        properties: true,
-
-        // Conditional optimizations
-        conditionals: true,
-        comparisons: true,
-        evaluate: true,
-        booleans: true,
-        loops: true,
-        if_return: true,
-
-        // Advanced optimizations (removed unsupported options)
-        negate_iife: true
-      },
-      mangle: {
-        // Maximum name mangling
-        toplevel: true,
-        safari10: true,
-        properties: {
-          regex: /^_/ // Mangle properties starting with underscore
-        }
-      },
-      format: {
-        // Minimal formatting for smallest size
-        comments: false,
-        ascii_only: true,
-        beautify: false,
-        semicolons: false
-      }
-    }
+    // Minifier switched to esbuild for React/Three/Fiber compatibility
   },
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    global: 'globalThis', // Fix for React Three Fiber in production builds
+    'process.env': {},
+  },
+  optimizeDeps: {
+    include: ['@react-three/fiber', '@react-three/postprocessing', 'three'],
+    exclude: [],
   },
 })

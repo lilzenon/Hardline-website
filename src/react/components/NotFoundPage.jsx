@@ -1,6 +1,6 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
-import Dither from './ui/Dither';
+import { Dither } from './ui/DitherShadcn';
 
 /**
  * Minimalist 404 Not Found Page with Dither Effect Background
@@ -159,15 +159,15 @@ export default function NotFoundPage() {
         zIndex: 1
       }}>
         <Dither
-          waveSpeed={0.05}
-          waveFrequency={19}
-          waveAmplitude={0.51}
-          waveColor={[0.5, 0.5, 0.5]}
-          colorNum={2.5}
-          pixelSize={3}
-          disableAnimation={false}
+          waveSpeed={0.02}
+          waveFrequency={2.0}
+          waveAmplitude={0.25}
+          waveColor={[1.0, 1.0, 1.0]}
+          colorNum={2}
+          pixelSize={2}
           enableMouseInteraction={false}
-          mouseRadius={0.3}
+          mouseRadius={1.0}
+          className="dither-background"
         />
       </div>
 
