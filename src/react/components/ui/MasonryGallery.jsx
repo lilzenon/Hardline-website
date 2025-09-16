@@ -32,6 +32,11 @@ const MasonryGallery = ({
     }
   }, [columns]);
 
+  // Check if device is mobile
+  const isMobile = useCallback(() => {
+    return window.innerWidth < 768;
+  }, []);
+
   // Intersection Observer for lazy loading
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -97,6 +102,14 @@ const MasonryGallery = ({
     setExpandedImage(null);
     document.body.style.overflow = 'unset'; // Restore scroll
   }, []);
+
+  // Handle touch events for mobile
+  const handleModalTouch = useCallback((e) => {
+    // Close modal on touch outside image (backdrop area)
+    if (e.target === e.currentTarget) {
+      closeExpandedImage();
+    }
+  }, [closeExpandedImage]);
 
   // Handle escape key
   useEffect(() => {
@@ -302,17 +315,20 @@ const MasonryGallery = ({
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            padding: '20px',
+            padding: isMobile() ? '40px 20px' : '20px', // More padding on mobile for better tap area
             cursor: 'pointer'
           }}
           onClick={closeExpandedImage}
+          onTouchEnd={handleModalTouch}
         >
           <div
             className="expanded-image"
             style={{
-              maxWidth: '90vw',
-              maxHeight: '90vh',
-              position: 'relative'
+              maxWidth: isMobile() ? '70vw' : '90vw', // Smaller on mobile for better tap area
+              maxHeight: isMobile() ? '50vh' : '90vh', // Smaller on mobile for better tap area
+              position: 'relative',
+              // Ensure minimum clickable area around image on mobile
+              margin: isMobile() ? '20px' : '10px'
             }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
-import MobileDrawer from './MobileDrawer';
 import MasonryGallery from './ui/MasonryGallery';
 
 /**
@@ -363,14 +362,6 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
         </div>
 
         {/* OLD NAVIGATION OVERLAY COMPLETELY REMOVED - Now using shared MobileNavigation component above */}
-
-        <MobileDrawer
-          contentRef={contentRef}
-          viewportContext={viewportContext}
-          onStateChange={(drawerState) => {
-            console.log('About page drawer state changed:', drawerState);
-          }}
-        />
 
       </div>
     </>
