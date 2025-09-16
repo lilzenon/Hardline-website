@@ -606,14 +606,14 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         cursor: onClick ? 'pointer' : 'default',
         opacity: isLoaded ? 1 : 0.95,
         animation: isLoaded ? 'fadeInScale 0.5s ease-out' : 'none',
-        // Ensure consistent aspect ratio to prevent layout shift
-        aspectRatio: image.aspectRatio || (image.height && image.width ? `${image.width}/${image.height}` : '1/1.2'),
-        minHeight: 'auto', // Let aspect ratio control height
-        width: '100%'
+        // Remove fixed aspect ratio - let images determine their natural size
+        width: '100%',
+        // Add minimum height only during loading to prevent collapse
+        minHeight: !isLoaded ? '200px' : 'auto'
       }}
       onClick={handleClick}
     >
-      {/* Enhanced Skeleton Loader with Proper Aspect Ratio */}
+      {/* Enhanced Skeleton Loader - Natural Height */}
       {!isLoaded && !imageError && (
         <div
           className="skeleton-shimmer"
@@ -627,8 +627,10 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            aspectRatio: image.aspectRatio || (image.height && image.width ? `${image.width}/${image.height}` : '1/1.2'),
-            minHeight: 'auto', // Remove fixed height to prevent layout shift
+            // Use estimated height based on image dimensions if available, otherwise use reasonable default
+            minHeight: image.height && image.width
+              ? `${Math.max(150, (image.height / image.width) * 300)}px`
+              : '200px',
             background: 'rgba(22, 22, 22, 0.9)', // Stronger glassmorphism background
             backdropFilter: 'blur(10px)',
             WebkitBackdropFilter: 'blur(10px)',
@@ -696,16 +698,15 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
             height: 'auto',
             display: 'block',
             transition: 'opacity 0.4s ease, transform 0.3s ease',
-            opacity: isLoaded ? 1 : 0,
-            objectFit: 'cover', // Ensure consistent image display
-            aspectRatio: 'inherit' // Inherit from container
+            opacity: isLoaded ? 1 : 0
+            // Removed objectFit and aspectRatio to allow natural image sizing
           }}
         />
       ) : (
         <div
           style={{
             width: '100%',
-            aspectRatio: image.aspectRatio || (image.height && image.width ? `${image.width}/${image.height}` : '1/1.2'),
+            minHeight: '200px', // Use reasonable minimum height instead of fixed aspect ratio
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
