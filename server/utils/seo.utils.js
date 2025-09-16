@@ -32,12 +32,16 @@ function generateMetaTags(options = {}) {
         if (!imageUrl) return defaultImage;
         if (imageUrl.startsWith('http')) return imageUrl;
 
-        // For uploaded OG images, use the dashboard domain where they're stored
-        if (imageUrl.startsWith('/uploads/')) {
+        // For uploaded OG images or served variants, use the dashboard domain where they're stored
+        if (
+            imageUrl.startsWith('/uploads/') ||
+            imageUrl.startsWith('/static/uploads/') ||
+            imageUrl.startsWith('/api/images/serve/')
+        ) {
             return `https://admin.b2b.click${imageUrl}`;
         }
 
-        // For static images, use the main domain
+        // For static images and site-relative assets, use the main domain
         return `${baseUrl}${imageUrl}`;
     };
 
