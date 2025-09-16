@@ -1,10 +1,10 @@
 /**
  * SEO Context - Manages dynamic SEO meta tags for the homepage
  * Fetches settings from dashboard API and updates meta tags in real-time
+ * Uses React 19's native metadata support instead of react-helmet-async
  */
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
 import {
   fetchSEOSettings,
   fetchMaintenanceStatus,
@@ -181,24 +181,20 @@ export const SEOProvider = ({ children }) => {
 
   return (
     <SEOContext.Provider value={contextValue}>
-      <HelmetProvider>
-        {/* Dynamic Meta Tags */}
-        <Helmet>
-          <title>{metaTags.title}</title>
-          {metaTags.meta.map((tag, index) => {
-            if (tag.name) {
-              return <meta key={`meta-${index}`} name={tag.name} content={tag.content} />;
-            } else if (tag.property) {
-              return <meta key={`meta-${index}`} property={tag.property} content={tag.content} />;
-            }
-            return null;
-          })}
-          {metaTags.link.map((link, index) => (
-            <link key={`link-${index}`} {...link} />
-          ))}
-        </Helmet>
-        {children}
-      </HelmetProvider>
+      {/* React 19 Native Metadata Support */}
+      <title>{metaTags.title}</title>
+      {metaTags.meta.map((tag, index) => {
+        if (tag.name) {
+          return <meta key={`meta-${index}`} name={tag.name} content={tag.content} />;
+        } else if (tag.property) {
+          return <meta key={`meta-${index}`} property={tag.property} content={tag.content} />;
+        }
+        return null;
+      })}
+      {metaTags.link.map((link, index) => (
+        <link key={`link-${index}`} {...link} />
+      ))}
+      {children}
     </SEOContext.Provider>
   );
 };
