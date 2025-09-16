@@ -11,6 +11,29 @@ const BrandedLoader = ({
   fullScreen = true,
   minDisplayTime = 800 // Minimum time to show loader for smooth UX
 }) => {
+  // Prevent double-rendering across page transitions: only one loader at a time
+  // Also suppress a second loader within a short cooldown window after the previous one ends
+  const [suppressRender] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const active = window.__B2B_LOADER_ACTIVE === true;
+    const lastEnded = window.__B2B_LOADER_LAST_ENDED || 0;
+    const withinCooldown = Date.now() - lastEnded < 600; // 600ms cooldown to avoid back-to-back loaders
+    return active || withinCooldown;
+  });
+
+  useEffect(() => {
+    if (suppressRender) return;
+    try {
+      window.__B2B_LOADER_ACTIVE = true;
+      return () => {
+        window.__B2B_LOADER_ACTIVE = false;
+        window.__B2B_LOADER_LAST_ENDED = Date.now();
+      };
+    } catch (_) {
+      // no-op in non-browser environments
+    }
+  }, [suppressRender]);
+
   const [isVisible, setIsVisible] = useState(true);
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
@@ -23,6 +46,7 @@ const BrandedLoader = ({
 
   // Handle smooth fade out after minimum display time
   useEffect(() => {
+    if (suppressRender) return;
     const timer = setTimeout(() => {
       setFadeOut(true);
       // Complete fade out after animation duration
@@ -32,18 +56,9 @@ const BrandedLoader = ({
     }, minDisplayTime);
 
     return () => clearTimeout(timer);
-  }, [minDisplayTime]);
+  }, [minDisplayTime, suppressRender]);
 
-  // Handle minimum display time
-  useEffect(() => {
-    if (minDisplayTime > 0) {
-      const timer = setTimeout(() => {
-        setIsVisible(true); // Keep visible, parent component controls actual visibility
-      }, minDisplayTime);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [minDisplayTime]);
+
 
   const containerStyle = {
     position: fullScreen ? 'fixed' : 'absolute',
@@ -94,11 +109,17 @@ const BrandedLoader = ({
     animation: shouldAnimate ? 'brandedLoaderDots 1.5s ease-in-out infinite' : 'none'
   };
 
-  // Inject keyframe animations
+  // Inject keyframe animations (global, single insertion)
   useEffect(() => {
-    if (!shouldAnimate) return;
+    if (suppressRender || !shouldAnimate) return;
 
-    const styleSheet = document.createElement('style');
+    let styleSheet = document.getElementById('b2b-branded-loader-animations');
+    if (styleSheet) {
+      // Already present; avoid duplicate insertion
+      return;
+    }
+    styleSheet = document.createElement('style');
+    styleSheet.id = 'b2b-branded-loader-animations';
     styleSheet.textContent = `
       @keyframes brandedLoaderPulse {
         0%, 100% {
@@ -147,20 +168,22 @@ const BrandedLoader = ({
         }
       }
     `;
-    
+
     document.head.appendChild(styleSheet);
-    
-    return () => {
-      if (document.head.contains(styleSheet)) {
-        document.head.removeChild(styleSheet);
-      }
-    };
-  }, [shouldAnimate]);
+    // Note: we intentionally do not remove this global style on unmount to prevent flicker across transitions
+  }, [shouldAnimate, suppressRender]);
+
+  if (suppressRender || !isVisible) {
+    return null;
+  }
 
   return (
     <div
       style={containerStyle}
       className={shouldAnimate ? 'branded-loader-container' : ''}
+      role="status"
+      aria-live="polite"
+      aria-busy={!fadeOut}
     >
       <div style={logoContainerStyle}>
         {/* B2B Logo - New SMALL_B2BLOGO_WHITE.svg */}
@@ -176,7 +199,7 @@ const BrandedLoader = ({
           aria-label="Bounce2Bounce Logo"
         />
       </div>
-      
+
       {showMessage && (
         <div style={messageStyle}>
           {message}

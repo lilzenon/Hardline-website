@@ -317,7 +317,7 @@ const MasonryGallery = ({
             onClick={(e) => e.stopPropagation()}
           >
             <img
-              src={expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
+              src={expandedImage.urls?.large || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
               alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
               style={{
                 width: '100%',
@@ -327,8 +327,24 @@ const MasonryGallery = ({
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
               }}
               onError={(e) => {
+                // Enhanced error handling for modal with fallback variants
+                const target = e.target;
+                const currentSrc = target.src;
+
+                if (expandedImage.urls) {
+                  if (currentSrc !== expandedImage.urls.medium && expandedImage.urls.medium) {
+                    console.log('🔄 Modal fallback to medium variant');
+                    target.src = expandedImage.urls.medium;
+                    return;
+                  } else if (currentSrc !== expandedImage.urls.original && expandedImage.urls.original) {
+                    console.log('🔄 Modal fallback to original');
+                    target.src = expandedImage.urls.original;
+                    return;
+                  }
+                }
+
                 console.error('❌ Modal image failed to load:', expandedImage);
-                e.target.style.display = 'none';
+                target.style.display = 'none';
               }}
               onLoad={() => {
                 console.log('✅ Modal image loaded successfully');
@@ -450,16 +466,44 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           ref={imgRef}
           src={image.url || image.src || image.image_url || image.file_url}
           srcSet={image.srcSet ? `
-            ${image.srcSet.small} 400w,
-            ${image.srcSet.medium} 600w,
-            ${image.srcSet.large} 800w
-          `.trim() : undefined}
+            ${image.srcSet.small || image.urls?.small} 400w,
+            ${image.srcSet.medium || image.urls?.medium} 600w,
+            ${image.srcSet.large || image.urls?.large} 800w
+          `.trim() : (image.urls ? `
+            ${image.urls.small} 400w,
+            ${image.urls.medium} 600w,
+            ${image.urls.large} 800w
+          `.trim() : undefined)}
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           alt={image.alt || image.title || 'Gallery image'}
           loading="lazy"
           onLoadStart={handleImageLoadStart}
           onLoad={handleImageLoad}
-          onError={handleImageError}
+          onError={(e) => {
+            // Enhanced error handling with fallback to different variants
+            const target = e.target;
+            const currentSrc = target.src;
+
+            // Try fallback variants in order: medium -> small -> original
+            if (image.urls) {
+              if (currentSrc !== image.urls.medium && image.urls.medium) {
+                console.log('🔄 Fallback to medium variant:', image.urls.medium);
+                target.src = image.urls.medium;
+                return;
+              } else if (currentSrc !== image.urls.small && image.urls.small) {
+                console.log('🔄 Fallback to small variant:', image.urls.small);
+                target.src = image.urls.small;
+                return;
+              } else if (currentSrc !== image.urls.original && image.urls.original) {
+                console.log('🔄 Fallback to original:', image.urls.original);
+                target.src = image.urls.original;
+                return;
+              }
+            }
+
+            // Final fallback
+            handleImageError(e);
+          }}
           style={{
             width: '100%',
             height: 'auto',
