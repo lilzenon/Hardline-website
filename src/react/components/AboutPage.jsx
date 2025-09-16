@@ -218,8 +218,20 @@ Join our community of music enthusiasts and discover your next favorite artist, 
           console.log('🖼️ First image structure:', data.data[0]);
           const normalized = data.data.map((img, idx) => {
             const n = normalizeGalleryImage(img);
-            if (idx < 5) console.log('🧭 Normalized gallery image', idx, n?.url || n);
-            return n;
+            // Ensure all variant URLs are absolute to the dashboard domain so the homepage can load them
+            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+            const makeAbs = (u) => (u ? (/^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`) : u);
+            const urls = (n && (n.urls || n.srcSet)) || {};
+            const absUrls = {
+              thumbnail: makeAbs(urls.thumbnail),
+              small: makeAbs(urls.small),
+              medium: makeAbs(urls.medium || n?.url),
+              large: makeAbs(urls.large),
+              original: makeAbs(urls.original || n?.url)
+            };
+            const withVariants = { ...n, urls: absUrls, srcSet: absUrls };
+            if (idx < 5) console.log('🧭 Normalized gallery image', idx, withVariants?.url || withVariants, withVariants.urls);
+            return withVariants;
           });
           setGalleryImages(normalized);
         } else {
