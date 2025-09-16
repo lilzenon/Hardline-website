@@ -9,10 +9,15 @@ const knex = require("../knex");
 const env = require("../env");
 
 async function find(match) {
-    if ((match.id || match.apikey) && env.REDIS_ENABLED) {
-        const key = redis.key.user(match.id || match.apikey);
-        const cachedUser = await redis.client.get(key);
-        if (cachedUser) return JSON.parse(cachedUser);
+    // Try Redis cache when enabled and ready; fall back gracefully
+    if ((match.id || match.apikey) && env.REDIS_ENABLED && redis.isRedisReady()) {
+        try {
+            const key = redis.key.user(match.id || match.apikey);
+            const cachedUser = await redis.safeRedisCommand('get', key);
+            if (cachedUser) return JSON.parse(cachedUser);
+        } catch (error) {
+            console.warn('⚠️ Redis user cache read failed, continuing with database query:', error.message);
+        }
     }
 
     const query = knex("users");
@@ -22,15 +27,19 @@ async function find(match) {
 
     const user = await query.first();
 
-    if (user && env.REDIS_ENABLED) {
-        if (match.id) {
-            const idKey = redis.key.user(user.id);
-            redis.client.set(idKey, JSON.stringify(user), "EX", 60 * 15);
-        }
+    if (user && env.REDIS_ENABLED && redis.isRedisReady()) {
+        try {
+            if (match.id) {
+                const idKey = redis.key.user(user.id);
+                await redis.safeRedisCommand('set', idKey, JSON.stringify(user), 'EX', 60 * 15);
+            }
 
-        if (match.apikey) {
-            const apikeyKey = redis.key.user(user.apikey);
-            redis.client.set(apikeyKey, JSON.stringify(user), "EX", 60 * 15);
+            if (match.apikey) {
+                const apikeyKey = redis.key.user(user.apikey);
+                await redis.safeRedisCommand('set', apikeyKey, JSON.stringify(user), 'EX', 60 * 15);
+            }
+        } catch (error) {
+            console.warn('⚠️ Redis user cache write failed, ignoring:', error.message);
         }
     }
 
@@ -241,9 +250,9 @@ async function create(params) {
 
 // check if there exists a user
 async function findAny() {
-    if (env.REDIS_ENABLED && redis.client) {
+    if (env.REDIS_ENABLED && redis.isRedisReady()) {
         try {
-            const anyuser = await redis.client.get("any-user");
+            const anyuser = await redis.safeRedisCommand('get', 'any-user');
             if (anyuser) return true;
         } catch (error) {
             // Redis not available, fall back to database
@@ -253,8 +262,12 @@ async function findAny() {
 
     const anyuser = await knex("users").select("id").first();
 
-    if (env.REDIS_ENABLED && redis.client && anyuser) {
-        redis.client.set("any-user", JSON.stringify(anyuser), "EX", 60 * 5);
+    if (env.REDIS_ENABLED && redis.isRedisReady() && anyuser) {
+        try {
+            await redis.safeRedisCommand('set', 'any-user', JSON.stringify(anyuser), 'EX', 60 * 5);
+        } catch (error) {
+            console.warn('\u26a0\ufe0f Redis user cache write failed in findAny, ignoring:', error.message);
+        }
     }
 
     return !!anyuser;

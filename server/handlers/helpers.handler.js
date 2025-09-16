@@ -147,13 +147,17 @@ function rateLimit(params) {
 
 // redirect to create admin page if the kutt instance is ran for the first time
 async function adminSetup(req, res, next) {
-    const isThereAUser = req.user || (await query.user.findAny());
-    if (isThereAUser) {
-        next();
-        return;
+    try {
+        const isThereAUser = req.user || (await query.user.findAny());
+        if (isThereAUser) {
+            return next();
+        }
+        return res.redirect("/create-admin");
+    } catch (error) {
+        // Never crash due to Redis/DB issues during admin setup check
+        console.warn('⚠️ adminSetup check failed, bypassing create-admin redirect:', error.message);
+        return next();
     }
-
-    res.redirect("/create-admin");
 }
 
 module.exports = {
