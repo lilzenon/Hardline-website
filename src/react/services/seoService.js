@@ -166,30 +166,55 @@ export const generateMetaTags = (seoSettings, options = {}) => {
     const settings = {...DEFAULT_SEO_SETTINGS, ...seoSettings };
     const { isMobile = false, deviceType = 'unknown' } = options;
 
-    // Ensure URLs are absolute for Open Graph
+    // Ensure URLs are absolute for Open Graph with admin-domain mapping for uploads
     const getAbsoluteImageUrl = (imageUrl) => {
         // If no image URL provided, use the default OG image from homepage
         if (!imageUrl || imageUrl.trim() === '') {
             return 'https://b2b.click/images/og-image.png';
         }
 
-        // If already absolute URL, return as-is
-        if (imageUrl.startsWith('http')) {
-            return imageUrl;
+        // If absolute URL, normalize path segments we know about and remap to admin when needed
+        if (/^https?:\/\//i.test(imageUrl)) {
+            try {
+                const u = new URL(imageUrl);
+                // Normalize known bad prefixes and map to admin domain when path indicates uploads
+                let p = u.pathname;
+                if (p.startsWith('/data/static/uploads/')) p = p.replace('/data/static/uploads/', '/static/uploads/');
+                const isAdminManaged =
+                    p.includes('/uploads/') ||
+                    p.includes('/static/uploads/') ||
+                    p.includes('/api/images/serve/') ||
+                    p.includes('/og-images/');
+                if (isAdminManaged) {
+                    return `https://admin.b2b.click${p}`;
+                }
+                return `${u.origin}${p}`;
+            } catch (_) {
+                // fall through to relative handling
+            }
         }
 
-        // If it's an uploaded image from dashboard, serve from admin domain
-        if (imageUrl.startsWith('/uploads/') || imageUrl.startsWith('/static/uploads/')) {
-            return `https://admin.b2b.click${imageUrl}`;
+        // Normalize relative paths and map uploads to admin domain
+        const rel = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+        const normalized = rel.startsWith('/data/static/uploads/')
+            ? rel.replace('/data/static/uploads/', '/static/uploads/')
+            : rel;
+        if (
+            normalized.startsWith('/uploads/') ||
+            normalized.startsWith('/static/uploads/') ||
+            normalized.startsWith('/api/images/serve/') ||
+            normalized.includes('/og-images/')
+        ) {
+            return `https://admin.b2b.click${normalized}`;
         }
 
         // For static images (like /images/og-image.png), serve from homepage domain
-        if (imageUrl.startsWith('/images/') || imageUrl.startsWith('/static/images/')) {
-            return `https://b2b.click${imageUrl}`;
+        if (normalized.startsWith('/images/') || normalized.startsWith('/static/images/')) {
+            return `https://b2b.click${normalized}`;
         }
 
-        // Default to homepage domain for relative paths
-        return `https://b2b.click${imageUrl.startsWith('/') ? imageUrl : '/' + imageUrl}`;
+        // Default to homepage domain for other relative paths
+        return `https://b2b.click${normalized}`;
     };
 
     const ogImage = getAbsoluteImageUrl(settings.default_og_image);
