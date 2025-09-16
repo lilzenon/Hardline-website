@@ -280,7 +280,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                 textAlign: 'center'
               }}
             >
-              About B2B
+              About
             </div>
 
             {/* About Content */}

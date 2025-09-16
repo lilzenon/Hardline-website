@@ -316,26 +316,26 @@ const MasonryGallery = ({
           ref={galleryRef}
           className={`masonry-gallery-placeholder ${className}`}
           style={{
-            height: '300px', // Reduced height for better proportions
-            background: 'rgba(22, 22, 22, 0.9)', // Stronger glassmorphism
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
+            height: 'auto', // Auto height to prevent artifacts
+            background: 'transparent', // Transparent to prevent artifacts
+            backdropFilter: 'none', // Remove blur to prevent artifacts
+            WebkitBackdropFilter: 'none', // Remove webkit blur to prevent artifacts
             borderRadius: '16px',
-            border: '1px solid rgba(56, 56, 56, 0.2)', // Subtle border
+            border: 'none', // Remove border to prevent artifacts
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'rgba(255, 255, 255, 0.8)',
+            color: 'transparent', // Invisible text to prevent artifacts
             fontFamily: 'Inter, sans-serif',
             fontSize: '16px',
             fontWeight: '500',
             transition: 'all 0.3s ease', // Smooth transition when loading
-            opacity: 0,
-            animation: 'fadeInUp 0.6s ease-out 0.2s forwards' // Consistent with page animations
+            opacity: 0, // Completely invisible to prevent artifacts
+            animation: 'none' // Remove animation to prevent artifacts
           }}
         >
           <div style={{
-            display: 'flex',
+            display: 'none', // Hide content to prevent artifacts
             flexDirection: 'column',
             alignItems: 'center',
             gap: '12px'
@@ -599,21 +599,21 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         position: 'relative',
         borderRadius: '12px',
         overflow: 'hidden',
-        background: isLoaded ? 'transparent' : 'rgba(22, 22, 22, 0.9)', // Only show background during loading
-        border: isLoaded ? 'none' : '1px solid rgba(56, 56, 56, 0.2)', // Hide border when loaded to prevent artifacts
-        backdropFilter: isLoaded ? 'none' : 'blur(20px)',
-        WebkitBackdropFilter: isLoaded ? 'none' : 'blur(20px)',
+        background: 'transparent', // Always transparent to prevent artifacts
+        border: 'none', // Always no border to prevent artifacts
+        backdropFilter: 'none', // Remove backdrop filter to prevent artifacts
+        WebkitBackdropFilter: 'none', // Remove webkit backdrop filter to prevent artifacts
         cursor: onClick ? 'pointer' : 'default',
-        opacity: isLoaded ? 1 : 0.95,
+        opacity: isLoaded ? 1 : 0, // Completely invisible until loaded
         animation: isLoaded ? 'fadeInScale 0.5s ease-out' : 'none',
         // Remove fixed aspect ratio - let images determine their natural size
         width: '100%',
-        // Add minimum height only during loading to prevent collapse
-        minHeight: !isLoaded ? '200px' : 'auto'
+        // No minimum height to prevent any container artifacts
+        minHeight: 'auto'
       }}
       onClick={handleClick}
     >
-      {/* Enhanced Skeleton Loader - Natural Height */}
+      {/* Hidden Skeleton Loader - No Artifacts */}
       {!isLoaded && !imageError && (
         <div
           className="skeleton-shimmer"
@@ -624,18 +624,15 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
             right: 0,
             bottom: 0,
             zIndex: 1,
-            display: 'flex',
+            display: 'none', // Hide skeleton loader to prevent artifacts
             alignItems: 'center',
             justifyContent: 'center',
-            // Use estimated height based on image dimensions if available, otherwise use reasonable default
-            minHeight: image.height && image.width
-              ? `${Math.max(150, (image.height / image.width) * 300)}px`
-              : '200px',
-            background: 'rgba(22, 22, 22, 0.9)', // Stronger glassmorphism background
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
+            minHeight: 'auto', // Remove minimum height
+            background: 'transparent', // Transparent to prevent artifacts
+            backdropFilter: 'none', // Remove blur to prevent artifacts
+            WebkitBackdropFilter: 'none', // Remove webkit blur to prevent artifacts
             borderRadius: '12px',
-            border: '1px solid rgba(56, 56, 56, 0.2)' // Subtle border matching design system
+            border: 'none' // Remove border to prevent artifacts
           }}
         >
           <div style={{
