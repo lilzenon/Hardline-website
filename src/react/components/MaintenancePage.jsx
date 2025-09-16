@@ -1,6 +1,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
 import { Dither } from './ui/DitherShadcn';
+import useLayloSDK from '../hooks/useLayloSDK';
 
 /**
  * Minimalist Maintenance Page with Dither Effect Background
@@ -118,6 +119,7 @@ class DitherErrorBoundary extends React.Component {
 
 export default function MaintenancePage() {
   const [ditherFailed, setDitherFailed] = useState(false);
+  const isLayloReady = useLayloSDK();
 
   // Log environment info in production for debugging
   useEffect(() => {
@@ -125,20 +127,6 @@ export default function MaintenancePage() {
       console.log('🔍 MaintenancePage loaded in production environment');
       logEnvironmentInfo();
     }
-
-    // Load Laylo SDK
-    const script = document.createElement('script');
-    script.src = 'https://embed.laylo.com/laylo-sdk.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup script on unmount
-      const existingScript = document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]');
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-    };
   }, []);
 
   // Simple navigation function
@@ -245,22 +233,24 @@ export default function MaintenancePage() {
           borderRadius: '8px',
           overflow: 'hidden'
         }}>
-          <iframe
-            id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
-            frameBorder="0"
-            scrolling="no"
-            allow="web-share"
-            allowTransparency="true"
-            style={{
-              width: '1px',
-              minWidth: '100%',
-              maxWidth: '1000px',
-              height: 'auto',
-              border: 'none'
-            }}
-            src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
-            title="Stay updated with BOUNCE2BOUNCE"
-          />
+          {isLayloReady && (
+            <iframe
+              id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
+              frameBorder="0"
+              scrolling="no"
+              allow="web-share"
+              allowTransparency="true"
+              style={{
+                width: '1px',
+                minWidth: '100%',
+                maxWidth: '1000px',
+                height: 'auto',
+                border: 'none'
+              }}
+              src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
+              title="Stay updated with BOUNCE2BOUNCE"
+            />
+          )}
         </div>
       </div>
     </div>
