@@ -33,7 +33,7 @@ const MobileDrawer = ({
   const [resendCountdown, setResendCountdown] = useState(0);
   const [canResend, setCanResend] = useState(false);
 
-  // Touch state for gesture handling
+  // Enhanced touch state for improved gesture handling
   const [touchState, setTouchState] = useState({
     isActive: false,
     startY: 0,
@@ -42,7 +42,10 @@ const MobileDrawer = ({
     isDragging: false,
     initialDrawerState: false,
     isOnDrawerContent: false,
-    isOnDrawerHandle: false
+    isOnDrawerHandle: false,
+    isOnSwipeZone: false, // New: expanded swipe detection area
+    dragDistance: 0, // New: track total drag distance for visual feedback
+    isIntentionalGesture: false // New: distinguish intentional swipes from accidental touches
   });
 
   // State preservation for drawer reopening
@@ -288,22 +291,31 @@ const MobileDrawer = ({
     }
   }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
 
-  // 🚀 SMART SCROLL ISOLATION: Intelligent touch handling for drawer vs content
+  // 🚀 ENHANCED GESTURE DETECTION: Expanded swipe area with smart content detection
   const handleTouchStart = useCallback((e) => {
-    // Don't interfere with form interactions or iframe content
+    // Don't interfere with form interactions, buttons, or iframe content
     if (e.target.tagName === 'INPUT' ||
         e.target.tagName === 'TEXTAREA' ||
-        e.target.closest('iframe')) {
+        e.target.tagName === 'BUTTON' ||
+        e.target.closest('iframe') ||
+        e.target.closest('button') ||
+        e.target.closest('[role="button"]')) {
       return;
     }
 
     const touch = e.touches[0];
     const now = Date.now();
 
-    // Determine if touch is on drawer content vs drawer handle/background
+    // Enhanced detection areas for better user experience
     const isOnDrawerContent = e.target.closest('.mobile-drawer-content');
     const drawerRect = drawerRef.current?.getBoundingClientRect();
-    const isOnDrawerHandle = drawerRect && touch.clientY > drawerRect.top && touch.clientY < drawerRect.top + 50;
+
+    // EXPANDED: Much larger swipe detection area (top 120px instead of 50px)
+    const isOnDrawerHandle = drawerRect && touch.clientY > drawerRect.top && touch.clientY < drawerRect.top + 120;
+
+    // NEW: Detect if touch is in the expanded swipe zone (top 40% of drawer when expanded)
+    const swipeZoneHeight = drawerExpanded ? drawerRect?.height * 0.4 : 120;
+    const isOnSwipeZone = drawerRect && touch.clientY > drawerRect.top && touch.clientY < drawerRect.top + swipeZoneHeight;
 
     setTouchState({
       isActive: true,
@@ -313,11 +325,14 @@ const MobileDrawer = ({
       isDragging: false,
       initialDrawerState: drawerExpanded,
       isOnDrawerContent: !!isOnDrawerContent,
-      isOnDrawerHandle: !!isOnDrawerHandle
+      isOnDrawerHandle: !!isOnDrawerHandle,
+      isOnSwipeZone: !!isOnSwipeZone,
+      dragDistance: 0,
+      isIntentionalGesture: false
     });
 
-    // Only prevent default for drawer handle area, allow content scrolling
-    if (isOnDrawerHandle && !isOnDrawerContent) {
+    // Prevent default for expanded swipe zone, but allow content scrolling
+    if (isOnSwipeZone && !isOnDrawerContent) {
       e.preventDefault();
       e.stopPropagation();
     }
@@ -326,10 +341,13 @@ const MobileDrawer = ({
   const handleTouchMove = useCallback((e) => {
     if (!touchState.isActive) return;
 
-    // Don't interfere with form interactions or iframe content
+    // Don't interfere with form interactions, buttons, or iframe content
     if (e.target.tagName === 'INPUT' ||
         e.target.tagName === 'TEXTAREA' ||
-        e.target.closest('iframe')) {
+        e.target.tagName === 'BUTTON' ||
+        e.target.closest('iframe') ||
+        e.target.closest('button') ||
+        e.target.closest('[role="button"]')) {
       return;
     }
 
@@ -337,21 +355,41 @@ const MobileDrawer = ({
     const deltaY = touchState.startY - touch.clientY; // Positive = swipe up, Negative = swipe down
     const absDeltaY = Math.abs(deltaY);
 
-    // 🚀 SMART ISOLATION: Only handle drawer gestures, not content scrolling
-    if (!touchState.isDragging && absDeltaY > 5) {
-      // Only start dragging if touch started on drawer handle area, not content
-      if (touchState.isOnDrawerHandle && !touchState.isOnDrawerContent) {
-        setTouchState(prev => ({ ...prev, isDragging: true }));
-        e.preventDefault(); // Prevent scrolling when dragging drawer
-        e.stopPropagation(); // Prevent event bubbling
+    // ENHANCED: More sensitive gesture detection with lower threshold
+    if (!touchState.isDragging && absDeltaY > 3) { // Reduced from 5px to 3px
+      // EXPANDED: Allow dragging from entire swipe zone, not just handle
+      if (touchState.isOnSwipeZone && !touchState.isOnDrawerContent) {
+        // NEW: Detect intentional gesture based on movement pattern
+        const isIntentionalGesture = absDeltaY > 8 || (absDeltaY > 3 && Date.now() - touchState.startTime > 100);
+
+        setTouchState(prev => ({
+          ...prev,
+          isDragging: true,
+          isIntentionalGesture,
+          dragDistance: absDeltaY
+        }));
+
+        if (isIntentionalGesture) {
+          e.preventDefault(); // Prevent scrolling when dragging drawer
+          e.stopPropagation(); // Prevent event bubbling
+        }
       }
     }
 
-    // 🚀 SMART ISOLATION: Only prevent default for confirmed drawer gestures
-    if (touchState.isDragging && touchState.isOnDrawerHandle && !touchState.isOnDrawerContent) {
-      e.preventDefault();
-      e.stopPropagation();
-      setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
+    // ENHANCED: Update drag state with visual feedback
+    if (touchState.isDragging && touchState.isOnSwipeZone && !touchState.isOnDrawerContent) {
+      const newDragDistance = Math.max(absDeltaY, touchState.dragDistance);
+
+      if (touchState.isIntentionalGesture) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      setTouchState(prev => ({
+        ...prev,
+        currentY: touch.clientY,
+        dragDistance: newDragDistance
+      }));
     } else if (!touchState.isOnDrawerContent) {
       // Update position for non-content touches
       setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
@@ -366,25 +404,39 @@ const MobileDrawer = ({
     const duration = Date.now() - touchState.startTime;
     const velocity = absDeltaY / duration; // pixels per millisecond
 
-    // 🚀 ENHANCED: More sensitive gesture thresholds for improved swipe-down detection
-    const minSwipeDistance = 15; // Further reduced from 20px for better responsiveness
-    const minFlickVelocity = 0.2; // Further reduced from 0.3 for easier flick gestures
-    const snapThreshold = 8; // Further reduced from 10px for better snap behavior
+    // 🚀 MUCH MORE SENSITIVE: Dramatically improved gesture thresholds
+    const minSwipeDistance = 8; // Reduced from 15px to 8px for much better responsiveness
+    const minFlickVelocity = 0.15; // Reduced from 0.2 for easier flick gestures
+    const snapThreshold = 5; // Reduced from 8px for better snap behavior
+    const intentionalGestureBonus = touchState.isIntentionalGesture ? 0.7 : 1; // Bonus for intentional gestures
 
     let shouldToggleDrawer = false;
 
-    if (touchState.isDragging) {
-      // Determine action based on swipe direction, distance, and velocity
-      if (velocity > minFlickVelocity) {
-        // Fast flick gesture
+    if (touchState.isDragging && touchState.isIntentionalGesture) {
+      // ENHANCED: More forgiving gesture detection with intentional gesture bonus
+      const adjustedMinDistance = minSwipeDistance * intentionalGestureBonus;
+      const adjustedMinVelocity = minFlickVelocity * intentionalGestureBonus;
+
+      if (velocity > adjustedMinVelocity) {
+        // Fast flick gesture - most responsive
         shouldToggleDrawer = true;
-      } else if (absDeltaY > minSwipeDistance) {
-        // Regular swipe gesture
+        console.log('🚀 Flick gesture detected:', { velocity, threshold: adjustedMinVelocity });
+      } else if (absDeltaY > adjustedMinDistance) {
+        // Regular swipe gesture - more forgiving
         shouldToggleDrawer = true;
+        console.log('🚀 Swipe gesture detected:', { distance: absDeltaY, threshold: adjustedMinDistance });
       } else if (absDeltaY > snapThreshold) {
-        // Snap-to-position based on distance
+        // Snap-to-position based on distance - very sensitive
         shouldToggleDrawer = true;
+        console.log('🚀 Snap gesture detected:', { distance: absDeltaY, threshold: snapThreshold });
       }
+    } else if (touchState.isDragging && !touchState.isIntentionalGesture) {
+      // Fallback for less intentional gestures - slightly higher thresholds
+      if (velocity > minFlickVelocity * 1.2 || absDeltaY > minSwipeDistance * 1.5) {
+        shouldToggleDrawer = true;
+        console.log('🚀 Fallback gesture detected');
+      }
+    }
 
       if (shouldToggleDrawer) {
         // Add momentum class for smooth animation
@@ -416,25 +468,27 @@ const MobileDrawer = ({
         }
       }
     } else {
-      // Handle tap gesture on drawer handle area
+      // ENHANCED: Handle tap gesture on expanded swipe zone
       const rect = drawerRef.current?.getBoundingClientRect();
-      if (rect && touchState.startY > rect.top && touchState.startY < rect.top + 50) {
-        // Tap on handle area - toggle drawer
+      const swipeZoneHeight = drawerExpanded ? rect?.height * 0.4 : 120;
+
+      if (rect && touchState.startY > rect.top && touchState.startY < rect.top + swipeZoneHeight) {
+        // Tap on swipe zone - toggle drawer
         if (drawerFullyClosed) {
           setDrawerFullyClosed(false);
           setDrawerExpanded(true);
-          console.log('🔄 Drawer opened via tap');
+          console.log('🔄 Drawer opened via tap on swipe zone');
         } else if (!drawerExpanded) {
           setDrawerExpanded(true);
-          console.log('🔄 Drawer expanded via tap');
+          console.log('🔄 Drawer expanded via tap on swipe zone');
         } else {
           setDrawerExpanded(false);
-          console.log('🔄 Drawer collapsed via tap');
+          console.log('🔄 Drawer collapsed via tap on swipe zone');
         }
       }
     }
 
-    // Reset touch state
+    // Reset enhanced touch state
     setTouchState({
       isActive: false,
       startY: 0,
@@ -443,7 +497,10 @@ const MobileDrawer = ({
       isDragging: false,
       initialDrawerState: false,
       isOnDrawerContent: false,
-      isOnDrawerHandle: false
+      isOnDrawerHandle: false,
+      isOnSwipeZone: false,
+      dragDistance: 0,
+      isIntentionalGesture: false
     });
   }, [touchState, drawerExpanded, drawerFullyClosed]);
 
@@ -554,6 +611,26 @@ const MobileDrawer = ({
             contain: layout style; /* Layout containment for smooth animations */
           }
 
+          /* 🚀 NEW: Enhanced swipe zone visual feedback */
+          .mobile-drawer.expanded::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%; /* Top 40% is swipe zone */
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent);
+            pointer-events: none;
+            border-radius: 24px 24px 0 0;
+            transition: opacity 0.2s ease;
+          }
+
+          /* 🚀 NEW: Dragging state visual feedback */
+          .mobile-drawer.dragging {
+            box-shadow: 0 -4px 20px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+          }
+
           /* ENHANCED: Complete drawer scroll isolation with hidden scrollbars */
           .mobile-drawer-content {
             /* Complete scroll isolation from main page */
@@ -662,7 +739,7 @@ const MobileDrawer = ({
       {/* EXTRACTED: Mobile Drawer - Enhanced Animation Component */}
       <div
         ref={drawerRef}
-        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
+        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''} ${touchState.isDragging ? 'dragging' : ''}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -689,18 +766,58 @@ const MobileDrawer = ({
         aria-label="Contact form drawer"
         aria-expanded={drawerExpanded}
       >
-        {/* Drawer Handle */}
+        {/* Enhanced Drawer Handle with Visual Feedback */}
         <div
           style={{
-            width: '40px',
-            height: '4px',
-            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            borderRadius: '2px',
-            margin: '8px auto 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px 0 16px',
             cursor: 'pointer'
           }}
           aria-hidden="true"
-        />
+        >
+          {/* Main Handle Bar */}
+          <div
+            style={{
+              width: '50px', // Increased from 40px for better visibility
+              height: '5px', // Increased from 4px for better touch target
+              backgroundColor: touchState.isDragging
+                ? 'rgba(255, 255, 255, 0.7)' // Brighter when dragging
+                : 'rgba(255, 255, 255, 0.4)', // Slightly more visible
+              borderRadius: '3px', // Increased for modern look
+              transition: 'all 0.2s ease',
+              boxShadow: touchState.isDragging
+                ? '0 0 8px rgba(255, 255, 255, 0.3)' // Glow effect when dragging
+                : 'none'
+            }}
+          />
+
+          {/* Swipe Indicator Dots */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '3px',
+              marginTop: '6px',
+              opacity: drawerExpanded ? 0.6 : 0.3,
+              transition: 'opacity 0.2s ease'
+            }}
+          >
+            {[0, 1, 2].map(i => (
+              <div
+                key={i}
+                style={{
+                  width: '3px',
+                  height: '3px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                  borderRadius: '50%',
+                  transition: 'all 0.2s ease',
+                  transform: touchState.isDragging ? 'scale(1.2)' : 'scale(1)'
+                }}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* Drawer Content */}
         <div
