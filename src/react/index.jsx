@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import HomePage from './components/HomePage';
 import AdminLogin from './components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './utils/security';
-import { SEOProvider, MaintenanceMode, SEODebug } from './contexts/SEOContext';
+import { SEOProvider, SEODebug, useSEO } from './contexts/SEOContext';
 
 // Lazy load About, Contact, and Maintenance pages for better performance
 const AboutPage = lazy(() => import('./components/AboutPage'));
@@ -24,6 +24,22 @@ const PageLoader = () => (
     minDisplayTime={300}
   />
 );
+
+// Enforce hard redirect to dedicated maintenance page when active
+const MaintenanceRedirect = () => {
+  const { maintenanceStatus } = useSEO();
+  useEffect(() => {
+    try {
+      if (maintenanceStatus?.maintenance_mode && window.location.pathname !== '/maintenance') {
+        window.location.replace('/maintenance');
+      }
+    } catch (e) {
+      // no-op
+    }
+  }, [maintenanceStatus]);
+  return null;
+};
+
 
 const App = () => {
   console.log('⚛️ REACT APP COMPONENT RENDERING');
@@ -59,7 +75,7 @@ const App = () => {
 
   return (
     <SEOProvider>
-      <MaintenanceMode />
+      <MaintenanceRedirect />
       <div className="app-container">
         {renderPage()}
       </div>

@@ -129,12 +129,11 @@ export default function MaintenancePage() {
     }
   }, []);
 
-  // Simple navigation function
-  const handleGoHome = () => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition('/');
-    } else {
-      window.location.href = '/';
+  // Keep users on the dedicated maintenance page during maintenance
+  const handleGoHome = (e) => {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (window.location.pathname !== '/maintenance') {
+      window.location.replace('/maintenance');
     }
   };
 

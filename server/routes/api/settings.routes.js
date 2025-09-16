@@ -24,12 +24,26 @@ router.get("/seo", (req, res) => {
 });
 
 // GET /api/settings/maintenance-status
-router.get("/maintenance-status", (req, res) => {
-  return res.json({
-    success: true,
-    maintenance_mode: false,
-    maintenance_message: "Service temporarily unavailable",
-  });
+router.get("/maintenance-status", async (req, res) => {
+  try {
+    const base = process.env.DASHBOARD_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+    const resp = await fetch(`${base}/api/settings/maintenance-status`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      return res.json(data);
+    }
+    throw new Error(`Dashboard responded ${resp.status}`);
+  } catch (err) {
+    console.warn('⚠️ Fallback maintenance-status (dashboard unreachable):', err.message);
+    return res.json({
+      success: true,
+      maintenance_mode: false,
+      maintenance_message: "Service temporarily unavailable",
+    });
+  }
 });
 
 // POST /api/analytics/track - Analytics tracking endpoint

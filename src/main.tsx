@@ -11,7 +11,7 @@ import { initializeFrontendSecurity } from './react/utils/security';
 // Maintenance page (React) for /maintenance route
 const ReactMaintenancePage = lazy(() => import('./react/components/MaintenancePage'));
 
-import { SEOProvider, MaintenanceMode, SEODebug } from './react/contexts/SEOContext';
+import { SEOProvider, SEODebug, useSEO } from './react/contexts/SEOContext';
 
 // 🚀 OPTIMIZED: Dynamic imports for utilities to reduce main bundle size
 const initializeUtilities = async () => {
@@ -72,6 +72,22 @@ const PageLoader = () => (
     showMessage={false}
   />
 );
+
+
+// Enforce hard redirect to dedicated maintenance page when active
+const MaintenanceRedirect: React.FC = () => {
+  const { maintenanceStatus } = useSEO();
+  useEffect(() => {
+    try {
+      if (maintenanceStatus?.maintenance_mode && window.location.pathname !== '/maintenance') {
+        window.location.replace('/maintenance');
+      }
+    } catch (e) {
+      // no-op
+    }
+  }, [maintenanceStatus]);
+  return null;
+};
 
 const App = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -165,7 +181,7 @@ const App = () => {
 
   return (
     <SEOProvider>
-      <MaintenanceMode />
+      <MaintenanceRedirect />
       {renderCurrentPage()}
       <SEODebug />
     </SEOProvider>
