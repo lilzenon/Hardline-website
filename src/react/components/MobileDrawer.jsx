@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import LayloIframe from './LayloIframe';
+import useLayloSDK from '../hooks/useLayloSDK';
+
 
 /**
  * Shared Mobile Drawer Component
  * Extracted from FigmaMobile.jsx to eliminate code duplication
  * Maintains 100% identical functionality, animations, and behavior
  */
-const MobileDrawer = ({ 
+const MobileDrawer = ({
   // Props for customization while maintaining identical behavior
   contentRef,
   viewportContext = { isRealMobileDevice: false },
@@ -31,6 +33,9 @@ const MobileDrawer = ({
 
   // Resend countdown state
   const [resendCountdown, setResendCountdown] = useState(0);
+  // Ensure Laylo SDK is fully loaded before rendering iframe
+  const isLayloReady = useLayloSDK();
+
   const [canResend, setCanResend] = useState(false);
 
   // Enhanced touch state for improved gesture handling
@@ -75,27 +80,6 @@ const MobileDrawer = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Add useEffect for Laylo SDK initialization - RESTORED ORIGINAL IMPLEMENTATION
-  useEffect(() => {
-    // Load Laylo SDK script only once with proper error handling
-    if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
-      const layloScript = document.createElement('script');
-      layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
-      layloScript.async = true;
-      layloScript.defer = true; // Add defer to prevent blocking
-
-      // Add error handling to prevent crashes
-      layloScript.onerror = (error) => {
-        console.warn('⚠️ Laylo SDK failed to load in MobileDrawer:', error);
-      };
-
-      layloScript.onload = () => {
-        console.log('✅ Laylo SDK script loaded successfully in MobileDrawer');
-      };
-
-      document.head.appendChild(layloScript);
-    }
-  }, []);
 
   // 📱 ENHANCED: Proper mobile drawer scroll lock with position preservation
   useEffect(() => {
@@ -852,7 +836,7 @@ const MobileDrawer = ({
           )}
 
           {/* Laylo Integration - RESTORED to working configuration */}
-          {!drawerFullyClosed && !showVerification && (
+          {!drawerFullyClosed && !showVerification && isLayloReady && (
             <div
               onClick={handleIframeClick}
               style={{

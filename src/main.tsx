@@ -8,6 +8,9 @@ import { createRoot } from 'react-dom/client';
 const HomePage = lazy(() => import('./react/components/HomePage'));
 const AdminLogin = lazy(() => import('./react/components/AdminLoginFigma'));
 import { initializeFrontendSecurity } from './react/utils/security';
+// Maintenance page (React) for /maintenance route
+const ReactMaintenancePage = lazy(() => import('./react/components/MaintenancePage'));
+
 import { SEOProvider, MaintenanceMode, SEODebug } from './react/contexts/SEOContext';
 
 // 🚀 OPTIMIZED: Dynamic imports for utilities to reduce main bundle size
@@ -142,6 +145,12 @@ const App = () => {
         return (
           <Suspense fallback={<PageLoader />}>
             <AdminLogin />
+          </Suspense>
+        );
+      case '/maintenance':
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <ReactMaintenancePage />
           </Suspense>
         );
       default:
