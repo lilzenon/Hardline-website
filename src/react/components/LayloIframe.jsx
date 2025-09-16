@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
-// Simple Laylo Iframe Component - Restored to Basic Functionality
+// Robust Laylo Iframe Component with Enhanced Loading Reliability
 const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
   const [iframeReady, setIframeReady] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
+  const [loadAttempts, setLoadAttempts] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   const iframeRef = useRef(null);
   const contentCheckInterval = useRef(null);
+  const loadTimeoutRef = useRef(null);
+  const retryTimeoutRef = useRef(null);
   const mountedRef = useRef(true);
+  const loadStartTime = useRef(null);
+
+  // Configuration constants for reliability
+  const MAX_LOAD_ATTEMPTS = 3;
+  const LOAD_TIMEOUT_MS = 8000; // 8 seconds for initial load
+  const RETRY_DELAY_MS = 2000; // 2 seconds between retries
+  const CONTENT_CHECK_INTERVAL_MS = 300; // Check every 300ms
+  const MAX_CONTENT_CHECKS = 20; // Check for 6 seconds (300ms * 20)
 
   // Build Laylo URL with parameters - PRESERVED ORIGINAL IMPLEMENTATION
   const layloUrl = useMemo(() => {
@@ -19,60 +31,133 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       background: background,
       ...(minimal && { minimal: 'true' })
     });
-    return `https://embed.laylo.com/?${params.toString()}`;
-  }, [dropId, color, theme, background, minimal]);
 
-  // Simple component lifecycle management
+    // Add cache-busting parameter for retries to ensure fresh load attempts
+    if (loadAttempts > 0) {
+      params.set('_retry', loadAttempts.toString());
+      params.set('_t', Date.now().toString());
+    }
+
+    return `https://embed.laylo.com/?${params.toString()}`;
+  }, [dropId, color, theme, background, minimal, loadAttempts]);
+
+  // Enhanced component lifecycle management with cleanup
   useEffect(() => {
     mountedRef.current = true;
 
     return () => {
       mountedRef.current = false;
+      // Comprehensive cleanup
       if (contentCheckInterval.current) {
         clearInterval(contentCheckInterval.current);
+        contentCheckInterval.current = null;
+      }
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
     };
   }, []);
 
-  // Simple iframe content detection - RESTORED BASIC FUNCTIONALITY
+  // Enhanced iframe content detection with multiple strategies
   const checkIframeContent = useCallback(() => {
     if (!iframeRef.current || !mountedRef.current) return false;
 
     try {
-      // Try to access iframe content (may fail due to CORS)
+      // Strategy 1: Try to access iframe content (may fail due to CORS)
       const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
 
       if (iframeDoc) {
-        // Look for Laylo-specific elements
-        const layloElements = iframeDoc.querySelectorAll('[class*="laylo"], [id*="laylo"], input[type="tel"], input[placeholder*="phone"], form');
+        // Look for Laylo-specific elements and general form elements
+        const layloElements = iframeDoc.querySelectorAll('[class*="laylo"], [id*="laylo"], input[type="tel"], input[placeholder*="phone"], form, button');
         if (layloElements.length > 0) {
-          console.log('✅ Laylo content detected in iframe');
+          console.log('✅ Laylo content detected in iframe via DOM access');
+          return true;
+        }
+
+        // Check if document has meaningful content
+        const bodyContent = iframeDoc.body?.textContent?.trim();
+        if (bodyContent && bodyContent.length > 10) {
+          console.log('✅ Iframe has meaningful text content');
           return true;
         }
       }
     } catch (e) {
-      // CORS error is expected, but iframe might still be working
-      console.log('🔒 CORS restriction (expected), checking iframe dimensions...');
+      // CORS error is expected for cross-origin iframes
+      console.log('🔒 CORS restriction (expected), using fallback detection methods...');
     }
 
-    // Fallback: Check if iframe has reasonable dimensions (content likely loaded)
-    const rect = iframeRef.current.getBoundingClientRect();
+    // Strategy 2: Check iframe dimensions and properties
+    const iframe = iframeRef.current;
+    const rect = iframe.getBoundingClientRect();
+
+    // Check if iframe has reasonable dimensions
     if (rect.height > 50 && rect.width > 100) {
-      console.log('✅ Iframe has content-like dimensions, assuming loaded');
+      console.log('✅ Iframe has content-like dimensions, likely loaded');
       return true;
+    }
+
+    // Strategy 3: Check if iframe src is properly set and not about:blank
+    if (iframe.src && iframe.src !== 'about:blank' && iframe.src.includes('laylo.com')) {
+      // Additional heuristic: if enough time has passed, assume it's loaded
+      const timeSinceLoad = Date.now() - (loadStartTime.current || 0);
+      if (timeSinceLoad > 3000) { // 3 seconds
+        console.log('✅ Sufficient time passed with valid src, assuming loaded');
+        return true;
+      }
     }
 
     return false;
   }, []);
 
-  // Simple iframe load handler - RESTORED BASIC FUNCTIONALITY
+  // Retry mechanism for failed loads
+  const retryLoad = useCallback(() => {
+    if (!mountedRef.current || loadAttempts >= MAX_LOAD_ATTEMPTS) return;
+
+    console.log(`🔄 Retrying iframe load (attempt ${loadAttempts + 1}/${MAX_LOAD_ATTEMPTS})`);
+    setIsRetrying(true);
+    setLoadAttempts(prev => prev + 1);
+    setIframeReady(false);
+    setContentLoaded(false);
+
+    // Clear any existing timeouts
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+    if (contentCheckInterval.current) {
+      clearInterval(contentCheckInterval.current);
+      contentCheckInterval.current = null;
+    }
+
+    // Delay before retry to avoid rapid successive requests
+    retryTimeoutRef.current = setTimeout(() => {
+      if (mountedRef.current) {
+        setIsRetrying(false);
+        loadStartTime.current = Date.now();
+      }
+    }, RETRY_DELAY_MS);
+  }, [loadAttempts, MAX_LOAD_ATTEMPTS]);
+
+  // Enhanced iframe load handler with timeout and retry logic
   const handleIframeLoad = useCallback(() => {
     if (!mountedRef.current) return;
 
-    console.log('📡 Iframe load event fired');
+    console.log(`📡 Iframe load event fired (attempt ${loadAttempts + 1})`);
+
+    // Clear load timeout since we got a load event
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+
     setIframeReady(true);
 
-    // Basic Laylo SDK notification - PRESERVED ORIGINAL IMPLEMENTATION
+    // Laylo SDK notification - PRESERVED ORIGINAL IMPLEMENTATION
     if (typeof window !== 'undefined' && window.Laylo && window.Laylo.init) {
       try {
         console.log('🔄 Notifying Laylo SDK of iframe readiness');
@@ -82,17 +167,18 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       }
     }
 
-    // Start checking for content
+    // Start enhanced content checking
     if (contentCheckInterval.current) {
       clearInterval(contentCheckInterval.current);
+      contentCheckInterval.current = null;
     }
 
     let checkCount = 0;
-    const maxChecks = 10; // Check for 2 seconds (200ms * 10)
 
     contentCheckInterval.current = setInterval(() => {
       if (!mountedRef.current) {
         clearInterval(contentCheckInterval.current);
+        contentCheckInterval.current = null;
         return;
       }
 
@@ -101,32 +187,84 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       if (checkIframeContent()) {
         setContentLoaded(true);
         clearInterval(contentCheckInterval.current);
-        console.log('✅ Laylo content confirmed loaded');
-      } else if (checkCount >= maxChecks) {
-        // Assume content is loaded after timeout
-        console.log('⏰ Content check timeout, assuming loaded');
-        setContentLoaded(true);
+        contentCheckInterval.current = null;
+        console.log('✅ Laylo content confirmed loaded successfully');
+      } else if (checkCount >= MAX_CONTENT_CHECKS) {
+        // Content check timeout - decide whether to retry or assume loaded
         clearInterval(contentCheckInterval.current);
-      }
-    }, 200);
+        contentCheckInterval.current = null;
 
-    // Cleanup after timeout
-    setTimeout(() => {
-      if (mountedRef.current && contentCheckInterval.current) {
-        clearInterval(contentCheckInterval.current);
-        if (!contentLoaded) {
-          console.log('⏰ Final timeout, assuming content loaded');
+        if (loadAttempts < MAX_LOAD_ATTEMPTS - 1) {
+          console.log('⚠️ Content check timeout, retrying...');
+          retryLoad();
+        } else {
+          console.log('⏰ Final content check timeout, assuming loaded');
           setContentLoaded(true);
         }
       }
-    }, 2000); // 2 second timeout
-  }, [checkIframeContent, contentLoaded]);
+    }, CONTENT_CHECK_INTERVAL_MS);
+  }, [checkIframeContent, loadAttempts, retryLoad, MAX_CONTENT_CHECKS, CONTENT_CHECK_INTERVAL_MS]);
 
-  // Simple error handling
+  // Enhanced error handling with retry logic
   const handleIframeError = useCallback((error) => {
     if (!mountedRef.current) return;
-    console.error('❌ Iframe load error:', error);
-  }, []);
+
+    console.error(`❌ Iframe load error (attempt ${loadAttempts + 1}):`, error);
+
+    // Clear any existing timeouts
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+
+    // Attempt retry if we haven't exceeded max attempts
+    if (loadAttempts < MAX_LOAD_ATTEMPTS - 1) {
+      console.log('🔄 Iframe error detected, will retry...');
+      retryLoad();
+    } else {
+      console.error('💥 Max retry attempts reached, iframe loading failed');
+      // Still set content loaded to prevent infinite loading state
+      setContentLoaded(true);
+    }
+  }, [loadAttempts, retryLoad, MAX_LOAD_ATTEMPTS]);
+
+  // Load timeout handler
+  const handleLoadTimeout = useCallback(() => {
+    if (!mountedRef.current) return;
+
+    console.warn(`⏰ Iframe load timeout (attempt ${loadAttempts + 1})`);
+
+    if (loadAttempts < MAX_LOAD_ATTEMPTS - 1) {
+      console.log('🔄 Load timeout, retrying...');
+      retryLoad();
+    } else {
+      console.warn('⏰ Final load timeout, assuming iframe is working');
+      setIframeReady(true);
+      setContentLoaded(true);
+    }
+  }, [loadAttempts, retryLoad, MAX_LOAD_ATTEMPTS]);
+
+  // Set up load timeout when iframe src changes
+  useEffect(() => {
+    if (!layloUrl || isRetrying) return;
+
+    loadStartTime.current = Date.now();
+
+    // Clear any existing timeout
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+
+    // Set load timeout
+    loadTimeoutRef.current = setTimeout(handleLoadTimeout, LOAD_TIMEOUT_MS);
+
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
+    };
+  }, [layloUrl, isRetrying, handleLoadTimeout, LOAD_TIMEOUT_MS]);
 
   // Don't render if no dropId - PRESERVED ORIGINAL LOGIC
   if (!dropId) {
@@ -146,7 +284,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     );
   }
 
-  // Render the iframe - RESTORED ORIGINAL IMPLEMENTATION
+  // Render the iframe with enhanced reliability - PRESERVED VISUAL APPEARANCE
   return (
     <iframe
       ref={iframeRef}
@@ -161,11 +299,15 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       allow="web-share"
       style={{
         ...style,
+        // Preserve original visual behavior - no loading indicators
         opacity: contentLoaded ? 1 : 0.8,
         transition: 'opacity 0.15s ease-out',
         minHeight: '60px'
       }}
       src={layloUrl}
+      // Enhanced attributes for reliability
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+      loading="eager"
     />
   );
 });
