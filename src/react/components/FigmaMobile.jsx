@@ -1995,9 +1995,10 @@ const FigmaMobile = () => {
           /* 🎯 ACCESSIBILITY: Respect user's motion preferences */
           @media (prefers-reduced-motion: reduce) {
             :root {
-              --animation-duration-fast: 0ms;
-              --animation-duration-normal: 0ms;
-              --animation-duration-slow: 0ms;
+              /* 🚨 PRESERVE NAVIGATION: Keep navigation animation variables for UX */
+              /* --animation-duration-fast: 0ms; COMMENTED OUT - navigation needs these */
+              /* --animation-duration-normal: 0ms; COMMENTED OUT - navigation needs these */
+              /* --animation-duration-slow: 0ms; COMMENTED OUT - navigation needs these */
               --animation-stagger-delay: 0ms;
               --ultra-smooth-duration: 0ms;
             }
