@@ -44,7 +44,7 @@ const MobileDrawer = ({
     isOnDrawerContent: false,
     isOnDrawerHandle: false,
     isOnSwipeZone: false, // New: expanded swipe detection area
-    dragDistance: 0, // New: track total drag distance for visual feedback
+    dragDistance: 0, // New: track total drag distance for gesture detection
     isIntentionalGesture: false // New: distinguish intentional swipes from accidental touches
   });
 
@@ -376,7 +376,7 @@ const MobileDrawer = ({
       }
     }
 
-    // ENHANCED: Update drag state with visual feedback
+    // ENHANCED: Update drag state for gesture detection
     if (touchState.isDragging && touchState.isOnSwipeZone && !touchState.isOnDrawerContent) {
       const newDragDistance = Math.max(absDeltaY, touchState.dragDistance);
 
@@ -610,25 +610,7 @@ const MobileDrawer = ({
             contain: layout style; /* Layout containment for smooth animations */
           }
 
-          /* 🚀 NEW: Enhanced swipe zone visual feedback */
-          .mobile-drawer.expanded::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 40%; /* Top 40% is swipe zone */
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent);
-            pointer-events: none;
-            border-radius: 24px 24px 0 0;
-            transition: opacity 0.2s ease;
-          }
 
-          /* 🚀 NEW: Dragging state visual feedback */
-          .mobile-drawer.dragging {
-            box-shadow: 0 -4px 20px rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-          }
 
           /* ENHANCED: Complete drawer scroll isolation with hidden scrollbars */
           .mobile-drawer-content {
@@ -678,7 +660,6 @@ const MobileDrawer = ({
 
           /* Disclaimer peek effect */
           .disclaimer-peek {
-            /* Add subtle visual feedback for disclaimer state */
           }
 
           /* Content fade animations */
@@ -738,7 +719,7 @@ const MobileDrawer = ({
       {/* EXTRACTED: Mobile Drawer - Enhanced Animation Component */}
       <div
         ref={drawerRef}
-        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''} ${touchState.isDragging ? 'dragging' : ''}`}
+        className={`mobile-drawer ${drawerExpanded ? 'expanded' : 'collapsed'} ${showDisclaimer ? 'disclaimer-peek' : ''}`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -765,57 +746,25 @@ const MobileDrawer = ({
         aria-label="Contact form drawer"
         aria-expanded={drawerExpanded}
       >
-        {/* Enhanced Drawer Handle with Visual Feedback */}
+        {/* Drawer Handle - Original Styling Restored */}
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            justifyContent: 'center',
             padding: '8px 0 16px',
             cursor: 'pointer'
           }}
           aria-hidden="true"
         >
-          {/* Main Handle Bar */}
+          {/* Handle Bar - Original Dimensions and Styling */}
           <div
             style={{
-              width: '50px', // Increased from 40px for better visibility
-              height: '5px', // Increased from 4px for better touch target
-              backgroundColor: touchState.isDragging
-                ? 'rgba(255, 255, 255, 0.7)' // Brighter when dragging
-                : 'rgba(255, 255, 255, 0.4)', // Slightly more visible
-              borderRadius: '3px', // Increased for modern look
-              transition: 'all 0.2s ease',
-              boxShadow: touchState.isDragging
-                ? '0 0 8px rgba(255, 255, 255, 0.3)' // Glow effect when dragging
-                : 'none'
+              width: '40px', // Restored original width
+              height: '4px', // Restored original height
+              backgroundColor: 'rgba(255, 255, 255, 0.3)', // Restored original opacity
+              borderRadius: '2px' // Restored original border radius
             }}
           />
-
-          {/* Swipe Indicator Dots */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '3px',
-              marginTop: '6px',
-              opacity: drawerExpanded ? 0.6 : 0.3,
-              transition: 'opacity 0.2s ease'
-            }}
-          >
-            {[0, 1, 2].map(i => (
-              <div
-                key={i}
-                style={{
-                  width: '3px',
-                  height: '3px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                  borderRadius: '50%',
-                  transition: 'all 0.2s ease',
-                  transform: touchState.isDragging ? 'scale(1.2)' : 'scale(1)'
-                }}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Drawer Content */}
