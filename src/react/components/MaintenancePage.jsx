@@ -3,14 +3,14 @@ import { logEnvironmentInfo, isProductionEnvironment } from '../utils/production
 import { Dither } from './ui/DitherShadcn';
 
 /**
- * Maintenance Mode Page with Dither Effect Background
+ * Minimalist Maintenance Page with Dither Effect Background
  *
  * Features:
  * - Full-screen dither effect background with React 19 compatibility
  * - CSS fallback for when Three.js fails
  * - Ultra-transparent glassmorphism card
  * - BOUNCE2BOUNCE logo positioning
- * - Minimalist design with maintenance message
+ * - Laylo iframe for user engagement
  * - Responsive layout
  * - Accessibility compliant
  * - Robust error handling
@@ -116,11 +116,7 @@ class DitherErrorBoundary extends React.Component {
   }
 }
 
-export default function MaintenancePage({ 
-  message = 'We are currently performing scheduled maintenance. Please check back soon.',
-  estimatedDowntime = '2 hours',
-  contactInfo = 'support@bounce2bounce.com'
-}) {
+export default function MaintenancePage() {
   const [ditherFailed, setDitherFailed] = useState(false);
 
   // Log environment info in production for debugging
@@ -189,7 +185,7 @@ export default function MaintenancePage({
         />
       </div>
 
-      {/* Maintenance Card */}
+      {/* Minimalist Maintenance Card */}
       <div style={{
         position: 'relative',
         zIndex: 10,
@@ -204,7 +200,7 @@ export default function MaintenancePage({
         backdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
-        maxWidth: '500px',
+        maxWidth: '400px',
         width: '90%'
       }}>
         {/* BOUNCE2BOUNCE Logo */}
@@ -212,7 +208,7 @@ export default function MaintenancePage({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '32px'
+          marginBottom: '24px'
         }}>
           <img
             src="/images/figma-exact/b2b-logo-nav.svg"
@@ -243,34 +239,9 @@ export default function MaintenancePage({
           </div>
         </div>
 
-        {/* Maintenance Title */}
-        <h1 style={{
-          fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-          fontWeight: '700',
-          color: 'rgba(255, 255, 255, 0.95)',
-          margin: '0 0 16px 0',
-          lineHeight: '1.2',
-          letterSpacing: '-0.01em'
-        }}>
-          Under Maintenance
-        </h1>
-
-        {/* Maintenance Message */}
-        <p style={{
-          fontSize: 'clamp(0.9rem, 2vw, 1rem)',
-          fontWeight: '400',
-          color: 'rgba(255, 255, 255, 0.8)',
-          margin: '0 0 24px 0',
-          lineHeight: '1.5',
-          maxWidth: '400px'
-        }}>
-          {message}
-        </p>
-
         {/* Laylo Iframe */}
         <div style={{
           width: '100%',
-          margin: '24px 0',
           borderRadius: '8px',
           overflow: 'hidden'
         }}>
@@ -291,30 +262,6 @@ export default function MaintenancePage({
             title="Stay updated with BOUNCE2BOUNCE"
           />
         </div>
-
-        {/* Estimated Downtime */}
-        {estimatedDowntime && (
-          <p style={{
-            fontSize: '0.875rem',
-            fontWeight: '500',
-            color: 'rgba(255, 193, 7, 0.9)',
-            margin: '0 0 16px 0'
-          }}>
-            Estimated downtime: {estimatedDowntime}
-          </p>
-        )}
-
-        {/* Contact Information */}
-        {contactInfo && (
-          <p style={{
-            fontSize: '0.8rem',
-            fontWeight: '400',
-            color: 'rgba(255, 255, 255, 0.6)',
-            margin: '0'
-          }}>
-            Questions? Contact us at {contactInfo}
-          </p>
-        )}
       </div>
     </div>
   );

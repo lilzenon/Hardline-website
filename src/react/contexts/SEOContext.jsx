@@ -5,6 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { Dither } from '../components/ui/DitherShadcn';
 import {
   fetchSEOSettings,
   fetchMaintenanceStatus,
@@ -360,154 +361,133 @@ export const MaintenanceMode = () => {
     return null;
   }
 
-  // Responsive styles based on device type
-  const containerStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: isMobile
-      ? 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)'
-      : 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)',
-    color: 'white',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10000,
-    fontFamily: 'Inter, sans-serif',
-    textAlign: 'center',
-    padding: isMobile ? '20px' : '40px',
-    overflow: 'hidden'
-  };
 
-  const iconStyle = {
-    fontSize: isMobile ? '64px' : '96px',
-    marginBottom: isMobile ? '24px' : '32px',
-    filter: 'drop-shadow(0 4px 8px rgba(255, 255, 255, 0.1))'
-  };
 
-  const titleStyle = {
-    fontSize: isMobile ? '28px' : '48px',
-    marginBottom: isMobile ? '16px' : '24px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #ffffff 0%, #cccccc 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text',
-    letterSpacing: '-0.02em'
-  };
-
-  const messageStyle = {
-    fontSize: isMobile ? '16px' : '20px',
-    marginBottom: isMobile ? '24px' : '32px',
-    maxWidth: isMobile ? '320px' : '600px',
-    lineHeight: 1.6,
-    opacity: 0.9
-  };
-
-  const downtimeStyle = {
-    fontSize: isMobile ? '14px' : '18px',
-    marginBottom: isMobile ? '20px' : '24px',
-    opacity: 0.8,
-    padding: isMobile ? '8px 16px' : '12px 24px',
-    background: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: isMobile ? '20px' : '30px',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.1)'
-  };
-
-  const contactStyle = {
-    fontSize: isMobile ? '12px' : '16px',
-    opacity: 0.6,
-    marginTop: isMobile ? '20px' : '32px'
+  // Simple navigation function
+  const handleGoHome = () => {
+    if (window.navigateWithTransition) {
+      window.navigateWithTransition('/');
+    } else {
+      window.location.href = '/';
+    }
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={iconStyle}>🔧</div>
-
-      <h1 style={titleStyle}>
-        {maintenanceStatus.maintenance_title || 'Site Under Maintenance'}
-      </h1>
-
-      <p style={messageStyle}>
-        {maintenanceStatus.maintenance_message || 'We are currently performing scheduled maintenance. Please check back soon.'}
-      </p>
-
-      {/* Laylo Iframe */}
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: '#000000',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 10000,
+      overflow: 'hidden'
+    }}>
+      {/* Dither Background Effect */}
       <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
         width: '100%',
-        maxWidth: isMobile ? '320px' : '500px',
-        margin: isMobile ? '20px 0' : '32px 0',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        padding: isMobile ? '16px' : '24px'
+        height: '100%',
+        zIndex: 1
       }}>
-        <iframe
-          id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
-          frameBorder="0"
-          scrolling="no"
-          allow="web-share"
-          allowTransparency="true"
-          style={{
-            width: '1px',
-            minWidth: '100%',
-            maxWidth: '1000px',
-            height: 'auto',
-            border: 'none'
-          }}
-          src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
-          title="Stay updated with BOUNCE2BOUNCE"
+        <Dither
+          waveSpeed={0.02}
+          waveFrequency={2.0}
+          waveAmplitude={0.25}
+          waveColor={[1.0, 1.0, 1.0]}
+          colorNum={2}
+          pixelSize={2}
+          enableMouseInteraction={false}
+          mouseRadius={1.0}
+          className="dither-background"
         />
       </div>
 
-      {maintenanceStatus.estimated_downtime && (
-        <div style={downtimeStyle}>
-          Estimated downtime: {maintenanceStatus.estimated_downtime}
+      {/* Minimalist Maintenance Card */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '40px 40px',
+        borderRadius: '16px',
+        background: 'rgba(22, 22, 22, 0.12)',
+        backdropFilter: 'blur(4px)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+        maxWidth: '400px',
+        width: '90%'
+      }}>
+        {/* BOUNCE2BOUNCE Logo */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: '24px'
+        }}>
+          <img
+            src="/images/figma-exact/b2b-logo-nav.svg"
+            alt="BOUNCE2BOUNCE"
+            style={{
+              height: '48px',
+              width: 'auto',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              opacity: 0.95,
+              filter: 'brightness(0) invert(1)'
+            }}
+            onClick={handleGoHome}
+            onError={(e) => {
+              // Fallback to text if logo fails to load
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'block';
+            }}
+          />
+          <div style={{
+            display: 'none',
+            color: 'rgba(255, 255, 255, 0.9)',
+            fontSize: '18px',
+            fontWeight: '600',
+            letterSpacing: '0.5px'
+          }}>
+            BOUNCE2BOUNCE
+          </div>
         </div>
-      )}
 
-      {maintenanceStatus.contact_information && (
-        <p style={contactStyle}>
-          Questions? Contact us: {maintenanceStatus.contact_information}
-        </p>
-      )}
-
-      {/* Glassmorphism decoration elements */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '20%',
-          left: '10%',
-          width: isMobile ? '80px' : '120px',
-          height: isMobile ? '80px' : '120px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          borderRadius: '50%',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          zIndex: -1
-        }}
-      />
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '15%',
-          right: '15%',
-          width: isMobile ? '60px' : '100px',
-          height: isMobile ? '60px' : '100px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '50%',
-          backdropFilter: 'blur(15px)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          zIndex: -1
-        }}
-      />
+        {/* Laylo Iframe */}
+        <div style={{
+          width: '100%',
+          borderRadius: '8px',
+          overflow: 'hidden'
+        }}>
+          <iframe
+            id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
+            frameBorder="0"
+            scrolling="no"
+            allow="web-share"
+            allowTransparency="true"
+            style={{
+              width: '1px',
+              minWidth: '100%',
+              maxWidth: '1000px',
+              height: 'auto',
+              border: 'none'
+            }}
+            src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
+            title="Stay updated with BOUNCE2BOUNCE"
+          />
+        </div>
+      </div>
     </div>
   );
 };
