@@ -387,9 +387,15 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
   }, [onLoadStart]);
 
   const handleImageError = useCallback(() => {
+    try {
+      const attempted = image?.url || image?.src || image?.image_url || image?.file_url;
+      console.error('❌ Gallery image failed to load:', { attemptedUrl: attempted, image });
+    } catch (e) {
+      // no-op
+    }
     setImageError(true);
     onLoad(); // Still mark as "loaded" to prevent infinite loading
-  }, [onLoad]);
+  }, [onLoad, image]);
 
   const handleClick = useCallback(() => {
     if (onClick) {

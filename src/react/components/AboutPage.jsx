@@ -143,6 +143,54 @@ Join our community of music enthusiasts and discover your next favorite artist, 
     }
   };
 
+  // Normalize gallery image to ensure absolute, publicly accessible URLs from dashboard API
+  const normalizeGalleryImage = (img) => {
+    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+
+    // Try to find a candidate URL from common fields
+    const candidate = img?.url || img?.src || img?.image_url || img?.file_url || img?.path || img?.imagePath || '';
+
+    // If value is an object (some APIs return { url: '...' }), unwrap
+    const orig = typeof candidate === 'string' ? candidate : (candidate?.url || '');
+
+    // 1) Already absolute HTTP URL: return as-is
+    if (orig && /^https?:\/\//i.test(orig)) {
+      return { ...img, url: orig };
+    }
+
+    // 2) New image system: /api/images/serve/:uuid(/:variant?)
+    if (orig && orig.includes('/api/images/serve/')) {
+      // Ensure variant; default to medium if missing
+      const hasVariant = /\/api\/images\/serve\/[a-f0-9-]{36}\/[^/]+/i.test(orig);
+      const withVariant = hasVariant ? orig : `${orig.replace(/\/?$/, '')}/medium`;
+      // Ensure absolute admin domain prefix
+      const absolute = withVariant.startsWith('http') ? withVariant : `${dashboardDomain}${withVariant}`;
+      return { ...img, url: absolute };
+    }
+
+    // 3) Relative path that looks like a UUID-based file name
+    if (orig && orig.startsWith('/') && /[a-f0-9-]{36}/i.test(orig)) {
+      const uuidMatch = orig.match(/([a-f0-9-]{36})/i);
+      if (uuidMatch) {
+        const uuid = uuidMatch[1];
+        return { ...img, url: `${dashboardDomain}/api/images/serve/${uuid}/medium` };
+      }
+    }
+
+    // 4) If the record has a uuid field
+    if (img && img.uuid && typeof img.uuid === 'string') {
+      return { ...img, url: `${dashboardDomain}/api/images/serve/${img.uuid}/medium` };
+    }
+
+    // 5) As a last resort, prefix dashboard domain to relative path
+    if (orig && orig.startsWith('/')) {
+      return { ...img, url: `${dashboardDomain}${orig}` };
+    }
+
+    // Nothing workable found; return original (Masonry will show fallback)
+    return img;
+  };
+
   const fetchGalleryImages = async () => {
     try {
       // Determine API base URL based on environment
@@ -168,7 +216,12 @@ Join our community of music enthusiasts and discover your next favorite artist, 
         console.log('🔍 Gallery API Response:', JSON.stringify(data, null, 2));
         if (data.success && Array.isArray(data.data)) {
           console.log('🖼️ First image structure:', data.data[0]);
-          setGalleryImages(data.data);
+          const normalized = data.data.map((img, idx) => {
+            const n = normalizeGalleryImage(img);
+            if (idx < 5) console.log('🧭 Normalized gallery image', idx, n?.url || n);
+            return n;
+          });
+          setGalleryImages(normalized);
         } else {
           console.warn('Invalid gallery response format:', data);
           setGalleryImages([]);

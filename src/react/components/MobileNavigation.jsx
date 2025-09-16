@@ -105,12 +105,12 @@ const MobileNavigation = ({
             contain: layout style;
           }
 
-          /* 🚀 JITTER FIX: Optimize menu overlay animations */
-          div[style*="opacity"][style*="transition"][style*="transitionDelay"] {
-            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-          }
+          /* Removed overly-broad selector that caused inconsistent timings */
+          /* div[style*="opacity"][style*="transition"][style*="transitionDelay"] { */
+          /*   transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important; */
+          /*   transform: translateZ(0); */
+          /*   -webkit-transform: translateZ(0); */
+          /* } */
 
           /* 📱 ULTRA-STABLE MOBILE NAVIGATION WITH SCROLL ISOLATION */
           .mobile-navigation-header {
@@ -197,7 +197,7 @@ const MobileNavigation = ({
 
           /* Navigation overlay animations */
           .mobile-nav-overlay {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.28s cubic-bezier(0.4, 0, 0.2, 1);
           }
 
           .mobile-nav-overlay.entering {
@@ -336,7 +336,7 @@ const MobileNavigation = ({
               height: '2px',
               background: '#FFFFFF',
               borderRadius: '1px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
               transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
               transformOrigin: 'center'
             }}
@@ -347,7 +347,7 @@ const MobileNavigation = ({
               height: '2px',
               background: '#FFFFFF',
               borderRadius: '1px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
               opacity: showMenu ? 0 : 1,
               transform: showMenu ? 'scale(0)' : 'scale(1)'
             }}
@@ -358,7 +358,7 @@ const MobileNavigation = ({
               height: '2px',
               background: '#FFFFFF',
               borderRadius: '1px',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
               transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
               transformOrigin: 'center'
             }}
@@ -399,7 +399,7 @@ const MobileNavigation = ({
       </header>
 
       {/* EXTRACTED: Mobile Navigation Overlay - Complete Menu System */}
-      <div
+      <div className="mobile-nav-overlay"
         style={{
           position: 'fixed',
           top: '0',
@@ -412,7 +412,7 @@ const MobileNavigation = ({
           flexDirection: 'column',
           opacity: showMenu ? 1 : 0,
           visibility: showMenu ? 'visible' : 'hidden',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
           backdropFilter: showMenu ? 'blur(10px)' : 'blur(0px)',
           // Hardware acceleration for smooth overlay animations
           transform: 'translateZ(0)',
@@ -542,8 +542,8 @@ const MobileNavigation = ({
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
             opacity: 1, // Always visible - let children control their own opacity
-            transition: 'transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Slower, more elegant
-            transitionDelay: showMenu ? '0.15s' : '0s', // Slightly faster start
+            transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionDelay: showMenu ? '0.05s' : '0s',
             /* 🎯 PERFORMANCE: Hardware acceleration for smooth animations */
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
@@ -565,8 +565,8 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Events (1st item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
-              transitionDelay: showMenu ? '0.4s' : '0s', // Longer delay for staggered effect
+              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.10s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
@@ -592,8 +592,8 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - About (2nd item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
-              transitionDelay: showMenu ? '0.6s' : '0s', // Staggered timing for sequential appearance
+              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.15s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
@@ -619,8 +619,8 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Contact (3rd item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
-              transitionDelay: showMenu ? '0.8s' : '0s', // Staggered timing for sequential appearance
+              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.20s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
@@ -643,8 +643,8 @@ const MobileNavigation = ({
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Social Media (4th item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
-              transition: 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)', // Much slower, more elegant
-              transitionDelay: showMenu ? '0.85s' : '0s', // FIXED: Better sync with other items (was 1.0s)
+              transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.25s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',

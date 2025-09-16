@@ -2022,8 +2022,7 @@ const FigmaMobile = () => {
             .mobile-nav-item *,
             .mobile-menu-button,
             .mobile-menu-button * {
-              animation-duration: initial !important;
-              transition-duration: initial !important;
+              /* Preserve component-defined durations; do not override here */
             }
           }
 
