@@ -45,7 +45,13 @@ function generateMetaTags(options = {}) {
                 normalizedPath.includes('/og-images/');
 
             if (needsAdmin) {
-                return `https://admin.b2b.click${normalizedPath}`;
+                let mappedPath = normalizedPath;
+                if (mappedPath.startsWith('/data/static/uploads/')) {
+                    mappedPath = mappedPath.replace('/data/static/uploads/', '/static/uploads/');
+                } else if (mappedPath.startsWith('/data/uploads/')) {
+                    mappedPath = mappedPath.replace('/data/uploads/', '/uploads/');
+                }
+                return `https://admin.b2b.click${mappedPath}`;
             }
             return `${u.origin}${normalizedPath}`;
         } catch {
@@ -64,7 +70,13 @@ function generateMetaTags(options = {}) {
             rel.startsWith('/api/images/serve/') ||
             rel.includes('/og-images/')
         ) {
-            return `https://admin.b2b.click${rel}`;
+            let mappedRel = rel;
+            if (mappedRel.startsWith('/data/static/uploads/')) {
+                mappedRel = mappedRel.replace('/data/static/uploads/', '/static/uploads/');
+            } else if (mappedRel.startsWith('/data/uploads/')) {
+                mappedRel = mappedRel.replace('/data/uploads/', '/uploads/');
+            }
+            return `https://admin.b2b.click${mappedRel}`;
         }
 
         // Default to main domain
