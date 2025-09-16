@@ -16,9 +16,11 @@ const MasonryGallery = ({
   const [isVisible, setIsVisible] = useState(false);
   const [expandedImage, setExpandedImage] = useState(null);
   const [imageLoadingStates, setImageLoadingStates] = useState(new Map());
+  const [isClosingModal, setIsClosingModal] = useState(false);
   const galleryRef = useRef(null);
   const observerRef = useRef(null);
   const modalRef = useRef(null);
+  const lastCloseTimeRef = useRef(0);
 
   // Responsive column calculation
   const updateColumns = useCallback(() => {
@@ -74,8 +76,21 @@ const MasonryGallery = ({
     setImageLoadingStates(prev => new Map(prev.set(index, 'loading')));
   }, []);
 
-  // Handle image click for expansion
+  // Handle image click for expansion with debouncing
   const handleImageClick = useCallback((image, index) => {
+    // Prevent opening new image too soon after closing one (debounce)
+    const now = Date.now();
+    if (now - lastCloseTimeRef.current < 300) {
+      console.log('🚫 Image click ignored - too soon after modal close');
+      return;
+    }
+
+    // Prevent opening if modal is currently closing
+    if (isClosingModal) {
+      console.log('🚫 Image click ignored - modal is closing');
+      return;
+    }
+
     console.log('🖼️ Image clicked:', image);
     console.log('🔍 Image properties:', Object.keys(image));
 
@@ -95,33 +110,80 @@ const MasonryGallery = ({
     }
 
     if (onImageClick) onImageClick(image);
-  }, [onImageClick]);
+  }, [onImageClick, isClosingModal]);
 
-  // Close expanded image
-  const closeExpandedImage = useCallback(() => {
+  // Close expanded image with proper event handling and timing
+  const closeExpandedImage = useCallback((e) => {
+    // Prevent event propagation to avoid triggering other image clicks
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+    }
+
+    // Set closing state to prevent immediate reopening
+    setIsClosingModal(true);
+    lastCloseTimeRef.current = Date.now();
+
+    // Close the modal
     setExpandedImage(null);
     document.body.style.overflow = 'unset'; // Restore scroll
+
+    // Reset closing state after a short delay
+    setTimeout(() => {
+      setIsClosingModal(false);
+    }, 100);
   }, []);
 
-  // Handle touch events for mobile
-  const handleModalTouch = useCallback((e) => {
-    // Close modal on touch outside image (backdrop area)
+  // Handle modal backdrop clicks with proper event control
+  const handleModalBackdropClick = useCallback((e) => {
+    // Only close if clicking directly on the backdrop (not on child elements)
     if (e.target === e.currentTarget) {
-      closeExpandedImage();
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      closeExpandedImage(e);
     }
   }, [closeExpandedImage]);
 
-  // Handle escape key
+  // Handle touch events for mobile with proper event control
+  const handleModalTouch = useCallback((e) => {
+    // Close modal on touch outside image (backdrop area)
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      closeExpandedImage(e);
+    }
+  }, [closeExpandedImage]);
+
+  // Enhanced keyboard handling
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && expandedImage) {
-        closeExpandedImage();
+    const handleKeyDown = (e) => {
+      if (!expandedImage) return;
+
+      switch (e.key) {
+        case 'Escape':
+          e.preventDefault();
+          closeExpandedImage();
+          break;
+        case 'Enter':
+        case ' ': // Spacebar
+          e.preventDefault();
+          closeExpandedImage();
+          break;
+        default:
+          break;
       }
     };
 
     if (expandedImage) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleKeyDown);
+      // Focus the modal for keyboard accessibility
+      if (modalRef.current) {
+        modalRef.current.focus();
+      }
+      return () => document.removeEventListener('keydown', handleKeyDown);
     }
   }, [expandedImage, closeExpandedImage]);
 
@@ -308,29 +370,59 @@ const MasonryGallery = ({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            backgroundColor: isClosingModal ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.9)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            padding: isMobile() ? '40px 20px' : '20px', // More padding on mobile for better tap area
-            cursor: 'pointer'
+            padding: isMobile() ? '60px 30px' : '40px', // Larger padding for better click-to-close area
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
+            // Add visual hint for click-to-close
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none'
+            }
           }}
-          onClick={closeExpandedImage}
+          onClick={handleModalBackdropClick}
           onTouchEnd={handleModalTouch}
+          title="Click outside image to close"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Expanded gallery image"
+          tabIndex={0}
         >
           <div
             className="expanded-image"
             style={{
-              maxWidth: isMobile() ? '70vw' : '90vw', // Smaller on mobile for better tap area
-              maxHeight: isMobile() ? '50vh' : '90vh', // Smaller on mobile for better tap area
+              maxWidth: isMobile() ? '70vw' : '85vw', // Optimized for better click-to-close area
+              maxHeight: isMobile() ? '50vh' : '85vh', // Optimized for better click-to-close area
               position: 'relative',
               // Ensure minimum clickable area around image on mobile
-              margin: isMobile() ? '20px' : '10px'
+              margin: isMobile() ? '30px' : '20px',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
+              transition: 'transform 0.2s ease',
+              transform: isClosingModal ? 'scale(0.95)' : 'scale(1)'
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.stopImmediatePropagation();
+            }}
           >
             <img
               src={expandedImage.urls?.large || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
@@ -366,14 +458,27 @@ const MasonryGallery = ({
                 console.log('✅ Modal image loaded successfully');
               }}
             />
+            {/* Enhanced Close Button with Better Event Handling */}
             <button
-              onClick={closeExpandedImage}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                closeExpandedImage(e);
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                closeExpandedImage(e);
+              }}
+              aria-label="Close image"
               style={{
                 position: 'absolute',
-                top: '-10px',
-                right: '-10px',
-                width: '40px',
-                height: '40px',
+                top: isMobile() ? '10px' : '-10px',
+                right: isMobile() ? '10px' : '-10px',
+                width: isMobile() ? '44px' : '40px', // Larger touch target on mobile
+                height: isMobile() ? '44px' : '40px',
                 borderRadius: '50%',
                 background: 'rgba(0, 0, 0, 0.8)',
                 border: '2px solid rgba(255, 255, 255, 0.2)',
@@ -383,15 +488,20 @@ const MasonryGallery = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                zIndex: 10001, // Ensure it's above everything
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)'
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = 'rgba(255, 255, 255, 0.2)';
                 e.target.style.transform = 'scale(1.1)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.4)';
               }}
               onMouseLeave={(e) => {
                 e.target.style.background = 'rgba(0, 0, 0, 0.8)';
                 e.target.style.transform = 'scale(1)';
+                e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
               }}
             >
               ×
