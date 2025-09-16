@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import LayloIframe from './LayloIframe';
+import LayloIframe, { layloSDKManager } from './LayloIframe';
 
 /**
  * Shared Mobile Drawer Component
@@ -75,26 +75,12 @@ const MobileDrawer = ({
     return () => clearTimeout(timer);
   }, []);
 
-  // Add useEffect for Laylo SDK initialization
+  // Initialize Laylo SDK using centralized manager
   useEffect(() => {
-    // Load Laylo SDK script only once with proper error handling
-    if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
-      const layloScript = document.createElement('script');
-      layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
-      layloScript.async = true;
-      layloScript.defer = true; // 🔧 FIXED: Add defer to prevent blocking
-
-      // 🔧 FIXED: Add error handling to prevent crashes
-      layloScript.onerror = (error) => {
-        console.warn('⚠️ Laylo SDK failed to load in MobileDrawer:', error);
-      };
-
-      layloScript.onload = () => {
-        console.log('✅ Laylo SDK script loaded successfully in MobileDrawer');
-      };
-
-      document.head.appendChild(layloScript);
-    }
+    // Use the centralized SDK manager instead of manual script loading
+    layloSDKManager.loadSDK().catch(error => {
+      console.warn('⚠️ Laylo SDK initialization failed in MobileDrawer:', error);
+    });
   }, []);
 
   // 📱 ENHANCED: Proper mobile drawer scroll lock with position preservation

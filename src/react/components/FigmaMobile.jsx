@@ -6,7 +6,7 @@ import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
-import LayloIframe from './LayloIframe';
+import LayloIframe, { layloSDKManager } from './LayloIframe';
 import BrandedLoader from './BrandedLoader';
 
 // REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
@@ -572,26 +572,12 @@ const FigmaMobile = () => {
     });
   }, [trackEvent]);
 
-  // Add useEffect for Laylo SDK initialization
+  // Initialize Laylo SDK using centralized manager
   useEffect(() => {
-    // Load Laylo SDK script only once with proper error handling
-    if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
-      const layloScript = document.createElement('script');
-      layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
-      layloScript.async = true;
-      layloScript.defer = true; // 🔧 FIXED: Add defer to prevent blocking
-
-      // 🔧 FIXED: Add error handling to prevent crashes
-      layloScript.onerror = (error) => {
-        console.warn('⚠️ Laylo SDK failed to load in FigmaMobile:', error);
-      };
-
-      layloScript.onload = () => {
-        console.log('✅ Laylo SDK script loaded successfully in FigmaMobile');
-      };
-
-      document.head.appendChild(layloScript);
-    }
+    // Use the centralized SDK manager instead of manual script loading
+    layloSDKManager.loadSDK().catch(error => {
+      console.warn('⚠️ Laylo SDK initialization failed in FigmaMobile:', error);
+    });
   }, []);
 
   // Track navigation menu state to hide drawer when menu is open
