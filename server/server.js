@@ -707,6 +707,11 @@ app.get("/test-route", (req, res) => {
 // CRITICAL FIX: Add error handling for route registration
 try {
 
+    // Add maintenance mode middleware before render routes
+    console.log('🔍 Loading maintenance mode middleware...');
+    const { maintenanceMiddleware } = require('./middleware/maintenance.middleware');
+    app.use(maintenanceMiddleware);
+    console.log('✅ Maintenance mode middleware loaded successfully');
 
     console.log('🔍 Registering render routes...');
     app.use("/", global.appRoutes.render);

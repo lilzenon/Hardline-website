@@ -52,6 +52,15 @@ router.get(
     asyncHandler(renders.reactHomepage)
 );
 
+// Maintenance page - React version (always accessible)
+router.get(
+    "/maintenance",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
 // REMOVED: Handlebars homepage fallback - React-only serving to prevent template conflicts
 
 // Public events listing page for SEO
