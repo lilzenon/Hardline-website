@@ -599,14 +599,27 @@ const FigmaDesktop = () => {
     console.log(`🎯 Responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.8x, container: 1200px)`, scaledDimensions);
   });
 
-  // MEMORY OPTIMIZATION: Initialize Laylo SDK using centralized manager
+  // MEMORY OPTIMIZATION: Lazy load Laylo SDK with error handling - RESTORED ORIGINAL IMPLEMENTATION
   useEffect(() => {
-    // Import and use the centralized SDK manager
-    import('./LayloIframe').then(({ layloSDKManager }) => {
-      layloSDKManager.loadSDK().catch(error => {
-        console.warn('⚠️ Laylo SDK initialization failed in FigmaDesktop:', error);
-      });
-    });
+    // Load Laylo SDK script only once with proper error handling
+    if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
+      const layloScript = document.createElement('script');
+      layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
+      layloScript.async = true;
+      layloScript.defer = true; // Defer to prevent blocking
+
+      // Add error handling to prevent crashes
+      layloScript.onerror = (error) => {
+        console.warn('⚠️ Laylo SDK failed to load:', error);
+        // Don't let this crash the app
+      };
+
+      layloScript.onload = () => {
+        console.log('✅ Laylo SDK script loaded successfully');
+      };
+
+      document.head.appendChild(layloScript);
+    }
   }, []);
 
 
