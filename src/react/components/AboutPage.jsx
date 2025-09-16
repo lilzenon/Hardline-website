@@ -568,7 +568,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
           }}
         >
-          About Us
+          About
         </div>
 
           {/* Content Area - Dynamic About Content */}

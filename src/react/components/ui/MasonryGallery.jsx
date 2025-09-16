@@ -275,13 +275,18 @@ const MasonryGallery = ({
 
     .skeleton-shimmer {
       background: linear-gradient(90deg,
-        rgba(22, 22, 22, 0.8) 25%,
-        rgba(56, 56, 56, 0.4) 50%,
-        rgba(22, 22, 22, 0.8) 75%
+        rgba(22, 22, 22, 0.9) 25%,
+        rgba(56, 56, 56, 0.5) 50%,
+        rgba(22, 22, 22, 0.9) 75%
       );
       background-size: 200px 100%;
-      animation: shimmer 1.5s infinite;
+      animation: shimmer 2s ease-in-out infinite;
       border-radius: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
 
     .modal-backdrop {
@@ -311,19 +316,40 @@ const MasonryGallery = ({
           ref={galleryRef}
           className={`masonry-gallery-placeholder ${className}`}
           style={{
-            height: '400px',
-            background: 'rgba(22, 22, 22, 0.8)',
+            height: '300px', // Reduced height for better proportions
+            background: 'rgba(22, 22, 22, 0.9)', // Stronger glassmorphism
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             borderRadius: '16px',
-            border: '1px solid rgba(56, 56, 56, 0.3)',
+            border: '1px solid rgba(56, 56, 56, 0.2)', // Subtle border
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: 'rgba(255, 255, 255, 0.8)',
             fontFamily: 'Inter, sans-serif',
-            fontSize: '16px'
+            fontSize: '16px',
+            fontWeight: '500',
+            transition: 'all 0.3s ease', // Smooth transition when loading
+            opacity: 0,
+            animation: 'fadeInUp 0.6s ease-out 0.2s forwards' // Consistent with page animations
           }}
         >
-          Loading Gallery...
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              borderTop: '2px solid rgba(255, 255, 255, 0.8)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
+            <span>Loading Gallery...</span>
+          </div>
         </div>
       </>
     );
@@ -573,16 +599,21 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         position: 'relative',
         borderRadius: '12px',
         overflow: 'hidden',
-        background: 'rgba(22, 22, 22, 0.8)',
-        border: '1px solid rgba(56, 56, 56, 0.3)',
-        backdropFilter: 'blur(20px)',
+        background: isLoaded ? 'transparent' : 'rgba(22, 22, 22, 0.9)', // Only show background during loading
+        border: isLoaded ? 'none' : '1px solid rgba(56, 56, 56, 0.2)', // Hide border when loaded to prevent artifacts
+        backdropFilter: isLoaded ? 'none' : 'blur(20px)',
+        WebkitBackdropFilter: isLoaded ? 'none' : 'blur(20px)',
         cursor: onClick ? 'pointer' : 'default',
-        opacity: isLoaded ? 1 : 0.9,
-        animation: isLoaded ? 'fadeInScale 0.5s ease-out' : 'none'
+        opacity: isLoaded ? 1 : 0.95,
+        animation: isLoaded ? 'fadeInScale 0.5s ease-out' : 'none',
+        // Ensure consistent aspect ratio to prevent layout shift
+        aspectRatio: image.aspectRatio || (image.height && image.width ? `${image.width}/${image.height}` : '1/1.2'),
+        minHeight: 'auto', // Let aspect ratio control height
+        width: '100%'
       }}
       onClick={handleClick}
     >
-      {/* Modern Skeleton Loader */}
+      {/* Enhanced Skeleton Loader with Proper Aspect Ratio */}
       {!isLoaded && !imageError && (
         <div
           className="skeleton-shimmer"
@@ -596,13 +627,22 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minHeight: '200px'
+            aspectRatio: image.aspectRatio || (image.height && image.width ? `${image.width}/${image.height}` : '1/1.2'),
+            minHeight: 'auto', // Remove fixed height to prevent layout shift
+            background: 'rgba(22, 22, 22, 0.9)', // Stronger glassmorphism background
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            border: '1px solid rgba(56, 56, 56, 0.2)' // Subtle border matching design system
           }}
         >
           <div style={{
-            color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '14px',
-            fontFamily: 'Inter, sans-serif'
+            color: 'rgba(255, 255, 255, 0.6)',
+            fontSize: '12px',
+            fontFamily: 'Inter, sans-serif',
+            fontWeight: '500',
+            textAlign: 'center',
+            padding: '8px'
           }}>
             Loading...
           </div>
@@ -655,25 +695,35 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
             width: '100%',
             height: 'auto',
             display: 'block',
-            transition: 'opacity 0.3s ease',
-            opacity: isLoaded ? 1 : 0
+            transition: 'opacity 0.4s ease, transform 0.3s ease',
+            opacity: isLoaded ? 1 : 0,
+            objectFit: 'cover', // Ensure consistent image display
+            aspectRatio: 'inherit' // Inherit from container
           }}
         />
       ) : (
         <div
           style={{
             width: '100%',
-            height: '200px',
+            aspectRatio: image.aspectRatio || (image.height && image.width ? `${image.width}/${image.height}` : '1/1.2'),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'rgba(255, 255, 255, 0.5)',
+            color: 'rgba(255, 255, 255, 0.6)',
             fontFamily: 'Inter, sans-serif',
             fontSize: '14px',
-            background: 'rgba(22, 22, 22, 0.9)'
+            fontWeight: '500',
+            background: 'rgba(22, 22, 22, 0.9)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            border: '1px solid rgba(56, 56, 56, 0.2)'
           }}
         >
-          Image unavailable
+          <div style={{ textAlign: 'center', padding: '16px' }}>
+            <div style={{ marginBottom: '8px', fontSize: '18px', opacity: 0.7 }}>📷</div>
+            <div>Image unavailable</div>
+          </div>
         </div>
       )}
       
