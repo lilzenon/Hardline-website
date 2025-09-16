@@ -1975,10 +1975,10 @@ const FigmaMobile = () => {
             --mobile-bg-secondary: #000000;
             --mobile-bg-rgba-primary: 22, 22, 22;
             --mobile-bg-rgba-secondary: 0, 0, 0;
-            /* 🎬 OPTIMIZED: Modern animation timing based on best practices */
-            --animation-duration-fast: 200ms;
-            --animation-duration-normal: 300ms;
-            --animation-duration-slow: 400ms;
+            /* 🎬 OPTIMIZED: Modern animation timing based on best practices (25% faster) */
+            --animation-duration-fast: 150ms;
+            --animation-duration-normal: 225ms;
+            --animation-duration-slow: 300ms;
             --animation-easing-standard: cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --animation-easing-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
             --animation-easing-accelerate: cubic-bezier(0.4, 0.0, 1, 1);
