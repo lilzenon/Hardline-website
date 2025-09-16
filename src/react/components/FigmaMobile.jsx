@@ -2536,7 +2536,7 @@ const FigmaMobile = () => {
             background: rgb(21 21 21 / 80%) !important;
             backdrop-filter: blur(10px) !important;
             border-radius: 24px 24px 0px 0px !important;
-            transition: transform 0.12s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+            transition: transform 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94), height 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
             transform-origin: bottom center !important;
             /* 🚨 CRITICAL: Highest z-index to ensure drawer stays above all content */
             z-index: 9999 !important;
