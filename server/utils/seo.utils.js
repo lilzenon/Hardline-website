@@ -1,4 +1,6 @@
 const env = require("../env");
+const path = require('path');
+
 
 /**
  * SEO Utilities for BOUNCE2BOUNCE Event Platform
@@ -27,22 +29,46 @@ function generateMetaTags(options = {}) {
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
     const defaultImage = `${baseUrl}/images/og-image.png`;
 
-    // Handle absolute URLs for uploaded images
+    // Handle absolute URLs for uploaded images and normalize paths
     const getAbsoluteImageUrl = (imageUrl) => {
         if (!imageUrl) return defaultImage;
-        if (imageUrl.startsWith('http')) return imageUrl;
 
-        // For uploaded OG images or served variants, use the dashboard domain where they're stored
-        if (
-            imageUrl.startsWith('/uploads/') ||
-            imageUrl.startsWith('/static/uploads/') ||
-            imageUrl.startsWith('/api/images/serve/')
-        ) {
-            return `https://admin.b2b.click${imageUrl}`;
+        // If absolute URL, normalize the path and remap to admin domain when needed
+        try {
+            const u = new URL(imageUrl);
+            const normalizedPath = path.posix.normalize(u.pathname);
+            const needsAdmin =
+                normalizedPath.includes('/uploads/') ||
+                normalizedPath.includes('/static/uploads/') ||
+                normalizedPath.includes('/data/static/uploads/') ||
+                normalizedPath.includes('/api/images/serve/') ||
+                normalizedPath.includes('/og-images/');
+
+            if (needsAdmin) {
+                return `https://admin.b2b.click${normalizedPath}`;
+            }
+            return `${u.origin}${normalizedPath}`;
+        } catch {
+            // Not an absolute URL; proceed with relative handling
         }
 
-        // For static images and site-relative assets, use the main domain
-        return `${baseUrl}${imageUrl}`;
+        // Normalize relative paths to remove ../ segments
+        const normalized = path.posix.normalize(imageUrl);
+        const rel = normalized.startsWith('/') ? normalized : `/${normalized}`;
+
+        // Map dashboard-managed assets to admin domain
+        if (
+            rel.startsWith('/uploads/') ||
+            rel.startsWith('/static/uploads/') ||
+            rel.startsWith('/data/static/uploads/') ||
+            rel.startsWith('/api/images/serve/') ||
+            rel.includes('/og-images/')
+        ) {
+            return `https://admin.b2b.click${rel}`;
+        }
+
+        // Default to main domain
+        return `${baseUrl}${rel}`;
     };
 
     const metaImage = getAbsoluteImageUrl(image);
@@ -177,7 +203,7 @@ function generateEventMetaTags(event) {
 function generateEventStructuredData(event) {
     const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
     const eventDate = event.event_date ? new Date(event.event_date) : null;
-    
+
     const structuredData = {
         "@context": "https://schema.org",
         "@type": "Event",
@@ -239,7 +265,7 @@ function generateEventStructuredData(event) {
  */
 function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
     const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
-    
+
     const organizationData = {
         "@context": "https://schema.org",
         "@type": "Organization",
@@ -285,20 +311,20 @@ function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
  */
 function optimizeTextForSEO(text, maxLength = 160) {
     if (!text) return '';
-    
+
     // Remove HTML tags and extra whitespace
     const cleaned = text
         .replace(/<[^>]*>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
-    
+
     // Truncate if too long, ensuring we don't cut off mid-word
     if (cleaned.length <= maxLength) return cleaned;
-    
+
     const truncated = cleaned.substring(0, maxLength);
     const lastSpace = truncated.lastIndexOf(' ');
-    
-    return lastSpace > maxLength * 0.8 
+
+    return lastSpace > maxLength * 0.8
         ? truncated.substring(0, lastSpace) + '...'
         : truncated + '...';
 }
@@ -308,7 +334,7 @@ function optimizeTextForSEO(text, maxLength = 160) {
  */
 function generateBreadcrumbData(breadcrumbs) {
     const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
-    
+
     return {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
