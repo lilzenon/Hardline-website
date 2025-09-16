@@ -6,6 +6,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   const [contentLoaded, setContentLoaded] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0); // Force remount without changing URL
   const iframeRef = useRef(null);
   const contentCheckInterval = useRef(null);
   const loadTimeoutRef = useRef(null);
@@ -32,12 +33,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       ...(minimal && { minimal: 'true' })
     });
 
-    // Add cache-busting parameter for retries to ensure fresh load attempts
-    if (loadAttempts > 0) {
-      params.set('_retry', loadAttempts.toString());
-      params.set('_t', Date.now().toString());
-    }
-
+    // Preserve exact Laylo URL and parameters without modification
     return `https://embed.laylo.com/?${params.toString()}`;
   }, [dropId, color, theme, background, minimal, loadAttempts]);
 
@@ -138,6 +134,8 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     retryTimeoutRef.current = setTimeout(() => {
       if (mountedRef.current) {
         setIsRetrying(false);
+        // Force remount of the iframe element without modifying the URL
+        setIframeKey((k) => k + 1);
         loadStartTime.current = Date.now();
       }
     }, RETRY_DELAY_MS);
@@ -264,7 +262,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
         loadTimeoutRef.current = null;
       }
     };
-  }, [layloUrl, isRetrying, handleLoadTimeout, LOAD_TIMEOUT_MS]);
+  }, [layloUrl, isRetrying, iframeKey, handleLoadTimeout, LOAD_TIMEOUT_MS]);
 
   // Don't render if no dropId - PRESERVED ORIGINAL LOGIC
   if (!dropId) {
@@ -287,6 +285,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   // Render the iframe with enhanced reliability - PRESERVED VISUAL APPEARANCE
   return (
     <iframe
+      key={iframeKey}
       ref={iframeRef}
       id={`laylo-drop-${dropId}`}
       title="Laylo Signup"
@@ -296,18 +295,8 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       scrolling="no"
       onLoad={handleIframeLoad}
       onError={handleIframeError}
-      allow="web-share"
-      style={{
-        ...style,
-        // Preserve original visual behavior - no loading indicators
-        opacity: contentLoaded ? 1 : 0.8,
-        transition: 'opacity 0.15s ease-out',
-        minHeight: '60px'
-      }}
+      style={style}
       src={layloUrl}
-      // Enhanced attributes for reliability
-      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-      loading="eager"
     />
   );
 });
