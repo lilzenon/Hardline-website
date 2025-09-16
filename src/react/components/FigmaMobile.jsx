@@ -594,7 +594,9 @@ const FigmaMobile = () => {
     }
   }, []);
 
-  // REMOVED: showMenu state - now handled by MobileNavigation component
+  // Track navigation menu state to hide drawer when menu is open
+  const [navigationMenuOpen, setNavigationMenuOpen] = useState(false);
+
   // TEMPORARY: Keep old drawer state variables until migration is complete
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
@@ -2872,6 +2874,7 @@ const FigmaMobile = () => {
           currentPage={currentPage}
           scrollY={scrollY}
           onNavigate={handleNavigation}
+          onMenuToggle={setNavigationMenuOpen}
         />
 
         {/* OLD NAVIGATION REMOVED - Now using shared MobileNavigation component above */}
@@ -4389,15 +4392,17 @@ const FigmaMobile = () => {
       {/* REMOVED: Duplicate inline drawer implementation - now using MobileDrawer component */}
 
 
-      {/* REFACTORED: Using Shared Mobile Drawer Component */}
-      <MobileDrawer
-        contentRef={contentRef}
-        viewportContext={viewportContext}
-        onStateChange={(drawerState) => {
-          // Handle drawer state changes if needed
-          console.log('Drawer state changed:', drawerState);
-        }}
-      />
+      {/* REFACTORED: Using Shared Mobile Drawer Component - Hidden when navigation menu is open */}
+      {!navigationMenuOpen && (
+        <MobileDrawer
+          contentRef={contentRef}
+          viewportContext={viewportContext}
+          onStateChange={(drawerState) => {
+            // Handle drawer state changes if needed
+            console.log('Drawer state changed:', drawerState);
+          }}
+        />
+      )}
     </div>
 
     {/* Expanded Image Modal */}

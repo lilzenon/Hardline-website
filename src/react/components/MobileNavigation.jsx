@@ -6,22 +6,26 @@ import SocialMediaButtons from './SocialMediaButtons';
  * Extracted from FigmaMobile.jsx to eliminate code duplication
  * Maintains 100% identical styling, animations, and behavior
  */
-const MobileNavigation = ({ 
-  currentPage = 'events', 
-  scrollY = 0, 
-  onNavigate = () => {} 
+const MobileNavigation = ({
+  currentPage = 'events',
+  scrollY = 0,
+  onNavigate = () => {},
+  onMenuToggle = () => {} // New callback to notify parent of menu state changes
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
   // Toggle mobile menu
   const toggleMenu = () => {
-    setShowMenu(!showMenu);
+    const newMenuState = !showMenu;
+    setShowMenu(newMenuState);
+    onMenuToggle(newMenuState); // Notify parent of menu state change
   };
 
   // Handle navigation with menu close
   const handleNavigation = (path) => {
     onNavigate(path);
     setShowMenu(false);
+    onMenuToggle(false); // Notify parent that menu is closed
   };
 
   // 📱 ENHANCED: Body scroll lock when menu is expanded (iOS Safari support)
@@ -423,7 +427,10 @@ const MobileNavigation = ({
           // Prevent pointer events when hidden
           pointerEvents: showMenu ? 'auto' : 'none'
         }}
-        onClick={() => setShowMenu(false)}
+        onClick={() => {
+          setShowMenu(false);
+          onMenuToggle(false);
+        }}
       >
         {/* Navigation Bar in Menu */}
         <div
@@ -447,6 +454,7 @@ const MobileNavigation = ({
             onClick={(e) => {
               e.stopPropagation();
               setShowMenu(false);
+              onMenuToggle(false);
             }}
             style={{
               position: 'absolute',
