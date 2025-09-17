@@ -495,6 +495,7 @@ const MobileDrawer = ({
     }, 10000);
   }, [drawerFullyClosed]);
   // Precompute iframe visibility to avoid in-render IIFE and bundler TDZ issues
+  const iframeMounted = !drawerFullyClosed && !showVerification;
   const iframeVisible = drawerExpanded && !showVerification;
 
 
@@ -817,7 +818,7 @@ const MobileDrawer = ({
               transition: 'opacity 0.3s ease, height 0.3s ease'
             }}
           >
-            {iframeVisible && (
+            {iframeMounted && (
               <LayloIframeSimple
                 dropId="1nTsX"
                 color="ff0409"

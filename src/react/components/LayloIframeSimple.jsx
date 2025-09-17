@@ -128,11 +128,13 @@ const LayloIframeSimple = ({
   return (
     <iframe
       key={iframeKey}
+      id={`laylo-drop-${dropId}`}
       title="Laylo Signup"
       width="100%"
       height="100%"
       frameBorder="0"
       scrolling="no"
+      allow="web-share"
       onLoad={handleLoad}
       onError={handleError}
       style={style}
