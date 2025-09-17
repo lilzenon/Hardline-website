@@ -241,14 +241,8 @@ function createSecurityMiddleware() {
         // Hide X-Powered-By header
         hidePoweredBy: true,
 
-        // Permissions Policy to prevent web-share violations
-        permissionsPolicy: {
-            'web-share': ['self'], // Only allow web-share on same origin
-            'camera': [], // Disable camera access
-            'microphone': [], // Disable microphone access
-            'geolocation': ['self'], // Allow geolocation only on same origin
-            'payment': [] // Disable payment API
-        }
+        // Permissions Policy handled by permissionsPolicyHeaders() middleware below
+        // Avoid setting it here to prevent duplicate/overridden headers
     });
 }
 
@@ -291,12 +285,23 @@ function staticAssetHeaders() {
  */
 function permissionsPolicyHeaders() {
     return (req, res, next) => {
-        // Set Permissions Policy - Optimized to prevent console violations
-        // Removed encrypted-media to prevent YouTube iframe violations
-        // Only allow necessary permissions for third-party services
-        res.setHeader('Permissions-Policy',
-            'camera=(), microphone=(), geolocation=(), encrypted-media=(), web-share=(self "https://www.youtube.com" "https://youtube.com" "https://laylo.com" "https://www.laylo.com" "https://embed.laylo.com"), fullscreen=(self "https://www.youtube.com" "https://youtube.com"), autoplay=(self "https://www.youtube.com" "https://youtube.com")'
-        );
+        // Set Permissions-Policy to enable required features for trusted third-party embeds
+        // Allow minimal set of features for Laylo and YouTube while denying others by default
+        const policy = [
+            'camera=()',
+            'microphone=()',
+            // Geolocation allowed only on self (not used by Laylo, kept strict)
+            'geolocation=(self)',
+            // Autoplay/Encrypted Media/Fullscreen permitted for Laylo + YouTube embeds
+            'autoplay=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")',
+            'encrypted-media=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")',
+            'fullscreen=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")',
+            // Picture-in-picture used by YouTube on Safari
+            'picture-in-picture=(self "https://www.youtube.com" "https://youtube.com")',
+            // Web Share for Laylo flows and YouTube
+            'web-share=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")'
+        ].join(', ');
+        res.setHeader('Permissions-Policy', policy);
         next();
     };
 }

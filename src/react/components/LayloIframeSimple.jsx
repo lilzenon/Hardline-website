@@ -200,6 +200,7 @@ const LayloIframeSimple = ({
       frameBorder="0"
       scrolling="no"
       allow="web-share; clipboard-write; fullscreen; autoplay; encrypted-media; picture-in-picture"
+      allowFullScreen
       loading="eager"
       onLoad={handleLoad}
       onError={handleError}
