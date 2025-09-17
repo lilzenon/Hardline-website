@@ -139,7 +139,7 @@ export default defineConfig({
           }
 
           // Icon library (Lucide React is large)
-          if (p.includes('lucide-react')) {
+          if (id.includes('lucide-react')) {
             return 'icons';
           }
 
