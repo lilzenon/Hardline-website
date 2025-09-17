@@ -1,6 +1,6 @@
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
-import { Dither } from './ui/DitherShadcn';
+const Dither = lazy(() => import('./ui/DitherShadcn').then(m => ({ default: m.Dither })));
 import useLayloSDK from '../hooks/useLayloSDK';
 
 /**
@@ -159,17 +159,19 @@ export default function MaintenancePage() {
         height: '100%',
         zIndex: 1
       }}>
-        <Dither
-          waveSpeed={0.02}
-          waveFrequency={2.0}
-          waveAmplitude={0.25}
-          waveColor={[1.0, 1.0, 1.0]}
-          colorNum={2}
-          pixelSize={2}
-          enableMouseInteraction={false}
-          mouseRadius={1.0}
-          className="dither-background"
-        />
+        <Suspense fallback={<CSSFallbackBackground />}>
+          <Dither
+            waveSpeed={0.02}
+            waveFrequency={2.0}
+            waveAmplitude={0.25}
+            waveColor={[1.0, 1.0, 1.0]}
+            colorNum={2}
+            pixelSize={2}
+            enableMouseInteraction={false}
+            mouseRadius={1.0}
+            className="dither-background"
+          />
+        </Suspense>
       </div>
 
       {/* Minimalist Maintenance Card */}
