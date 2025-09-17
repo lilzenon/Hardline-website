@@ -14,10 +14,64 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   const mountedRef = useRef(true);
   const loadStartTime = useRef(null);
 
+  // One-time visibility check flag and observer for show-time refresh
+  const showCheckDoneRef = useRef(false);
+  const ioRef = useRef(null);
+
+  const ioSupportedRef = useRef(false);
+
   // Configuration constants for reliability
   const MAX_LOAD_ATTEMPTS = 3;
   const LOAD_TIMEOUT_MS = 8000; // 8 seconds for initial load
   const RETRY_DELAY_MS = 2000; // 2 seconds between retries
+  // IntersectionObserver: one-time show-time refresh if blank when >50% visible
+  useEffect(() => {
+    if (!iframeRef.current) return;
+
+    // Clean up any previous observer
+    if (ioRef.current) {
+      try { ioRef.current.disconnect(); } catch (_) {}
+      ioRef.current = null;
+    }
+
+    // Create observer for viewport visibility
+    try {
+      const el = iframeRef.current;
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !showCheckDoneRef.current) {
+            // Guard: only run once per mount
+            showCheckDoneRef.current = true;
+            // Allow drawer animation/layout to settle briefly
+            setTimeout(() => {
+              if (!checkIframeContent()) {
+                console.log('👁️ IO: iframe >50% visible but content missing — one-time refresh');
+                setContentLoaded(false);
+                setIsRetrying(false);
+                setIframeKey((k) => k + 1);
+                loadStartTime.current = Date.now();
+              }
+            }, 180);
+          }
+        });
+      }, { root: null, threshold: [0.5] });
+
+      observer.observe(el);
+      ioRef.current = observer;
+      ioSupportedRef.current = true;
+    } catch (e) {
+      ioSupportedRef.current = false;
+      console.warn('⚠️ IntersectionObserver unavailable or failed to initialize:', e);
+    }
+
+    return () => {
+      if (ioRef.current) {
+        try { ioRef.current.disconnect(); } catch (_) {}
+        ioRef.current = null;
+      }
+    };
+  }, [checkIframeContent, iframeKey]);
+
   const CONTENT_CHECK_INTERVAL_MS = 300; // Check every 300ms
   const MAX_CONTENT_CHECKS = 20; // Check for 6 seconds (300ms * 20)
 
@@ -107,6 +161,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       }
     }
 
+
     return false;
   }, []);
 
@@ -116,6 +171,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
 
     console.log(`🔄 Retrying iframe load (attempt ${loadAttempts + 1}/${MAX_LOAD_ATTEMPTS})`);
     setIsRetrying(true);
+    showCheckDoneRef.current = false;
     setLoadAttempts(prev => prev + 1);
     setIframeReady(false);
     setContentLoaded(false);
@@ -154,6 +210,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     }
 
     setIframeReady(true);
+
 
     // Laylo SDK notification - PRESERVED ORIGINAL IMPLEMENTATION
     if (typeof window !== 'undefined' && window.Laylo && window.Laylo.init) {
@@ -231,6 +288,9 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     if (!mountedRef.current) return;
     if (!visible) return;
 
+    // If IO is active and has not yet performed the one-time check, avoid double-handling here
+    if (ioSupportedRef.current && !showCheckDoneRef.current) return;
+
     if (loadAttempts === 0 && !contentLoaded && !isRetrying) {
       // Kick off load timing for first visibility
       loadStartTime.current = Date.now();
@@ -263,6 +323,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
         console.log('↩️ pageshow from bfcache — refreshing Laylo iframe');
         setContentLoaded(false);
         setIsRetrying(false);
+        showCheckDoneRef.current = false;
         setLoadAttempts(0);
         setIframeKey((k) => k + 1);
         loadStartTime.current = Date.now();
@@ -276,6 +337,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
             console.log('👁️ Tab became visible and content missing — refreshing iframe');
             setContentLoaded(false);
             setIsRetrying(false);
+            showCheckDoneRef.current = false;
             setIframeKey((k) => k + 1);
             loadStartTime.current = Date.now();
           }
@@ -321,6 +383,7 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     loadTimeoutRef.current = setTimeout(handleLoadTimeout, LOAD_TIMEOUT_MS);
 
     return () => {
+
       if (loadTimeoutRef.current) {
         clearTimeout(loadTimeoutRef.current);
         loadTimeoutRef.current = null;
