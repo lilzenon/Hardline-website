@@ -226,20 +226,69 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     }
   }, [loadAttempts, retryLoad, MAX_LOAD_ATTEMPTS]);
 
-  // When iframe becomes visible, ensure a load attempt occurs if not yet loaded
+  // When iframe becomes visible, verify content; trigger refresh or retry as needed
   useEffect(() => {
     if (!mountedRef.current) return;
-    if (visible && !contentLoaded && !isRetrying && loadAttempts === 0) {
+    if (!visible) return;
+
+    if (loadAttempts === 0 && !contentLoaded && !isRetrying) {
       // Kick off load timing for first visibility
       loadStartTime.current = Date.now();
-      // No need to force remount; the initial mount will proceed
     }
-    // If re-visible after hidden and content never confirmed, trigger a retry
-    if (visible && !contentLoaded && !isRetrying && loadAttempts > 0 && loadAttempts < MAX_LOAD_ATTEMPTS) {
-      console.log('👁️ Iframe became visible without content, triggering retry...');
-      retryLoad();
-    }
-  }, [visible, contentLoaded, isRetrying, loadAttempts, MAX_LOAD_ATTEMPTS, retryLoad]);
+
+    // Allow layout to settle before checking content presence
+    const t = setTimeout(() => {
+      const hasContent = checkIframeContent();
+      if (!hasContent) {
+        // If we "thought" it was loaded (e.g., after bfcache restore) but content isn't detectable, remount iframe
+        console.log('👁️ Visible but content not detected — refreshing iframe element');
+        setContentLoaded(false);
+        setIsRetrying(false);
+        setIframeKey((k) => k + 1); // remount with same URL
+        loadStartTime.current = Date.now();
+      } else if (!contentLoaded && !isRetrying && loadAttempts > 0 && loadAttempts < MAX_LOAD_ATTEMPTS) {
+        console.log('👁️ Iframe became visible without content, triggering retry...');
+        retryLoad();
+      }
+    }, 150);
+
+    return () => clearTimeout(t);
+  }, [visible, contentLoaded, isRetrying, loadAttempts, retryLoad, checkIframeContent, MAX_LOAD_ATTEMPTS]);
+
+  // Handle bfcache/tab visibility restores by refreshing iframe if blank
+  useEffect(() => {
+    const onPageShow = (e) => {
+      if (!mountedRef.current) return;
+      if (e && e.persisted) {
+        console.log('↩️ pageshow from bfcache — refreshing Laylo iframe');
+        setContentLoaded(false);
+        setIsRetrying(false);
+        setLoadAttempts(0);
+        setIframeKey((k) => k + 1);
+        loadStartTime.current = Date.now();
+      }
+    };
+    const onVisibility = () => {
+      if (!mountedRef.current) return;
+      if (document.visibilityState === 'visible' && visible) {
+        setTimeout(() => {
+          if (!checkIframeContent()) {
+            console.log('👁️ Tab became visible and content missing — refreshing iframe');
+            setContentLoaded(false);
+            setIsRetrying(false);
+            setIframeKey((k) => k + 1);
+            loadStartTime.current = Date.now();
+          }
+        }, 150);
+      }
+    };
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [visible, checkIframeContent]);
 
   // Load timeout handler
   const handleLoadTimeout = useCallback(() => {
