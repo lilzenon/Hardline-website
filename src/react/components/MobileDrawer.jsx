@@ -81,47 +81,6 @@ const MobileDrawer = ({
   }, []);
 
 
-  // 📱 ENHANCED: Proper mobile drawer scroll lock with position preservation
-  useEffect(() => {
-    const body = document.body;
-    const contentContainer = contentRef?.current;
-
-    if (drawerExpanded) {
-      // Store current scroll position before locking
-      const scrollY = window.scrollY;
-
-      // Apply body scroll lock with position preservation
-      body.classList.add('drawer-scroll-lock');
-      body.style.top = `-${scrollY}px`;
-
-      if (contentContainer) {
-        contentContainer.classList.add('drawer-active');
-      }
-    } else {
-      // Restore scroll position when unlocking
-      const scrollY = body.style.top;
-      body.classList.remove('drawer-scroll-lock');
-      body.style.top = '';
-
-      // Restore scroll position
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
-
-      if (contentContainer) {
-        contentContainer.classList.remove('drawer-active');
-      }
-    }
-
-    // Cleanup on unmount
-    return () => {
-      body.classList.remove('drawer-scroll-lock');
-      body.style.top = '';
-      if (contentContainer) {
-        contentContainer.classList.remove('drawer-active');
-      }
-    };
-  }, [drawerExpanded, contentRef]);
 
   // Enhanced state preservation including iframe content state
   const saveCurrentDrawerState = useCallback(() => {
@@ -708,9 +667,11 @@ const MobileDrawer = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onWheel={(e) => {
-          // ENHANCED: Complete scroll isolation for iOS Safari
-          e.stopPropagation();
-          e.preventDefault(); // Prevent scroll bleed on desktop/trackpad
+          if (drawerExpanded) {
+            // Prevent scroll bleed only when drawer is expanded
+            e.stopPropagation();
+            e.preventDefault();
+          }
         }}
         style={{
           height: getDrawerHeight(),
@@ -844,7 +805,7 @@ const MobileDrawer = ({
                 margin: '0px -20px 0 -20px',
                 cursor: 'pointer',
                 borderRadius: '8px',
-                overflow: 'hidden',
+                overflow: 'visible',
                 flexShrink: 0,
                 // Visibility control to avoid unmounting (prevents reload/blank states)
                 opacity: (!drawerFullyClosed && !showVerification) ? 1 : 0,
