@@ -24,6 +24,58 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
   const MAX_LOAD_ATTEMPTS = 3;
   const LOAD_TIMEOUT_MS = 8000; // 8 seconds for initial load
   const RETRY_DELAY_MS = 2000; // 2 seconds between retries
+  // Enhanced iframe content detection with multiple strategies
+  const checkIframeContent = useCallback(() => {
+    if (!iframeRef.current || !mountedRef.current) return false;
+
+    try {
+      // Strategy 1: Try to access iframe content (may fail due to CORS)
+      const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+
+      if (iframeDoc) {
+        // Look for Laylo-specific elements and general form elements
+        const layloElements = iframeDoc.querySelectorAll('[class*="laylo"], [id*="laylo"], input[type="tel"], input[placeholder*="phone"], form, button');
+        if (layloElements.length > 0) {
+          console.log('✅ Laylo content detected in iframe via DOM access');
+          return true;
+        }
+
+        // Check if document has meaningful content
+        const bodyContent = iframeDoc.body?.textContent?.trim();
+        if (bodyContent && bodyContent.length > 10) {
+          console.log('✅ Iframe has meaningful text content');
+          return true;
+        }
+      }
+    } catch (e) {
+      // CORS error is expected for cross-origin iframes
+      console.log('🔒 CORS restriction (expected), using fallback detection methods...');
+    }
+
+    // Strategy 2: Check iframe dimensions and properties
+    const iframe = iframeRef.current;
+    const rect = iframe.getBoundingClientRect();
+
+    // Check if iframe has reasonable dimensions
+    if (rect.height > 50 && rect.width > 100) {
+      console.log('✅ Iframe has content-like dimensions, likely loaded');
+      return true;
+    }
+
+    // Strategy 3: Check if iframe src is properly set and not about:blank
+    if (iframe.src && iframe.src !== 'about:blank' && iframe.src.includes('laylo.com')) {
+      // Additional heuristic: if enough time has passed, assume it's loaded
+      const timeSinceLoad = Date.now() - (loadStartTime.current || 0);
+      if (timeSinceLoad > 3000) { // 3 seconds
+        console.log('✅ Sufficient time passed with valid src, assuming loaded');
+        return true;
+      }
+    }
+
+
+    return false;
+  }, []);
+
   // IntersectionObserver: one-time show-time refresh if blank when >50% visible
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -113,57 +165,6 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
     };
   }, []);
 
-  // Enhanced iframe content detection with multiple strategies
-  const checkIframeContent = useCallback(() => {
-    if (!iframeRef.current || !mountedRef.current) return false;
-
-    try {
-      // Strategy 1: Try to access iframe content (may fail due to CORS)
-      const iframeDoc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
-
-      if (iframeDoc) {
-        // Look for Laylo-specific elements and general form elements
-        const layloElements = iframeDoc.querySelectorAll('[class*="laylo"], [id*="laylo"], input[type="tel"], input[placeholder*="phone"], form, button');
-        if (layloElements.length > 0) {
-          console.log('✅ Laylo content detected in iframe via DOM access');
-          return true;
-        }
-
-        // Check if document has meaningful content
-        const bodyContent = iframeDoc.body?.textContent?.trim();
-        if (bodyContent && bodyContent.length > 10) {
-          console.log('✅ Iframe has meaningful text content');
-          return true;
-        }
-      }
-    } catch (e) {
-      // CORS error is expected for cross-origin iframes
-      console.log('🔒 CORS restriction (expected), using fallback detection methods...');
-    }
-
-    // Strategy 2: Check iframe dimensions and properties
-    const iframe = iframeRef.current;
-    const rect = iframe.getBoundingClientRect();
-
-    // Check if iframe has reasonable dimensions
-    if (rect.height > 50 && rect.width > 100) {
-      console.log('✅ Iframe has content-like dimensions, likely loaded');
-      return true;
-    }
-
-    // Strategy 3: Check if iframe src is properly set and not about:blank
-    if (iframe.src && iframe.src !== 'about:blank' && iframe.src.includes('laylo.com')) {
-      // Additional heuristic: if enough time has passed, assume it's loaded
-      const timeSinceLoad = Date.now() - (loadStartTime.current || 0);
-      if (timeSinceLoad > 3000) { // 3 seconds
-        console.log('✅ Sufficient time passed with valid src, assuming loaded');
-        return true;
-      }
-    }
-
-
-    return false;
-  }, []);
 
   // Retry mechanism for failed loads
   const retryLoad = useCallback(() => {
