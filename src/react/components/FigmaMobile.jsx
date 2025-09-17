@@ -3499,8 +3499,8 @@ const FigmaMobile = () => {
             </div>
           )}
 
-          {/* 🚀 ENHANCED: Fallback Hero when no featured events - only in "ALL" mode */}
-          {showAllEvents && filteredFeaturedEvents.length === 0 && (
+          {/* 🚀 ENHANCED: Fallback Hero when no featured events - only in "Next" mode and only if there ARE upcoming homepage events */}
+          {showAllEvents && filteredFeaturedEvents.length === 0 && filteredHomepageEvents.length > 0 && (
             <div
               className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
               style={{
