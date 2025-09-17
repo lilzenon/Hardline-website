@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import LayloIframe from './LayloIframe';
+import LayloIframeSimple from './LayloIframeSimple';
 import useLayloSDK from '../hooks/useLayloSDK';
 
 
@@ -799,7 +799,7 @@ const MobileDrawer = ({
             </div>
           )}
 
-          {/* Laylo Integration - Always mounted for state persistence; visibility toggled via CSS */}
+          {/* Laylo Integration - Reliability-first: unmount when hidden; remount fresh when shown */}
           <div
             onClick={handleIframeClick}
             aria-hidden={!iframeVisible}
@@ -811,33 +811,33 @@ const MobileDrawer = ({
               overflow: 'visible',
               zIndex: 2,
               flexShrink: 0,
-              // Visibility control to avoid unmounting (prevents reload/blank states)
               opacity: iframeVisible ? 1 : 0,
-              // Keep a non-zero height even when hidden to avoid zero-measure init issues
               height: iframeVisible ? (iframeExpanded ? '200px' : '160px') : 40,
               pointerEvents: iframeVisible ? 'auto' : 'none',
               transition: 'opacity 0.3s ease, height 0.3s ease'
             }}
           >
-            <LayloIframe
-              dropId="1nTsX"
-              color="ff0409"
-              theme="dark"
-              background="solid"
-              minimal={true}
-              visible={iframeVisible}
-              style={{
-                width: '100%',
-                height: '100%', // Match container height for smooth transitions
-                border: 'none',
-                borderRadius: '8px',
-                background: 'transparent',
-                display: 'block'
-              }}
-            />
+            {iframeVisible && (
+              <LayloIframeSimple
+                dropId="1nTsX"
+                color="ff0409"
+                theme="dark"
+                background="solid"
+                minimal={true}
+                visible={true}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  borderRadius: '8px',
+                  background: 'transparent',
+                  display: 'block'
+                }}
+              />
+            )}
           </div>
-          {/* 🔧 DEBUG: Log when Laylo iframe is visually hidden (but still mounted) */}
-          {(drawerFullyClosed || showVerification) && console.log('🚫 Laylo iframe visually hidden (mounted):', { drawerFullyClosed, showVerification })}
+          {/* 🔧 DEBUG: Log when Laylo iframe is hidden (unmounted for reliability) */}
+          {(drawerFullyClosed || showVerification) && console.log('🚫 Laylo iframe hidden: unmounted for reliability', { drawerFullyClosed, showVerification })}
         </div>
       </div>
     </>

@@ -6,7 +6,7 @@ import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
-import LayloIframe from './LayloIframe';
+
 import BrandedLoader from './BrandedLoader';
 
 // REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
