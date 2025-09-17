@@ -191,11 +191,11 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'nowrap',
-            justifyContent: 'center', // 🚨 FIX: Center skeleton buttons with consistent gap
+            justifyContent: isDesktop ? 'center' : 'space-between',
             alignItems: 'center',
-            gap: isDesktop ? '20px' : '10px', // 🚨 FIX: Fixed gap between skeleton buttons
-            width: 'auto', // 🚨 FIX: Auto width for skeleton container
-            maxWidth: '100%', // 🚨 FIX: Allow natural sizing
+            gap: isDesktop ? '20px' : '10px',
+            width: isDesktop ? 'auto' : '100%',
+            maxWidth: '100%',
             padding: '0',
             boxSizing: 'border-box'
           }}
@@ -263,12 +263,12 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'nowrap', // Prevent stacking
-          justifyContent: 'center', // 🚨 FIX: Center buttons with consistent gap instead of space-between
+          justifyContent: isDesktop ? 'center' : 'space-between',
           alignItems: 'center',
-          gap: isDesktop ? '20px' : '10px', // 🚨 FIX: Fixed gap between buttons for consistent spacing
-          width: 'auto', // 🚨 FIX: Auto width to fit content with consistent gaps
-          maxWidth: '100%', // 🚨 FIX: Allow natural sizing with max constraint
-          padding: '0', // 🚨 FIX: Remove padding to align buttons with iframe edges
+          gap: isDesktop ? '20px' : '10px',
+          width: isDesktop ? 'auto' : '100%',
+          maxWidth: '100%',
+          padding: '0',
           boxSizing: 'border-box'
         }}
       >
