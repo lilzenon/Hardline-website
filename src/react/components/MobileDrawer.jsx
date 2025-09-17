@@ -835,17 +835,22 @@ const MobileDrawer = ({
             </div>
           )}
 
-          {/* Laylo Integration - RESTORED to working configuration */}
-          {!drawerFullyClosed && !showVerification && isLayloReady && (
+          {/* Laylo Integration - Always mounted for state persistence; visibility toggled via CSS */}
+          {isLayloReady && (
             <div
               onClick={handleIframeClick}
               style={{
-                width: 'calc(100% + 40px)', // Extend container to full drawer width
-                margin: '0px -20px 0 -20px', // Minimal top margin to bring iframe very close to text
+                width: 'calc(100% + 40px)',
+                margin: '0px -20px 0 -20px',
                 cursor: 'pointer',
                 borderRadius: '8px',
-                overflow: 'visible',
-                flexShrink: 0
+                overflow: 'hidden',
+                flexShrink: 0,
+                // Visibility control to avoid unmounting (prevents reload/blank states)
+                opacity: (!drawerFullyClosed && !showVerification) ? 1 : 0,
+                height: (!drawerFullyClosed && !showVerification) ? (iframeExpanded ? '200px' : '160px') : 1,
+                pointerEvents: (!drawerFullyClosed && !showVerification) ? 'auto' : 'none',
+                transition: 'opacity 0.3s ease, height 0.3s ease'
               }}
             >
               <LayloIframe
@@ -854,21 +859,20 @@ const MobileDrawer = ({
                 theme="dark"
                 background="solid"
                 minimal={true}
+                visible={!drawerFullyClosed && !showVerification}
                 style={{
-                  width: '100%', // Full width of the extended container
-                  height: iframeExpanded ? '200px' : '160px',
+                  width: '100%',
+                  height: '100%', // Match container height for smooth transitions
                   border: 'none',
                   borderRadius: '8px',
                   background: 'transparent',
-                  display: 'block',
-                  transition: 'opacity 0.3s ease, height 0.3s ease',
-                  pointerEvents: 'auto'
+                  display: 'block'
                 }}
               />
             </div>
           )}
-          {/* 🔧 DEBUG: Log when Laylo iframe is hidden */}
-          {(drawerFullyClosed || showVerification) && console.log('🚫 Laylo iframe hidden:', { drawerFullyClosed, showVerification })}
+          {/* 🔧 DEBUG: Log when Laylo iframe is visually hidden (but still mounted) */}
+          {(drawerFullyClosed || showVerification) && console.log('🚫 Laylo iframe visually hidden (mounted):', { drawerFullyClosed, showVerification })}
         </div>
       </div>
     </>

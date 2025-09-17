@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 
 // Robust Laylo Iframe Component with Enhanced Loading Reliability
-const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {} }) => {
+const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background = 'solid', minimal = true, style = {}, visible = true }) => {
   const [iframeReady, setIframeReady] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
   const [loadAttempts, setLoadAttempts] = useState(0);
@@ -225,6 +225,21 @@ const LayloIframe = memo(({ dropId, color = 'ff0409', theme = 'dark', background
       setContentLoaded(true);
     }
   }, [loadAttempts, retryLoad, MAX_LOAD_ATTEMPTS]);
+
+  // When iframe becomes visible, ensure a load attempt occurs if not yet loaded
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    if (visible && !contentLoaded && !isRetrying && loadAttempts === 0) {
+      // Kick off load timing for first visibility
+      loadStartTime.current = Date.now();
+      // No need to force remount; the initial mount will proceed
+    }
+    // If re-visible after hidden and content never confirmed, trigger a retry
+    if (visible && !contentLoaded && !isRetrying && loadAttempts > 0 && loadAttempts < MAX_LOAD_ATTEMPTS) {
+      console.log('👁️ Iframe became visible without content, triggering retry...');
+      retryLoad();
+    }
+  }, [visible, contentLoaded, isRetrying, loadAttempts, MAX_LOAD_ATTEMPTS, retryLoad]);
 
   // Load timeout handler
   const handleLoadTimeout = useCallback(() => {
