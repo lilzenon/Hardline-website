@@ -26,28 +26,28 @@ function makeHttpRequest(url) {
       res.on('end', () => {
         try {
           if (res.statusCode !== 200) {
-            console.warn(`⚠️ Maintenance API returned ${res.statusCode}, assuming not in maintenance`);
-            resolve({ maintenance_mode: false });
+            console.warn(`⚠️ Maintenance API returned ${res.statusCode}`);
+            reject(new Error(`API returned status ${res.statusCode}`));
             return;
           }
           const jsonData = JSON.parse(data);
           resolve(jsonData);
         } catch (e) {
-          console.warn('⚠️ Failed to parse maintenance API response, assuming not in maintenance');
-          resolve({ maintenance_mode: false });
+          console.warn('⚠️ Failed to parse maintenance API response');
+          reject(new Error(`Failed to parse API response: ${e.message}`));
         }
       });
     });
 
     req.on('error', (error) => {
       console.warn('⚠️ Maintenance API request failed:', error.message);
-      resolve({ maintenance_mode: false });
+      reject(error);
     });
 
     req.on('timeout', () => {
       console.warn('⚠️ Maintenance API request timed out');
       req.destroy();
-      resolve({ maintenance_mode: false });
+      reject(new Error('Request timeout'));
     });
 
     req.end();
@@ -74,7 +74,7 @@ let maintenanceCache = {
 };
 
 /**
- * Fetch maintenance status from the dashboard API
+ * Fetch maintenance status from the dashboard API with database fallback
  */
 async function fetchMaintenanceStatus() {
   try {
@@ -91,19 +91,100 @@ async function fetchMaintenanceStatus() {
 
     console.log(`🔍 Checking maintenance status from: ${maintenanceUrl}`);
 
-    const data = await makeHttpRequest(maintenanceUrl);
-    
-    // Update cache
-    maintenanceCache.status = data;
-    maintenanceCache.lastChecked = now;
+    try {
+      const data = await makeHttpRequest(maintenanceUrl);
 
-    console.log(`✅ Maintenance status: ${data.maintenance_mode ? 'ENABLED' : 'DISABLED'}`);
-    return data;
+      // Update cache
+      maintenanceCache.status = data;
+      maintenanceCache.lastChecked = now;
+
+      console.log(`✅ Maintenance status from API: ${data.maintenance_mode ? 'ENABLED' : 'DISABLED'}`);
+      return data;
+    } catch (apiError) {
+      console.warn('⚠️ Dashboard API request failed, checking local database fallback:', apiError.message);
+
+      // Fallback to local database check
+      const localStatus = await fetchMaintenanceStatusFromDatabase();
+
+      // Update cache with local status
+      maintenanceCache.status = localStatus;
+      maintenanceCache.lastChecked = now;
+
+      console.log(`✅ Maintenance status from local DB: ${localStatus.maintenance_mode ? 'ENABLED' : 'DISABLED'}`);
+      return localStatus;
+    }
 
   } catch (error) {
-    console.warn('⚠️ Failed to fetch maintenance status:', error.message);
-    // On error, assume not in maintenance mode to avoid breaking the site
+    console.error('❌ Failed to fetch maintenance status from both API and database:', error.message);
+    // Final fallback - assume not in maintenance mode to avoid breaking the site
     return { maintenance_mode: false };
+  }
+}
+
+/**
+ * Fetch maintenance status from local database as fallback
+ */
+async function fetchMaintenanceStatusFromDatabase() {
+  try {
+    const knex = require('../knex');
+
+    // Try to get from seo_settings table first (primary source)
+    const seoSettings = await knex('seo_settings').first();
+
+    if (seoSettings) {
+      return {
+        success: true,
+        maintenance_mode: seoSettings.maintenance_mode || false,
+        maintenance_message: seoSettings.maintenance_message || 'We are currently performing scheduled maintenance. Please check back soon.',
+        maintenance_title: seoSettings.maintenance_title || 'Site Under Maintenance',
+        estimated_downtime: seoSettings.maintenance_estimated_time || '2 hours',
+        contact_information: 'support@bounce2bounce.com',
+        timestamp: new Date().toISOString(),
+        source: 'local_database'
+      };
+    }
+
+    // Fallback to homepage_settings table if seo_settings doesn't exist
+    const homepageSettings = await knex('homepage_settings').first();
+
+    if (homepageSettings) {
+      return {
+        success: true,
+        maintenance_mode: homepageSettings.maintenance_mode || false,
+        maintenance_message: homepageSettings.maintenance_message || 'We are currently performing scheduled maintenance. Please check back soon.',
+        maintenance_title: homepageSettings.maintenance_title || 'Site Under Maintenance',
+        estimated_downtime: homepageSettings.estimated_downtime || '2 hours',
+        contact_information: 'support@bounce2bounce.com',
+        timestamp: new Date().toISOString(),
+        source: 'local_database'
+      };
+    }
+
+    // If no settings found, return default (maintenance disabled)
+    return {
+      success: true,
+      maintenance_mode: false,
+      maintenance_message: 'We are currently performing scheduled maintenance. Please check back soon.',
+      maintenance_title: 'Site Under Maintenance',
+      estimated_downtime: '2 hours',
+      contact_information: 'support@bounce2bounce.com',
+      timestamp: new Date().toISOString(),
+      source: 'default'
+    };
+
+  } catch (dbError) {
+    console.error('❌ Database fallback failed:', dbError.message);
+    // Return safe default
+    return {
+      success: false,
+      maintenance_mode: false,
+      maintenance_message: 'We are currently performing scheduled maintenance. Please check back soon.',
+      maintenance_title: 'Site Under Maintenance',
+      estimated_downtime: '2 hours',
+      contact_information: 'support@bounce2bounce.com',
+      timestamp: new Date().toISOString(),
+      source: 'error_fallback'
+    };
   }
 }
 
@@ -217,7 +298,7 @@ async function maintenanceMiddleware(req, res, next) {
 }
 
 /**
- * Clear maintenance cache (useful for testing)
+ * Clear maintenance cache (useful for testing and immediate updates)
  */
 function clearMaintenanceCache() {
   maintenanceCache = {
@@ -225,10 +306,33 @@ function clearMaintenanceCache() {
     lastChecked: 0,
     cacheDuration: 30000
   };
+  console.log('🗑️ Maintenance cache cleared');
+}
+
+/**
+ * Force refresh maintenance status (bypasses cache)
+ */
+async function refreshMaintenanceStatus() {
+  try {
+    console.log('🔄 Force refreshing maintenance status...');
+
+    // Clear cache first
+    clearMaintenanceCache();
+
+    // Fetch fresh status
+    const status = await fetchMaintenanceStatus();
+
+    console.log(`✅ Maintenance status refreshed: ${status.maintenance_mode ? 'ENABLED' : 'DISABLED'}`);
+    return status;
+  } catch (error) {
+    console.error('❌ Failed to refresh maintenance status:', error.message);
+    return { maintenance_mode: false };
+  }
 }
 
 module.exports = {
   maintenanceMiddleware,
   clearMaintenanceCache,
+  refreshMaintenanceStatus,
   fetchMaintenanceStatus
 };

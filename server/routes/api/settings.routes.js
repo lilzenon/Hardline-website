@@ -46,6 +46,32 @@ router.get("/maintenance-status", async (req, res) => {
   }
 });
 
+// POST /api/settings/maintenance-refresh
+// Force refresh maintenance status cache (for immediate updates)
+router.post("/maintenance-refresh", async (req, res) => {
+  try {
+    console.log('🔄 Maintenance cache refresh requested');
+
+    const { refreshMaintenanceStatus } = require('../../middleware/maintenance.middleware');
+    const status = await refreshMaintenanceStatus();
+
+    res.json({
+      success: true,
+      message: 'Maintenance status cache refreshed',
+      status: status,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('❌ Failed to refresh maintenance cache:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to refresh maintenance status',
+      message: error.message
+    });
+  }
+});
+
 // POST /api/analytics/track - Analytics tracking endpoint
 router.post('/analytics/track', (req, res) => {
     // Return 204 No Content for analytics tracking
