@@ -797,41 +797,45 @@ const MobileDrawer = ({
           )}
 
           {/* Laylo Integration - Always mounted for state persistence; visibility toggled via CSS */}
-          {isLayloReady && (
-            <div
-              onClick={handleIframeClick}
-              style={{
-                width: 'calc(100% + 40px)',
-                margin: '0px -20px 0 -20px',
-                cursor: 'pointer',
-                borderRadius: '8px',
-                overflow: 'visible',
-                flexShrink: 0,
-                // Visibility control to avoid unmounting (prevents reload/blank states)
-                opacity: (!drawerFullyClosed && !showVerification) ? 1 : 0,
-                height: (!drawerFullyClosed && !showVerification) ? (iframeExpanded ? '200px' : '160px') : 1,
-                pointerEvents: (!drawerFullyClosed && !showVerification) ? 'auto' : 'none',
-                transition: 'opacity 0.3s ease, height 0.3s ease'
-              }}
-            >
-              <LayloIframe
-                dropId="1nTsX"
-                color="ff0409"
-                theme="dark"
-                background="solid"
-                minimal={true}
-                visible={!drawerFullyClosed && !showVerification}
+          {(() => {
+            const iframeVisible = drawerExpanded && !showVerification;
+            return (
+              <div
+                onClick={handleIframeClick}
+                aria-hidden={!iframeVisible}
                 style={{
-                  width: '100%',
-                  height: '100%', // Match container height for smooth transitions
-                  border: 'none',
+                  width: 'calc(100% + 40px)',
+                  margin: '0px -20px 0 -20px',
+                  cursor: 'pointer',
                   borderRadius: '8px',
-                  background: 'transparent',
-                  display: 'block'
+                  overflow: 'visible',
+                  flexShrink: 0,
+                  // Visibility control to avoid unmounting (prevents reload/blank states)
+                  opacity: iframeVisible ? 1 : 0,
+                  height: iframeVisible ? (iframeExpanded ? '200px' : '160px') : 0,
+                  pointerEvents: iframeVisible ? 'auto' : 'none',
+                  transition: 'opacity 0.3s ease, height 0.3s ease'
                 }}
-              />
-            </div>
-          )}
+              >
+                <LayloIframe
+                  dropId="1nTsX"
+                  color="ff0409"
+                  theme="dark"
+                  background="solid"
+                  minimal={true}
+                  visible={iframeVisible}
+                  style={{
+                    width: '100%',
+                    height: '100%', // Match container height for smooth transitions
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: 'transparent',
+                    display: 'block'
+                  }}
+                />
+              </div>
+            );
+          })()}
           {/* 🔧 DEBUG: Log when Laylo iframe is visually hidden (but still mounted) */}
           {(drawerFullyClosed || showVerification) && console.log('🚫 Laylo iframe visually hidden (mounted):', { drawerFullyClosed, showVerification })}
         </div>
