@@ -137,8 +137,9 @@ export default function MaintenancePage() {
     <div style={{
       position: 'relative',
       width: '100vw',
-      height: '100vh',
+      height: '100dvh',
       overflow: 'hidden',
+      overscrollBehavior: 'none',
       background: '#000000',
       fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
       display: 'flex',
@@ -149,12 +150,15 @@ export default function MaintenancePage() {
     }}>
       {/* Dither Background Effect with Error Boundary */}
       <div style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
+        right: 0,
+        bottom: 0,
         width: '100%',
         height: '100%',
-        zIndex: 1
+        zIndex: 1,
+        pointerEvents: 'none'
       }}>
         <Suspense fallback={null}>
           <Dither
@@ -180,14 +184,15 @@ export default function MaintenancePage() {
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '20px 0 40px 0',
+        padding: '20px 0 8px 0',
         borderRadius: '16px',
         background: 'rgba(22, 22, 22, 0.6)',
         backdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
         maxWidth: '400px',
-        width: '90%'
+        width: '90%',
+        marginTop: '100px'
       }}>
         {/* BOUNCE2BOUNCE Logo */}
         <div style={{
@@ -196,6 +201,7 @@ export default function MaintenancePage() {
           justifyContent: 'center',
           marginBottom: '24px'
         }}>
+
           <img
             src="/images/figma-exact/b2b-logo-nav.svg"
             alt="BOUNCE2BOUNCE"
@@ -204,8 +210,11 @@ export default function MaintenancePage() {
               width: 'auto',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              opacity: 0.95,
-              filter: 'brightness(0) invert(1)'
+              opacity: 0.72,
+              filter: 'brightness(0) invert(1) contrast(1.05) drop-shadow(0 0 2px rgba(255,255,255,0.28)) drop-shadow(0 0 10px rgba(255,255,255,0.14)) drop-shadow(0 6px 14px rgba(0,0,0,0.45))',
+              WebkitFilter: 'brightness(0) invert(1) contrast(1.05) drop-shadow(0 0 2px rgba(255,255,255,0.28)) drop-shadow(0 0 10px rgba(255,255,255,0.14)) drop-shadow(0 6px 14px rgba(0,0,0,0.45))',
+              mixBlendMode: 'screen',
+              transform: 'translateZ(0)'
             }}
             onClick={handleGoHome}
             onError={(e) => {
@@ -224,13 +233,28 @@ export default function MaintenancePage() {
             BOUNCE2BOUNCE
           </div>
         </div>
+        {/* Title above Laylo iframe */}
+        <div style={{
+          margin: 0,
+          padding: 0,
+          width: '100%',
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+          fontWeight: 600,
+          fontSize: '24px',
+          lineHeight: 1.25,
+          color: 'rgba(255, 255, 255, 0.72)',
+          textAlign: 'center'
+        }}>
+          ⚠️Under Construction⚠️
+        </div>
+
 
         {/* Laylo Iframe */}
         <div style={{
           width: '100%',
           borderRadius: '8px',
           overflow: 'hidden',
-          minHeight: '280px'
+          minHeight: '160px'
         }}>
           {/* Laylo iframe per requested implementation */}
           <iframe
@@ -240,7 +264,7 @@ export default function MaintenancePage() {
             scrolling="no"
             allow="web-share"
             allowtransparency="true"
-            style={{ width: '1px', minWidth: '100%', maxWidth: '1000px', border: 'none' }}
+            style={{ width: '1px', minWidth: '100%', maxWidth: '1000px', height: '160px', border: 'none', marginTop: '-6px' }}
             src="https://embed.laylo.com?dropId=1nTsX&color=f60509&minimal=true&theme=dark&background=transparent"
             title="Stay updated with BOUNCE2BOUNCE"
           />
