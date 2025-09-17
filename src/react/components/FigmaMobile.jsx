@@ -4025,15 +4025,45 @@ const FigmaMobile = () => {
                 >
                   No upcoming events
                 </div>
-                <div
+                <button
+                  type="button"
+                  aria-label="View Past Events"
+                  onClick={() => setShowAllEvents(false)}
                   style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '12px 16px',
+                    minHeight: '44px',
+                    borderRadius: '14px',
+                    fontFamily: 'Inter',
                     fontSize: '14px',
-                    fontWeight: '400',
-                    opacity: 0.6
+                    fontWeight: 600,
+                    color: '#FFF',
+                    background: 'rgba(22, 22, 22, 0.60)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)';
+                  }}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
                   }}
                 >
-                  Check back soon for exciting events!
-                </div>
+                  View Past Events
+                </button>
               </div>
             )}
 
