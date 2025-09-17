@@ -1,7 +1,7 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
 const Dither = lazy(() => import('./ui/DitherShadcn').then(m => ({ default: m.Dither })));
-import useLayloSDK from '../hooks/useLayloSDK';
+
 
 /**
  * Minimalist Maintenance Page with Dither Effect Background
@@ -17,45 +17,7 @@ import useLayloSDK from '../hooks/useLayloSDK';
  * - Robust error handling
  */
 
-// CSS-only fallback background that matches the dither effect
-const CSSFallbackBackground = () => (
-  <div style={{
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: 1,
-    background: `
-      radial-gradient(circle at 20% 30%, rgba(128, 128, 128, 0.1) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, rgba(128, 128, 128, 0.08) 0%, transparent 50%),
-      radial-gradient(circle at 40% 80%, rgba(128, 128, 128, 0.06) 0%, transparent 50%),
-      linear-gradient(45deg, #000000 0%, #0a0a0a 25%, #000000 50%, #0a0a0a 75%, #000000 100%)
-    `,
-    backgroundSize: '400px 400px, 600px 600px, 300px 300px, 20px 20px',
-    animation: 'cssWaveAnimation 8s ease-in-out infinite alternate'
-  }}>
-    <style>{`
-      @keyframes cssWaveAnimation {
-        0% {
-          opacity: 0.8;
-          filter: hue-rotate(0deg) brightness(1);
-          background-position: 0% 0%, 100% 100%, 50% 50%, 0% 0%;
-        }
-        50% {
-          opacity: 0.6;
-          filter: hue-rotate(5deg) brightness(1.1);
-          background-position: 20% 20%, 80% 80%, 30% 70%, 10% 10%;
-        }
-        100% {
-          opacity: 0.7;
-          filter: hue-rotate(10deg) brightness(0.9);
-          background-position: 40% 10%, 60% 90%, 70% 30%, 20% 20%;
-        }
-      }
-    `}</style>
-  </div>
-);
+
 
 // Error boundary specifically for the Dither component
 class DitherErrorBoundary extends React.Component {
@@ -119,7 +81,8 @@ class DitherErrorBoundary extends React.Component {
 
 export default function MaintenancePage() {
   const [ditherFailed, setDitherFailed] = useState(false);
-  const isLayloReady = useLayloSDK();
+  const [sdkLoaded, setSdkLoaded] = useState(false);
+
 
   // Log environment info in production for debugging
   useEffect(() => {
@@ -128,6 +91,39 @@ export default function MaintenancePage() {
       logEnvironmentInfo();
     }
   }, []);
+
+  // Ensure Laylo SDK loads reliably in the background (no UI dependency)
+  useEffect(() => {
+    const SDK_SRC = 'https://embed.laylo.com/laylo-sdk.js';
+    let retries = 0;
+    let aborted = false;
+
+    const ensureScript = () => {
+      if (aborted) return;
+      // If already present, nothing to do
+      const existing = Array.from(document.scripts).some((s) => s.src && s.src.includes('embed.laylo.com/laylo-sdk.js'));
+      if (existing) return;
+
+      const s = document.createElement('script');
+      s.src = SDK_SRC;
+      s.async = true;
+      s.defer = true;
+      s.onload = () => { setSdkLoaded(true); console.log('✅ Laylo SDK loaded'); }
+      s.onerror = () => {
+        if (aborted) return;
+        retries += 1;
+        const backoff = Math.min(2000, 200 * Math.pow(2, retries));
+        console.warn('⚠️ Laylo SDK failed to load, retrying...', { retries, backoff });
+        setTimeout(ensureScript, backoff);
+      };
+      document.head.appendChild(s);
+    };
+
+    ensureScript();
+    return () => { aborted = true; };
+
+  }, []);
+
 
   // Keep users on the dedicated maintenance page during maintenance
   const handleGoHome = (e) => {
@@ -148,7 +144,8 @@ export default function MaintenancePage() {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'flex-start',
+      paddingTop: '12vh'
     }}>
       {/* Dither Background Effect with Error Boundary */}
       <div style={{
@@ -159,7 +156,7 @@ export default function MaintenancePage() {
         height: '100%',
         zIndex: 1
       }}>
-        <Suspense fallback={<CSSFallbackBackground />}>
+        <Suspense fallback={null}>
           <Dither
             waveSpeed={0.02}
             waveFrequency={2.0}
@@ -183,9 +180,9 @@ export default function MaintenancePage() {
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: '40px 40px',
+        padding: '20px 0 40px 0',
         borderRadius: '16px',
-        background: 'rgba(22, 22, 22, 0.12)',
+        background: 'rgba(22, 22, 22, 0.6)',
         backdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
@@ -232,26 +229,21 @@ export default function MaintenancePage() {
         <div style={{
           width: '100%',
           borderRadius: '8px',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          minHeight: '280px'
         }}>
-          {isLayloReady && (
-            <iframe
-              id="laylo-drop-c9ee71a5-2d3a-4da6-a528-eead61246989"
-              frameBorder="0"
-              scrolling="no"
-              allow="web-share"
-              allowTransparency="true"
-              style={{
-                width: '1px',
-                minWidth: '100%',
-                maxWidth: '1000px',
-                height: 'auto',
-                border: 'none'
-              }}
-              src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
-              title="Stay updated with BOUNCE2BOUNCE"
-            />
-          )}
+          {/* Laylo iframe per requested implementation */}
+          <iframe
+            key={sdkLoaded ? 'sdk-ready' : 'sdk-init'}
+            id="laylo-drop-1nTsX"
+            frameBorder="0"
+            scrolling="no"
+            allow="web-share"
+            allowtransparency="true"
+            style={{ width: '1px', minWidth: '100%', maxWidth: '1000px', border: 'none' }}
+            src="https://embed.laylo.com?dropId=1nTsX&color=f60509&minimal=true&theme=dark&background=transparent"
+            title="Stay updated with BOUNCE2BOUNCE"
+          />
         </div>
       </div>
     </div>

@@ -20,14 +20,10 @@ const MobileDrawer = ({
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
   const [selectedCountryId, setSelectedCountryId] = useState('us');
   const [phoneInputState, setPhoneInputState] = useState('normal'); // normal, loading, valid, invalid
-  const [showVerification, setShowVerification] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationPhone, setVerificationPhone] = useState('');
-  const [verificationSubmitting, setVerificationSubmitting] = useState(false);
-  const [verificationState, setVerificationState] = useState('normal'); // normal, filled, valid, invalid
+
   const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [drawerFullyClosed, setDrawerFullyClosed] = useState(false); // Start in collapsed state showing "Text us"
+  const [drawerFullyClosed, setDrawerFullyClosed] = useState(true); // Start fully closed (unambiguous initial state)
   const [iframeExpanded, setIframeExpanded] = useState(false); // Track iframe interaction
   const [iframeHasLoadedOnce, setIframeHasLoadedOnce] = useState(false); // Track if iframe has been loaded to persist state
 
@@ -57,8 +53,6 @@ const MobileDrawer = ({
   const [previousDrawerState, setPreviousDrawerState] = useState({
     expanded: false,
     showDisclaimer: false,
-    showVerification: false,
-    verificationCode: '',
     phoneNumber: ''
   });
 
@@ -70,32 +64,19 @@ const MobileDrawer = ({
   const drawerRef = useRef(null);
   const resendTimerRef = useRef(null);
 
-  // Animate drawer to collapsed state after component mounts (show text only, no iframe)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDrawerFullyClosed(false);
-      setDrawerExpanded(false); // Start in collapsed state - text only, no iframe
-    }, 500); // Wait 500ms then animate to collapsed state
-
-    return () => clearTimeout(timer);
-  }, []);
-
-
 
   // Enhanced state preservation including iframe content state
   const saveCurrentDrawerState = useCallback(() => {
     setPreviousDrawerState({
       expanded: drawerExpanded,
       showDisclaimer: showDisclaimer,
-      showVerification: showVerification,
-      verificationCode: verificationCode,
       phoneNumber: phoneNumber
     });
 
     // Preserve iframe state by keeping it in DOM but hidden
     // This prevents content loss when drawer is collapsed/reopened
     console.log('💾 Drawer state saved, iframe content preserved');
-  }, [drawerExpanded, showDisclaimer, showVerification, verificationCode, phoneNumber]);
+  }, [drawerExpanded, showDisclaimer, phoneNumber]);
 
   // Handle clicking outside drawer to close it
   const handleOutsideClick = useCallback((e) => {
@@ -106,17 +87,11 @@ const MobileDrawer = ({
       // Always close drawer visually
       setDrawerExpanded(false);
 
-      // If in verification mode, keep it minimized but accessible
-      if (showVerification) {
-        // Don't fully close, just collapse so user can tap to reopen
-        setDrawerFullyClosed(false);
-      } else {
-        // Always return to collapsed state showing "Text us" - never fully close on outside click
-        setDrawerFullyClosed(false);
-        setShowDisclaimer(false);
-      }
+      // Always return to collapsed state showing "Text us" - never fully close on outside click
+      setDrawerFullyClosed(false);
+      setShowDisclaimer(false);
     }
-  }, [phoneNumber, showVerification, saveCurrentDrawerState]);
+  }, [phoneNumber, saveCurrentDrawerState]);
 
   // Add click outside listener
   useEffect(() => {
@@ -169,16 +144,44 @@ const MobileDrawer = ({
     };
   }, [drawerExpanded, contentRef]);
 
-  // Notify parent of state changes
+  // Notify parent of state changes (debounced to only emit on actual change)
+  const lastEmittedRef = useRef({
+    drawerExpanded: undefined,
+    drawerFullyClosed: undefined,
+    iframeExpanded: undefined,
+    phoneSubmitted: undefined,
+  });
+
   useEffect(() => {
-    onStateChange({
-      drawerExpanded,
-      drawerFullyClosed,
-      showVerification,
-      iframeExpanded,
-      phoneSubmitted
-    });
-  }, [drawerExpanded, drawerFullyClosed, showVerification, iframeExpanded, phoneSubmitted, onStateChange]);
+    const nextState = { drawerExpanded, drawerFullyClosed, iframeExpanded, phoneSubmitted };
+    const prev = lastEmittedRef.current;
+    const changed =
+      prev.drawerExpanded !== nextState.drawerExpanded ||
+      prev.drawerFullyClosed !== nextState.drawerFullyClosed ||
+      prev.iframeExpanded !== nextState.iframeExpanded ||
+      prev.phoneSubmitted !== nextState.phoneSubmitted;
+
+    if (changed) {
+      lastEmittedRef.current = nextState;
+      onStateChange(nextState);
+    }
+  }, [drawerExpanded, drawerFullyClosed, iframeExpanded, phoneSubmitted, onStateChange]);
+
+  // Log hidden/unmounted state only when it actually flips, avoid render-time spam
+  const closedLogOnceRef = useRef(false);
+  useEffect(() => {
+    if (!import.meta.env.DEV) return; // only log in dev
+    if (drawerFullyClosed) {
+      if (!closedLogOnceRef.current) {
+        closedLogOnceRef.current = true;
+        console.log('🚫 Laylo iframe hidden: unmounted for reliability', { drawerFullyClosed });
+      }
+    } else {
+      // Reset when reopened so we can log again on the next close
+      closedLogOnceRef.current = false;
+    }
+  }, [drawerFullyClosed]);
+
 
   // Calculate drawer height based on content and state - FIXED for iframe loading
   const getDrawerHeight = useCallback(() => {
@@ -186,16 +189,12 @@ const MobileDrawer = ({
       return '50px'; // Fully closed - only handle and minimal padding visible
     } else if (iframeExpanded) {
       return '320px'; // Iframe expanded - extra space for full iframe interaction
-    } else if (showVerification && drawerExpanded) {
-      return '240px'; // Verification mode expanded - tight layout without extra space
-    } else if (showVerification && !drawerExpanded) {
-      return '60px'; // Verification mode collapsed - show handle only, no content peek
     } else if (drawerExpanded) {
       return '280px'; // Expanded - show text + Laylo iframe with proper height for phone form
     } else {
       return '80px'; // Collapsed - show only text content, iframe hidden but loading in background
     }
-  }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer, iframeExpanded]);
+  }, [drawerFullyClosed, drawerExpanded, showDisclaimer, iframeExpanded]);
 
   // Dynamic bottom spacing calculation based on viewport context
   const getDynamicBottomSpacing = useCallback(() => {
@@ -453,15 +452,6 @@ const MobileDrawer = ({
       setDrawerFullyClosed(false);
       setDrawerExpanded(previousDrawerState.expanded || true);
       setShowDisclaimer(previousDrawerState.showDisclaimer);
-      setShowVerification(previousDrawerState.showVerification);
-
-      // Restore verification code if it was in progress
-      if (previousDrawerState.verificationCode) {
-        setVerificationCode(previousDrawerState.verificationCode);
-        if (previousDrawerState.verificationCode.length === 4) {
-          setVerificationState('filled');
-        }
-      }
 
       // Restore phone number if it was entered
       if (previousDrawerState.phoneNumber) {
@@ -470,11 +460,11 @@ const MobileDrawer = ({
     } else if (!drawerExpanded) {
       // If just collapsed, expand to previous state
       setDrawerExpanded(true);
-      if (previousDrawerState.showDisclaimer && !showVerification) {
+      if (previousDrawerState.showDisclaimer) {
         setShowDisclaimer(true);
       }
     }
-  }, [drawerFullyClosed, drawerExpanded, previousDrawerState, showVerification]);
+  }, [drawerFullyClosed, drawerExpanded, previousDrawerState]);
 
   // Handle iframe click to expand drawer for better visibility
   const handleIframeClick = useCallback((e) => {
@@ -495,8 +485,8 @@ const MobileDrawer = ({
     }, 10000);
   }, [drawerFullyClosed]);
   // Precompute iframe visibility to avoid in-render IIFE and bundler TDZ issues
-  const iframeMounted = !drawerFullyClosed && !showVerification;
-  const iframeVisible = drawerExpanded && !showVerification;
+  const iframeMounted = !drawerFullyClosed;
+  const iframeVisible = drawerExpanded;
 
 
   return (
@@ -718,7 +708,7 @@ const MobileDrawer = ({
 
         {/* Drawer Content */}
         <div
-          className={`drawer-content mobile-drawer-content ${showVerification ? 'verification-mode' : ''}`}
+          className={`drawer-content mobile-drawer-content`}
           onTouchStart={(e) => {
             // Allow drawer content scrolling while preventing bleed
             e.stopPropagation();
@@ -761,8 +751,8 @@ const MobileDrawer = ({
             WebkitOverflowScrolling: 'touch'
           }}
         >
-          {/* Text Us Group - Hidden during verification */}
-          {!drawerFullyClosed && !showVerification && (
+          {/* Text Us Group */}
+          {!drawerFullyClosed && (
             <div
               style={{
                 display: 'flex',
@@ -837,8 +827,7 @@ const MobileDrawer = ({
               />
             )}
           </div>
-          {/* 🔧 DEBUG: Log when Laylo iframe is hidden (unmounted for reliability) */}
-          {(drawerFullyClosed || showVerification) && console.log('🚫 Laylo iframe hidden: unmounted for reliability', { drawerFullyClosed, showVerification })}
+
         </div>
       </div>
     </>

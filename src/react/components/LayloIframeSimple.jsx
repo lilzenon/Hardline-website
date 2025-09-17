@@ -36,6 +36,11 @@ const LayloIframeSimple = ({
 
   // Effective src used for iOS WebKit deferral and cache-busting
   const [effectiveSrc, setEffectiveSrc] = useState(null);
+  const prevVisibleRef = useRef(visible);
+  const lastReloadAtRef = useRef(0);
+  const MIN_RELOAD_GAP_MS = 1000;
+  const bustUrl = (base) => (base || '') + ((base || '').includes('?') ? '&' : '?') + '_ts=' + Date.now();
+
 
 
   const layloUrl = useMemo(() => {
@@ -56,36 +61,42 @@ const LayloIframeSimple = ({
     console.log(`[LayloSimple ${ts}] ${msg}`, extra ?? '');
   };
 
-  // Freshly mount (or re-src) iframe when it becomes visible; iOS WebKit defers src until visible
+  // Freshly mount (or re-src) iframe only on false->true visibility; preserve state otherwise
   useEffect(() => {
+    const becameVisible = !prevVisibleRef.current && visible;
+
     if (!visible) {
-      // Cleanup when hidden
+      // Cleanup when hidden, but preserve iframe state/src
       if (loadTimeoutRef.current) {
         clearTimeout(loadTimeoutRef.current);
         loadTimeoutRef.current = null;
       }
-      loadedRef.current = false;
-      if (isIOSWebKit) {
-        setEffectiveSrc(null);
-      }
+      prevVisibleRef.current = visible;
       return;
     }
 
-    // When visible, remount and start timer
+    if (!becameVisible) {
+      // Already visible in previous render; avoid redundant remount/src changes
+      prevVisibleRef.current = visible;
+      return;
+    }
+
+    // First become visible -> ensure src and start timer
     setRetryCount(0);
-    setIframeKey((k) => k + 1);
     loadStartRef.current = Date.now();
     loadedRef.current = false;
-    log('Visible -> (re)mounting iframe', { retryCount: 0, url: layloUrl });
+    log('Visible -> ensuring iframe src', { retryCount: 0, url: layloUrl });
 
     // For iOS WebKit, set src after a tiny defer to avoid layout thrash
     if (isIOSWebKit) {
       setEffectiveSrc(null);
       const defer = setTimeout(() => {
-        const bust = (layloUrl || '') + ((layloUrl || '').includes('?') ? '&' : '?') + '_ts=' + Date.now();
+        const bust = bustUrl(layloUrl);
+        lastReloadAtRef.current = Date.now();
         setEffectiveSrc(bust);
       }, 180);
       // Clear defer if unmounted/hidden
+      prevVisibleRef.current = visible;
       return () => {
         clearTimeout(defer);
         if (loadTimeoutRef.current) {
@@ -94,52 +105,42 @@ const LayloIframeSimple = ({
         }
       };
     } else {
-      setEffectiveSrc(layloUrl);
+      if (!effectiveSrc) {
+        lastReloadAtRef.current = Date.now();
+        setEffectiveSrc(layloUrl);
+      }
     }
 
-    // Setup load timeout
-    loadTimeoutRef.current = setTimeout(() => {
-      if (loadedRef.current) return;
-      if (retryCount < MAX_RETRIES) {
-        log('Load timeout -> retry remount', { retryCount: retryCount + 1 });
-        setRetryCount((r) => r + 1);
-        setIframeKey((k) => k + 1);
-        loadStartRef.current = Date.now();
-      } else {
-        log('Final load timeout -> giving up after max retries');
-      }
-    }, LOAD_TIMEOUT_MS);
-
-    return () => {
-      if (loadTimeoutRef.current) {
-        clearTimeout(loadTimeoutRef.current);
-        loadTimeoutRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, layloUrl, isIOSWebKit]);
+    // Setup of load timeout moved to a separate effect to avoid duplicate timers
+    prevVisibleRef.current = visible;
+    // no cleanup here; iOS branch above returns its own cleanup
+  }, [visible, layloUrl, isIOSWebKit, effectiveSrc]);
 
   // iOS WebKit: handle bfcache (pageshow persisted) and visibility restores
   useEffect(() => {
     if (!isIOSWebKit) return;
     const onPageShow = (e) => {
       if (e.persisted && visible) {
-        log('pageshow (persisted) -> remounting iframe for iOS WebKit');
-        setRetryCount(0);
-        setIframeKey((k) => k + 1);
-        loadStartRef.current = Date.now();
-        loadedRef.current = false;
-        setEffectiveSrc(null);
-        setTimeout(() => {
-          const bust = (layloUrl || '') + ((layloUrl || '').includes('?') ? '&' : '?') + '_ts=' + Date.now();
-          setEffectiveSrc(bust);
-        }, 180);
+        const now = Date.now();
+        if (now - lastReloadAtRef.current > MIN_RELOAD_GAP_MS) {
+          log('pageshow (persisted) -> refreshing iframe src (iOS)');
+          lastReloadAtRef.current = now;
+          loadedRef.current = false;
+          setEffectiveSrc(null);
+          setTimeout(() => {
+            setEffectiveSrc(bustUrl(layloUrl));
+          }, 180);
+        }
       }
     };
     const onVisibility = () => {
       if (document.visibilityState === 'visible' && visible) {
-        log('visibilitychange -> visible; ensuring iframe src for iOS WebKit');
-        setEffectiveSrc((curr) => curr ?? ((layloUrl || '') + ((layloUrl || '').includes('?') ? '&' : '?') + '_ts=' + Date.now()));
+        const now = Date.now();
+        if (now - lastReloadAtRef.current > MIN_RELOAD_GAP_MS) {
+          log('visibilitychange -> visible; refreshing iframe src (iOS)');
+          lastReloadAtRef.current = now;
+          setEffectiveSrc((curr) => curr ?? bustUrl(layloUrl));
+        }
       }
     };
     window.addEventListener('pageshow', onPageShow);
@@ -167,18 +168,54 @@ const LayloIframeSimple = ({
       loadTimeoutRef.current = null;
     }
     if (retryCount < MAX_RETRIES) {
-      log('Error -> retry remount', { retryCount: retryCount + 1 });
+      log('Error -> retry (src bust)', { retryCount: retryCount + 1 });
       setRetryCount((r) => r + 1);
-      setIframeKey((k) => k + 1);
-      loadStartRef.current = Date.now();
-      loadedRef.current = false;
+      const now = Date.now();
+      if (now - lastReloadAtRef.current > MIN_RELOAD_GAP_MS) {
+        lastReloadAtRef.current = now;
+        loadStartRef.current = Date.now();
+        loadedRef.current = false;
+        setEffectiveSrc(bustUrl(layloUrl));
+      }
     } else {
       log('Final error -> giving up after max retries');
     }
   };
+  // Setup load timeout whenever a new src is applied while visible
+  useEffect(() => {
+    if (!visible || !effectiveSrc) return;
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
+    loadStartRef.current = Date.now();
+    loadTimeoutRef.current = setTimeout(() => {
+      if (loadedRef.current) return;
+      if (retryCount < MAX_RETRIES) {
+        log('Load timeout -> retry (src bust)', { retryCount: retryCount + 1 });
+        setRetryCount((r) => r + 1);
+        const now = Date.now();
+        if (now - lastReloadAtRef.current > MIN_RELOAD_GAP_MS) {
+          lastReloadAtRef.current = now;
+          setEffectiveSrc(bustUrl(layloUrl));
+        }
+      } else {
+        log('Final load timeout -> giving up after max retries');
+      }
+    }, LOAD_TIMEOUT_MS);
+
+    return () => {
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+        loadTimeoutRef.current = null;
+      }
+    };
+  }, [effectiveSrc, visible, retryCount, layloUrl]);
+
 
   if (!dropId) {
     return (
+
       <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60 }}>
         <span style={{ color: '#999', fontSize: 14 }}>[LayloSimple] Missing dropId</span>
       </div>
@@ -200,7 +237,6 @@ const LayloIframeSimple = ({
       frameBorder="0"
       scrolling="no"
       allow="web-share; clipboard-write; fullscreen; autoplay; encrypted-media; picture-in-picture"
-      allowFullScreen
       loading="eager"
       onLoad={handleLoad}
       onError={handleError}

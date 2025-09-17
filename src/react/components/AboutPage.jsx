@@ -563,7 +563,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             fontSize: '48px',
             fontWeight: '800',
             textAlign: 'center',
-            marginTop: '64px',
+            marginTop: '16px',
             opacity: 0,
             animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
           }}
@@ -611,7 +611,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
           {/* Gallery Section - Masonry Layout with Optimized Spacing */}
           <div
             style={{
-              marginTop: isMobile ? '0px' : '24px', // CRITICAL FIX: Eliminated mobile spacing completely
+              marginTop: isMobile ? '0px' : '8px', // CRITICAL FIX: Reduced desktop spacing further
               marginBottom: '32px'
             }}
           >
@@ -620,7 +620,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
                 color: '#FFFFFF',
                 fontFamily: 'Inter',
                 fontWeight: '600',
-                fontSize: isMobile ? '24px' : '32px',
+                fontSize: '48px',
                 lineHeight: '1.3em',
                 marginBottom: isMobile ? '8px' : '16px', // CRITICAL FIX: Further reduced spacing
                 textAlign: 'center',

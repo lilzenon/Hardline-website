@@ -4198,7 +4198,7 @@ const FigmaMobile = () => {
                     src={buildYouTubeURL}
                     title="Henry Fong YouTube Video - Adaptive Quality"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                    allowFullScreen
+
                     loading="lazy"
                     style={{
                       position: 'absolute',
@@ -4428,8 +4428,9 @@ const FigmaMobile = () => {
           contentRef={contentRef}
           viewportContext={viewportContext}
           onStateChange={(drawerState) => {
-            // Handle drawer state changes if needed
-            console.log('Drawer state changed:', drawerState);
+            const { drawerExpanded, drawerFullyClosed } = drawerState;
+            const status = drawerFullyClosed ? 'fullyClosed' : (drawerExpanded ? 'expanded' : 'collapsed');
+            console.log('Drawer state changed:', drawerState, `status=${status}`);
           }}
         />
       )}

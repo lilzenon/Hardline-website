@@ -264,7 +264,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               style={{
                 width: '100%',
                 maxWidth: '430px',
-                padding: '40px 24px 0px 24px', // Removed bottom padding
+                padding: '8px 24px 0px 24px', // Reduced top padding to bring title closer to nav
                 boxSizing: 'border-box'
               }}
             >
@@ -326,7 +326,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                   color: '#FFFFFF',
                   fontFamily: 'Inter',
                   fontWeight: '600',
-                  fontSize: '24px',
+                  fontSize: '32px',
                   lineHeight: '1.3em',
                   marginBottom: '24px',
                   textAlign: 'center'
