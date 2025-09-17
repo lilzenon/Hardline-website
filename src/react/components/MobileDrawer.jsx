@@ -825,7 +825,7 @@ const MobileDrawer = ({
                 theme="dark"
                 background="solid"
                 minimal={true}
-                visible={true}
+                visible={iframeVisible}
                 style={{
                   width: '100%',
                   height: '100%',
