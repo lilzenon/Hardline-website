@@ -1956,7 +1956,7 @@ const FigmaDesktop = () => {
                 onClick={() => setShowAllEvents(!showAllEvents)}
                 role="switch"
                 aria-checked={showAllEvents}
-                aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
+                aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -2015,7 +2015,7 @@ const FigmaDesktop = () => {
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
                   >
-                    All
+                    Next
                   </span>
                 </div>
 
@@ -2874,7 +2874,7 @@ const FigmaDesktop = () => {
               onClick={() => setShowAllEvents(!showAllEvents)}
               role="switch"
               aria-checked={showAllEvents}
-              aria-label={`Switch to ${showAllEvents ? 'Past' : 'All'} events`}
+              aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -2948,7 +2948,7 @@ const FigmaDesktop = () => {
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                   }}
                 >
-                  All
+                  Next
                 </span>
               </div>
 

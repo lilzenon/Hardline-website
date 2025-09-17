@@ -37,7 +37,7 @@ export const useHomepageData = () => {
   const [formattedDate, setFormattedDate] = useState("March 29th, 9:00 P.M.");
   
   // Filter state
-  const [showAllEvents, setShowAllEvents] = useState(true); // true = "All", false = "Past"
+  const [showAllEvents, setShowAllEvents] = useState(true); // true = "Next" (upcoming), false = "Past"
 
   /**
    * Validates event data structure
@@ -267,28 +267,25 @@ export const useHomepageData = () => {
   const sortEvents = useCallback((events, showAll) => {
     const sortedEvents = [...events];
 
-    // 🚨 CRITICAL FIX: Both "ALL" and "Past" should show most recent events first
-    // Sort in reverse chronological order (most recent first) for both cases
+    // Next (upcoming): soonest first (ascending)
+    // Past: most recent past first (descending)
     sortedEvents.sort((a, b) => {
       const dateA = new Date(a.eventDate);
       const dateB = new Date(b.eventDate);
 
       // Validate dates to handle edge cases
-      if (isNaN(dateA.getTime()) && isNaN(dateB.getTime())) {
-        return 0; // Both invalid, maintain order
-      }
-      if (isNaN(dateA.getTime())) {
-        return 1; // Invalid dateA goes to end
-      }
-      if (isNaN(dateB.getTime())) {
-        return -1; // Invalid dateB goes to end
-      }
+      const aInvalid = isNaN(dateA.getTime());
+      const bInvalid = isNaN(dateB.getTime());
+      if (aInvalid && bInvalid) return 0;
+      if (aInvalid) return 1; // invalid to end
+      if (bInvalid) return -1;
 
-      // Most recent first (descending order)
-      return dateB.getTime() - dateA.getTime();
+      return showAll
+        ? (dateA.getTime() - dateB.getTime()) // Next: ascending
+        : (dateB.getTime() - dateA.getTime()); // Past: descending
     });
 
-    console.log(`🔍 Sorted ${sortedEvents.length} events (${showAll ? 'ALL' : 'Past'}) - most recent first:`,
+    console.log(`🔍 Sorted ${sortedEvents.length} events (${showAll ? 'NEXT' : 'Past'})`,
       sortedEvents.slice(0, 3).map(e => ({ title: e.title, date: e.eventDate })));
 
     return sortedEvents;
@@ -301,18 +298,22 @@ export const useHomepageData = () => {
    * @returns {Array} Filtered events
    */
   const filterEvents = useCallback((events, showAll) => {
+    const now = new Date(); // precise to current time
+
     if (showAll) {
-      return events; // Show all events
+      // Next: only future events (strictly after now)
+      return events.filter(event => {
+        const eventDate = new Date(event.eventDate);
+        if (isNaN(eventDate.getTime())) return false; // exclude missing/invalid dates
+        return eventDate.getTime() > now.getTime();
+      });
     }
-    
-    // Show only past events
-    const now = new Date();
-    now.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
-    
+
+    // Past: only past events (strictly before now)
     return events.filter(event => {
       const eventDate = new Date(event.eventDate);
-      eventDate.setHours(0, 0, 0, 0);
-      return eventDate < now;
+      if (isNaN(eventDate.getTime())) return false;
+      return eventDate.getTime() < now.getTime();
     });
   }, []);
 
