@@ -812,7 +812,7 @@ const MobileDrawer = ({
                   flexShrink: 0,
                   // Visibility control to avoid unmounting (prevents reload/blank states)
                   opacity: iframeVisible ? 1 : 0,
-                  height: iframeVisible ? (iframeExpanded ? '200px' : '160px') : 0,
+                  height: iframeVisible ? (iframeExpanded ? '200px' : '160px') : 1,
                   pointerEvents: iframeVisible ? 'auto' : 'none',
                   transition: 'opacity 0.3s ease, height 0.3s ease'
                 }}
