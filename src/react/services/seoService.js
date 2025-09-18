@@ -230,7 +230,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
 
         // Open Graph / Facebook
         { property: 'og:type', content: 'website' },
-        { property: 'og:url', content: 'https://b2b.click/' },
+        { property: 'og:url', content: (typeof window !== 'undefined' ? `https://b2b.click${window.location.pathname}` : 'https://b2b.click/') },
         { property: 'og:title', content: settings.default_title },
         { property: 'og:description', content: settings.default_description },
         { property: 'og:image', content: ogImage },
@@ -244,7 +244,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: settings.twitter_handle },
         { name: 'twitter:creator', content: settings.twitter_handle },
-        { name: 'twitter:url', content: 'https://b2b.click/' },
+        { name: 'twitter:url', content: (typeof window !== 'undefined' ? `https://b2b.click${window.location.pathname}` : 'https://b2b.click/') },
         { name: 'twitter:title', content: settings.default_title },
         { name: 'twitter:description', content: settings.default_description },
         { name: 'twitter:image', content: ogImage },
@@ -274,7 +274,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         title: settings.default_title,
         meta: metaTags,
         link: [
-            { rel: 'canonical', href: 'https://b2b.click/' }
+            { rel: 'canonical', href: (typeof window !== 'undefined' ? `https://b2b.click${window.location.pathname}` : 'https://b2b.click/') }
         ]
     };
 };

@@ -283,7 +283,7 @@ const FAQPageMobile = () => {
                   minHeight: '44px'
                 }}
               >
-                <span>{item.q}</span>
+                <span className="rich-text-content" dangerouslySetInnerHTML={{ __html: item.qHtml || item.q }} />
                 <span style={{ display: 'inline-block', transition: 'transform 0.24s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
               </button>
 
@@ -301,7 +301,7 @@ const FAQPageMobile = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .mobile-content-fade {
           animation: fadeInUp 0.6s ease-out;
         }

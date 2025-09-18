@@ -54,7 +54,7 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
       display: 'flex',
       width: '93.3px',  // Scaled up by 30% (71.77 × 1.30) for better touch targets
       height: '34.8px', // Scaled up by 30% (26.79 × 1.30) for better touch targets
-      padding: '15px 14px', // Increased padding for better touch area
+      padding: '0 14px', // Vertical centering: remove vertical padding; keep horizontal only
       justifyContent: 'center',
       alignItems: 'center',
       gap: '10px',
@@ -108,31 +108,34 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
       {/* Events - Scaled up by 30% (3.24 × 1.30) */}
       <div
         style={getNavPillStyles('Events', '4.21px')}
-        onClick={() => handleNavClick('Events')}
       >
-        <span style={getNavTextStyles('Events')}>
-          Events
-        </span>
+        <a href="/" aria-label="Events" onClick={(e)=>{e.preventDefault(); handleNavClick('Events')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+          <span style={getNavTextStyles('Events')}>
+            Events
+          </span>
+        </a>
       </div>
 
       {/* About - Scaled up by 30% (77.03 × 1.30) */}
       <div
         style={getNavPillStyles('About', '100.14px')}
-        onClick={() => handleNavClick('About')}
       >
-        <span style={getNavTextStyles('About')}>
-          About
-        </span>
+        <a href="/about" aria-label="About" onClick={(e)=>{e.preventDefault(); handleNavClick('About')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+          <span style={getNavTextStyles('About')}>
+            About
+          </span>
+        </a>
       </div>
 
       {/* FAQ - Scaled up by 30% (150.82 × 1.30) */}
       <div
         style={getNavPillStyles('FAQ', '196.07px')}
-        onClick={() => handleNavClick('FAQ')}
       >
-        <span style={getNavTextStyles('FAQ')}>
-          FAQ
-        </span>
+        <a href="/faq" aria-label="FAQ" onClick={(e)=>{e.preventDefault(); handleNavClick('FAQ')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+          <span style={getNavTextStyles('FAQ')}>
+            FAQ
+          </span>
+        </a>
       </div>
     </div>
   );

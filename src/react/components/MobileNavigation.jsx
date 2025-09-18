@@ -392,35 +392,30 @@ const MobileNavigation = ({
         </div>
 
         {/* 🎯 B2B LOGO - CONSISTENT POSITIONING: Same appearance whether menu is open or closed */}
-        <img
-          onClick={() => onNavigate('/')}
-          src="/images/mobile-figma/b2b-logo-mobile.svg"
-          alt="B2B Logo"
-          className="mobile-navigation-logo"
-          style={{
-            /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
-            width: '160px', // Fixed size - container scaling handles the proportional reduction
-            height: '50px', // Fixed size - container scaling handles the proportional reduction
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            /* 🚀 CONSISTENT TRANSFORM: Only positioning, no scaling (container handles scaling) */
-            transform: 'translate(-50%, -50%)', // Only center positioning - no scale()
-            cursor: 'pointer',
-            userSelect: 'none',
-            /* 🎯 LAYERING FIX: Ensure logo stays visible above menu overlay */
-            zIndex: 1001, // Higher than menu overlay (1000) to stay visible
-            /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
-            transition: 'none !important',
-            willChange: 'auto',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
-          }}
-          /* 🚨 CRITICAL FIX: Remove all mouse events that could trigger scaling */
-          onMouseDown={undefined}
-          onMouseUp={undefined}
-          onMouseLeave={undefined}
-        />
+        <a href="/" aria-label="Home" onClick={(e)=>{e.preventDefault(); onNavigate('/');}}
+          style={{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%, -50%)',zIndex:1001}}
+        >
+          <img
+            src="/images/mobile-figma/b2b-logo-mobile.svg"
+            alt="B2B Logo"
+            className="mobile-navigation-logo"
+            style={{
+              /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
+              width: '160px',
+              height: '50px',
+              cursor: 'pointer',
+              userSelect: 'none',
+              /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
+              transition: 'none !important',
+              willChange: 'auto',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden'
+            }}
+            onMouseDown={undefined}
+            onMouseUp={undefined}
+            onMouseLeave={undefined}
+          />
+        </a>
         </div> {/* Close content wrapper */}
       </header>
 
@@ -532,34 +527,29 @@ const MobileNavigation = ({
           </div>
 
           {/* Logo in Menu - FIXED: Static size, no scaling effects */}
-          <img
-            src="/images/mobile-figma/b2b-logo-mobile.svg"
-            alt="B2B Logo"
-            className="mobile-navigation-logo"
-            style={{
-              width: '160px',
-              height: '50px',
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              cursor: 'pointer',
-              userSelect: 'none',
-              zIndex: 1001,
-              /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
-              transition: 'none !important',
-              willChange: 'auto',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigate('/');
-            }}
-            onMouseDown={undefined}
-            onMouseUp={undefined}
-            onMouseLeave={undefined}
-          />
+          <a href="/" aria-label="Home" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); onNavigate('/');}}
+            style={{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%, -50%)',zIndex:1001}}
+          >
+            <img
+              src="/images/mobile-figma/b2b-logo-mobile.svg"
+              alt="B2B Logo"
+              className="mobile-navigation-logo"
+              style={{
+                width: '160px',
+                height: '50px',
+                cursor: 'pointer',
+                userSelect: 'none',
+                /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
+                transition: 'none !important',
+                willChange: 'auto',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden'
+              }}
+              onMouseDown={undefined}
+              onMouseUp={undefined}
+              onMouseLeave={undefined}
+            />
+          </a>
         </div>
 
         {/* 🎭 ELEGANT MENU ITEMS: Smooth animations with proper positioning */}
@@ -611,7 +601,9 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            Events
+            <a href="/" aria-label="Events" onClick={(e)=>{e.preventDefault(); handleNavigation('/')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+              Events
+            </a>
           </div>
           <div
             onClick={() => handleNavigation('/about')}
@@ -638,7 +630,9 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            About
+            <a href="/about" aria-label="About" onClick={(e)=>{e.preventDefault(); handleNavigation('/about')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+              About
+            </a>
           </div>
           <div
             onClick={() => handleNavigation('/faq')}
@@ -665,7 +659,9 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            FAQ
+            <a href="/faq" aria-label="FAQ" onClick={(e)=>{e.preventDefault(); handleNavigation('/faq')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+              FAQ
+            </a>
           </div>
 
           {/* 🎭 SOCIAL MEDIA BUTTONS: Elegant final entrance */}

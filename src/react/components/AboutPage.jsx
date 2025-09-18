@@ -109,6 +109,22 @@ const AboutPage = () => {
     };
     script.text = JSON.stringify(ld);
     document.head.appendChild(script);
+
+    // Add BreadcrumbList JSON-LD for clear site hierarchy
+    const bcId = 'ld-json-breadcrumbs-about';
+    document.getElementById(bcId)?.remove();
+    const bcScript = document.createElement('script');
+    bcScript.type = 'application/ld+json';
+    bcScript.id = bcId;
+    bcScript.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${siteUrl}/` },
+        { '@type': 'ListItem', 'position': 2, 'name': 'About', 'item': pageUrl }
+      ]
+    });
+    document.head.appendChild(bcScript);
   }, []);
 
 

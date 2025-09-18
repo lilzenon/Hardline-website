@@ -139,6 +139,22 @@ const FAQPage = () => {
     }));
     script.text = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': faqs });
     document.head.appendChild(script);
+
+    // Add BreadcrumbList JSON-LD for clear site hierarchy
+    const bcId = 'ld-json-breadcrumbs-faq';
+    document.getElementById(bcId)?.remove();
+    const bcScript = document.createElement('script');
+    bcScript.type = 'application/ld+json';
+    bcScript.id = bcId;
+    bcScript.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://b2b.click/' },
+        { '@type': 'ListItem', 'position': 2, 'name': 'FAQ', 'item': 'https://b2b.click/faq' }
+      ]
+    });
+    document.head.appendChild(bcScript);
   }, [faqItems]); // Update structured data when FAQ items change
 
   // 🚨 API INTEGRATION: Load FAQ items from backend (following About page pattern)
@@ -294,7 +310,7 @@ const FAQPage = () => {
             alt="B2B Logo"
             loading="lazy"
             decoding="async"
-            fetchpriority="high"
+            fetchPriority="high"
             onClick={() => {
               if (window.navigateWithTransition) {
                 window.navigateWithTransition('/');
@@ -324,36 +340,7 @@ const FAQPage = () => {
             currentPage="FAQ"
             onNavigate={handleNavigation}
           />
-          {/* Admin Login Button (right column) */}
-          <div style={{ gridColumn: '3', justifySelf: 'end', display: 'flex', alignItems: 'center' }}>
-            <button
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '8px',
-                color: '#FFFFFF',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                fontSize: '14px',
-                padding: '8px 16px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => {
-                window.location.href = 'https://admin.b2b.click';
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-              }}
-            >
-              Admin
-            </button>
-          </div>
+
         </div>
 
         {/* FAQ Content Section - Transparent container (no outer card) */}
@@ -459,7 +446,7 @@ const FAQPage = () => {
                     aria-expanded={isOpen}
                     aria-controls={`faq-answer-${idx}`}
                   >
-                    <span style={{ flex: 1, paddingRight: '16px' }} dangerouslySetInnerHTML={{ __html: item.qHtml || item.q }} />
+                    <span className="rich-text-content" style={{ flex: 1, paddingRight: '16px' }} dangerouslySetInnerHTML={{ __html: item.qHtml || item.q }} />
                     <span style={{
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -519,7 +506,7 @@ const FAQPage = () => {
       </div>
 
     {/* 🚨 MATCH ABOUT PAGE: Add fadeInUp animation keyframes */}
-    <style jsx>{`
+    <style>{`
       @keyframes fadeInUp {
         from {
           opacity: 0;
