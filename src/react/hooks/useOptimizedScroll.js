@@ -9,8 +9,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  */
 export const useOptimizedScroll = (element = null, options = {}) => {
   const {
-    throttleMs = 32, // Reduced frequency to 30fps for better mobile performance
-    threshold = 20,
+    throttleMs = 100, // Increased throttling to reduce interference with native scrolling
+    threshold = 50, // Increased threshold to reduce sensitivity
     passive = true
   } = options;
 
@@ -30,11 +30,11 @@ export const useOptimizedScroll = (element = null, options = {}) => {
   const isThrottled = useRef(false);
 
   const handleScroll = useCallback((event) => {
-    // 📱 MOBILE SCROLL FIX: Ultra-passive approach to prevent scroll interference
+    // 📱 SCROLL SENSITIVITY FIX: Ultra-passive approach to prevent scroll interference
     if (isThrottled.current) return;
 
-    // FIXED: Never prevent default or interfere with native scrolling
-    // event.preventDefault() and event.stopPropagation() are completely avoided
+    // 🚨 CRITICAL: Never interfere with native scrolling or touch events
+    // Completely passive - no preventDefault() or stopPropagation()
 
     isThrottled.current = true;
 

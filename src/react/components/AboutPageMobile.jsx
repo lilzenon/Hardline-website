@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
+import { useNavHeight } from '../hooks/useNavHeight';
 import MasonryGallery from './ui/MasonryGallery';
 
 /**
@@ -14,14 +15,16 @@ const AboutPageMobile = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   // REMOVED: showMenu state - no longer needed after removing old navigation
   const contentRef = useRef(null);
+  const navHeight = useNavHeight();
+  const topSpacer = Math.max(navHeight || 0, 0) + 12;
 
   // Viewport context state for dynamic spacing (matching FigmaMobile.jsx)
   const [viewportContext, setViewportContext] = useState(0);
 
-  // 📱 MOBILE SCROLL FIX: Ultra-passive scroll state to prevent interference (matching homepage)
+  // 📱 SCROLL SENSITIVITY FIX: Reduced sensitivity to prevent accidental page reloads
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
-    threshold: 20,
-    throttleMs: 100, // Increased throttling to reduce interference with native scrolling
+    threshold: 50, // Increased threshold to reduce sensitivity
+    throttleMs: 200, // Increased throttling to reduce interference with native scrolling
     passive: true // Ensure completely passive event handling
   });
 
@@ -310,7 +313,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               flexDirection: 'column',
               justifyContent: 'flex-start',
               alignItems: 'center',
-              padding: '0px', // Remove padding to allow proper scrolling
+              paddingTop: topSpacer, // Dynamic spacing below fixed nav
               boxSizing: 'border-box',
               overflow: 'auto', // Enable scrolling
               overflowX: 'hidden',
@@ -325,7 +328,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               style={{
                 width: '100%',
                 maxWidth: '430px',
-                padding: '8px 24px 0px 24px', // Reduced top padding to bring title closer to nav
+                padding: '0px 24px 0px 24px', // Top padding handled by dynamic nav height
                 boxSizing: 'border-box'
               }}
             >

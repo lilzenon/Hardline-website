@@ -236,6 +236,34 @@ const MobileNavigation = ({
             overscroll-behavior: none !important;
             -webkit-overscroll-behavior: none !important;
           }
+
+          /* 🚨 SCROLL FIX: Prevent accidental page reloads and pull-to-refresh */
+          html, body {
+            /* Disable pull-to-refresh on mobile */
+            overscroll-behavior-y: contain !important;
+            -webkit-overscroll-behavior-y: contain !important;
+            /* Prevent bounce scrolling that can trigger refresh */
+            -webkit-overflow-scrolling: auto !important;
+            /* Disable touch callouts that can interfere */
+            -webkit-touch-callout: none !important;
+            /* Prevent text selection during scroll */
+            -webkit-user-select: none !important;
+            user-select: none !important;
+          }
+
+          /* 🚨 SCROLL FIX: Optimize mobile content containers */
+          .mobile-content-container {
+            /* Allow only vertical scrolling */
+            touch-action: pan-y !important;
+            /* Prevent overscroll bounce */
+            overscroll-behavior: contain !important;
+            -webkit-overscroll-behavior: contain !important;
+            /* Smooth scrolling without interference */
+            -webkit-overflow-scrolling: touch !important;
+            /* Prevent scroll chaining */
+            overscroll-behavior-x: none !important;
+            overscroll-behavior-y: contain !important;
+          }
         `}
       </style>
 
@@ -243,17 +271,12 @@ const MobileNavigation = ({
       <header
         role="banner"
         className="mobile-navigation-header"
-        onTouchMove={(e) => {
-          // FIXED: Prevent navigation bar scroll from affecting main page
-          e.stopPropagation();
-        }}
-        onWheel={(e) => {
-          // FIXED: Prevent navigation bar scroll from affecting main page
-          e.stopPropagation();
-        }}
+
         style={{
-          position: 'sticky',
+          position: 'fixed',
           top: '0px',
+          left: '0px',
+          right: '0px',
           /* 🚀 JITTER FIX: Use fixed width to prevent layout shifts during scroll */
           width: '100%', // Full width to prevent horizontal layout shifts
           maxWidth: '100%', // Ensure no width constraints cause reflows
@@ -271,20 +294,19 @@ const MobileNavigation = ({
           /* 🚨 FIXED: Navigation container remains at fixed size and position */
           transform: 'none', // No scaling - container stays fixed
           transformOrigin: 'top center', // Keep for consistency but no scaling applied
-          /* 🚨 FIXED: Simplified transitions - no transform scaling (25% faster) */
-          transition: 'background-color 0.225s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.225s cubic-bezier(0.4, 0, 0.2, 1)',
-          zIndex: 200,
+          /* 🚨 SCROLL FIX: Remove transitions that interfere with scrolling */
+          transition: 'none',
+          zIndex: 1000,
           /* REMOVED: Bottom border for cleaner look */
           flexShrink: 0,
-          /* 🚨 FIXED: Minimal performance properties - no scaling optimizations needed */
-          contain: 'layout style', // Basic containment only
-          willChange: 'auto', // No transform changes expected
-          /* 🚨 FIXED: Standard rendering - no 3D transforms */
-          backfaceVisibility: 'visible',
-          WebkitBackfaceVisibility: 'visible',
-          /* 🎯 RENDERING OPTIMIZATION: Crisp scaling at all levels */
-          imageRendering: '-webkit-optimize-contrast',
-          WebkitImageRendering: '-webkit-optimize-contrast'
+          /* 🚨 SCROLL FIX: Prevent navigation from interfering with page scroll */
+          contain: 'layout',
+          willChange: 'auto',
+          /* 🚨 SCROLL FIX: Disable overscroll behavior on navigation */
+          overscrollBehavior: 'none',
+          WebkitOverscrollBehavior: 'none',
+          /* 🎯 TOUCH FIX: Prevent touch events from bubbling */
+          touchAction: 'none'
         }}
 
       >

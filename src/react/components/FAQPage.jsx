@@ -166,7 +166,9 @@ const FAQPage = () => {
             // Transform API data to component format
             const transformedFAQs = result.data.map(faq => ({
               q: faq.question,
+              qHtml: faq.question_html || faq.question,
               a: faq.answer,
+              aHtml: faq.answer_html || faq.answer,
               id: faq.id,
               display_order: faq.display_order
             }));
@@ -457,7 +459,7 @@ const FAQPage = () => {
                     aria-expanded={isOpen}
                     aria-controls={`faq-answer-${idx}`}
                   >
-                    <span style={{ flex: 1, paddingRight: '16px' }}>{item.q}</span>
+                    <span style={{ flex: 1, paddingRight: '16px' }} dangerouslySetInnerHTML={{ __html: item.qHtml || item.q }} />
                     <span style={{
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -491,7 +493,7 @@ const FAQPage = () => {
                       borderTopColor: isOpen ? 'rgba(56, 56, 56, 0.3)' : 'rgba(56, 56, 56, 0.0)',
                       transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s, padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}>
-                      {item.a}
+                      <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: item.aHtml || item.a }} />
                     </div>
                   </div>
                 </div>

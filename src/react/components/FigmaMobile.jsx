@@ -5,6 +5,7 @@ import { useHomepageData } from '../hooks/useHomepageData';
 import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
+import { useNavHeight } from '../hooks/useNavHeight';
 import MobileDrawer from './MobileDrawer';
 
 import BrandedLoader from './BrandedLoader';
@@ -733,6 +734,8 @@ const FigmaMobile = () => {
   const isMountedRef = useRef(true);
   const drawerRef = useRef(null);
   const contentRef = useRef(null);
+  const navHeight = useNavHeight();
+  const topSpacer = Math.max(navHeight || 0, 0) + 12;
 
   // 🚀 JITTER FIX: Optimized scroll state to prevent navigation jitter
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
@@ -2891,7 +2894,9 @@ const FigmaMobile = () => {
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '2px 0px 40px 0px', // Drastically reduced top padding for tighter layout
+            paddingTop: topSpacer, // Dynamic spacing below fixed nav
+            paddingLeft: '0px',
+            paddingRight: '0px',
             paddingBottom: getDynamicBottomSpacing(),
             boxSizing: 'border-box',
             overflow: 'auto',

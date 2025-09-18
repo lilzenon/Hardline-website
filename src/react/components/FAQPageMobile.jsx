@@ -1,15 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MobileNavigation from './MobileNavigation';
+import { useNavHeight } from '../hooks/useNavHeight';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 
 
 const FAQPageMobile = () => {
   const contentRef = useRef(null);
+  const navHeight = useNavHeight();
+  const topSpacer = Math.max(navHeight || 0, 0) + 12;
 
-  // Match About mobile: optimized passive scroll state for nav alignment
+  // 📱 SCROLL SENSITIVITY FIX: Reduced sensitivity to prevent accidental page reloads
   const { scrollY } = useOptimizedScroll(contentRef.current, {
-    threshold: 20,
-    throttleMs: 100,
+    threshold: 50, // Increased threshold to reduce sensitivity
+    throttleMs: 200, // Increased throttling to reduce interference with native scrolling
     passive: true
   });
 
@@ -80,7 +83,9 @@ const FAQPageMobile = () => {
             // Transform API data to component format
             const transformedFAQs = result.data.map(faq => ({
               q: faq.question,
+              qHtml: faq.question_html || faq.question,
               a: faq.answer,
+              aHtml: faq.answer_html || faq.answer,
               id: faq.id,
               display_order: faq.display_order
             }));
@@ -208,7 +213,7 @@ const FAQPageMobile = () => {
             flexDirection: 'column',
             justifyContent: 'flex-start',
             alignItems: 'center',
-            padding: '0px', // Remove padding to allow proper scrolling
+            paddingTop: topSpacer, // Dynamic spacing below fixed nav
             boxSizing: 'border-box',
             overflow: 'auto', // Enable scrolling
             overflowX: 'hidden',
@@ -223,7 +228,7 @@ const FAQPageMobile = () => {
             style={{
               width: '100%',
               maxWidth: '430px',
-              padding: '8px 24px 48px 24px', // Reduced top padding to bring title closer to nav
+              padding: '0px 24px 48px 24px', // Top padding handled by dynamic nav height
               boxSizing: 'border-box'
             }}
           >
@@ -285,7 +290,7 @@ const FAQPageMobile = () => {
 
               <div id={`faq-mobile-answer-${idx}`} role="region" aria-labelledby={`faq-mobile-question-${idx}`} style={{ maxHeight: isOpen ? '500px' : '0px', transition: 'max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'max-height, padding', overflow: 'hidden' }}>
                 <div style={{ padding: isOpen ? '12px 24px 24px 24px' : '0 24px', color: 'rgba(255,255,255,0.84)', borderTop: '1px solid rgba(56,56,56,0.3)', borderTopColor: isOpen ? 'rgba(56,56,56,0.3)' : 'rgba(56,56,56,0)', opacity: isOpen ? 1 : 0, transform: isOpen ? 'translateY(0)' : 'translateY(4px)', transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s' }}>
-                  {item.a}
+                  <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: item.aHtml || item.a }} />
                 </div>
               </div>
             </div>
