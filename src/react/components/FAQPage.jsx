@@ -168,7 +168,7 @@ const FAQPage = () => {
         const isDevelopment = window.location.hostname === 'localhost';
         const apiBaseUrl = isDevelopment ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
-        const response = await fetch(`${apiBaseUrl}/api/settings/faq`, {
+        const response = await fetch(`${apiBaseUrl}/api/settings/faq?ts=${Date.now()}` , {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
