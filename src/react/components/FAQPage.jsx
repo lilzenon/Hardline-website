@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import { sanitizeRichText } from '../utils/sanitizer';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigation from './DesktopNavigation';
@@ -446,7 +447,7 @@ const FAQPage = () => {
                     aria-expanded={isOpen}
                     aria-controls={`faq-answer-${idx}`}
                   >
-                    <span className="rich-text-content" style={{ flex: 1, paddingRight: '16px' }} dangerouslySetInnerHTML={{ __html: item.qHtml || item.q }} />
+                    <span className="rich-text-content" style={{ flex: 1, paddingRight: '16px' }} dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.qHtml || item.q) }} />
                     <span style={{
                       transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -480,7 +481,7 @@ const FAQPage = () => {
                       borderTopColor: isOpen ? 'rgba(56, 56, 56, 0.3)' : 'rgba(56, 56, 56, 0.0)',
                       transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s, padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}>
-                      <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: item.aHtml || item.a }} />
+                      <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} />
                     </div>
                   </div>
                 </div>

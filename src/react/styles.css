@@ -598,6 +598,8 @@ body {
 .rich-text-content li { margin: 0.25rem 0; }
 .rich-text-content b, .rich-text-content strong { font-weight: 700; }
 .rich-text-content i, .rich-text-content em { font-style: italic; }
+.rich-text-content u { text-decoration: underline; }
+
 .rich-text-content h1,
 .rich-text-content h2,
 .rich-text-content h3,

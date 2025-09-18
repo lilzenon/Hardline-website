@@ -3467,7 +3467,14 @@ const FigmaMobile = () => {
                   justifyContent: 'flex-start',
                   alignItems: 'flex-end',
                   gap: '10px',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  // Layer and compositing fixes to prevent title disappearing under drawer overlay on iOS
+                  zIndex: 2,
+                  pointerEvents: 'none', // allow underlying card button clicks
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'translateZ(0)',
+                  willChange: 'transform'
                 }}
               >
                 <div
@@ -4005,7 +4012,7 @@ const FigmaMobile = () => {
                   </article>
                 );
               })
-            ) : (
+            ) : (showAllEvents && filteredFeaturedEvents.length > 0 ? null : (
               /* Empty State - No Events */
               <div
                 style={{
@@ -4070,7 +4077,7 @@ const FigmaMobile = () => {
                   View Past Events
                 </button>
               </div>
-            )}
+            ))}
 
               </div>
 
