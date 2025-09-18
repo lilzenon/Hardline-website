@@ -145,45 +145,71 @@ const FAQPage = () => {
   useEffect(() => {
     const loadFAQContent = async () => {
       try {
-        // TODO: Replace with actual API endpoint when backend is ready
-        // const response = await fetch('/api/settings/faq');
-        // if (response.ok) {
-        //   const data = await response.json();
-        //   setFaqItems(data.items || []);
-        // } else {
-        //   throw new Error('Failed to load FAQ content');
-        // }
+        console.log('📥 Loading FAQ content from API...');
 
-        // Temporary default content until API is implemented
+        // Try to fetch from dashboard API first
+        const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3002';
+        const response = await fetch(`${dashboardUrl}/api/settings/faq`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ FAQ content loaded from API:', result);
+
+          if (result.success && result.data) {
+            // Transform API data to component format
+            const transformedFAQs = result.data.map(faq => ({
+              q: faq.question,
+              a: faq.answer,
+              id: faq.id,
+              display_order: faq.display_order
+            }));
+
+            setFaqItems(transformedFAQs);
+            setContentError(null);
+            console.log('✅ FAQ items set:', transformedFAQs.length);
+          } else {
+            throw new Error('Invalid API response format');
+          }
+        } else {
+          throw new Error(`API responded with ${response.status}: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error('❌ Error loading FAQ content from API:', error);
+        console.log('🔄 Falling back to default FAQ content...');
+
+        // Fallback to default content if API is unavailable
         const defaultFaqItems = [
           {
-            q: "What is Bounce2Bounce?",
-            a: "Bounce2Bounce is a comprehensive event management platform that helps you create, manage, and promote events with ease."
+            q: "What is BOUNCE2BOUNCE?",
+            a: "BOUNCE2BOUNCE is a premium live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales."
           },
           {
-            q: "How do I create an event?",
-            a: "Simply log into your dashboard, click 'Create Event', and follow our step-by-step wizard to set up your event details, ticketing, and promotion."
+            q: "How do I buy tickets?",
+            a: "Tickets can be purchased directly through our platform. Simply browse events, click 'Get Tickets' on any event card, and complete your purchase through our secure checkout process."
           },
           {
             q: "What payment methods do you accept?",
-            a: "We accept all major credit cards, PayPal, and various digital payment methods to make ticket purchasing convenient for your attendees."
+            a: "We accept all major credit cards, PayPal, and Apple Pay for secure and convenient transactions."
           },
           {
-            q: "Can I customize my event page?",
-            a: "Yes! Our platform offers extensive customization options including custom branding, colors, layouts, and content to match your event's unique style."
+            q: "Is BOUNCE2BOUNCE mobile-friendly?",
+            a: "Yes, BOUNCE2BOUNCE features a mobile-first design optimized for iOS Safari and all browsers, providing a seamless mobile experience for event discovery and ticket purchasing."
           },
           {
-            q: "How do I track event analytics?",
-            a: "Your dashboard provides comprehensive analytics including ticket sales, attendee demographics, engagement metrics, and revenue tracking in real-time."
+            q: "How do I contact BOUNCE2BOUNCE?",
+            a: "You can reach us at info@bounce2bounce.com for general inquiries or events@bounce2bounce.com for event-related questions and artist promotion opportunities."
           }
         ];
 
         setFaqItems(defaultFaqItems);
-        setContentError(null);
-      } catch (error) {
-        console.error('Error loading FAQ content:', error);
-        setContentError('Failed to load FAQ content. Please try again later.');
-        setFaqItems([]); // Fallback to empty array
+        setContentError('Using default FAQ content. API connection unavailable.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
