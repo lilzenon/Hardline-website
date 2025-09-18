@@ -61,9 +61,11 @@ const FAQPageMobile = () => {
       try {
         console.log('📥 Loading FAQ content from API (mobile)...');
 
-        // Try to fetch from dashboard API first
-        const dashboardUrl = process.env.REACT_APP_DASHBOARD_URL || 'http://localhost:3002';
-        const response = await fetch(`${dashboardUrl}/api/settings/faq`, {
+        // Determine API base URL based on environment
+        const isDevelopment = window.location.hostname === 'localhost';
+        const apiBaseUrl = isDevelopment ? 'http://localhost:3002' : 'https://admin.b2b.click';
+
+        const response = await fetch(`${apiBaseUrl}/api/settings/faq`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
