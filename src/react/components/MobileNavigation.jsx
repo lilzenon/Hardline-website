@@ -388,11 +388,11 @@ const MobileNavigation = ({
             userSelect: 'none',
             /* 🎯 LAYERING FIX: Ensure logo stays visible above menu overlay */
             zIndex: 1001, // Higher than menu overlay (1000) to stay visible
-            /* 🎯 PERFORMANCE: Optimized for container-based scaling */
-            willChange: 'auto', // No individual scaling needed
+            /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
+            transition: 'none !important',
+            willChange: 'auto',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden'
-            /* CSS transitions now handled by .mobile-navigation-logo class */
           }}
           /* 🚨 CRITICAL FIX: Remove all mouse events that could trigger scaling */
           onMouseDown={undefined}
@@ -513,22 +513,27 @@ const MobileNavigation = ({
           <img
             src="/images/mobile-figma/b2b-logo-mobile.svg"
             alt="B2B Logo"
+            className="mobile-navigation-logo"
             style={{
-              width: '160px', // FIXED: Match main navigation logo size exactly
-              height: '50px', // FIXED: Match main navigation logo size exactly
+              width: '160px',
+              height: '50px',
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
               cursor: 'pointer',
               userSelect: 'none',
-              /* 🚨 CRITICAL FIX: Remove all scaling effects to maintain consistent size */
-              transform: 'none', // No transforms
-              transition: 'none', // No transitions that could affect size
-              flexShrink: 0, // Prevent compression
-              flexGrow: 0 // Prevent expansion
+              zIndex: 1001,
+              /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
+              transition: 'none !important',
+              willChange: 'auto',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden'
             }}
             onClick={(e) => {
               e.stopPropagation();
               onNavigate('/');
             }}
-            /* 🚨 CRITICAL FIX: Remove all mouse events that could trigger scaling */
             onMouseDown={undefined}
             onMouseUp={undefined}
             onMouseLeave={undefined}
@@ -614,8 +619,8 @@ const MobileNavigation = ({
             About
           </div>
           <div
-            onClick={() => handleNavigation('/contact')}
-            className={`mobile-nav-item ${currentPage === 'contact' ? 'active' : ''}`}
+            onClick={() => handleNavigation('/faq')}
+            className={`mobile-nav-item ${currentPage === 'faq' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
@@ -624,7 +629,7 @@ const MobileNavigation = ({
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
-              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Contact (3rd item) */
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - FAQ (3rd item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
               transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -638,7 +643,7 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            Contact
+            FAQ
           </div>
 
           {/* 🎭 SOCIAL MEDIA BUTTONS: Elegant final entrance */}

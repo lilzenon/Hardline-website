@@ -120,12 +120,6 @@ html, body {
 
 /* Disable problematic animations on mobile during scroll */
 @media (max-width: 767px) {
-    /* Reduce animation complexity that interferes with scrolling */
-    * {
-        animation-duration: 0.1s !important;
-        transition-duration: 0.1s !important;
-    }
-    
     /* Exception for essential UI animations */
     .mobile-drawer,
     .mobile-nav,

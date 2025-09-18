@@ -1,0 +1,518 @@
+import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import { usePerformantResize } from '../hooks/usePerformantResize';
+import BrandedLoader from './BrandedLoader';
+import DesktopNavigation from './DesktopNavigation';
+
+const FAQPage = () => {
+  // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeNavTab, setActiveNavTab] = useState('FAQ');
+  const [faqItems, setFaqItems] = useState([]);
+  const [contentError, setContentError] = useState(null);
+  const [scaledDimensions, setScaledDimensions] = useState({
+    heroWidth: 299,
+    heroHeight: 299,
+    rightHeroWidth: 498,
+    rightHeroHeight: 299,
+    gap: 32,
+    containerWidth: 1192, // 🚨 MATCH HOMEPAGE: Updated from 825px to 1192px for consistency
+    eventsTextGap: 18,
+    eventCardWidth: 220,
+    eventCardHeight: 85,
+    eventsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 440px to 380px
+    textUsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 299px to 380px
+    scale: 1
+  });
+
+  // 🚨 HOMEPAGE CONSISTENCY: Use exact same responsive scaling system as homepage
+  const { width: viewportWidth } = usePerformantResize((dimensions) => {
+    const { width: currentViewportWidth } = dimensions;
+    const padding = currentViewportWidth <= 360 ? 16 : currentViewportWidth <= 480 ? 24 : 32;
+    const availableWidth = currentViewportWidth - padding;
+
+    // 🚨 MATCH HOMEPAGE: Base dimensions from homepage FigmaDesktop.jsx
+    const baseHeroWidth = 299;
+    const baseHeroHeight = 299;
+    const baseRightHeroWidth = 498;
+    const baseRightHeroHeight = 299;
+    const baseGap = 32;
+    const baseContainerWidth = 1192; // 🚨 MATCH HOMEPAGE: Same as homepage
+    const containerPadding = 48; // 🚨 MATCH HOMEPAGE: Increased padding for larger container (24px on each side)
+    const availableContainerWidth = baseContainerWidth - containerPadding; // 1144px (1192px - 48px)
+
+    // 🚨 MATCH HOMEPAGE: Calculate scale factor to fit both hero sections and events/text sections
+    const totalHeroWidth = baseHeroWidth + baseGap + baseRightHeroWidth; // 829px
+    const baseEventsWidth = 380;  // 🚨 MATCH HOMEPAGE: Further reduced to make it more compact
+    const baseTextUsWidth = 380;  // 🚨 MATCH HOMEPAGE: Match Events section base width exactly
+    const baseEventsTextGap = 40;  // 🚨 MATCH HOMEPAGE: Reduced gap slightly
+    const totalEventsTextWidth = baseEventsWidth + baseEventsTextGap + baseTextUsWidth; // 800px
+
+    // Use the more restrictive constraint to ensure both sections fit
+    const maxRequiredWidth = Math.max(totalHeroWidth, totalEventsTextWidth); // 829px
+    let scale = Math.min(availableWidth / maxRequiredWidth, availableContainerWidth / maxRequiredWidth);
+
+    // 🚨 MATCH HOMEPAGE: Cap scale at 1.8x to prevent oversized content
+    scale = Math.min(scale, 1.8);
+
+    const scaledDimensions = {
+      heroWidth: Math.round(baseHeroWidth * scale * 0.90), // 🚨 MATCH HOMEPAGE: Reduce hero size by 10% to align with smaller events section
+      heroHeight: Math.round(baseHeroHeight * scale * 0.90), // 🚨 MATCH HOMEPAGE: Reduce hero size by 10% to align with smaller events section
+      rightHeroWidth: Math.round(baseRightHeroWidth * scale),
+      rightHeroHeight: Math.round(baseRightHeroHeight * scale),
+      gap: Math.round(baseGap * scale),
+      // Container width stays fixed for alignment
+      containerWidth: baseContainerWidth,  // 🚨 MATCH HOMEPAGE: Now 1192px for tighter layout alignment
+      // Scale events and text sections to match hero scaling
+      eventsWidth: Math.round(baseEventsWidth * scale),  // Scale events section width
+      textUsWidth: Math.round(baseTextUsWidth * scale),  // Scale text us section width
+      eventsTextGap: Math.round(baseEventsTextGap * scale),  // Scale gap between Events and Text us
+      eventCardWidth: 220,  // Set to 220px as requested
+      eventCardHeight: 85,   // Always 85px event card height
+      scale: scale
+    };
+
+    // 🚨 HOMEPAGE CONSISTENCY: Device detection using viewport width
+    const userAgent = navigator.userAgent || '';
+    const isMobileByUA = /Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const deviceIsMobile = currentViewportWidth <= 768 || isMobileByUA;
+
+    setIsMobile(deviceIsMobile);
+    setIsLoading(false);
+    setScaledDimensions(scaledDimensions);
+
+    console.log(`🎯 FAQ page responsive scaling: ${scale.toFixed(3)} for viewport ${currentViewportWidth}px (max 1.8x, container: 1192px)`, scaledDimensions);
+    console.log('📱 FAQ Page Device Detection:', {
+      viewportWidth: currentViewportWidth,
+      isMobileByUA,
+      finalDecision: deviceIsMobile ? 'MOBILE' : 'DESKTOP'
+    });
+  });
+
+  // SEO: Page-specific tags + FAQPage structured data
+  useEffect(() => {
+    const siteUrl = 'https://b2b.click';
+    const pageUrl = `${siteUrl}/faq`;
+    const title = 'FAQ | BOUNCE2BOUNCE';
+    const description = 'Answers to the most common questions about BOUNCE2BOUNCE events, tickets, and the platform.';
+    const ogImage = `${siteUrl}/images/og-image.png`;
+
+    const setMeta = (selectorAttr, name, content) => {
+      let el = document.head.querySelector(`meta[${selectorAttr}="${name}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute(selectorAttr, name); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel, href) => {
+      let link = document.head.querySelector(`link[rel="${rel}"]`);
+      if (!link) { link = document.createElement('link'); link.setAttribute('rel', rel); document.head.appendChild(link); }
+      link.setAttribute('href', href);
+    };
+
+    document.title = title;
+    setMeta('name', 'description', description);
+    setMeta('name', 'robots', 'index,follow');
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'BOUNCE2BOUNCE');
+    setMeta('property', 'og:title', title);
+    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:url', pageUrl);
+    setMeta('property', 'og:image', ogImage);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', title);
+    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:image', ogImage);
+    setMeta('name', 'twitter:site', '@bounce2bounce');
+    setLink('canonical', pageUrl);
+
+    // JSON-LD FAQPage
+    const ldId = 'ld-json-faq';
+    const existing = document.getElementById(ldId);
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = ldId;
+    // FAQ structured data - will be updated when faqItems are loaded
+    const faqs = faqItems.map(i => ({
+      '@type': 'Question',
+      'name': i.q,
+      'acceptedAnswer': { '@type': 'Answer', 'text': i.a }
+    }));
+    script.text = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': faqs });
+    document.head.appendChild(script);
+  }, [faqItems]); // Update structured data when FAQ items change
+
+  // 🚨 API INTEGRATION: Load FAQ items from backend (following About page pattern)
+  useEffect(() => {
+    const loadFAQContent = async () => {
+      try {
+        // TODO: Replace with actual API endpoint when backend is ready
+        // const response = await fetch('/api/settings/faq');
+        // if (response.ok) {
+        //   const data = await response.json();
+        //   setFaqItems(data.items || []);
+        // } else {
+        //   throw new Error('Failed to load FAQ content');
+        // }
+
+        // Temporary default content until API is implemented
+        const defaultFaqItems = [
+          {
+            q: "What is Bounce2Bounce?",
+            a: "Bounce2Bounce is a comprehensive event management platform that helps you create, manage, and promote events with ease."
+          },
+          {
+            q: "How do I create an event?",
+            a: "Simply log into your dashboard, click 'Create Event', and follow our step-by-step wizard to set up your event details, ticketing, and promotion."
+          },
+          {
+            q: "What payment methods do you accept?",
+            a: "We accept all major credit cards, PayPal, and various digital payment methods to make ticket purchasing convenient for your attendees."
+          },
+          {
+            q: "Can I customize my event page?",
+            a: "Yes! Our platform offers extensive customization options including custom branding, colors, layouts, and content to match your event's unique style."
+          },
+          {
+            q: "How do I track event analytics?",
+            a: "Your dashboard provides comprehensive analytics including ticket sales, attendee demographics, engagement metrics, and revenue tracking in real-time."
+          }
+        ];
+
+        setFaqItems(defaultFaqItems);
+        setContentError(null);
+      } catch (error) {
+        console.error('Error loading FAQ content:', error);
+        setContentError('Failed to load FAQ content. Please try again later.');
+        setFaqItems([]); // Fallback to empty array
+      }
+    };
+
+    loadFAQContent();
+  }, []);
+
+  // Accordion state with smooth animations
+  const [openIndex, setOpenIndex] = useState(null);
+  const toggleIndex = (idx) => setOpenIndex(prev => prev === idx ? null : idx);
+
+  // Navigation handler for DesktopNavigation component
+  const handleNavigation = (tabName) => {
+    setActiveNavTab(tabName);
+    console.log(`🧭 FAQ Page Navigation: Switched to ${tabName} tab`);
+  };
+
+  // 🚨 MATCH ABOUT PAGE: Use exact same loading pattern and timing
+  if (isLoading) {
+    return (
+      <BrandedLoader
+        fullScreen={true}
+        minDisplayTime={800}
+        showMessage={false}
+      />
+    );
+  }
+
+  if (isMobile) {
+    const FAQPageMobile = React.lazy(() => import('./FAQPageMobile'));
+    return (
+      <Suspense fallback={
+        <BrandedLoader
+          fullScreen={true}
+          minDisplayTime={300}
+          showMessage={false}
+        />
+      }>
+        <FAQPageMobile />
+      </Suspense>
+    );
+  }
+
+  // 🚨 MATCH ABOUT PAGE: Use exact same desktop layout structure and styling
+  return (
+    <>
+      <div className="homepage-content" style={{ minHeight: 'auto' }}>
+      <div
+        className="desktop-container"
+        style={{
+          width: '100%',
+          maxWidth: `${scaledDimensions.containerWidth}px`,
+          margin: '0 auto',
+          position: 'relative',
+          background: '#000000',
+          minHeight: 'auto', // 🚨 CRITICAL FIX: Removed 100vh to prevent forced spacing
+          padding: '0 20px', // 🚨 MATCH HOMEPAGE: INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
+          boxSizing: 'border-box'
+        }}
+      >
+        <div style={{ width: '100%', position: 'relative' }}>
+        {/* Frame 12 - Navigation - EXACT MATCH to FigmaDesktop */}
+        <div
+          style={{
+            position: 'relative',
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr auto',
+            width: '100%',
+            height: '48px',
+            alignItems: 'center',
+            margin: '35px 0 0 0'
+          }}
+        >
+          {/* Group 4 - B2B Logo Nav - MATCH AboutPage */}
+          <img
+            crossOrigin="anonymous"
+            referrerPolicy="no-referrer"
+            src="/images/figma-exact/b2b-logo-nav.svg"
+            alt="B2B Logo"
+            loading="lazy"
+            decoding="async"
+            fetchpriority="high"
+            onClick={() => {
+              if (window.navigateWithTransition) {
+                window.navigateWithTransition('/');
+              } else {
+                window.location.href = '/';
+              }
+            }}
+            style={{
+              width: '180px',
+              height: '56px',
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: 'scale(1)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.filter = 'brightness(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.filter = 'brightness(1)';
+            }}
+          />
+
+          {/* Reusable Desktop Navigation Component */}
+          <DesktopNavigation
+            currentPage="FAQ"
+            onNavigate={handleNavigation}
+          />
+          {/* Admin Login Button (right column) */}
+          <div style={{ gridColumn: '3', justifySelf: 'end', display: 'flex', alignItems: 'center' }}>
+            <button
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '8px',
+                color: '#FFFFFF',
+                fontFamily: 'Inter',
+                fontWeight: '500',
+                fontSize: '14px',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => {
+                window.location.href = 'https://admin.b2b.click';
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              Admin
+            </button>
+          </div>
+        </div>
+
+        {/* FAQ Content Section - Transparent container (no outer card) */}
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '800px',
+            margin: '48px auto 0 auto',
+            background: 'transparent',
+            backdropFilter: 'none',
+            WebkitBackdropFilter: 'none',
+            border: 'none',
+            borderRadius: 0,
+            boxSizing: 'border-box',
+            opacity: 0,
+            animation: 'fadeInUp 0.6s ease-out 0.2s forwards'
+          }}
+        >
+          {/* FAQ Title */}
+          <h1 style={{
+            color: '#FFFFFF',
+            fontFamily: 'Inter',
+            fontWeight: '800',
+            fontSize: '48px',
+            lineHeight: '1.2em',
+            margin: '0 0 32px 0',
+            textAlign: 'center'
+          }}>
+            FAQ
+          </h1>
+
+          {/* Error State */}
+          {contentError && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              color: 'rgba(239, 68, 68, 0.9)',
+              fontFamily: 'Inter',
+              fontSize: '14px',
+              textAlign: 'center'
+            }}>
+              {contentError}
+            </div>
+          )}
+
+          {/* FAQ Accordion Items */}
+          <div style={{ marginTop: '0px' }}>
+            {faqItems.map((item, idx) => {
+              const isOpen = openIndex === idx;
+              return (
+                <div key={idx} style={{
+                  background: 'rgba(22, 22, 22, 0.4)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(56, 56, 56, 0.3)',
+                  borderRadius: '16px',
+                  marginBottom: '12px',
+                  overflow: 'hidden',
+                  transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                  willChange: 'transform, opacity',
+                  transform: isOpen ? 'translateZ(0) scale(1.01)' : 'translateZ(0) scale(1)',
+                  boxShadow: isOpen ? '0 8px 24px rgba(0,0,0,0.25)' : '0 4px 12px rgba(0,0,0,0.15)',
+                  opacity: 0,
+                  animation: `fadeInUp 0.4s ease-out ${0.1 + idx * 0.05}s forwards`
+                }}>
+                  <button
+                    onClick={() => toggleIndex(idx)}
+                    style={{
+                      width: '100%',
+                      padding: '20px 24px',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#FFFFFF',
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      fontFamily: 'Inter',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      minHeight: '44px', // 🚨 ACCESSIBILITY: 44px minimum touch target
+                      transition: 'background-color 0.2s ease',
+                      outline: 'none'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.outline = '2px solid rgba(255, 255, 255, 0.35)';
+                      e.currentTarget.style.outlineOffset = '2px';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.outline = 'none';
+                    }}
+                    id={`faq-question-${idx}`}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${idx}`}
+                  >
+                    <span style={{ flex: 1, paddingRight: '16px' }}>{item.q}</span>
+                    <span style={{
+                      transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      fontSize: '16px',
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      willChange: 'transform'
+                    }}>▼</span>
+                  </button>
+
+                  {/* Accordion Content with Smooth Height Animation */}
+                  <div
+                    id={`faq-answer-${idx}`}
+                    style={{
+                      maxHeight: isOpen ? '500px' : '0px',
+                      overflow: 'hidden',
+                      transition: 'max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      willChange: 'max-height, padding'
+                    }}
+                    role="region"
+                    aria-labelledby={`faq-question-${idx}`}
+                  >
+                    <div style={{
+                      padding: isOpen ? '12px 24px 24px' : '0 24px 0',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontSize: '16px',
+                      lineHeight: '1.6',
+                      fontFamily: 'Inter',
+                      opacity: isOpen ? 1 : 0,
+                      transform: isOpen ? 'translateY(0)' : 'translateY(4px)',
+                      borderTop: '1px solid rgba(56, 56, 56, 0.3)',
+                      borderTopColor: isOpen ? 'rgba(56, 56, 56, 0.3)' : 'rgba(56, 56, 56, 0.0)',
+                      transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s, padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }}>
+                      {item.a}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Empty State */}
+          {faqItems.length === 0 && !contentError && (
+            <div style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              color: 'rgba(255, 255, 255, 0.6)',
+              fontFamily: 'Inter',
+              fontSize: '16px'
+            }}>
+              No FAQ items available at the moment.
+            </div>
+          )}
+        </div>
+        </div>
+      </div>
+      </div>
+
+    {/* 🚨 MATCH ABOUT PAGE: Add fadeInUp animation keyframes */}
+    <style jsx>{`
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* 🚨 ACCESSIBILITY: Respect reduced motion preference */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    `}</style>
+    </>
+  );
+};
+
+export default FAQPage;
+

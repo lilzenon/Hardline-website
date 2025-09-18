@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import MasonryGallery from './ui/MasonryGallery';
 import BrandedLoader from './BrandedLoader';
+import DesktopNavigation from './DesktopNavigation';
 
 const AboutPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -25,6 +26,91 @@ const AboutPage = () => {
     textUsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 299px to 380px
     scale: 1
   });
+  // SEO: Page-specific meta tags and structured data for About page
+  useEffect(() => {
+    const siteUrl = 'https://b2b.click';
+    const pageUrl = `${siteUrl}/about`;
+    const title = 'About BOUNCE2BOUNCE | Live Music Events & Experiences';
+    const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
+    const keywords = 'about bounce2bounce, live music events, edm collective, concerts, event platform, artist community';
+    const ogImage = `${siteUrl}/images/og-image.png`;
+
+    const setMeta = (selectorAttr, name, content) => {
+      let el = document.head.querySelector(`meta[${selectorAttr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(selectorAttr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+
+    const setLink = (rel, href) => {
+      let link = document.head.querySelector(`link[rel="${rel}"]`);
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', rel);
+        document.head.appendChild(link);
+      }
+      link.setAttribute('href', href);
+    };
+
+    // Title
+    document.title = title;
+
+    // Basic meta
+    setMeta('name', 'description', description);
+    setMeta('name', 'keywords', keywords);
+    setMeta('name', 'robots', 'index,follow');
+
+    // Open Graph
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'BOUNCE2BOUNCE');
+    setMeta('property', 'og:title', title);
+    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:url', pageUrl);
+    setMeta('property', 'og:image', ogImage);
+
+    // Twitter
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', title);
+    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:image', ogImage);
+    setMeta('name', 'twitter:site', '@bounce2bounce');
+
+    // Canonical
+    setLink('canonical', pageUrl);
+
+    // JSON-LD Structured Data (AboutPage + Organization)
+    const ldId = 'ld-json-about';
+    const existing = document.getElementById(ldId);
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = ldId;
+    const ld = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'Organization',
+          'name': 'BOUNCE2BOUNCE',
+          'url': siteUrl,
+          'logo': `${siteUrl}/images/og-image.png`
+        },
+        {
+          '@type': 'AboutPage',
+          'name': 'About BOUNCE2BOUNCE',
+          'url': pageUrl,
+          'description': description,
+          'isPartOf': { '@type': 'WebSite', 'name': 'BOUNCE2BOUNCE', 'url': siteUrl },
+          'primaryImageOfPage': { '@type': 'ImageObject', 'url': ogImage }
+        }
+      ]
+    };
+    script.text = JSON.stringify(ld);
+    document.head.appendChild(script);
+  }, []);
+
 
   // 🚨 HOMEPAGE CONSISTENCY: Use exact same responsive scaling system as homepage
   const { width: viewportWidth } = usePerformantResize((dimensions) => {
@@ -268,66 +354,10 @@ Join our community of music enthusiasts and discover your next favorite artist, 
     ));
   };
 
-  const handleNavClick = (tab) => {
-    setActiveNavTab(tab);
-
-    // Navigate to different pages with smooth transitions
-    if (tab === 'Events') {
-      if (window.navigateWithTransition) {
-        window.navigateWithTransition('/');
-      } else {
-        window.location.href = '/';
-      }
-    } else if (tab === 'About') {
-      if (window.navigateWithTransition) {
-        window.navigateWithTransition('/about');
-      } else {
-        window.location.href = '/about';
-      }
-    } else if (tab === 'Contact') {
-      if (window.navigateWithTransition) {
-        window.navigateWithTransition('/contact');
-      } else {
-        window.location.href = '/contact';
-      }
-    }
-  };
-
-  // 🚨 HOMEPAGE CONSISTENCY: Get navigation pill styles - EXACT MATCH to FigmaDesktop (30% scaling)
-  const getNavPillStyles = (tabName, leftPosition) => {
-    const isActive = activeNavTab === tabName;
-    return {
-      position: 'absolute',
-      left: leftPosition,
-      top: '4.7px',     // 🚨 MATCH HOMEPAGE: Scaled up by 30% (3.61 × 1.30)
-      display: 'flex',
-      width: '93.3px',  // 🚨 MATCH HOMEPAGE: Scaled up by 30% (71.77 × 1.30) for better touch targets
-      height: '34.8px', // 🚨 MATCH HOMEPAGE: Scaled up by 30% (26.79 × 1.30) for better touch targets
-      padding: '15px 14px', // 🚨 MATCH HOMEPAGE: Increased padding for better touch area
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '10px',
-      borderRadius: '12px', // 🚨 MATCH HOMEPAGE: Slightly increased border radius
-      background: isActive ? '#000' : 'transparent',
-      boxShadow: isActive ? '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' : 'none',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease', // Smooth animation
-      transform: isActive ? 'scale(1)' : 'scale(0.95)', // Subtle scale effect
-      opacity: isActive ? 1 : 0.8
-    };
-  };
-
-  // 🚨 HOMEPAGE CONSISTENCY: Get navigation text styles - EXACT MATCH to FigmaDesktop
-  const getNavTextStyles = (tabName) => {
-    const isActive = activeNavTab === tabName;
-    return {
-      color: '#FFF',
-      fontFamily: 'Inter',
-      fontSize: '13px', // 🚨 MATCH HOMEPAGE: Increased from 12px to 13px for better readability
-      fontWeight: isActive ? '300' : '400',
-      lineHeight: 'normal',
-      transition: 'font-weight 0.3s ease' // Smooth font weight transition
-    };
+  // Navigation handler for DesktopNavigation component
+  const handleNavigation = (tabName) => {
+    setActiveNavTab(tabName);
+    console.log(`🧭 About Page Navigation: Switched to ${tabName} tab`);
   };
 
   // Loading state
@@ -499,60 +529,11 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             }}
           />
 
-          {/* Group 5 - Navigation Pills - 🚨 HOMEPAGE CONSISTENCY: Match 30% scaling */}
-          <div
-            style={{
-              position: 'relative',
-              width: '294.45px', // 🚨 MATCH HOMEPAGE: Scaled up by 30% (226.49 × 1.30) for better prominence
-              height: '44.2px',  // 🚨 MATCH HOMEPAGE: Scaled up by 30% (34 × 1.30) for better touch targets
-              gridColumn: '3',  // Place in third column (right side)
-              justifySelf: 'end'  // Align to right edge of grid cell
-            }}
-          >
-          {/* Background pill container */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: '294.45px', // 🚨 MATCH HOMEPAGE: Scaled up by 30% (226.49 × 1.30)
-              height: '44.2px',  // 🚨 MATCH HOMEPAGE: Scaled up by 30% (34 × 1.30)
-              background: '#232323',
-              borderRadius: '14px', // 🚨 MATCH HOMEPAGE: Slightly increased border radius
-              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-            }}
+          {/* Reusable Desktop Navigation Component */}
+          <DesktopNavigation
+            currentPage="About"
+            onNavigate={handleNavigation}
           />
-
-          {/* Events - 🚨 MATCH HOMEPAGE: Scaled up by 30% (3.24 × 1.30) */}
-          <div
-            style={getNavPillStyles('Events', '4.21px')}
-            onClick={() => handleNavClick('Events')}
-          >
-            <span style={getNavTextStyles('Events')}>
-              Events
-            </span>
-          </div>
-
-          {/* About - 🚨 MATCH HOMEPAGE: Scaled up by 30% (77.03 × 1.30) */}
-          <div
-            style={getNavPillStyles('About', '100.14px')}
-            onClick={() => handleNavClick('About')}
-          >
-            <span style={getNavTextStyles('About')}>
-              About
-            </span>
-          </div>
-
-          {/* Contact - 🚨 MATCH HOMEPAGE: Scaled up by 30% (150.82 × 1.30) */}
-          <div
-            style={getNavPillStyles('Contact', '196.07px')}
-            onClick={() => handleNavClick('Contact')}
-          >
-            <span style={getNavTextStyles('Contact')}>
-              Contact
-            </span>
-          </div>
-        </div>
         </div>
 
         {/* Page Title */}
@@ -564,6 +545,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             fontWeight: '800',
             textAlign: 'center',
             marginTop: '16px',
+            marginBottom: '8px',
             opacity: 0,
             animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
           }}
@@ -576,13 +558,9 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             style={{
               width: '100%',
               maxWidth: '800px',
-              margin: '48px auto 0 auto',
-              background: 'rgba(22, 22, 22, 0.8)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(56, 56, 56, 0.3)',
-              borderRadius: '24px',
-              padding: '40px',
+              margin: '0 auto',
+              background: 'transparent',
+              padding: '20px',
               boxSizing: 'border-box',
               opacity: 0,
               animation: 'fadeInUp 0.8s ease-out 0.4s forwards'

@@ -5,9 +5,9 @@ import AdminLogin from './components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './utils/security';
 import { SEOProvider, SEODebug, useSEO } from './contexts/SEOContext';
 
-// Lazy load About, Contact, and Maintenance pages for better performance
+// Lazy load About, FAQ, and Maintenance pages for better performance
 const AboutPage = lazy(() => import('./components/AboutPage'));
-const ContactPage = lazy(() => import('./components/ContactPage'));
+const FAQPage = lazy(() => import('./components/FAQPage'));
 const MaintenancePage = lazy(() => import('./components/MaintenancePage'));
 
 // Import any additional CSS if needed
@@ -56,10 +56,10 @@ const App = () => {
           <AboutPage />
         </Suspense>
       );
-    } else if (currentPath === '/contact') {
+    } else if (currentPath === '/faq' || currentPath === '/contact') {
       return (
         <Suspense fallback={<PageLoader />}>
-          <ContactPage />
+          <FAQPage />
         </Suspense>
       );
     } else if (currentPath === '/maintenance') {

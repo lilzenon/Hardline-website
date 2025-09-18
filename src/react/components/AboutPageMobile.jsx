@@ -25,6 +25,67 @@ const AboutPageMobile = () => {
     passive: true // Ensure completely passive event handling
   });
 
+  // SEO: Page-specific meta tags for About (mobile)
+  useEffect(() => {
+    const siteUrl = 'https://b2b.click';
+    const pageUrl = `${siteUrl}/about`;
+    const title = 'About BOUNCE2BOUNCE | Live Music Events & Experiences';
+    const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
+    const keywords = 'about bounce2bounce, live music events, edm collective, concerts, event platform, artist community';
+    const ogImage = `${siteUrl}/images/og-image.png`;
+
+    const setMeta = (selectorAttr, name, content) => {
+      let el = document.head.querySelector(`meta[${selectorAttr}="${name}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(selectorAttr, name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute('content', content);
+    };
+    const setLink = (rel, href) => {
+      let link = document.head.querySelector(`link[rel="${rel}"]`);
+      if (!link) {
+        link = document.createElement('link');
+        link.setAttribute('rel', rel);
+        document.head.appendChild(link);
+      }
+      link.setAttribute('href', href);
+    };
+
+    document.title = title;
+    setMeta('name', 'description', description);
+    setMeta('name', 'keywords', keywords);
+    setMeta('name', 'robots', 'index,follow');
+    setMeta('property', 'og:type', 'website');
+    setMeta('property', 'og:site_name', 'BOUNCE2BOUNCE');
+    setMeta('property', 'og:title', title);
+    setMeta('property', 'og:description', description);
+    setMeta('property', 'og:url', pageUrl);
+    setMeta('property', 'og:image', ogImage);
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', title);
+    setMeta('name', 'twitter:description', description);
+    setMeta('name', 'twitter:image', ogImage);
+    setMeta('name', 'twitter:site', '@bounce2bounce');
+    setLink('canonical', pageUrl);
+
+    const ldId = 'ld-json-about';
+    const existing = document.getElementById(ldId);
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = ldId;
+    script.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'Organization', 'name': 'BOUNCE2BOUNCE', 'url': siteUrl, 'logo': `${siteUrl}/images/og-image.png` },
+        { '@type': 'AboutPage', 'name': 'About BOUNCE2BOUNCE', 'url': pageUrl, 'description': description, 'isPartOf': { '@type': 'WebSite', 'name': 'BOUNCE2BOUNCE', 'url': siteUrl }, 'primaryImageOfPage': { '@type': 'ImageObject', 'url': ogImage } }
+      ]
+    });
+    document.head.appendChild(script);
+  }, []);
+
   // Handle viewport changes for dynamic spacing (matching FigmaMobile.jsx)
   useEffect(() => {
     const handleViewportChange = () => {

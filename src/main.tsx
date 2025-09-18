@@ -50,9 +50,9 @@ const initializeUtilities = async () => {
 // Initialize utilities after DOM is ready
 initializeUtilities();
 
-// Lazy load About and Contact pages for better performance
+// Lazy load About and FAQ pages for better performance
 const AboutPage = lazy(() => import('./react/components/AboutPage'));
-const ContactPage = lazy(() => import('./react/components/ContactPage'));
+const FAQPage = lazy(() => import('./react/components/FAQPage'));
 const NotFoundPage = lazy(() => import('./react/components/NotFoundPage'));
 
 // Import Error Boundary for graceful error handling
@@ -151,10 +151,11 @@ const App = () => {
             <AboutPage />
           </Suspense>
         );
-      case '/contact':
+      case '/faq':
+      case '/contact': // temporary alias to avoid broken links
         return (
           <Suspense fallback={<PageLoader />}>
-            <ContactPage />
+            <FAQPage />
           </Suspense>
         );
       case '/admin/login':

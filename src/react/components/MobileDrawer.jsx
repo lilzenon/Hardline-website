@@ -23,7 +23,7 @@ const MobileDrawer = ({
 
   const [drawerExpanded, setDrawerExpanded] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [drawerFullyClosed, setDrawerFullyClosed] = useState(true); // Start fully closed (unambiguous initial state)
+  const [drawerFullyClosed, setDrawerFullyClosed] = useState(false); // Start in closed state (visible but collapsed) - NOT fully hidden
   const [iframeExpanded, setIframeExpanded] = useState(false); // Track iframe interaction
   const [iframeHasLoadedOnce, setIframeHasLoadedOnce] = useState(false); // Track if iframe has been loaded to persist state
 
@@ -33,6 +33,13 @@ const MobileDrawer = ({
   const isLayloReady = useLayloSDK();
 
   const [canResend, setCanResend] = useState(false);
+
+  // Precompute iframe visibility to avoid in-render IIFE and bundler TDZ issues
+  // FIXED: Only mount iframe when Laylo SDK is ready AND drawer is not fully closed
+  const iframeMounted = !drawerFullyClosed && isLayloReady;
+  // FIXED: Start loading iframe immediately when mounted (even in collapsed state)
+  const iframeVisible = iframeMounted; // Load immediately when mounted
+  const iframeInteractive = drawerExpanded; // Only interactive when expanded
 
   // Enhanced touch state for improved gesture handling
   const [touchState, setTouchState] = useState({
@@ -182,6 +189,18 @@ const MobileDrawer = ({
     }
   }, [drawerFullyClosed]);
 
+  // Track iframe loading state to ensure it's ready before user interaction
+  useEffect(() => {
+    if (iframeMounted && isLayloReady && !iframeHasLoadedOnce) {
+      // Set a timer to mark iframe as loaded after SDK is ready and iframe is mounted
+      const loadTimer = setTimeout(() => {
+        setIframeHasLoadedOnce(true);
+        console.log('✅ Laylo iframe ready for interaction');
+      }, 1000); // Give iframe 1 second to initialize after SDK is ready
+
+      return () => clearTimeout(loadTimer);
+    }
+  }, [iframeMounted, isLayloReady, iframeHasLoadedOnce]);
 
   // Calculate drawer height based on content and state - FIXED for iframe loading
   const getDrawerHeight = useCallback(() => {
@@ -484,10 +503,6 @@ const MobileDrawer = ({
       setIframeExpanded(false);
     }, 10000);
   }, [drawerFullyClosed]);
-  // Precompute iframe visibility to avoid in-render IIFE and bundler TDZ issues
-  const iframeMounted = !drawerFullyClosed;
-  const iframeVisible = drawerExpanded;
-
 
   return (
     <>
@@ -802,9 +817,9 @@ const MobileDrawer = ({
               overflow: 'visible',
               zIndex: 2,
               flexShrink: 0,
-              opacity: iframeVisible ? 1 : 0,
-              height: iframeVisible ? (iframeExpanded ? '200px' : '160px') : 40,
-              pointerEvents: iframeVisible ? 'auto' : 'none',
+              opacity: iframeInteractive ? 1 : 0,
+              height: iframeInteractive ? (iframeExpanded ? '200px' : '160px') : 40,
+              pointerEvents: iframeInteractive ? 'auto' : 'none',
               transition: 'opacity 0.3s ease, height 0.3s ease'
             }}
           >

@@ -52,6 +52,16 @@ router.get(
     asyncHandler(renders.reactHomepage)
 );
 
+// FAQ page - React version
+router.get(
+    "/faq",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
+
 // Maintenance page - React version (always accessible)
 router.get(
     "/maintenance",

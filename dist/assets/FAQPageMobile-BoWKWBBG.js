@@ -1,0 +1,37 @@
+import{j as a}from"./index-C8Qdbkas.js";import{b as s}from"./vendor-ViNJc2wV.js";import{u as k,M as q}from"./MobileNavigation-CKQktu0H.js";import"./SocialMediaButtons-BqJVXwdt.js";const B=()=>{const g=s.useRef(null),{scrollY:f}=k(g.current,{threshold:20,throttleMs:100,passive:!0});s.useEffect(()=>{const t="https://b2b.click",e=`${t}/faq`,o="FAQ | BOUNCE2BOUNCE",c="Answers to the most common questions about BOUNCE2BOUNCE events, tickets, and the platform.",r=`${t}/images/og-image.png`,n=(d,u,i)=>{let p=document.head.querySelector(`meta[${d}="${u}"]`);p||(p=document.createElement("meta"),p.setAttribute(d,u),document.head.appendChild(p)),p.setAttribute("content",i)},m=(d,u)=>{let i=document.head.querySelector(`link[rel="${d}"]`);i||(i=document.createElement("link"),i.setAttribute("rel",d),document.head.appendChild(i)),i.setAttribute("href",u)};document.title=o,n("name","description",c),n("name","robots","index,follow"),n("property","og:type","website"),n("property","og:site_name","BOUNCE2BOUNCE"),n("property","og:title",o),n("property","og:description",c),n("property","og:url",e),n("property","og:image",r),n("name","twitter:card","summary_large_image"),n("name","twitter:title",o),n("name","twitter:description",c),n("name","twitter:image",r),n("name","twitter:site","@bounce2bounce"),m("canonical",e)},[]);const[l,h]=s.useState([]),[F,b]=s.useState(null);s.useEffect(()=>{(async()=>{try{h([{q:"What is Bounce2Bounce?",a:"Bounce2Bounce is a comprehensive event management platform that helps you create, manage, and promote events with ease."},{q:"How do I create an event?",a:"Simply log into your dashboard, click 'Create Event', and follow our step-by-step wizard to set up your event details, ticketing, and promotion."},{q:"What payment methods do you accept?",a:"We accept all major credit cards, PayPal, and various digital payment methods to make ticket purchasing convenient for your attendees."},{q:"Can I customize my event page?",a:"Yes! Our platform offers extensive customization options including custom branding, colors, layouts, and content to match your event's unique style."},{q:"How do I track event analytics?",a:"Your dashboard provides comprehensive analytics including ticket sales, attendee demographics, engagement metrics, and revenue tracking in real-time."}]),b(null)}catch(e){console.error("Error loading FAQ content:",e),b("Failed to load FAQ content. Please try again later."),h([])}})()},[]);const[x,y]=s.useState(null),v=t=>y(e=>e===t?null:t),w=t=>{if(t==="/faq"){window.scrollTo({top:0,behavior:"smooth"});return}window.location.href=t};return s.useEffect(()=>{const t="ld-json-faq",e=document.getElementById(t);e&&e.remove();const o=[{q:"What is Bounce2Bounce?",a:"Bounce2Bounce is a comprehensive event management platform that helps you create, manage, and promote events with ease."},{q:"How do I create an event?",a:"Simply log into your dashboard, click 'Create Event', and follow our step-by-step wizard to set up your event details, ticketing, and promotion."}],c=l&&l.length?l:o,r=document.createElement("script");r.type="application/ld+json",r.id=t;const n=c.map(m=>({"@type":"Question",name:m.q,acceptedAnswer:{"@type":"Answer",text:m.a}}));r.text=JSON.stringify({"@context":"https://schema.org","@type":"FAQPage",mainEntity:n}),document.head.appendChild(r)},[l]),a.jsxs("div",{style:{width:"100vw",height:"100vh",background:"#000000",position:"relative",overflow:"hidden",fontFamily:"Inter, sans-serif"},children:[a.jsxs("div",{style:{width:"430px",height:"932px",maxWidth:"100vw",maxHeight:"100vh",margin:"0 auto",background:"#000000",position:"relative",display:"flex",flexDirection:"column",overflow:"hidden",overscrollBehavior:"contain"},"aria-label":"Mobile FAQ page content",children:[a.jsx(q,{currentPage:"faq",scrollY:f,onNavigate:w}),a.jsx("div",{ref:g,className:"mobile-content-container mobile-content-fade",style:{flex:"1 1 auto",width:"100%",background:"#000000",display:"flex",flexDirection:"column",justifyContent:"flex-start",alignItems:"center",padding:"0px",boxSizing:"border-box",overflow:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",scrollBehavior:"smooth"},role:"main","aria-label":"FAQ page content",children:a.jsxs("div",{style:{width:"100%",maxWidth:"430px",padding:"8px 24px 48px 24px",boxSizing:"border-box"},children:[a.jsx("h1",{style:{margin:"16px 0 24px 0",fontSize:"32px",fontWeight:800,lineHeight:1.15,letterSpacing:"-0.02em",textAlign:"center",color:"#FFFFFF"},children:"FAQ"}),a.jsx("div",{style:{padding:"0 10px"},children:l.map((t,e)=>{const o=x===e;return a.jsxs("div",{style:{background:"rgba(22,22,22,0.4)",border:"1px solid rgba(56,56,56,0.3)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderRadius:"14px",marginBottom:"10px",overflow:"hidden",transition:"transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)",willChange:"transform, opacity",transform:o?"translateZ(0) scale(1.01)":"translateZ(0) scale(1)",boxShadow:o?"0 8px 24px rgba(0,0,0,0.25)":"0 4px 12px rgba(0,0,0,0.15)",opacity:0,animation:`fadeInUp 0.4s ease-out ${.1+e*.05}s forwards`},children:[a.jsxs("button",{onClick:()=>v(e),id:`faq-mobile-question-${e}`,"aria-expanded":o,"aria-controls":`faq-mobile-answer-${e}`,style:{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 24px",background:"transparent",color:"#FFF",border:"none",cursor:"pointer",fontSize:"18px",lineHeight:1.3,fontWeight:600,minHeight:"44px"},children:[a.jsx("span",{children:t.q}),a.jsx("span",{style:{display:"inline-block",transition:"transform 0.24s ease",transform:o?"rotate(180deg)":"rotate(0deg)"},children:"▼"})]}),a.jsx("div",{id:`faq-mobile-answer-${e}`,role:"region","aria-labelledby":`faq-mobile-question-${e}`,style:{maxHeight:o?"500px":"0px",transition:"max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)",willChange:"max-height, padding",overflow:"hidden"},children:a.jsx("div",{style:{padding:o?"12px 24px 24px 24px":"0 24px",color:"rgba(255,255,255,0.84)",borderTop:"1px solid rgba(56,56,56,0.3)",borderTopColor:o?"rgba(56,56,56,0.3)":"rgba(56,56,56,0)",opacity:o?1:0,transform:o?"translateY(0)":"translateY(4px)",transition:"opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s"},children:t.a})})]},e)})})]})})]}),a.jsx("style",{jsx:!0,children:`
+        .mobile-content-fade {
+          animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Scrolling optimizations */
+        .mobile-content-container {
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+          overscroll-behavior: contain;
+        }
+
+        /* Ensure content is scrollable */
+        .mobile-content-container::-webkit-scrollbar {
+          display: none; /* Hide scrollbar for cleaner look */
+        }
+
+        .mobile-content-container {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+      `})]})};export{B as default};

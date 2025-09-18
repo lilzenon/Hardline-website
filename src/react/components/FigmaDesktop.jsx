@@ -1195,11 +1195,11 @@ const FigmaDesktop = () => {
       } else {
         window.location.href = '/about';
       }
-    } else if (tabName === 'Contact') {
+    } else if (tabName === 'FAQ') {
       if (window.navigateWithTransition) {
-        window.navigateWithTransition('/contact');
+        window.navigateWithTransition('/faq');
       } else {
-        window.location.href = '/contact';
+        window.location.href = '/faq';
       }
     }
     // Events tab stays on current page (homepage)
@@ -1431,13 +1431,13 @@ const FigmaDesktop = () => {
             </span>
           </div>
 
-          {/* Contact - Scaled up by 30% (150.82 × 1.30) */}
+          {/* FAQ - Scaled up by 30% (150.82 × 1.30) */}
           <div
-            style={getNavPillStyles('Contact', '196.07px')}
-            onClick={() => handleNavClick('Contact')}
+            style={getNavPillStyles('FAQ', '196.07px')}
+            onClick={() => handleNavClick('FAQ')}
           >
-            <span style={getNavTextStyles('Contact')}>
-              Contact
+            <span style={getNavTextStyles('FAQ')}>
+              FAQ
             </span>
           </div>
         </div>
