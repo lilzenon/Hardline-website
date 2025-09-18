@@ -609,3 +609,41 @@ body {
 .rich-text-content h1 { font-size: 2rem; }
 .rich-text-content h2 { font-size: 1.5rem; }
 .rich-text-content h3 { font-size: 1.25rem; }
+
+
+/* FAQ answer scroll container with styled scrollbar */
+.faq-answer-scroll {
+  max-height: 300px; /* Desktop default */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  padding-right: 6px; /* room for scrollbar without shifting content */
+}
+
+/* Scrollbar styling (WebKit) */
+.faq-answer-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.faq-answer-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.faq-answer-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.22);
+  border-radius: 8px;
+}
+.faq-answer-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.32);
+}
+
+/* Scrollbar styling (Firefox) */
+.faq-answer-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.22) transparent;
+}
+
+@media (max-width: 768px) {
+  .faq-answer-scroll {
+    max-height: 200px; /* Mobile default */
+  }
+}

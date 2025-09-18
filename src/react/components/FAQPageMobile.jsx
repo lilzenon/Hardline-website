@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { sanitizeRichText } from '../utils/sanitizer';
+import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/sanitizer';
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
@@ -84,6 +84,7 @@ const FAQPageMobile = () => {
             // Transform API data to component format
             const transformedFAQs = result.data.map(faq => ({
               q: faq.question,
+              qText: toPlainText(faq.question_html || faq.question), // Clean text title
               qHtml: faq.question_html || faq.question,
               a: faq.answer,
               aHtml: faq.answer_html || faq.answer,
@@ -133,6 +134,8 @@ const FAQPageMobile = () => {
       }
     };
 
+    // Preload DOMPurify early to minimize any chance of HTML tag flash
+    preloadSanitizer();
     loadFAQContent();
   }, []);
 
@@ -284,14 +287,14 @@ const FAQPageMobile = () => {
                   minHeight: '44px'
                 }}
               >
-                <span className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.qHtml || item.q) }} />
+                <span className="rich-text-content">{item.qText}</span>
                 <span style={{ display: 'inline-block', transition: 'transform 0.24s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
               </button>
 
 
               <div id={`faq-mobile-answer-${idx}`} role="region" aria-labelledby={`faq-mobile-question-${idx}`} style={{ maxHeight: isOpen ? '500px' : '0px', transition: 'max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'max-height, padding', overflow: 'hidden' }}>
                 <div style={{ padding: isOpen ? '12px 24px 24px 24px' : '0 24px', color: 'rgba(255,255,255,0.84)', borderTop: '1px solid rgba(56,56,56,0.3)', borderTopColor: isOpen ? 'rgba(56,56,56,0.3)' : 'rgba(56,56,56,0)', opacity: isOpen ? 1 : 0, transform: isOpen ? 'translateY(0)' : 'translateY(4px)', transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s' }}>
-                  <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} />
+                  <div className="faq-answer-scroll"><div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} /></div>
                 </div>
               </div>
             </div>

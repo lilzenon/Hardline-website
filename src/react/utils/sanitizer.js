@@ -11,6 +11,32 @@ const loadDOMPurify = async () => {
 };
 
 /**
+ * Preload DOMPurify early to avoid first-paint flashes of escaped HTML
+ */
+export function preloadSanitizer() {
+  // Fire and forget
+  loadDOMPurify().catch(() => {});
+}
+
+/**
+ * Convert HTML to plain text synchronously (for titles)
+ * - Strips all tags and decodes entities
+ */
+export function toPlainText(html) {
+  if (!html || typeof html !== 'string') return '';
+  // Quick strip tags
+  const withoutTags = html.replace(/<[^>]*>/g, ' ');
+  // Decode entities using a temporary DOM element
+  if (typeof document !== 'undefined') {
+    const el = document.createElement('div');
+    el.innerHTML = withoutTags;
+    const text = el.textContent || el.innerText || '';
+    return text.replace(/\s+/g, ' ').trim();
+  }
+  return withoutTags.replace(/\s+/g, ' ').trim();
+}
+
+/**
  * Frontend XSS Protection Utilities
  * Provides comprehensive sanitization for user inputs and dynamic content
  */
