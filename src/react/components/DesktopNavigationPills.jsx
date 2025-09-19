@@ -52,27 +52,22 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
       alignItems: 'center',
       gap: '10px',
       borderRadius: '12px',
-      // Glassmorphism matching updated desktop pills
-      // Inactive: fully transparent; Hover/Active: glassmorphism per design system
-      background: (isActive || isHovered)
-        ? 'rgba(22, 22, 22, 0.30)'
-        : 'transparent',
-      backdropFilter: (isActive || isHovered)
-        ? 'blur(12px)'
-        : 'none',
-      WebkitBackdropFilter: (isActive || isHovered)
-        ? 'blur(12px)'
-        : 'none',
-      border: (isActive || isHovered)
-        ? '1px solid rgba(255, 255, 255, 0.12)'
-        : '1px solid transparent',
-      boxShadow: (isActive || isHovered)
-        ? '0px 4px 8px rgba(0, 0, 0, 0.20)'
-        : 'none',
+      // Glassmorphism per design system with brighter active state
+      background: isActive
+        ? 'rgba(22, 22, 22, 0.45)'
+        : (isHovered ? 'rgba(22, 22, 22, 0.36)' : 'transparent'),
+      backdropFilter: (isActive || isHovered) ? 'blur(12px)' : 'none',
+      WebkitBackdropFilter: (isActive || isHovered) ? 'blur(12px)' : 'none',
+      border: isActive
+        ? '1px solid rgba(255, 255, 255, 0.20)'
+        : (isHovered ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid transparent'),
+      boxShadow: isActive
+        ? '0 0 0 2px rgba(255, 255, 255, 0.12), 0 6px 14px rgba(0, 0, 0, 0.35)'
+        : (isHovered ? '0px 4px 8px rgba(0, 0, 0, 0.20)' : 'none'),
       color: '#FFFFFF',
       cursor: 'pointer',
       userSelect: 'none',
-      transition: 'all 0.2s ease',
+      transition: 'background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
       transform: 'translateZ(0)',
       opacity: 1,
       outline: isFocused ? '2px solid rgba(255, 255, 255, 0.85)' : 'none',
@@ -88,7 +83,8 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
       fontSize: '13px',
       fontWeight: isActive ? '800' : '500',
       lineHeight: 'normal',
-      transition: 'font-weight 0.3s ease'
+      textShadow: isActive ? '0 0 8px rgba(255, 255, 255, 0.35)' : 'none',
+      transition: 'font-weight 0.3s ease, text-shadow 0.2s ease'
     };
   }, [activeNavTab]);
 

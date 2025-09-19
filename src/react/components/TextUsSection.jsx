@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 
 const TextUsSection = ({ scaledDimensions }) => {
@@ -10,6 +10,12 @@ const TextUsSection = ({ scaledDimensions }) => {
   const [iframeHeight, setIframeHeight] = useState(85);
 
   // 🚨 AGGRESSIVE RESPONSIVE IFRAME HEIGHT CALCULATION
+  // Desktop-only Laylo iframe mount + reliability
+  const [shouldMountIframe, setShouldMountIframe] = useState(false);
+  const [layloLoaded, setLayloLoaded] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+  const layloRetryRef = useRef(false);
+
   // Calculate responsive iframe height with more aggressive scaling to prevent text wrapping overlap
   const calculateResponsiveIframeHeight = useCallback(() => {
     const containerWidth = scaledDimensions.eventsWidth * 1.2; // Match parent container width
@@ -43,6 +49,32 @@ const TextUsSection = ({ scaledDimensions }) => {
   // 🚨 USE PERFORMANT RESIZE HOOK
   // Debounced resize listener for optimal performance
   usePerformantResize(handleResize);
+
+  // Mount iframe after layout stabilizes (desktop-only) for reliability
+  useEffect(() => {
+    const containerWidth = scaledDimensions?.eventsWidth || 0;
+    const isDesktop = (scaledDimensions?.containerWidth || window.innerWidth) >= 1024;
+    if (isDesktop) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setShouldMountIframe(true));
+      });
+    } else {
+      setShouldMountIframe(true);
+    }
+  }, [scaledDimensions?.containerWidth, scaledDimensions?.eventsWidth]);
+
+  // Retry once if onLoad doesn't fire in time (desktop-only)
+  useEffect(() => {
+    const isDesktop = (scaledDimensions?.containerWidth || window.innerWidth) >= 1024;
+    if (!isDesktop || !shouldMountIframe || layloLoaded) return;
+    const t = setTimeout(() => {
+      if (!layloLoaded && !layloRetryRef.current) {
+        layloRetryRef.current = true;
+        setIframeKey((k) => k + 1);
+      }
+    }, 3000);
+    return () => clearTimeout(t);
+  }, [shouldMountIframe, layloLoaded, scaledDimensions?.containerWidth]);
 
   // 🚨 INITIAL HEIGHT CALCULATION
   // Set initial iframe height on component mount and when scaledDimensions change
@@ -88,43 +120,47 @@ const TextUsSection = ({ scaledDimensions }) => {
       <div
         style={{
           position: 'relative',
-          width: 'calc(100% + 10px)', // 🚨 FIX: Increased width by 10px as requested
-          height: `${iframeHeight}px`, // 🚨 DYNAMIC: State-based height that updates on viewport resize
-          minHeight: '85px', // 🚨 RESPONSIVE: Minimum height constraint
-          marginLeft: '-5px', // 🚨 FIX: Center the wider iframe by offsetting half the extra width
-          marginRight: '-5px', // 🚨 FIX: Center the wider iframe by offsetting half the extra width
-          marginTop: `${Math.max(-18, Math.round(scaledDimensions.scale * -21))}px`, // 🚨 FIX: Move iframe up 4-6px more to align with video height
-          marginBottom: '0', // 🚨 FIX: Remove bottom margin for tighter layout with social buttons
+          width: '100%', // Normalize container width; widen only the iframe (right side)
+          height: `${iframeHeight}px`,
+          minHeight: '85px',
+          marginLeft: '0',
+          marginRight: '0',
+          marginTop: `${Math.max(-18, Math.round(scaledDimensions.scale * -21))}px`,
+          marginBottom: '0',
           borderRadius: '8px',
-          overflow: 'visible', // 🚨 FIX: Changed to visible to show all iframe content including wrapped text
+          overflow: 'visible',
           background: 'transparent',
-          // 🚨 SMOOTH TRANSITIONS: Add transition for height changes during resize
           transition: 'height 0.2s ease-out',
-          // 🚨 RESPONSIVE: Container query support for modern browsers
-          containerType: 'inline-size' // Enable container queries for width-based responsive behavior
+          containerType: 'inline-size'
         }}
       >
-        <iframe
-          id="laylo-drop-1nTsX"
-          src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true&hideFooter=false&compact=false"
-          style={{
-            width: '100%',
-            height: `${iframeHeight}px`, // 🚨 DYNAMIC: State-based height that updates on viewport resize
-            minHeight: '85px', // 🚨 RESPONSIVE: Minimum height constraint
-            border: 'none',
-            borderRadius: '8px',
-            background: 'transparent',
-            transform: 'translateX(0)',
-            position: 'relative',
-            left: '-18px', // Shift left by exactly 18px
-            top: '0px', // Ensure proper positioning to show main content
-            // 🚨 SMOOTH TRANSITIONS: Add transition for height changes during resize
-            transition: 'height 0.2s ease-out'
-          }}
-          scrolling="no" // Disable scrolling to prevent footer access
-          allow="web-share"
-          title="Laylo Signup Form"
-        />
+        {shouldMountIframe && (
+          <iframe
+            key={iframeKey}
+            id="laylo-drop-1nTsX"
+            src="https://embed.laylo.com/?dropId=1nTsX&color=ff0409&theme=dark&background=solid&minimal=true&hideFooter=false&compact=false"
+            style={{
+              width: (scaledDimensions?.containerWidth || window.innerWidth) >= 1024 ? 'calc(100% + 36px)' : '100%',
+              height: `${iframeHeight}px`,
+              minHeight: '85px',
+              border: 'none',
+              borderRadius: '8px',
+              background: 'transparent',
+              transform: 'translateX(0)',
+              position: 'relative',
+              left: '0px',
+              marginLeft: (scaledDimensions?.containerWidth || window.innerWidth) >= 1024 ? '-18px' : '0px',
+              marginRight: (scaledDimensions?.containerWidth || window.innerWidth) >= 1024 ? '-18px' : '0px',
+              top: '0px',
+              visibility: layloLoaded ? 'visible' : 'hidden',
+              transition: 'height 0.2s ease-out'
+            }}
+            onLoad={() => setLayloLoaded(true)}
+            scrolling="no"
+            allow="web-share"
+            title="Laylo Signup Form"
+          />
+        )}
       </div>
     </div>
   );

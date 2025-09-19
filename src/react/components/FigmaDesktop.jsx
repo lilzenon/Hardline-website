@@ -543,6 +543,12 @@ const FigmaDesktop = () => {
 
   const [videoSizeFromLaylo, setVideoSizeFromLaylo] = useState({ width: null, height: null });
 
+  const videoContainerRef = useRef(null);
+
+  const layloContainerRef = useRef(null);
+  const socialContainerRef = useRef(null);
+  const [socialMarginTop, setSocialMarginTop] = useState(null);
+
   // Featured hero title spacing control (desktop only)
   const heroTitleRef = useRef(null);
   const [heroTitleBottom, setHeroTitleBottom] = useState(95);
@@ -635,7 +641,7 @@ const FigmaDesktop = () => {
         const desktop = document.querySelector('.desktop-container');
         const left = leftColumnRef.current;
         if (desktop && left) {
-          const gapPx = 12; // desktop gap between left and right columns
+          const gapPx = 24; // desktop gap between left and right columns (standardized)
           const rightPadding = 20; // desktop container has 20px right padding
           const desktopRect = desktop.getBoundingClientRect();
           const leftRect = left.getBoundingClientRect();
@@ -1422,6 +1428,55 @@ const FigmaDesktop = () => {
       setHeroTitleBottom(lines <= 1 ? 66 : 90);
     } catch (_) {}
   }, [mostRecentEvent, scaledDimensions.heroWidth, scaledDimensions.containerWidth, homeSettings?.event_title]);
+
+  // Desktop-only: function to (re)calculate social buttons top margin so their bottom aligns to video bottom
+  const recalcSocialAlignment = useCallback(() => {
+    try {
+      if (!scaledDimensions || (scaledDimensions.containerWidth ?? 0) < 1024) return;
+      const videoRect = videoContainerRef?.current?.getBoundingClientRect?.();
+      const layloRect = layloContainerRef?.current?.getBoundingClientRect?.();
+      const socialRect = socialContainerRef?.current?.getBoundingClientRect?.();
+      if (!videoRect || !layloRect || !socialRect) return;
+      const desiredBottom = videoRect.top + videoRect.height;
+      const currentBottom = layloRect.top + layloRect.height + socialRect.height;
+      const bias = Math.round(Math.max(8, (scaledDimensions.scale || 1) * 12));
+      const mt = Math.max(0, Math.round(desiredBottom + bias - currentBottom));
+      setSocialMarginTop(mt);
+    } catch (_) {}
+  }, [scaledDimensions?.containerWidth, scaledDimensions?.scale]);
+
+  // Run on layout changes driven by our scaling calculations
+  useLayoutEffect(() => {
+    // Allow layout to settle across two frames then measure
+    const id = requestAnimationFrame(() => {
+      const id2 = requestAnimationFrame(() => recalcSocialAlignment());
+      return () => cancelAnimationFrame(id2);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [recalcSocialAlignment, scaledDimensions?.textUsWidth, scaledDimensions?.eventsWidth]);
+
+  // Also respond to viewport resizes (desktop only) using performant window listener
+  useEffect(() => {
+    recalcSocialAlignment();
+  }, [recalcSocialAlignment, viewportWidth]);
+
+  // Observe element size changes (Laylo and Video) for real-time responsiveness
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const observers = [];
+    const cb = () => {
+      // Batch via RAF to avoid layout thrash
+      requestAnimationFrame(() => recalcSocialAlignment());
+    };
+    [videoContainerRef.current, layloContainerRef.current, socialContainerRef.current]
+      .filter(Boolean)
+      .forEach((el) => {
+        const ro = new ResizeObserver(cb);
+        ro.observe(el);
+        observers.push(ro);
+      });
+    return () => observers.forEach((ro) => ro.disconnect());
+  }, [recalcSocialAlignment]);
 
   // Show smooth branded loading state
   if (loading) {
@@ -2615,7 +2670,7 @@ const FigmaDesktop = () => {
             margin: '16px 0 0 0', // Reduced from 32px to 16px for better visual flow
             padding: '0',
             alignItems: 'flex-start',
-            columnGap: '12px' // Tighter gap to bring columns closer while keeping breathing room
+            columnGap: '24px' // Standardized desktop gap between left/right columns
           }}
         >
           {/* Left Side - Follow Us (Social Media Buttons) */}
@@ -2631,7 +2686,7 @@ const FigmaDesktop = () => {
             }}
           >
             {/* Follow Us: Laylo (top) + Social buttons (bottom) */}
-            <div style={{ width: `${Math.round(scaledDimensions.eventsWidth)}px`, display: 'flex', justifyContent: 'flex-start' }}>
+            <div ref={layloContainerRef} style={{ width: `${Math.round(scaledDimensions.eventsWidth)}px`, display: 'flex', justifyContent: 'flex-start' }}>
               <TextUsSection
                 scaledDimensions={scaledDimensions}
                 phoneNumber={phoneNumber}
@@ -2665,13 +2720,15 @@ const FigmaDesktop = () => {
 
             {/* Social Media Buttons - Desktop Left Side */}
             <div
+              ref={socialContainerRef}
               style={{
                 width: `${Math.round(scaledDimensions.eventsWidth)}px`,
                 display: 'flex',
                 justifyContent: 'flex-start',
                 alignItems: 'center',
                 padding: '0',
-                marginTop: `${Math.max(20, Math.round(scaledDimensions.scale * 28))}px`,
+                marginTop: socialMarginTop != null ? `${socialMarginTop}px` : `${Math.max(20, Math.round(scaledDimensions.scale * 28))}px`,
+                marginRight: '-18px',
                 zIndex: 0
               }}
             >
@@ -2714,6 +2771,7 @@ const FigmaDesktop = () => {
         >
           {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
           <div
+            ref={videoContainerRef}
             onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
             style={{
               width: '100%',
