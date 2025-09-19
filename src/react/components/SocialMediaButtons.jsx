@@ -174,11 +174,11 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
 
   // Compute dynamic sizing based on containerWidth and number of buttons (desktop only)
   const buttonsCount = (socialLinks && socialLinks.length ? socialLinks.length : 4);
-  const gapPx = isDesktop ? 16 : 10; // Reduced gap for better spacing
+  const gapPx = isDesktop ? 16 : 0; // Mobile: remove base gap so space-between defines spacing
   const effectiveWidth = isDesktop && typeof containerWidth === 'number' && containerWidth > 0 ? containerWidth : null;
   let computedButtonSize = effectiveWidth
     ? Math.max(80, Math.min(140, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount)))
-    : (isDesktop ? 90 : 70);
+    : (isDesktop ? 90 : 80);
 
   // Desktop overflow guard: clamp by maxButtonSizePx when provided
   if (isDesktop && typeof maxButtonSizePx === 'number' && maxButtonSizePx > 0) {

@@ -2386,7 +2386,7 @@ const FigmaMobile = () => {
           .mobile-expand-handle.expanded {
             position: relative;
             bottom: auto;
-            margin: 12px auto 0 auto; /* Reduced from 16px to 12px (~25% reduction) for closer positioning */
+            margin: 4px auto 0 auto; /* Further reduced to 4px to tighten section gap (>50% reduction) */
             transform: translateZ(0); /* Keep GPU acceleration, no other transforms */
             left: auto;
           }
@@ -3613,7 +3613,7 @@ const FigmaMobile = () => {
               width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
               margin: '0 auto',
               position: 'relative',
-              paddingBottom: filteredHomepageEvents.length > 3 ? '12px' : '0', // Space for improved gradient and button
+              paddingBottom: filteredHomepageEvents.length > 3 ? '4px' : '0', // Tightened spacing for gradient/handle (>=50% reduction)
               background: '#000000' // Match main page background - pure black
             }}
           >
