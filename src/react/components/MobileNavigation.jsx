@@ -13,6 +13,27 @@ const MobileNavigation = ({
   onMenuToggle = () => {} // New callback to notify parent of menu state changes
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  // Dynamic overlay height to handle iOS/Android dynamic viewports and notches
+  const [overlayHeight, setOverlayHeight] = useState('100vh');
+  useEffect(() => {
+    const update = () => {
+      try {
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        setOverlayHeight(`${vh}px`);
+      } catch (e) {
+        setOverlayHeight(`${window.innerHeight}px`);
+      }
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+      if (window.visualViewport) window.visualViewport.removeEventListener('resize', update);
+    };
+  }, []);
 
   // Toggle mobile menu
   const toggleMenu = () => {
@@ -426,8 +447,10 @@ const MobileNavigation = ({
           top: '0',
           left: '0',
           width: '100vw',
-          height: '100vh',
+          height: overlayHeight,
+          minHeight: '100vh',
           background: 'rgba(0, 0, 0, 0.95)',
+          overflow: 'hidden',
           zIndex: showMenu ? 1000 : -1,
           display: 'flex',
           flexDirection: 'column',
@@ -562,7 +585,7 @@ const MobileNavigation = ({
             width: 'min(360px, calc(100vw - 16px))', // FIXED: Match navigation bar width exactly
             maxWidth: '360px', // FIXED: Match navigation bar max width
             margin: '0 auto', // Center like main content
-            padding: '8px 8px 40px 8px', // FIXED: Minimal padding to maximize content width
+            padding: '8px 8px max(40px, env(safe-area-inset-bottom, 24px)) 8px', // Ensure bottom safe area space
             gap: '32px', // Increased gap for more elegant spacing
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
@@ -572,7 +595,12 @@ const MobileNavigation = ({
             /* 🎯 PERFORMANCE: Hardware acceleration for smooth animations */
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
+            WebkitBackfaceVisibility: 'hidden',
+            // Enable scrolling within the menu on small viewports
+            flex: '1 1 auto',
+            overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
+            maxHeight: 'calc(100% - 97px)'
           }}
           onClick={(e) => e.stopPropagation()}
         >

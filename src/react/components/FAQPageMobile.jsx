@@ -222,7 +222,15 @@ const FAQPageMobile = () => {
             overflow: 'auto', // Enable scrolling
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-            scrollBehavior: 'smooth' // Smooth scrolling behavior
+            scrollBehavior: 'smooth', // Smooth scrolling behavior
+            overscrollBehavior: 'contain',
+            overscrollBehaviorY: 'contain',
+            overscrollBehaviorX: 'none',
+            touchAction: 'pan-y',
+            transform: 'translateZ(0)',
+            willChange: 'auto',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
           }}
           role="main"
           aria-label="FAQ page content"
@@ -288,13 +296,35 @@ const FAQPageMobile = () => {
                 }}
               >
                 <span className="rich-text-content">{item.qText}</span>
-                <span style={{ display: 'inline-block', transition: 'transform 0.24s ease', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+                <span
+                  className="faq-arrow"
+                  aria-hidden="true"
+                  style={{
+                    display: 'inline-flex',
+                    width: '20px',
+                    height: '20px',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transform: isOpen ? 'rotate(180deg) translateZ(0)' : 'rotate(0deg) translateZ(0)',
+                    transformOrigin: '50% 50%'
+                  }}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{ display: 'block' }}
+                  >
+                    <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
               </button>
 
 
-              <div id={`faq-mobile-answer-${idx}`} role="region" aria-labelledby={`faq-mobile-question-${idx}`} style={{ maxHeight: isOpen ? '500px' : '0px', transition: 'max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'max-height, padding', overflow: 'hidden' }}>
+              <div id={`faq-mobile-answer-${idx}`} role="region" aria-labelledby={`faq-mobile-question-${idx}`} style={{ maxHeight: isOpen ? 'min(70vh, 560px)' : '0px', transition: 'max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'max-height, padding', overflow: 'hidden' }}>
                 <div style={{ padding: isOpen ? '12px 24px 24px 24px' : '0 24px', color: 'rgba(255,255,255,0.84)', borderTop: '1px solid rgba(56,56,56,0.3)', borderTopColor: isOpen ? 'rgba(56,56,56,0.3)' : 'rgba(56,56,56,0)', opacity: isOpen ? 1 : 0, transform: isOpen ? 'translateY(0)' : 'translateY(4px)', transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s' }}>
-                  <div className="faq-answer-scroll"><div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} /></div>
+                  <div className="faq-answer-scroll" style={{ maxHeight: 'min(68vh, 520px)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}><div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} /></div>
                 </div>
               </div>
             </div>
@@ -321,11 +351,30 @@ const FAQPageMobile = () => {
           }
         }
 
+        /* Global mobile scroll behavior fixes to prevent pull-to-refresh */
+        @media (max-width: 767px) {
+          html, body {
+            overscroll-behavior-y: contain !important;
+            -webkit-overscroll-behavior-y: contain !important;
+            overscroll-behavior-x: none !important;
+            touch-action: pan-y !important;
+          }
+        }
+
         /* Scrolling optimizations */
         .mobile-content-container {
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
           overscroll-behavior: contain;
+          overscroll-behavior-y: contain;
+          overscroll-behavior-x: none;
+          touch-action: pan-y;
+          contain: layout style;
+          will-change: auto;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
         }
 
         /* Ensure content is scrollable */
@@ -337,6 +386,17 @@ const FAQPageMobile = () => {
           -ms-overflow-style: none; /* IE and Edge */
           scrollbar-width: none; /* Firefox */
         }
+
+        /* Modern animated arrow for expand/collapse */
+        .faq-arrow {
+          transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+          will-change: transform;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+
 
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
