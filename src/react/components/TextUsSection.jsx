@@ -55,7 +55,7 @@ const TextUsSection = ({ scaledDimensions }) => {
     <div
       style={{
         display: 'flex',
-        width: '100%', // Use full width of parent container for responsive behavior
+        width: `${calculatedWidth}px`, // Align left edge exactly with Events/Up next widths on desktop
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'stretch',

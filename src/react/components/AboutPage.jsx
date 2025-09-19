@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import MasonryGallery from './ui/MasonryGallery';
 import BrandedLoader from './BrandedLoader';
-import DesktopNavigation from './DesktopNavigation';
+import DesktopNavigationPills from './DesktopNavigationPills';
 
 const AboutPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -545,8 +545,8 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             }}
           />
 
-          {/* Reusable Desktop Navigation Component */}
-          <DesktopNavigation
+          {/* Reusable Desktop Navigation Component (Pills) */}
+          <DesktopNavigationPills
             currentPage="About"
             onNavigate={handleNavigation}
           />

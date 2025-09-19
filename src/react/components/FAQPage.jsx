@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/sanitizer';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
-import DesktopNavigation from './DesktopNavigation';
+import DesktopNavigationPills from './DesktopNavigationPills';
 
 const FAQPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -339,8 +339,8 @@ const FAQPage = () => {
             }}
           />
 
-          {/* Reusable Desktop Navigation Component */}
-          <DesktopNavigation
+          {/* Reusable Desktop Navigation Component (Pills) */}
+          <DesktopNavigationPills
             currentPage="FAQ"
             onNavigate={handleNavigation}
           />

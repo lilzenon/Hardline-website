@@ -190,7 +190,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           padding: '0',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'stretch'
         }}
         aria-label="Loading social media links"
       >
@@ -200,10 +200,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'nowrap',
-            justifyContent: effectiveWidth ? 'space-between' : (isDesktop ? 'center' : 'space-between'),
+            justifyContent: 'space-between',
             alignItems: 'center',
             gap: `${gapPx}px`,
-            width: effectiveWidth ? `${effectiveWidth}px` : (isDesktop ? 'auto' : '100%'),
+            width: '100%',
             maxWidth: '100%',
             padding: '0',
             boxSizing: 'border-box'
@@ -261,7 +261,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
         padding: '0', // Remove all padding
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center'
+        alignItems: 'stretch'
       }}
       aria-label="Follow us on social media"
     >
@@ -272,10 +272,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'nowrap', // Prevent stacking
-          justifyContent: effectiveWidth ? 'space-between' : (isDesktop ? 'center' : 'space-between'),
+          justifyContent: 'space-between', // Always spread across available width
           alignItems: 'center',
           gap: `${gapPx}px`,
-          width: effectiveWidth ? `${effectiveWidth}px` : (isDesktop ? 'auto' : '100%'),
+          width: '100%', // Fill parent width (parent will be sized to match Laylo/title)
           maxWidth: '100%',
           padding: '0',
           boxSizing: 'border-box'

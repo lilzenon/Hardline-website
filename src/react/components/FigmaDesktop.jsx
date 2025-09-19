@@ -7,6 +7,8 @@ import { loadImageWithCircuitBreaker } from '../../lib/circuit-breaker';
 import TextUsSection from './TextUsSection';
 import SocialMediaButtons from './SocialMediaButtons';
 import BrandedLoader from './BrandedLoader';
+import DesktopNavigationPills from './DesktopNavigationPills';
+
 
 // CSS for custom scrollbar styling
 const scrollbarStyles = `
@@ -22,6 +24,12 @@ const scrollbarStyles = `
   }
   .events-grid-scrollable::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Desktop fade-in animation for homepage */
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
   }
 `;
 
@@ -528,10 +536,16 @@ const FigmaDesktop = () => {
   const resendTimerRef = useRef(null);
   const isMountedRef = useRef(true);
   const [isMobile, setIsMobile] = useState(false);
-  const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
+
 
   const leftColumnRef = useRef(null);
   const [videoMaxWidthPx, setVideoMaxWidthPx] = useState(null);
+
+  const [videoSizeFromLaylo, setVideoSizeFromLaylo] = useState({ width: null, height: null });
+
+  // Featured hero title spacing control (desktop only)
+  const heroTitleRef = useRef(null);
+  const [heroTitleBottom, setHeroTitleBottom] = useState(95);
 
   // Event Filter Toggle State - now managed by useHomepageData hook
   const [scaledDimensions, setScaledDimensions] = useState({
@@ -551,6 +565,7 @@ const FigmaDesktop = () => {
   // Use performant resize hook for responsive calculations
   const { width: viewportWidth } = usePerformantResize((dimensions) => {
     const { width: currentViewportWidth } = dimensions;
+
     const padding = currentViewportWidth <= 360 ? 16 : currentViewportWidth <= 480 ? 24 : 32;
     const availableWidth = currentViewportWidth - padding;
 
@@ -594,6 +609,7 @@ const FigmaDesktop = () => {
       eventCardWidth: 220,  // Set to 220px as requested
       eventCardHeight: 85,   // Always 85px event card height
       scale: scale
+
     };
 
     // Update mobile state based on whether events list can fit alongside text us section
@@ -605,19 +621,37 @@ const FigmaDesktop = () => {
   });
 
   // MEMORY OPTIMIZATION: Lazy load Laylo SDK with error handling - RESTORED ORIGINAL IMPLEMENTATION
+  // Desktop-only fade-in animation helper
+  const fadeIn = useCallback((delayMs = 0) => (
+    scaledDimensions.containerWidth >= 1024
+      ? { opacity: 0, animation: `fadeInUp 0.8s ease-out ${delayMs}ms forwards` }
+      : {}
+  ), [scaledDimensions.containerWidth]);
+
   // Compute the maximum usable width for the right video column based on available space
   useLayoutEffect(() => {
     const recompute = () => {
       try {
         const desktop = document.querySelector('.desktop-container');
         const left = leftColumnRef.current;
-        if (!desktop || !left) return;
-        const gapPx = 12; // desktop gap between left and right columns
-        const rightPadding = 20; // desktop container has 20px right padding
-        const desktopRect = desktop.getBoundingClientRect();
-        const leftRect = left.getBoundingClientRect();
-        const available = Math.floor(desktopRect.right - leftRect.right - gapPx - rightPadding);
-        setVideoMaxWidthPx(available > 0 ? available : 0);
+        if (desktop && left) {
+          const gapPx = 12; // desktop gap between left and right columns
+          const rightPadding = 20; // desktop container has 20px right padding
+          const desktopRect = desktop.getBoundingClientRect();
+          const leftRect = left.getBoundingClientRect();
+          const available = Math.floor(desktopRect.right - leftRect.right - gapPx - rightPadding);
+          setVideoMaxWidthPx(available > 0 ? available : 0);
+        }
+
+        // Match YouTube video height to Laylo iframe height (desktop only)
+        const laylo = document.getElementById('laylo-drop-1nTsX');
+        if (laylo) {
+          const h = Math.round(laylo.getBoundingClientRect().height);
+          if (h && h > 0) {
+            const w = Math.round((h * 16) / 9);
+            setVideoSizeFromLaylo({ width: w, height: h });
+          }
+        }
       } catch (_) {}
     };
 
@@ -625,31 +659,68 @@ const FigmaDesktop = () => {
     recompute();
     const raf = requestAnimationFrame(recompute);
 
-    // Observe size changes on both containers to support bidirectional scaling without relying solely on window resize
+    // Observe size changes on both containers and Laylo iframe to support bidirectional scaling
     const desktop = document.querySelector('.desktop-container');
     const left = leftColumnRef.current;
     const supportsRO = typeof ResizeObserver !== 'undefined';
     let roDesktop = null;
     let roLeft = null;
-    if (supportsRO && desktop && left) {
-      roDesktop = new ResizeObserver(recompute);
-      roLeft = new ResizeObserver(recompute);
-      roDesktop.observe(desktop);
-      roLeft.observe(left);
-    } else {
-      // Fallback to resize event
-      window.addEventListener('resize', recompute);
+    let roLaylo = null;
+    let layloAttachInterval = null;
+
+    const tryAttachLayloObserver = () => {
+      if (roLaylo) return true;
+      const layloEl = document.getElementById('laylo-drop-1nTsX');
+      if (layloEl && supportsRO) {
+        roLaylo = new ResizeObserver(recompute);
+        roLaylo.observe(layloEl);
+        return true;
+      }
+      return false;
+    };
+
+    if (supportsRO) {
+      if (desktop) {
+        roDesktop = new ResizeObserver(recompute);
+        roDesktop.observe(desktop);
+      }
+      if (left) {
+        roLeft = new ResizeObserver(recompute);
+        roLeft.observe(left);
+      }
+      // Attach now or keep trying for a short period until Laylo iframe is mounted
+      if (!tryAttachLayloObserver()) {
+        layloAttachInterval = setInterval(() => {
+          if (tryAttachLayloObserver()) {
+            clearInterval(layloAttachInterval);
+            layloAttachInterval = null;
+          }
+        }, 300);
+        // Safety timeout to stop polling after 5s
+        setTimeout(() => {
+          if (layloAttachInterval) {
+            clearInterval(layloAttachInterval);
+            layloAttachInterval = null;
+          }
+        }, 5000);
+      }
     }
+
+    // Always listen to window resize as an additional signal
+    window.addEventListener('resize', recompute);
     window.addEventListener('load', recompute);
 
     return () => {
       cancelAnimationFrame(raf);
       if (roDesktop) roDesktop.disconnect();
       if (roLeft) roLeft.disconnect();
-      else window.removeEventListener('resize', recompute);
+      if (roLaylo) roLaylo.disconnect();
+      if (layloAttachInterval) clearInterval(layloAttachInterval);
+      window.removeEventListener('resize', recompute);
       window.removeEventListener('load', recompute);
     };
   }, []);
+
 
   useEffect(() => {
     // Load Laylo SDK script only once with proper error handling
@@ -1234,64 +1305,8 @@ const FigmaDesktop = () => {
     console.log(`🌍 Country changed to: ${newCountry.code} (${newCountry.name})`);
   }, [phoneNumber]);
 
-  // Navigation handler with modern transitions
-  const handleNavClick = useCallback((tabName) => {
-    setActiveNavTab(tabName);
-    console.log(`🧭 Navigation: Switched to ${tabName} tab`);
 
-    // Navigate to different pages with smooth transitions
-    if (tabName === 'About') {
-      if (window.navigateWithTransition) {
-        window.navigateWithTransition('/about');
-      } else {
-        window.location.href = '/about';
-      }
-    } else if (tabName === 'FAQ') {
-      if (window.navigateWithTransition) {
-        window.navigateWithTransition('/faq');
-      } else {
-        window.location.href = '/faq';
-      }
-    }
-    // Events tab stays on current page (homepage)
-  }, []);
 
-  // Get navigation pill styles based on active state
-  const getNavPillStyles = useCallback((tabName, leftPosition) => {
-    const isActive = activeNavTab === tabName;
-    return {
-      position: 'absolute',
-      left: leftPosition,
-      top: '4.7px',     // Scaled up by 30% (3.61 × 1.30)
-      display: 'flex',
-      width: '93.3px',  // Scaled up by 30% (71.77 × 1.30) for better touch targets
-      height: '34.8px', // Scaled up by 30% (26.79 × 1.30) for better touch targets
-      padding: '15px 14px', // Increased padding for better touch area
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '10px',
-      borderRadius: '12px', // Slightly increased border radius
-      background: isActive ? '#000' : 'transparent',
-      boxShadow: isActive ? '0px 4px 4px 0px rgba(0, 0, 0, 0.25)' : 'none',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease', // Smooth animation
-      transform: isActive ? 'scale(1)' : 'scale(0.95)', // Subtle scale effect
-      opacity: isActive ? 1 : 0.8
-    };
-  }, [activeNavTab]);
-
-  // Get navigation text styles based on active state
-  const getNavTextStyles = useCallback((tabName) => {
-    const isActive = activeNavTab === tabName;
-    return {
-      color: '#FFF',
-      fontFamily: 'Inter',
-      fontSize: '13px', // Increased from 12px to 13px for better readability
-      fontWeight: isActive ? '300' : '400',
-      lineHeight: 'normal',
-      transition: 'font-weight 0.3s ease' // Smooth font weight transition
-    };
-  }, [activeNavTab]);
 
   // Event cards processing now handled by useHomepageData hook
   // Using filteredFeaturedEvents and filteredHomepageEvents directly
@@ -1436,7 +1451,8 @@ const FigmaDesktop = () => {
           width: '100%',
           height: '48px',
           alignItems: 'center',
-          margin: '35px 0 0 0'
+          margin: '35px 0 0 0',
+          ...fadeIn(0)
         }}
       >
         {/* Group 4 - B2B Logo Nav - CLICKABLE - INCREASED SIZE */}
@@ -1478,60 +1494,8 @@ const FigmaDesktop = () => {
           }}
         />
 
-        {/* Group 5 - Navigation Pills */}
-        <div
-          style={{
-            position: 'relative',
-            width: '294.45px', // Scaled up by 30% (226.49 × 1.30) for better prominence
-            height: '44.2px',  // Scaled up by 30% (34 × 1.30) for better touch targets
-            gridColumn: '3',  // Place in third column (right side)
-            justifySelf: 'end'  // Align to right edge of grid cell
-          }}
-        >
-          {/* Background pill container */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: '294.45px', // Scaled up by 30% (226.49 × 1.30)
-              height: '44.2px',  // Scaled up by 30% (34 × 1.30)
-              background: '#232323',
-              borderRadius: '14px', // Slightly increased border radius
-              boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-            }}
-          />
-
-          {/* Events - Scaled up by 30% (3.24 × 1.30) */}
-          <div
-            style={getNavPillStyles('Events', '4.21px')}
-            onClick={() => handleNavClick('Events')}
-          >
-            <span style={getNavTextStyles('Events')}>
-              Events
-            </span>
-          </div>
-
-          {/* About - Scaled up by 30% (77.03 × 1.30) */}
-          <div
-            style={getNavPillStyles('About', '100.14px')}
-            onClick={() => handleNavClick('About')}
-          >
-            <span style={getNavTextStyles('About')}>
-              About
-            </span>
-          </div>
-
-          {/* FAQ - Scaled up by 30% (150.82 × 1.30) */}
-          <div
-            style={getNavPillStyles('FAQ', '196.07px')}
-            onClick={() => handleNavClick('FAQ')}
-          >
-            <span style={getNavTextStyles('FAQ')}>
-              FAQ
-            </span>
-          </div>
-        </div>
+        {/* Group 5 - Navigation Pills (Reusable) */}
+        <DesktopNavigationPills currentPage="Events" />
       </div>
 
       {/* Desktop Layout: Hero Left + Events Right (1024px+) */}
@@ -1571,7 +1535,8 @@ const FigmaDesktop = () => {
                 padding: '0',
                 height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
                 display: 'flex',
-                alignItems: 'center' // Center text vertically within the height
+                alignItems: 'center', // Center text vertically within the height
+                ...fadeIn(200)
               }}
             >
               Up Next
@@ -1603,7 +1568,8 @@ const FigmaDesktop = () => {
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             transform: 'scale(1)',
             borderRadius: '20px',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            ...fadeIn(400)
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
@@ -1922,7 +1888,7 @@ const FigmaDesktop = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              bottom: '95px', // Use bottom positioning for consistency
+              bottom: `${heroTitleBottom}px`, // Dynamic spacing based on single vs multi-line title
               display: 'flex',
               width: '100%', // Use full width of responsive hero card
               height: '48px',
@@ -1934,6 +1900,7 @@ const FigmaDesktop = () => {
             }}
           >
             <div
+              ref={heroTitleRef}
               style={{
                 color: '#FFF',
                 fontFamily: 'Inter',
@@ -1942,8 +1909,9 @@ const FigmaDesktop = () => {
                 lineHeight: '1.1',
                 flex: '1',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
                 maxWidth: `${scaledDimensions.heroWidth - 24}px`
               }}
             >
@@ -2003,7 +1971,7 @@ const FigmaDesktop = () => {
               alignItems: 'stretch',
               gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap
               minWidth: `${Math.max(450, Math.round(scaledDimensions.eventsWidth))}px`, // Scale with eventsWidth
-              maxWidth: `${Math.round(scaledDimensions.eventsWidth + 200)}px`, // Increase width to align rightmost edge with navigation pills
+
               height: (() => {
                 // Calculate total height to match Up Next title + gap + square hero image
                 const titleHeight = Math.max(20, Math.round(scaledDimensions.scale * 26)); // Up Next title height (updated)
@@ -2022,7 +1990,8 @@ const FigmaDesktop = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 margin: '0', // Remove margin to align with hero top
-                padding: '0'
+                padding: '0',
+                ...fadeIn(600)
               }}
             >
               {/* Event Title - Scaled down to match Up Next Title */}
@@ -2040,22 +2009,26 @@ const FigmaDesktop = () => {
               >
                 Events
               </div>
-              {/* Event Filter Toggle - Responsive */}
+              {/* Event Filter Toggle - Responsive (Glass container, sliding mechanism preserved) */}
               <div
                 style={{
                   display: 'flex',
-                  width: `${Math.max(75, Math.round(scaledDimensions.scale * 95))}px`, // Reduced from 118px to 95px for smaller size
-                  height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`, // Reduced from 34px to 28px for smaller size
-                  padding: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`, // Slightly reduced padding
+                  width: `${Math.max(75, Math.round(scaledDimensions.scale * 95))}px`,
+                  height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`,
+                  padding: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
                   justifyContent: 'center',
                   alignItems: 'center',
                   flexShrink: 0,
-                  borderRadius: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Slightly reduced border radius
-                  background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+                  borderRadius: '10px',
+                  background: 'rgba(22, 22, 22, 0.30)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                   position: 'relative',
                   cursor: 'pointer',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  WebkitTapHighlightColor: 'transparent'
+                  WebkitTapHighlightColor: 'transparent',
+                  boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                 }}
                 onClick={() => setShowAllEvents(!showAllEvents)}
                 role="switch"
@@ -2069,32 +2042,31 @@ const FigmaDesktop = () => {
                   }
                 }}
               >
-                {/* Sliding Button Background - Responsive */}
+                {/* Sliding Button Background - Responsive (unchanged) */}
                 <div
                   style={{
                     position: 'absolute',
-                    width: `${Math.max(36, Math.round(scaledDimensions.scale * 46))}px`, // Reduced from 57px to 46px
-                    height: `${Math.max(19, Math.round(scaledDimensions.scale * 24))}px`, // Reduced from 30px to 24px
-                    borderRadius: `${Math.max(4, Math.round(scaledDimensions.scale * 6))}px`, // Reduced border radius
+                    width: `${Math.max(36, Math.round(scaledDimensions.scale * 46))}px`,
+                    height: `${Math.max(19, Math.round(scaledDimensions.scale * 24))}px`,
+                    borderRadius: `${Math.max(4, Math.round(scaledDimensions.scale * 6))}px`,
                     border: '0.5px solid rgba(0, 0, 0, 0.04)',
                     background: '#FFF',
                     boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
-                    left: showAllEvents ? `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px` : `${Math.max(37, Math.round(scaledDimensions.scale * 47))}px`, // Adjusted positions for smaller size
-                    top: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`, // Adjusted top position
+                    left: showAllEvents ? `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px` : `${Math.max(37, Math.round(scaledDimensions.scale * 47))}px`,
+                    top: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
                     transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     zIndex: 1
                   }}
                 />
 
-                {/* All Button - Responsive */}
+                {/* Next Button - Responsive (unchanged) */}
                 <div
                   style={{
                     display: 'flex',
-                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`, // Scale padding
+                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`,
                     alignItems: 'center',
                     flex: '1 0 0',
                     alignSelf: 'stretch',
-                    borderRadius: `${Math.max(5, Math.round(scaledDimensions.scale * 7))}px`, // Scale border radius
                     position: 'relative',
                     zIndex: 2
                   }}
@@ -2111,10 +2083,10 @@ const FigmaDesktop = () => {
                       fontFeatureSettings: "'liga' off, 'clig' off",
                       textOverflow: 'ellipsis',
                       fontFamily: 'Inter',
-                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`, // Reduced from 13px to 11px
+                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`,
                       fontStyle: 'normal',
                       fontWeight: showAllEvents ? '590' : '400',
-                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`, // Reduced line height
+                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`,
                       letterSpacing: '-0.08px',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
@@ -2123,11 +2095,11 @@ const FigmaDesktop = () => {
                   </span>
                 </div>
 
-                {/* Past Button - Responsive */}
+                {/* Past Button - Responsive (unchanged) */}
                 <div
                   style={{
                     display: 'flex',
-                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`, // Scale padding
+                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`,
                     alignItems: 'center',
                     flex: '1 0 0',
                     alignSelf: 'stretch',
@@ -2147,10 +2119,10 @@ const FigmaDesktop = () => {
                       fontFeatureSettings: "'liga' off, 'clig' off",
                       textOverflow: 'ellipsis',
                       fontFamily: 'Inter',
-                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`, // Reduced from 13px to 11px
+                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`,
                       fontStyle: 'normal',
                       fontWeight: !showAllEvents ? '590' : '400',
-                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`, // Reduced line height
+                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`,
                       letterSpacing: '-0.08px',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                     }}
@@ -2179,7 +2151,7 @@ const FigmaDesktop = () => {
                 ref={gridScrollRef}
                 className="events-grid-scrollable"
                 onScroll={updateScrollState}
-                style={{
+                style={{ ...(fadeIn(800)),
                   position: 'relative',
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)', // 2 columns
@@ -2299,9 +2271,9 @@ const FigmaDesktop = () => {
                       height: '100%',
                       minHeight: '90px', // Reduced from 128px to 90px
                       borderRadius: '20px',
-                      background: 'rgba(15, 15, 15, 0.95)',
-                      backdropFilter: 'blur(20px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      background: 'rgba(22, 22, 22, 0.30)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                       position: 'relative',
@@ -2558,7 +2530,10 @@ const FigmaDesktop = () => {
                                 window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
                               }}
                               style={{
-                                background: 'rgba(23, 23, 23, 0.8)',
+                                background: 'rgba(22, 22, 22, 0.30)',
+                              backdropFilter: 'blur(12px)',
+                              WebkitBackdropFilter: 'blur(12px)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
                                 borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`, // Scale border radius
                                 display: 'flex',
                                 flexDirection: 'row',
@@ -2568,7 +2543,6 @@ const FigmaDesktop = () => {
                                 padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`, // Scale padding
                                 width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
                                 height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
-                                border: 'none',
                                 cursor: 'pointer',
                                 fontFamily: 'Inter',
                                 fontWeight: '500',
@@ -2582,11 +2556,11 @@ const FigmaDesktop = () => {
                               }}
                               onMouseEnter={(e) => {
                                 e.currentTarget.style.transform = 'scale(1.02)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.45)';
                               }}
                               onMouseLeave={(e) => {
                                 e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
+                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.30)';
                               }}
                             >
                               {card.buttonText || 'View Event'}
@@ -2620,7 +2594,7 @@ const FigmaDesktop = () => {
       {/* YouTube Video and Text Us Section - Side by Side Layout (Desktop 1024px+) */}
       {scaledDimensions.containerWidth >= 1024 && (
         <div
-          style={{
+          style={{ ...(fadeIn(1000)),
             position: 'relative',
             display: 'flex',
             width: '100%',
@@ -2645,7 +2619,7 @@ const FigmaDesktop = () => {
             }}
           >
             {/* Follow Us: Laylo (top) + Social buttons (bottom) */}
-            <div style={{ width: '100%' }}>
+            <div style={{ width: `${Math.round(scaledDimensions.eventsWidth)}px`, display: 'flex', justifyContent: 'flex-start' }}>
               <TextUsSection
                 scaledDimensions={scaledDimensions}
                 phoneNumber={phoneNumber}
@@ -2680,9 +2654,9 @@ const FigmaDesktop = () => {
             {/* Social Media Buttons - Desktop Left Side */}
             <div
               style={{
-                width: '100%',
+                width: `${Math.round(scaledDimensions.eventsWidth)}px`,
                 display: 'flex',
-                justifyContent: 'stretch', // Changed from center to stretch for full width
+                justifyContent: 'flex-start',
                 alignItems: 'center',
                 padding: '0',
                 marginTop: `${Math.max(20, Math.round(scaledDimensions.scale * 28))}px`,
@@ -2723,17 +2697,23 @@ const FigmaDesktop = () => {
             })(),
             alignItems: 'flex-start',
             flex: '0 0 auto',
-            width: `${(
-              videoMaxWidthPx ?? Math.min(
+            width: `${(() => {
+              const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
+              const fallback = Math.min(
                 Math.round(scaledDimensions.eventsWidth + 200),
                 Math.round(scaledDimensions.containerWidth * 0.45)
-              )
-            )}px`, // Prefer measured available space for true bidirectional scaling
-            maxWidth: `${(
-              videoMaxWidthPx ?? Math.min(
+              );
+              const raw = (videoMaxWidthPx ?? fallback);
+              return Math.max(minW, raw);
+            })()}px`, // Prefer measured available space but never below desktop min for visibility
+            maxWidth: `${(() => {
+              const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
+              const fallback = Math.min(
                 Math.round(scaledDimensions.eventsWidth + 200)
-              )
-            )}px`, // Keep alignment with events but allow growth via measured space
+              );
+              const raw = (videoMaxWidthPx ?? fallback);
+              return Math.max(minW, raw);
+            })()}px`, // Keep alignment with events, allow growth, and ensure a sensible desktop minimum
             transition: 'width 200ms cubic-bezier(0.4, 0, 0.2, 1), max-width 200ms cubic-bezier(0.4, 0, 0.2, 1)',
             willChange: 'width, max-width'
 
@@ -2743,9 +2723,29 @@ const FigmaDesktop = () => {
           <div
             onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
             style={{
-              width: '100%', // Fill right column to align right edge with events/nav
+              width: (() => {
+                if (videoSizeFromLaylo?.height) {
+                  const targetW = Math.round((videoSizeFromLaylo.height * 16) / 9);
+                  const maxW = (videoMaxWidthPx ?? targetW);
+                  const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
+                  const allowedW = Math.max(minW, Math.min(targetW, maxW));
+                  return `${allowedW}px`;
+                }
+                return '100%';
+              })(),
+              height: (() => {
+                if (videoSizeFromLaylo?.height) {
+                  const targetW = Math.round((videoSizeFromLaylo.height * 16) / 9);
+                  const maxW = (videoMaxWidthPx ?? targetW);
+                  const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
+                  const allowedW = Math.max(minW, Math.min(targetW, maxW));
+                  const allowedH = Math.round((allowedW * 9) / 16);
+                  return `${allowedH}px`;
+                }
+                return undefined;
+              })(),
               maxWidth: 'calc(100vw - 40px)', // Clamp to container inner width on tight desktops (20px side padding)
-              aspectRatio: '16 / 9', // Maintain 16:9; height derives from width
+              aspectRatio: videoSizeFromLaylo?.height ? undefined : '16 / 9', // Preserve 16:9 when Laylo height not available
               position: 'relative',
               flexShrink: 0,
               cursor: 'pointer',
@@ -2778,7 +2778,8 @@ const FigmaDesktop = () => {
                 width: '100%', // Match parent container width
                 height: '100%',
                 borderRadius: '24px',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                ...fadeIn(400)
               }}
             >
               {/* YouTube iframe wrapper with aspect ratio preservation */}
