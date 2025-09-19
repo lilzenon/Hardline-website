@@ -2974,11 +2974,15 @@ const FigmaMobile = () => {
                   alignItems: 'center',
                   flexShrink: 0,
                   borderRadius: '9px',
-                  background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+                  background: 'rgba(22, 22, 22, 0.30)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                   position: 'relative',
                   cursor: 'pointer',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  WebkitTapHighlightColor: 'transparent'
+                  WebkitTapHighlightColor: 'transparent',
+                  boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                 }}
                 onClick={() => setShowAllEvents(!showAllEvents)}
                 role="switch"
@@ -3596,7 +3600,7 @@ const FigmaMobile = () => {
                       lineHeight: '1.1'
                     }}
                   >
-                    UPCOMING EVENTS
+                    {showAllEvents ? 'UPCOMING EVENTS' : 'PAST EVENTS'}
                   </div>
                 </div>
               </div>
@@ -3625,7 +3629,7 @@ const FigmaMobile = () => {
               {/* Events List - Vertical Stack */}
               <div
                 role="list"
-                aria-label="Upcoming live music events"
+                aria-label={showAllEvents ? "Upcoming live music events" : "Past live music events"}
                 style={{
                   display: 'flex',
                   width: '100%',
@@ -3899,11 +3903,11 @@ const FigmaMobile = () => {
                             <svg
                               width="12"
                               height="12"
-                              viewBox="0 0 10 10"
+                              viewBox="0 0 24 24"
                               fill="none"
                               style={{ color: 'rgba(255, 255, 255, 0.7)' }}
                             >
-                              <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
+                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor"/>
                             </svg>
                             <span
                               style={{
@@ -4053,7 +4057,7 @@ const FigmaMobile = () => {
                     opacity: 0.8
                   }}
                 >
-                  No upcoming events
+                  {showAllEvents ? 'No upcoming events' : 'No past events'}
                 </div>
                 <button
                   type="button"

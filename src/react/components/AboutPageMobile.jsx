@@ -156,6 +156,33 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
       setLoading(false);
     }
   };
+  // Normalize gallery image to ensure absolute, publicly accessible URLs from dashboard API (mobile)
+  const normalizeGalleryImage = (img) => {
+    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+    const candidate = img?.url || img?.src || img?.image_url || img?.file_url || img?.path || img?.imagePath || '';
+    const orig = typeof candidate === 'string' ? candidate : (candidate?.url || '');
+
+    // Absolute HTTP URL
+    if (orig && /^https?:\/\//i.test(orig)) {
+      return { ...img, url: orig };
+    }
+
+    // New image service route: /api/images/serve/:uuid
+    if (orig && /^\/?api\/images\/serve\//i.test(orig)) {
+      return { ...img, url: `${dashboardDomain}/${orig.replace(/^\//, '')}` };
+    }
+
+    // Legacy uploads path handling
+    if (orig && /^\/?(uploads|static\/uploads|data\/static\/uploads)\//i.test(orig)) {
+      let pub = orig.replace(/^\/?data\/static\/uploads\//, '/static/uploads/');
+      if (!pub.startsWith('/')) pub = `/${pub}`;
+      return { ...img, url: `${dashboardDomain}${pub}` };
+    }
+
+    // Fallback - return as-is
+    return { ...img, url: orig };
+  };
+
 
   const fetchGalleryImages = async () => {
     try {
@@ -170,13 +197,28 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
         headers: {
           'Content-Type': 'application/json',
         },
-        // Don't include credentials for public endpoint
+        // Public endpoint; disable cache to avoid stale responses
+        cache: 'no-cache'
       });
 
       if (response.ok) {
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
-          setGalleryImages(data.data);
+          const normalized = data.data.map((img) => {
+            const n = normalizeGalleryImage(img);
+            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+            const makeAbs = (u) => (u ? (/^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`) : u);
+            const urls = (n && (n.urls || n.srcSet)) || {};
+            const absUrls = {
+              thumbnail: makeAbs(urls.thumbnail),
+              small: makeAbs(urls.small),
+              medium: makeAbs(urls.medium || n?.url),
+              large: makeAbs(urls.large),
+              original: makeAbs(urls.original || n?.url)
+            };
+            return { ...n, urls: absUrls, srcSet: absUrls };
+          });
+          setGalleryImages(normalized);
         } else {
           console.warn('Invalid gallery response format:', data);
           setGalleryImages([]);

@@ -643,6 +643,78 @@ async function getFeaturedEvents(options = {}) {
     }
 }
 
+// Get homepage events (all events marked to show on homepage and active)
+async function getHomepageEvents(options = {}) {
+    const { limit } = options;
+
+    try {
+        console.log('🔍 getHomepageEvents: Starting query with options:', options);
+
+        const query = knex("events")
+            .select([
+                "events.id",
+                "events.title",
+                "events.description",
+                "events.slug",
+                "events.cover_image",
+                "events.background_color",
+                "events.gradient_data",
+                "events.text_color",
+                "events.button_color",
+                "events.button_text",
+                "events.button_text_color",
+                "events.background_type",
+                "events.card_background_type",
+                "events.is_active",
+                "events.show_on_homepage",
+                "events.created_at",
+                "events.updated_at",
+                // Event-specific fields for homepage display
+                "events.artist_name",
+                "events.event_date",
+                "events.event_address",
+                "events.posh_embed_url",
+                "events.external_ticket_url",
+                "events.buy_button_text",
+                "events.display_tickets"
+            ])
+            .where("events.show_on_homepage", true)
+            .where("events.is_active", true)
+            .orderBy("events.event_date", "desc");
+
+        if (limit) {
+            query.limit(limit);
+        }
+
+        console.log('🔍 getHomepageEvents: Executing query...');
+        const result = await query;
+
+        console.log('🎯 getHomepageEvents: Query completed', {
+            resultCount: result.length,
+            events: result.map(event => ({
+                id: event.id,
+                title: event.title,
+                artist_name: event.artist_name,
+                event_date: event.event_date,
+                event_address: event.event_address,
+                cover_image: event.cover_image,
+                show_on_homepage: event.show_on_homepage,
+                is_active: event.is_active
+            }))
+        });
+
+        return result;
+    } catch (error) {
+        console.error('❌ Error in getHomepageEvents:', error);
+        console.error('❌ Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
+        return [];
+    }
+}
+
+
 // 🎯 QR CODE FUNCTIONS
 
 // Find event by QR identifier
@@ -753,6 +825,7 @@ module.exports = {
     getLocationFromIP,
     getAcquisitionChannel,
     // 🏠 Homepage Features
+    getHomepageEvents,
     getFeaturedEvents,
     // 🎯 QR Code Functions
     findByQRIdentifier,

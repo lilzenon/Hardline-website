@@ -41,18 +41,28 @@ const MasonryGallery = ({
 
   // Intersection Observer for lazy loading
   useEffect(() => {
+    // Fallback for browsers without IntersectionObserver
+    if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
+    }
+
     observerRef.current = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry && entry.isIntersecting) {
           setIsVisible(true);
           observerRef.current?.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '50px' }
     );
 
     if (galleryRef.current) {
       observerRef.current.observe(galleryRef.current);
+    } else {
+      // If ref not ready yet, ensure visibility after a short delay
+      const t = setTimeout(() => setIsVisible(true), 800);
+      return () => clearTimeout(t);
     }
 
     return () => observerRef.current?.disconnect();
@@ -64,6 +74,14 @@ const MasonryGallery = ({
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, [updateColumns]);
+  // Safety fallback: if images arrive but observer didn't trigger, force visibility
+  useEffect(() => {
+    if (!isVisible && Array.isArray(images) && images.length > 0) {
+      const t = setTimeout(() => setIsVisible(true), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [images, isVisible]);
+
 
   // Handle image load
   const handleImageLoad = useCallback((index) => {
@@ -205,7 +223,7 @@ const MasonryGallery = ({
       // Find column with minimum height
       const minHeightIndex = colHeights.indexOf(Math.min(...colHeights));
       cols[minHeightIndex].push({ ...image, originalIndex: index });
-      
+
       // Estimate height based on aspect ratio (fallback if not provided)
       const aspectRatio = image.aspectRatio || (image.height / image.width) || 1.2;
       const estimatedHeight = 300 * aspectRatio; // Base width of 300px
@@ -468,6 +486,8 @@ const MasonryGallery = ({
             <img
               src={expandedImage.urls?.large || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
               alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
               style={{
                 width: '100%',
                 height: '100%',
@@ -651,17 +671,20 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         <img
           ref={imgRef}
           src={image.url || image.src || image.image_url || image.file_url}
-          srcSet={image.srcSet ? `
-            ${image.srcSet.small || image.urls?.small} 400w,
-            ${image.srcSet.medium || image.urls?.medium} 600w,
-            ${image.srcSet.large || image.urls?.large} 800w
-          `.trim() : (image.urls ? `
-            ${image.urls.small} 400w,
-            ${image.urls.medium} 600w,
-            ${image.urls.large} 800w
-          `.trim() : undefined)}
+          srcSet={(() => {
+            const small = image?.srcSet?.small || image?.urls?.small;
+            const medium = image?.srcSet?.medium || image?.urls?.medium;
+            const large = image?.srcSet?.large || image?.urls?.large;
+            const parts = [];
+            if (small) parts.push(`${small} 400w`);
+            if (medium) parts.push(`${medium} 600w`);
+            if (large) parts.push(`${large} 800w`);
+            return parts.length ? parts.join(', ') : undefined;
+          })()}
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           alt={image.alt || image.title || 'Gallery image'}
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
           loading="lazy"
           onLoadStart={handleImageLoadStart}
           onLoad={handleImageLoad}
@@ -685,6 +708,16 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
                 target.src = image.urls.original;
                 return;
               }
+            }
+
+            // Cache-busting single retry before final fallback
+            const attempt = parseInt(target.dataset.retryAttempt || '0', 10);
+            if (attempt < 1 && currentSrc) {
+              const sep = currentSrc.includes('?') ? '&' : '?';
+              target.dataset.retryAttempt = '1';
+              console.log('🔄 Cache-busting retry for image:', currentSrc);
+              target.src = `${currentSrc}${sep}_cb=${Date.now()}`;
+              return;
             }
 
             // Final fallback
@@ -724,7 +757,7 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           </div>
         </div>
       )}
-      
+
       {image.title && (
         <div
           style={{

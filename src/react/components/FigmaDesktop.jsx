@@ -551,7 +551,7 @@ const FigmaDesktop = () => {
 
   // Featured hero title spacing control (desktop only)
   const heroTitleRef = useRef(null);
-  const [heroTitleBottom, setHeroTitleBottom] = useState(95);
+  const [heroTitleBottom, setHeroTitleBottom] = useState(72);
 
   // Event Filter Toggle State - now managed by useHomepageData hook
   const [scaledDimensions, setScaledDimensions] = useState({
@@ -1424,8 +1424,8 @@ const FigmaDesktop = () => {
       const lineHeight = parseFloat(cs.lineHeight) || 26;
       const height = el.scrollHeight;
       const lines = Math.max(1, Math.round(height / lineHeight));
-      // Closer to date row for single-line titles; default spacing for multi-line
-      setHeroTitleBottom(lines <= 1 ? 66 : 90);
+      // Adjusted: move title slightly lower and tighten spacing to date row
+      setHeroTitleBottom(lines <= 1 ? 52 : 70);
     } catch (_) {}
   }, [mostRecentEvent, scaledDimensions.heroWidth, scaledDimensions.containerWidth, homeSettings?.event_title]);
 
@@ -1966,7 +1966,8 @@ const FigmaDesktop = () => {
               justifyContent: 'flex-start',
               alignItems: 'flex-end',
               gap: '10px',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              zIndex: 4 // Ensure title renders above gradient overlay
             }}
           >
             <div
@@ -2507,11 +2508,11 @@ const FigmaDesktop = () => {
                             <svg
                               width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
                               height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
-                              viewBox="0 0 10 10"
+                              viewBox="0 0 24 24"
                               fill="none"
                               style={{ color: 'rgba(255, 255, 255, 0.7)' }}
                             >
-                              <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
+                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor"/>
                             </svg>
                             <span
                               style={{
@@ -2667,7 +2668,7 @@ const FigmaDesktop = () => {
             display: 'grid',
             gridTemplateColumns: 'auto 1fr',
             width: '100%',
-            margin: '16px 0 0 0', // Reduced from 32px to 16px for better visual flow
+            margin: '24px 0 0 0', // Standardized vertical gap between top and bottom rows (desktop-only)
             padding: '0',
             alignItems: 'flex-start',
             columnGap: '24px' // Standardized desktop gap between left/right columns
@@ -3439,11 +3440,11 @@ const FigmaDesktop = () => {
                         <svg
                           width="12"
                           height="12"
-                          viewBox="0 0 10 10"
+                          viewBox="0 0 24 24"
                           fill="none"
                           style={{ color: 'rgba(255, 255, 255, 0.7)' }}
                         >
-                          <path d="M8 2V1a1 1 0 0 0-2 0v1H4V1a1 1 0 0 0-2 0v1H1a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H8zM2 8H1V7h1v1zm0-2H1V5h1v1zm2 2H3V7h1v1zm0-2H3V5h1v1zm2 2H5V7h1v1zm0-2H5V5h1v1zm2 2H7V7h1v1zm0-2H7V5h1v1z" fill="currentColor"/>
+                          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor"/>
                         </svg>
                         <span
                           style={{

@@ -561,7 +561,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
             fontWeight: '800',
             textAlign: 'center',
             marginTop: '16px',
-            marginBottom: '8px',
+            marginBottom: '4px',
             opacity: 0,
             animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
           }}
@@ -576,7 +576,7 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               maxWidth: '800px',
               margin: '0 auto',
               background: 'transparent',
-              padding: '20px',
+              padding: '8px 20px 20px 20px',
               boxSizing: 'border-box',
               opacity: 0,
               animation: 'fadeInUp 0.8s ease-out 0.4s forwards'

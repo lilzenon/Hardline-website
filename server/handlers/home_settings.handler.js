@@ -181,15 +181,17 @@ async function getHomepageData(req, res) {
     try {
         console.log('🔄 Fetching complete homepage data for refresh...');
 
-        // Get home settings
-        const homeSettings = await query.homeSettings.get();
-
-        // Get featured events
-        const featuredEvents = await query.event.getFeaturedEvents({ limit: 6 });
+        // Fetch all homepage data in parallel
+        const [homeSettings, featuredEvents, homepageEvents] = await Promise.all([
+            query.homeSettings.get(),
+            query.event.getFeaturedEvents({ limit: 20 }),
+            // Return all events marked for homepage (active), no limit so Past can show everything
+            query.event.getHomepageEvents({})
+        ]);
 
         // Format the date for display
         let formattedDate = "March 29th, 9:00 P.M.";
-        if (homeSettings.event_date) {
+        if (homeSettings && homeSettings.event_date) {
             const eventDate = new Date(homeSettings.event_date);
             const options = {
                 month: 'long',
@@ -202,13 +204,14 @@ async function getHomepageData(req, res) {
                 .replace(',', 'th,'); // Add 'th' suffix
         }
 
-        console.log(`✅ Homepage data refreshed: ${featuredEvents.length} featured events`);
+        console.log(`✅ Homepage data refreshed: ${featuredEvents.length} featured, ${homepageEvents.length} homepage events`);
 
         return res.status(200).send({
             homeSettings,
             featuredEvents,
+            homepageEvents,
             formattedDate,
-            totalCards: 1 + featuredEvents.length // 1 default + featured events
+            totalCards: 1 + (featuredEvents?.length || 0) // kept for backward compatibility
         });
     } catch (error) {
         console.error("Error fetching homepage data:", error);
