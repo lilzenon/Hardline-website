@@ -84,15 +84,17 @@ export const useHomepageData = () => {
       if (eventDate instanceof Date) {
         parsedDate = eventDate;
       } else if (typeof eventDate === 'string') {
-        // Try parsing as ISO string first, then fallback to Date constructor
-        parsedDate = new Date(eventDate);
+        // Normalize strings without timezone to UTC for consistency across clients
+        let s = eventDate.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
+        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
+        parsedDate = new Date(s);
 
-        // If that fails, try parsing common formats
+        // If that still fails, try parsing YYYY-MM-DD as UTC midnight
         if (isNaN(parsedDate.getTime())) {
-          // Try parsing YYYY-MM-DD format
-          const isoMatch = eventDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+          const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
           if (isoMatch) {
-            parsedDate = new Date(isoMatch[0]);
+            parsedDate = new Date(`${isoMatch[0]}T00:00:00Z`);
           }
         }
       } else {
@@ -122,8 +124,10 @@ export const useHomepageData = () => {
         options.hour12 = true;
       }
 
-      let formattedDate = parsedDate.toLocaleDateString('en-US', options);
-      
+      const __tz = (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York';
+      const __formatter = new Intl.DateTimeFormat('en-US', { ...options, timeZone: __tz });
+      let formattedDate = __formatter.format(parsedDate);
+
       if (includeTime) {
         formattedDate = formattedDate.replace(',', ' @');
       } else {
@@ -369,16 +373,14 @@ export const useHomepageData = () => {
       // Generate formatted date for hero sections
       let heroFormattedDate = data.formattedDate || "March 29th, 9:00 P.M.";
       if (validatedFeaturedEvents.length > 0 && validatedFeaturedEvents[0].event_date) {
-        const eventDate = new Date(validatedFeaturedEvents[0].event_date);
-        const options = {
-          month: 'long',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        };
-        heroFormattedDate = eventDate.toLocaleDateString('en-US', options)
-          .replace(',', 'th,'); // Add 'th' suffix
+        // Normalize and format in a fixed timezone for consistency
+        let s = validatedFeaturedEvents[0].event_date.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
+        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
+        const d = new Date(s);
+        const __tz = (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York';
+        const heroFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: __tz });
+        heroFormattedDate = heroFormatter.format(d).replace(',', 'th,');
       }
 
       // Cache the successful response

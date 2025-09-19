@@ -3296,7 +3296,14 @@ const FigmaMobile = () => {
                   gap: '12px', // Reduced gap to make more room for wider button
                   boxSizing: 'border-box',
                   zIndex: 3,
-                  minHeight: '44px' // Ensure minimum height for button container
+                  minHeight: '44px', // Ensure minimum height for button container
+                  // Ensure crisp, bright text on iOS Safari at initial load
+                  WebkitFontSmoothing: 'antialiased',
+                  MozOsxFontSmoothing: 'grayscale',
+                  textRendering: 'optimizeLegibility',
+                  opacity: 1,
+                  transform: 'translateZ(0)',
+                  willChange: 'transform'
                 }}
               >
                 <div
@@ -3334,18 +3341,25 @@ const FigmaMobile = () => {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         flex: 1,
-                        minWidth: 0
+                        minWidth: 0,
+                        // Improve initial visibility on mobile (iOS Safari)
+                        WebkitFontSmoothing: 'antialiased',
+                        MozOsxFontSmoothing: 'grayscale',
+                        textRendering: 'optimizeLegibility',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
+                        opacity: 1
                       }}
                     >
                       {featuredEvent.eventDate
-                        ? new Date(featuredEvent.eventDate).toLocaleDateString('en-US', {
+                        ? new Intl.DateTimeFormat('en-US', {
                             month: 'long',
                             day: 'numeric',
                             hour: 'numeric',
                             minute: '2-digit',
-                            hour12: true
-                          }).replace(',', 'th,')
-                        : featuredEvent.date || "March 29th, 9:00 P.M."
+                            hour12: true,
+                            timeZone: (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York'
+                          }).format(new Date(featuredEvent.eventDate)).replace(',', 'th,')
+                        : (featuredEvent.date || "March 29th, 9:00 P.M.")
                       }
                     </span>
                   </div>
@@ -3375,7 +3389,13 @@ const FigmaMobile = () => {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         flex: 1,
-                        minWidth: 0
+                        minWidth: 0,
+                        // Improve initial visibility on mobile (iOS Safari)
+                        WebkitFontSmoothing: 'antialiased',
+                        MozOsxFontSmoothing: 'grayscale',
+                        textRendering: 'optimizeLegibility',
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
+                        opacity: 1
                       }}
                     >
                       {featuredEvent.location || "Asbury Park, NJ"}
@@ -3459,7 +3479,7 @@ const FigmaMobile = () => {
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  bottom: '95px', // Use bottom positioning for consistency
+                  bottom: '68px', // Bring title closer to date/location for better hierarchy
                   display: 'flex',
                   width: '100%', // Use full width of responsive hero card
                   height: '48px',
