@@ -1291,8 +1291,11 @@ const FigmaDesktop = () => {
           if (card.coverImage) {
             const img = new Image();
             img.src = getOptimizedImageUrl(card.coverImage, 400);
-            img.onload = () => console.log(`✅ Preloaded desktop regular event image ${index + 1}:`, card.title);
-            img.onerror = () => console.warn(`❌ Failed to preload desktop regular event image ${index + 1}:`, card.title);
+            // Only log preloading in development
+            if (process.env.NODE_ENV === 'development') {
+              img.onload = () => console.log(`✅ Preloaded event image: ${card.title}`);
+              img.onerror = () => console.warn(`⚠️ Failed to preload: ${card.title}`);
+            }
           }
         });
       }
@@ -1598,23 +1601,50 @@ const FigmaDesktop = () => {
                   loading="eager"
                   decoding="async"
                   fetchpriority="high"
-                  onLoad={() => console.log('✅ DESKTOP FEATURED EVENT HERO IMAGE LOADED:', mostRecentEvent.title)}
+                  onLoad={() => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('✅ Hero image loaded:', mostRecentEvent.title);
+                    }
+                  }}
                   onError={(e) => {
                     const img = e.target;
                     const url = img?.src || '';
+
+                    // Prevent infinite error loops
                     if (img && !img.dataset.fallbackTried) {
                       img.dataset.fallbackTried = '1';
-                      if (url.includes('/event_hero')) { img.src = url.replace('/event_hero', '/medium'); return; }
-                      if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
-                      if (url.includes('/medium')) { img.src = url.replace('/medium', '/small'); return; }
-                      if (url.includes('/small')) { img.src = url.replace('/small', '/thumbnail'); return; }
+
+                      // Try different image variants before giving up
+                      if (url.includes('/event_hero')) {
+                        img.src = url.replace('/event_hero', '/medium');
+                        return;
+                      }
+                      if (url.includes('/event_card')) {
+                        img.src = url.replace('/event_card', '/medium');
+                        return;
+                      }
+                      if (url.includes('/medium')) {
+                        img.src = url.replace('/medium', '/small');
+                        return;
+                      }
+                      if (url.includes('/small')) {
+                        img.src = url.replace('/small', '/thumbnail');
+                        return;
+                      }
                       if (url.includes('/api/images/serve/')) {
                         img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
                         return;
                       }
+
+                      // Final fallback to static image
+                      img.src = '/images/optimized/hero-left-image-375w.jpg';
+                    } else {
+                      // If all fallbacks failed, hide the image gracefully
+                      if (process.env.NODE_ENV === 'development') {
+                        console.warn('⚠️ All hero image fallbacks failed');
+                      }
+                      img.style.backgroundColor = '#222222';
                     }
-                    console.warn('⚠️ Falling back to static hero placeholder:', url);
-                    img.src = '/images/optimized/hero-left-image-375w.jpg';
                   }}
                   style={{
                     position: 'absolute',
@@ -1647,8 +1677,16 @@ const FigmaDesktop = () => {
                   loading="eager"
                   decoding="async"
                   fetchpriority="high"
-                  onLoad={() => console.log('✅ DESKTOP DEFAULT HERO IMAGE LOADED')}
-                  onError={(e) => console.error('❌ DESKTOP DEFAULT HERO IMAGE FAILED:', e.target.src)}
+                  onLoad={() => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log('✅ Default hero image loaded');
+                    }
+                  }}
+                  onError={(e) => {
+                    if (process.env.NODE_ENV === 'development') {
+                      console.warn('⚠️ Default hero image failed:', e.target.src);
+                    }
+                  }}
                   style={{
                     position: 'absolute',
                     left: '0px',
@@ -2287,11 +2325,19 @@ const FigmaDesktop = () => {
                           alt={`${card.title} event cover`}
                           loading="lazy"
                           onError={(e) => {
-                            console.error(`❌ DESKTOP FEATURED: Featured event image failed to load for "${card.title}":`, e.target.src);
-                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                            // Only log in development to reduce console spam
+                            if (process.env.NODE_ENV === 'development') {
+                              console.warn(`⚠️ Event image failed to load: "${card.title}"`);
+                            }
+                            // Prevent further error events by removing the src
+                            e.target.style.backgroundColor = '#222222';
+                            e.target.style.display = 'none';
                           }}
                           onLoad={(e) => {
-                            console.log('✅ DESKTOP FEATURED: Featured event image loaded successfully:', card.title, e.target.src);
+                            // Only log in development
+                            if (process.env.NODE_ENV === 'development') {
+                              console.log('✅ Event image loaded:', card.title);
+                            }
                             e.target.style.backgroundColor = 'transparent';
                           }}
                           style={{
@@ -3165,15 +3211,13 @@ const FigmaDesktop = () => {
                       alt={`${card.title} event cover`}
                       loading="lazy"
                       onError={(e) => {
-                        const img = e.target;
-                        const url = img?.src || '';
-                        console.error(`❌ DESKTOP: Homepage event image failed to load for "${card.title}":`, {
-                          url: url,
-                          originalCoverImage: card.coverImage,
-                          errorEvent: e,
-                          networkState: img.networkState,
-                          readyState: img.readyState
-                        });
+                        // Only log in development to reduce console spam
+                        if (process.env.NODE_ENV === 'development') {
+                          console.warn(`⚠️ Event image failed to load: "${card.title}"`);
+                        }
+                        // Prevent further error events by hiding the image
+                        e.target.style.backgroundColor = '#222222';
+                        e.target.style.display = 'none';
 
                         if (img && !img.dataset.fallbackTried) {
                           img.dataset.fallbackTried = '1';
