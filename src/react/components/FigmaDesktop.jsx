@@ -1408,6 +1408,21 @@ const FigmaDesktop = () => {
     return soonestEvent;
   }, [featuredEvents, homepageEvents]);
 
+  // Desktop-only: measure featured hero title lines to adjust vertical spacing
+  useLayoutEffect(() => {
+    if (scaledDimensions.containerWidth < 1024) return;
+    const el = heroTitleRef.current;
+    if (!el) return;
+    try {
+      const cs = window.getComputedStyle(el);
+      const lineHeight = parseFloat(cs.lineHeight) || 26;
+      const height = el.scrollHeight;
+      const lines = Math.max(1, Math.round(height / lineHeight));
+      // Closer to date row for single-line titles; default spacing for multi-line
+      setHeroTitleBottom(lines <= 1 ? 66 : 90);
+    } catch (_) {}
+  }, [mostRecentEvent, scaledDimensions.heroWidth, scaledDimensions.containerWidth, homeSettings?.event_title]);
+
   // Show smooth branded loading state
   if (loading) {
     return (
@@ -2596,14 +2611,13 @@ const FigmaDesktop = () => {
         <div
           style={{ ...(fadeIn(1000)),
             position: 'relative',
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: 'auto 1fr',
             width: '100%',
             margin: '16px 0 0 0', // Reduced from 32px to 16px for better visual flow
             padding: '0',
-            justifyContent: 'flex-start', // Start from left and let right column align naturally
             alignItems: 'flex-start',
-            gap: '12px', // Tighter gap to bring columns closer while keeping breathing room
-            flexDirection: 'row'
+            columnGap: '12px' // Tighter gap to bring columns closer while keeping breathing room
           }}
         >
           {/* Left Side - Follow Us (Social Media Buttons) */}
@@ -2696,56 +2710,17 @@ const FigmaDesktop = () => {
               return '52px'; // Default gap for wide desktop screens
             })(),
             alignItems: 'flex-start',
-            flex: '0 0 auto',
-            width: `${(() => {
-              const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
-              const fallback = Math.min(
-                Math.round(scaledDimensions.eventsWidth + 200),
-                Math.round(scaledDimensions.containerWidth * 0.45)
-              );
-              const raw = (videoMaxWidthPx ?? fallback);
-              return Math.max(minW, raw);
-            })()}px`, // Prefer measured available space but never below desktop min for visibility
-            maxWidth: `${(() => {
-              const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
-              const fallback = Math.min(
-                Math.round(scaledDimensions.eventsWidth + 200)
-              );
-              const raw = (videoMaxWidthPx ?? fallback);
-              return Math.max(minW, raw);
-            })()}px`, // Keep alignment with events, allow growth, and ensure a sensible desktop minimum
-            transition: 'width 200ms cubic-bezier(0.4, 0, 0.2, 1), max-width 200ms cubic-bezier(0.4, 0, 0.2, 1)',
-            willChange: 'width, max-width'
-
+            width: '100%',
+            maxWidth: '100%'
           }}
         >
           {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
           <div
             onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
             style={{
-              width: (() => {
-                if (videoSizeFromLaylo?.height) {
-                  const targetW = Math.round((videoSizeFromLaylo.height * 16) / 9);
-                  const maxW = (videoMaxWidthPx ?? targetW);
-                  const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
-                  const allowedW = Math.max(minW, Math.min(targetW, maxW));
-                  return `${allowedW}px`;
-                }
-                return '100%';
-              })(),
-              height: (() => {
-                if (videoSizeFromLaylo?.height) {
-                  const targetW = Math.round((videoSizeFromLaylo.height * 16) / 9);
-                  const maxW = (videoMaxWidthPx ?? targetW);
-                  const minW = Math.round(Math.max(360, scaledDimensions.eventsWidth * 0.8));
-                  const allowedW = Math.max(minW, Math.min(targetW, maxW));
-                  const allowedH = Math.round((allowedW * 9) / 16);
-                  return `${allowedH}px`;
-                }
-                return undefined;
-              })(),
-              maxWidth: 'calc(100vw - 40px)', // Clamp to container inner width on tight desktops (20px side padding)
-              aspectRatio: videoSizeFromLaylo?.height ? undefined : '16 / 9', // Preserve 16:9 when Laylo height not available
+              width: '100%',
+              height: 'auto',
+              aspectRatio: '16 / 9',
               position: 'relative',
               flexShrink: 0,
               cursor: 'pointer',
@@ -2803,11 +2778,12 @@ const FigmaDesktop = () => {
                   loading="eager"
                   style={{
                     position: 'absolute',
-                    top: '50%',
-                    left: '50%',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     width: '100%',
                     height: '100%',
-                    transform: 'translate(-50%, -50%)',
                     border: 'none',
                     pointerEvents: 'none',
                     opacity: 1

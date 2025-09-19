@@ -53,21 +53,22 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
       gap: '10px',
       borderRadius: '12px',
       // Glassmorphism matching updated desktop pills
-      background: isActive
-        ? 'rgba(255, 255, 255, 0.12)'
-        : (isHovered ? 'rgba(255, 255, 255, 0.06)' : 'transparent'),
-      backdropFilter: isActive
-        ? 'blur(25px)'
-        : (isHovered ? 'blur(15px)' : 'blur(0px)'),
-      WebkitBackdropFilter: isActive
-        ? 'blur(25px)'
-        : (isHovered ? 'blur(15px)' : 'blur(0px)'),
-      border: isActive
+      // Inactive: fully transparent; Hover/Active: glassmorphism per design system
+      background: (isActive || isHovered)
+        ? 'rgba(22, 22, 22, 0.30)'
+        : 'transparent',
+      backdropFilter: (isActive || isHovered)
+        ? 'blur(12px)'
+        : 'none',
+      WebkitBackdropFilter: (isActive || isHovered)
+        ? 'blur(12px)'
+        : 'none',
+      border: (isActive || isHovered)
         ? '1px solid rgba(255, 255, 255, 0.12)'
-        : (isHovered ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(255, 255, 255, 0.0)'),
-      boxShadow: isActive
-        ? '0px 8px 16px rgba(0, 0, 0, 0.30)'
-        : (isHovered ? '0px 4px 8px rgba(0, 0, 0, 0.20)' : 'none'),
+        : '1px solid transparent',
+      boxShadow: (isActive || isHovered)
+        ? '0px 4px 8px rgba(0, 0, 0, 0.20)'
+        : 'none',
       color: '#FFFFFF',
       cursor: 'pointer',
       userSelect: 'none',
