@@ -239,18 +239,67 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
     );
   }
 
-  // Enhanced error handling - show fallback instead of disappearing
+  // Enhanced error handling - show fallback instead of disappearing (desktop-only placeholder)
   if (socialLinks.length === 0) {
-    // If we have an error but no fallback links were set, don't render
-    if (error && !error.includes('fallback')) {
-      console.warn('⚠️ No social links available and no fallback, component will be hidden');
+    if (error) {
+      if (isDesktop) {
+        return (
+          <section
+            style={{ width: '100%', margin: '0', padding: '0', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
+            aria-label="Social media links temporarily unavailable"
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: `${gapPx}px`,
+                width: '100%',
+                maxWidth: '100%',
+                padding: '0',
+                boxSizing: 'border-box'
+              }}
+            >
+              {[1,2,3,4].map((i) => (
+                <div
+                  key={`placeholder-${i}`}
+                  role="button"
+                  aria-disabled="true"
+                  title="Coming Soon"
+                  style={{
+                    width: `${computedButtonSize}px`,
+                    height: `${computedButtonSize}px`,
+                    minWidth: `${computedButtonSize}px`,
+                    maxWidth: `${computedButtonSize}px`,
+                    minHeight: `${computedButtonSize}px`,
+                    maxHeight: `${computedButtonSize}px`,
+                    borderRadius: '20px',
+                    background: 'rgba(22, 22, 22, 0.30)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexShrink: 0,
+                    opacity: 0.6,
+                    aspectRatio: '1 / 1',
+                    cursor: 'not-allowed'
+                  }}
+                >
+                  <div style={{ width: Math.round(computedIconSize*0.6), height: Math.round(computedIconSize*0.6), borderRadius: '8px', background: 'rgba(255,255,255,0.25)' }} />
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      }
+      // Non-desktop: keep current behavior (no render) to avoid impacting mobile/tablet layouts
       return null;
     }
-
-    // If still loading or no links at all, don't render
-    if (!error) {
-      return null;
-    }
+    // If still loading or no links at all without error, don't render
+    return null;
   }
 
   return (
@@ -301,10 +350,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                 minHeight: `${computedButtonSize}px`,
                 maxHeight: `${computedButtonSize}px`,
                 borderRadius: '20px', // Optimized radius
-                background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
+                background: isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)', // Glassmorphism (desktop uses 0.30)
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect
                 WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.15)', // Slightly more visible border
+                border: isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)', // Standard border (desktop uses 0.12)
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
@@ -320,33 +369,43 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               }}
               onTouchStart={(e) => {
                 e.currentTarget.style.transform = 'scale(0.95)';
-                e.currentTarget.style.background = 'rgba(120, 120, 120, 0.8)'; // Noticeable medium gray like TikTok
-                e.currentTarget.style.boxShadow = '0 0 12px rgba(255, 255, 255, 0.2), 0 0 24px rgba(255, 255, 255, 0.1)'; // More subtle glow
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
+                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
               }}
               onTouchEnd={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.6)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
               onMouseDown={(e) => {
                 e.currentTarget.style.transform = 'scale(0.95)';
-                e.currentTarget.style.background = 'rgba(120, 120, 120, 0.8)'; // Noticeable medium gray like TikTok
-                e.currentTarget.style.boxShadow = '0 0 12px rgba(255, 255, 255, 0.2), 0 0 24px rgba(255, 255, 255, 0.1)'; // More subtle glow
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
+                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
               }}
               onMouseUp={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.6)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.6)';
-                e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.boxShadow = 'none';
+              }}
+              onFocus={(e) => {
+                if (isDesktop) {
+                  e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.5)';
+                }
+              }}
+              onBlur={(e) => {
+                if (isDesktop) {
+                  e.currentTarget.style.boxShadow = 'none';
+                }
               }}
             >
               {/* Social Media Icon */}

@@ -2811,11 +2811,11 @@ const FigmaDesktop = () => {
               style={{
                 position: 'absolute',
                 left: '0px',
-                bottom: '0',
+                bottom: '12px',
                 display: 'flex',
                 width: '100%',
-                height: '44px',
-                padding: '8px 16px',
+                minHeight: '52px',
+                padding: '10px 16px 12px',
                 justifyContent: 'space-between',
                 alignItems: 'flex-end',
                 gap: '16px',
@@ -2870,6 +2870,16 @@ const FigmaDesktop = () => {
                     e.stopPropagation();
                     window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
                   }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Watch now on YouTube"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                    }
+                  }}
                   style={{
                     display: 'flex',
                     minWidth: '112px',
@@ -2877,19 +2887,23 @@ const FigmaDesktop = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     borderRadius: '22px',
-                    background: 'rgba(38, 38, 38, 0.80)',
+                    background: 'rgba(22, 22, 22, 0.30)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: '0px 4px 8px rgba(0,0,0,0.20)',
                     cursor: 'pointer',
                     transition: 'all 0.3s ease',
                     transform: 'scale(1)',
                     boxSizing: 'border-box'
                   }}
                   onMouseEnter={(e) => {
-                    e.target.style.transform = 'scale(1.05)';
-                    e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.40)';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.transform = 'scale(1)';
-                    e.target.style.background = 'rgba(38, 38, 38, 0.80)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.30)';
                   }}
                   onMouseDown={(e) => {
                     e.target.style.transform = 'scale(0.95)';
