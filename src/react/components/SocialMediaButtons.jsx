@@ -171,6 +171,15 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
     };
   }, []);
 
+  // Compute dynamic sizing based on containerWidth and number of buttons (desktop only)
+  const buttonsCount = (socialLinks && socialLinks.length ? socialLinks.length : 4);
+  const gapPx = isDesktop ? 16 : 10; // Reduced gap for better spacing
+  const effectiveWidth = isDesktop && typeof containerWidth === 'number' && containerWidth > 0 ? containerWidth : null;
+  const computedButtonSize = effectiveWidth
+    ? Math.max(80, Math.min(140, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount)))
+    : (isDesktop ? 90 : 70);
+  const computedIconSize = isDesktop ? Math.round(computedButtonSize * 0.66) : 40;
+
   // Show skeleton during loading to maintain layout and timing
   if (loading) {
     return (
@@ -191,10 +200,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
             display: 'flex',
             flexDirection: 'row',
             flexWrap: 'nowrap',
-            justifyContent: isDesktop ? 'center' : 'space-between',
+            justifyContent: effectiveWidth ? 'space-between' : (isDesktop ? 'center' : 'space-between'),
             alignItems: 'center',
-            gap: isDesktop ? '20px' : '10px',
-            width: isDesktop ? 'auto' : '100%',
+            gap: `${gapPx}px`,
+            width: effectiveWidth ? `${effectiveWidth}px` : (isDesktop ? 'auto' : '100%'),
             maxWidth: '100%',
             padding: '0',
             boxSizing: 'border-box'
@@ -205,12 +214,12 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
             <div
               key={index}
               style={{
-                width: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed skeleton button size to match actual buttons
-                height: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed height for perfect squares
-                minWidth: isDesktop ? '75px' : '70px',
-                maxWidth: isDesktop ? '75px' : '70px',
-                minHeight: isDesktop ? '75px' : '70px',
-                maxHeight: isDesktop ? '75px' : '70px',
+                width: `${computedButtonSize}px`,
+                height: `${computedButtonSize}px`,
+                minWidth: `${computedButtonSize}px`,
+                maxWidth: `${computedButtonSize}px`,
+                minHeight: `${computedButtonSize}px`,
+                maxHeight: `${computedButtonSize}px`,
                 borderRadius: '20px',
                 background: 'rgba(22, 22, 22, 0.4)',
                 backdropFilter: 'blur(12px)',
@@ -263,10 +272,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'nowrap', // Prevent stacking
-          justifyContent: isDesktop ? 'center' : 'space-between',
+          justifyContent: effectiveWidth ? 'space-between' : (isDesktop ? 'center' : 'space-between'),
           alignItems: 'center',
-          gap: isDesktop ? '20px' : '10px',
-          width: isDesktop ? 'auto' : '100%',
+          gap: `${gapPx}px`,
+          width: effectiveWidth ? `${effectiveWidth}px` : (isDesktop ? 'auto' : '100%'),
           maxWidth: '100%',
           padding: '0',
           boxSizing: 'border-box'
@@ -285,12 +294,12 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               aria-label={`Follow us on ${platform.name}`}
               style={{
                 // 🚨 FIX: Fixed button sizes with consistent dimensions regardless of container width
-                width: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed width for consistent button sizing
-                height: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed height to match width for perfect squares
-                minWidth: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed minimum size
-                maxWidth: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed maximum size
-                minHeight: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed minimum height
-                maxHeight: isDesktop ? '75px' : '70px', // 🚨 FIX: Fixed maximum height
+                width: `${computedButtonSize}px`,
+                height: `${computedButtonSize}px`,
+                minWidth: `${computedButtonSize}px`,
+                maxWidth: `${computedButtonSize}px`,
+                minHeight: `${computedButtonSize}px`,
+                maxHeight: `${computedButtonSize}px`,
                 borderRadius: '20px', // Optimized radius
                 background: 'rgba(22, 22, 22, 0.6)', // Enhanced glassmorphic background
                 backdropFilter: 'blur(12px)', // Increased blur for better glass effect
@@ -343,8 +352,8 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               {/* Social Media Icon */}
               <div
                 style={{
-                  width: isDesktop ? '50px' : '40px', // Larger icons on desktop
-                  height: isDesktop ? '50px' : '40px', // Larger icons on desktop
+                  width: `${computedIconSize}px`,
+                  height: `${computedIconSize}px`,
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center'

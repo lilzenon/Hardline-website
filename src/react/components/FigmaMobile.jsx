@@ -3119,7 +3119,7 @@ const FigmaMobile = () => {
               style={{
                 width: '100%',
                 padding: '0', // Remove padding to let inner element control width
-                marginBottom: '6px', // Slightly increased spacing between hero cards for better readability
+                marginBottom: '2px', // Reduced spacing for more compact layout (>=50% reduction)
                 boxSizing: 'border-box',
                 display: 'flex',
                 justifyContent: 'center', // Center the hero card
@@ -3634,7 +3634,7 @@ const FigmaMobile = () => {
                   alignItems: 'stretch',
                   gap: '4px', // Slightly increased gap for better card separation
                   flexShrink: 0,
-                  padding: '8px 0', // FIXED: Equal padding top and bottom for balanced spacing
+                  padding: '4px 0', // Reduced padding for compact spacing (>=50% reduction)
                   boxSizing: 'border-box',
                   minHeight: 'auto',
                   overflow: 'visible',

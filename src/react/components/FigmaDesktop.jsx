@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 import { useAnalytics } from '../hooks/useAnalytics';
@@ -530,6 +530,9 @@ const FigmaDesktop = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState('Events'); // Navigation state
 
+  const leftColumnRef = useRef(null);
+  const [videoMaxWidthPx, setVideoMaxWidthPx] = useState(null);
+
   // Event Filter Toggle State - now managed by useHomepageData hook
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
@@ -602,6 +605,52 @@ const FigmaDesktop = () => {
   });
 
   // MEMORY OPTIMIZATION: Lazy load Laylo SDK with error handling - RESTORED ORIGINAL IMPLEMENTATION
+  // Compute the maximum usable width for the right video column based on available space
+  useLayoutEffect(() => {
+    const recompute = () => {
+      try {
+        const desktop = document.querySelector('.desktop-container');
+        const left = leftColumnRef.current;
+        if (!desktop || !left) return;
+        const gapPx = 12; // desktop gap between left and right columns
+        const rightPadding = 20; // desktop container has 20px right padding
+        const desktopRect = desktop.getBoundingClientRect();
+        const leftRect = left.getBoundingClientRect();
+        const available = Math.floor(desktopRect.right - leftRect.right - gapPx - rightPadding);
+        setVideoMaxWidthPx(available > 0 ? available : 0);
+      } catch (_) {}
+    };
+
+    // Initial sync before first paint and again on next frame (covers hydration/layout shifts)
+    recompute();
+    const raf = requestAnimationFrame(recompute);
+
+    // Observe size changes on both containers to support bidirectional scaling without relying solely on window resize
+    const desktop = document.querySelector('.desktop-container');
+    const left = leftColumnRef.current;
+    const supportsRO = typeof ResizeObserver !== 'undefined';
+    let roDesktop = null;
+    let roLeft = null;
+    if (supportsRO && desktop && left) {
+      roDesktop = new ResizeObserver(recompute);
+      roLeft = new ResizeObserver(recompute);
+      roDesktop.observe(desktop);
+      roLeft.observe(left);
+    } else {
+      // Fallback to resize event
+      window.addEventListener('resize', recompute);
+    }
+    window.addEventListener('load', recompute);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (roDesktop) roDesktop.disconnect();
+      if (roLeft) roLeft.disconnect();
+      else window.removeEventListener('resize', recompute);
+      window.removeEventListener('load', recompute);
+    };
+  }, []);
+
   useEffect(() => {
     // Load Laylo SDK script only once with proper error handling
     if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
@@ -1637,7 +1686,7 @@ const FigmaDesktop = () => {
                       }
 
                       // Final fallback to static image
-                      img.src = '/images/optimized/hero-left-image-375w.jpg';
+                      img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                     } else {
                       // If all fallbacks failed, hide the image gracefully
                       if (process.env.NODE_ENV === 'development') {
@@ -1659,46 +1708,24 @@ const FigmaDesktop = () => {
                 />
               </picture>
             ) : (
-              /* Fallback to default hero image when no featured events */
-              <picture>
-                <source
-                  srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
-                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                  type="image/avif"
-                />
-                <source
-                  srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
-                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                  type="image/webp"
-                />
-                <img
-                  src="/images/optimized/hero-left-image-375w.jpg"
-                  alt="Default Hero Background"
-                  loading="eager"
-                  decoding="async"
-                  fetchpriority="high"
-                  onLoad={() => {
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('✅ Default hero image loaded');
-                    }
-                  }}
-                  onError={(e) => {
-                    if (process.env.NODE_ENV === 'development') {
-                      console.warn('⚠️ Default hero image failed:', e.target.src);
-                    }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: '0px',
-                    top: '0px',
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    zIndex: 1
-                  }}
-                />
-              </picture>
+              /* Fallback hero placeholder when no featured events */
+              <img
+                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K"
+                alt="No upcoming featured event"
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  zIndex: 1
+                }}
+              />
             )}
           </div>
 
@@ -2599,234 +2626,75 @@ const FigmaDesktop = () => {
             width: '100%',
             margin: '16px 0 0 0', // Reduced from 32px to 16px for better visual flow
             padding: '0',
-            justifyContent: 'space-between', // Space between Watch section and Follow Us section
+            justifyContent: 'flex-start', // Start from left and let right column align naturally
             alignItems: 'flex-start',
-            gap: '32px', // Fixed gap for consistent spacing between video and text section
+            gap: '12px', // Tighter gap to bring columns closer while keeping breathing room
             flexDirection: 'row'
           }}
         >
-          {/* Left Side - YouTube Video Section with Title */}
+          {/* Left Side - Follow Us (Social Media Buttons) */}
           <div
+            ref={leftColumnRef}
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as other sections
-              alignItems: 'flex-start'
+              alignItems: 'flex-start',
+              flex: '1 1 auto',
+              minWidth: '400px'
             }}
           >
-            {/* Watch Title - Standardized Typography */}
-            <div
-              style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Match Events/Up Next/Text us titles
-                fontWeight: '800',
-                lineHeight: 'normal',
-                letterSpacing: '-0.02em', // Match other titles
-                margin: '0',
-                padding: '0',
-                height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match other titles
-                display: 'flex',
-                alignItems: 'center' // Center text vertically within the height
-              }}
-            >
-              Watch
-            </div>
-
-            {/* YouTube Video Container */}
-            <div
-            onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
-            style={{
-              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.9)}px`, // Increased to 90% for wider video
-              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.9)}px`, // Increased to 90% proportionally
-              position: 'relative',
-              flexShrink: 0,
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)',
-              borderRadius: '24px'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1) translateY(0px)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-            }}
-          >
-          {/* Video background container - UPDATED DIMENSIONS */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: `${Math.round(scaledDimensions.rightHeroWidth * 0.9)}px`, // Match wider video size
-              height: `${Math.round(scaledDimensions.rightHeroHeight * 0.9)}px`, // Match wider video size
-              borderRadius: '24px',
-              overflow: 'hidden'
-            }}
-          >
-            {/* YouTube iframe wrapper with aspect ratio preservation */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '100%',
-                height: '100%',
-                overflow: 'hidden'
-              }}
-            >
-              {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
-              <iframe
-                src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
-                title="Henry Fong YouTube Video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                loading="eager"
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  width: '100%',
-                  height: '100%',
-                  transform: 'translate(-50%, -50%) scale(1.5)',
-                  border: 'none',
-                  pointerEvents: 'none',
-                  opacity: 1
-                }}
+            {/* Follow Us: Laylo (top) + Social buttons (bottom) */}
+            <div style={{ width: '100%' }}>
+              <TextUsSection
+                scaledDimensions={scaledDimensions}
+                phoneNumber={phoneNumber}
+                setPhoneNumber={setPhoneNumber}
+                phoneSubmitting={phoneSubmitting}
+                phoneSubmitted={phoneSubmitted}
+                phoneInputState={phoneInputState}
+                selectedCountryId={selectedCountryId}
+                setSelectedCountryId={setSelectedCountryId}
+                flagImageRef={flagImageRef}
+                phoneContainerRef={phoneContainerRef}
+                showVerification={showVerification}
+                verificationPhone={verificationPhone}
+                verificationCode={verificationCode}
+                setVerificationCode={setVerificationCode}
+                verificationSubmitting={verificationSubmitting}
+                verificationState={verificationState}
+                resendCountdown={resendCountdown}
+                canResend={canResend}
+                resendSubmitting={resendSubmitting}
+                handlePhoneSubmit={handlePhoneSubmit}
+                handleVerificationSubmit={handleVerificationSubmit}
+                handleResendCode={handleResendCode}
+                handlePhoneChange={handlePhoneChange}
+                handlePhoneKeyDown={handlePhoneKeyDown}
+                handleCountryChange={handleCountryChange}
+                handleVerificationChange={handleVerificationCodeChange}
+                handleBackToPhone={handleBackToPhone}
               />
             </div>
 
-            {/* Gradient overlay to match original design */}
+            {/* Social Media Buttons - Desktop Left Side */}
             <div
               style={{
-                position: 'absolute',
-                top: '0',
-                left: '0',
                 width: '100%',
-                height: '100%',
-                background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
-                borderRadius: '24px',
-                zIndex: 1
-              }}
-            />
-          </div>
-
-          {/* Video Hero Text Box - UPDATED POSITIONING */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: `${Math.min(Math.round(scaledDimensions.rightHeroHeight * 0.75), 350) - 54}px`, // Adjust for reduced video size
-              display: 'flex',
-              width: '100%',
-              height: '44px',
-              padding: '8px 16px',
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              gap: '16px',
-              zIndex: 2
-            }}
-          >
-            {/* Left - Date and title */}
-            <div
-              style={{
                 display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                gap: '4px',
-                flex: '1'
+                justifyContent: 'stretch', // Changed from center to stretch for full width
+                alignItems: 'center',
+                padding: '0',
+                marginTop: `${Math.max(20, Math.round(scaledDimensions.scale * 28))}px`,
+                zIndex: 0
               }}
             >
-              <div
-                style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '24px',
-                  fontWeight: '800',
-                  lineHeight: '1.1',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  maxWidth: `${Math.round(scaledDimensions.rightHeroWidth * 0.9) >= 300 ? Math.round(scaledDimensions.rightHeroWidth * 0.9) - 150 : Math.round(scaledDimensions.rightHeroWidth * 0.9) - 60}px` // Adjust for wider video size
-                }}
-              >
-                Watch on YouTube
-              </div>
-
-              <div
-                style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '10px',
-                  fontWeight: '200',
-                  lineHeight: 'normal'
-                }}
-              >
-                Henry Fong full set live on YouTube
-              </div>
+              <SocialMediaButtons
+                isDesktop={true}
+                containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth} // Pass actual container width
+                responsive={true}
+              />
             </div>
-
-            {/* Right - CTA - UPDATED CONDITION */}
-            {Math.round(scaledDimensions.rightHeroWidth * 0.9) >= 300 && ( // Adjust condition for wider video size
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
-                }}
-                style={{
-                  display: 'flex',
-                  minWidth: '112px',
-                  height: '44px',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  borderRadius: '22px',
-                  background: 'rgba(38, 38, 38, 0.80)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  transform: 'scale(1)',
-                  boxSizing: 'border-box'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'scale(1.05)';
-                  e.target.style.background = 'rgba(76, 76, 76, 0.90)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'scale(1)';
-                  e.target.style.background = 'rgba(38, 38, 38, 0.80)';
-                }}
-                onMouseDown={(e) => {
-                  e.target.style.transform = 'scale(0.95)';
-                }}
-                onMouseUp={(e) => {
-                  e.target.style.transform = 'scale(1.05)';
-                }}
-              >
-                <span
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    lineHeight: '1.2',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  Watch now
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
         </div>
 
         {/* Right Side - Text Us Section with Laylo and Social Media Buttons */}
@@ -2854,57 +2722,224 @@ const FigmaDesktop = () => {
               return '52px'; // Default gap for wide desktop screens
             })(),
             alignItems: 'flex-start',
-            flex: '1 1 auto', // Allow growing and shrinking
-            minWidth: '320px', // Increased minimum width for better scaling
-            maxWidth: `${Math.round(scaledDimensions.eventsWidth * 1.2)}px` // Allow 20% larger than Events section
+            flex: '0 0 auto',
+            width: `${(
+              videoMaxWidthPx ?? Math.min(
+                Math.round(scaledDimensions.eventsWidth + 200),
+                Math.round(scaledDimensions.containerWidth * 0.45)
+              )
+            )}px`, // Prefer measured available space for true bidirectional scaling
+            maxWidth: `${(
+              videoMaxWidthPx ?? Math.min(
+                Math.round(scaledDimensions.eventsWidth + 200)
+              )
+            )}px`, // Keep alignment with events but allow growth via measured space
+            transition: 'width 200ms cubic-bezier(0.4, 0, 0.2, 1), max-width 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'width, max-width'
+
           }}
         >
-          <TextUsSection
-            scaledDimensions={scaledDimensions}
-            phoneNumber={phoneNumber}
-            setPhoneNumber={setPhoneNumber}
-            phoneSubmitting={phoneSubmitting}
-            phoneSubmitted={phoneSubmitted}
-            phoneInputState={phoneInputState}
-            selectedCountryId={selectedCountryId}
-            setSelectedCountryId={setSelectedCountryId}
-            flagImageRef={flagImageRef}
-            phoneContainerRef={phoneContainerRef}
-            showVerification={showVerification}
-            verificationPhone={verificationPhone}
-            verificationCode={verificationCode}
-            setVerificationCode={setVerificationCode}
-            verificationSubmitting={verificationSubmitting}
-            verificationState={verificationState}
-            resendCountdown={resendCountdown}
-            canResend={canResend}
-            resendSubmitting={resendSubmitting}
-            handlePhoneSubmit={handlePhoneSubmit}
-            handleVerificationSubmit={handleVerificationSubmit}
-            handleResendCode={handleResendCode}
-            handlePhoneChange={handlePhoneChange}
-            handlePhoneKeyDown={handlePhoneKeyDown}
-            handleCountryChange={handleCountryChange}
-            handleVerificationChange={handleVerificationCodeChange}
-            handleBackToPhone={handleBackToPhone}
-          />
-
-          {/* Social Media Buttons - Desktop Integration with Full Width */}
+          {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
           <div
+            onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
             style={{
-              width: '100%', // Use full width of parent container
-              display: 'flex',
-              justifyContent: 'center', // Center the social media buttons
-              alignItems: 'center',
-              padding: '0' // Remove padding to use full width
+              width: '100%', // Fill right column to align right edge with events/nav
+              maxWidth: 'calc(100vw - 40px)', // Clamp to container inner width on tight desktops (20px side padding)
+              aspectRatio: '16 / 9', // Maintain 16:9; height derives from width
+              position: 'relative',
+              flexShrink: 0,
+              cursor: 'pointer',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transformOrigin: 'right top',
+              borderRadius: '24px',
+              marginLeft: 'auto' // Right-align within container to match elements above
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
             }}
           >
-            <SocialMediaButtons
-              isDesktop={true}
-              containerWidth={Math.round(scaledDimensions.eventsWidth * 1.2)}
-              responsive={true}
-            />
+            {/* Video background container */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '0px',
+                top: '0px',
+                width: '100%', // Match parent container width
+                height: '100%',
+                borderRadius: '24px',
+                overflow: 'hidden'
+              }}
+            >
+              {/* YouTube iframe wrapper with aspect ratio preservation */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '100%',
+                  height: '100%',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
+                <iframe
+                  src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
+                  title="Henry Fong YouTube Video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="eager"
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    width: '100%',
+                    height: '100%',
+                    transform: 'translate(-50%, -50%)',
+                    border: 'none',
+                    pointerEvents: 'none',
+                    opacity: 1
+                  }}
+                />
+              </div>
+
+              {/* Gradient overlay */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
+                  borderRadius: '24px',
+                  zIndex: 1
+                }}
+              />
+            </div>
+
+            {/* Video Hero Text Box */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '0px',
+                bottom: '0',
+                display: 'flex',
+                width: '100%',
+                height: '44px',
+                padding: '8px 16px',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                gap: '16px',
+                zIndex: 2
+              }}
+            >
+              {/* Left - Title */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-end',
+                  gap: '4px',
+                  flex: '1'
+                }}
+              >
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '24px',
+                    fontWeight: '800',
+                    lineHeight: '1.1',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    maxWidth: `${(() => {
+                      const responsiveWidth = Math.min(Math.round(scaledDimensions.rightHeroWidth), Math.round(scaledDimensions.containerWidth * 0.4));
+                      return responsiveWidth >= 300 ? responsiveWidth - 150 : responsiveWidth - 60;
+                    })()}px`
+                  }}
+                >
+                  Watch on YouTube
+                </div>
+                <div
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '10px',
+                    fontWeight: '200',
+                    lineHeight: 'normal'
+                  }}
+                >
+                  Henry Fong full set live on YouTube
+                </div>
+              </div>
+
+              {/* Right - CTA */}
+              {Math.min(Math.round(scaledDimensions.rightHeroWidth * 1.25), Math.round(scaledDimensions.containerWidth * 0.5)) >= 300 && (
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                  }}
+                  style={{
+                    display: 'flex',
+                    minWidth: '112px',
+                    height: '44px',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: '22px',
+                    background: 'rgba(38, 38, 38, 0.80)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    transform: 'scale(1)',
+                    boxSizing: 'border-box'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.05)';
+                    e.target.style.background = 'rgba(76, 76, 76, 0.90)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.background = 'rgba(38, 38, 38, 0.80)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.target.style.transform = 'scale(0.95)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.target.style.transform = 'scale(1.05)';
+                  }}
+                >
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      lineHeight: '1.2',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    Watch now
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
+
+
+
         </div>
         </div>
       )}

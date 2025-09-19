@@ -36,8 +36,9 @@ export const useHomepageData = () => {
   const [homepageEvents, setHomepageEvents] = useState([]);
   const [formattedDate, setFormattedDate] = useState("March 29th, 9:00 P.M.");
   
-  // Filter state - Default to "Past" mode as requested
-  const [showAllEvents, setShowAllEvents] = useState(false); // true = "Next" (upcoming), false = "Past"
+  // Filter state - Default depends on viewport: Mobile defaults to "Next", Desktop to "Past"
+  const isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 767;
+  const [showAllEvents, setShowAllEvents] = useState(isMobileViewport ? true : false); // true = "Next" (upcoming), false = "Past"
 
   /**
    * Validates event data structure
