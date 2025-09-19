@@ -1456,8 +1456,400 @@ const FigmaDesktop = () => {
           alignItems: 'flex-start'
         }}
       >
-        {/* Mobile/Tablet Layout - Original Hero Image (hidden on desktop) */}
-        {scaledDimensions.containerWidth < 1024 && (
+        {/* Left Side - Up Next Section (Desktop Only) */}
+        {scaledDimensions.containerWidth >= 1024 ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as events section
+              width: `${scaledDimensions.heroWidth}px`,
+              flexShrink: 0
+            }}
+          >
+            {/* Up Next Title - Scaled down for better proportion */}
+            <div
+              style={{
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced from 32px to 26px for better proportion
+                fontWeight: '800',
+                lineHeight: 'normal',
+                margin: '0',
+                padding: '0',
+                height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
+                display: 'flex',
+                alignItems: 'center' // Center text vertically within the height
+              }}
+            >
+              Up Next
+            </div>
+
+            {/* Hero Featured Event - Perfect Square */}
+            <div
+              onClick={(e) => {
+                console.log('🔍 Desktop Featured Event: Click detected!', e.target);
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Navigate directly to ticket purchase page in new tab
+                if (mostRecentEvent?.external_ticket_url) {
+                  console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                  window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                } else {
+                  console.log('🎫 Desktop Featured Event: No ticket link available for', mostRecentEvent?.title);
+                  console.log('🔍 Desktop Featured Event data:', mostRecentEvent);
+                }
+              }}
+              style={{
+                width: `${scaledDimensions.heroWidth}px`, // Use heroWidth for perfect square
+                height: `${scaledDimensions.heroWidth}px`, // Same as width for perfect square
+                position: 'relative',
+                flexShrink: 0,
+                margin: '0',
+                cursor: 'pointer',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: 'scale(1)',
+            borderRadius: '20px',
+            overflow: 'hidden'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="View featured event details"
+        >
+          {/* Background Image with Gradient Overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '0px',
+              top: '0px',
+              width: '100%',
+              height: '100%',
+              borderRadius: '20px',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Dynamic Event Image or Fallback */}
+            {mostRecentEvent?.cover_image ? (
+              <picture>
+                <source
+                  srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/avif"
+                />
+                <source
+                  srcSet={getResponsiveSrcSet(mostRecentEvent.cover_image, 'hero')}
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/webp"
+                />
+                <img
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
+                  src={getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
+                  alt={`${mostRecentEvent.artist_name || mostRecentEvent.title} - Featured Event`}
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                  onLoad={() => console.log('✅ DESKTOP FEATURED EVENT HERO IMAGE LOADED:', mostRecentEvent.title)}
+                  onError={(e) => {
+                    const img = e.target;
+                    const url = img?.src || '';
+                    if (img && !img.dataset.fallbackTried) {
+                      img.dataset.fallbackTried = '1';
+                      if (url.includes('/event_hero')) { img.src = url.replace('/event_hero', '/medium'); return; }
+                      if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
+                      if (url.includes('/medium')) { img.src = url.replace('/medium', '/small'); return; }
+                      if (url.includes('/small')) { img.src = url.replace('/small', '/thumbnail'); return; }
+                      if (url.includes('/api/images/serve/')) {
+                        img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
+                        return;
+                      }
+                    }
+                    console.warn('⚠️ Falling back to static hero placeholder:', url);
+                    img.src = '/images/optimized/hero-left-image-375w.jpg';
+                  }}
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    zIndex: 1
+                  }}
+                />
+              </picture>
+            ) : (
+              /* Fallback to default hero image when no featured events */
+              <picture>
+                <source
+                  srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/avif"
+                />
+                <source
+                  srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
+                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                  type="image/webp"
+                />
+                <img
+                  src="/images/optimized/hero-left-image-375w.jpg"
+                  alt="Default Hero Background"
+                  loading="eager"
+                  decoding="async"
+                  fetchpriority="high"
+                  onLoad={() => console.log('✅ DESKTOP DEFAULT HERO IMAGE LOADED')}
+                  onError={(e) => console.error('❌ DESKTOP DEFAULT HERO IMAGE FAILED:', e.target.src)}
+                  style={{
+                    position: 'absolute',
+                    left: '0px',
+                    top: '0px',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    objectPosition: 'center',
+                    zIndex: 1
+                  }}
+                />
+              </picture>
+            )}
+          </div>
+
+          {/* Mobile-Optimized Gradient Overlay - Outside image container for better rendering */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '0px',
+              top: '0px',
+              width: '100%',
+              height: '100%',
+              background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
+              borderRadius: '20px',
+              pointerEvents: 'none',
+              zIndex: 2,
+              // Desktop optimizations
+              WebkitTransform: 'translateZ(0)', // Force hardware acceleration
+              transform: 'translateZ(0)',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden'
+            }}
+          />
+
+          {/* Bottom overlay with date and location - Fixed positioning */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '0px',
+              bottom: '8px', // Positioned lower in the card for better visual balance
+              display: 'flex',
+              width: '100%',
+              justifyContent: 'space-between',
+              padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
+              gap: '12px', // Reduced gap to make more room for wider button
+              boxSizing: 'border-box',
+              zIndex: 3,
+              minHeight: '44px' // Ensure minimum height for button container
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flex: '1',
+                padding: '4px 0px',
+                flexDirection: 'column',
+                minWidth: 0,
+                maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
+              }}
+            >
+              {/* Date row - Enhanced styling */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignSelf: 'stretch',
+                  alignItems: 'center',
+                  gap: '6px', // Slightly more gap for better readability
+                  minWidth: 0,
+                  marginBottom: '2px' // Small margin for separation
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
+                </svg>
+                <span
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '12px', // Fixed size like mobile
+                    fontWeight: '200',
+                    lineHeight: 'normal',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    minWidth: 0
+                  }}
+                >
+                  {mostRecentEvent?.event_date
+                    ? new Date(mostRecentEvent.event_date).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      }).replace(',', 'th,')
+                    : formattedDate
+                  }
+                </span>
+              </div>
+
+              {/* Location row */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignSelf: 'stretch',
+                  alignItems: 'center',
+                  gap: '4px',
+                  minWidth: 0
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
+                  <circle cx="5" cy="4" r="1" fill="#FFF"/>
+                </svg>
+                <span
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '12px', // Fixed size like mobile
+                    fontWeight: '200',
+                    lineHeight: 'normal',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    minWidth: 0
+                  }}
+                >
+                  {mostRecentEvent?.location || homeSettings?.event_location || "Asbury Park, NJ"}
+                </span>
+              </div>
+            </div>
+
+            {/* CTA Button - Enhanced styling and positioning */}
+            <div
+              style={{
+                display: 'flex',
+                width: '120px', // Increased width for better presence
+                height: '44px', // Increased height for better touch target
+                padding: '2px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexShrink: 0,
+                zIndex: 3
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  width: '116px', // Match new container width minus padding
+                  height: '40px', // Increased height for better presence
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px',
+                  borderRadius: '22px', // More rounded for modern look
+                  background: 'rgba(15, 15, 15, 0.95)', // Darker, more opaque glassmorphism
+                  backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
+                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)', // More visible border
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: 'scale(1)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow with inset highlight
+                }}
+                onMouseEnter={(e) => {
+                  e.stopPropagation();
+                  e.target.style.transform = 'scale(1.05)';
+                  e.target.style.background = 'rgba(35, 35, 35, 0.98)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.stopPropagation();
+                  e.target.style.transform = 'scale(1)';
+                  e.target.style.background = 'rgba(15, 15, 15, 0.95)';
+                  e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (mostRecentEvent?.external_ticket_url) {
+                    console.log(`🎫 Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                    window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer');
+                  }
+                }}
+              >
+                <span
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '15px', // Slightly larger for better readability
+                    fontWeight: '500', // Medium weight for better presence
+                    lineHeight: 'normal',
+                    pointerEvents: 'none',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
+                  }}
+                >
+                  {mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Event title overlay - Responsive */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '0px',
+              bottom: '95px', // Use bottom positioning for consistency
+              display: 'flex',
+              width: '100%', // Use full width of responsive hero card
+              height: '48px',
+              padding: '8px 16px', // Slightly more padding
+              justifyContent: 'flex-start',
+              alignItems: 'flex-end',
+              gap: '10px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div
+              style={{
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: '24px', // Fixed size like mobile
+                fontWeight: '800',
+                lineHeight: '1.1',
+                flex: '1',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                maxWidth: `${scaledDimensions.heroWidth - 24}px`
+              }}
+            >
+              {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
+            </div>
+          </div>
+            </div>
+          </div>
+        ) : (
+          /* Mobile/Tablet Layout - Original Hero Image */
           <div
             onClick={(e) => {
               // Navigate directly to ticket purchase page in new tab
@@ -1506,11 +1898,17 @@ const FigmaDesktop = () => {
               justifyContent: 'flex-start',
               alignItems: 'stretch',
               gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap
-              width: '100%',
-              minWidth: '100%',
-              maxWidth: '100%',
-              height: 'auto',
-              overflow: 'visible'
+              minWidth: `${Math.max(450, Math.round(scaledDimensions.eventsWidth))}px`, // Scale with eventsWidth
+              maxWidth: `${Math.round(scaledDimensions.eventsWidth + 200)}px`, // Increase width to align rightmost edge with navigation pills
+              height: (() => {
+                // Calculate total height to match Up Next title + gap + square hero image
+                const titleHeight = Math.max(20, Math.round(scaledDimensions.scale * 26)); // Up Next title height (updated)
+                const sectionGap = Math.max(6, Math.round(scaledDimensions.scale * 8)); // Gap between title and hero
+                const squareHeroHeight = scaledDimensions.heroWidth; // Square hero uses heroWidth for height
+                const totalLeftSideHeight = titleHeight + sectionGap + squareHeroHeight;
+                return `${totalLeftSideHeight}px`; // Match total left side height
+              })(),
+              overflow: 'hidden' // Prevent any overflow
             }}
           >
             {/* Events Title and Toggle - Aligned with Hero Top */}
@@ -1664,7 +2062,12 @@ const FigmaDesktop = () => {
               style={{
                 position: 'relative',
                 width: '100%',
-                height: 'auto'
+                height: (() => {
+                  // Simple calculation: match the hero image height exactly
+                  // The hero image height is scaledDimensions.heroWidth (since it's square and already scaled)
+                  const heroImageHeight = scaledDimensions.heroWidth;
+                  return `${heroImageHeight}px`; // Match hero height exactly for perfect alignment
+                })()
               }}
             >
               {/* Scrollable Events Grid */}
@@ -1682,19 +2085,33 @@ const FigmaDesktop = () => {
                   width: '100%',
                   height: '100%',
                   alignItems: 'stretch',
-                  // Scrolling properties disabled for full-height desktop layout
-                  overflowY: 'visible',
+                  // Scrolling properties
+                  overflowY: 'auto',
                   overflowX: 'hidden',
-                  scrollBehavior: 'auto',
-                  WebkitOverflowScrolling: 'auto',
-                  // Disable scrollbar styling and fade masks in full-height mode
-                  scrollbarWidth: 'auto',
-                  scrollbarColor: 'auto',
-                  // Smooth content transitions on toggle like mobile
-                  transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  willChange: 'opacity, transform',
-                  maskImage: 'none',
-                  WebkitMaskImage: 'none'
+                  scrollBehavior: 'smooth',
+                  WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
+                  // Firefox scrollbar styling
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
+                  // Modern CSS Mask-based Fade Effect - Much cleaner than overlay gradients
+                  maskImage: (() => {
+                    // Dynamic mask based on scroll state for optimal performance
+                    if (!scrollState.isScrollable) return 'none';
+
+                    const topFade = scrollState.canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
+                    const bottomFade = scrollState.canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
+
+                    return `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
+                  })(),
+                  WebkitMaskImage: (() => {
+                    // Safari support with same logic
+                    if (!scrollState.isScrollable) return 'none';
+
+                    const topFade = scrollState.canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
+                    const bottomFade = scrollState.canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
+
+                    return `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
+                  })()
                 }}
               >
               {(() => {
@@ -1728,50 +2145,22 @@ const FigmaDesktop = () => {
                     style={{
                       fontSize: '18px',
                       fontWeight: '600',
-                      opacity: 0.8
+                      opacity: '0.8'
                     }}
                   >
-                    No upcoming events
+                    No Events Available
                   </div>
-                  <button
-                    type="button"
-                    aria-label="View Past Events"
-                    onClick={() => setShowAllEvents(false)}
+                  <div
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '12px 16px',
-                      minHeight: '44px',
-                      borderRadius: '14px',
-                      fontFamily: 'Inter',
                       fontSize: '14px',
-                      fontWeight: 600,
-                      color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.60)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)';
-                    }}
-                    onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'scale(0.98)';
-                    }}
-                    onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
+                      fontWeight: '400',
+                      opacity: '0.6',
+                      maxWidth: '300px',
+                      lineHeight: '1.4'
                     }}
                   >
-                    View Past Events
-                  </button>
+                    Events marked as "Show on Homepage" will appear here. Check the admin dashboard to feature events.
+                  </div>
                 </div>
               ) : (
                 /* Event Cards - Show first 6 events in 3x2 grid */
@@ -2638,50 +3027,22 @@ const FigmaDesktop = () => {
                   style={{
                     fontSize: '18px',
                     fontWeight: '600',
-                    opacity: 0.8
+                    opacity: '0.8'
                   }}
                 >
-                  No upcoming events
+                  No Events Available
                 </div>
-                <button
-                  type="button"
-                  aria-label="View Past Events"
-                  onClick={() => setShowAllEvents(false)}
+                <div
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '12px 16px',
-                    minHeight: '44px',
-                    borderRadius: '14px',
-                    fontFamily: 'Inter',
                     fontSize: '14px',
-                    fontWeight: 600,
-                    color: '#FFF',
-                    background: 'rgba(22, 22, 22, 0.60)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)';
-                  }}
-                  onTouchStart={(e) => {
-                    e.currentTarget.style.transform = 'scale(0.98)';
-                  }}
-                  onTouchEnd={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
+                    fontWeight: '400',
+                    opacity: '0.6',
+                    maxWidth: '300px',
+                    lineHeight: '1.4'
                   }}
                 >
-                  View Past Events
-                </button>
+                  Events marked as "Show on Homepage" will appear here. Check the admin dashboard to feature events.
+                </div>
               </div>
             ) : (
               /* All Event Cards - Mobile-style Cards (including previously featured events) */
