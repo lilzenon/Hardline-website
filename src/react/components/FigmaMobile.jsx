@@ -3877,11 +3877,9 @@ const FigmaMobile = () => {
                               height: 'auto',
                               margin: '0 0 4px 0',
                               padding: '0',
-                              overflow: 'visible',
-                              textOverflow: 'unset',
-                              whiteSpace: 'normal',
-                              wordWrap: 'break-word',
-                              hyphens: 'auto'
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
                             }}
                           >
                             {card.title}

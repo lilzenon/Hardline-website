@@ -116,6 +116,7 @@ const TextUsSection = ({ scaledDimensions }) => {
             background: 'transparent',
             transform: 'translateX(0)',
             position: 'relative',
+            left: '-18px', // Shift left by exactly 18px
             top: '0px', // Ensure proper positioning to show main content
             // 🚨 SMOOTH TRANSITIONS: Add transition for height changes during resize
             transition: 'height 0.2s ease-out'
