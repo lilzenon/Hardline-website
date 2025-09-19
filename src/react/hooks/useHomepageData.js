@@ -36,8 +36,8 @@ export const useHomepageData = () => {
   const [homepageEvents, setHomepageEvents] = useState([]);
   const [formattedDate, setFormattedDate] = useState("March 29th, 9:00 P.M.");
   
-  // Filter state
-  const [showAllEvents, setShowAllEvents] = useState(true); // true = "Next" (upcoming), false = "Past"
+  // Filter state - Default to "Past" mode as requested
+  const [showAllEvents, setShowAllEvents] = useState(false); // true = "Next" (upcoming), false = "Past"
 
   /**
    * Validates event data structure

@@ -499,7 +499,9 @@ const FigmaDesktop = () => {
     showAllEvents,
     setShowAllEvents,
     filteredFeaturedEvents,
-    filteredHomepageEvents
+    filteredHomepageEvents,
+    featuredEvents,
+    homepageEvents
   } = useHomepageData();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
@@ -1297,10 +1299,47 @@ const FigmaDesktop = () => {
     }
   }, [filteredFeaturedEvents, filteredHomepageEvents]);
 
-  // Get the most recent event for hero sections
+  // Get the most recent upcoming event for hero sections (independent of toggle state)
   const mostRecentEvent = useMemo(() => {
-    return filteredFeaturedEvents && filteredFeaturedEvents.length > 0 ? filteredFeaturedEvents[0] : null;
-  }, [filteredFeaturedEvents]);
+    // Always show the soonest upcoming event in hero, regardless of toggle state
+    const now = new Date();
+
+    // Combine all events (featured + homepage) and filter for upcoming only
+    const allEvents = [...(featuredEvents || []), ...(homepageEvents || [])];
+
+    // Filter for upcoming events only (future dates)
+    const upcomingEvents = allEvents.filter(event => {
+      if (!event?.event_date) return false;
+
+      // Parse event date consistently
+      let eventDate;
+      if (event.event_date instanceof Date) {
+        eventDate = event.event_date;
+      } else {
+        let s = event.event_date.trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
+        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
+        eventDate = new Date(s);
+      }
+
+      if (isNaN(eventDate.getTime())) return false;
+      return eventDate.getTime() > now.getTime();
+    });
+
+    // Sort by date ascending (soonest first) and return the first one
+    if (upcomingEvents.length === 0) return null;
+
+    upcomingEvents.sort((a, b) => {
+      const dateA = new Date(a.event_date);
+      const dateB = new Date(b.event_date);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    const soonestEvent = upcomingEvents[0];
+    console.log('🎯 Hero event selected:', soonestEvent?.title, 'Date:', soonestEvent?.event_date);
+
+    return soonestEvent;
+  }, [featuredEvents, homepageEvents]);
 
   // Show smooth branded loading state
   if (loading) {
