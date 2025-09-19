@@ -425,8 +425,18 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                 fontSize: '16px',
                 lineHeight: '1.5em',
                 marginBottom: '0px',
-                textAlign: 'left'
+                textAlign: 'left',
+                /* Make about content independently scrollable on mobile */
+                maxHeight: 'min(56vh, 460px)',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain',
+                overscrollBehaviorY: 'contain',
+                overscrollBehaviorX: 'none'
               }}
+              role="region"
+              aria-label="About content"
             >
               {formatContent(aboutContent)}
               {error && (

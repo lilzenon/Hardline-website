@@ -1609,7 +1609,9 @@ const FigmaDesktop = () => {
               alignItems: 'stretch',
               gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as events section
               width: `${scaledDimensions.heroWidth}px`,
-              flexShrink: 0
+              flexShrink: 0,
+              contain: 'paint',
+              isolation: 'isolate'
             }}
           >
             {/* Up Next Title - Scaled down for better proportion */}
@@ -1658,6 +1660,12 @@ const FigmaDesktop = () => {
             transform: 'scale(1)',
             borderRadius: '20px',
             overflow: 'hidden',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            contain: 'paint',
+            isolation: 'isolate',
             ...fadeIn(400)
           }}
           onMouseEnter={(e) => {
@@ -1681,7 +1689,12 @@ const FigmaDesktop = () => {
               width: '100%',
               height: '100%',
               borderRadius: '20px',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              WebkitTransform: 'translateZ(0)',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden'
             }}
           >
             {/* Dynamic Event Image or Fallback */}
@@ -2245,7 +2258,10 @@ const FigmaDesktop = () => {
                   // The hero image height is scaledDimensions.heroWidth (since it's square and already scaled)
                   const heroImageHeight = scaledDimensions.heroWidth;
                   return `${heroImageHeight}px`; // Match hero height exactly for perfect alignment
-                })()
+                })(),
+                  contain: 'paint',
+                  isolation: 'isolate',
+                  WebkitTransform: 'translateZ(0)'
               }}
             >
               {/* Scrollable Events Grid */}
@@ -2270,7 +2286,8 @@ const FigmaDesktop = () => {
                   WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
                   // Firefox scrollbar styling
                   scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)'
+                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
+                  contain: 'paint'
                 }}
               >
               {(() => {
@@ -2342,9 +2359,8 @@ const FigmaDesktop = () => {
                   </button>
                 </div>
               ) : (
-                /* Event Cards - Show first 6 events in 3x2 grid */
+                /* Event Cards - Render all events; scroll container shows more below */
                 [...filteredFeaturedEvents, ...filteredHomepageEvents]
-                  .slice(0, 6) // Limit to 6 events for 3x2 grid
                   .map((card, index) => (
                   <article
                     key={`homepage-desktop-${card.id}`}
