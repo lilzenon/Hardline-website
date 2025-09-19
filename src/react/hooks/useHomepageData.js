@@ -340,6 +340,45 @@ export const useHomepageData = () => {
         setHomepageEvents(cached.data.homepageEvents || []);
         setFormattedDate(cached.data.formattedDate || "March 29th, 9:00 P.M.");
         setLoading(false);
+
+        // 🔄 Background revalidation to pick up admin changes immediately
+        (async () => {
+          try {
+            const apiBaseUrl = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+            const url = `${apiBaseUrl}/api/home-settings/homepage-data`;
+            const response = await fetch(url, { cache: 'no-store' });
+            if (!response.ok) return;
+            const fresh = await response.json();
+
+            // Update if server indicates new data via refreshTimestamp or if payload differs
+            if (!cached.data || fresh.refreshTimestamp !== cached.data.refreshTimestamp) {
+              console.log('🆕 Homepage data changed on server. Updating state from background revalidation.');
+              apiCache.set('homepage-data-v2', { data: fresh, timestamp: Date.now() });
+
+              const vFeatured = validateEvents(fresh.featuredEvents || [], 'Featured');
+              const vHomepage = validateEvents(fresh.homepageEvents || [], 'Homepage');
+
+              // Recompute hero formatted date using the same logic below
+              let heroFormattedDate = fresh.formattedDate || "March 29th, 9:00 P.M.";
+              if (vFeatured.length > 0 && vFeatured[0].event_date) {
+                let s = vFeatured[0].event_date.trim();
+                if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
+                else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
+                const d = new Date(s);
+                const __tz = (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York';
+                const heroFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: __tz });
+                heroFormattedDate = heroFormatter.format(d).replace(',', 'th,');
+              }
+
+              setHomeSettings(fresh.homeSettings || {});
+              setFeaturedEvents(vFeatured);
+              setHomepageEvents(vHomepage);
+              setFormattedDate(heroFormattedDate);
+            }
+          } catch (reErr) {
+            console.log('⚠️ Background revalidation failed (non-blocking):', reErr);
+          }
+        })();
         return;
       }
 
@@ -350,7 +389,7 @@ export const useHomepageData = () => {
 
       console.log('🔍 Fetching homepage data from:', `${apiBaseUrl}/api/home-settings/homepage-data`);
 
-      const response = await fetch(`${apiBaseUrl}/api/home-settings/homepage-data`);
+      const response = await fetch(`${apiBaseUrl}/api/home-settings/homepage-data`, { cache: 'no-store' });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);

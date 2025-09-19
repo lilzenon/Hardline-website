@@ -222,7 +222,15 @@ const FAQPageMobile = () => {
             overflow: 'auto', // Enable scrolling
             overflowX: 'hidden',
             WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-            scrollBehavior: 'smooth' // Smooth scrolling behavior
+            scrollBehavior: 'smooth', // Smooth scrolling behavior
+            overscrollBehavior: 'contain',
+            overscrollBehaviorY: 'contain',
+            overscrollBehaviorX: 'none',
+            touchAction: 'pan-y',
+            transform: 'translateZ(0)',
+            willChange: 'auto',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden'
           }}
           role="main"
           aria-label="FAQ page content"
@@ -321,11 +329,30 @@ const FAQPageMobile = () => {
           }
         }
 
+        /* Global mobile scroll behavior fixes to prevent pull-to-refresh */
+        @media (max-width: 767px) {
+          html, body {
+            overscroll-behavior-y: contain !important;
+            -webkit-overscroll-behavior-y: contain !important;
+            overscroll-behavior-x: none !important;
+            touch-action: pan-y !important;
+          }
+        }
+
         /* Scrolling optimizations */
         .mobile-content-container {
           -webkit-overflow-scrolling: touch;
           scroll-behavior: smooth;
           overscroll-behavior: contain;
+          overscroll-behavior-y: contain;
+          overscroll-behavior-x: none;
+          touch-action: pan-y;
+          contain: layout style;
+          will-change: auto;
+          transform: translateZ(0);
+          -webkit-transform: translateZ(0);
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
         }
 
         /* Ensure content is scrollable */

@@ -437,34 +437,41 @@ const FigmaDesktop = () => {
   const { trackEvent, trackLinkClick } = useAnalytics();
 
   // State for tracking scroll position and fade gradients
-  const [scrollState, setScrollState] = useState({
-    canScrollUp: false,
-    canScrollDown: false,
-    isScrollable: false
-  });
+  // Scroll fade mask (desktop events list): avoid React re-renders during scroll
   const gridScrollRef = useRef(null);
+  const scrollMaskRaf = useRef(0);
 
-  // Function to update scroll state for fade gradients
-  const updateScrollState = useCallback(() => {
-    const element = gridScrollRef.current;
-    if (!element) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = element;
+  const applyScrollMask = useCallback(() => {
+    const el = gridScrollRef.current;
+    if (!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
     const isScrollable = scrollHeight > clientHeight;
+    if (!isScrollable) {
+      el.style.maskImage = 'none';
+      el.style.webkitMaskImage = 'none';
+      return;
+    }
     const canScrollUp = scrollTop > 0;
-    const canScrollDown = scrollTop < scrollHeight - clientHeight - 1; // -1 for rounding
-
-    setScrollState({
-      canScrollUp,
-      canScrollDown,
-      isScrollable
-    });
+    const canScrollDown = scrollTop < scrollHeight - clientHeight - 1;
+    const topFade = canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
+    const bottomFade = canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
+    const gradient = `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
+    el.style.maskImage = gradient;
+    el.style.webkitMaskImage = gradient;
   }, []);
 
-  // Update scroll state when content changes or on mount
+  const handleGridScroll = useCallback(() => {
+    if (scrollMaskRaf.current) cancelAnimationFrame(scrollMaskRaf.current);
+    scrollMaskRaf.current = requestAnimationFrame(applyScrollMask);
+  }, [applyScrollMask]);
+
+  // Initialize fade mask on mount and when layout changes
   useEffect(() => {
-    updateScrollState();
-  }, [updateScrollState]);
+    applyScrollMask();
+    return () => {
+      if (scrollMaskRaf.current) cancelAnimationFrame(scrollMaskRaf.current);
+    };
+  }, [applyScrollMask]);
 
   // Autoplay YouTube on load per requirements (keep muted for autoplay policy)
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
@@ -548,6 +555,8 @@ const FigmaDesktop = () => {
   const layloContainerRef = useRef(null);
   const socialContainerRef = useRef(null);
   const [socialMarginTop, setSocialMarginTop] = useState(null);
+  const [maxSocialButtonSize, setMaxSocialButtonSize] = useState(null);
+
 
   // Featured hero title spacing control (desktop only)
   const heroTitleRef = useRef(null);
@@ -1437,11 +1446,21 @@ const FigmaDesktop = () => {
       const layloRect = layloContainerRef?.current?.getBoundingClientRect?.();
       const socialRect = socialContainerRef?.current?.getBoundingClientRect?.();
       if (!videoRect || !layloRect || !socialRect) return;
+
+      // Align bottoms by adjusting top margin
       const desiredBottom = videoRect.top + videoRect.height;
       const currentBottom = layloRect.top + layloRect.height + socialRect.height;
       const bias = Math.round(Math.max(8, (scaledDimensions.scale || 1) * 12));
       const mt = Math.max(0, Math.round(desiredBottom + bias - currentBottom));
       setSocialMarginTop(mt);
+
+      // Compute maximum allowed button size so the row never extends past the video bottom
+      const availableRowHeight = Math.max(0, Math.floor(desiredBottom - (socialRect.top + mt)) - 8); // subtract small padding
+      if (availableRowHeight > 0) {
+        // Constrain between 64px and 160px to preserve aesthetics
+        const clamped = Math.max(64, Math.min(160, availableRowHeight));
+        setMaxSocialButtonSize(clamped);
+      }
     } catch (_) {}
   }, [scaledDimensions?.containerWidth, scaledDimensions?.scale]);
 
@@ -1798,6 +1817,12 @@ const FigmaDesktop = () => {
               gap: '12px', // Reduced gap to make more room for wider button
               boxSizing: 'border-box',
               zIndex: 3,
+              // Promote to its own compositor layer to prevent flicker during events scroll
+              WebkitTransform: 'translateZ(0)',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
               minHeight: '44px' // Ensure minimum height for button container
             }}
           >
@@ -1967,7 +1992,13 @@ const FigmaDesktop = () => {
               alignItems: 'flex-end',
               gap: '10px',
               boxSizing: 'border-box',
-              zIndex: 4 // Ensure title renders above gradient overlay
+              zIndex: 4, // Ensure title renders above gradient overlay
+              // Promote to its own compositor layer to prevent flicker during events scroll
+              WebkitTransform: 'translateZ(0)',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden'
             }}
           >
             <div
@@ -2221,7 +2252,7 @@ const FigmaDesktop = () => {
               <div
                 ref={gridScrollRef}
                 className="events-grid-scrollable"
-                onScroll={updateScrollState}
+                onScroll={handleGridScroll}
                 style={{ ...(fadeIn(800)),
                   position: 'relative',
                   display: 'grid',
@@ -2239,26 +2270,7 @@ const FigmaDesktop = () => {
                   WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
                   // Firefox scrollbar styling
                   scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
-                  // Modern CSS Mask-based Fade Effect - Much cleaner than overlay gradients
-                  maskImage: (() => {
-                    // Dynamic mask based on scroll state for optimal performance
-                    if (!scrollState.isScrollable) return 'none';
-
-                    const topFade = scrollState.canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
-                    const bottomFade = scrollState.canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
-
-                    return `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
-                  })(),
-                  WebkitMaskImage: (() => {
-                    // Safari support with same logic
-                    if (!scrollState.isScrollable) return 'none';
-
-                    const topFade = scrollState.canScrollUp ? 'transparent 0%, black 8%' : 'black 0%';
-                    const bottomFade = scrollState.canScrollDown ? 'black 92%, transparent 100%' : 'black 100%';
-
-                    return `linear-gradient(to bottom, ${topFade}, black 8%, black 92%, ${bottomFade})`;
-                  })()
+                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)'
                 }}
               >
               {(() => {
@@ -2737,6 +2749,7 @@ const FigmaDesktop = () => {
                 isDesktop={true}
                 containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth} // Pass actual container width
                 responsive={true}
+                maxButtonSizePx={maxSocialButtonSize}
               />
             </div>
         </div>
