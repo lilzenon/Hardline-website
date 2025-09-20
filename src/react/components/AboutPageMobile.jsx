@@ -421,13 +421,10 @@ const AboutPageMobile = () => {
               overflow: 'auto', // Enable scrolling
               overflowX: 'hidden',
               WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-              scrollBehavior: 'smooth', // Smooth scrolling behavior
               overscrollBehavior: 'contain',
               overscrollBehaviorY: 'contain',
               overscrollBehaviorX: 'none',
               touchAction: 'pan-y',
-              transform: 'translateZ(0)',
-              willChange: 'auto',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden'
             }}
@@ -468,8 +465,8 @@ const AboutPageMobile = () => {
                 lineHeight: '1.5em',
                 marginBottom: '0px',
                 textAlign: 'left',
-                /* Make about content independently scrollable on mobile */
-                maxHeight: 'min(56vh, 460px)',
+                /* Limit about section height on mobile to surface gallery sooner */
+                maxHeight: 'min(44vh, 380px)',
                 overflowY: 'auto',
                 overflowX: 'hidden',
                 WebkitOverflowScrolling: 'touch',
