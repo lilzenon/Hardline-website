@@ -172,13 +172,20 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
     };
   }, []);
 
-  // Compute dynamic sizing based on containerWidth and number of buttons (desktop only)
+  // Compute sizing with breakpoint steps to prevent 1px jitter on desktop
   const buttonsCount = (socialLinks && socialLinks.length ? socialLinks.length : 4);
   const gapPx = isDesktop ? 16 : 0; // Mobile: remove base gap so space-between defines spacing
   const effectiveWidth = isDesktop && typeof containerWidth === 'number' && containerWidth > 0 ? containerWidth : null;
-  let computedButtonSize = effectiveWidth
-    ? Math.max(80, Math.min(140, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount)))
-    : (isDesktop ? 90 : 80);
+
+  // Step-based sizes to keep visual consistency; only change at intentional thresholds
+  const DISCRETE_SIZES = [80, 88, 96, 104, 112, 120, 128, 140];
+
+  const perButtonSafe = effectiveWidth
+    ? Math.max(64, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount))
+    : (isDesktop ? 96 : 80);
+
+  // Pick the largest discrete size that fits in the safe per-button space
+  let computedButtonSize = DISCRETE_SIZES.reduce((acc, val) => (val <= perButtonSafe ? val : acc), DISCRETE_SIZES[0]);
 
   // Desktop overflow guard: clamp by maxButtonSizePx when provided
   if (isDesktop && typeof maxButtonSizePx === 'number' && maxButtonSizePx > 0) {
