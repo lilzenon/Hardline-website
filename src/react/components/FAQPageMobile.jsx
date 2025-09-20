@@ -9,6 +9,8 @@ const FAQPageMobile = () => {
   const contentRef = useRef(null);
   const navHeight = useNavHeight();
   const topSpacer = Math.max(navHeight || 0, 0) + 12;
+  const iosScrollStateRef = useRef({ startY: 0, lastY: 0 });
+
 
   // 📱 SCROLL SENSITIVITY FIX: Reduced sensitivity to prevent accidental page reloads
   const { scrollY } = useOptimizedScroll(contentRef.current, {
@@ -54,6 +56,45 @@ const FAQPageMobile = () => {
 
     // JSON-LD injected after FAQ items load (see effect below)
   }, []);
+  // iOS Safari pull-to-refresh guard on the scroll container
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const ua = navigator.userAgent || '';
+    const isIOSSafari = /iPhone|iPad|iPod/.test(ua) && /Safari/.test(ua) && !/Chrome/.test(ua);
+    if (!isIOSSafari) return;
+
+    const onTouchStart = (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      iosScrollStateRef.current.startY = t.clientY;
+      iosScrollStateRef.current.lastY = t.clientY;
+    };
+
+    const onTouchMove = (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      const dy = t.clientY - iosScrollStateRef.current.lastY;
+      iosScrollStateRef.current.lastY = t.clientY;
+
+      const atTop = el.scrollTop <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+
+      // Prevent iOS pull-to-refresh (downward swipe at top) and rubber-band at bottom
+      if ((atTop && dy > 0) || (atBottom && dy < 0)) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
+
 
   // 🚨 MATCH DESKTOP: Use same FAQ items and API integration pattern
   const [faqItems, setFaqItems] = useState([]);

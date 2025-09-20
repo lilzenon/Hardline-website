@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+
 
 /**
  * Modern Masonry Gallery Component with Image Expansion
@@ -421,7 +423,7 @@ const MasonryGallery = ({
       </div>
 
       {/* Image Expansion Modal */}
-      {expandedImage && (
+      {expandedImage && createPortal(
         <div
           ref={modalRef}
           className="modal-backdrop"
@@ -438,22 +440,15 @@ const MasonryGallery = ({
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 9999,
-            padding: isMobile() ? '60px 30px' : '40px', // Larger padding for better click-to-close area
+            padding: isMobile() ? '60px 30px' : '40px',
             cursor: 'pointer',
             transition: 'background-color 0.2s ease',
-            // Add visual hint for click-to-close
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              pointerEvents: 'none'
-            }
+            touchAction: 'none'
           }}
           onClick={handleModalBackdropClick}
           onTouchEnd={handleModalTouch}
+          onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
           title="Click outside image to close"
           role="dialog"
           aria-modal="true"
@@ -463,10 +458,9 @@ const MasonryGallery = ({
           <div
             className="expanded-image"
             style={{
-              maxWidth: isMobile() ? '70vw' : '85vw', // Optimized for better click-to-close area
-              maxHeight: isMobile() ? '50vh' : '85vh', // Optimized for better click-to-close area
+              maxWidth: isMobile() ? '70vw' : '85vw',
+              maxHeight: isMobile() ? '50vh' : '85vh',
               position: 'relative',
-              // Ensure minimum clickable area around image on mobile
               margin: isMobile() ? '30px' : '20px',
               borderRadius: '16px',
               overflow: 'hidden',
@@ -477,7 +471,6 @@ const MasonryGallery = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // Use stopImmediatePropagation only if available
               if (typeof e.stopImmediatePropagation === 'function') {
                 e.stopImmediatePropagation();
               }
@@ -485,7 +478,6 @@ const MasonryGallery = ({
             onTouchEnd={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              // Use stopImmediatePropagation only if available
               if (typeof e.stopImmediatePropagation === 'function') {
                 e.stopImmediatePropagation();
               }
@@ -504,35 +496,26 @@ const MasonryGallery = ({
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
               }}
               onError={(e) => {
-                // Enhanced error handling for modal with fallback variants
                 const target = e.target;
                 const currentSrc = target.src;
 
                 if (expandedImage.urls) {
                   if (currentSrc !== expandedImage.urls.medium && expandedImage.urls.medium) {
-                    console.log('🔄 Modal fallback to medium variant');
                     target.src = expandedImage.urls.medium;
                     return;
                   } else if (currentSrc !== expandedImage.urls.original && expandedImage.urls.original) {
-                    console.log('🔄 Modal fallback to original');
                     target.src = expandedImage.urls.original;
                     return;
                   }
                 }
 
-                console.error('❌ Modal image failed to load:', expandedImage);
                 target.style.display = 'none';
               }}
-              onLoad={() => {
-                console.log('✅ Modal image loaded successfully');
-              }}
             />
-            {/* Enhanced Close Button with Better Event Handling */}
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Use stopImmediatePropagation only if available
                 if (typeof e.stopImmediatePropagation === 'function') {
                   e.stopImmediatePropagation();
                 }
@@ -541,7 +524,6 @@ const MasonryGallery = ({
               onTouchEnd={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Use stopImmediatePropagation only if available
                 if (typeof e.stopImmediatePropagation === 'function') {
                   e.stopImmediatePropagation();
                 }
@@ -552,7 +534,7 @@ const MasonryGallery = ({
                 position: 'absolute',
                 top: isMobile() ? '10px' : '-10px',
                 right: isMobile() ? '10px' : '-10px',
-                width: isMobile() ? '44px' : '40px', // Larger touch target on mobile
+                width: isMobile() ? '44px' : '40px',
                 height: isMobile() ? '44px' : '40px',
                 borderRadius: '50%',
                 background: 'rgba(0, 0, 0, 0.8)',
@@ -564,25 +546,16 @@ const MasonryGallery = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'all 0.2s ease',
-                zIndex: 10001, // Ensure it's above everything
+                zIndex: 10001,
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.target.style.transform = 'scale(1.1)';
-                e.target.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'rgba(0, 0, 0, 0.8)';
-                e.target.style.transform = 'scale(1)';
-                e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
               }}
             >
               ×
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
@@ -620,7 +593,11 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
     }
   }, [onClick, image]);
 
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+  const movedRef = useRef(false);
+
   return (
+
     <div
       className="masonry-image masonry-image-container"
       style={{
@@ -640,11 +617,33 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         minHeight: 'auto'
       }}
       onClick={handleClick}
+      onTouchStart={(e) => {
+        if (window.innerWidth < 768) {
+          const t = e.touches && e.touches[0];
+          if (!t) return;
+          touchStartRef.current = { x: t.clientX, y: t.clientY, time: Date.now() };
+          movedRef.current = false;
+        }
+      }}
+      onTouchMove={(e) => {
+        if (window.innerWidth < 768) {
+          const t = e.touches && e.touches[0];
+          if (!t) return;
+          const dx = Math.abs(t.clientX - touchStartRef.current.x);
+          const dy = Math.abs(t.clientY - touchStartRef.current.y);
+          if (dx > 10 || dy > 10) {
+            movedRef.current = true;
+          }
+        }
+      }}
       onTouchEnd={(e) => {
         if (window.innerWidth < 768) {
-          e.preventDefault();
-          e.stopPropagation();
-          handleClick();
+          if (!movedRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleClick();
+          }
+          movedRef.current = false;
         }
       }}
     >

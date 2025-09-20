@@ -294,7 +294,8 @@ const AboutPage = () => {
         ? 'http://localhost:3002'
         : 'https://admin.b2b.click';
 
-      const galleryUrl = `${apiBaseUrl}/api/settings/about/gallery/public`;
+      const cacheBuster = `cb=${Date.now()}`;
+      const galleryUrl = `${apiBaseUrl}/api/settings/about/gallery/public?${cacheBuster}`;
       console.log('🔍 Fetching gallery from:', galleryUrl);
 
       const response = await fetch(galleryUrl, {
@@ -315,7 +316,12 @@ const AboutPage = () => {
             const n = normalizeGalleryImage(img);
             // Ensure all variant URLs are absolute to the dashboard domain so the homepage can load them
             const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-            const makeAbs = (u) => (u ? (/^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`) : u);
+            const makeAbs = (u) => {
+              if (!u) return u;
+              const abs = /^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`;
+              const sep = abs.includes('?') ? '&' : '?';
+              return `${abs}${sep}${cacheBuster}`;
+            };
             const urls = (n && (n.urls || n.srcSet)) || {};
             const absUrls = {
               thumbnail: makeAbs(urls.thumbnail),

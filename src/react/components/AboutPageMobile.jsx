@@ -16,6 +16,8 @@ const AboutPageMobile = () => {
   // REMOVED: showMenu state - no longer needed after removing old navigation
   const contentRef = useRef(null);
   const navHeight = useNavHeight();
+  const iosScrollStateRef = useRef({ startY: 0, lastY: 0 });
+
   const topSpacer = Math.max(navHeight || 0, 0) + 12;
 
   // Viewport context state for dynamic spacing (matching FigmaMobile.jsx)
@@ -105,6 +107,45 @@ const AboutPageMobile = () => {
       window.removeEventListener('orientationchange', handleViewportChange);
     };
   }, []);
+  // iOS Safari pull-to-refresh guard on the scroll container
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const ua = navigator.userAgent || '';
+    const isIOSSafari = /iPhone|iPad|iPod/.test(ua) && /Safari/.test(ua) && !/Chrome/.test(ua);
+    if (!isIOSSafari) return;
+
+    const onTouchStart = (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      iosScrollStateRef.current.startY = t.clientY;
+      iosScrollStateRef.current.lastY = t.clientY;
+    };
+
+    const onTouchMove = (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      const dy = t.clientY - iosScrollStateRef.current.lastY;
+      iosScrollStateRef.current.lastY = t.clientY;
+
+      const atTop = el.scrollTop <= 0;
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+
+      // Prevent iOS pull-to-refresh (downward swipe at top) and rubber-band at bottom
+      if ((atTop && dy > 0) || (atBottom && dy < 0)) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
+
 
   useEffect(() => {
     fetchAboutContent();
@@ -187,7 +228,8 @@ const AboutPageMobile = () => {
         ? 'http://localhost:3002'
         : 'https://admin.b2b.click';
 
-      const response = await fetch(`${apiBaseUrl}/api/settings/about/gallery/public`, {
+      const cacheBuster = `cb=${Date.now()}`;
+      const response = await fetch(`${apiBaseUrl}/api/settings/about/gallery/public?${cacheBuster}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -202,7 +244,12 @@ const AboutPageMobile = () => {
           const normalized = data.data.map((img) => {
             const n = normalizeGalleryImage(img);
             const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-            const makeAbs = (u) => (u ? (/^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`) : u);
+            const makeAbs = (u) => {
+              if (!u) return u;
+              const abs = /^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`;
+              const sep = abs.includes('?') ? '&' : '?';
+              return `${abs}${sep}${cacheBuster}`;
+            };
             const urls = (n && (n.urls || n.srcSet)) || {};
             const absUrls = {
               thumbnail: makeAbs(urls.thumbnail),
