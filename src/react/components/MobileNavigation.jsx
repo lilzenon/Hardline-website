@@ -162,7 +162,7 @@ const MobileNavigation = ({
             position: relative;
             /* 🎯 SMOOTH INTERACTIONS: Elegant hover response (25% faster) */
             transition: all 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
-            padding: 20px 40px; /* Increased padding for better touch targets */
+            padding: clamp(12px, 3vh, 20px) clamp(16px, 6vw, 40px); /* Responsive padding: keep 44px+ targets while fitting shorter viewports */
             border-radius: 24px; /* Larger radius for modern feel */
             margin: 12px 0; /* Increased margin for better spacing */
             /* 🎨 GLASSMORPHISM: Enhanced background for better contrast */
@@ -447,8 +447,9 @@ const MobileNavigation = ({
           top: '0',
           left: '0',
           width: '100vw',
-          height: overlayHeight,
-          minHeight: '100vh',
+          height: '100dvh',
+          minHeight: '100dvh',
+          maxHeight: '100dvh',
           background: 'rgba(0, 0, 0, 0.95)',
           overflow: 'hidden',
           zIndex: showMenu ? 1000 : -1,
@@ -581,26 +582,24 @@ const MobileNavigation = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            justifyContent: 'center',
             /* 🎯 POSITIONING FIX: Fill the space and align with page content */
-            width: 'min(360px, calc(100vw - 16px))', // FIXED: Match navigation bar width exactly
-            maxWidth: '360px', // FIXED: Match navigation bar max width
-            margin: '0 auto', // Center like main content
-            padding: '8px 8px max(40px, env(safe-area-inset-bottom, 24px)) 8px', // Ensure bottom safe area space
-            gap: '32px', // Increased gap for more elegant spacing
+            width: 'min(360px, calc(100vw - 16px))',
+            maxWidth: '360px',
+            margin: '0 auto',
+            padding: 'clamp(8px, 2vh, 16px) 8px max(24px, env(safe-area-inset-bottom)) 8px',
+            gap: 'clamp(16px, 4vh, 32px)',
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
-            opacity: 1, // Always visible - let children control their own opacity
+            opacity: 1,
             transition: 'transform 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
             transitionDelay: showMenu ? '0.05s' : '0s',
             /* 🎯 PERFORMANCE: Hardware acceleration for smooth animations */
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            // Enable scrolling within the menu on small viewports
-            flex: '1 1 auto',
-            overflowY: 'auto',
-            WebkitOverflowScrolling: 'touch',
-            maxHeight: 'calc(100% - 97px)'
+            /* Ensure menu fits within viewport without internal scrolling */
+            flex: '1 0 auto'
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -610,7 +609,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: '64px',
+              fontSize: 'clamp(28px, 7.5vh, 64px)',
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',
@@ -639,7 +638,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: '64px',
+              fontSize: 'clamp(28px, 7.5vh, 64px)',
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',
@@ -668,7 +667,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: '64px',
+              fontSize: 'clamp(28px, 7.5vh, 64px)',
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',

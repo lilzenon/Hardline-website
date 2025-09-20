@@ -3,6 +3,7 @@ import { usePerformantResize } from '../hooks/usePerformantResize';
 import MasonryGallery from './ui/MasonryGallery';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
+import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 
 const AboutPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -28,9 +29,9 @@ const AboutPage = () => {
   });
   // SEO: Page-specific meta tags and structured data for About page
   useEffect(() => {
-    const siteUrl = 'https://b2b.click';
+    const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/about`;
-    const title = 'About BOUNCE2BOUNCE | Electronic Music Events and Experiences';
+    const title = 'About BOUNCE2BOUNCE';
     const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
     const keywords = 'about bounce2bounce, live music events, edm collective, concerts, event platform, artist community';
     const ogImage = `${siteUrl}/images/og-image.png`;
@@ -127,6 +128,13 @@ const AboutPage = () => {
     document.head.appendChild(bcScript);
   }, []);
 
+  // Reset document.title on unmount so homepage title restores correctly
+  useEffect(() => {
+    const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'BOUNCE2BOUNCE - Premium Event Platform';
+    return () => {
+      document.title = defaultTitle;
+    };
+  }, []);
 
   // 🚨 HOMEPAGE CONSISTENCY: Use exact same responsive scaling system as homepage
   const { width: viewportWidth } = usePerformantResize((dimensions) => {

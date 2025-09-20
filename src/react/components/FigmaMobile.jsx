@@ -2250,7 +2250,7 @@ const FigmaMobile = () => {
           }
 
           .mobile-event-cards-container.expanded {
-            max-height: 2000px; /* Large enough for all cards */
+            max-height: none; /* Unbounded to show all events */
             /* Additional smoothness optimizations for expanded state */
             transform: scale3d(1, 1, 1);
             opacity: 1;
@@ -3314,7 +3314,7 @@ const FigmaMobile = () => {
                   style={{
                     display: 'flex',
                     flex: '1',
-                    padding: '4px 0px',
+                    padding: '0px 0px',
                     flexDirection: 'column',
                     minWidth: 0,
                     maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
@@ -3328,7 +3328,7 @@ const FigmaMobile = () => {
                       alignItems: 'center',
                       gap: '6px', // Slightly more gap for better readability
                       minWidth: 0,
-                      marginBottom: '2px' // Small margin for separation
+                      marginBottom: '1px' // Tighten spacing between date and location
                     }}
                   >
                     <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>

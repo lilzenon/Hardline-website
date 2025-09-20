@@ -15,6 +15,7 @@ const AboutPageMobile = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   // REMOVED: showMenu state - no longer needed after removing old navigation
   const contentRef = useRef(null);
+  const aboutContentRef = useRef(null);
   const navHeight = useNavHeight();
   const iosScrollStateRef = useRef({ startY: 0, lastY: 0 });
 
@@ -125,13 +126,19 @@ const AboutPageMobile = () => {
     const onTouchMove = (e) => {
       const t = e.touches && e.touches[0];
       if (!t) return;
+
+      // If interacting with the inner About content scroll area, don't interfere
+      if (aboutContentRef.current && e.target && aboutContentRef.current.contains(e.target)) {
+        return;
+      }
+
       const dy = t.clientY - iosScrollStateRef.current.lastY;
       iosScrollStateRef.current.lastY = t.clientY;
 
       const atTop = el.scrollTop <= 0;
       const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 
-      // Prevent iOS pull-to-refresh (downward swipe at top) and rubber-band at bottom
+      // Prevent iOS pull-to-refresh (downward swipe at top) and rubber-band at bottom on the main container only
       if ((atTop && dy > 0) || (atBottom && dy < 0)) {
         e.preventDefault();
       }
@@ -340,20 +347,10 @@ const AboutPageMobile = () => {
             }
           }
 
-          /* Scrolling optimizations */
+          /* Scrolling optimizations (safe defaults to avoid scroll lock) */
           .mobile-content-container {
             -webkit-overflow-scrolling: touch;
-            scroll-behavior: smooth;
-            overscroll-behavior: contain;
-            overscroll-behavior-y: contain;
-            overscroll-behavior-x: none;
             touch-action: pan-y;
-            contain: layout style;
-            will-change: auto;
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
           }
 
           /* Ensure content is scrollable */
@@ -421,9 +418,6 @@ const AboutPageMobile = () => {
               overflow: 'auto', // Enable scrolling
               overflowX: 'hidden',
               WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
-              overscrollBehavior: 'contain',
-              overscrollBehaviorY: 'contain',
-              overscrollBehaviorX: 'none',
               touchAction: 'pan-y',
               backfaceVisibility: 'hidden',
               WebkitBackfaceVisibility: 'hidden'
@@ -457,6 +451,8 @@ const AboutPageMobile = () => {
 
             {/* About Content */}
             <div
+              ref={aboutContentRef}
+              className="about-inner-scroll"
               style={{
                 color: '#FFFFFF',
                 fontFamily: 'Inter',
@@ -469,10 +465,7 @@ const AboutPageMobile = () => {
                 maxHeight: 'min(44vh, 380px)',
                 overflowY: 'auto',
                 overflowX: 'hidden',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehavior: 'contain',
-                overscrollBehaviorY: 'contain',
-                overscrollBehaviorX: 'none'
+                WebkitOverflowScrolling: 'touch'
               }}
               role="region"
               aria-label="About content"

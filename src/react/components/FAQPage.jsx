@@ -4,6 +4,8 @@ import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
 
+import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
+
 const FAQPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
   const [isMobile, setIsMobile] = useState(false);
@@ -92,9 +94,9 @@ const FAQPage = () => {
 
   // SEO: Page-specific tags + FAQPage structured data
   useEffect(() => {
-    const siteUrl = 'https://b2b.click';
+    const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/faq`;
-    const title = 'FAQ BOUNCE2BOUNCE | Electronic Music Events and Experiences';
+    const title = 'FAQ - BOUNCE2BOUNCE';
     const description = 'Answers to the most common questions about BOUNCE2BOUNCE events, tickets, and the platform.';
     const ogImage = `${siteUrl}/images/og-image.png`;
 
@@ -157,6 +159,14 @@ const FAQPage = () => {
     });
     document.head.appendChild(bcScript);
   }, [faqItems]); // Update structured data when FAQ items change
+
+  // Reset document.title on unmount so homepage title restores correctly
+  useEffect(() => {
+    const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'BOUNCE2BOUNCE - Premium Event Platform';
+    return () => {
+      document.title = defaultTitle;
+    };
+  }, []);
 
   // 🚨 API INTEGRATION: Load FAQ items from backend (following About page pattern)
   useEffect(() => {

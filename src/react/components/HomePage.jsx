@@ -6,6 +6,8 @@ import useMobileLifecycle from '../hooks/useMobileLifecycle';
 import { initializeMobileOptimizations, isMobileDevice } from '../../utils/mobileOptimization';
 import BrandedLoader from './BrandedLoader';
 
+import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
+
 // 🚀 PERFORMANCE: Optimized lazy loading with immediate desktop, lazy mobile
 import FigmaDesktop from './FigmaDesktop';
 const FigmaMobile = lazy(() => import('./FigmaMobile'));
@@ -28,6 +30,16 @@ const HomePage = () => {
   const mobileLifecycle = useMobileLifecycle();
 
   // Initialize SEO management
+  // Ensure homepage title is set on mount (fixes title persistence when returning)
+  useEffect(() => {
+    try {
+      const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'BOUNCE2BOUNCE - Premium Event Platform';
+      document.title = defaultTitle;
+    } catch (_) {
+      // no-op
+    }
+  }, []);
+
   const { seoSettings, isMaintenanceMode, refreshSEOSettings } = useSEO();
 
   useEffect(() => {
