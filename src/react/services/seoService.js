@@ -133,6 +133,7 @@ export const fetchMaintenanceStatus = async() => {
             return {
                 maintenance_mode: data.maintenance_mode || false,
                 maintenance_message: data.maintenance_message || 'We are currently performing scheduled maintenance.',
+                maintenance_title: data.maintenance_title || 'Site Under Maintenance',
                 estimated_downtime: data.estimated_downtime || '2 hours',
                 contact_information: data.contact_information || 'support@bounce2bounce.com'
             };

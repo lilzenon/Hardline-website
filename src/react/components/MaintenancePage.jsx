@@ -1,5 +1,6 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
+import { useSEO } from '../contexts/SEOContext';
 const Dither = lazy(() => import('./ui/DitherShadcn').then(m => ({ default: m.Dither })));
 
 
@@ -82,6 +83,8 @@ class DitherErrorBoundary extends React.Component {
 export default function MaintenancePage() {
   const [ditherFailed, setDitherFailed] = useState(false);
   const [sdkLoaded, setSdkLoaded] = useState(false);
+  const { maintenanceStatus } = useSEO();
+  const maintenanceTitle = (maintenanceStatus && maintenanceStatus.maintenance_title) || '⚠️Under Construction⚠️';
 
 
   // Log environment info in production for debugging
@@ -245,7 +248,7 @@ export default function MaintenancePage() {
           color: 'rgba(255, 255, 255, 0.72)',
           textAlign: 'center'
         }}>
-          ⚠️Under Construction⚠️
+          {maintenanceTitle}
         </div>
 
 

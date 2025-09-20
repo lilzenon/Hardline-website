@@ -8,7 +8,11 @@ const express = require("express");
 const router = express.Router();
 
 // GET /api/settings/seo
+const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
+
 router.get("/seo", (req, res) => {
+const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
+
   return res.json({
     success: true,
     settings: {
