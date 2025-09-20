@@ -8,7 +8,7 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://b2b.click/</loc>
+    <loc>https://bounce2bounce.com/</loc>
     <lastmod>2025-01-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -47,11 +47,11 @@
     <mobile:mobile/>
   </url>
 
-  <!-- Contact Page -->
+  <!-- FAQ Page -->
   <url>
-    <loc>https://b2b.click/contact</loc>
+    <loc>https://bounce2bounce.com/faq</loc>
     <lastmod>2025-01-28</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>
     <mobile:mobile/>
   </url>
