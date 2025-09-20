@@ -71,6 +71,8 @@ async function generateSitemap(req, res) {
 
         // Add static/important pages
         const staticPages = [
+            { url: '/about', priority: '0.6', changefreq: 'monthly' },
+            { url: '/faq', priority: '0.7', changefreq: 'weekly' },
             { url: '/privacy', priority: '0.3', changefreq: 'monthly' },
             { url: '/terms', priority: '0.3', changefreq: 'monthly' }
         ];
