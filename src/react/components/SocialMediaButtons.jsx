@@ -178,11 +178,12 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
   const effectiveWidth = isDesktop && typeof containerWidth === 'number' && containerWidth > 0 ? containerWidth : null;
 
   // Step-based sizes to keep visual consistency; only change at intentional thresholds
-  const DISCRETE_SIZES = [80, 88, 96, 104, 112, 120, 128, 140];
+  // Expanded range to better cover small (1024-1200), medium (1200-1440), large (1440+ and 4K) viewports
+  const DISCRETE_SIZES = [64, 72, 80, 88, 96, 104, 112, 120, 128, 140, 152, 164, 176, 192, 208, 224];
 
   const perButtonSafe = effectiveWidth
-    ? Math.max(64, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount))
-    : (isDesktop ? 96 : 80);
+    ? Math.max(56, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount))
+    : (isDesktop ? 112 : 80);
 
   // Pick the largest discrete size that fits in the safe per-button space
   let computedButtonSize = DISCRETE_SIZES.reduce((acc, val) => (val <= perButtonSafe ? val : acc), DISCRETE_SIZES[0]);
