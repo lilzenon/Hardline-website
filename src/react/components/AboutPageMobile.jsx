@@ -32,7 +32,7 @@ const AboutPageMobile = () => {
   useEffect(() => {
     const siteUrl = 'https://b2b.click';
     const pageUrl = `${siteUrl}/about`;
-    const title = 'About BOUNCE2BOUNCE | Live Music Events & Experiences';
+    const title = 'About BOUNCE2BOUNCE | Electronic Music Events and Experiences';
     const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
     const keywords = 'about bounce2bounce, live music events, edm collective, concerts, event platform, artist community';
     const ogImage = `${siteUrl}/images/og-image.png`;
@@ -146,12 +146,7 @@ const AboutPageMobile = () => {
     } catch (error) {
       console.error('❌ Error fetching About page content:', error);
       setError(error.message);
-      // Set fallback content
-      setAboutContent(`Bounce2Bounce is the premier destination for exclusive events, contests, and unforgettable experiences. We connect people with the most exciting opportunities in their area.
 
-Our platform brings together event organizers, brands, and participants to create meaningful connections and memorable moments. From VIP experiences to local gatherings, we curate the best events for our community.
-
-Join thousands of members who trust Bounce2Bounce to discover and participate in exclusive events, win amazing prizes, and connect with like-minded individuals.`);
     } finally {
       setLoading(false);
     }
@@ -438,19 +433,28 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
               role="region"
               aria-label="About content"
             >
-              {formatContent(aboutContent)}
-              {error && (
-                <div style={{
-                  marginTop: '16px',
-                  padding: '12px',
-                  background: 'rgba(255, 0, 0, 0.1)',
-                  border: '1px solid rgba(255, 0, 0, 0.3)',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  color: 'rgba(255, 255, 255, 0.7)'
-                }}>
-                  Note: Using fallback content due to connection issue.
+              {error ? (
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  style={{
+                    marginTop: '16px',
+                    padding: '16px',
+                    background: 'rgba(22, 22, 22, 0.30)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    color: '#FF4D4D',
+                    fontWeight: 600,
+                    fontSize: '14px'
+                  }}
+                >
+                  Connection issue — please try again later.
                 </div>
+              ) : (
+                <>{formatContent(aboutContent)}</>
               )}
             </div>
 
@@ -471,6 +475,7 @@ Join thousands of members who trust Bounce2Bounce to discover and participate in
                   fontWeight: '600',
                   fontSize: '32px',
                   lineHeight: '1.3em',
+                  marginTop: '8px',
                   marginBottom: '24px',
                   textAlign: 'center'
                 }}

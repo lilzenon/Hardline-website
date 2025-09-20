@@ -206,13 +206,21 @@ const MasonryGallery = ({
 
     if (expandedImage) {
       document.addEventListener('keydown', handleKeyDown);
-      // Focus the modal for keyboard accessibility
+      // Focus the modal for keyboard accessibility, preventing scroll jumps on mobile
       if (modalRef.current) {
-        modalRef.current.focus();
+        try {
+          // Modern browsers: preventScroll avoids page jump
+          modalRef.current.focus({ preventScroll: true });
+        } catch (err) {
+          // Fallback: only focus on non-mobile to avoid scroll-to-top on iOS Safari
+          if (!isMobile()) {
+            modalRef.current.focus();
+          }
+        }
       }
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [expandedImage, closeExpandedImage]);
+  }, [expandedImage, closeExpandedImage, isMobile]);
 
   // Distribute images across columns
   const distributeImages = useCallback(() => {
@@ -632,6 +640,13 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         minHeight: 'auto'
       }}
       onClick={handleClick}
+      onTouchEnd={(e) => {
+        if (window.innerWidth < 768) {
+          e.preventDefault();
+          e.stopPropagation();
+          handleClick();
+        }
+      }}
     >
       {/* Hidden Skeleton Loader - No Artifacts */}
       {!isLoaded && !imageError && (

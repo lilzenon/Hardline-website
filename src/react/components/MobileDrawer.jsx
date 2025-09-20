@@ -46,6 +46,8 @@ const MobileDrawer = ({
     isActive: false,
     startY: 0,
     currentY: 0,
+    startX: 0, // New: horizontal start point for angle detection
+    currentX: 0, // New: track horizontal movement
     startTime: 0,
     isDragging: false,
     initialDrawerState: false,
@@ -53,7 +55,8 @@ const MobileDrawer = ({
     isOnDrawerHandle: false,
     isOnSwipeZone: false, // New: expanded swipe detection area
     dragDistance: 0, // New: track total drag distance for gesture detection
-    isIntentionalGesture: false // New: distinguish intentional swipes from accidental touches
+    isIntentionalGesture: false, // New: distinguish intentional swipes from accidental touches
+    isVerticalIntent: null // New: tri-state (null, true, false) to lock gesture axis
   });
 
   // State preservation for drawer reopening
@@ -70,6 +73,8 @@ const MobileDrawer = ({
   const flagImageRef = useRef(null);
   const drawerRef = useRef(null);
   const resendTimerRef = useRef(null);
+  const lastContentTouchYRef = useRef(null);
+
 
 
   // Enhanced state preservation including iframe content state
@@ -282,6 +287,8 @@ const MobileDrawer = ({
       isActive: true,
       startY: touch.clientY,
       currentY: touch.clientY,
+      startX: touch.clientX,
+      currentX: touch.clientX,
       startTime: now,
       isDragging: false,
       initialDrawerState: drawerExpanded,
@@ -289,7 +296,8 @@ const MobileDrawer = ({
       isOnDrawerHandle: !!isOnDrawerHandle,
       isOnSwipeZone: !!isOnSwipeZone,
       dragDistance: 0,
-      isIntentionalGesture: false
+      isIntentionalGesture: false,
+      isVerticalIntent: null
     });
 
     // Prevent default for expanded swipe zone, but allow content scrolling
@@ -314,7 +322,23 @@ const MobileDrawer = ({
 
     const touch = e.touches[0];
     const deltaY = touchState.startY - touch.clientY; // Positive = swipe up, Negative = swipe down
+
     const absDeltaY = Math.abs(deltaY);
+
+    // Axis lock: decide vertical vs horizontal intent early to avoid hijacking horizontal gestures
+    const deltaX = touch.clientX - touchState.startX;
+    const absDeltaX = Math.abs(deltaX);
+    if (touchState.isVerticalIntent === null && (absDeltaY > 4 || absDeltaX > 4)) {
+      const vertical = absDeltaY >= absDeltaX * 1.2; // require ~20% more vertical than horizontal
+      setTouchState(prev => ({ ...prev, isVerticalIntent: vertical }));
+      if (!vertical) {
+        // Horizontal intent: don't intercept, allow native horizontal interactions
+        return;
+      }
+    }
+    if (touchState.isVerticalIntent === false) {
+      return; // honor horizontal gestures
+    }
 
     // ENHANCED: More sensitive gesture detection with lower threshold
     if (!touchState.isDragging && absDeltaY > 3) { // Reduced from 5px to 3px
@@ -349,11 +373,12 @@ const MobileDrawer = ({
       setTouchState(prev => ({
         ...prev,
         currentY: touch.clientY,
+        currentX: touch.clientX,
         dragDistance: newDragDistance
       }));
     } else if (!touchState.isOnDrawerContent) {
       // Update position for non-content touches
-      setTouchState(prev => ({ ...prev, currentY: touch.clientY }));
+      setTouchState(prev => ({ ...prev, currentY: touch.clientY, currentX: touch.clientX }));
     }
   }, [touchState]);
 
@@ -453,6 +478,8 @@ const MobileDrawer = ({
       isActive: false,
       startY: 0,
       currentY: 0,
+      startX: 0,
+      currentX: 0,
       startTime: 0,
       isDragging: false,
       initialDrawerState: false,
@@ -460,7 +487,8 @@ const MobileDrawer = ({
       isOnDrawerHandle: false,
       isOnSwipeZone: false,
       dragDistance: 0,
-      isIntentionalGesture: false
+      isIntentionalGesture: false,
+      isVerticalIntent: null
     });
   }, [touchState, drawerExpanded, drawerFullyClosed]);
 
@@ -700,6 +728,25 @@ const MobileDrawer = ({
         aria-label="Contact form drawer"
         aria-expanded={drawerExpanded}
       >
+        {/* Invisible gesture hit-zone (no visual change) to meet 44px+ touch target */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '64px', // Expanded effective touch area (>=44px)
+            minHeight: '44px',
+            background: 'transparent',
+            zIndex: 3,
+            pointerEvents: 'auto'
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        />
+
         {/* Drawer Handle - Original Styling Restored */}
         <div
           style={{
@@ -727,6 +774,9 @@ const MobileDrawer = ({
           onTouchStart={(e) => {
             // Allow drawer content scrolling while preventing bleed
             e.stopPropagation();
+            if (e.touches && e.touches[0]) {
+              lastContentTouchYRef.current = e.touches[0].clientY;
+            }
           }}
           onTouchMove={(e) => {
             // 🚀 SMART SCROLL ISOLATION: Prevent main page scroll bleed from drawer content
@@ -740,12 +790,16 @@ const MobileDrawer = ({
             const isAtTop = scrollTop === 0;
             const isAtBottom = scrollTop + clientHeight >= scrollHeight;
 
-            // Calculate scroll direction
-            const touch = e.touches[0];
-            const deltaY = touch.clientY - (touch.pageY || touch.clientY);
+            // Calculate scroll direction reliably using last touch position
+            const touchY = e.touches && e.touches[0] ? e.touches[0].clientY : null;
+            let dy = 0;
+            if (touchY != null && lastContentTouchYRef.current != null) {
+              dy = touchY - lastContentTouchYRef.current;
+              lastContentTouchYRef.current = touchY;
+            }
 
             // Prevent scroll bleed at boundaries - only allow internal scrolling
-            if ((isAtTop && deltaY > 0) || (isAtBottom && deltaY < 0)) {
+            if ((isAtTop && dy > 0) || (isAtBottom && dy < 0)) {
               e.preventDefault(); // Prevent main page scroll when at boundaries
             }
           }}

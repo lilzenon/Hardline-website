@@ -21,7 +21,7 @@ const FAQPageMobile = () => {
   useEffect(() => {
     const siteUrl = 'https://b2b.click';
     const pageUrl = `${siteUrl}/faq`;
-    const title = 'FAQ | BOUNCE2BOUNCE';
+    const title = 'FAQ BOUNCE2BOUNCE | Electronic Music Events and Experiences';
     const description = 'Answers to the most common questions about BOUNCE2BOUNCE events, tickets, and the platform.';
     const ogImage = `${siteUrl}/images/og-image.png`;
 

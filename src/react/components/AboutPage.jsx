@@ -30,7 +30,7 @@ const AboutPage = () => {
   useEffect(() => {
     const siteUrl = 'https://b2b.click';
     const pageUrl = `${siteUrl}/about`;
-    const title = 'About BOUNCE2BOUNCE | Live Music Events & Experiences';
+    const title = 'About BOUNCE2BOUNCE | Electronic Music Events and Experiences';
     const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
     const keywords = 'about bounce2bounce, live music events, edm collective, concerts, event platform, artist community';
     const ogImage = `${siteUrl}/images/og-image.png`;
@@ -232,14 +232,7 @@ const AboutPage = () => {
     } catch (error) {
       console.error('❌ Error fetching About page content:', error);
       setContentError(error.message);
-      // Set fallback content
-      setAboutContent(`Welcome to BOUNCE2BOUNCE, your premier destination for exclusive live music events. We're passionate about connecting music lovers with unforgettable experiences that showcase the best in live entertainment.
 
-Our platform brings together top artists, intimate venues, and discerning audiences to create magical moments that resonate long after the last note fades. From emerging talents to established performers, we curate events that celebrate the power of live music.
-
-At BOUNCE2BOUNCE, we believe that great music deserves great experiences. That's why we've built a seamless platform that makes discovering, booking, and attending premium events effortless and exciting.
-
-Join our community of music enthusiasts and discover your next favorite artist, your next unforgettable night, and your next reason to fall in love with live music all over again.`);
     } finally {
       // Content loading is now handled by main loading state
     }
@@ -582,22 +575,29 @@ Join our community of music enthusiasts and discover your next favorite artist, 
               animation: 'fadeInUp 0.8s ease-out 0.4s forwards'
             }}
           >
-            <div style={{
-              textAlign: 'left'
-            }}>
-              {formatContent(aboutContent)}
-            </div>
-            {contentError && (
-              <div style={{
-                marginTop: '24px',
-                padding: '16px',
-                background: 'rgba(255, 0, 0, 0.1)',
-                border: '1px solid rgba(255, 0, 0, 0.3)',
-                borderRadius: '12px',
-                fontSize: '14px',
-                color: 'rgba(255, 255, 255, 0.7)'
-              }}>
-                Note: Using fallback content due to connection issue.
+            {contentError ? (
+              <div
+                role="alert"
+                aria-live="polite"
+                style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  background: 'rgba(22, 22, 22, 0.30)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '12px',
+                  textAlign: 'center',
+                  color: '#FF4D4D',
+                  fontWeight: 600,
+                  fontSize: '14px'
+                }}
+              >
+                Connection issue — please try again later.
+              </div>
+            ) : (
+              <div style={{ textAlign: 'left' }}>
+                {formatContent(aboutContent)}
               </div>
             )}
           </div>
