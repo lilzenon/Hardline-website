@@ -11,7 +11,7 @@ export const DEFAULT_SEO_SETTINGS = {
     default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
     default_keywords: 'events, tickets, entertainment, concerts, festivals',
     default_author: 'BOUNCE2BOUNCE',
-    default_og_image: 'https://b2b.click/images/og-image.png',
+    default_og_image: 'https://bounce2bounce.com/images/og-image.png',
     twitter_handle: '@bounce2bounce',
     google_analytics_id: '',
     google_search_console_id: ''
@@ -165,13 +165,15 @@ export const fetchMaintenanceStatus = async() => {
  */
 export const generateMetaTags = (seoSettings, options = {}) => {
     const settings = {...DEFAULT_SEO_SETTINGS, ...seoSettings };
+    const CANONICAL_HOST = 'bounce2bounce.com';
+    const HOMEPAGE_ORIGIN = `https://${CANONICAL_HOST}`;
     const { isMobile = false, deviceType = 'unknown' } = options;
 
     // Ensure URLs are absolute for Open Graph with admin-domain mapping for uploads
     const getAbsoluteImageUrl = (imageUrl) => {
         // If no image URL provided, use the default OG image from homepage
         if (!imageUrl || imageUrl.trim() === '') {
-            return 'https://b2b.click/images/og-image.png';
+            return `${HOMEPAGE_ORIGIN}/images/og-image.png`;
         }
 
         // If absolute URL, normalize path segments we know about and remap to admin when needed
@@ -211,11 +213,11 @@ export const generateMetaTags = (seoSettings, options = {}) => {
 
         // For static images (like /images/og-image.png), serve from homepage domain
         if (normalized.startsWith('/images/') || normalized.startsWith('/static/images/')) {
-            return `https://b2b.click${normalized}`;
+            return `${HOMEPAGE_ORIGIN}${normalized}`;
         }
 
         // Default to homepage domain for other relative paths
-        return `https://b2b.click${normalized}`;
+        return `${HOMEPAGE_ORIGIN}${normalized}`;
     };
 
     const ogImage = getAbsoluteImageUrl(settings.default_og_image);
@@ -231,7 +233,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
 
         // Open Graph / Facebook
         { property: 'og:type', content: 'website' },
-        { property: 'og:url', content: (typeof window !== 'undefined' ? `https://b2b.click${window.location.pathname}` : 'https://b2b.click/') },
+        { property: 'og:url', content: (typeof window !== 'undefined' ? `${HOMEPAGE_ORIGIN}${window.location.pathname}` : `${HOMEPAGE_ORIGIN}/`) },
         { property: 'og:title', content: settings.default_title },
         { property: 'og:description', content: settings.default_description },
         { property: 'og:image', content: ogImage },
@@ -245,7 +247,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         { name: 'twitter:card', content: 'summary_large_image' },
         { name: 'twitter:site', content: settings.twitter_handle },
         { name: 'twitter:creator', content: settings.twitter_handle },
-        { name: 'twitter:url', content: (typeof window !== 'undefined' ? `https://b2b.click${window.location.pathname}` : 'https://b2b.click/') },
+        { name: 'twitter:url', content: (typeof window !== 'undefined' ? `${HOMEPAGE_ORIGIN}${window.location.pathname}` : `${HOMEPAGE_ORIGIN}/`) },
         { name: 'twitter:title', content: settings.default_title },
         { name: 'twitter:description', content: settings.default_description },
         { name: 'twitter:image', content: ogImage },
@@ -275,7 +277,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         title: settings.default_title,
         meta: metaTags,
         link: [
-            { rel: 'canonical', href: (typeof window !== 'undefined' ? `https://b2b.click${window.location.pathname}` : 'https://b2b.click/') }
+            { rel: 'canonical', href: (typeof window !== 'undefined' ? `${HOMEPAGE_ORIGIN}${window.location.pathname}` : `${HOMEPAGE_ORIGIN}/`) }
         ]
     };
 };

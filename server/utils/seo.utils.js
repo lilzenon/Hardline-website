@@ -25,7 +25,7 @@ function generateMetaTags(options = {}) {
         modifiedTime
     } = options;
 
-    const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
     const defaultImage = `${baseUrl}/images/og-image.png`;
 
@@ -163,7 +163,7 @@ function generateEventMetaTags(event) {
         event.event_address ? event.event_address.split(',')[0] : 'live event'
     ].filter(Boolean).join(', ');
 
-    const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
     const fullUrl = `${baseUrl}${eventUrl}`;
 
     // Generate comprehensive meta tags for all platforms
@@ -213,7 +213,7 @@ function generateEventMetaTags(event) {
  * Generate JSON-LD structured data for events
  */
 function generateEventStructuredData(event) {
-    const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
     const eventDate = event.event_date ? new Date(event.event_date) : null;
 
     const structuredData = {
@@ -276,7 +276,7 @@ function generateEventStructuredData(event) {
  * Generate homepage structured data
  */
 function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
-    const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
 
     const organizationData = {
         "@context": "https://schema.org",
@@ -345,7 +345,7 @@ function optimizeTextForSEO(text, maxLength = 160) {
  * Generate breadcrumb structured data
  */
 function generateBreadcrumbData(breadcrumbs) {
-    const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
 
     return {
         "@context": "https://schema.org",

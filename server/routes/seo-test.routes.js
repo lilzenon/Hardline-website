@@ -16,7 +16,7 @@ router.get('/test-meta-tags', async(req, res) => {
             default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
             default_keywords: 'live music events, concert tickets, artist promotion, event discovery, exclusive music experiences',
             default_author: 'BOUNCE2BOUNCE',
-            default_og_image: 'https://b2b.click/images/og-image.png',
+            default_og_image: 'https://bounce2bounce.com/images/og-image.png',
             twitter_handle: '@bounce2bounce'
         };
 

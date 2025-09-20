@@ -9,7 +9,7 @@ async function generateSitemap(req, res) {
     try {
         console.log('🗺️ Generating XML sitemap...');
         
-        const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+        const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
         const currentDate = new Date().toISOString();
         
         // Get all active events for sitemap
@@ -123,7 +123,7 @@ function escapeXml(unsafe) {
  */
 async function generateRobotsTxt(req, res) {
     try {
-        const baseUrl = `https://${env.DEFAULT_DOMAIN}`;
+        const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
         
         const robotsTxt = `# Robots.txt for ${env.DEFAULT_DOMAIN} - Event Platform
 User-agent: *
