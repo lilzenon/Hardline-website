@@ -14,12 +14,12 @@
     <priority>1.0</priority>
     <mobile:mobile/>
     <image:image>
-      <image:loc>https://b2b.click/images/og-image.jpg</image:loc>
+      <image:loc>https://bounce2bounce.com/images/og-image.jpg</image:loc>
       <image:title>BOUNCE2BOUNCE - Exclusive Live Music Events</image:title>
       <image:caption>Discover exclusive live music events and connect with your favorite artists</image:caption>
     </image:image>
     <video:video>
-      <video:thumbnail_loc>https://b2b.click/images/video-thumbnail.jpg</video:thumbnail_loc>
+      <video:thumbnail_loc>https://bounce2bounce.com/images/video-thumbnail.jpg</video:thumbnail_loc>
       <video:title>Henry Fong Live Performance</video:title>
       <video:description>Watch Henry Fong's exclusive live performance at BOUNCE2BOUNCE events</video:description>
       <video:content_loc>https://youtu.be/vEHTO3gf1jk</video:content_loc>
@@ -32,7 +32,7 @@
 
   <!-- AI-Specific Resources -->
   <url>
-    <loc>https://b2b.click/llms.txt</loc>
+    <loc>https://bounce2bounce.com/llms.txt</loc>
     <lastmod>2025-01-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -40,7 +40,7 @@
 
   <!-- About Page -->
   <url>
-    <loc>https://b2b.click/about</loc>
+    <loc>https://bounce2bounce.com/about</loc>
     <lastmod>2025-01-28</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -58,25 +58,18 @@
 
   <!-- Events Listing -->
   <url>
-    <loc>https://b2b.click/events</loc>
+    <loc>https://bounce2bounce.com/events</loc>
     <lastmod>2025-01-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
     <mobile:mobile/>
   </url>
 
-  <!-- Dashboard (for authenticated users) -->
-  <url>
-    <loc>https://b2b.click/dashboard</loc>
-    <lastmod>2025-01-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-    <mobile:mobile/>
-  </url>
+
 
   <!-- API Documentation for AI Agents -->
   <url>
-    <loc>https://b2b.click/api/events</loc>
+    <loc>https://bounce2bounce.com/api/events</loc>
     <lastmod>2025-01-28</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
