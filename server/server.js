@@ -710,8 +710,12 @@ try {
     // Add maintenance mode middleware before render routes
     console.log('🔍 Loading maintenance mode middleware...');
     const { maintenanceMiddleware } = require('./middleware/maintenance.middleware');
+    const { redirectRulesMiddleware } = require('./middleware/redirect-rules.middleware');
     app.use(maintenanceMiddleware);
     console.log('✅ Maintenance mode middleware loaded successfully');
+
+    // Dashboard-managed URL redirects (slug → destination)
+    app.use(redirectRulesMiddleware);
 
     console.log('🔍 Registering render routes...');
     app.use("/", global.appRoutes.render);
