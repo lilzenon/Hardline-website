@@ -1428,6 +1428,14 @@ const FigmaMobile = () => {
     }
   };
 
+  // Ensure Past mode shows all events without limits
+  useEffect(() => {
+    if (showAllEvents === false) {
+      setIsEventSectionExpanded(true);
+    }
+  }, [showAllEvents]);
+
+
   // 🔧 ENHANCED: Current page detection for active state styling
   const getCurrentPage = () => {
     const pathname = window.location.pathname;
@@ -3486,7 +3494,8 @@ const FigmaMobile = () => {
                   bottom: '68px', // Bring title closer to date/location for better hierarchy
                   display: 'flex',
                   width: '100%', // Use full width of responsive hero card
-                  height: '48px',
+                  height: 'auto',
+                  minHeight: '32px',
                   padding: '8px 16px', // Slightly more padding for mobile
                   justifyContent: 'flex-start',
                   alignItems: 'flex-end',
@@ -3510,9 +3519,12 @@ const FigmaMobile = () => {
                     fontWeight: '800',
                     lineHeight: '1.1',
                     flex: '1',
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    WebkitLineClamp: 2, // clamp to 2 lines on mobile
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    whiteSpace: 'normal',
                     maxWidth: '100%', // Use full available width within padding
                     margin: '0px 0px 8px 0px', // Added margin as requested
                     // 🚀 ENHANCED: iOS Safari specific text rendering optimizations
