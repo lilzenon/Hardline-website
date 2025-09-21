@@ -24,6 +24,52 @@ const MasonryGallery = ({
   const modalRef = useRef(null);
   const lastCloseTimeRef = useRef(0);
 
+  // Body scroll lock for mobile browsers (iOS/Android)
+  const scrollLockRef = useRef({ y: 0, locked: false });
+  const lockBodyScroll = useCallback(() => {
+    if (scrollLockRef.current.locked) return;
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
+    scrollLockRef.current.y = y;
+    scrollLockRef.current.locked = true;
+    const bodyStyle = document.body.style;
+    bodyStyle.position = 'fixed';
+    bodyStyle.top = `-${y}px`;
+    bodyStyle.left = '0';
+    bodyStyle.right = '0';
+    bodyStyle.width = '100%';
+    bodyStyle.overflow = 'hidden';
+    // Harden against background scroll on iOS/Android
+    document.documentElement.style.overscrollBehavior = 'none';
+    document.documentElement.style.touchAction = 'none';
+    const preventScroll = (ev) => { ev.preventDefault(); ev.stopPropagation(); };
+    // Capture-phase listeners to swallow wheel/touchmove
+    window.addEventListener('wheel', preventScroll, { passive: false, capture: true });
+    window.addEventListener('touchmove', preventScroll, { passive: false, capture: true });
+    scrollLockRef.current.preventScroll = preventScroll;
+  }, []);
+  const unlockBodyScroll = useCallback(() => {
+    if (!scrollLockRef.current.locked) return;
+    const y = scrollLockRef.current.y || 0;
+    const bodyStyle = document.body.style;
+    bodyStyle.position = '';
+    bodyStyle.top = '';
+    bodyStyle.left = '';
+    bodyStyle.right = '';
+    bodyStyle.width = '';
+    bodyStyle.overflow = '';
+    document.documentElement.style.overscrollBehavior = '';
+    document.documentElement.style.touchAction = '';
+    // Remove global listeners if attached
+    if (scrollLockRef.current.preventScroll) {
+      window.removeEventListener('wheel', scrollLockRef.current.preventScroll, { capture: true });
+      window.removeEventListener('touchmove', scrollLockRef.current.preventScroll, { capture: true });
+      scrollLockRef.current.preventScroll = undefined;
+    }
+    scrollLockRef.current.locked = false;
+    // Restore scroll position
+    window.scrollTo(0, y);
+  }, []);
+
   // Responsive column calculation
   const updateColumns = useCallback(() => {
     const width = window.innerWidth;
@@ -124,7 +170,8 @@ const MasonryGallery = ({
         url: imageUrl, // Normalize the URL property
         index
       });
-      document.body.style.overflow = 'hidden'; // Prevent background scroll
+      // Lock background scrolling across mobile browsers (iOS/Android)
+      lockBodyScroll();
     } else {
       console.error('❌ No valid image URL found in image object:', image);
     }
@@ -148,9 +195,19 @@ const MasonryGallery = ({
     setIsClosingModal(true);
     lastCloseTimeRef.current = Date.now();
 
+    // Suppress the very next click/touchend globally to prevent accidental taps on underlying content
+    const stopOnce = (ev) => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+    };
+    document.addEventListener('click', stopOnce, { capture: true, once: true });
+    document.addEventListener('touchend', stopOnce, { capture: true, once: true });
+
     // Close the modal
     setExpandedImage(null);
-    document.body.style.overflow = 'unset'; // Restore scroll
+    // Unlock background scrolling and restore position
+    unlockBodyScroll();
 
     // Reset closing state after a short delay
     setTimeout(() => {
@@ -344,7 +401,7 @@ const MasonryGallery = ({
           ref={galleryRef}
           className={`masonry-gallery-placeholder ${className}`}
           style={{
-            height: 'auto', // Auto height to prevent artifacts
+            minHeight: (typeof window !== 'undefined' && window.innerWidth < 768) ? '240px' : '360px',
             background: 'transparent', // Transparent to prevent artifacts
             backdropFilter: 'none', // Remove blur to prevent artifacts
             WebkitBackdropFilter: 'none', // Remove webkit blur to prevent artifacts
@@ -357,9 +414,7 @@ const MasonryGallery = ({
             fontFamily: 'Inter, sans-serif',
             fontSize: '16px',
             fontWeight: '500',
-            transition: 'all 0.3s ease', // Smooth transition when loading
-            opacity: 0, // Completely invisible to prevent artifacts
-            animation: 'none' // Remove animation to prevent artifacts
+            transition: 'all 0.3s ease' // Smooth transition when loading
           }}
         >
           <div style={{
@@ -433,7 +488,7 @@ const MasonryGallery = ({
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: isClosingModal ? 'rgba(0, 0, 0, 0.7)' : 'rgba(0, 0, 0, 0.9)',
+            backgroundColor: 'rgba(0, 0, 0, 1)', // Fully opaque backdrop to hide underlying content
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             display: 'flex',
@@ -443,10 +498,14 @@ const MasonryGallery = ({
             padding: isMobile() ? '60px 30px' : '40px',
             cursor: 'pointer',
             transition: 'background-color 0.2s ease',
-            touchAction: 'none'
+            touchAction: 'none',
+            overflow: 'hidden',
+            overscrollBehavior: 'none',
+            overscrollBehaviorY: 'none'
           }}
           onClick={handleModalBackdropClick}
           onTouchEnd={handleModalTouch}
+          onScroll={(e) => { e.preventDefault(); e.stopPropagation(); e.currentTarget.scrollTop = 0; }}
           onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); }}
           onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
           title="Click outside image to close"
@@ -475,6 +534,14 @@ const MasonryGallery = ({
                 e.stopImmediatePropagation();
               }
             }}
+            onTouchMove={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof e.stopImmediatePropagation === 'function') {
+                e.stopImmediatePropagation();
+              }
+            }}
+            onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
             onTouchEnd={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -611,10 +678,10 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         cursor: onClick ? 'pointer' : 'default',
         opacity: isLoaded ? 1 : 0, // Completely invisible until loaded
         animation: isLoaded ? 'fadeInScale 0.5s ease-out' : 'none',
-        // Remove fixed aspect ratio - let images determine their natural size
+        // Reserve space to ensure lazy-loading triggers correctly
         width: '100%',
-        // No minimum height to prevent any container artifacts
-        minHeight: 'auto'
+        aspectRatio: (image?.width && image?.height) ? `${image.width} / ${image.height}` : undefined,
+        minHeight: isLoaded ? 'auto' : ((typeof window !== 'undefined' && window.innerWidth < 768) ? '160px' : '220px')
       }}
       onClick={handleClick}
       onTouchStart={(e) => {
@@ -700,6 +767,9 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
           loading="lazy"
+          decoding="async"
+          width={image?.width}
+          height={image?.height}
           onLoadStart={handleImageLoadStart}
           onLoad={handleImageLoad}
           onError={(e) => {

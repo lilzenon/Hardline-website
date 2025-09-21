@@ -696,6 +696,92 @@ const FigmaMobile = () => {
     setExpandedImage(null);
   }, []);
 
+  // Modal body scroll lock for expanded image (prevents background scroll on mobile)
+  const modalScrollLockRef = useRef({
+    scrollY: 0,
+    locked: false,
+    prevent: undefined,
+    prevBodyPosition: '',
+    prevBodyTop: '',
+    prevBodyWidth: '',
+    prevBodyOverflow: '',
+    prevBodyTouchAction: ''
+  });
+
+  const lockModalBodyScroll = useCallback(() => {
+    if (modalScrollLockRef.current.locked) return;
+
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    modalScrollLockRef.current.scrollY = scrollY;
+
+    const prevent = (e) => {
+      if (e && typeof e.preventDefault === 'function') {
+        e.preventDefault();
+      }
+      if (e && typeof e.stopPropagation === 'function') {
+        e.stopPropagation();
+      }
+    };
+    modalScrollLockRef.current.prevent = prevent;
+
+    // Disable overscroll on the root element
+    document.documentElement.style.overscrollBehavior = 'none';
+
+    // Preserve prior body styles and lock viewport
+    const body = document.body;
+    modalScrollLockRef.current.prevBodyPosition = body.style.position || '';
+    modalScrollLockRef.current.prevBodyTop = body.style.top || '';
+    modalScrollLockRef.current.prevBodyWidth = body.style.width || '';
+    modalScrollLockRef.current.prevBodyOverflow = body.style.overflow || '';
+    modalScrollLockRef.current.prevBodyTouchAction = body.style.touchAction || '';
+
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    body.style.touchAction = 'none';
+
+    // Capture-phase listeners to intercept scroll gestures on iOS/Android
+    window.addEventListener('wheel', prevent, { passive: false, capture: true });
+    window.addEventListener('touchmove', prevent, { passive: false, capture: true });
+
+    modalScrollLockRef.current.locked = true;
+  }, []);
+
+  const unlockModalBodyScroll = useCallback(() => {
+    if (!modalScrollLockRef.current.locked) return;
+
+    const body = document.body;
+    body.style.position = modalScrollLockRef.current.prevBodyPosition;
+    body.style.top = modalScrollLockRef.current.prevBodyTop;
+    body.style.width = modalScrollLockRef.current.prevBodyWidth;
+    body.style.overflow = modalScrollLockRef.current.prevBodyOverflow;
+    body.style.touchAction = modalScrollLockRef.current.prevBodyTouchAction;
+
+    document.documentElement.style.overscrollBehavior = '';
+
+    if (modalScrollLockRef.current.prevent) {
+      window.removeEventListener('wheel', modalScrollLockRef.current.prevent, { capture: true });
+      window.removeEventListener('touchmove', modalScrollLockRef.current.prevent, { capture: true });
+    }
+
+    const y = modalScrollLockRef.current.scrollY || 0;
+    window.scrollTo(0, y);
+    modalScrollLockRef.current.locked = false;
+  }, []);
+
+  // Lock/unlock body scroll when expanded image modal opens/closes
+  useEffect(() => {
+    if (expandedImage) {
+      lockModalBodyScroll();
+      return () => {
+        unlockModalBodyScroll();
+      };
+    }
+    // Ensure unlock if modal is not shown
+    unlockModalBodyScroll();
+  }, [expandedImage, lockModalBodyScroll, unlockModalBodyScroll]);
+
   // Optimized scroll state for dynamic navigation (contentRef defined below)
 
   // Video quality state for adaptive streaming
@@ -4485,19 +4571,24 @@ const FigmaMobile = () => {
           left: 0,
           width: '100vw',
           height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.15)', // Barely covering - very transparent
-          backdropFilter: 'blur(60px)', // Heavy blur for glassmorphism effect
-          WebkitBackdropFilter: 'blur(60px)',
-          zIndex: 1000,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)', // Opaque enough to fully hide underlying content
+          backdropFilter: 'blur(30px)', // Strong blur for glassmorphism while reducing GPU cost
+          WebkitBackdropFilter: 'blur(30px)',
+          zIndex: 10001, // Above drawer and nav
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           padding: '20px',
           boxSizing: 'border-box',
+          overflow: 'hidden',
+          overscrollBehavior: 'none',
+          touchAction: 'none',
           animation: 'expandedImageFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
         }}
         onClick={handleImageCollapse}
+        onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
       >
         {/* Expanded Image */}
         <div

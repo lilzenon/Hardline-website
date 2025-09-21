@@ -465,7 +465,9 @@ const AboutPageMobile = () => {
                 maxHeight: 'min(44vh, 380px)',
                 overflowY: 'auto',
                 overflowX: 'hidden',
-                WebkitOverflowScrolling: 'touch'
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior: 'contain',
+                overscrollBehaviorY: 'contain'
               }}
               role="region"
               aria-label="About content"
