@@ -20,11 +20,33 @@ window.invalidateHomepageCache = () => {
 
 // Cache for formatted dates to avoid repeated calculations
 const dateFormatCache = new Map();
+// Stable time formatter that preserves wall-clock HH:mm as entered (no timezone conversion)
+const formatWallClockTime = (timeString) => {
+  if (!timeString) return '';
+  try {
+    const raw = String(timeString).trim();
+    let m = raw.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (!m && raw.includes('T')) {
+      const t = raw.split('T')[1];
+      m = t ? t.match(/^(\d{2}):(\d{2})(?::(\d{2}))?/) : null;
+    }
+    if (!m) return raw; // fallback as-is
+    const hh = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    const period = hh >= 12 ? 'PM' : 'AM';
+    const displayHour = (hh % 12) || 12;
+    const displayMinutes = mm.toString().padStart(2, '0');
+    return `${displayHour}:${displayMinutes} ${period}`;
+  } catch (_) {
+    return '';
+  }
+};
+
 
 /**
  * Custom hook to manage homepage data fetching, validation, and processing
  * Consolidates duplicate logic from FigmaDesktop.jsx and FigmaMobile.jsx
- * 
+ *
  * @returns {Object} Homepage data state and handlers
  */
 export const useHomepageData = () => {
@@ -35,7 +57,7 @@ export const useHomepageData = () => {
   const [featuredEvents, setFeaturedEvents] = useState([]);
   const [homepageEvents, setHomepageEvents] = useState([]);
   const [formattedDate, setFormattedDate] = useState("March 29th, 9:00 P.M.");
-  
+
   // Filter state - Default depends on viewport: Mobile defaults to "Next", Desktop to "Past"
   const isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 767;
   const [showAllEvents, setShowAllEvents] = useState(isMobileViewport ? true : false); // true = "Next" (upcoming), false = "Past"
@@ -48,7 +70,7 @@ export const useHomepageData = () => {
    */
   const validateEvents = useCallback((events, type) => {
     if (!Array.isArray(events)) return [];
-    
+
     return events.filter(event => {
       if (!event || typeof event !== 'object') return false;
       if (!event.id || !event.title) {
@@ -66,83 +88,75 @@ export const useHomepageData = () => {
    * @returns {Object} Formatted date information
    */
   const formatEventDate = useCallback((eventDate, includeTime = false) => {
+    // NOTE: This function now formats the DATE portion only (no default time padding).
+    // For time display, combine with event.event_time using libFormatEventTime in normalizeEvent.
     if (!eventDate) {
+      const now = new Date();
+      const day = now.getUTCDate().toString().padStart(2, '0');
+      const month = now.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
       return {
-        eventDate: new Date(),
-        formattedDate: 'Tue, Sep 02 @ 10:00PM',
-        day: '02',
-        month: 'SEP'
+        eventDate: now,
+        formattedDate: new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: '2-digit', timeZone: 'UTC' }).format(now),
+        day,
+        month
       };
     }
 
-    const cacheKey = `${eventDate}-${includeTime}`;
+    const cacheKey = `${eventDate}-${includeTime}-v2`; // v2 to bust old cache semantics
     let cachedFormat = dateFormatCache.get(cacheKey);
 
     if (!cachedFormat) {
-      // 🚨 ENHANCED DATE PARSING: Handle multiple date formats
       let parsedDate;
 
       if (eventDate instanceof Date) {
         parsedDate = eventDate;
       } else if (typeof eventDate === 'string') {
-        // Normalize strings without timezone to UTC for consistency across clients
-        let s = eventDate.trim();
-        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
-        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
-        parsedDate = new Date(s);
-
-        // If that still fails, try parsing YYYY-MM-DD as UTC midnight
-        if (isNaN(parsedDate.getTime())) {
-          const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-          if (isoMatch) {
-            parsedDate = new Date(`${isoMatch[0]}T00:00:00Z`);
-          }
+        const s = eventDate.trim();
+        // Extract Y-M-D regardless of time/tz for stable day rendering
+        const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) {
+          const y = parseInt(m[1], 10);
+          const mo = parseInt(m[2], 10);
+          const d = parseInt(m[3], 10);
+          // Use UTC MIDDAY to avoid any timezone day shifting
+          parsedDate = new Date(Date.UTC(y, mo - 1, d, 12, 0, 0));
+        } else {
+          // Fallback to native parsing (rare)
+          parsedDate = new Date(s);
         }
       } else {
         parsedDate = new Date(eventDate);
       }
 
-      // Final validation
       if (!parsedDate || isNaN(parsedDate.getTime())) {
         console.warn('🚨 Invalid event date:', eventDate, 'using fallback');
+        const now = new Date();
+        const day = now.getUTCDate().toString().padStart(2, '0');
+        const month = now.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' }).toUpperCase();
         return {
-          eventDate: new Date(),
-          formattedDate: 'Tue, Sep 02 @ 10:00PM',
-          day: '02',
-          month: 'SEP'
+          eventDate: now,
+          formattedDate: new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: '2-digit', timeZone: 'UTC' }).format(now),
+          day,
+          month
         };
       }
 
-      const options = {
+      // Format the DATE portion using UTC to avoid off-by-one issues
+      const formattedDate = new Intl.DateTimeFormat('en-US', {
         weekday: 'short',
         month: 'short',
-        day: '2-digit'
-      };
+        day: '2-digit',
+        timeZone: 'UTC'
+      }).format(parsedDate);
 
-      if (includeTime) {
-        options.hour = 'numeric';
-        options.minute = '2-digit';
-        options.hour12 = true;
-      }
+      const day = parsedDate.getUTCDate().toString().padStart(2, '0');
+      const month = new Intl.DateTimeFormat('en-US', { month: 'short', timeZone: 'UTC' }).format(parsedDate).toUpperCase();
 
-      const __tz = (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York';
-      const __formatter = new Intl.DateTimeFormat('en-US', { ...options, timeZone: __tz });
-      let formattedDate = __formatter.format(parsedDate);
-
-      if (includeTime) {
-        formattedDate = formattedDate.replace(',', ' @');
-      } else {
-        formattedDate = formattedDate.replace(',', ' @') + ' 10:00PM';
-      }
-
-      const day = parsedDate.getDate().toString().padStart(2, '0');
-      const month = parsedDate.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-
-      cachedFormat = { 
-        eventDate: parsedDate, 
-        formattedDate, 
-        day, 
-        month 
+      cachedFormat = {
+        eventDate: parsedDate,
+        formattedDate,
+        day,
+        month
       };
       dateFormatCache.set(cacheKey, cachedFormat);
     }
@@ -193,11 +207,32 @@ export const useHomepageData = () => {
    */
   const normalizeEvent = useCallback((event, idPrefix = 'event', includeTime = false) => {
     try {
-      const dateInfo = formatEventDate(event.event_date, includeTime);
+      // Always format the DATE portion only; append time below if requested
+      const dateInfo = formatEventDate(event.event_date, false);
       const title = event.title || event.artist_name || `Event`;
       const location = formatLocation(event.event_address || event.venue_name);
       const ticketInfo = getTicketInfo(event);
-      
+
+      // Combine date + time (time taken from explicit event_time if present, else extracted from event_date)
+      let formatted = dateInfo.formattedDate;
+      if (includeTime) {
+        let timeSource = null;
+        if (event && typeof event.event_time === 'string' && event.event_time.trim()) {
+          timeSource = event.event_time.trim();
+        } else if (event && typeof event.event_date === 'string' && event.event_date.includes('T')) {
+          // Extract time portion after 'T'
+          const parts = event.event_date.split('T');
+          if (parts[1]) timeSource = parts[1].trim();
+        }
+        if (timeSource) {
+          try {
+            formatted = `${formatted} at ${formatWallClockTime(timeSource)}`;
+          } catch (_) {
+            // If formatting fails, keep date-only
+          }
+        }
+      }
+
       // Process cover image - convert relative URLs to absolute URLs
       let coverImage = event.cover_image;
       if (coverImage) {
@@ -236,7 +271,7 @@ export const useHomepageData = () => {
           coverImage = `/${coverImage}`;
         }
       }
-      
+
       // Fallback image if none provided
       if (!coverImage) {
         coverImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIyIiBoZWlnaHQ9IjEyNCIgdmlld0JveD0iMCAwIDIyMiAxMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMjIiIGhlaWdodD0iMTI0IiBmaWxsPSIjMTYxNjE2Ii8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNTY1NjU2IiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc2l6ZT0iMTQiPkV2ZW50IEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
@@ -245,7 +280,7 @@ export const useHomepageData = () => {
       return {
         id: `${idPrefix}-${event.id}`,
         title,
-        date: dateInfo.formattedDate,
+        date: formatted,
         day: dateInfo.day,
         month: dateInfo.month,
         location,
@@ -358,16 +393,21 @@ export const useHomepageData = () => {
               const vFeatured = validateEvents(fresh.featuredEvents || [], 'Featured');
               const vHomepage = validateEvents(fresh.homepageEvents || [], 'Homepage');
 
-              // Recompute hero formatted date using the same logic below
-              let heroFormattedDate = fresh.formattedDate || "March 29th, 9:00 P.M.";
+              // Recompute hero formatted date (stable day, append explicit time when available)
+              let heroFormattedDate = fresh.formattedDate || "March 29, 9:00 PM";
               if (vFeatured.length > 0 && vFeatured[0].event_date) {
-                let s = vFeatured[0].event_date.trim();
-                if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
-                else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
-                const d = new Date(s);
-                const __tz = (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York';
-                const heroFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: __tz });
-                heroFormattedDate = heroFormatter.format(d).replace(',', 'th,');
+                const raw = vFeatured[0].event_date.trim();
+                const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                if (m) {
+                  const d = new Date(Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10), 12, 0, 0));
+                  const md = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(d);
+                  let timeText = '';
+                  const t = (vFeatured[0].event_time) || (raw.includes('T') ? raw.split('T')[1] : '');
+                  if (t) {
+                    try { timeText = formatWallClockTime(t); } catch (_) { timeText = ''; }
+                  }
+                  heroFormattedDate = timeText ? `${md}, ${timeText}` : md;
+                }
               }
 
               setHomeSettings(fresh.homeSettings || {});
@@ -402,7 +442,7 @@ export const useHomepageData = () => {
       }
 
       // Validate and process data
-      const homeSettings = data.homeSettings || {};
+
       const validatedFeaturedEvents = validateEvents(data.featuredEvents || [], 'Featured');
       const validatedHomepageEvents = validateEvents(data.homepageEvents || [], 'Homepage');
 
@@ -410,17 +450,21 @@ export const useHomepageData = () => {
       console.log('🔍 Featured events:', validatedFeaturedEvents);
       console.log('🔍 Homepage events:', validatedHomepageEvents);
 
-      // Generate formatted date for hero sections
-      let heroFormattedDate = data.formattedDate || "March 29th, 9:00 P.M.";
+      // Generate formatted date for hero sections (stable day + explicit time when available)
+      let heroFormattedDate = data.formattedDate || "March 29, 9:00 PM";
       if (validatedFeaturedEvents.length > 0 && validatedFeaturedEvents[0].event_date) {
-        // Normalize and format in a fixed timezone for consistency
-        let s = validatedFeaturedEvents[0].event_date.trim();
-        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
-        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
-        const d = new Date(s);
-        const __tz = (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York';
-        const heroFormatter = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: __tz });
-        heroFormattedDate = heroFormatter.format(d).replace(',', 'th,');
+        const raw = validatedFeaturedEvents[0].event_date.trim();
+        const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) {
+          const d = new Date(Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10), 12, 0, 0));
+          const md = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(d);
+          let timeText = '';
+          const t = (validatedFeaturedEvents[0].event_time) || (raw.includes('T') ? raw.split('T')[1] : '');
+          if (t) {
+            try { timeText = formatWallClockTime(t); } catch (_) { timeText = ''; }
+          }
+          heroFormattedDate = timeText ? `${md}, ${timeText}` : md;
+        }
       }
 
       // Cache the successful response
@@ -559,21 +603,21 @@ export const useHomepageData = () => {
     featuredEvents,
     homepageEvents,
     formattedDate,
-    
+
     // Filter state
     showAllEvents,
     setShowAllEvents,
-    
+
     // Processed data
     filteredFeaturedEvents: processedFeaturedEvents,
     filteredHomepageEvents: processedHomepageEvents,
-    
+
     // Utility functions (exposed for advanced use cases)
     normalizeEvent,
     formatEventDate,
     formatLocation,
     getTicketInfo,
-    
+
     // Refresh function
     refetch: fetchHomepageData
   };
