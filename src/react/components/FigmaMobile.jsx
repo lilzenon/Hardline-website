@@ -1428,13 +1428,6 @@ const FigmaMobile = () => {
     }
   };
 
-  // Ensure Past mode shows all events without limits
-  useEffect(() => {
-    if (showAllEvents === false) {
-      setIsEventSectionExpanded(true);
-    }
-  }, [showAllEvents]);
-
 
   // 🔧 ENHANCED: Current page detection for active state styling
   const getCurrentPage = () => {
@@ -3492,7 +3485,7 @@ const FigmaMobile = () => {
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  bottom: '34px', // Move title significantly closer to date/location
+                  bottom: '50px', // Fine-tuned: balanced spacing to date/location
                   display: 'flex',
                   width: '100%', // Use full width of responsive hero card
                   height: 'auto',
@@ -3527,7 +3520,7 @@ const FigmaMobile = () => {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'normal',
                     maxWidth: '100%', // Use full available width within padding
-                    margin: '0px 0px 2px 0px', // Tighten spacing above date
+                    margin: '0px 0px 4px 0px', // Slightly increased for better spacing
                     // 🚀 ENHANCED: iOS Safari specific text rendering optimizations
                     WebkitFontSmoothing: 'antialiased',
                     MozOsxFontSmoothing: 'grayscale',
@@ -3555,7 +3548,7 @@ const FigmaMobile = () => {
               style={{
                 width: '100%',
                 padding: '0',
-                marginBottom: '20px',
+                marginBottom: '0px',
                 boxSizing: 'border-box',
                 display: 'flex',
                 justifyContent: 'center'
