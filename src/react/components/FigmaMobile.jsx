@@ -2259,6 +2259,7 @@ const FigmaMobile = () => {
 
           .mobile-event-cards-container.expanded {
             max-height: none; /* Unbounded to show all events */
+            overflow: visible; /* Allow all cards to render fully */
             /* Additional smoothness optimizations for expanded state */
             transform: scale3d(1, 1, 1);
             opacity: 1;
@@ -3491,7 +3492,7 @@ const FigmaMobile = () => {
                 style={{
                   position: 'absolute',
                   left: '0px',
-                  bottom: '68px', // Bring title closer to date/location for better hierarchy
+                  bottom: '34px', // Move title significantly closer to date/location
                   display: 'flex',
                   width: '100%', // Use full width of responsive hero card
                   height: 'auto',
@@ -3526,7 +3527,7 @@ const FigmaMobile = () => {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'normal',
                     maxWidth: '100%', // Use full available width within padding
-                    margin: '0px 0px 8px 0px', // Added margin as requested
+                    margin: '0px 0px 2px 0px', // Tighten spacing above date
                     // 🚀 ENHANCED: iOS Safari specific text rendering optimizations
                     WebkitFontSmoothing: 'antialiased',
                     MozOsxFontSmoothing: 'grayscale',
