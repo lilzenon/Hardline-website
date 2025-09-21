@@ -502,9 +502,13 @@ const AboutPageMobile = () => {
             {/* Gallery Section - Mobile Masonry */}
             <div
               style={{
+                width: '100%',
+                maxWidth: '430px',
+                margin: '0 auto',
                 marginTop: '0px',
                 marginBottom: '24px',
-                padding: '0 16px'
+                padding: '0 24px', // Match page content horizontal padding for consistency
+                boxSizing: 'border-box'
               }}
             >
               <div

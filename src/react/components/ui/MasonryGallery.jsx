@@ -195,14 +195,22 @@ const MasonryGallery = ({
     setIsClosingModal(true);
     lastCloseTimeRef.current = Date.now();
 
-    // Suppress the very next click/touchend globally to prevent accidental taps on underlying content
+    // Suppress only the very next pointer release (avoid double-suppression of touchend + click)
+    let suppressed = false;
     const stopOnce = (ev) => {
+      if (suppressed) return;
+      suppressed = true;
       ev.preventDefault();
       ev.stopPropagation();
       if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+      document.removeEventListener('pointerup', stopOnce, true);
+      document.removeEventListener('click', stopOnce, true);
+      document.removeEventListener('touchend', stopOnce, true);
     };
-    document.addEventListener('click', stopOnce, { capture: true, once: true });
-    document.addEventListener('touchend', stopOnce, { capture: true, once: true });
+    // Prefer pointer events; add safe fallbacks, removed manually in handler above
+    document.addEventListener('pointerup', stopOnce, true);
+    document.addEventListener('click', stopOnce, true);
+    document.addEventListener('touchend', stopOnce, true);
 
     // Close the modal
     setExpandedImage(null);
@@ -448,7 +456,9 @@ const MasonryGallery = ({
           display: 'flex',
           gap: `${gap}px`,
           width: '100%',
-          alignItems: 'flex-start'
+          boxSizing: 'border-box',
+          alignItems: 'flex-start',
+          paddingLeft: window.innerWidth < 768 ? 0 : 0 // container relies on page padding; ensure no overflow
         }}
       >
         {imageColumns.map((column, colIndex) => (
@@ -494,7 +504,7 @@ const MasonryGallery = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 9999,
+            zIndex: 10001,
             padding: isMobile() ? '60px 30px' : '40px',
             cursor: 'pointer',
             transition: 'background-color 0.2s ease',
