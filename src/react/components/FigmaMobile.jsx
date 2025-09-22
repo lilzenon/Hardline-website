@@ -638,7 +638,8 @@ const FigmaMobile = () => {
     showAllEvents,
     setShowAllEvents,
     filteredFeaturedEvents,
-    filteredHomepageEvents
+    filteredHomepageEvents,
+    normalizeEvent
   } = useHomepageData();
 
   // Event Filter Toggle State - now managed by useHomepageData hook
@@ -3442,15 +3443,8 @@ const FigmaMobile = () => {
                         opacity: 1
                       }}
                     >
-                      {featuredEvent.eventDate
-                        ? new Intl.DateTimeFormat('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true,
-                            timeZone: (typeof window !== 'undefined' && window.__B2B_TIMEZONE) || 'America/New_York'
-                          }).format(new Date(featuredEvent.eventDate)).replace(',', 'th,')
+                      {normalizeEvent
+                        ? (normalizeEvent(featuredEvent.eventData || featuredEvent, 'hero', true)?.date || (featuredEvent.date || "March 29th, 9:00 P.M."))
                         : (featuredEvent.date || "March 29th, 9:00 P.M.")
                       }
                     </span>

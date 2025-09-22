@@ -516,7 +516,8 @@ const FigmaDesktop = () => {
     filteredFeaturedEvents,
     filteredHomepageEvents,
     featuredEvents,
-    homepageEvents
+    homepageEvents,
+    normalizeEvent
   } = useHomepageData();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
@@ -1423,6 +1424,17 @@ const FigmaDesktop = () => {
     return soonestEvent;
   }, [featuredEvents, homepageEvents]);
 
+  // Hero date text using literal wall-clock time (no timezone conversion)
+  const heroDateText = useMemo(() => {
+    if (!mostRecentEvent) return formattedDate;
+    try {
+      const n = normalizeEvent(mostRecentEvent, 'hero', true);
+      return (n && n.date) ? n.date : formattedDate;
+    } catch (_) {
+      return formattedDate;
+    }
+  }, [mostRecentEvent, normalizeEvent, formattedDate]);
+
   // Desktop-only: measure featured hero title lines to adjust vertical spacing
   useLayoutEffect(() => {
     if (scaledDimensions.containerWidth < 1024) return;
@@ -1877,16 +1889,7 @@ const FigmaDesktop = () => {
                     minWidth: 0
                   }}
                 >
-                  {mostRecentEvent?.event_date
-                    ? new Date(mostRecentEvent.event_date).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                      }).replace(',', 'th,')
-                    : formattedDate
-                  }
+                  {heroDateText}
                 </span>
               </div>
 
