@@ -458,7 +458,10 @@ const MasonryGallery = ({
           width: '100%',
           boxSizing: 'border-box',
           alignItems: 'flex-start',
-          paddingLeft: window.innerWidth < 768 ? 0 : 0 // container relies on page padding; ensure no overflow
+          justifyContent: 'center', // Center columns block to prevent perceived right shift on narrow viewports
+          margin: '0 auto', // Ensure the gallery container itself is centered within its parent
+          maxWidth: '100%',
+          paddingLeft: 0 // container relies on page padding; ensure no overflow
         }}
       >
         {imageColumns.map((column, colIndex) => (
