@@ -14,7 +14,13 @@ const MasonryGallery = ({
   onImageClick = null
 }) => {
   const [loadedImages, setLoadedImages] = useState(new Set());
-  const [columnCount, setColumnCount] = useState(columns.desktop);
+  const [columnCount, setColumnCount] = useState(() => {
+    if (typeof window === 'undefined') return columns.desktop;
+    const w = window.innerWidth;
+    if (w < 768) return columns.mobile;
+    if (w < 1024) return columns.tablet;
+    return columns.desktop;
+  });
   const [isVisible, setIsVisible] = useState(false);
   const [expandedImage, setExpandedImage] = useState(null);
   const [imageLoadingStates, setImageLoadingStates] = useState(new Map());
@@ -72,7 +78,7 @@ const MasonryGallery = ({
 
   // Responsive column calculation
   const updateColumns = useCallback(() => {
-    const width = window.innerWidth;
+    const width = (galleryRef.current?.clientWidth) || (typeof window !== 'undefined' ? window.innerWidth : 1024);
     if (width < 768) {
       setColumnCount(columns.mobile);
     } else if (width < 1024) {
@@ -130,6 +136,43 @@ const MasonryGallery = ({
     }
   }, [images, isVisible]);
 
+
+  // Recalculate columns when gallery becomes visible (after IO) and on tab restore
+  useEffect(() => {
+    if (!isVisible) return;
+    // Next frame to ensure DOM/layout has settled
+    if (typeof requestAnimationFrame === 'function') {
+      requestAnimationFrame(() => updateColumns());
+    } else {
+      updateColumns();
+    }
+    // Nudge again shortly after for browsers that adjust after paint
+    const t = setTimeout(updateColumns, 150);
+    return () => clearTimeout(t);
+  }, [isVisible, updateColumns]);
+
+  // Handle visibility/tab restore events which can affect viewport measurements
+  useEffect(() => {
+    const handleVis = () => updateColumns();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('visibilitychange', handleVis);
+      window.addEventListener('pageshow', handleVis);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('visibilitychange', handleVis);
+        window.removeEventListener('pageshow', handleVis);
+      }
+    };
+  }, [updateColumns]);
+
+  // Observe container size to base columns on actual container width, not only window
+  useEffect(() => {
+    if (!galleryRef.current || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => updateColumns());
+    ro.observe(galleryRef.current);
+    return () => ro.disconnect();
+  }, [updateColumns]);
 
   // Handle image load
   const handleImageLoad = useCallback((index) => {
