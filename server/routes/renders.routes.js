@@ -73,12 +73,11 @@ router.get(
 
 // REMOVED: Handlebars homepage fallback - React-only serving to prevent template conflicts
 
-// Public events listing page for SEO
-router.get(
-    "/events",
-    asyncHandler(locals.config),
-    asyncHandler(eventsListing.eventsListing)
-);
+// Public events listing page - Redirect to React SPA homepage
+// Legacy Handlebars template (events-listing.hbs) archived in server/views/_archived_handlebars/
+router.get("/events", (req, res) => {
+    res.redirect(301, "/");
+});
 
 // 🚀 BACKUP: Original URL shortener homepage
 router.get(
