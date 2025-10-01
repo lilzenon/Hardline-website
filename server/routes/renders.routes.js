@@ -421,45 +421,33 @@ router.get(
     }
 );
 
-// Redirect legacy dashboard to new React dashboard
+// Return 404 for /dashboard route on public homepage
+// Admin dashboard is at admin.b2b.click (separate domain)
+// Future: Regular user accounts will have their own dashboard system
 router.get(
     "/dashboard",
     (req, res) => {
-        // Redirect to the new React dashboard domain
-        const dashboardUrl = process.env.NODE_ENV === 'production' ?
-            'https://admin.b2b.click/dashboard' :
-            'http://localhost:3002/dashboard';
-
-        console.log(`🔄 Redirecting legacy dashboard to React dashboard: ${dashboardUrl}`);
-        res.redirect(301, dashboardUrl);
+        console.log(`🚫 404: /dashboard route not available on public homepage`);
+        // Serve React SPA which will handle 404 routing
+        res.status(404).sendFile(path.join(__dirname, '../../dist/index.html'));
     }
 );
 
-// Legacy dashboard routes now redirect to React dashboard
+// Legacy dashboard routes return 404 on public homepage
 router.get(
     "/dashboard-old",
     (req, res) => {
-        // Redirect to the new React dashboard domain
-        const dashboardUrl = process.env.NODE_ENV === 'production' ?
-            'https://admin.b2b.click/dashboard' :
-            'http://localhost:3002/dashboard';
-
-        console.log(`🔄 Redirecting legacy dashboard-old to React dashboard: ${dashboardUrl}`);
-        res.redirect(301, dashboardUrl);
+        console.log(`🚫 404: /dashboard-old route not available on public homepage`);
+        res.status(404).sendFile(path.join(__dirname, '../../dist/index.html'));
     }
 );
 
-// SMS dashboard redirect to React dashboard
+// SMS dashboard returns 404 on public homepage
 router.get(
     "/sms",
     (req, res) => {
-        // Redirect to the new React dashboard domain
-        const dashboardUrl = process.env.NODE_ENV === 'production' ?
-            'https://admin.b2b.click/sms' :
-            'http://localhost:3002/sms';
-
-        console.log(`🔄 Redirecting SMS dashboard to React dashboard: ${dashboardUrl}`);
-        res.redirect(301, dashboardUrl);
+        console.log(`🚫 404: /sms route not available on public homepage`);
+        res.status(404).sendFile(path.join(__dirname, '../../dist/index.html'));
     }
 );
 
