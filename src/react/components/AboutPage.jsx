@@ -3,6 +3,8 @@ import { usePerformantResize } from '../hooks/usePerformantResize';
 import MasonryGallery from './ui/MasonryGallery';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
+import Footer from './Footer';
+import Breadcrumb from './Breadcrumb';
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 
 const AboutPage = () => {
@@ -559,6 +561,14 @@ const AboutPage = () => {
           />
         </div>
 
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb
+          items={[
+            { name: 'Home', url: '/' },
+            { name: 'About' }
+          ]}
+        />
+
         {/* Page Title */}
         <div
           style={{
@@ -567,7 +577,7 @@ const AboutPage = () => {
             fontSize: '48px',
             fontWeight: '800',
             textAlign: 'center',
-            marginTop: '16px',
+            marginTop: '8px',
             marginBottom: '4px',
             opacity: 0,
             animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
@@ -645,6 +655,9 @@ const AboutPage = () => {
               gap={isMobile ? 12 : 16}
             />
           </div>
+
+          {/* Footer */}
+          <Footer compact={false} />
 
         </div>
       </div>

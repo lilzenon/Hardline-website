@@ -8,6 +8,7 @@ import TextUsSection from './TextUsSection';
 import SocialMediaButtons from './SocialMediaButtons';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
+import Footer from './Footer';
 
 
 // CSS for custom scrollbar styling
@@ -3606,6 +3607,8 @@ const FigmaDesktop = () => {
           </div>
         </div>
 
+        {/* Footer - Compact for minimal visual impact */}
+        <Footer compact={false} />
 
       </div>
     </div>

@@ -3,6 +3,8 @@ import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import MasonryGallery from './ui/MasonryGallery';
+import Footer from './Footer';
+import Breadcrumb from './Breadcrumb';
 
 /**
  * Mobile-only About page component with shared navigation
@@ -33,7 +35,7 @@ const AboutPageMobile = () => {
 
   // SEO: Page-specific meta tags for About (mobile)
   useEffect(() => {
-    const siteUrl = 'https://b2b.click';
+    const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/about`;
     const title = 'About BOUNCE2BOUNCE | Electronic Music Events and Experiences';
     const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
@@ -434,6 +436,16 @@ const AboutPageMobile = () => {
                 boxSizing: 'border-box'
               }}
             >
+            {/* Breadcrumb - Hidden on mobile but present for SEO */}
+            <div style={{ display: 'none' }}>
+              <Breadcrumb
+                items={[
+                  { name: 'Home', url: '/' },
+                  { name: 'About' }
+                ]}
+              />
+            </div>
+
             {/* Page Title */}
             <div
               style={{
@@ -546,7 +558,10 @@ const AboutPageMobile = () => {
                 margin: '0 auto'
               }}
             >
-
+              {/* Footer - Hidden on mobile but present for SEO */}
+              <div style={{ display: 'none' }}>
+                <Footer compact={true} />
+              </div>
 
             </div>
           </div>

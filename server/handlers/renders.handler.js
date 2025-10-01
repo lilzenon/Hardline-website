@@ -457,6 +457,199 @@ async function eventEdit(req, res) {
     }
 }
 
+// Helper function to generate structured data based on page type
+function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml) {
+    const baseUrl = 'https://bounce2bounce.com';
+
+    // Build social media sameAs array
+    const sameAs = [
+        seoSettings.social_instagram_url,
+        seoSettings.social_twitter_url,
+        seoSettings.social_facebook_url,
+        seoSettings.social_tiktok_url,
+        seoSettings.social_youtube_url,
+        seoSettings.social_linkedin_url,
+        seoSettings.social_spotify_url
+    ].filter(url => url && url.trim() !== '');
+
+    // Organization schema (used on all pages)
+    const organizationSchema = {
+        "@type": "Organization",
+        "@id": `${baseUrl}/#organization`,
+        "name": escapeHtml(seoSettings.organization_name || "BOUNCE2BOUNCE"),
+        "alternateName": escapeHtml(seoSettings.organization_alternate_name || "B2B"),
+        "url": baseUrl,
+        "logo": {
+            "@type": "ImageObject",
+            "url": `${baseUrl}${escapeHtml(seoSettings.organization_logo_url || metaTags.ogImage)}`
+        },
+        "description": escapeHtml(seoSettings.organization_description || "NJ's premiere EDM collective curating exclusive live music events and unforgettable experiences."),
+        "sameAs": sameAs,
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": escapeHtml(seoSettings.organization_phone || ""),
+            "contactType": "customer service",
+            "email": escapeHtml(seoSettings.organization_email || "info@bounce2bounce.com"),
+            "availableLanguage": "English"
+        },
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": escapeHtml(seoSettings.organization_address_city || "Asbury Park"),
+            "addressRegion": escapeHtml(seoSettings.organization_address_state || "NJ"),
+            "addressCountry": escapeHtml(seoSettings.organization_address_country || "US")
+        }
+    };
+
+    if (seoSettings.organization_founded_year) {
+        organizationSchema.foundingDate = seoSettings.organization_founded_year.toString();
+    }
+
+    // Generate page-specific structured data
+    if (pageType === 'homepage') {
+        // Homepage: Organization + WebSite + BreadcrumbList
+        const websiteSchema = {
+            "@type": "WebSite",
+            "@id": `${baseUrl}/#website`,
+            "name": "BOUNCE2BOUNCE",
+            "url": baseUrl,
+            "description": escapeHtml(metaTags.description),
+            "publisher": {
+                "@id": `${baseUrl}/#organization`
+            },
+            "hasPart": [
+                {
+                    "@type": "WebPage",
+                    "@id": `${baseUrl}/about`,
+                    "name": "About BOUNCE2BOUNCE",
+                    "description": escapeHtml(seoSettings.about_page_description || "Learn about our mission and values"),
+                    "url": `${baseUrl}/about`
+                },
+                {
+                    "@type": "WebPage",
+                    "@id": `${baseUrl}/faq`,
+                    "name": "FAQ",
+                    "description": escapeHtml(seoSettings.faq_page_description || "Frequently asked questions"),
+                    "url": `${baseUrl}/faq`
+                }
+            ]
+        };
+
+        const breadcrumbSchema = {
+            "@type": "BreadcrumbList",
+            "@id": `${baseUrl}/#breadcrumb`,
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": `${baseUrl}/`
+                }
+            ]
+        };
+
+        return JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [organizationSchema, websiteSchema, breadcrumbSchema]
+        }, null, 2);
+
+    } else if (pageType === 'about') {
+        // About Page: AboutPage + BreadcrumbList
+        const aboutPageSchema = {
+            "@type": "AboutPage",
+            "@id": `${baseUrl}/about#webpage`,
+            "name": escapeHtml(metaTags.title),
+            "description": escapeHtml(metaTags.description),
+            "url": `${baseUrl}/about`,
+            "isPartOf": {
+                "@id": `${baseUrl}/#website`
+            },
+            "mainEntity": {
+                "@id": `${baseUrl}/#organization`
+            },
+            "breadcrumb": {
+                "@id": `${baseUrl}/about#breadcrumb`
+            },
+            "primaryImageOfPage": {
+                "@type": "ImageObject",
+                "url": `${baseUrl}${escapeHtml(metaTags.ogImage)}`
+            }
+        };
+
+        const breadcrumbSchema = {
+            "@type": "BreadcrumbList",
+            "@id": `${baseUrl}/about#breadcrumb`,
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": `${baseUrl}/`
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "About",
+                    "item": `${baseUrl}/about`
+                }
+            ]
+        };
+
+        return JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [aboutPageSchema, breadcrumbSchema]
+        }, null, 2);
+
+    } else if (pageType === 'faq') {
+        // FAQ Page: FAQPage + BreadcrumbList
+        // Note: The actual FAQ questions will be added client-side by React
+        const faqPageSchema = {
+            "@type": "FAQPage",
+            "@id": `${baseUrl}/faq#webpage`,
+            "name": escapeHtml(metaTags.title),
+            "description": escapeHtml(metaTags.description),
+            "url": `${baseUrl}/faq`,
+            "isPartOf": {
+                "@id": `${baseUrl}/#website`
+            },
+            "breadcrumb": {
+                "@id": `${baseUrl}/faq#breadcrumb`
+            }
+        };
+
+        const breadcrumbSchema = {
+            "@type": "BreadcrumbList",
+            "@id": `${baseUrl}/faq#breadcrumb`,
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": `${baseUrl}/`
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "FAQ",
+                    "item": `${baseUrl}/faq`
+                }
+            ]
+        };
+
+        return JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [faqPageSchema, breadcrumbSchema]
+        }, null, 2);
+    }
+
+    // Fallback (should not reach here)
+    return JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": escapeHtml(metaTags.title),
+        "url": escapeHtml(metaTags.ogUrl)
+    }, null, 2);
+}
+
 // 🚀 REACT HOMEPAGE - Serve React app with dynamic SEO meta tags
 async function reactHomepage(req, res) {
     console.log('🚀🚀🚀 REACT HOMEPAGE FUNCTION CALLED - Dynamic SEO meta tags processing started');
@@ -469,6 +662,16 @@ async function reactHomepage(req, res) {
         const path = require('path');
         const fs = require('fs');
         const seoUtils = require('../utils/seo.utils');
+
+        // Determine page type based on request path
+        const requestPath = req.path.toLowerCase();
+        let pageType = 'homepage';
+        if (requestPath === '/about' || requestPath === '/about/') {
+            pageType = 'about';
+        } else if (requestPath === '/faq' || requestPath === '/faq/') {
+            pageType = 'faq';
+        }
+        console.log('📄 Page type detected:', pageType);
 
         // Get SEO settings from dashboard API with timeout and fallback
         let seoSettings;
@@ -505,18 +708,54 @@ async function reactHomepage(req, res) {
                 default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
                 default_author: 'BOUNCE2BOUNCE',
                 default_og_image: '/images/og-image.png',
-                twitter_handle: '@bounce2bounce'
+                twitter_handle: '@bounce2bounce',
+                // About Page defaults
+                about_page_title: 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective',
+                about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.',
+                about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music',
+                about_page_og_image: '/images/og-image.png',
+                // FAQ Page defaults
+                faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
+                faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.',
+                faq_page_keywords: 'faq, questions, help, bounce2bounce support',
+                faq_page_og_image: '/images/og-image.png'
             };
         }
 
+        // Select page-specific SEO settings based on page type
+        let pageTitle, pageDescription, pageKeywords, pageOgImage, pageUrl;
+
+        if (pageType === 'about') {
+            pageTitle = seoSettings.about_page_title || 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective';
+            pageDescription = seoSettings.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
+            pageKeywords = seoSettings.about_page_keywords || 'about bounce2bounce, edm collective, live music events, nj music';
+            pageOgImage = seoSettings.about_page_og_image || seoSettings.default_og_image || '/images/og-image.png';
+            pageUrl = '/about';
+        } else if (pageType === 'faq') {
+            pageTitle = seoSettings.faq_page_title || 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions';
+            pageDescription = seoSettings.faq_page_description || 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.';
+            pageKeywords = seoSettings.faq_page_keywords || 'faq, questions, help, bounce2bounce support';
+            pageOgImage = seoSettings.faq_page_og_image || seoSettings.default_og_image || '/images/og-image.png';
+            pageUrl = '/faq';
+        } else {
+            // Homepage
+            pageTitle = seoSettings.default_title || 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE';
+            pageDescription = seoSettings.default_description || 'Discover exclusive live music events and connect with artists';
+            pageKeywords = seoSettings.default_keywords || 'live music events, concert tickets, artist promotion';
+            pageOgImage = seoSettings.default_og_image || '/images/og-image.png';
+            pageUrl = '/';
+        }
+
+        console.log('🏷️ Page-specific SEO:', { pageType, pageTitle, pageUrl });
+
         // Generate meta tags using SEO utils with proper image handling
         const metaTags = seoUtils.generateMetaTags({
-            title: seoSettings.default_title || 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
-            description: seoSettings.default_description || 'Discover exclusive live music events and connect with artists',
-            keywords: seoSettings.default_keywords || 'live music events, concert tickets, artist promotion',
+            title: pageTitle,
+            description: pageDescription,
+            keywords: pageKeywords,
             author: seoSettings.default_author || 'BOUNCE2BOUNCE',
-            image: seoSettings.default_og_image,
-            url: '/'
+            image: pageOgImage,
+            url: pageUrl
         });
 
         console.log('🏷️ Generated meta tags:', {
@@ -594,22 +833,7 @@ async function reactHomepage(req, res) {
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "${escapeHtml(metaTags.title)}",
-        "description": "${escapeHtml(metaTags.description)}",
-        "url": "${escapeHtml(metaTags.ogUrl)}",
-        "image": "${escapeHtml(metaTags.ogImage)}",
-        "publisher": {
-            "@type": "Organization",
-            "name": "BOUNCE2BOUNCE",
-            "logo": {
-                "@type": "ImageObject",
-                "url": "${escapeHtml(metaTags.ogImage)}"
-            }
-        }
-    }
+    ${generateStructuredData(pageType, seoSettings, metaTags, escapeHtml)}
     </script>`;
 
         // Replace the existing title and inject meta tags

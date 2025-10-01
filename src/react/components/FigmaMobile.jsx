@@ -7,6 +7,7 @@ import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import MobileDrawer from './MobileDrawer';
+import Footer from './Footer';
 
 import BrandedLoader from './BrandedLoader';
 
@@ -4514,29 +4515,15 @@ const FigmaMobile = () => {
         </div>
 
         {/* Footer Section - FIXED: Hidden when drawer is active to prevent scroll visibility */}
-        <footer
+        <div
           style={{
-            width: '100%',
-            padding: '40px 16px 20px',
-            textAlign: 'center',
-            background: 'transparent',
             /* 🚨 CRITICAL FIX: Hide footer when drawer is active to prevent unwanted text visibility */
             display: drawerExpanded ? 'none' : 'block',
             visibility: drawerExpanded ? 'hidden' : 'visible'
           }}
         >
-          <div
-            style={{
-              color: 'rgba(255, 255, 255, 0.6)',
-              fontFamily: 'Inter',
-              fontSize: '12px',
-              fontWeight: '300',
-              lineHeight: '1.5'
-            }}
-          >
-            © 2024 BOUNCE2BOUNCE. All rights reserved.
-          </div>
-        </footer>
+          <Footer compact={true} />
+        </div>
       </main>
 
       {/* REMOVED: Duplicate inline drawer implementation - now using MobileDrawer component */}

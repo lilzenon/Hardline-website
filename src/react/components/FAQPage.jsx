@@ -3,6 +3,8 @@ import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/saniti
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
+import Footer from './Footer';
+import Breadcrumb from './Breadcrumb';
 
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 
@@ -373,6 +375,14 @@ const FAQPage = () => {
             animation: 'fadeInUp 0.6s ease-out 0.2s forwards'
           }}
         >
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { name: 'Home', url: '/' },
+              { name: 'FAQ' }
+            ]}
+          />
+
           {/* FAQ Title */}
           <h1 style={{
             color: '#FFFFFF',
@@ -517,6 +527,10 @@ const FAQPage = () => {
         </div>
         </div>
       </div>
+
+        {/* Footer */}
+        <Footer compact={false} />
+
       </div>
 
     {/* 🚨 MATCH ABOUT PAGE: Add fadeInUp animation keyframes */}
