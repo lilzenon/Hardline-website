@@ -172,23 +172,20 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
     };
   }, []);
 
-  // Compute sizing with breakpoint steps to prevent 1px jitter on desktop
+  // 🚨 FIX: Use fixed button sizes to prevent shrinking on viewport resize
+  // The previous implementation recalculated sizes based on containerWidth, causing buttons
+  // to shrink when the viewport was resized. Now using stable, fixed sizes.
   const buttonsCount = (socialLinks && socialLinks.length ? socialLinks.length : 4);
   const gapPx = isDesktop ? 16 : 0; // Mobile: remove base gap so space-between defines spacing
-  const effectiveWidth = isDesktop && typeof containerWidth === 'number' && containerWidth > 0 ? containerWidth : null;
 
-  // Step-based sizes to keep visual consistency; only change at intentional thresholds
-  // Expanded range to better cover small (1024-1200), medium (1200-1440), large (1440+ and 4K) viewports
-  const DISCRETE_SIZES = [64, 72, 80, 88, 96, 104, 112, 120, 128, 140, 152, 164, 176, 192, 208, 224];
+  // Fixed button sizes for consistent appearance across all viewport sizes
+  const FIXED_DESKTOP_BUTTON_SIZE = 96; // Fixed size for desktop
+  const FIXED_MOBILE_BUTTON_SIZE = 80; // Fixed size for mobile
 
-  const perButtonSafe = effectiveWidth
-    ? Math.max(56, Math.floor((effectiveWidth - gapPx * (buttonsCount - 1)) / buttonsCount))
-    : (isDesktop ? 112 : 80);
+  // Use fixed sizes instead of responsive calculations to prevent resize issues
+  let computedButtonSize = isDesktop ? FIXED_DESKTOP_BUTTON_SIZE : FIXED_MOBILE_BUTTON_SIZE;
 
-  // Pick the largest discrete size that fits in the safe per-button space
-  let computedButtonSize = DISCRETE_SIZES.reduce((acc, val) => (val <= perButtonSafe ? val : acc), DISCRETE_SIZES[0]);
-
-  // Desktop overflow guard: clamp by maxButtonSizePx when provided
+  // Desktop overflow guard: only apply maxButtonSizePx if explicitly provided
   if (isDesktop && typeof maxButtonSizePx === 'number' && maxButtonSizePx > 0) {
     computedButtonSize = Math.min(computedButtonSize, Math.max(64, Math.floor(maxButtonSizePx)));
   }
