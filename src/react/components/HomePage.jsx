@@ -30,16 +30,7 @@ const HomePage = () => {
   const mobileLifecycle = useMobileLifecycle();
 
   // Initialize SEO management
-  // Ensure homepage title is set on mount (fixes title persistence when returning)
-  useEffect(() => {
-    try {
-      const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'BOUNCE2BOUNCE - Premium Event Platform';
-      document.title = defaultTitle;
-    } catch (_) {
-      // no-op
-    }
-  }, []);
-
+  // Title is managed by SEOContext - no need to set it manually here
   const { seoSettings, isMaintenanceMode, refreshSEOSettings } = useSEO();
 
   useEffect(() => {

@@ -6,10 +6,11 @@
 import { apiClient } from '../../lib/api-client';
 
 // Default SEO settings fallback
+// NOTE: These should match the server-side defaults in server/queries/seo_settings.queries.js
 export const DEFAULT_SEO_SETTINGS = {
-    default_title: 'BOUNCE2BOUNCE - Premium Event Platform',
-    default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
-    default_keywords: 'events, tickets, entertainment, concerts, festivals',
+    default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
+    default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
+    default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
     default_author: 'BOUNCE2BOUNCE',
     default_og_image: 'https://bounce2bounce.com/images/og-image.png',
     twitter_handle: '@bounce2bounce',
