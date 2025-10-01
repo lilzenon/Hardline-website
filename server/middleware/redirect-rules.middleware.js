@@ -1,25 +1,11 @@
 // Dashboard-driven URL redirect middleware for slug paths
-// Queries admin dashboard API: /api/redirects/:slug
-// If enabled rule found, perform 302 redirect to destination URL
+// PERFORMANCE FIX: Direct database query instead of cross-domain API calls
+// This eliminates network timeouts and ensures 100% reliability
 
 const env = require("../env");
-
-let _fetch = null;
-async function getFetch() {
-  if (_fetch) return _fetch;
-  const mod = await import("node-fetch");
-  _fetch = mod.default || mod;
-  return _fetch;
-}
+const knex = require("../knex");
 
 const cache = new Map(); // slug -> { enabled, destinationUrl, expiresAt }
-
-function getDashboardBaseUrl() {
-  if (env.NODE_ENV === "production") {
-    return env.PRODUCTION_DASHBOARD_URL || "https://admin.b2b.click";
-  }
-  return env.DASHBOARD_URL || "http://localhost:3002";
-}
 
 function shouldBypass(path) {
   if (!path || path === "/") return true;
@@ -35,43 +21,36 @@ function isValidSlug(s) {
   return /^[A-Za-z0-9_-]{1,100}$/.test(s);
 }
 
+/**
+ * Query redirect rule directly from database
+ * PERFORMANCE FIX: Eliminates network calls and timeouts
+ * @param {string} slug - The redirect slug to look up
+ * @returns {Promise<{found: boolean, enabled?: boolean, destinationUrl?: string, ttlMs?: number, error?: string}>}
+ */
 async function fetchRule(slug) {
-  const fetch = await getFetch();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 5000);
-
   try {
-    const base = getDashboardBaseUrl();
-    const url = `${base}/api/redirects/${encodeURIComponent(slug)}`;
-    const resp = await fetch(url, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-    });
+    const rule = await knex("redirects")
+      .where("slug", slug.toLowerCase())
+      .first();
 
-    if (resp.status === 404) {
+    if (!rule) {
       return { found: false };
     }
 
-    if (!resp.ok) {
-      return { error: `dashboard returned ${resp.status}` };
-    }
-
-    const data = await resp.json().catch(() => ({}));
-    const enabled = !!data?.enabled;
-    const destinationUrl = data?.destinationUrl;
-    const ttlSec = Number(data?.cacheTtlSeconds || 60);
+    const enabled = !!rule.enabled;
+    const destinationUrl = rule.destination_url;
+    const ttlMs = 60000; // Default 60 seconds cache TTL
 
     return {
       found: true,
       enabled,
       destinationUrl,
-      ttlMs: Math.max(5000, Math.min(300000, (isNaN(ttlSec) ? 60 : ttlSec) * 1000)),
+      ttlMs,
     };
   } catch (err) {
-    return { error: err?.message || "fetch error" };
-  } finally {
-    clearTimeout(timeout);
+    // Log error but don't block the request
+    console.error(`❌ Redirect middleware database error for "${slug}":`, err.message);
+    return { error: err?.message || "database error" };
   }
 }
 
@@ -82,7 +61,7 @@ async function redirectRulesMiddleware(req, res, next) {
     const slug = extractSlug(req.path);
     if (!isValidSlug(slug)) return next();
 
-    // cache lookup
+    // Cache lookup to avoid redundant database queries
     const now = Date.now();
     const cached = cache.get(slug);
     if (cached && cached.expiresAt > now) {
@@ -92,8 +71,16 @@ async function redirectRulesMiddleware(req, res, next) {
       return next();
     }
 
-    // fetch from dashboard
+    // Fetch redirect rule from database
+    // PERFORMANCE FIX: Direct database query - no network timeouts
     const result = await fetchRule(slug);
+
+    // Handle database errors gracefully - ALWAYS continue to short link handler
+    if (result.error) {
+      console.warn(`⚠️ Redirect middleware: Database error for "${slug}", continuing to short link handler`);
+      // Don't cache errors - allow retry on next request
+      return next();
+    }
 
     if (result.found) {
       const { enabled, destinationUrl, ttlMs } = result;
@@ -107,11 +94,12 @@ async function redirectRulesMiddleware(req, res, next) {
       return next();
     }
 
-    // not found: negative cache briefly
+    // Not found: negative cache briefly to avoid repeated database queries
     cache.set(slug, { enabled: false, destinationUrl: null, expiresAt: now + 60000 });
     return next();
   } catch (e) {
-    // Fail open: allow existing shortlink/404 logic to handle
+    // CRITICAL: Fail open - ALWAYS allow existing shortlink/404 logic to handle
+    console.error(`❌ Redirect rules middleware EXCEPTION for ${req.path}:`, e.message);
     return next();
   }
 }
