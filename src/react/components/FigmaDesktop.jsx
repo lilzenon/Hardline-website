@@ -1646,15 +1646,20 @@ const FigmaDesktop = () => {
               Up Next
             </div>
 
-            {/* Hero Featured Event - Perfect Square */}
+            {/* Hero Featured Event or Fallback - Perfect Square */}
             <div
               onClick={(e) => {
                 console.log('🔍 Desktop Featured Event: Click detected!', e.target);
                 e.preventDefault();
                 e.stopPropagation();
 
-                // Navigate directly to ticket purchase page in new tab
-                if (mostRecentEvent?.external_ticket_url) {
+                // If showing fallback, use fallback CTA URL
+                if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
+                  console.log('🎫 Desktop Fallback: Opening CTA link:', homeSettings.desktop_fallback_cta_url);
+                  window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
+                }
+                // Otherwise use event ticket URL
+                else if (mostRecentEvent?.external_ticket_url) {
                   console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
                   window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
                 } else {
@@ -1710,8 +1715,9 @@ const FigmaDesktop = () => {
               WebkitBackfaceVisibility: 'hidden'
             }}
           >
-            {/* Dynamic Event Image or Fallback */}
+            {/* Dynamic Event Image, Custom Fallback, or Default Placeholder */}
             {mostRecentEvent?.cover_image ? (
+              /* Event Cover Image */
               <picture>
                 <source
                   srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
@@ -1788,8 +1794,40 @@ const FigmaDesktop = () => {
                   }}
                 />
               </picture>
+            ) : !mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_image_uuid ? (
+              /* Custom Fallback Image from Dashboard Settings */
+              <img
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+                src={`/api/images/serve/${homeSettings.desktop_fallback_image_uuid}/medium`}
+                alt={homeSettings.desktop_fallback_title || 'Coming Soon'}
+                loading="eager"
+                decoding="async"
+                fetchpriority="high"
+                onError={(e) => {
+                  const img = e.target;
+                  if (img && !img.dataset.fallbackTried) {
+                    img.dataset.fallbackTried = '1';
+                    // Try small variant if medium fails
+                    img.src = `/api/images/serve/${homeSettings.desktop_fallback_image_uuid}/small`;
+                  } else {
+                    // Final fallback to placeholder
+                    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  left: '0px',
+                  top: '0px',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  zIndex: 1
+                }}
+              />
             ) : (
-              /* Fallback hero placeholder when no featured events */
+              /* Default Placeholder when no event and no custom fallback */
               <img
                 src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K"
                 alt="No upcoming featured event"
@@ -1830,7 +1868,7 @@ const FigmaDesktop = () => {
             }}
           />
 
-          {/* Bottom overlay with date and location - Fixed positioning */}
+          {/* Bottom overlay with date/location (events only) or CTA button (fallback) - Fixed positioning */}
           <div
             style={{
               position: 'absolute',
@@ -1838,7 +1876,7 @@ const FigmaDesktop = () => {
               bottom: '8px', // Positioned lower in the card for better visual balance
               display: 'flex',
               width: '100%',
-              justifyContent: 'space-between',
+              justifyContent: mostRecentEvent ? 'space-between' : 'flex-end', // Right-align button for fallback
               padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
               gap: '12px', // Reduced gap to make more room for wider button
               boxSizing: 'border-box',
@@ -1852,80 +1890,83 @@ const FigmaDesktop = () => {
               minHeight: '44px' // Ensure minimum height for button container
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                flex: '1',
-                padding: '4px 0px',
-                flexDirection: 'column',
-                minWidth: 0,
-                maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
-              }}
-            >
-              {/* Date row - Enhanced styling */}
+            {/* Date and Location - Only show for actual events, not fallback */}
+            {mostRecentEvent && (
               <div
                 style={{
                   display: 'flex',
-                  alignSelf: 'stretch',
-                  alignItems: 'center',
-                  gap: '6px', // Slightly more gap for better readability
+                  flex: '1',
+                  padding: '4px 0px',
+                  flexDirection: 'column',
                   minWidth: 0,
-                  marginBottom: '2px' // Small margin for separation
+                  maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
                 }}
               >
-                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
-                </svg>
-                <span
+                {/* Date row - Enhanced styling */}
+                <div
                   style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '12px', // Fixed size like mobile
-                    fontWeight: '200',
-                    lineHeight: 'normal',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    flex: 1,
-                    minWidth: 0
+                    display: 'flex',
+                    alignSelf: 'stretch',
+                    alignItems: 'center',
+                    gap: '6px', // Slightly more gap for better readability
+                    minWidth: 0,
+                    marginBottom: '2px' // Small margin for separation
                   }}
                 >
-                  {heroDateText}
-                </span>
-              </div>
+                  <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                    <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
+                  </svg>
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '12px', // Fixed size like mobile
+                      fontWeight: '200',
+                      lineHeight: 'normal',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                      minWidth: 0
+                    }}
+                  >
+                    {heroDateText}
+                  </span>
+                </div>
 
-              {/* Location row */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignSelf: 'stretch',
-                  alignItems: 'center',
-                  gap: '4px',
-                  minWidth: 0
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
-                  <circle cx="5" cy="4" r="1" fill="#FFF"/>
-                </svg>
-                <span
+                {/* Location row */}
+                <div
                   style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '12px', // Fixed size like mobile
-                    fontWeight: '200',
-                    lineHeight: 'normal',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    flex: 1,
+                    display: 'flex',
+                    alignSelf: 'stretch',
+                    alignItems: 'center',
+                    gap: '4px',
                     minWidth: 0
                   }}
                 >
-                  {mostRecentEvent?.location || homeSettings?.event_location || "Asbury Park, NJ"}
-                </span>
+                  <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                    <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
+                    <circle cx="5" cy="4" r="1" fill="#FFF"/>
+                  </svg>
+                  <span
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '12px', // Fixed size like mobile
+                      fontWeight: '200',
+                      lineHeight: 'normal',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      flex: 1,
+                      minWidth: 0
+                    }}
+                  >
+                    {mostRecentEvent?.location || homeSettings?.event_location || "Asbury Park, NJ"}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* CTA Button - Enhanced styling and positioning */}
             <div
@@ -1972,7 +2013,11 @@ const FigmaDesktop = () => {
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (mostRecentEvent?.external_ticket_url) {
+                  // Handle fallback CTA or event ticket URL
+                  if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
+                    console.log('🎫 Opening fallback CTA link:', homeSettings.desktop_fallback_cta_url);
+                    window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
+                  } else if (mostRecentEvent?.external_ticket_url) {
                     console.log(`🎫 Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
                     window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer');
                   }
@@ -1989,13 +2034,15 @@ const FigmaDesktop = () => {
                     textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
                   }}
                 >
-                  {mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event'}
+                  {!mostRecentEvent && homeSettings?.desktop_fallback_enabled
+                    ? 'Join Waitlist'
+                    : (mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event')}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Event title overlay - Responsive */}
+          {/* Event/Fallback title overlay - Responsive */}
           <div
             style={{
               position: 'absolute',
@@ -2034,7 +2081,9 @@ const FigmaDesktop = () => {
                 maxWidth: `${scaledDimensions.heroWidth - 24}px`
               }}
             >
-              {mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE"}
+              {!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_title
+                ? homeSettings.desktop_fallback_title
+                : (mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE")}
             </div>
           </div>
             </div>
