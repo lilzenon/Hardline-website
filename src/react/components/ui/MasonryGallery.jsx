@@ -573,15 +573,18 @@ const MasonryGallery = ({
           <div
             className="expanded-image"
             style={{
-              maxWidth: isMobile() ? '70vw' : '85vw',
-              maxHeight: isMobile() ? '50vh' : '85vh',
+              maxWidth: isMobile() ? '90vw' : '90vw',
+              maxHeight: isMobile() ? '80vh' : '90vh',
               position: 'relative',
-              margin: isMobile() ? '30px' : '20px',
+              margin: isMobile() ? '20px' : '20px',
               borderRadius: '16px',
-              overflow: 'hidden',
+              overflow: 'visible',
               boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
               transition: 'transform 0.2s ease',
-              transform: isClosingModal ? 'scale(0.95)' : 'scale(1)'
+              transform: isClosingModal ? 'scale(0.95)' : 'scale(1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
             onClick={(e) => {
               e.preventDefault();
@@ -612,11 +615,14 @@ const MasonryGallery = ({
               crossOrigin="anonymous"
               referrerPolicy="no-referrer"
               style={{
-                width: '100%',
-                height: '100%',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: 'auto',
+                height: 'auto',
                 objectFit: 'contain',
                 borderRadius: '12px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
+                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+                display: 'block'
               }}
               onError={(e) => {
                 const target = e.target;

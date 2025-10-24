@@ -590,7 +590,6 @@ const AboutPage = () => {
           <div
             style={{
               width: '100%',
-              maxWidth: '800px',
               margin: '0 auto',
               background: 'transparent',
               padding: '8px 20px 20px 20px',
