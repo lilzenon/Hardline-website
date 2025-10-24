@@ -4150,7 +4150,7 @@ const FigmaMobile = () => {
                   /* Laylo CTA Button - Opens in new tab */
                   <button
                     type="button"
-                    aria-label="Join Waitlist"
+                    aria-label={homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
                     onClick={() => {
                       window.open(homeSettings.mobile_laylo_cta_url, '_blank', 'noopener,noreferrer');
                     }}
@@ -4187,7 +4187,7 @@ const FigmaMobile = () => {
                       e.currentTarget.style.transform = 'scale(1)';
                     }}
                   >
-                    Join Waitlist
+                    {homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
                   </button>
                 ) : (
                   /* Default "View Past Events" Button */

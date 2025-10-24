@@ -2035,7 +2035,7 @@ const FigmaDesktop = () => {
                   }}
                 >
                   {!mostRecentEvent && homeSettings?.desktop_fallback_enabled
-                    ? 'Join Waitlist'
+                    ? (homeSettings?.fallback_cta_button_text || 'Join Waitlist')
                     : (mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event')}
                 </span>
               </div>
