@@ -1387,13 +1387,18 @@ const FigmaDesktop = () => {
   const mostRecentEvent = useMemo(() => {
     // Always show the soonest upcoming event in hero, regardless of toggle state
     const now = new Date();
+    console.log('🕐 Current time:', now.toISOString());
 
     // Combine all events (featured + homepage) and filter for upcoming only
     const allEvents = [...(featuredEvents || []), ...(homepageEvents || [])];
+    console.log('📋 Total events to filter:', allEvents.length, allEvents.map(e => ({ title: e.title, date: e.event_date })));
 
     // Filter for upcoming events only (future dates)
     const upcomingEvents = allEvents.filter(event => {
-      if (!event?.event_date) return false;
+      if (!event?.event_date) {
+        console.log('⚠️ Event has no date:', event?.title);
+        return false;
+      }
 
       // Parse event date consistently
       let eventDate;
@@ -1406,12 +1411,23 @@ const FigmaDesktop = () => {
         eventDate = new Date(s);
       }
 
-      if (isNaN(eventDate.getTime())) return false;
-      return eventDate.getTime() > now.getTime();
+      if (isNaN(eventDate.getTime())) {
+        console.log('⚠️ Invalid date for event:', event?.title, event.event_date);
+        return false;
+      }
+
+      const isFuture = eventDate.getTime() > now.getTime();
+      console.log(`📅 ${event.title}: ${event.event_date} -> ${eventDate.toISOString()} | Future: ${isFuture}`);
+      return isFuture;
     });
 
+    console.log('✅ Upcoming events after filter:', upcomingEvents.length, upcomingEvents.map(e => e.title));
+
     // Sort by date ascending (soonest first) and return the first one
-    if (upcomingEvents.length === 0) return null;
+    if (upcomingEvents.length === 0) {
+      console.log('❌ NO UPCOMING EVENTS - Should show fallback hero');
+      return null;
+    }
 
     upcomingEvents.sort((a, b) => {
       const dateA = new Date(a.event_date);

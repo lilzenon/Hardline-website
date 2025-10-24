@@ -147,12 +147,13 @@ class AnalyticsBeacon {
     private getPageInfo(): AnalyticsEvent {
         // Extract UTM parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
-        
+
         return {
             ts: Date.now(),
             page_url: window.location.href,
             page_title: document.title || '',
             referrer: document.referrer || undefined,
+            session_id: this.sessionId || undefined,
             utm_source: urlParams.get('utm_source') || undefined,
             utm_medium: urlParams.get('utm_medium') || undefined,
             utm_campaign: urlParams.get('utm_campaign') || undefined,
