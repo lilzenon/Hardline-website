@@ -3672,10 +3672,11 @@ const FigmaDesktop = () => {
           </div>
         </div>
 
-        {/* Footer - Compact for minimal visual impact */}
-        <Footer compact={false} />
-
       </div>
+
+      {/* Footer - Placed outside hidden mobile section so it's visible on desktop */}
+      <Footer compact={false} />
+
     </div>
     </div>
     </div>

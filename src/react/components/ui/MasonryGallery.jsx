@@ -578,13 +578,14 @@ const MasonryGallery = ({
               position: 'relative',
               margin: isMobile() ? '20px' : '20px',
               borderRadius: '16px',
-              overflow: 'visible',
+              overflow: 'hidden',
               boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
               transition: 'transform 0.2s ease',
               transform: isClosingModal ? 'scale(0.95)' : 'scale(1)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              background: 'transparent'
             }}
             onClick={(e) => {
               e.preventDefault();
@@ -622,7 +623,8 @@ const MasonryGallery = ({
                 objectFit: 'contain',
                 borderRadius: '12px',
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
-                display: 'block'
+                display: 'block',
+                margin: '0 auto'
               }}
               onError={(e) => {
                 const target = e.target;
