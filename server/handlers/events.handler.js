@@ -128,11 +128,85 @@ function extractUuidFromCoverImage(coverImage) {
         return null;
     }
 }
-function withCoverImageUrl(eventRow, req, variant = "event_card") {
+/**
+ * Enhance event with cover image URL and SEO metadata
+ * @param {Object} eventRow - Event data from database
+ * @param {Object} req - Express request object
+ * @param {string} variant - Image variant to use (thumbnail, small, medium, large, event_card)
+ * @returns {Object} Event with cover_image_url and image SEO metadata
+ */
+async function withCoverImageUrl(eventRow, req, variant = "event_card") {
     if (!eventRow || typeof eventRow !== "object") return eventRow;
     const uuid = eventRow.cover_image_uuid || extractUuidFromCoverImage(eventRow.cover_image);
     const cover_image_url = uuid ? buildImageUrl(uuid, variant, req) : null;
-    return { ...eventRow, cover_image_url };
+
+    // Fetch image SEO metadata from images table if UUID exists
+    let imageSeoData = {};
+    if (uuid) {
+        try {
+            const imageRecord = await knex('images')
+                .select('alt_text', 'title', 'description', 'variants')
+                .where('uuid', uuid)
+                .first();
+
+            if (imageRecord) {
+                imageSeoData = {
+                    image_alt_text: imageRecord.alt_text || `${eventRow.title} event cover image`,
+                    image_title: imageRecord.title || eventRow.title,
+                    image_caption: imageRecord.description || null,
+                    // Generate srcset from available variants
+                    image_srcset: imageRecord.variants ? generateImageSrcSet(uuid, imageRecord.variants, req) : null
+                };
+            }
+        } catch (error) {
+            console.error('⚠️  Error fetching image SEO metadata:', error);
+            // Fallback to event title if image metadata fetch fails
+            imageSeoData = {
+                image_alt_text: `${eventRow.title} event cover image`,
+                image_title: eventRow.title,
+                image_caption: null,
+                image_srcset: null
+            };
+        }
+    }
+
+    return {
+        ...eventRow,
+        cover_image_url,
+        ...imageSeoData
+    };
+}
+
+/**
+ * Generate srcset object for responsive images
+ * @param {string} uuid - Image UUID
+ * @param {Object} variants - Variants JSON from images table
+ * @param {Object} req - Express request object
+ * @returns {Object} Srcset object with different widths
+ */
+function generateImageSrcSet(uuid, variants, req) {
+    if (!variants || typeof variants !== 'object') return null;
+
+    const srcset = {};
+    const variantMapping = {
+        'thumbnail': '150w',
+        'small': '300w',
+        'medium': '600w',
+        'large': '1200w',
+        'event_card': '400w'
+    };
+
+    // Parse variants if it's a string
+    const parsedVariants = typeof variants === 'string' ? JSON.parse(variants) : variants;
+
+    // Build srcset URLs for available variants
+    Object.keys(parsedVariants).forEach(variantName => {
+        if (variantMapping[variantName]) {
+            srcset[variantMapping[variantName]] = buildImageUrl(uuid, variantName, req);
+        }
+    });
+
+    return Object.keys(srcset).length > 0 ? srcset : null;
 }
 const seo = require("../utils/seo.utils");
 
@@ -706,9 +780,9 @@ async function getUserEvents(req, res) {
         offset: parseInt(offset)
     });
 
-    // Normalize cover image URL for each event (server-side, environment-aware)
+    // Normalize cover image URL for each event (server-side, environment-aware) with SEO metadata
     const normalized = Array.isArray(drops)
-        ? drops.map((e) => withCoverImageUrl(e, req, "event_card"))
+        ? await Promise.all(drops.map((e) => withCoverImageUrl(e, req, "event_card")))
         : [];
 
     res.json({
@@ -730,8 +804,8 @@ async function getEvent(req, res) {
 
 
 
-    // Normalize cover image URL for the single event (use medium for edit preview)
-    const normalizedEvent = withCoverImageUrl(foundEvent, req, "medium");
+    // Normalize cover image URL for the single event (use medium for edit preview) with SEO metadata
+    const normalizedEvent = await withCoverImageUrl(foundEvent, req, "medium");
 
     res.json({
         success: true,

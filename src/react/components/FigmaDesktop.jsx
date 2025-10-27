@@ -2516,7 +2516,10 @@ const FigmaDesktop = () => {
                             });
                             return optimizedUrl;
                           })()}
-                          alt={`${card.title} event cover`}
+                          srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 111px"
+                          alt={card.image_alt_text || `${card.title} event cover`}
+                          title={card.image_title || card.title}
                           loading="lazy"
                           onError={(e) => {
                             // Only log in development to reduce console spam
@@ -3436,7 +3439,10 @@ const FigmaDesktop = () => {
                         });
                         return optimizedUrl;
                       })()}
-                      alt={`${card.title} event cover`}
+                      srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
+                      alt={card.image_alt_text || `${card.title} event cover`}
+                      title={card.image_title || card.title}
                       loading="lazy"
                       onError={(e) => {
                         // Only log in development to reduce console spam

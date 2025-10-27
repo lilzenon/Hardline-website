@@ -564,6 +564,7 @@ async function getFeaturedEvents(options = {}) {
                 "events.description",
                 "events.slug",
                 "events.cover_image",
+                "events.cover_image_uuid",
                 "events.background_color",
                 "events.gradient_data",
                 "events.text_color",
@@ -581,9 +582,15 @@ async function getFeaturedEvents(options = {}) {
                 "events.event_date",
                 "events.event_address",
                 "events.posh_embed_url",
+                // 🖼️ Image SEO metadata from images table
+                "images.alt_text as image_alt_text",
+                "images.title as image_title",
+                "images.description as image_caption",
+                "images.variants as image_variants",
                 knex.raw("COALESCE(COUNT(event_signups.id), 0) as signup_count")
             ])
             .leftJoin("event_signups", "events.id", "event_signups.event_id")
+            .leftJoin("images", "events.cover_image_uuid", "images.uuid")
             .where("events.show_on_homepage", true)
             .where("events.is_active", true)
             .groupBy([
@@ -592,6 +599,7 @@ async function getFeaturedEvents(options = {}) {
                 "events.description",
                 "events.slug",
                 "events.cover_image",
+                "events.cover_image_uuid",
                 "events.background_color",
                 "events.gradient_data",
                 "events.text_color",
@@ -607,7 +615,11 @@ async function getFeaturedEvents(options = {}) {
                 "events.artist_name",
                 "events.event_date",
                 "events.event_address",
-                "events.posh_embed_url"
+                "events.posh_embed_url",
+                "images.alt_text",
+                "images.title",
+                "images.description",
+                "images.variants"
             ])
             .where("events.is_featured", true)
             .where("events.is_active", true)
@@ -657,6 +669,7 @@ async function getHomepageEvents(options = {}) {
                 "events.description",
                 "events.slug",
                 "events.cover_image",
+                "events.cover_image_uuid",
                 "events.background_color",
                 "events.gradient_data",
                 "events.text_color",
@@ -669,6 +682,11 @@ async function getHomepageEvents(options = {}) {
                 "events.show_on_homepage",
                 "events.created_at",
                 "events.updated_at",
+                // Join with images table for SEO metadata
+                "images.alt_text as image_alt_text",
+                "images.title as image_title",
+                "images.description as image_caption",
+                "images.variants as image_variants",
                 // Event-specific fields for homepage display
                 "events.artist_name",
                 "events.event_date",
@@ -678,6 +696,8 @@ async function getHomepageEvents(options = {}) {
                 "events.buy_button_text",
                 "events.display_tickets"
             ])
+            // LEFT JOIN with images table to get SEO metadata
+            .leftJoin("images", "events.cover_image_uuid", "images.uuid")
             .where("events.show_on_homepage", true)
             .where("events.is_active", true)
             .orderBy("events.event_date", "desc");
