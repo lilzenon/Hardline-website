@@ -613,6 +613,7 @@ const MasonryGallery = ({
             <img
               src={expandedImage.urls?.large || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
               alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
+              title={expandedImage.title || expandedImage.alt || 'Gallery image'}
               crossOrigin="anonymous"
               referrerPolicy="no-referrer"
               style={{
@@ -828,6 +829,7 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           })()}
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
           alt={image.alt || image.title || 'Gallery image'}
+          title={image.title || image.alt || 'Gallery image'}
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
           loading="lazy"
