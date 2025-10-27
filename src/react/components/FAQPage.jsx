@@ -7,6 +7,7 @@ import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
 
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
+import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 
 const FAQPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -146,20 +147,9 @@ const FAQPage = () => {
     document.head.appendChild(script);
 
     // Add BreadcrumbList JSON-LD for clear site hierarchy
-    const bcId = 'ld-json-breadcrumbs-faq';
-    document.getElementById(bcId)?.remove();
-    const bcScript = document.createElement('script');
-    bcScript.type = 'application/ld+json';
-    bcScript.id = bcId;
-    bcScript.text = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      'itemListElement': [
-        { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://b2b.click/' },
-        { '@type': 'ListItem', 'position': 2, 'name': 'FAQ', 'item': 'https://b2b.click/faq' }
-      ]
-    });
-    document.head.appendChild(bcScript);
+    // ✅ SEO FIX: Use "Events" instead of "Home" as position 1 (Google Search Console requirement)
+    // ✅ SEO FIX: Use canonical domain bounce2bounce.com instead of b2b.click
+    initializeBreadcrumbSchema('faq');
   }, [faqItems]); // Update structured data when FAQ items change
 
   // Reset document.title on unmount so homepage title restores correctly

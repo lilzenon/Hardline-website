@@ -26,20 +26,12 @@ async function generateSitemap(req, res) {
 `;
 
         // Homepage - highest priority
+        // ✅ SEO FIX: Only include canonical URL (/) - removed /home to prevent "Page with redirect" errors
         sitemap += `  <url>
     <loc>${baseUrl}/</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-  </url>
-`;
-
-        // Home page alternative URL
-        sitemap += `  <url>
-    <loc>${baseUrl}/home</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
   </url>
 `;
 

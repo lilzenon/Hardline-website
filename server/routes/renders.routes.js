@@ -73,11 +73,9 @@ router.get(
 
 // REMOVED: Handlebars homepage fallback - React-only serving to prevent template conflicts
 
-// Public events listing page - Redirect to React SPA homepage
+// ✅ SEO FIX: Removed /events redirect - this was causing "Page with redirect" errors in Google Search Console
+// The homepage (/) already displays events, so /events redirect is unnecessary
 // Legacy Handlebars template (events-listing.hbs) archived in server/views/_archived_handlebars/
-router.get("/events", (req, res) => {
-    res.redirect(301, "/");
-});
 
 // 🚀 BACKUP: Original URL shortener homepage
 router.get(
@@ -857,7 +855,7 @@ router.get(
 // Backward compatibility redirects - redirect old URLs to new nested structure
 router.get("/admin", (req, res) => res.redirect(301, "/dashboard/admin"));
 router.get("/contact-book", (req, res) => res.redirect(301, "/dashboard/users"));
-router.get("/events", (req, res) => res.redirect(301, "/dashboard/events"));
+// ✅ SEO FIX: Removed /events redirect - already handled above (removed entirely to prevent Google Search Console errors)
 router.get("/stats", (req, res) => res.redirect(301, "/dashboard/stats"));
 router.get("/home-editor", (req, res) => res.redirect(301, "/dashboard/home-editor"));
 router.get("/settings", (req, res) => res.redirect(301, "/dashboard/settings"));

@@ -10,6 +10,7 @@ import MobileDrawer from './MobileDrawer';
 import Footer from './Footer';
 
 import BrandedLoader from './BrandedLoader';
+import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 
 // REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
 
@@ -573,6 +574,12 @@ const FigmaMobile = () => {
       viewport_type: 'mobile'
     });
   }, [trackEvent]);
+
+  // ✅ SEO FIX: Add breadcrumb schema to mobile homepage (Google Search Console requirement)
+  // Homepage should have single breadcrumb item labeled "Events" (not "Home")
+  useEffect(() => {
+    initializeBreadcrumbSchema('homepage');
+  }, []);
 
   // Add useEffect for Laylo SDK initialization - RESTORED ORIGINAL IMPLEMENTATION
   useEffect(() => {

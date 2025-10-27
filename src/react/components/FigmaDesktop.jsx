@@ -9,6 +9,7 @@ import SocialMediaButtons from './SocialMediaButtons';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
 import Footer from './Footer';
+import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 
 
 // CSS for custom scrollbar styling
@@ -432,6 +433,12 @@ const FigmaDesktop = () => {
         existingStyle.remove();
       }
     };
+  }, []);
+
+  // ✅ SEO FIX: Add breadcrumb schema to homepage (Google Search Console requirement)
+  // Homepage should have single breadcrumb item labeled "Events" (not "Home")
+  useEffect(() => {
+    initializeBreadcrumbSchema('homepage');
   }, []);
 
   // Initialize analytics
