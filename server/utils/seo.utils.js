@@ -25,7 +25,10 @@ function generateMetaTags(options = {}) {
         modifiedTime
     } = options;
 
-    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
+    // CRITICAL SEO FIX: Always use bounce2bounce.com as canonical domain
+    // This ensures Google Search Console sees consistent canonical URLs
+    const CANONICAL_DOMAIN = 'https://bounce2bounce.com';
+    const baseUrl = CANONICAL_DOMAIN;
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
     const defaultImage = `${baseUrl}/images/og-image.png`;
 

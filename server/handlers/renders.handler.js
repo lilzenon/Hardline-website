@@ -760,6 +760,8 @@ async function reactHomepage(req, res) {
 
         console.log('🏷️ Generated meta tags:', {
             title: metaTags.title,
+            canonical: metaTags.canonical,
+            ogUrl: metaTags.ogUrl,
             ogImage: metaTags.ogImage,
             ogTitle: metaTags.ogTitle,
             ogDescription: metaTags.ogDescription
