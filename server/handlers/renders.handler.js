@@ -703,22 +703,42 @@ async function reactHomepage(req, res) {
         } catch (error) {
             console.warn('⚠️ Failed to fetch SEO settings from dashboard API, using defaults:', error.message);
             seoSettings = {
+                // Default/Homepage SEO
                 default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
                 default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
                 default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
                 default_author: 'BOUNCE2BOUNCE',
                 default_og_image: '/images/og-image.png',
                 twitter_handle: '@bounce2bounce',
-                // About Page defaults
+                // About Page SEO
                 about_page_title: 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective',
                 about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.',
                 about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music',
                 about_page_og_image: '/images/og-image.png',
-                // FAQ Page defaults
+                // FAQ Page SEO
                 faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
                 faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.',
                 faq_page_keywords: 'faq, questions, help, bounce2bounce support',
-                faq_page_og_image: '/images/og-image.png'
+                faq_page_og_image: '/images/og-image.png',
+                // Organization Schema (CRITICAL for structured data)
+                organization_name: 'BOUNCE2BOUNCE',
+                organization_alternate_name: 'B2B',
+                organization_description: 'NJ\'s premiere EDM collective curating exclusive live music events and unforgettable experiences.',
+                organization_logo_url: '/images/og-image.png',
+                organization_phone: '',
+                organization_email: 'info@bounce2bounce.com',
+                organization_address_city: 'Asbury Park',
+                organization_address_state: 'NJ',
+                organization_address_country: 'US',
+                organization_founded_year: 2020,
+                // Social Media URLs (CRITICAL for structured data)
+                social_facebook_url: '',
+                social_instagram_url: 'https://www.instagram.com/bounce2bounce',
+                social_twitter_url: 'https://twitter.com/bounce2bounce',
+                social_tiktok_url: '',
+                social_youtube_url: '',
+                social_linkedin_url: '',
+                social_spotify_url: ''
             };
         }
 
