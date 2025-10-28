@@ -30,6 +30,7 @@ export const SEOProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [deviceInfo, setDeviceInfo] = useState({ isMobile: false, deviceType: 'unknown' });
+  const [currentPathname, setCurrentPathname] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
 
   /**
    * Load SEO settings from API or cache
@@ -155,9 +156,32 @@ export const SEOProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
+  // 🚀 CRITICAL FIX: Track pathname changes to regenerate meta tags for page-specific SEO
+  useEffect(() => {
+    const handlePathnameChange = () => {
+      const newPathname = window.location.pathname;
+      if (newPathname !== currentPathname) {
+        console.log(`🔄 Pathname changed: ${currentPathname} → ${newPathname}`);
+        setCurrentPathname(newPathname);
+      }
+    };
+
+    // Check for pathname changes on popstate (browser back/forward)
+    window.addEventListener('popstate', handlePathnameChange);
+
+    // Also check periodically in case of client-side navigation
+    const interval = setInterval(handlePathnameChange, 100);
+
+    return () => {
+      window.removeEventListener('popstate', handlePathnameChange);
+      clearInterval(interval);
+    };
+  }, [currentPathname]);
+
   // Note: React Helmet will automatically manage conflicts with server-side meta tags
 
-  // Generate meta tags from current settings with device info
+  // 🚀 CRITICAL FIX: Generate meta tags from current settings with device info AND pathname
+  // This ensures meta tags update when navigating between pages (/, /about, /faq)
   const metaTags = useMemo(() => {
     if (!seoSettings) return { title: 'BOUNCE2BOUNCE', meta: [], link: [] };
 
@@ -165,7 +189,7 @@ export const SEOProvider = ({ children }) => {
     // React Helmet will properly manage conflicts with server-side tags
     console.log('🔄 Generating dynamic meta tags from current SEO settings');
     return generateMetaTags(seoSettings, deviceInfo);
-  }, [seoSettings, deviceInfo]);
+  }, [seoSettings, deviceInfo, currentPathname]);
 
   const contextValue = {
     seoSettings,

@@ -159,6 +159,55 @@ export const fetchMaintenanceStatus = async() => {
 };
 
 /**
+ * Detect current page type based on URL pathname
+ * @returns {string} Page type: 'homepage', 'about', or 'faq'
+ */
+const detectPageType = () => {
+    if (typeof window === 'undefined') return 'homepage';
+
+    const pathname = window.location.pathname.toLowerCase();
+    if (pathname === '/about' || pathname === '/about/') {
+        return 'about';
+    } else if (pathname === '/faq' || pathname === '/faq/') {
+        return 'faq';
+    }
+    return 'homepage';
+};
+
+/**
+ * Get page-specific SEO fields based on page type
+ * @param {Object} settings - Complete SEO settings object
+ * @param {string} pageType - Page type: 'homepage', 'about', or 'faq'
+ * @returns {Object} Page-specific SEO fields { title, description, keywords, ogImage }
+ */
+const getPageSpecificSEO = (settings, pageType) => {
+    switch (pageType) {
+        case 'about':
+            return {
+                title: settings.about_page_title || settings.default_title,
+                description: settings.about_page_description || settings.default_description,
+                keywords: settings.about_page_keywords || settings.default_keywords,
+                ogImage: settings.about_page_og_image || settings.default_og_image
+            };
+        case 'faq':
+            return {
+                title: settings.faq_page_title || settings.default_title,
+                description: settings.faq_page_description || settings.default_description,
+                keywords: settings.faq_page_keywords || settings.default_keywords,
+                ogImage: settings.faq_page_og_image || settings.default_og_image
+            };
+        case 'homepage':
+        default:
+            return {
+                title: settings.default_title,
+                description: settings.default_description,
+                keywords: settings.default_keywords,
+                ogImage: settings.default_og_image
+            };
+    }
+};
+
+/**
  * Generate complete meta tags object from SEO settings
  * @param {Object} seoSettings - SEO settings from API
  * @param {Object} options - Additional options for meta tag generation
@@ -169,6 +218,15 @@ export const generateMetaTags = (seoSettings, options = {}) => {
     const CANONICAL_HOST = 'bounce2bounce.com';
     const HOMEPAGE_ORIGIN = `https://${CANONICAL_HOST}`;
     const { isMobile = false, deviceType = 'unknown' } = options;
+
+    // 🚀 CRITICAL FIX: Detect current page and use page-specific SEO fields
+    const pageType = detectPageType();
+    const pageSEO = getPageSpecificSEO(settings, pageType);
+
+    console.log(`🔍 SEO Meta Tags - Page Type: ${pageType}`, {
+        title: pageSEO.title,
+        description: pageSEO.description?.substring(0, 50) + '...'
+    });
 
     // Ensure URLs are absolute for Open Graph with admin-domain mapping for uploads
     const getAbsoluteImageUrl = (imageUrl) => {
@@ -221,13 +279,14 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         return `${HOMEPAGE_ORIGIN}${normalized}`;
     };
 
-    const ogImage = getAbsoluteImageUrl(settings.default_og_image);
+    // 🚀 CRITICAL FIX: Use page-specific OG image instead of default
+    const ogImage = getAbsoluteImageUrl(pageSEO.ogImage);
 
-    // Base meta tags
+    // 🚀 CRITICAL FIX: Use page-specific SEO fields for meta tags
     const metaTags = [
         // Basic meta tags
-        { name: 'description', content: settings.default_description },
-        { name: 'keywords', content: settings.default_keywords },
+        { name: 'description', content: pageSEO.description },
+        { name: 'keywords', content: pageSEO.keywords },
         { name: 'author', content: settings.default_author },
         { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { name: 'googlebot', content: 'index, follow' },
@@ -235,12 +294,12 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         // Open Graph / Facebook
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: (typeof window !== 'undefined' ? `${HOMEPAGE_ORIGIN}${window.location.pathname}` : `${HOMEPAGE_ORIGIN}/`) },
-        { property: 'og:title', content: settings.default_title },
-        { property: 'og:description', content: settings.default_description },
+        { property: 'og:title', content: pageSEO.title },
+        { property: 'og:description', content: pageSEO.description },
         { property: 'og:image', content: ogImage },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
-        { property: 'og:image:alt', content: `${settings.default_title} - Preview Image` },
+        { property: 'og:image:alt', content: `${pageSEO.title} - Preview Image` },
         { property: 'og:site_name', content: 'BOUNCE2BOUNCE' },
         { property: 'og:locale', content: 'en_US' },
 
@@ -249,10 +308,10 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         { name: 'twitter:site', content: settings.twitter_handle },
         { name: 'twitter:creator', content: settings.twitter_handle },
         { name: 'twitter:url', content: (typeof window !== 'undefined' ? `${HOMEPAGE_ORIGIN}${window.location.pathname}` : `${HOMEPAGE_ORIGIN}/`) },
-        { name: 'twitter:title', content: settings.default_title },
-        { name: 'twitter:description', content: settings.default_description },
+        { name: 'twitter:title', content: pageSEO.title },
+        { name: 'twitter:description', content: pageSEO.description },
         { name: 'twitter:image', content: ogImage },
-        { name: 'twitter:image:alt', content: `${settings.default_title} - Preview Image` },
+        { name: 'twitter:image:alt', content: `${pageSEO.title} - Preview Image` },
 
         // Additional SEO
         { name: 'theme-color', content: '#000000' },
@@ -274,8 +333,9 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         );
     }
 
+    // 🚀 CRITICAL FIX: Return page-specific title instead of default
     return {
-        title: settings.default_title,
+        title: pageSEO.title,
         meta: metaTags,
         link: [
             { rel: 'canonical', href: (typeof window !== 'undefined' ? `${HOMEPAGE_ORIGIN}${window.location.pathname}` : `${HOMEPAGE_ORIGIN}/`) }
