@@ -231,7 +231,16 @@ const AboutPage = () => {
 
     } catch (error) {
       console.error('❌ Error fetching About page content:', error);
-      setContentError(error.message);
+
+      // 🔧 FIX: Use static content from server-side rendered HTML as fallback
+      // This ensures Googlebot sees content even if API is blocked by robots.txt
+      const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
+
+Our mission is to unite top talent, immersive production, and passionate fans to create the ultimate electronic music experiences in the tri-state area.`;
+
+      setAboutContent(staticContent);
+      console.log('✅ Using static fallback content for About page (API blocked or unavailable)');
+      // Don't set error state - just use fallback content silently
 
     } finally {
       // Content loading is now handled by main loading state
