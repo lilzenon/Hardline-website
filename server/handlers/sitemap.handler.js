@@ -3,14 +3,18 @@ const env = require("../env");
 
 /**
  * Generate XML sitemap for SEO optimization
- * ✅ ONLY includes publicly accessible pages for regular users
- * ❌ EXCLUDES: API endpoints, AI resources, admin pages, dashboard pages
+ * ✅ ONLY includes publicly accessible pages that return HTTP 200
+ * ❌ EXCLUDES: API endpoints, AI resources, admin pages, dashboard pages, event pages
  *
  * Includes:
- * - Homepage (/)
+ * - Homepage (/) - displays all events
  * - About page (/about)
  * - FAQ page (/faq)
- * - Individual event pages (/event/:slug)
+ *
+ * NOTE: Individual event pages (/event/:slug) are EXCLUDED because:
+ * 1. They currently return HTTP 500 errors (broken image URL construction)
+ * 2. The homepage already displays all events with ticket purchase functionality
+ * 3. Including broken URLs would cause "soft 404" errors in Google Search Console
  *
  * Uses canonical domain: bounce2bounce.com
  */
@@ -22,20 +26,12 @@ async function generateSitemap(req, res) {
         const baseUrl = 'https://bounce2bounce.com';
         const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-        // Get all active events for sitemap
-        const activeEvents = await query.event.find({
-            is_active: true
-        });
-
-        console.log(`📋 Found ${activeEvents.length} active events for sitemap`);
-
         // Start building sitemap XML with proper namespaces
         let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
 
-        // ✅ Homepage - highest priority
+        // ✅ Homepage - highest priority (displays all events)
         sitemap += `  <url>
     <loc>${baseUrl}/</loc>
     <lastmod>${currentDate}</lastmod>
@@ -62,34 +58,6 @@ async function generateSitemap(req, res) {
   </url>
 `;
 
-        // ✅ Add each active event page
-        for (const event of activeEvents) {
-            const eventUrl = `${baseUrl}/event/${event.slug}`;
-            const lastMod = event.updated_at
-                ? new Date(event.updated_at).toISOString().split('T')[0]
-                : currentDate;
-
-            sitemap += `  <url>
-    <loc>${eventUrl}</loc>
-    <lastmod>${lastMod}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>`;
-
-            // Add image if available
-            if (event.cover_image) {
-                sitemap += `
-    <image:image>
-      <image:loc>${escapeXml(event.cover_image)}</image:loc>
-      <image:title>${escapeXml(event.title)}</image:title>
-      <image:caption>${escapeXml(event.description || event.title)}</image:caption>
-    </image:image>`;
-            }
-
-            sitemap += `
-  </url>
-`;
-        }
-
         sitemap += `</urlset>`;
 
         // Set appropriate headers
@@ -99,9 +67,10 @@ async function generateSitemap(req, res) {
             'X-Robots-Tag': 'noindex' // Prevent indexing of sitemap itself
         });
 
-        console.log('✅ Sitemap generated successfully with', activeEvents.length + 3, 'URLs');
-        console.log('📋 Included pages: /, /about, /faq, and', activeEvents.length, 'event pages');
-        console.log('❌ Excluded: /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
+        console.log('✅ Sitemap generated successfully with 3 URLs');
+        console.log('📋 Included pages: /, /about, /faq');
+        console.log('❌ Excluded: /event/:slug (returns 500), /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
+        console.log('ℹ️  All events are displayed on the homepage (/) with ticket purchase functionality');
 
         res.send(sitemap);
 
