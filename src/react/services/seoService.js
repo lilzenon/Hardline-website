@@ -8,6 +8,7 @@ import { apiClient } from '../../lib/api-client';
 // Default SEO settings fallback
 // NOTE: These should match the server-side defaults in server/queries/seo_settings.queries.js
 export const DEFAULT_SEO_SETTINGS = {
+    // Default/Homepage SEO
     default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
     default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
     default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
@@ -15,7 +16,17 @@ export const DEFAULT_SEO_SETTINGS = {
     default_og_image: 'https://bounce2bounce.com/images/og-image.png',
     twitter_handle: '@bounce2bounce',
     google_analytics_id: '',
-    google_search_console_id: ''
+    google_search_console_id: '',
+    // About Page SEO
+    about_page_title: 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective',
+    about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events. Discover our mission, values, and commitment to unforgettable music experiences.',
+    about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music, event curation, music community',
+    about_page_og_image: 'https://bounce2bounce.com/images/og-image.png',
+    // FAQ Page SEO
+    faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
+    faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more. Get answers to common questions about our live music experiences.',
+    faq_page_keywords: 'faq, questions, help, bounce2bounce support, event information, ticket help',
+    faq_page_og_image: 'https://bounce2bounce.com/images/og-image.png'
 };
 
 // PERFORMANCE OPTIMIZATION: Staggered cache to prevent cascade expiration
@@ -181,30 +192,45 @@ const detectPageType = () => {
  * @returns {Object} Page-specific SEO fields { title, description, keywords, ogImage }
  */
 const getPageSpecificSEO = (settings, pageType) => {
+    let pageSEO;
+
     switch (pageType) {
         case 'about':
-            return {
+            pageSEO = {
                 title: settings.about_page_title || settings.default_title,
                 description: settings.about_page_description || settings.default_description,
                 keywords: settings.about_page_keywords || settings.default_keywords,
                 ogImage: settings.about_page_og_image || settings.default_og_image
             };
+            break;
         case 'faq':
-            return {
+            pageSEO = {
                 title: settings.faq_page_title || settings.default_title,
                 description: settings.faq_page_description || settings.default_description,
                 keywords: settings.faq_page_keywords || settings.default_keywords,
                 ogImage: settings.faq_page_og_image || settings.default_og_image
             };
+            break;
         case 'homepage':
         default:
-            return {
+            pageSEO = {
                 title: settings.default_title,
                 description: settings.default_description,
                 keywords: settings.default_keywords,
                 ogImage: settings.default_og_image
             };
+            break;
     }
+
+    // 🔍 DEBUG: Log page-specific SEO selection
+    console.log(`🏷️ Page-Specific SEO Selected (${pageType}):`, {
+        title: pageSEO.title,
+        hasAboutTitle: !!settings.about_page_title,
+        hasFaqTitle: !!settings.faq_page_title,
+        usingFallback: pageSEO.title === settings.default_title && pageType !== 'homepage'
+    });
+
+    return pageSEO;
 };
 
 /**
@@ -378,13 +404,24 @@ export const clearSEOCache = () => {
 
 export const setCachedSEOSettings = (settings) => {
     try {
-        // Create a minimal cache object to reduce storage size
+        // 🚀 CRITICAL FIX: Cache ALL SEO fields including page-specific settings
         const cacheData = {
             data: {
+                // Default/Homepage SEO
                 default_title: settings.default_title,
                 default_description: settings.default_description,
                 default_og_image: settings.default_og_image,
-                twitter_handle: settings.twitter_handle
+                twitter_handle: settings.twitter_handle,
+                // About Page SEO
+                about_page_title: settings.about_page_title,
+                about_page_description: settings.about_page_description,
+                about_page_keywords: settings.about_page_keywords,
+                about_page_og_image: settings.about_page_og_image,
+                // FAQ Page SEO
+                faq_page_title: settings.faq_page_title,
+                faq_page_description: settings.faq_page_description,
+                faq_page_keywords: settings.faq_page_keywords,
+                faq_page_og_image: settings.faq_page_og_image
             },
             timestamp: Date.now()
         };
@@ -398,13 +435,13 @@ export const setCachedSEOSettings = (settings) => {
         }
 
         localStorage.setItem(CACHE_KEY, cacheString);
-        console.log('💾 SEO settings cached successfully');
+        console.log('💾 SEO settings cached successfully (including page-specific fields)');
     } catch (error) {
         if (error.name === 'QuotaExceededError') {
             console.warn('⚠️ localStorage quota exceeded, clearing cache and retrying');
             clearSEOCache();
             try {
-                // Retry with minimal data
+                // Retry with minimal data (homepage only)
                 const minimalCache = {
                     data: {
                         default_title: settings.default_title,
@@ -414,7 +451,7 @@ export const setCachedSEOSettings = (settings) => {
                     timestamp: Date.now()
                 };
                 localStorage.setItem(CACHE_KEY, JSON.stringify(minimalCache));
-                console.log('💾 SEO settings cached with minimal data');
+                console.log('💾 SEO settings cached with minimal data (homepage only)');
             } catch (retryError) {
                 console.warn('⚠️ Failed to cache even minimal SEO settings:', retryError);
             }

@@ -887,15 +887,17 @@ async function reactHomepage(req, res) {
 
         // Set caching headers
         if (env.NODE_ENV === 'production') {
-            // Production: Cache for 5 minutes to balance freshness and performance
-            const fiveMinutes = 5 * 60; // 5 minutes in seconds
-            const expiresDate = new Date(Date.now() + fiveMinutes * 1000).toUTCString();
+            // 🚀 CRITICAL FIX: Reduce cache time to 1 minute for faster SEO updates
+            // This ensures page-specific SEO changes appear within 1 minute
+            const oneMinute = 1 * 60; // 1 minute in seconds
+            const expiresDate = new Date(Date.now() + oneMinute * 1000).toUTCString();
 
             res.set({
-                'Cache-Control': 'public, max-age=' + fiveMinutes + ', must-revalidate',
+                'Cache-Control': 'public, max-age=' + oneMinute + ', must-revalidate, stale-while-revalidate=60',
                 'Expires': expiresDate,
                 'Last-Modified': new Date().toUTCString(),
-                'ETag': '"homepage-seo-' + Date.now() + '"'
+                'ETag': '"homepage-seo-' + pageType + '-' + Date.now() + '"',
+                'Vary': 'Accept-Encoding'
             });
         } else {
             // Development: No cache for easier development
