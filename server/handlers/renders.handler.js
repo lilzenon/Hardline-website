@@ -476,7 +476,7 @@ function generateStaticContent(pageType, metaTags, seoSettings) {
 }
 
 // Helper function to generate structured data based on page type
-function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml) {
+function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl) {
     const baseUrl = 'https://bounce2bounce.com';
 
     // Build social media sameAs array
@@ -889,7 +889,7 @@ async function reactHomepage(req, res) {
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-    ${generateStructuredData(pageType, seoSettings, metaTags, escapeHtml)}
+    ${generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl)}
     </script>`;
 
         // Replace the existing title and inject meta tags
