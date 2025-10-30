@@ -800,11 +800,13 @@ async function reactHomepage(req, res) {
                 about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.',
                 about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music',
                 about_page_og_image: '/images/og-image.png',
+                about_page_og_image_alt: 'About BOUNCE2BOUNCE - Preview Image',
                 // FAQ Page SEO
                 faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
                 faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.',
                 faq_page_keywords: 'faq, questions, help, bounce2bounce support',
                 faq_page_og_image: '/images/og-image.png',
+                faq_page_og_image_alt: 'FAQ - BOUNCE2BOUNCE - Preview Image',
                 // Organization Schema (CRITICAL for structured data)
                 organization_name: 'BOUNCE2BOUNCE',
                 organization_alternate_name: 'B2B',
@@ -828,19 +830,21 @@ async function reactHomepage(req, res) {
         }
 
         // Select page-specific SEO settings based on page type
-        let pageTitle, pageDescription, pageKeywords, pageOgImage, pageUrl;
+        let pageTitle, pageDescription, pageKeywords, pageOgImage, pageOgImageAlt, pageUrl;
 
         if (pageType === 'about') {
             pageTitle = seoSettings.about_page_title || 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective';
             pageDescription = seoSettings.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
             pageKeywords = seoSettings.about_page_keywords || 'about bounce2bounce, edm collective, live music events, nj music';
             pageOgImage = seoSettings.about_page_og_image || seoSettings.default_og_image || '/images/og-image.png';
+            pageOgImageAlt = seoSettings.about_page_og_image_alt || 'About BOUNCE2BOUNCE - Preview Image';
             pageUrl = '/about';
         } else if (pageType === 'faq') {
             pageTitle = seoSettings.faq_page_title || 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions';
             pageDescription = seoSettings.faq_page_description || 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.';
             pageKeywords = seoSettings.faq_page_keywords || 'faq, questions, help, bounce2bounce support';
             pageOgImage = seoSettings.faq_page_og_image || seoSettings.default_og_image || '/images/og-image.png';
+            pageOgImageAlt = seoSettings.faq_page_og_image_alt || 'FAQ - BOUNCE2BOUNCE - Preview Image';
             pageUrl = '/faq';
         } else {
             // Homepage
@@ -848,6 +852,7 @@ async function reactHomepage(req, res) {
             pageDescription = seoSettings.default_description || 'Discover exclusive live music events and connect with artists';
             pageKeywords = seoSettings.default_keywords || 'live music events, concert tickets, artist promotion';
             pageOgImage = seoSettings.default_og_image || '/images/og-image.png';
+            pageOgImageAlt = pageTitle + ' - Preview Image';
             pageUrl = '/';
         }
 
@@ -914,7 +919,7 @@ async function reactHomepage(req, res) {
     <meta property="og:image" content="${escapeHtml(metaTags.ogImage)}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="${escapeHtml(metaTags.ogTitle)} - Preview Image">
+    <meta property="og:image:alt" content="${escapeHtml(pageOgImageAlt)}">
     <meta property="og:site_name" content="${escapeHtml(metaTags.ogSiteName)}">
     <meta property="og:locale" content="en_US">
 
@@ -926,7 +931,7 @@ async function reactHomepage(req, res) {
     <meta name="twitter:title" content="${escapeHtml(metaTags.twitterTitle)}">
     <meta name="twitter:description" content="${escapeHtml(metaTags.twitterDescription)}">
     <meta name="twitter:image" content="${escapeHtml(metaTags.twitterImage)}">
-    <meta name="twitter:image:alt" content="${escapeHtml(metaTags.twitterTitle)} - Preview Image">
+    <meta name="twitter:image:alt" content="${escapeHtml(pageOgImageAlt)}">
 
     <!-- Additional SEO Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
