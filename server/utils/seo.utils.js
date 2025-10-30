@@ -30,7 +30,8 @@ function generateMetaTags(options = {}) {
     const CANONICAL_DOMAIN = 'https://bounce2bounce.com';
     const baseUrl = CANONICAL_DOMAIN;
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
-    const defaultImage = `${baseUrl}/images/og-image.png`;
+    // Use the actual uploaded OG image from admin dashboard as default
+    const defaultImage = 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
 
     // Handle absolute URLs for uploaded images and normalize paths
     const getAbsoluteImageUrl = (imageUrl) => {

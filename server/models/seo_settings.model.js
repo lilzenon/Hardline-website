@@ -14,7 +14,7 @@ async function createSEOSettingsTable(knex) {
             table.text("default_description").defaultTo("Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.");
             table.string("default_keywords", 500).defaultTo("live music events, concert tickets, artist promotion, event discovery, music experiences");
             table.string("default_author", 100).defaultTo("BOUNCE2BOUNCE");
-            table.string("default_og_image", 500).defaultTo("/images/og-image.png");
+            table.string("default_og_image", 500).defaultTo("https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png");
             table.string("twitter_handle", 50).defaultTo("@bounce2bounce");
 
             // Sitemap settings
@@ -92,7 +92,7 @@ async function createSEOSettingsTable(knex) {
             default_description: "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.",
             default_keywords: "live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE",
             default_author: "BOUNCE2BOUNCE",
-            default_og_image: "/images/og-image.png",
+            default_og_image: "https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png",
             twitter_handle: "@bounce2bounce",
             sitemap_enabled: true,
             sitemap_include_events: true,

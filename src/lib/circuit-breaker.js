@@ -185,7 +185,7 @@ export function getDefaultFallback(endpoint) {
             settings: {
                 default_title: 'BOUNCE2BOUNCE - Premium Event Platform',
                 default_description: 'Discover and book premium events worldwide',
-                default_og_image: '/images/og-image.png',
+                default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 twitter_handle: '@bounce2bounce'
             }
         };

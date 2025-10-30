@@ -726,25 +726,25 @@ async function reactHomepage(req, res) {
                 default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
                 default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
                 default_author: 'BOUNCE2BOUNCE',
-                default_og_image: '/images/og-image.png',
+                default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 twitter_handle: '@bounce2bounce',
                 // About Page SEO
                 about_page_title: 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective',
                 about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.',
                 about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music',
-                about_page_og_image: '/images/og-image.png',
+                about_page_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 about_page_og_image_alt: 'About BOUNCE2BOUNCE - Preview Image',
                 // FAQ Page SEO
                 faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
                 faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.',
                 faq_page_keywords: 'faq, questions, help, bounce2bounce support',
-                faq_page_og_image: '/images/og-image.png',
+                faq_page_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 faq_page_og_image_alt: 'FAQ - BOUNCE2BOUNCE - Preview Image',
                 // Organization Schema (CRITICAL for structured data)
                 organization_name: 'BOUNCE2BOUNCE',
                 organization_alternate_name: 'B2B',
                 organization_description: 'NJ\'s premiere EDM collective curating exclusive live music events and unforgettable experiences.',
-                organization_logo_url: '/images/og-image.png',
+                organization_logo_url: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 organization_phone: '',
                 organization_email: 'info@bounce2bounce.com',
                 organization_address_city: 'Asbury Park',
@@ -769,14 +769,14 @@ async function reactHomepage(req, res) {
             pageTitle = seoSettings.about_page_title || 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective';
             pageDescription = seoSettings.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
             pageKeywords = seoSettings.about_page_keywords || 'about bounce2bounce, edm collective, live music events, nj music';
-            pageOgImage = seoSettings.about_page_og_image || seoSettings.default_og_image || '/images/og-image.png';
+            pageOgImage = seoSettings.about_page_og_image || seoSettings.default_og_image || 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
             pageOgImageAlt = seoSettings.about_page_og_image_alt || 'About BOUNCE2BOUNCE - Preview Image';
             pageUrl = '/about';
         } else if (pageType === 'faq') {
             pageTitle = seoSettings.faq_page_title || 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions';
             pageDescription = seoSettings.faq_page_description || 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.';
             pageKeywords = seoSettings.faq_page_keywords || 'faq, questions, help, bounce2bounce support';
-            pageOgImage = seoSettings.faq_page_og_image || seoSettings.default_og_image || '/images/og-image.png';
+            pageOgImage = seoSettings.faq_page_og_image || seoSettings.default_og_image || 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
             pageOgImageAlt = seoSettings.faq_page_og_image_alt || 'FAQ - BOUNCE2BOUNCE - Preview Image';
             pageUrl = '/faq';
         } else {
@@ -784,7 +784,7 @@ async function reactHomepage(req, res) {
             pageTitle = seoSettings.default_title || 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE';
             pageDescription = seoSettings.default_description || 'Discover exclusive live music events and connect with artists';
             pageKeywords = seoSettings.default_keywords || 'live music events, concert tickets, artist promotion';
-            pageOgImage = seoSettings.default_og_image || '/images/og-image.png';
+            pageOgImage = seoSettings.default_og_image || 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
             pageOgImageAlt = pageTitle + ' - Preview Image';
             pageUrl = '/';
         }

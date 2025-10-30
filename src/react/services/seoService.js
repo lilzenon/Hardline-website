@@ -13,7 +13,7 @@ export const DEFAULT_SEO_SETTINGS = {
     default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
     default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
     default_author: 'BOUNCE2BOUNCE',
-    default_og_image: 'https://bounce2bounce.com/images/og-image.png',
+    default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
     twitter_handle: '@bounce2bounce',
     google_analytics_id: '',
     google_search_console_id: '',
@@ -256,9 +256,9 @@ export const generateMetaTags = (seoSettings, options = {}) => {
 
     // Ensure URLs are absolute for Open Graph with admin-domain mapping for uploads
     const getAbsoluteImageUrl = (imageUrl) => {
-        // If no image URL provided, use the default OG image from homepage
+        // If no image URL provided, use the default OG image from admin dashboard
         if (!imageUrl || imageUrl.trim() === '') {
-            return `${HOMEPAGE_ORIGIN}/images/og-image.png`;
+            return 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
         }
 
         // If absolute URL, normalize path segments we know about and remap to admin when needed
