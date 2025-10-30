@@ -534,6 +534,14 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
             "publisher": {
                 "@id": `${baseUrl}/#organization`
             },
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": `${baseUrl}/?s={search_term_string}`
+                },
+                "query-input": "required name=search_term_string"
+            },
             "hasPart": [
                 {
                     "@type": "WebPage",
@@ -571,7 +579,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
         }, null, 2);
 
     } else if (pageType === 'about') {
-        // About Page: AboutPage + BreadcrumbList
+        // About Page: Organization + AboutPage + BreadcrumbList
         const aboutPageSchema = {
             "@type": "AboutPage",
             "@id": `${baseUrl}/about#webpage`,
@@ -614,11 +622,11 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
 
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [aboutPageSchema, breadcrumbSchema]
+            "@graph": [organizationSchema, aboutPageSchema, breadcrumbSchema]
         }, null, 2);
 
     } else if (pageType === 'faq') {
-        // FAQ Page: FAQPage + BreadcrumbList
+        // FAQ Page: Organization + FAQPage + BreadcrumbList
         // Note: The actual FAQ questions will be added client-side by React
         const faqPageSchema = {
             "@type": "FAQPage",
@@ -655,7 +663,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
 
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [faqPageSchema, breadcrumbSchema]
+            "@graph": [organizationSchema, faqPageSchema, breadcrumbSchema]
         }, null, 2);
     }
 
