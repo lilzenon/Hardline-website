@@ -457,6 +457,91 @@ async function eventEdit(req, res) {
     }
 }
 
+// Helper function to generate static HTML content for Googlebot
+// This prevents soft 404 errors by ensuring the page has visible content
+// before React hydrates on the client side
+function generateStaticContent(pageType, metaTags, seoSettings) {
+    const escapeHtml = (text) => {
+        if (!text) return '';
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
+    if (pageType === 'about') {
+        return `
+            <div style="max-width: 1200px; margin: 0 auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff;">
+                <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem;">${escapeHtml(metaTags.title)}</h1>
+                <p style="font-size: 1.125rem; line-height: 1.75; margin-bottom: 1.5rem; color: #e5e5e5;">${escapeHtml(metaTags.description)}</p>
+                <p style="font-size: 1rem; line-height: 1.75; color: #d4d4d4;">
+                    BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
+                </p>
+                <p style="font-size: 1rem; line-height: 1.75; color: #d4d4d4; margin-top: 1.5rem;">
+                    Our mission is to unite top talent, immersive production, and passionate fans to create the ultimate electronic music experiences in the tri-state area.
+                </p>
+                <noscript>
+                    <p style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                        This page requires JavaScript to display the full interactive experience. Please enable JavaScript in your browser.
+                    </p>
+                </noscript>
+            </div>
+        `;
+    } else if (pageType === 'faq') {
+        return `
+            <div style="max-width: 1200px; margin: 0 auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff;">
+                <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1.5rem;">${escapeHtml(metaTags.title)}</h1>
+                <p style="font-size: 1.125rem; line-height: 1.75; margin-bottom: 2rem; color: #e5e5e5;">${escapeHtml(metaTags.description)}</p>
+
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">General Questions</h2>
+                    <p style="font-size: 1rem; line-height: 1.75; color: #d4d4d4;">
+                        Find answers to frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">Tickets & Events</h2>
+                    <p style="font-size: 1rem; line-height: 1.75; color: #d4d4d4;">
+                        Learn about our ticketing process, event schedules, and how to stay updated on upcoming shows.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem;">Contact & Support</h2>
+                    <p style="font-size: 1rem; line-height: 1.75; color: #d4d4d4;">
+                        Need help? Contact us at ${escapeHtml(seoSettings.organization_email || 'info@bounce2bounce.com')} for assistance.
+                    </p>
+                </div>
+
+                <noscript>
+                    <p style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                        This page requires JavaScript to display the full interactive FAQ experience. Please enable JavaScript in your browser.
+                    </p>
+                </noscript>
+            </div>
+        `;
+    } else {
+        // Homepage - minimal static content
+        return `
+            <div style="max-width: 1200px; margin: 0 auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff; text-align: center;">
+                <h1 style="font-size: 3rem; font-weight: 700; margin-bottom: 1.5rem;">${escapeHtml(metaTags.title)}</h1>
+                <p style="font-size: 1.25rem; line-height: 1.75; margin-bottom: 2rem; color: #e5e5e5;">${escapeHtml(metaTags.description)}</p>
+                <p style="font-size: 1rem; line-height: 1.75; color: #d4d4d4;">
+                    Discover exclusive live music events and unforgettable experiences.
+                </p>
+                <noscript>
+                    <p style="margin-top: 2rem; padding: 1rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px;">
+                        This page requires JavaScript to display the full interactive experience. Please enable JavaScript in your browser.
+                    </p>
+                </noscript>
+            </div>
+        `;
+    }
+}
+
 // Helper function to generate structured data based on page type
 function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml) {
     const baseUrl = 'https://bounce2bounce.com';
@@ -883,6 +968,15 @@ async function reactHomepage(req, res) {
         htmlContent = htmlContent.replace(
             '</head>',
             `${dynamicMetaTags}\n    <!-- Server-side meta tags injected -->\n</head>`
+        );
+
+        // 🔧 CRITICAL FIX: Inject static content into #root div for Googlebot
+        // This prevents soft 404 errors by ensuring the page has visible content
+        // before React hydrates on the client side
+        const staticContent = generateStaticContent(pageType, metaTags, seoSettings);
+        htmlContent = htmlContent.replace(
+            /<div id="root"><\/div>/i,
+            `<div id="root">${staticContent}</div>`
         );
 
         // Set caching headers
