@@ -499,7 +499,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
         "url": baseUrl,
         "logo": {
             "@type": "ImageObject",
-            "url": ensureAbsoluteUrl(seoSettings.organization_logo_url || metaTags.ogImage)
+            "url": ensureAbsoluteUrl(seoSettings.organization_logo_url || metaTags.ogImage, baseUrl)
         },
         "description": escapeHtml(seoSettings.organization_description || "NJ's premiere EDM collective curating exclusive live music events and unforgettable experiences."),
         "sameAs": sameAs,
@@ -589,7 +589,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
             },
             "primaryImageOfPage": {
                 "@type": "ImageObject",
-                "url": ensureAbsoluteUrl(metaTags.ogImage)
+                "url": ensureAbsoluteUrl(metaTags.ogImage, baseUrl)
             }
         };
 
@@ -836,14 +836,14 @@ async function reactHomepage(req, res) {
         };
 
         // Helper function to ensure absolute URL (don't double-prepend baseUrl)
-        const ensureAbsoluteUrl = (url) => {
+        const ensureAbsoluteUrl = (url, base = 'https://bounce2bounce.com') => {
             if (!url) return '';
             // If already absolute (starts with http:// or https://), return as-is
             if (url.startsWith('http://') || url.startsWith('https://')) {
                 return url;
             }
             // If relative, prepend baseUrl
-            return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
+            return `${base}${url.startsWith('/') ? url : '/' + url}`;
         };
 
         // Generate dynamic meta tags HTML
