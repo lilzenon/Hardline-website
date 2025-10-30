@@ -566,7 +566,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml) {
         "url": baseUrl,
         "logo": {
             "@type": "ImageObject",
-            "url": `${baseUrl}${escapeHtml(seoSettings.organization_logo_url || metaTags.ogImage)}`
+            "url": ensureAbsoluteUrl(seoSettings.organization_logo_url || metaTags.ogImage)
         },
         "description": escapeHtml(seoSettings.organization_description || "NJ's premiere EDM collective curating exclusive live music events and unforgettable experiences."),
         "sameAs": sameAs,
@@ -656,7 +656,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml) {
             },
             "primaryImageOfPage": {
                 "@type": "ImageObject",
-                "url": `${baseUrl}${escapeHtml(metaTags.ogImage)}`
+                "url": ensureAbsoluteUrl(metaTags.ogImage)
             }
         };
 
@@ -900,6 +900,17 @@ async function reactHomepage(req, res) {
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        };
+
+        // Helper function to ensure absolute URL (don't double-prepend baseUrl)
+        const ensureAbsoluteUrl = (url) => {
+            if (!url) return '';
+            // If already absolute (starts with http:// or https://), return as-is
+            if (url.startsWith('http://') || url.startsWith('https://')) {
+                return url;
+            }
+            // If relative, prepend baseUrl
+            return `${baseUrl}${url.startsWith('/') ? url : '/' + url}`;
         };
 
         // Generate dynamic meta tags HTML

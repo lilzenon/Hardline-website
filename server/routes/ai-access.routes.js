@@ -14,7 +14,7 @@ router.get("/ai/site-info", asyncHandler(async (req, res) => {
     // Basic site information for AI agents
     const siteInfo = {
         name: "BOUNCE2BOUNCE",
-        url: "https://b2b.click",
+        url: "https://bounce2bounce.com",
         description: "Live music events platform for discovering exclusive concerts, purchasing tickets, and connecting with artists",
         type: "event-platform",
         services: [
