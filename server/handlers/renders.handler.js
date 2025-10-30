@@ -560,22 +560,11 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
             ]
         };
 
-        const breadcrumbSchema = {
-            "@type": "BreadcrumbList",
-            "@id": `${baseUrl}/#breadcrumb`,
-            "itemListElement": [
-                {
-                    "@type": "ListItem",
-                    "position": 1,
-                    "name": "Home",
-                    "item": `${baseUrl}/`
-                }
-            ]
-        };
-
+        // Homepage: No breadcrumb needed (Google requires at least 2 items, homepage only has 1)
+        // Per Google's guidelines: "It's not required to include the top-level domain"
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [organizationSchema, websiteSchema, breadcrumbSchema]
+            "@graph": [organizationSchema, websiteSchema]
         }, null, 2);
 
     } else if (pageType === 'about') {
@@ -614,8 +603,8 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
                 {
                     "@type": "ListItem",
                     "position": 2,
-                    "name": "About",
-                    "item": `${baseUrl}/about`
+                    "name": "About"
+                    // Note: Last breadcrumb item omits "item" property per Google's guidelines
                 }
             ]
         };
@@ -655,8 +644,8 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
                 {
                     "@type": "ListItem",
                     "position": 2,
-                    "name": "FAQ",
-                    "item": `${baseUrl}/faq`
+                    "name": "FAQ"
+                    // Note: Last breadcrumb item omits "item" property per Google's guidelines
                 }
             ]
         };
