@@ -93,20 +93,10 @@ October 30, 2025
 ```
 
 #### BreadcrumbList Schema
-```json
-{
-  "@type": "BreadcrumbList",
-  "@id": "https://bounce2bounce.com/#breadcrumb",
-  "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Home",
-      "item": "https://bounce2bounce.com/"
-    }
-  ]
-}
-```
+**Note:** Homepage does NOT include a breadcrumb schema. Per Google's guidelines:
+- BreadcrumbList requires at least 2 items
+- It's not required to include the top-level domain
+- Homepage is the top-level entry point, so no breadcrumb is needed
 
 ---
 
@@ -156,12 +146,14 @@ October 30, 2025
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "About",
-      "item": "https://bounce2bounce.com/about"
+      "name": "About"
+      // Note: Last breadcrumb item omits "item" property per Google's guidelines
     }
   ]
 }
 ```
+
+**Note:** The last breadcrumb item ("About") omits the `item` property. Per Google's official documentation: "If the breadcrumb is the last item in the breadcrumb trail, item is not required."
 
 ---
 
@@ -209,12 +201,14 @@ October 30, 2025
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "FAQ",
-      "item": "https://bounce2bounce.com/faq"
+      "name": "FAQ"
+      // Note: Last breadcrumb item omits "item" property per Google's guidelines
     }
   ]
 }
 ```
+
+**Note:** The last breadcrumb item ("FAQ") omits the `item` property. Per Google's official documentation: "If the breadcrumb is the last item in the breadcrumb trail, item is not required."
 
 ---
 
@@ -309,13 +303,66 @@ Monitor in: https://search.google.com/search-console
 
 ---
 
+## BreadcrumbList Compliance Update (Commit 250c4921)
+
+### Changes Made to Align with Google's Official Guidelines
+
+**Date:** October 30, 2025
+**Reference:** [Google BreadcrumbList Documentation](https://developers.google.com/search/docs/appearance/structured-data/breadcrumb)
+
+#### Issues Fixed:
+
+1. **Removed Homepage Breadcrumb**
+   - **Problem:** Homepage had only 1 breadcrumb item, but Google requires minimum 2 items
+   - **Solution:** Removed breadcrumb from homepage entirely
+   - **Rationale:** Per Google: "It's not required to include the top-level domain"
+
+2. **Removed `item` Property from Last Breadcrumb Items**
+   - **Problem:** About and FAQ pages included `item` URL on the last breadcrumb
+   - **Solution:** Omitted `item` property from last breadcrumb on both pages
+   - **Rationale:** Per Google: "If the breadcrumb is the last item in the breadcrumb trail, item is not required"
+
+#### Current Implementation:
+
+**Homepage:**
+- ✅ Organization schema
+- ✅ WebSite schema (with SearchAction)
+- ❌ No BreadcrumbList (not needed for top-level page)
+
+**About Page:**
+- ✅ Organization schema
+- ✅ AboutPage schema
+- ✅ BreadcrumbList with 2 items:
+  - Position 1: "Home" (with `item` URL)
+  - Position 2: "About" (WITHOUT `item` URL - last item)
+
+**FAQ Page:**
+- ✅ Organization schema
+- ✅ FAQPage schema
+- ✅ BreadcrumbList with 2 items:
+  - Position 1: "Home" (with `item` URL)
+  - Position 2: "FAQ" (WITHOUT `item` URL - last item)
+
+#### Validation Checklist:
+
+- ✅ About and FAQ pages have minimum 2 breadcrumb items (Google requirement)
+- ✅ Last breadcrumb items omit `item` property (Google best practice)
+- ✅ Position numbering starts at 1 and increments sequentially
+- ✅ All URLs are absolute (https://bounce2bounce.com/...)
+- ✅ Each ListItem has required `@type`, `position`, `name`
+- ✅ `@id` references maintained for @graph cross-referencing
+
+---
+
 ## References
 
 - [Google Search Central - Structured Data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data)
+- [Google BreadcrumbList Documentation](https://developers.google.com/search/docs/appearance/structured-data/breadcrumb) ⭐ **Official Guidelines**
 - [schema.org - Organization](https://schema.org/Organization)
 - [schema.org - WebSite](https://schema.org/WebSite)
 - [schema.org - SearchAction](https://schema.org/SearchAction)
 - [schema.org - BreadcrumbList](https://schema.org/BreadcrumbList)
+- [schema.org - ListItem](https://schema.org/ListItem)
 - [schema.org - AboutPage](https://schema.org/AboutPage)
 - [schema.org - FAQPage](https://schema.org/FAQPage)
 - [Google Rich Results Test](https://search.google.com/test/rich-results)
