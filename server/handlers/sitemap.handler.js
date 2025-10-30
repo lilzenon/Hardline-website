@@ -3,30 +3,39 @@ const env = require("../env");
 
 /**
  * Generate XML sitemap for SEO optimization
- * Includes homepage, active events, and static pages
+ * ✅ ONLY includes publicly accessible pages for regular users
+ * ❌ EXCLUDES: API endpoints, AI resources, admin pages, dashboard pages
+ *
+ * Includes:
+ * - Homepage (/)
+ * - About page (/about)
+ * - FAQ page (/faq)
+ * - Individual event pages (/event/:slug)
+ *
+ * Uses canonical domain: bounce2bounce.com
  */
 async function generateSitemap(req, res) {
     try {
-        console.log('🗺️ Generating XML sitemap...');
-        
-        const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
-        const currentDate = new Date().toISOString();
-        
+        console.log('🗺️ Generating XML sitemap for bounce2bounce.com...');
+
+        // ✅ Use canonical domain (bounce2bounce.com, not b2b.click)
+        const baseUrl = 'https://bounce2bounce.com';
+        const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
         // Get all active events for sitemap
-        const activeEvents = await query.event.find({ 
-            is_active: true 
+        const activeEvents = await query.event.find({
+            is_active: true
         });
-        
+
         console.log(`📋 Found ${activeEvents.length} active events for sitemap`);
-        
-        // Start building sitemap XML
+
+        // Start building sitemap XML with proper namespaces
         let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
-        // Homepage - highest priority
-        // ✅ SEO FIX: Only include canonical URL (/) - removed /home to prevent "Page with redirect" errors
+        // ✅ Homepage - highest priority
         sitemap += `  <url>
     <loc>${baseUrl}/</loc>
     <lastmod>${currentDate}</lastmod>
@@ -35,46 +44,48 @@ async function generateSitemap(req, res) {
   </url>
 `;
 
-        // Add each active event
+        // ✅ About Page - important static page
+        sitemap += `  <url>
+    <loc>${baseUrl}/about</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+
+        // ✅ FAQ Page - important static page
+        sitemap += `  <url>
+    <loc>${baseUrl}/faq</loc>
+    <lastmod>${currentDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+
+        // ✅ Add each active event page
         for (const event of activeEvents) {
             const eventUrl = `${baseUrl}/event/${event.slug}`;
-            const lastMod = event.updated_at ? new Date(event.updated_at).toISOString() : currentDate;
-            
+            const lastMod = event.updated_at
+                ? new Date(event.updated_at).toISOString().split('T')[0]
+                : currentDate;
+
             sitemap += `  <url>
     <loc>${eventUrl}</loc>
     <lastmod>${lastMod}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>`;
-            
+    <priority>0.9</priority>`;
+
             // Add image if available
             if (event.cover_image) {
                 sitemap += `
     <image:image>
-      <image:loc>${event.cover_image}</image:loc>
+      <image:loc>${escapeXml(event.cover_image)}</image:loc>
       <image:title>${escapeXml(event.title)}</image:title>
       <image:caption>${escapeXml(event.description || event.title)}</image:caption>
     </image:image>`;
             }
-            
+
             sitemap += `
-  </url>
-`;
-        }
-
-        // Add static/important pages
-        const staticPages = [
-            { url: '/about', priority: '0.6', changefreq: 'monthly' },
-            { url: '/faq', priority: '0.7', changefreq: 'weekly' },
-            { url: '/privacy', priority: '0.3', changefreq: 'monthly' },
-            { url: '/terms', priority: '0.3', changefreq: 'monthly' }
-        ];
-
-        for (const page of staticPages) {
-            sitemap += `  <url>
-    <loc>${baseUrl}${page.url}</loc>
-    <lastmod>${currentDate}</lastmod>
-    <changefreq>${page.changefreq}</changefreq>
-    <priority>${page.priority}</priority>
   </url>
 `;
         }
@@ -83,11 +94,15 @@ async function generateSitemap(req, res) {
 
         // Set appropriate headers
         res.set({
-            'Content-Type': 'application/xml',
+            'Content-Type': 'application/xml; charset=utf-8',
             'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+            'X-Robots-Tag': 'noindex' // Prevent indexing of sitemap itself
         });
 
-        console.log('✅ Sitemap generated successfully');
+        console.log('✅ Sitemap generated successfully with', activeEvents.length + 3, 'URLs');
+        console.log('📋 Included pages: /, /about, /faq, and', activeEvents.length, 'event pages');
+        console.log('❌ Excluded: /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
+
         res.send(sitemap);
 
     } catch (error) {
@@ -113,39 +128,68 @@ function escapeXml(unsafe) {
 }
 
 /**
- * Generate robots.txt dynamically (if needed)
+ * Generate robots.txt dynamically for bounce2bounce.com
+ * ✅ Allows public pages and necessary API endpoints for JavaScript SEO
+ * ❌ Blocks admin, dashboard, and private API endpoints
  */
 async function generateRobotsTxt(req, res) {
     try {
-        const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
-        
-        const robotsTxt = `# Robots.txt for ${env.DEFAULT_DOMAIN} - Event Platform
+        const baseUrl = 'https://bounce2bounce.com';
+
+        const robotsTxt = `# Robots.txt for bounce2bounce.com - Public Homepage
 User-agent: *
+
+# Allow public pages and assets
 Allow: /
+Allow: /about
+Allow: /faq
 Allow: /event/
-Allow: /drop/
-Allow: /home
 Allow: /static/
 Allow: /images/
 Allow: /css/
 Allow: /js/
 
+# Allow public API endpoints (required for JavaScript SEO and React rendering)
+# These endpoints provide content that Googlebot needs to properly render pages
+Allow: /api/settings/about$
+Allow: /api/settings/about/gallery/public
+Allow: /api/settings/faq$
+Allow: /api/settings/seo$
+Allow: /api/settings/seo/fast$
+Allow: /api/social-media$
+Allow: /api/events/public
+Allow: /api/settings/maintenance-status$
+
+# Block admin and private endpoints
 Disallow: /admin/
 Disallow: /dashboard/
-Disallow: /api/
+Disallow: /api/admin/
+Disallow: /api/auth/
+Disallow: /api/users/
+Disallow: /api/analytics/
+Disallow: /api/settings/about/gallery/admin
+Disallow: /api/settings/about/gallery/upload
+Disallow: /api/settings/about/gallery/delete
+Disallow: /api/settings/upload/
 Disallow: /login
 Disallow: /logout
 Disallow: /settings
 Disallow: /stats
 
+# Sitemap location
 Sitemap: ${baseUrl}/sitemap.xml
 
+# Crawl-delay to prevent server overload
 Crawl-delay: 1`;
 
         res.set({
-            'Content-Type': 'text/plain',
+            'Content-Type': 'text/plain; charset=utf-8',
             'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
         });
+
+        console.log('✅ robots.txt generated for bounce2bounce.com');
+        console.log('✅ Allowed public API endpoints for JavaScript SEO');
+        console.log('❌ Blocked admin, dashboard, and private API endpoints');
 
         res.send(robotsTxt);
 
