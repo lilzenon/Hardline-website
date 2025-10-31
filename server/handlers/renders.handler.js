@@ -568,7 +568,7 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
         }, null, 2);
 
     } else if (pageType === 'about') {
-        // About Page: Organization + AboutPage + BreadcrumbList
+        // About Page: Organization + AboutPage + BreadcrumbList + ImageObject (for gallery images)
         const aboutPageSchema = {
             "@type": "AboutPage",
             "@id": `${baseUrl}/about#webpage`,
@@ -609,9 +609,75 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
             ]
         };
 
+        // 🖼️ GOOGLE IMAGE SEO: Fetch gallery images and create ImageObject structured data
+        // This enables Google Image Search indexing and Rich Results for gallery images
+        let galleryImageSchemas = [];
+        try {
+            const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click/api/settings/about/gallery/public' :
+                'http://localhost:3002/api/settings/about/gallery/public';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const galleryResponse = await fetch(dashboardApiUrl, {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+
+            if (galleryResponse.ok) {
+                const galleryData = await galleryResponse.json();
+                const galleryImages = galleryData.data || [];
+
+                console.log(`🖼️ Fetched ${galleryImages.length} gallery images for ImageObject schema`);
+
+                // Create ImageObject schema for each gallery image
+                galleryImageSchemas = galleryImages.map((image, index) => {
+                    // Use absolute URL for image (required by Google)
+                    const imageUrl = image.urls?.large || image.url || image.src;
+                    const absoluteImageUrl = imageUrl.startsWith('http')
+                        ? imageUrl
+                        : `https://admin.b2b.click${imageUrl}`;
+
+                    return {
+                        "@type": "ImageObject",
+                        "@id": `${baseUrl}/about#gallery-image-${index + 1}`,
+                        "contentUrl": absoluteImageUrl,
+                        "url": `${baseUrl}/about`, // The page containing the image
+                        "name": escapeHtml(image.title || image.alt || `BOUNCE2BOUNCE Gallery Image ${index + 1}`),
+                        "description": escapeHtml(image.description || image.alt || `Gallery image from BOUNCE2BOUNCE About page`),
+                        "width": image.width || null,
+                        "height": image.height || null,
+                        // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
+                        "creditText": "BOUNCE2BOUNCE",
+                        "copyrightNotice": `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
+                    };
+                }).filter(schema => schema.contentUrl); // Only include images with valid URLs
+
+                console.log(`✅ Created ${galleryImageSchemas.length} ImageObject schemas for About page gallery`);
+            } else {
+                console.warn(`⚠️ Failed to fetch gallery images for ImageObject schema: ${galleryResponse.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching gallery images for ImageObject schema:', error.message);
+            // Continue without gallery image schemas - not critical for page rendering
+        }
+
+        // Combine all schemas in @graph array
+        const graphSchemas = [
+            organizationSchema,
+            aboutPageSchema,
+            breadcrumbSchema,
+            ...galleryImageSchemas // Add all gallery ImageObject schemas
+        ];
+
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [organizationSchema, aboutPageSchema, breadcrumbSchema]
+            "@graph": graphSchemas
         }, null, 2);
 
     } else if (pageType === 'faq') {
