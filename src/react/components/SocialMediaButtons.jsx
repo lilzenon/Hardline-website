@@ -75,12 +75,50 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
   const [error, setError] = useState(null);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
 
-  // Enhanced fetch with retry mechanism and timeout handling
+  // Enhanced fetch with retry mechanism, timeout handling, and localStorage caching
   useEffect(() => {
     let abortController = new AbortController();
     let retryCount = 0;
     const maxRetries = 3;
     const retryDelay = 1000; // Start with 1 second
+    const CACHE_KEY = 'bounce2bounce_social_links';
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    // Try to load from cache
+    const loadFromCache = () => {
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          const age = Date.now() - timestamp;
+
+          if (age < CACHE_DURATION) {
+            console.log(`📦 Loaded ${data.length} social media links from cache (age: ${Math.round(age / 1000)}s)`);
+            setSocialLinks(data);
+            return true;
+          } else {
+            console.log('🗑️ Cache expired, fetching fresh data');
+            localStorage.removeItem(CACHE_KEY);
+          }
+        }
+      } catch (err) {
+        console.warn('⚠️ Failed to load from cache:', err.message);
+      }
+      return false;
+    };
+
+    // Save to cache
+    const saveToCache = (data) => {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+        console.log('💾 Saved social media links to cache');
+      } catch (err) {
+        console.warn('⚠️ Failed to save to cache:', err.message);
+      }
+    };
 
     const fetchSocialLinksWithRetry = async () => {
       try {
@@ -116,8 +154,9 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
         const data = await response.json();
 
         if (data.success && Array.isArray(data.links)) {
-          console.log(`✅ Loaded ${data.links.length} social media links`);
+          console.log(`✅ Loaded ${data.links.length} social media links from API`);
           setSocialLinks(data.links);
+          saveToCache(data.links); // Cache successful response
           setError(null); // Clear any previous errors
         } else {
           throw new Error(data.error || 'Invalid response format');
@@ -145,22 +184,27 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           return;
         }
 
-        // All retries failed - use fallback
-        console.warn('⚠️ All retry attempts failed, using fallback social links');
-        setError('Using fallback links');
+        // All retries failed - try to use cache as last resort
+        console.warn('⚠️ All retry attempts failed');
+        const cachedDataLoaded = loadFromCache();
 
-        // Fallback social links to prevent complete disappearance
-        setSocialLinks([
-          { platform: 'instagram', url: 'https://instagram.com/bounce2bounce', display_order: 1, enabled: true },
-          { platform: 'tiktok', url: 'https://tiktok.com/@bounce2bounce', display_order: 2, enabled: true },
-          { platform: 'facebook', url: 'https://facebook.com/bounce2bounce', display_order: 3, enabled: true },
-          { platform: 'twitter', url: 'https://twitter.com/bounce2bounce', display_order: 4, enabled: true }
-        ]);
+        if (!cachedDataLoaded) {
+          console.error('❌ No cached data available - social media buttons will not be displayed');
+          setError('Failed to load social media links');
+          setSocialLinks([]); // Empty array - no buttons will be shown
+        } else {
+          console.log('✅ Using cached data as fallback');
+          setError('Using cached data');
+        }
       } finally {
         setLoading(false);
       }
     };
 
+    // Load from cache immediately for instant display
+    const hasCachedData = loadFromCache();
+
+    // Then fetch fresh data in background
     fetchSocialLinksWithRetry();
 
     // Trigger animation immediately for better loading sequence
