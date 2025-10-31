@@ -643,7 +643,8 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
                         ? imageUrl
                         : `https://admin.b2b.click${imageUrl}`;
 
-                    return {
+                    // Build ImageObject with all available metadata
+                    const imageObject = {
                         "@type": "ImageObject",
                         "@id": `${baseUrl}/about#gallery-image-${index + 1}`,
                         "contentUrl": absoluteImageUrl,
@@ -651,11 +652,38 @@ function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ens
                         "name": escapeHtml(image.title || image.alt || `BOUNCE2BOUNCE Gallery Image ${index + 1}`),
                         "description": escapeHtml(image.description || image.alt || `Gallery image from BOUNCE2BOUNCE About page`),
                         "width": image.width || null,
-                        "height": image.height || null,
-                        // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
-                        "creditText": "BOUNCE2BOUNCE",
-                        "copyrightNotice": `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
+                        "height": image.height || null
                     };
+
+                    // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
+                    // Add creator information if available
+                    if (image.creator_name) {
+                        imageObject.creator = {
+                            "@type": "Person",
+                            "name": escapeHtml(image.creator_name)
+                        };
+                    }
+
+                    // Add credit text (fallback to default if not set)
+                    imageObject.creditText = escapeHtml(image.credit_text || "BOUNCE2BOUNCE");
+
+                    // Add copyright notice (fallback to default if not set)
+                    imageObject.copyrightNotice = escapeHtml(
+                        image.copyright_notice ||
+                        `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
+                    );
+
+                    // Add license URL if available (enables "Licensable" badge in Google Images)
+                    if (image.license_url) {
+                        imageObject.license = image.license_url;
+                    }
+
+                    // Add acquire license page URL if available
+                    if (image.acquire_license_page_url) {
+                        imageObject.acquireLicensePage = image.acquire_license_page_url;
+                    }
+
+                    return imageObject;
                 }).filter(schema => schema.contentUrl); // Only include images with valid URLs
 
                 console.log(`✅ Created ${galleryImageSchemas.length} ImageObject schemas for About page gallery`);
