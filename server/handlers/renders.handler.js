@@ -656,11 +656,17 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                     };
 
                     // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
-                    // Add creator information if available
+                    // Add creator information (use organization as default if no specific creator)
                     if (image.creator_name) {
                         imageObject.creator = {
                             "@type": "Person",
                             "name": escapeHtml(image.creator_name)
+                        };
+                    } else {
+                        // Default to organization as creator
+                        imageObject.creator = {
+                            "@type": "Organization",
+                            "name": "BOUNCE2BOUNCE"
                         };
                     }
 
@@ -673,15 +679,12 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                         `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
                     );
 
-                    // Add license URL if available (enables "Licensable" badge in Google Images)
-                    if (image.license_url) {
-                        imageObject.license = image.license_url;
-                    }
+                    // Add license URL (use Creative Commons Attribution-NonCommercial as default)
+                    // This enables "Licensable" badge in Google Images
+                    imageObject.license = image.license_url || "https://creativecommons.org/licenses/by-nc/4.0/";
 
-                    // Add acquire license page URL if available
-                    if (image.acquire_license_page_url) {
-                        imageObject.acquireLicensePage = image.acquire_license_page_url;
-                    }
+                    // Add acquire license page URL (contact page for licensing inquiries)
+                    imageObject.acquireLicensePage = image.acquire_license_page_url || `${baseUrl}/contact`;
 
                     return imageObject;
                 }).filter(schema => schema.contentUrl); // Only include images with valid URLs
