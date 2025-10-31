@@ -560,11 +560,104 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
             ]
         };
 
+        // 🖼️ GOOGLE IMAGE SEO: Fetch event cover images and create ImageObject structured data
+        let eventImageSchemas = [];
+        try {
+            const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click/api/home-settings/homepage-data' :
+                'http://localhost:3002/api/home-settings/homepage-data';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const eventsResponse = await fetch(dashboardApiUrl, {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+
+            if (eventsResponse.ok) {
+                const eventsData = await eventsResponse.json();
+                const featuredEvents = eventsData.featuredEvents || [];
+                const homepageEvents = eventsData.homepageEvents || [];
+                const allEvents = [...featuredEvents, ...homepageEvents];
+
+                console.log(`🖼️ Creating ImageObject schemas for ${allEvents.length} event cover images`);
+
+                // Create ImageObject schema for each event cover image
+                eventImageSchemas = allEvents
+                    .filter(event => event.cover_image) // Only events with cover images
+                    .map((event, index) => {
+                        // Use absolute URL for image (required by Google)
+                        const imageUrl = event.cover_image;
+                        const absoluteImageUrl = imageUrl.startsWith('http')
+                            ? imageUrl
+                            : `https://admin.b2b.click${imageUrl}`;
+
+                        // Build ImageObject with all available metadata
+                        const imageObject = {
+                            "@type": "ImageObject",
+                            "@id": `${baseUrl}/#event-image-${event.id}`,
+                            "contentUrl": absoluteImageUrl,
+                            "url": baseUrl, // The page containing the image (homepage)
+                            "name": escapeHtml(event.image_title || event.title || `${event.artist_name || 'Event'} Cover Image`),
+                            "description": escapeHtml(event.image_description || event.image_alt_text || `Cover image for ${event.title || event.artist_name || 'event'}`),
+                            "width": event.image_width || null,
+                            "height": event.image_height || null
+                        };
+
+                        // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
+                        // Add creator information (use organization as default if no specific creator)
+                        if (event.image_creator_name) {
+                            imageObject.creator = {
+                                "@type": "Person",
+                                "name": escapeHtml(event.image_creator_name)
+                            };
+                        } else {
+                            // Default to organization as creator
+                            imageObject.creator = {
+                                "@type": "Organization",
+                                "name": "BOUNCE2BOUNCE"
+                            };
+                        }
+
+                        // Add credit text (fallback to default if not set)
+                        imageObject.creditText = escapeHtml(event.image_credit_text || "BOUNCE2BOUNCE");
+
+                        // Add copyright notice (fallback to default if not set)
+                        imageObject.copyrightNotice = escapeHtml(
+                            event.image_copyright_notice ||
+                            `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
+                        );
+
+                        // Add license URL (use Creative Commons Attribution-NonCommercial as default)
+                        // This enables "Licensable" badge in Google Images
+                        imageObject.license = event.image_license_url || "https://creativecommons.org/licenses/by-nc/4.0/";
+
+                        // Add acquire license page URL (contact page for licensing inquiries)
+                        imageObject.acquireLicensePage = event.image_acquire_license_page_url || `${baseUrl}/contact`;
+
+                        return imageObject;
+                    })
+                    .filter(schema => schema.contentUrl); // Only include images with valid URLs
+
+                console.log(`✅ Created ${eventImageSchemas.length} ImageObject schemas for event cover images`);
+            } else {
+                console.warn(`⚠️ Failed to fetch events for ImageObject schema: ${eventsResponse.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching events for ImageObject schema:', error.message);
+            // Continue without event image schemas - not critical for page rendering
+        }
+
         // Homepage: No breadcrumb needed (Google requires at least 2 items, homepage only has 1)
         // Per Google's guidelines: "It's not required to include the top-level domain"
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [organizationSchema, websiteSchema]
+            "@graph": [organizationSchema, websiteSchema, ...eventImageSchemas]
         }, null, 2);
 
     } else if (pageType === 'about') {
