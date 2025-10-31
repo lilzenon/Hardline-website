@@ -7,11 +7,12 @@ const env = require("../env");
  * ❌ EXCLUDES: API endpoints, AI resources, admin pages, dashboard pages, event pages
  *
  * Includes:
- * - Homepage (/) - displays all events
+ * - Homepage (/) - displays all events with cover images for Google Image Search
  * - About page (/about) - with gallery images for Google Image Search
  * - FAQ page (/faq)
  *
  * 🖼️ GOOGLE IMAGE SEO:
+ * - Homepage includes <image:image> tags for all event cover images
  * - About page includes <image:image> tags for all gallery images
  * - Uses Google's image sitemap format (xmlns:image)
  * - Includes image:loc, image:title, and image:caption for each image
@@ -37,12 +38,81 @@ async function generateSitemap(req, res) {
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
-        // ✅ Homepage - highest priority (displays all events)
+        // ✅ Homepage - highest priority (displays all events with cover images)
         sitemap += `  <url>
     <loc>${baseUrl}/</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <priority>1.0</priority>`;
+
+        // 🖼️ GOOGLE IMAGE SEO: Fetch and include event cover images in sitemap
+        try {
+            const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click/api/home-settings/homepage-data' :
+                'http://localhost:3002/api/home-settings/homepage-data';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const eventsResponse = await fetch(dashboardApiUrl, {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+
+            if (eventsResponse.ok) {
+                const eventsData = await eventsResponse.json();
+                const featuredEvents = eventsData.featuredEvents || [];
+                const homepageEvents = eventsData.homepageEvents || [];
+                const allEvents = [...featuredEvents, ...homepageEvents];
+
+                console.log(`🖼️ Adding ${allEvents.length} event cover images to homepage sitemap`);
+
+                // Add image tags for each event cover image
+                for (const event of allEvents) {
+                    if (!event.cover_image) continue; // Skip events without cover images
+
+                    const imageUrl = event.cover_image;
+                    const absoluteImageUrl = imageUrl.startsWith('http')
+                        ? imageUrl
+                        : `https://admin.b2b.click${imageUrl}`;
+
+                    // Add image:image tag (Google's image sitemap format)
+                    sitemap += `
+    <image:image>
+      <image:loc>${escapeXml(absoluteImageUrl)}</image:loc>`;
+
+                    // Add optional title if available
+                    const imageTitle = event.image_title || event.title || `${event.artist_name || 'Event'} Cover Image`;
+                    if (imageTitle) {
+                        sitemap += `
+      <image:title>${escapeXml(imageTitle)}</image:title>`;
+                    }
+
+                    // Add optional caption if available (using description or alt text)
+                    const imageCaption = event.image_description || event.image_alt_text || `Cover image for ${event.title || event.artist_name || 'event'}`;
+                    if (imageCaption) {
+                        sitemap += `
+      <image:caption>${escapeXml(imageCaption)}</image:caption>`;
+                    }
+
+                    sitemap += `
+    </image:image>`;
+                }
+
+                console.log(`✅ Added ${allEvents.filter(e => e.cover_image).length} event cover images to homepage sitemap`);
+            } else {
+                console.warn(`⚠️ Failed to fetch events for sitemap: ${eventsResponse.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching events for sitemap:', error.message);
+            // Continue without event images - not critical for sitemap generation
+        }
+
+        sitemap += `
   </url>
 `;
 
@@ -137,9 +207,10 @@ async function generateSitemap(req, res) {
         });
 
         console.log('✅ Sitemap generated successfully with 3 URLs');
-        console.log('📋 Included pages: /, /about (with gallery images), /faq');
+        console.log('📋 Included pages: / (with event cover images), /about (with gallery images), /faq');
         console.log('❌ Excluded: /event/:slug (returns 500), /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
         console.log('ℹ️  All events are displayed on the homepage (/) with ticket purchase functionality');
+        console.log('🖼️ Homepage includes event cover images for Google Image Search optimization');
         console.log('🖼️ About page includes gallery images for Google Image Search optimization');
 
         res.send(sitemap);
