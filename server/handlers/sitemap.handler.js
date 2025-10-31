@@ -8,8 +8,13 @@ const env = require("../env");
  *
  * Includes:
  * - Homepage (/) - displays all events
- * - About page (/about)
+ * - About page (/about) - with gallery images for Google Image Search
  * - FAQ page (/faq)
+ *
+ * 🖼️ GOOGLE IMAGE SEO:
+ * - About page includes <image:image> tags for all gallery images
+ * - Uses Google's image sitemap format (xmlns:image)
+ * - Includes image:loc, image:title, and image:caption for each image
  *
  * NOTE: Individual event pages (/event/:slug) are EXCLUDED because:
  * 1. They currently return HTTP 500 errors (broken image URL construction)
@@ -26,9 +31,10 @@ async function generateSitemap(req, res) {
         const baseUrl = 'https://bounce2bounce.com';
         const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-        // Start building sitemap XML with proper namespaces
+        // Start building sitemap XML with proper namespaces (including image namespace)
         let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 `;
 
         // ✅ Homepage - highest priority (displays all events)
@@ -40,12 +46,75 @@ async function generateSitemap(req, res) {
   </url>
 `;
 
-        // ✅ About Page - important static page
+        // ✅ About Page - important static page with gallery images
         sitemap += `  <url>
     <loc>${baseUrl}/about</loc>
     <lastmod>${currentDate}</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.8</priority>`;
+
+        // 🖼️ GOOGLE IMAGE SEO: Fetch and include gallery images in sitemap
+        try {
+            const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click/api/settings/about/gallery/public' :
+                'http://localhost:3002/api/settings/about/gallery/public';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const galleryResponse = await fetch(dashboardApiUrl, {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+
+            if (galleryResponse.ok) {
+                const galleryData = await galleryResponse.json();
+                const galleryImages = galleryData.data || [];
+
+                console.log(`🖼️ Adding ${galleryImages.length} gallery images to About page sitemap`);
+
+                // Add image tags for each gallery image
+                for (const image of galleryImages) {
+                    const imageUrl = image.urls?.large || image.url || image.src;
+                    const absoluteImageUrl = imageUrl.startsWith('http')
+                        ? imageUrl
+                        : `https://admin.b2b.click${imageUrl}`;
+
+                    // Add image:image tag (Google's image sitemap format)
+                    sitemap += `
+    <image:image>
+      <image:loc>${escapeXml(absoluteImageUrl)}</image:loc>`;
+
+                    // Add optional title if available
+                    if (image.title) {
+                        sitemap += `
+      <image:title>${escapeXml(image.title)}</image:title>`;
+                    }
+
+                    // Add optional caption if available (using description)
+                    if (image.description) {
+                        sitemap += `
+      <image:caption>${escapeXml(image.description)}</image:caption>`;
+                    }
+
+                    sitemap += `
+    </image:image>`;
+                }
+
+                console.log(`✅ Added ${galleryImages.length} images to About page sitemap`);
+            } else {
+                console.warn(`⚠️ Failed to fetch gallery images for sitemap: ${galleryResponse.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching gallery images for sitemap:', error.message);
+            // Continue without gallery images - not critical for sitemap generation
+        }
+
+        sitemap += `
   </url>
 `;
 
@@ -68,9 +137,10 @@ async function generateSitemap(req, res) {
         });
 
         console.log('✅ Sitemap generated successfully with 3 URLs');
-        console.log('📋 Included pages: /, /about, /faq');
+        console.log('📋 Included pages: /, /about (with gallery images), /faq');
         console.log('❌ Excluded: /event/:slug (returns 500), /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
         console.log('ℹ️  All events are displayed on the homepage (/) with ticket purchase functionality');
+        console.log('🖼️ About page includes gallery images for Google Image Search optimization');
 
         res.send(sitemap);
 
