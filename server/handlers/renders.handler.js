@@ -750,7 +750,8 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
 
                     // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
                     // Add creator information (use organization as default if no specific creator)
-                    if (image.creator_name) {
+                    // If creator_name is 'BOUNCE2BOUNCE' (the default), use Organization type
+                    if (image.creator_name && image.creator_name !== 'BOUNCE2BOUNCE') {
                         imageObject.creator = {
                             "@type": "Person",
                             "name": escapeHtml(image.creator_name)
