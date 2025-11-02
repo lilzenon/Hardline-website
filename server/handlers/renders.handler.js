@@ -561,7 +561,9 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
         };
 
         // 🖼️ GOOGLE IMAGE SEO: Fetch event cover images and create ImageObject structured data
+        // 🎯 GOOGLE EVENT SEO: Create Event structured data for all displayed events
         let eventImageSchemas = [];
+        let eventSchemas = [];
         try {
             const dashboardApiUrl = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click/api/home-settings/homepage-data' :
@@ -586,6 +588,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                 const allEvents = [...featuredEvents, ...homepageEvents];
 
                 console.log(`🖼️ Creating ImageObject schemas for ${allEvents.length} event cover images`);
+                console.log(`🎯 Creating Event schemas for ${allEvents.length} events`);
 
                 // Create ImageObject schema for each event cover image
                 eventImageSchemas = allEvents
@@ -645,19 +648,141 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                     .filter(schema => schema.contentUrl); // Only include images with valid URLs
 
                 console.log(`✅ Created ${eventImageSchemas.length} ImageObject schemas for event cover images`);
+
+                // 🎯 GOOGLE EVENT SEO: Create Event structured data for each event
+                // This allows Google to discover events directly from the homepage
+                eventSchemas = allEvents
+                    .filter(event => event.slug && event.is_active) // Only active events with slugs
+                    .map((event) => {
+                        const eventUrl = `${baseUrl}/event/${event.slug}`;
+
+                        // Build Event schema with all required and recommended fields
+                        const eventSchema = {
+                            "@type": "Event",
+                            "@id": `${eventUrl}#event`,
+                            "name": escapeHtml(event.title),
+                            "description": escapeHtml(event.description || `Join us for ${event.title}${event.artist_name ? ` featuring ${event.artist_name}` : ''}`),
+                            "url": eventUrl
+                        };
+
+                        // IMAGE: Multiple aspect ratios (1x1, 4x3, 16x9) - RECOMMENDED by Google
+                        if (event.cover_image) {
+                            const imageUrl = event.cover_image.startsWith('http')
+                                ? event.cover_image
+                                : `https://admin.b2b.click${event.cover_image}`;
+                            eventSchema.image = [imageUrl, imageUrl, imageUrl]; // TODO: Use actual variants when available
+                        }
+
+                        // START DATE: ISO 8601 with timezone - REQUIRED
+                        if (event.event_datetime_utc) {
+                            eventSchema.startDate = event.event_datetime_utc;
+                        } else if (event.event_date) {
+                            eventSchema.startDate = event.event_date;
+                        }
+
+                        // END DATE: ISO 8601 with timezone - RECOMMENDED
+                        if (event.event_end_date) {
+                            eventSchema.endDate = event.event_end_date;
+                        }
+
+                        // EVENT STATUS: EventScheduled, EventCancelled, etc. - RECOMMENDED
+                        eventSchema.eventStatus = `https://schema.org/${event.event_status || 'EventScheduled'}`;
+
+                        // EVENT ATTENDANCE MODE: OfflineEventAttendanceMode (physical location) - RECOMMENDED
+                        eventSchema.eventAttendanceMode = "https://schema.org/OfflineEventAttendanceMode";
+
+                        // PERFORMER: Person or PerformingGroup - RECOMMENDED
+                        if (event.artist_name) {
+                            eventSchema.performer = {
+                                "@type": event.performer_type || "Person",
+                                "name": escapeHtml(event.artist_name)
+                            };
+                        }
+
+                        // LOCATION: Place with complete PostalAddress - REQUIRED
+                        // DUAL ADDRESS SYSTEM: Use structured venue fields for SEO, event_address for UI display
+                        const location = {
+                            "@type": "Place"
+                        };
+
+                        // Venue name (use venue_name if available, otherwise event_address)
+                        if (event.venue_name) {
+                            location.name = escapeHtml(event.venue_name);
+                        } else if (event.event_address) {
+                            location.name = escapeHtml(event.event_address);
+                        }
+
+                        // Complete PostalAddress with all components
+                        const address = {
+                            "@type": "PostalAddress"
+                        };
+
+                        if (event.venue_street_address) {
+                            address.streetAddress = escapeHtml(event.venue_street_address);
+                        }
+                        if (event.venue_city) {
+                            address.addressLocality = escapeHtml(event.venue_city);
+                        }
+                        if (event.venue_state) {
+                            address.addressRegion = escapeHtml(event.venue_state);
+                        }
+                        if (event.venue_postal_code) {
+                            address.postalCode = escapeHtml(event.venue_postal_code);
+                        }
+                        address.addressCountry = event.venue_country || "US";
+
+                        location.address = address;
+
+                        // Geo coordinates (if available)
+                        if (event.address_latitude && event.address_longitude) {
+                            location.geo = {
+                                "@type": "GeoCoordinates",
+                                "latitude": parseFloat(event.address_latitude),
+                                "longitude": parseFloat(event.address_longitude)
+                            };
+                        }
+
+                        eventSchema.location = location;
+
+                        // ORGANIZER: Organization - RECOMMENDED
+                        eventSchema.organizer = {
+                            "@type": "Organization",
+                            "name": "BOUNCE2BOUNCE",
+                            "url": baseUrl
+                        };
+
+                        // OFFERS: Ticket pricing and availability - RECOMMENDED
+                        if (event.external_ticket_url || event.posh_embed_url) {
+                            const offerUrl = event.external_ticket_url || event.posh_embed_url;
+
+                            eventSchema.offers = {
+                                "@type": "Offer",
+                                "url": offerUrl,
+                                "price": event.ticket_price_amount ? event.ticket_price_amount.toString() : "0",
+                                "priceCurrency": event.ticket_price_currency || "USD",
+                                "availability": `https://schema.org/${event.ticket_availability || 'InStock'}`,
+                                "validFrom": event.created_at
+                            };
+                        }
+
+                        return eventSchema;
+                    });
+
+                console.log(`✅ Created ${eventSchemas.length} Event schemas for homepage events`);
             } else {
-                console.warn(`⚠️ Failed to fetch events for ImageObject schema: ${eventsResponse.status}`);
+                console.warn(`⚠️ Failed to fetch events for structured data: ${eventsResponse.status}`);
             }
         } catch (error) {
-            console.warn('⚠️ Error fetching events for ImageObject schema:', error.message);
-            // Continue without event image schemas - not critical for page rendering
+            console.warn('⚠️ Error fetching events for structured data:', error.message);
+            // Continue without event schemas - not critical for page rendering
         }
 
         // Homepage: No breadcrumb needed (Google requires at least 2 items, homepage only has 1)
         // Per Google's guidelines: "It's not required to include the top-level domain"
+        // Include Organization, WebSite, Event schemas, and ImageObject schemas in @graph
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [organizationSchema, websiteSchema, ...eventImageSchemas]
+            "@graph": [organizationSchema, websiteSchema, ...eventSchemas, ...eventImageSchemas]
         }, null, 2);
 
     } else if (pageType === 'about') {
