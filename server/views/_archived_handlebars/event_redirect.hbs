@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{event.title}} - BOUNCE2BOUNCE</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{{#if event.description}}{{event.description}}{{else}}Join us for {{event.title}}{{#if event.artist_name}} featuring {{event.artist_name}}{{/if}}{{/if}}">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://{{default_domain}}/event/{{event.slug}}">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}} | BOUNCE2BOUNCE">
+    <meta property="og:description" content="{{#if event.description}}{{event.description}}{{else}}Join us for {{event.title}}{{/if}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://{{default_domain}}/event/{{event.slug}}">
+    <meta property="og:site_name" content="BOUNCE2BOUNCE">
+    {{#if event.cover_image}}
+    <meta property="og:image" content="{{event.cover_image}}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="{{event.title}} event cover image">
+    {{/if}}
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@bounce2bounce">
+    <meta name="twitter:title" content="{{event.title}}{{#if event.artist_name}} - {{event.artist_name}}{{/if}}">
+    <meta name="twitter:description" content="{{#if event.description}}{{event.description}}{{else}}Join us for {{event.title}}{{/if}}">
+    {{#if event.cover_image}}
+    <meta name="twitter:image" content="{{event.cover_image}}">
+    <meta name="twitter:image:alt" content="{{event.title}} event cover image">
+    {{/if}}
+    
+    <!-- 🎯 GOOGLE EVENT STRUCTURED DATA (schema.org/Event) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": "{{event.title}}",
+        "description": "{{#if event.description}}{{event.description}}{{else}}Join us for {{event.title}}{{#if event.artist_name}} featuring {{event.artist_name}}{{/if}}{{/if}}",
+        "url": "https://{{default_domain}}/event/{{event.slug}}",
+        {{#if event.cover_image}}
+        "image": [
+            "{{event.cover_image}}",
+            "{{event.cover_image}}",
+            "{{event.cover_image}}"
+        ],
+        {{/if}}
+        {{#if event.event_datetime_utc}}
+        "startDate": "{{event.event_datetime_utc}}",
+        {{else}}{{#if event.event_date}}
+        "startDate": "{{event.event_date}}",
+        {{/if}}{{/if}}
+        {{#if event.event_end_date}}
+        "endDate": "{{event.event_end_date}}",
+        {{/if}}
+        "eventStatus": "https://schema.org/{{#if event.event_status}}{{event.event_status}}{{else}}EventScheduled{{/if}}",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        {{#if event.artist_name}}
+        "performer": {
+            "@type": "{{#if event.performer_type}}{{event.performer_type}}{{else}}Person{{/if}}",
+            "name": "{{event.artist_name}}"
+        },
+        {{/if}}
+        "location": {
+            "@type": "Place",
+            {{#if event.venue_name}}
+            "name": "{{event.venue_name}}",
+            {{else}}{{#if event.event_address}}
+            "name": "{{event.event_address}}",
+            {{/if}}{{/if}}
+            "address": {
+                "@type": "PostalAddress",
+                {{#if event.venue_street_address}}
+                "streetAddress": "{{event.venue_street_address}}",
+                {{/if}}
+                {{#if event.venue_city}}
+                "addressLocality": "{{event.venue_city}}",
+                {{/if}}
+                {{#if event.venue_state}}
+                "addressRegion": "{{event.venue_state}}",
+                {{/if}}
+                {{#if event.venue_postal_code}}
+                "postalCode": "{{event.venue_postal_code}}",
+                {{/if}}
+                "addressCountry": "{{#if event.venue_country}}{{event.venue_country}}{{else}}US{{/if}}"
+            }{{#if event.address_latitude}},
+            "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": {{event.address_latitude}},
+                "longitude": {{event.address_longitude}}
+            }{{/if}}
+        },
+        "organizer": {
+            "@type": "Organization",
+            "name": "BOUNCE2BOUNCE",
+            "url": "https://{{default_domain}}"
+        }{{#if event.external_ticket_url}},
+        "offers": {
+            "@type": "Offer",
+            "url": "{{event.external_ticket_url}}",
+            {{#if event.ticket_price_amount}}
+            "price": "{{event.ticket_price_amount}}",
+            {{else}}
+            "price": "0",
+            {{/if}}
+            "priceCurrency": "{{#if event.ticket_price_currency}}{{event.ticket_price_currency}}{{else}}USD{{/if}}",
+            "availability": "https://schema.org/{{#if event.ticket_availability}}{{event.ticket_availability}}{{else}}InStock{{/if}}",
+            "validFrom": "{{event.created_at}}"
+        }{{/if}}
+    }
+    </script>
+    
+    <!-- Breadcrumb Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://{{default_domain}}/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "{{event.title}}",
+                "item": "https://{{default_domain}}/event/{{event.slug}}"
+            }
+        ]
+    }
+    </script>
+    
+    <!-- Auto-redirect after 100ms (allows Google to parse structured data) -->
+    <meta http-equiv="refresh" content="0;url={{redirectUrl}}">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .redirect-container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 600px;
+        }
+        .event-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .redirect-message {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #319DFF;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .manual-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: #319DFF;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .manual-link:hover {
+            background: #2589e6;
+        }
+    </style>
+</head>
+<body>
+    <div class="redirect-container">
+        <div class="spinner"></div>
+        <h1 class="event-title">{{event.title}}</h1>
+        {{#if event.artist_name}}
+        <p class="redirect-message">Featuring {{event.artist_name}}</p>
+        {{/if}}
+        <p class="redirect-message">Redirecting to tickets...</p>
+        <a href="{{redirectUrl}}" class="manual-link">Click here if not redirected</a>
+    </div>
+    
+    <!-- JavaScript redirect as fallback -->
+    <script>
+        setTimeout(function() {
+            window.location.href = '{{redirectUrl}}';
+        }, 100);
+    </script>
+</body>
+</html>
+

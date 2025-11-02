@@ -4,12 +4,13 @@ const env = require("../env");
 /**
  * Generate XML sitemap for SEO optimization
  * ✅ ONLY includes publicly accessible pages that return HTTP 200
- * ❌ EXCLUDES: API endpoints, AI resources, admin pages, dashboard pages, event pages
+ * ❌ EXCLUDES: API endpoints, AI resources, admin pages, dashboard pages
  *
  * Includes:
  * - Homepage (/) - displays all events with cover images for Google Image Search
  * - About page (/about) - with gallery images for Google Image Search
  * - FAQ page (/faq)
+ * - Individual event pages (/event/:slug) - with Event structured data for Google Events
  *
  * 🖼️ GOOGLE IMAGE SEO:
  * - Homepage includes <image:image> tags for all event cover images
@@ -17,10 +18,11 @@ const env = require("../env");
  * - Uses Google's image sitemap format (xmlns:image)
  * - Includes image:loc, image:title, and image:caption for each image
  *
- * NOTE: Individual event pages (/event/:slug) are EXCLUDED because:
- * 1. They currently return HTTP 500 errors (broken image URL construction)
- * 2. The homepage already displays all events with ticket purchase functionality
- * 3. Including broken URLs would cause "soft 404" errors in Google Search Console
+ * 🎯 GOOGLE EVENT SEO:
+ * - Individual event pages include Event structured data (schema.org/Event)
+ * - Each event has unique URL: /event/:slug
+ * - Events redirect to external ticket URLs after 150ms (allows Google to parse schema)
+ * - Only active events with show_on_homepage=true are included
  *
  * Uses canonical domain: bounce2bounce.com
  */
@@ -197,6 +199,66 @@ async function generateSitemap(req, res) {
   </url>
 `;
 
+        // 🎯 INDIVIDUAL EVENT PAGES - with Event structured data for Google Events
+        // Only include active events with show_on_homepage=true
+        let eventCount = 0;
+        try {
+            const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click/api/home-settings/homepage-data' :
+                'http://localhost:3002/api/home-settings/homepage-data';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+            const eventsResponse = await fetch(dashboardApiUrl, {
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+
+            if (eventsResponse.ok) {
+                const eventsData = await eventsResponse.json();
+                const featuredEvents = eventsData.featuredEvents || [];
+                const homepageEvents = eventsData.homepageEvents || [];
+
+                // Combine and deduplicate events by slug
+                const allEvents = [...featuredEvents, ...homepageEvents];
+                const uniqueEvents = Array.from(
+                    new Map(allEvents.map(event => [event.slug, event])).values()
+                );
+
+                console.log(`🎯 Adding ${uniqueEvents.length} individual event pages to sitemap`);
+
+                // Add URL entry for each event
+                for (const event of uniqueEvents) {
+                    if (!event.slug || !event.is_active) continue;
+
+                    // Use event's updated_at or created_at for lastmod
+                    const eventLastMod = event.updated_at || event.created_at || currentDate;
+                    const lastModDate = new Date(eventLastMod).toISOString().split('T')[0];
+
+                    sitemap += `  <url>
+    <loc>${baseUrl}/event/${escapeXml(event.slug)}</loc>
+    <lastmod>${lastModDate}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+                    eventCount++;
+                }
+
+                console.log(`✅ Added ${eventCount} event pages to sitemap`);
+            } else {
+                console.warn(`⚠️ Failed to fetch events for sitemap: ${eventsResponse.status}`);
+            }
+        } catch (error) {
+            console.warn('⚠️ Error fetching events for sitemap:', error.message);
+            // Continue without event pages - not critical for sitemap generation
+        }
+
         sitemap += `</urlset>`;
 
         // Set appropriate headers
@@ -206,12 +268,13 @@ async function generateSitemap(req, res) {
             'X-Robots-Tag': 'noindex' // Prevent indexing of sitemap itself
         });
 
-        console.log('✅ Sitemap generated successfully with 3 URLs');
-        console.log('📋 Included pages: / (with event cover images), /about (with gallery images), /faq');
-        console.log('❌ Excluded: /event/:slug (returns 500), /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
-        console.log('ℹ️  All events are displayed on the homepage (/) with ticket purchase functionality');
+        const totalUrls = 3 + eventCount; // 3 static pages + event pages
+        console.log(`✅ Sitemap generated successfully with ${totalUrls} URLs`);
+        console.log('📋 Included pages: / (with event cover images), /about (with gallery images), /faq, /event/:slug (with Event schemas)');
+        console.log('❌ Excluded: /llms.txt, /api/*, /dashboard/*, /admin/*, /events');
         console.log('🖼️ Homepage includes event cover images for Google Image Search optimization');
         console.log('🖼️ About page includes gallery images for Google Image Search optimization');
+        console.log('🎯 Individual event pages include Event structured data for Google Events');
 
         res.send(sitemap);
 
