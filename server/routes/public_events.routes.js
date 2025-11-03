@@ -244,15 +244,55 @@ router.get(
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Event Not Found - BOUNCE2BOUNCE</title>
                     <style>
-                        body { margin: 0; padding: 2rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; text-align: center; }
-                        h1 { font-size: 2rem; margin-bottom: 1rem; }
-                        a { color: #319DFF; text-decoration: none; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        body {
+                            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                            background: #000000;
+                            color: #FFFFFF;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            min-height: 100vh;
+                            padding: 1rem;
+                        }
+                        .error-card {
+                            background: rgba(22, 22, 22, 0.8);
+                            border: 1px solid rgba(56, 56, 56, 0.3);
+                            backdrop-filter: blur(20px);
+                            -webkit-backdrop-filter: blur(20px);
+                            border-radius: 16px;
+                            padding: 2rem;
+                            text-align: center;
+                            max-width: 500px;
+                            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+                        }
+                        h1 { font-size: 2rem; margin-bottom: 1rem; font-weight: 700; }
+                        p { color: rgba(255, 255, 255, 0.7); margin-bottom: 1.5rem; line-height: 1.5; }
+                        a {
+                            display: inline-block;
+                            padding: 0.875rem 2rem;
+                            background: rgba(49, 157, 255, 0.2);
+                            border: 1px solid rgba(49, 157, 255, 0.4);
+                            color: #319DFF;
+                            text-decoration: none;
+                            border-radius: 12px;
+                            font-weight: 600;
+                            transition: all 0.2s ease;
+                            backdrop-filter: blur(10px);
+                        }
+                        a:hover {
+                            background: rgba(49, 157, 255, 0.3);
+                            border-color: rgba(49, 157, 255, 0.6);
+                            transform: translateY(-2px);
+                        }
                     </style>
                 </head>
                 <body>
-                    <h1>Event Not Found</h1>
-                    <p>The event you're looking for doesn't exist.</p>
-                    <a href="https://${defaultDomain}">Return to Homepage</a>
+                    <div class="error-card">
+                        <h1>Event Not Found</h1>
+                        <p>The event you're looking for doesn't exist.</p>
+                        <a href="https://${defaultDomain}">Return to Homepage</a>
+                    </div>
                 </body>
                 </html>
             `);
@@ -303,6 +343,7 @@ router.get(
 
         // Generate complete HTML response with structured data and JavaScript redirect
         // Using template literals for clean, maintainable HTML generation
+        // 🎨 GLASSMORPHISM DESIGN: Matches main React homepage styling
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -334,6 +375,11 @@ router.get(
     ${safeCoverImage ? `<meta name="twitter:image" content="${safeCoverImage}">
     <meta name="twitter:image:alt" content="${safeTitle} event cover image">` : ''}
 
+    <!-- Preload critical resources for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    ${safeCoverImage ? `<link rel="preload" as="image" href="${safeCoverImage}">` : ''}
+
     <!-- 🎯 GOOGLE EVENT STRUCTURED DATA (schema.org/Event) -->
     <script type="application/ld+json">
 ${JSON.stringify(eventSchema, null, 2)}
@@ -344,68 +390,158 @@ ${JSON.stringify(eventSchema, null, 2)}
 ${JSON.stringify(breadcrumbSchema, null, 2)}
     </script>
 
+    <!-- Inline critical CSS for performance (eliminates render-blocking) -->
     <style>
+        /* 🎨 GLASSMORPHISM DESIGN SYSTEM - Matches React Homepage */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-            background: #000;
-            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #000000;
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            padding: 1rem;
+            overflow-x: hidden;
         }
+
         .redirect-container {
             text-align: center;
-            padding: 2rem;
             max-width: 600px;
+            width: 100%;
+            animation: fadeIn 0.3s ease-out;
         }
-        .event-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
+
+        /* Event Cover Image with Glassmorphism */
+        .event-cover {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(22, 22, 22, 0.8);
+            border: 1px solid rgba(56, 56, 56, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
-        .redirect-message {
-            font-size: 1.125rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 2rem;
+
+        .event-cover img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
         }
+
+        /* Glassmorphism Card for Content */
+        .content-card {
+            background: rgba(22, 22, 22, 0.8);
+            border: 1px solid rgba(56, 56, 56, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Loading Spinner */
         .spinner {
-            width: 40px;
-            height: 40px;
-            margin: 0 auto 1rem;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1.5rem;
             border: 4px solid rgba(255, 255, 255, 0.1);
             border-top-color: #319DFF;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Typography */
+        .event-title {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+            color: #FFFFFF;
+        }
+
+        .artist-name {
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+
+        .redirect-message {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        /* Manual Link Button with Glassmorphism */
         .manual-link {
             display: inline-block;
             margin-top: 1rem;
-            padding: 0.75rem 1.5rem;
-            background: #319DFF;
-            color: #fff;
+            padding: 0.875rem 2rem;
+            background: rgba(49, 157, 255, 0.2);
+            border: 1px solid rgba(49, 157, 255, 0.4);
+            color: #319DFF;
             text-decoration: none;
-            border-radius: 8px;
+            border-radius: 12px;
             font-weight: 600;
-            transition: background 0.2s;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
+
         .manual-link:hover {
-            background: #2589e6;
+            background: rgba(49, 157, 255, 0.3);
+            border-color: rgba(49, 157, 255, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(49, 157, 255, 0.3);
+        }
+
+        .manual-link:active {
+            transform: translateY(0);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 640px) {
+            .content-card { padding: 1.5rem; }
+            .event-cover { margin-bottom: 1.5rem; }
         }
     </style>
 </head>
 <body>
     <div class="redirect-container">
-        <div class="spinner"></div>
-        <h1 class="event-title">${safeTitle}</h1>
-        ${safeArtistName ? `<p class="redirect-message">Featuring ${safeArtistName}</p>` : ''}
-        <p class="redirect-message">Redirecting to tickets...</p>
-        <a href="${safeRedirectUrl}" class="manual-link">Click here if not redirected</a>
+        ${safeCoverImage ? `
+        <!-- Event Cover Image -->
+        <div class="event-cover">
+            <img src="${safeCoverImage}" alt="${safeTitle} event cover" loading="eager" decoding="async">
+        </div>
+        ` : ''}
+
+        <!-- Content Card with Glassmorphism -->
+        <div class="content-card">
+            <div class="spinner"></div>
+            <h1 class="event-title">${safeTitle}</h1>
+            ${safeArtistName ? `<p class="artist-name">Featuring ${safeArtistName}</p>` : ''}
+            <p class="redirect-message">Redirecting to tickets...</p>
+            <a href="${safeRedirectUrl}" class="manual-link">Click here if not redirected</a>
+        </div>
     </div>
 
     <!-- JavaScript redirect after 150ms (allows Google bot to parse JSON-LD) -->
