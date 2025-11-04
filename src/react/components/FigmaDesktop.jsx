@@ -1985,7 +1985,7 @@ const FigmaDesktop = () => {
                       minWidth: 0
                     }}
                   >
-                    {mostRecentEvent?.location || homeSettings?.event_location || "Asbury Park, NJ"}
+                    {formatLocation(mostRecentEvent?.event_address || homeSettings?.event_address)}
                   </span>
                 </div>
               </div>
