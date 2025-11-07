@@ -457,16 +457,42 @@ async function eventEdit(req, res) {
     }
 }
 
-// Helper function to generate static HTML content for Googlebot
-// UPDATED: Return empty content to prevent flash before React loads
-// React handles all rendering including the loading animation
-// EXCEPTION: FAQ page gets server-side rendered content for bots
-function generateStaticContent(pageType, metaTags, seoSettings, faqData = null) {
-    // FAQ Page: Inject server-side rendered FAQ content for bots
-    if (pageType === 'faq' && faqData && faqData.length > 0) {
-        const faqItemsHtml = faqData.map((faq, index) => `
+// Helper function to generate static HTML content for bots (Googlebot, Instagram, etc.)
+// 🤖 BOT-FRIENDLY RENDERING: All pages now get server-side rendered content
+// This prevents soft 404 errors and ensures bots can index page content
+function generateStaticContent(pageType, metaTags, seoSettings, pageData = null) {
+    const baseStyles = `
+        min-height: 100vh;
+        background: #000000;
+        color: #ffffff;
+        font-family: Inter, system-ui, sans-serif;
+        padding: 2rem 1rem;
+    `;
+
+    const containerStyles = `
+        max-width: 800px;
+        margin: 0 auto;
+    `;
+
+    const titleStyles = `
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-align: center;
+    `;
+
+    const descriptionStyles = `
+        font-size: 1.125rem;
+        color: #e5e5e5;
+        margin-bottom: 2rem;
+        text-align: center;
+    `;
+
+    // FAQ Page: Render FAQ questions and answers
+    if (pageType === 'faq' && pageData && pageData.length > 0) {
+        const faqItemsHtml = pageData.map((faq) => `
             <div style="margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
-                <div style="padding: 1.25rem; background: rgba(22,22,22,0.8); cursor: pointer;">
+                <div style="padding: 1.25rem; background: rgba(22,22,22,0.8);">
                     <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #ffffff;">
                         ${faq.question || faq.q || ''}
                     </h3>
@@ -478,32 +504,104 @@ function generateStaticContent(pageType, metaTags, seoSettings, faqData = null) 
         `).join('');
 
         return `
-            <div style="min-height: 100vh; background: #000000; color: #ffffff; font-family: Inter, system-ui, sans-serif; padding: 2rem 1rem;">
-                <div style="max-width: 800px; margin: 0 auto;">
-                    <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">
-                        ${metaTags.title || 'Frequently Asked Questions'}
-                    </h1>
-                    <p style="font-size: 1.125rem; color: #e5e5e5; margin-bottom: 2rem; text-align: center;">
-                        ${metaTags.description || 'Find answers to common questions about BOUNCE2BOUNCE events.'}
-                    </p>
-                    <div style="margin-top: 2rem;">
-                        ${faqItemsHtml}
-                    </div>
+            <div style="${baseStyles}">
+                <div style="${containerStyles}">
+                    <h1 style="${titleStyles}">${metaTags.title || 'Frequently Asked Questions'}</h1>
+                    <p style="${descriptionStyles}">${metaTags.description || 'Find answers to common questions about BOUNCE2BOUNCE events.'}</p>
+                    <div style="margin-top: 2rem;">${faqItemsHtml}</div>
                 </div>
             </div>
-            <noscript>
-                <div style="max-width: 800px; margin: 100px auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff; text-align: center;">
-                    <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">JavaScript Required</h1>
-                    <p style="font-size: 1.125rem; line-height: 1.75; color: #e5e5e5;">
-                        This page requires JavaScript to display the full interactive experience. Please enable JavaScript in your browser.
-                    </p>
-                </div>
-            </noscript>
         `;
     }
 
-    // All other pages: Return ONLY noscript fallback - no visible content before React loads
-    // This prevents the flash of unstyled content while preserving SEO
+    // About Page: Render about content
+    if (pageType === 'about' && pageData && pageData.content) {
+        return `
+            <div style="${baseStyles}">
+                <div style="${containerStyles}">
+                    <h1 style="${titleStyles}">${metaTags.title || 'About BOUNCE2BOUNCE'}</h1>
+                    <p style="${descriptionStyles}">${metaTags.description || 'Learn about our mission and values.'}</p>
+                    <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
+                        ${pageData.content || ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Homepage: Render event listings
+    if (pageType === 'homepage' && pageData && pageData.events && pageData.events.length > 0) {
+        const eventsHtml = pageData.events.slice(0, 6).map((event) => `
+            <div style="margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; background: rgba(22,22,22,0.8);">
+                ${event.cover_image_url ? `
+                    <img src="${event.cover_image_url}" alt="${event.title || 'Event'}" style="width: 100%; height: 200px; object-fit: cover;">
+                ` : ''}
+                <div style="padding: 1.5rem;">
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: #ffffff;">
+                        ${event.title || 'Untitled Event'}
+                    </h3>
+                    ${event.event_date_local ? `
+                        <p style="margin: 0.25rem 0; color: #e5e5e5; font-size: 0.875rem;">
+                            📅 ${event.event_date_local}
+                        </p>
+                    ` : ''}
+                    ${event.venue_name ? `
+                        <p style="margin: 0.25rem 0; color: #e5e5e5; font-size: 0.875rem;">
+                            📍 ${event.venue_name}${event.venue_city ? `, ${event.venue_city}` : ''}
+                        </p>
+                    ` : ''}
+                    ${event.external_ticket_url ? `
+                        <a href="${event.external_ticket_url}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #319DFF; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                            Get Tickets
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div style="${baseStyles}">
+                <div style="${containerStyles}">
+                    <h1 style="${titleStyles}">${metaTags.title || 'BOUNCE2BOUNCE - Events'}</h1>
+                    <p style="${descriptionStyles}">${metaTags.description || 'Discover exclusive live music events.'}</p>
+                    <div style="margin-top: 2rem;">${eventsHtml}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Contact Page: Render static contact information
+    if (pageType === 'contact') {
+        return `
+            <div style="${baseStyles}">
+                <div style="${containerStyles}">
+                    <h1 style="${titleStyles}">${metaTags.title || 'Contact Us'}</h1>
+                    <p style="${descriptionStyles}">${metaTags.description || 'Get in touch with BOUNCE2BOUNCE.'}</p>
+                    <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
+                        <p style="margin-bottom: 1rem;">
+                            <strong>Email:</strong> <a href="mailto:info@bounce2bounce.com" style="color: #319DFF; text-decoration: none;">info@bounce2bounce.com</a>
+                        </p>
+                        <p style="margin-bottom: 1rem;">
+                            <strong>Follow us:</strong>
+                        </p>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 0.5rem;">
+                                <a href="https://instagram.com/bounce2bounce_" target="_blank" style="color: #319DFF; text-decoration: none;">Instagram</a>
+                            </li>
+                            <li style="margin-bottom: 0.5rem;">
+                                <a href="https://twitter.com/bounce2bounce_" target="_blank" style="color: #319DFF; text-decoration: none;">Twitter</a>
+                            </li>
+                            <li style="margin-bottom: 0.5rem;">
+                                <a href="https://facebook.com/bounce2bounce_" target="_blank" style="color: #319DFF; text-decoration: none;">Facebook</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Fallback for all other pages: Return minimal noscript content
     return `
             <noscript>
                 <div style="max-width: 800px; margin: 100px auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff; text-align: center;">
@@ -1164,37 +1262,93 @@ async function reactHomepage(req, res) {
             ogDescription: metaTags.ogDescription
         });
 
-        // 🤖 BOT FIX: Fetch FAQ data server-side for bot-friendly rendering
-        let faqData = null;
+        // 🤖 BOT FIX: Fetch page-specific data server-side for bot-friendly rendering
+        let pageData = null;
+
         if (pageType === 'faq') {
+            // Fetch FAQ data
             try {
                 const dashboardApiUrl = env.NODE_ENV === 'production' ?
                     'https://admin.b2b.click/api/settings/faq' :
                     'http://localhost:3002/api/settings/faq';
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-                const faqResponse = await fetch(dashboardApiUrl, {
+                const response = await fetch(dashboardApiUrl, {
                     signal: controller.signal,
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
                 });
                 clearTimeout(timeoutId);
 
-                if (faqResponse.ok) {
-                    const faqApiResponse = await faqResponse.json();
-                    faqData = faqApiResponse.data || faqApiResponse;
-                    console.log('✅ FAQ data fetched for server-side rendering:', faqData.length, 'items');
+                if (response.ok) {
+                    const apiResponse = await response.json();
+                    pageData = apiResponse.data || apiResponse;
+                    console.log('✅ FAQ data fetched for SSR:', pageData.length, 'items');
                 } else {
-                    console.warn('⚠️ FAQ API responded with', faqResponse.status);
+                    console.warn('⚠️ FAQ API responded with', response.status);
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch FAQ data for SSR:', error.message);
             }
+        } else if (pageType === 'about') {
+            // Fetch About page content
+            try {
+                const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click/api/settings/about' :
+                    'http://localhost:3002/api/settings/about';
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(dashboardApiUrl, {
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const apiResponse = await response.json();
+                    pageData = apiResponse.data || apiResponse;
+                    console.log('✅ About page content fetched for SSR');
+                } else {
+                    console.warn('⚠️ About API responded with', response.status);
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to fetch About content for SSR:', error.message);
+            }
+        } else if (pageType === 'homepage') {
+            // Fetch homepage events data
+            try {
+                const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click/api/home-settings/homepage-data' :
+                    'http://localhost:3002/api/home-settings/homepage-data';
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(dashboardApiUrl, {
+                    signal: controller.signal,
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    const apiResponse = await response.json();
+                    // Extract events from the response
+                    const homepageEvents = apiResponse.homepageEvents || [];
+                    const featuredEvents = apiResponse.featuredEvents || [];
+                    const allEvents = [...featuredEvents, ...homepageEvents];
+                    pageData = { events: allEvents };
+                    console.log('✅ Homepage events fetched for SSR:', allEvents.length, 'events');
+                } else {
+                    console.warn('⚠️ Homepage API responded with', response.status);
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to fetch homepage events for SSR:', error.message);
+            }
         }
+        // Contact page doesn't need API data - static content only
 
         // FIXED: Only use Vite-built React homepage to prevent bundle conflicts
         const reactIndexPath = path.join(__dirname, '../../dist/index.html');
@@ -1305,11 +1459,11 @@ async function reactHomepage(req, res) {
             `${dynamicMetaTags}\n    <!-- Server-side meta tags injected -->\n</head>`
         );
 
-        // 🔧 CRITICAL FIX: Inject static content into #root div for Googlebot
+        // 🔧 CRITICAL FIX: Inject static content into #root div for bots (Googlebot, Instagram, etc.)
         // This prevents soft 404 errors by ensuring the page has visible content
         // before React hydrates on the client side
-        // 🤖 BOT FIX: Pass FAQ data for server-side rendering on FAQ page
-        const staticContent = generateStaticContent(pageType, metaTags, seoSettings, faqData);
+        // 🤖 BOT FIX: Pass page-specific data for server-side rendering on all pages
+        const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
         htmlContent = htmlContent.replace(
             /<div id="root"><\/div>/i,
             `<div id="root">${staticContent}</div>`
