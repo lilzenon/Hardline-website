@@ -106,11 +106,13 @@ console.log('📦 ROOT CONTAINER:', container);
 if (container) {
   console.log('✅ ROOT FOUND - MOUNTING REACT APP');
   try {
-    // 🔧 CRITICAL FIX: Clear server-side rendered content before React mounts
-    // This prevents hydration mismatch errors when bots see server-rendered HTML
-    // but React tries to hydrate with different content
-    console.log('🧹 Clearing server-side content before React mount...');
-    container.innerHTML = '';
+    // 🔧 CRITICAL FIX: Hide server-side rendered content when React loads
+    // This prevents hydration mismatch while preserving SEO content for bots
+    const ssrContent = document.getElementById('ssr-content');
+    if (ssrContent) {
+      console.log('🧹 Hiding server-side content...');
+      ssrContent.style.display = 'none';
+    }
 
     const root = createRoot(container);
     root.render(

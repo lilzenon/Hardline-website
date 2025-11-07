@@ -1459,14 +1459,13 @@ async function reactHomepage(req, res) {
             `${dynamicMetaTags}\n    <!-- Server-side meta tags injected -->\n</head>`
         );
 
-        // 🔧 CRITICAL FIX: Inject static content into #root div for bots (Googlebot, Instagram, etc.)
-        // This prevents soft 404 errors by ensuring the page has visible content
-        // before React hydrates on the client side
-        // 🤖 BOT FIX: Pass page-specific data for server-side rendering on all pages
+        // 🔧 CRITICAL FIX: Inject static content as SIBLING to #root div for bots
+        // This prevents React hydration mismatch errors while still providing content for bots
+        // React will hide this div when it loads, bots see it before JavaScript executes
         const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
         htmlContent = htmlContent.replace(
             /<div id="root"><\/div>/i,
-            `<div id="root">${staticContent}</div>`
+            `<div id="ssr-content" style="display: block;">${staticContent}</div><div id="root"></div>`
         );
 
         // Set caching headers
