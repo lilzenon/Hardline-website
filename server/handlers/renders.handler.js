@@ -1459,14 +1459,22 @@ async function reactHomepage(req, res) {
             `${dynamicMetaTags}\n    <!-- Server-side meta tags injected -->\n</head>`
         );
 
-        // 🔧 CRITICAL FIX: Inject static content as SIBLING to #root div for bots
-        // This prevents React hydration mismatch errors while still providing content for bots
-        // React will hide this div when it loads, bots see it before JavaScript executes
-        const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
-        htmlContent = htmlContent.replace(
-            /<div id="root"><\/div>/i,
-            `<div id="ssr-content" style="display: block;">${staticContent}</div><div id="root"></div>`
-        );
+        // 🔧 CRITICAL FIX: Inject static content ONLY for bots (not regular users)
+        // This prevents React hydration mismatch errors on mobile while still providing content for bots
+        // Detect bots by checking User-Agent header
+        const userAgent = req.headers['user-agent'] || '';
+        const isBot = /bot|crawler|spider|crawling|google|facebook|instagram|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(userAgent);
+
+        if (isBot) {
+            console.log('🤖 Bot detected, injecting SSR content:', userAgent.substring(0, 50));
+            const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
+            htmlContent = htmlContent.replace(
+                /<div id="root"><\/div>/i,
+                `<div id="ssr-content" style="display: block;">${staticContent}</div><div id="root"></div>`
+            );
+        } else {
+            console.log('👤 Regular user detected, skipping SSR content injection');
+        }
 
         // Set caching headers
         if (env.NODE_ENV === 'production') {
