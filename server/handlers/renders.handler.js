@@ -460,8 +460,49 @@ async function eventEdit(req, res) {
 // Helper function to generate static HTML content for Googlebot
 // UPDATED: Return empty content to prevent flash before React loads
 // React handles all rendering including the loading animation
-function generateStaticContent(pageType, metaTags, seoSettings) {
-    // Return ONLY noscript fallback - no visible content before React loads
+// EXCEPTION: FAQ page gets server-side rendered content for bots
+function generateStaticContent(pageType, metaTags, seoSettings, faqData = null) {
+    // FAQ Page: Inject server-side rendered FAQ content for bots
+    if (pageType === 'faq' && faqData && faqData.length > 0) {
+        const faqItemsHtml = faqData.map((faq, index) => `
+            <div style="margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+                <div style="padding: 1.25rem; background: rgba(22,22,22,0.8); cursor: pointer;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #ffffff;">
+                        ${faq.question || faq.q || ''}
+                    </h3>
+                </div>
+                <div style="padding: 1.25rem; background: rgba(22,22,22,0.5); color: #e5e5e5; line-height: 1.75;">
+                    ${faq.answer_html || faq.aHtml || faq.answer || faq.a || ''}
+                </div>
+            </div>
+        `).join('');
+
+        return `
+            <div style="min-height: 100vh; background: #000000; color: #ffffff; font-family: Inter, system-ui, sans-serif; padding: 2rem 1rem;">
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center;">
+                        ${metaTags.title || 'Frequently Asked Questions'}
+                    </h1>
+                    <p style="font-size: 1.125rem; color: #e5e5e5; margin-bottom: 2rem; text-align: center;">
+                        ${metaTags.description || 'Find answers to common questions about BOUNCE2BOUNCE events.'}
+                    </p>
+                    <div style="margin-top: 2rem;">
+                        ${faqItemsHtml}
+                    </div>
+                </div>
+            </div>
+            <noscript>
+                <div style="max-width: 800px; margin: 100px auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff; text-align: center;">
+                    <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">JavaScript Required</h1>
+                    <p style="font-size: 1.125rem; line-height: 1.75; color: #e5e5e5;">
+                        This page requires JavaScript to display the full interactive experience. Please enable JavaScript in your browser.
+                    </p>
+                </div>
+            </noscript>
+        `;
+    }
+
+    // All other pages: Return ONLY noscript fallback - no visible content before React loads
     // This prevents the flash of unstyled content while preserving SEO
     return `
             <noscript>
@@ -1123,6 +1164,38 @@ async function reactHomepage(req, res) {
             ogDescription: metaTags.ogDescription
         });
 
+        // 🤖 BOT FIX: Fetch FAQ data server-side for bot-friendly rendering
+        let faqData = null;
+        if (pageType === 'faq') {
+            try {
+                const dashboardApiUrl = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click/api/settings/faq' :
+                    'http://localhost:3002/api/settings/faq';
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+                const faqResponse = await fetch(dashboardApiUrl, {
+                    signal: controller.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                clearTimeout(timeoutId);
+
+                if (faqResponse.ok) {
+                    const faqApiResponse = await faqResponse.json();
+                    faqData = faqApiResponse.data || faqApiResponse;
+                    console.log('✅ FAQ data fetched for server-side rendering:', faqData.length, 'items');
+                } else {
+                    console.warn('⚠️ FAQ API responded with', faqResponse.status);
+                }
+            } catch (error) {
+                console.warn('⚠️ Failed to fetch FAQ data for SSR:', error.message);
+            }
+        }
+
         // FIXED: Only use Vite-built React homepage to prevent bundle conflicts
         const reactIndexPath = path.join(__dirname, '../../dist/index.html');
 
@@ -1235,7 +1308,8 @@ async function reactHomepage(req, res) {
         // 🔧 CRITICAL FIX: Inject static content into #root div for Googlebot
         // This prevents soft 404 errors by ensuring the page has visible content
         // before React hydrates on the client side
-        const staticContent = generateStaticContent(pageType, metaTags, seoSettings);
+        // 🤖 BOT FIX: Pass FAQ data for server-side rendering on FAQ page
+        const staticContent = generateStaticContent(pageType, metaTags, seoSettings, faqData);
         htmlContent = htmlContent.replace(
             /<div id="root"><\/div>/i,
             `<div id="root">${staticContent}</div>`
