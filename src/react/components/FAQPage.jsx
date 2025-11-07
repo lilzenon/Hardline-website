@@ -95,56 +95,35 @@ const FAQPage = () => {
     });
   });
 
-  // SEO: Page-specific tags + FAQPage structured data
+  // 🚀 SEO FIX: Removed hardcoded meta tags - now using SEO service from SEOContext
+  // The SEOProvider automatically detects the /faq page and applies dashboard settings
+  // via the seoService.js detectPageType() and getPageSpecificSEO() functions
   useEffect(() => {
     const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/faq`;
-    const title = 'FAQ - BOUNCE2BOUNCE';
-    const description = 'Answers to the most common questions about BOUNCE2BOUNCE events, tickets, and the platform.';
-    const ogImage = `${siteUrl}/images/og-image.png`;
-
-    const setMeta = (selectorAttr, name, content) => {
-      let el = document.head.querySelector(`meta[${selectorAttr}="${name}"]`);
-      if (!el) { el = document.createElement('meta'); el.setAttribute(selectorAttr, name); document.head.appendChild(el); }
-      el.setAttribute('content', content);
-    };
-    const setLink = (rel, href) => {
-      let link = document.head.querySelector(`link[rel="${rel}"]`);
-      if (!link) { link = document.createElement('link'); link.setAttribute('rel', rel); document.head.appendChild(link); }
-      link.setAttribute('href', href);
-    };
-
-    document.title = title;
-    setMeta('name', 'description', description);
-    setMeta('name', 'robots', 'index,follow');
-    setMeta('property', 'og:type', 'website');
-    setMeta('property', 'og:site_name', 'BOUNCE2BOUNCE');
-    setMeta('property', 'og:title', title);
-    setMeta('property', 'og:description', description);
-    setMeta('property', 'og:url', pageUrl);
-    setMeta('property', 'og:image', ogImage);
-    setMeta('name', 'twitter:card', 'summary_large_image');
-    setMeta('name', 'twitter:title', title);
-    setMeta('name', 'twitter:description', description);
-    setMeta('name', 'twitter:image', ogImage);
-    setMeta('name', 'twitter:site', '@bounce2bounce');
-    setLink('canonical', pageUrl);
 
     // JSON-LD FAQPage
+    // ✅ SEO FIX: Only inject schema when we have FAQ items to avoid "Missing field 'mainEntity'" error
     const ldId = 'ld-json-faq';
     const existing = document.getElementById(ldId);
     if (existing) existing.remove();
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = ldId;
-    // FAQ structured data - will be updated when faqItems are loaded
-    const faqs = faqItems.map(i => ({
-      '@type': 'Question',
-      'name': i.q,
-      'acceptedAnswer': { '@type': 'Answer', 'text': i.a }
-    }));
-    script.text = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': faqs });
-    document.head.appendChild(script);
+
+    if (faqItems && faqItems.length > 0) {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = ldId;
+      // FAQ structured data - will be updated when faqItems are loaded
+      const faqs = faqItems.map(i => ({
+        '@type': 'Question',
+        'name': i.qText || i.q, // Use plain text for schema (no HTML)
+        'acceptedAnswer': { '@type': 'Answer', 'text': i.a }
+      }));
+      script.text = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', 'mainEntity': faqs });
+      document.head.appendChild(script);
+      console.log('✅ FAQ Schema injected with', faqs.length, 'questions');
+    } else {
+      console.log('⏳ Waiting for FAQ items before injecting schema...');
+    }
 
     // Add BreadcrumbList JSON-LD for clear site hierarchy
     // ✅ SEO FIX: Use "Events" instead of "Home" as position 1 (Google Search Console requirement)

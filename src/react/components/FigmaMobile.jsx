@@ -11,6 +11,7 @@ import Footer from './Footer';
 
 import BrandedLoader from './BrandedLoader';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
+import EventStructuredData from './EventStructuredData';
 
 // REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
 
@@ -2064,6 +2065,12 @@ const FigmaMobile = () => {
 
   return (
     <>
+      {/* SEO: Inject JSON-LD structured data for all events */}
+      <EventStructuredData
+        events={[...featuredEvents, ...homepageEvents]}
+        domain="bounce2bounce.com"
+      />
+
       {/* 📱 MOBILE SCROLL PERFORMANCE FIX */}
       <link rel="stylesheet" href="/css/mobile-scroll-fix.css" />
 

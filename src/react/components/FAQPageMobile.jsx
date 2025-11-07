@@ -191,25 +191,9 @@ const FAQPageMobile = () => {
     window.location.href = path;
   };
 
-  // Inject JSON-LD structured data when FAQ items are available
-  useEffect(() => {
-    const ldId = 'ld-json-faq';
-    const existing = document.getElementById(ldId);
-    if (existing) existing.remove();
-
-    const fallback = [
-      { q: 'What is Bounce2Bounce?', a: 'Bounce2Bounce is a comprehensive event management platform that helps you create, manage, and promote events with ease.' },
-      { q: 'How do I create an event?', a: "Simply log into your dashboard, click 'Create Event', and follow our step-by-step wizard to set up your event details, ticketing, and promotion." },
-    ];
-    const items = (faqItems && faqItems.length) ? faqItems : fallback;
-
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.id = ldId;
-    const faqs = items.map(i => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } }));
-    script.text = JSON.stringify({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs });
-    document.head.appendChild(script);
-  }, [faqItems]);
+  // ✅ SEO FIX: Removed duplicate schema injection
+  // Schema is now handled by parent FAQPage.jsx component to avoid "Duplicate field 'FAQPage'" error
+  // The parent component injects schema once for both desktop and mobile views
 
   return (
     <div

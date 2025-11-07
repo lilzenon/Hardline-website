@@ -10,6 +10,7 @@ import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
 import Footer from './Footer';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
+import EventStructuredData from './EventStructuredData';
 
 
 // CSS for custom scrollbar styling
@@ -1552,6 +1553,12 @@ const FigmaDesktop = () => {
 
   return (
     <div className="homepage-root">
+      {/* SEO: Inject JSON-LD structured data for all events */}
+      <EventStructuredData
+        events={[...featuredEvents, ...homepageEvents]}
+        domain="bounce2bounce.com"
+      />
+
       <div className="homepage-content">
         <div
           className="desktop-container"
