@@ -2067,7 +2067,7 @@ const FigmaMobile = () => {
     <>
       {/* SEO: Inject JSON-LD structured data for all events */}
       <EventStructuredData
-        events={[...featuredEvents, ...homepageEvents]}
+        events={[...filteredFeaturedEvents, ...filteredHomepageEvents]}
         domain="bounce2bounce.com"
       />
 
