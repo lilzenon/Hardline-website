@@ -4,6 +4,7 @@ import HomePage from './components/HomePage';
 import AdminLogin from './components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './utils/security';
 import { SEOProvider, SEODebug, useSEO } from './contexts/SEOContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy load About, FAQ, and Maintenance pages for better performance
 const AboutPage = lazy(() => import('./components/AboutPage'));
@@ -105,8 +106,18 @@ console.log('📦 ROOT CONTAINER:', container);
 if (container) {
   console.log('✅ ROOT FOUND - MOUNTING REACT APP');
   try {
+    // 🔧 CRITICAL FIX: Clear server-side rendered content before React mounts
+    // This prevents hydration mismatch errors when bots see server-rendered HTML
+    // but React tries to hydrate with different content
+    console.log('🧹 Clearing server-side content before React mount...');
+    container.innerHTML = '';
+
     const root = createRoot(container);
-    root.render(React.createElement(App));
+    root.render(
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    );
     console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
   } catch (error) {
     console.error('❌ REACT MOUNTING ERROR:', error);

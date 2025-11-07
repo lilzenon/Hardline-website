@@ -194,6 +194,12 @@ const container = document.getElementById('root');
 
 if (container) {
   try {
+    // 🔧 CRITICAL FIX: Clear server-side rendered content before React mounts
+    // This prevents hydration mismatch errors when bots see server-rendered HTML
+    // but React tries to hydrate with different content
+    console.log('🧹 Clearing server-side content before React mount...');
+    container.innerHTML = '';
+
     const root = createRoot(container);
     root.render(
       <ErrorBoundary>
