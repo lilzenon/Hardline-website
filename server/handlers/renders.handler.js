@@ -489,19 +489,32 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
     `;
 
     // FAQ Page: Render FAQ questions and answers
-    if (pageType === 'faq' && pageData && pageData.length > 0) {
-        const faqItemsHtml = pageData.map((faq) => `
-            <div style="margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
-                <div style="padding: 1.25rem; background: rgba(22,22,22,0.8);">
-                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #ffffff;">
-                        ${faq.question || faq.q || ''}
-                    </h3>
+    if (pageType === 'faq') {
+        // ✅ SEO FIX: Always render FAQ page structure, even if no FAQ items loaded
+        // This prevents soft 404 errors when API is slow or fails
+        let faqItemsHtml = '';
+
+        if (pageData && pageData.length > 0) {
+            faqItemsHtml = pageData.map((faq) => `
+                <div style="margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
+                    <div style="padding: 1.25rem; background: rgba(22,22,22,0.8);">
+                        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #ffffff;">
+                            ${faq.question || faq.q || ''}
+                        </h3>
+                    </div>
+                    <div style="padding: 1.25rem; background: rgba(22,22,22,0.5); color: #e5e5e5; line-height: 1.75;">
+                        ${faq.answer_html || faq.aHtml || faq.answer || faq.a || ''}
+                    </div>
                 </div>
-                <div style="padding: 1.25rem; background: rgba(22,22,22,0.5); color: #e5e5e5; line-height: 1.75;">
-                    ${faq.answer_html || faq.aHtml || faq.answer || faq.a || ''}
+            `).join('');
+        } else {
+            // Fallback content if FAQ data is not available
+            faqItemsHtml = `
+                <div style="padding: 2rem; text-align: center; color: rgba(255,255,255,0.7);">
+                    <p>FAQ content is loading. Please enable JavaScript for the full interactive experience.</p>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }
 
         return `
             <div style="${baseStyles}">
@@ -1070,22 +1083,9 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
         }, null, 2);
 
     } else if (pageType === 'faq') {
-        // FAQ Page: Organization + FAQPage + BreadcrumbList
-        // Note: The actual FAQ questions will be added client-side by React
-        const faqPageSchema = {
-            "@type": "FAQPage",
-            "@id": `${baseUrl}/faq#webpage`,
-            "name": escapeHtml(metaTags.title),
-            "description": escapeHtml(metaTags.description),
-            "url": `${baseUrl}/faq`,
-            "isPartOf": {
-                "@id": `${baseUrl}/#website`
-            },
-            "breadcrumb": {
-                "@id": `${baseUrl}/faq#breadcrumb`
-            }
-        };
-
+        // ✅ SEO FIX: FAQ Page - Organization + BreadcrumbList only
+        // FAQPage schema with mainEntity is injected client-side by React (FAQPage.jsx)
+        // This prevents "Duplicate field 'FAQPage'" error in Google Search Console
         const breadcrumbSchema = {
             "@type": "BreadcrumbList",
             "@id": `${baseUrl}/faq#breadcrumb`,
@@ -1107,7 +1107,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
 
         return JSON.stringify({
             "@context": "https://schema.org",
-            "@graph": [organizationSchema, faqPageSchema, breadcrumbSchema]
+            "@graph": [organizationSchema, breadcrumbSchema]
         }, null, 2);
     }
 

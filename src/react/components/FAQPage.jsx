@@ -125,10 +125,8 @@ const FAQPage = () => {
       console.log('⏳ Waiting for FAQ items before injecting schema...');
     }
 
-    // Add BreadcrumbList JSON-LD for clear site hierarchy
-    // ✅ SEO FIX: Use "Events" instead of "Home" as position 1 (Google Search Console requirement)
-    // ✅ SEO FIX: Use canonical domain bounce2bounce.com instead of b2b.click
-    initializeBreadcrumbSchema('faq');
+    // ✅ SEO FIX: Breadcrumb schema is now injected server-side to prevent duplicates
+    // Server-side rendering in renders.handler.js includes BreadcrumbList in @graph
   }, [faqItems]); // Update structured data when FAQ items change
 
   // Reset document.title on unmount so homepage title restores correctly
