@@ -133,13 +133,18 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
 
     // Add offers/tickets if available
     if (ticketUrl && ticketUrl !== `https://${domain}`) {
+        // ✅ GOOGLE SEO FIX: Ensure validFrom is always present and properly formatted
+        // validFrom indicates when tickets become available for purchase
+        // Use ticket_sale_start_date if available, otherwise fall back to created_at or current date
+        const validFromDate = eventData.ticket_sale_start_date || eventData.created_at || new Date().toISOString();
+
         eventStructuredData.offers = {
             "@type": "Offer",
             "url": ticketUrl,
             "price": eventData.ticket_price_amount || "0",
             "priceCurrency": eventData.ticket_price_currency || "USD",
             "availability": `https://schema.org/${eventData.ticket_availability || 'InStock'}`,
-            "validFrom": eventData.created_at
+            "validFrom": validFromDate  // ✅ Always present with fallback values
         };
     }
 
