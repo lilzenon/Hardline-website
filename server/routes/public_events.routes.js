@@ -9,7 +9,7 @@ const query = require("../queries");
 const { renderReactPage } = require("../utils/ssr.utils");
 const { isBot, logBotAccess } = require("../utils/bot-detection.utils");
 const seoUtils = require("../utils/seo.utils");
-const EventLandingPage = require("../components/EventLandingPage");
+const EventLandingPage = require("../components/EventLandingPage.jsx");
 
 const router = Router();
 
