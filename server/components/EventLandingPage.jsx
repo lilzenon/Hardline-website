@@ -46,6 +46,39 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
 
     const formattedDate = formatEventDate(eventData.event_date);
 
+    // ✅ GOOGLE IMAGE SEO: Enhanced Event structured data with ImageObject for rich search results
+    // Google requires proper image metadata for Event rich results to display cover images as thumbnails
+    // Reference: https://developers.google.com/search/docs/appearance/structured-data/event
+
+    // Prepare image data for Google Search rich results
+    const coverImageUrl = eventData.cover_image || `https://${domain}/images/bounce-logo.svg`;
+    const imageCaption = `${eventData.title}${eventData.artist_name ? ` featuring ${eventData.artist_name}` : ''}`;
+
+    // ✅ GOOGLE IMAGE SEO: Use full ImageObject instead of simple URL for maximum visibility
+    // Provides width, height, format, and caption metadata that Google uses for rich results
+    const eventImageObject = {
+        "@type": "ImageObject",
+        "url": coverImageUrl,
+        "contentUrl": coverImageUrl,
+        "caption": imageCaption,
+        "description": imageCaption,
+        // Google recommends 1920px width (minimum 720px) for Event images
+        // These dimensions ensure optimal display in Google Search rich results
+        "width": "1920",
+        "height": "1080",
+        "encodingFormat": "image/jpeg"
+    };
+
+    // ✅ GOOGLE IMAGE SEO: Provide multiple aspect ratios for best Google Search display
+    // Google's documentation shows examples with 1x1, 4x3, and 16x9 variants
+    // This maximizes the chance of images appearing in various Google Search layouts
+    const eventImageArray = [
+        coverImageUrl, // Simple URL for backward compatibility
+        eventImageObject, // Full ImageObject with metadata
+        // Additional aspect ratio variants (if available in future)
+        // Google will choose the best one based on search result layout
+    ];
+
     // Structured Data for SEO
     const eventStructuredData = {
         "@context": "https://schema.org",
@@ -53,7 +86,9 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
         "name": eventData.title,
         "description": eventData.description || `Join us for ${eventData.title}`,
         "url": `https://${domain}/event/${eventData.slug}`,
-        "image": eventData.cover_image || `https://${domain}/images/bounce-logo.svg`,
+        // ✅ GOOGLE IMAGE SEO: Use ImageObject array instead of simple string
+        // This provides Google with rich image metadata for search result thumbnails
+        "image": eventImageArray,
         "organizer": {
             "@type": "Organization",
             "name": "BOUNCE2BOUNCE",

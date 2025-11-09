@@ -170,6 +170,11 @@ function generateEventMetaTags(event) {
     const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
     const fullUrl = `${baseUrl}${eventUrl}`;
 
+    // ✅ GOOGLE IMAGE SEO: Ensure proper image dimensions for social sharing and Google Search
+    // Google recommends minimum 1200x630px for social sharing (Open Graph)
+    // Event images should be 1920px wide (minimum 720px) for Google Search rich results
+    // Reference: https://developers.google.com/search/docs/appearance/structured-data/event
+
     // Generate comprehensive meta tags for all platforms
     return {
         // Basic meta tags
@@ -177,27 +182,30 @@ function generateEventMetaTags(event) {
         description: defaultDescription,
         keywords,
 
-        // Open Graph (Facebook, LinkedIn, WhatsApp)
+        // ✅ GOOGLE IMAGE SEO: Open Graph (Facebook, LinkedIn, WhatsApp, Google Search preview)
+        // These tags ensure event cover images appear in social shares AND Google Search previews
         'og:title': ogTitle,
         'og:description': ogDescription,
         'og:image': ogImage,
-        'og:image:width': '1200',
-        'og:image:height': '630',
-        'og:image:alt': `${ogTitle} - Event Image`,
+        'og:image:secure_url': ogImage, // HTTPS version for secure contexts
+        'og:image:width': '1920', // ✅ Updated to 1920px (Google's recommended width for Event images)
+        'og:image:height': '1080', // ✅ Maintains 16:9 aspect ratio (optimal for most displays)
+        'og:image:alt': `${ogTitle} - Event Cover Image`,
         'og:image:type': 'image/jpeg',
         'og:url': fullUrl,
-        'og:type': 'article',
+        'og:type': 'website', // ✅ Changed from 'article' to 'website' (more appropriate for event pages)
         'og:site_name': 'BOUNCE2BOUNCE',
         'og:locale': 'en_US',
 
-        // Twitter Card
+        // ✅ GOOGLE IMAGE SEO: Twitter Card (also used by Google for rich snippets)
+        // Twitter's large image card format is ideal for event cover images
         'twitter:card': 'summary_large_image',
         'twitter:site': '@bounce2bounce',
         'twitter:creator': '@bounce2bounce',
         'twitter:title': twitterTitle,
         'twitter:description': twitterDescription,
         'twitter:image': twitterImage,
-        'twitter:image:alt': `${twitterTitle} - Event Image`,
+        'twitter:image:alt': `${twitterTitle} - Event Cover Image`,
 
         // iOS Messages / Apple specific
         'apple-mobile-web-app-title': iosTitle,
