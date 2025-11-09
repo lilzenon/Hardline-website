@@ -6,6 +6,10 @@ const asyncHandler = require("../utils/asyncHandler");
 // Analytics middleware moved to dashboard repository
 const { CustomError } = require("../utils");
 const query = require("../queries");
+const { renderReactPage } = require("../utils/ssr.utils");
+const { isBot, logBotAccess } = require("../utils/bot-detection.utils");
+const seoUtils = require("../utils/seo.utils");
+const EventLandingPage = require("../components/EventLandingPage");
 
 const router = Router();
 
@@ -217,14 +221,19 @@ function validateRequest(req, res, next) {
     next();
 }
 
-// GET /event/:slug - SEO-compliant redirect to external ticket URL with Event structured data
+// GET /event/:slug - React SSR Event Landing Page with SEO-Optimized Redirect
+//
+// ✅ SEO FIX: Event landing pages now return HTTP 200 with full HTML content for bots
+// This allows Google to index the pages instead of treating them as redirects
 //
 // IMPLEMENTATION NOTES:
-// - Uses server-side HTML generation (NO Handlebars templates) for maximum performance
-// - Generates complete Event structured data (schema.org/Event) with all required/recommended fields
-// - Sends HTTP 200 response (NOT 301 redirect) to allow Google to crawl structured data
-// - JavaScript redirect after 150ms delay ensures Google bot can parse JSON-LD before redirect
-// - Dual address system: event_address for UI display, venue_* fields for Event schema SEO
+// - Uses React Server-Side Rendering for proper meta tags and structured data
+// - Detects bots/crawlers vs human visitors for optimal behavior
+// - Generates complete Event structured data (schema.org/Event) for SEO
+// - Sends HTTP 200 response (NOT 301/302 redirect) to allow crawlers to index the page
+// - Bots see full HTML content with "Get Tickets" button (NO redirect)
+// - Humans get 2-second JavaScript redirect to ticket platform
+// - Redirects to external_ticket_url → posh_embed_url → homepage (in that priority order)
 router.get(
     "/:slug",
     asyncHandler(async(req, res) => {
@@ -323,238 +332,31 @@ router.get(
             `);
         }
 
-        // 🎯 SEO-COMPLIANT REDIRECT: Generate Event structured data before redirecting
-        // This ensures Google can crawl and index the Event schema before the redirect occurs
+        // 🤖 Detect if request is from a bot/crawler
+        const isBotRequest = isBot(req);
+        logBotAccess(req, slug);
 
+        // 🎯 Determine redirect URL (priority: external_ticket_url → posh_embed_url → homepage)
         const redirectUrl = foundEvent.external_ticket_url || foundEvent.posh_embed_url || `https://${defaultDomain}`;
 
-        console.log(`✅ Event found: ${foundEvent.title}, redirecting to: ${redirectUrl}`);
+        console.log(`✅ Event found: ${foundEvent.title}, redirecting to: ${redirectUrl}, isBot: ${isBotRequest}`);
 
-        // Generate Event and Breadcrumb structured data
-        const eventSchema = generateEventSchema(foundEvent, defaultDomain);
-        const breadcrumbSchema = generateBreadcrumbSchema(foundEvent, defaultDomain);
+        // 🎨 Generate SEO meta tags using existing seoUtils
+        const metaTags = seoUtils.generateEventMetaTags(foundEvent);
 
-        // Escape values for safe HTML insertion
-        const safeTitle = escapeHtml(foundEvent.title);
-        const safeArtistName = escapeHtml(foundEvent.artist_name);
-        const safeDescription = escapeHtml(foundEvent.description || `Join us for ${foundEvent.title}${foundEvent.artist_name ? ` featuring ${foundEvent.artist_name}` : ''}`);
-        const safeCoverImage = escapeHtml(foundEvent.cover_image);
-        const safeRedirectUrl = escapeHtml(redirectUrl);
-
-        // Generate complete HTML response with structured data and JavaScript redirect
-        // Using template literals for clean, maintainable HTML generation
-        // 🎨 GLASSMORPHISM DESIGN: Matches main React homepage styling
-        const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${safeTitle} - BOUNCE2BOUNCE</title>
-
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="${safeDescription}">
-    <meta name="robots" content="index, follow, max-image-preview:large">
-    <link rel="canonical" href="https://${defaultDomain}/event/${foundEvent.slug}">
-
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="${safeTitle}${safeArtistName ? ` - ${safeArtistName}` : ''} | BOUNCE2BOUNCE">
-    <meta property="og:description" content="${safeDescription}">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://${defaultDomain}/event/${foundEvent.slug}">
-    <meta property="og:site_name" content="BOUNCE2BOUNCE">
-    ${safeCoverImage ? `<meta property="og:image" content="${safeCoverImage}">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="${safeTitle} event cover image">` : ''}
-
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@bounce2bounce">
-    <meta name="twitter:title" content="${safeTitle}${safeArtistName ? ` - ${safeArtistName}` : ''}">
-    <meta name="twitter:description" content="${safeDescription}">
-    ${safeCoverImage ? `<meta name="twitter:image" content="${safeCoverImage}">
-    <meta name="twitter:image:alt" content="${safeTitle} event cover image">` : ''}
-
-    <!-- Preload critical resources for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    ${safeCoverImage ? `<link rel="preload" as="image" href="${safeCoverImage}">` : ''}
-
-    <!-- 🎯 GOOGLE EVENT STRUCTURED DATA (schema.org/Event) -->
-    <script type="application/ld+json">
-${JSON.stringify(eventSchema, null, 2)}
-    </script>
-
-    <!-- Breadcrumb Structured Data -->
-    <script type="application/ld+json">
-${JSON.stringify(breadcrumbSchema, null, 2)}
-    </script>
-
-    <!-- Inline critical CSS for performance (eliminates render-blocking) -->
-    <style>
-        /* 🎨 GLASSMORPHISM DESIGN SYSTEM - Matches React Homepage */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: #000000;
-            color: #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 1rem;
-            overflow-x: hidden;
-        }
-
-        .redirect-container {
-            text-align: center;
-            max-width: 600px;
-            width: 100%;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        /* Event Cover Image with Glassmorphism */
-        .event-cover {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto 2rem;
-            border-radius: 16px;
-            overflow: hidden;
-            background: rgba(22, 22, 22, 0.8);
-            border: 1px solid rgba(56, 56, 56, 0.3);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .event-cover img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-        }
-
-        /* Glassmorphism Card for Content */
-        .content-card {
-            background: rgba(22, 22, 22, 0.8);
-            border: 1px solid rgba(56, 56, 56, 0.3);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            width: 48px;
-            height: 48px;
-            margin: 0 auto 1.5rem;
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #319DFF;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Typography */
-        .event-title {
-            font-size: clamp(1.5rem, 4vw, 2rem);
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-            color: #FFFFFF;
-        }
-
-        .artist-name {
-            font-size: clamp(1rem, 3vw, 1.25rem);
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 1rem;
-        }
-
-        .redirect-message {
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
-        }
-
-        /* Manual Link Button with Glassmorphism */
-        .manual-link {
-            display: inline-block;
-            margin-top: 1rem;
-            padding: 0.875rem 2rem;
-            background: rgba(49, 157, 255, 0.2);
-            border: 1px solid rgba(49, 157, 255, 0.4);
-            color: #319DFF;
-            text-decoration: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.9375rem;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-
-        .manual-link:hover {
-            background: rgba(49, 157, 255, 0.3);
-            border-color: rgba(49, 157, 255, 0.6);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(49, 157, 255, 0.3);
-        }
-
-        .manual-link:active {
-            transform: translateY(0);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 640px) {
-            .content-card { padding: 1.5rem; }
-            .event-cover { margin-bottom: 1.5rem; }
-        }
-    </style>
-</head>
-<body>
-    <div class="redirect-container">
-        ${safeCoverImage ? `
-        <!-- Event Cover Image -->
-        <div class="event-cover">
-            <img src="${safeCoverImage}" alt="${safeTitle} event cover" loading="eager" decoding="async">
-        </div>
-        ` : ''}
-
-        <!-- Content Card with Glassmorphism -->
-        <div class="content-card">
-            <div class="spinner"></div>
-            <h1 class="event-title">${safeTitle}</h1>
-            ${safeArtistName ? `<p class="artist-name">Featuring ${safeArtistName}</p>` : ''}
-            <p class="redirect-message">Redirecting to tickets...</p>
-            <a href="${safeRedirectUrl}" class="manual-link">Click here if not redirected</a>
-        </div>
-    </div>
-
-    <!-- JavaScript redirect after 150ms (allows Google bot to parse JSON-LD) -->
-    <script>
-        setTimeout(function() {
-            window.location.href = '${safeRedirectUrl}';
-        }, 150);
-    </script>
-</body>
-</html>`;
+        // 🚀 Render React SSR Event Landing Page
+        const html = renderReactPage(EventLandingPage, {
+            event: foundEvent,
+            metaTags,
+            redirectUrl,
+            isBot: isBotRequest,
+            defaultDomain
+        }, {
+            fullDocument: true  // Component returns complete HTML document
+        });
 
         // Send HTTP 200 response with complete HTML (NOT 301 redirect)
-        // This allows Google to crawl the structured data before the JavaScript redirect occurs
+        // This allows crawlers to read meta tags before following redirect
         res.status(200).set('Content-Type', 'text/html').send(html);
     })
 );
