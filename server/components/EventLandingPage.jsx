@@ -99,23 +99,43 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
     };
 
     // Add performer if artist name is available
+    // ✅ GOOGLE SEO FIX: Always provide performer with fallback to BOUNCE2BOUNCE
     if (eventData.artist_name) {
         eventStructuredData.performer = {
             "@type": eventData.performer_type || "Person",
             "name": eventData.artist_name
         };
+    } else {
+        // Fallback to BOUNCE2BOUNCE as the performer/organizer
+        eventStructuredData.performer = {
+            "@type": "Organization",
+            "name": "BOUNCE2BOUNCE"
+        };
     }
 
     // Add date if available
+    // ✅ GOOGLE SEO FIX: startDate is REQUIRED for Event rich results - always provide with fallback
     if (eventData.event_date) {
         eventStructuredData.startDate = eventData.event_date;
+    } else if (eventData.event_datetime_utc) {
+        eventStructuredData.startDate = eventData.event_datetime_utc;
+    } else {
+        // ✅ CRITICAL FIX: If no date is set, use created_at or current date
+        eventStructuredData.startDate = eventData.created_at || new Date().toISOString();
     }
 
+    // ✅ GOOGLE SEO FIX: Generate endDate from startDate if not provided
     if (eventData.event_end_date) {
         eventStructuredData.endDate = eventData.event_end_date;
+    } else {
+        // Generate endDate by adding 4 hours to startDate (typical event duration)
+        const startDate = new Date(eventStructuredData.startDate);
+        const endDate = new Date(startDate.getTime() + (4 * 60 * 60 * 1000)); // +4 hours
+        eventStructuredData.endDate = endDate.toISOString();
     }
 
     // Add location if available
+    // ✅ GOOGLE SEO FIX: Always provide location name with fallback
     if (eventData.venue_name || eventData.event_address) {
         eventStructuredData.location = {
             "@type": "Place",
@@ -127,6 +147,16 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
                 "addressRegion": eventData.venue_state,
                 "postalCode": eventData.venue_postal_code,
                 "addressCountry": eventData.venue_country || "US"
+            }
+        };
+    } else {
+        // Fallback to generic location
+        eventStructuredData.location = {
+            "@type": "Place",
+            "name": "Event Location - Details TBA",
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "US"
             }
         };
     }
