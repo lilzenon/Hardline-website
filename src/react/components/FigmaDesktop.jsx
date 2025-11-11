@@ -2466,6 +2466,7 @@ const FigmaDesktop = () => {
                       isolation: 'isolate',
                       transform: 'translateZ(0)',
                       willChange: 'transform',
+                      contain: 'layout style paint', // 🚀 PERFORMANCE: CSS containment for optimized rendering
                       zIndex: 1,
                       clear: 'both'
                     }}
@@ -2509,6 +2510,8 @@ const FigmaDesktop = () => {
                         <img
                           crossOrigin="anonymous"
                           referrerPolicy="no-referrer"
+                          width={Math.max(79, Math.round(105 * cardScaleFactor))}
+                          height={Math.max(79, Math.round(105 * cardScaleFactor))}
                           src={(() => {
                             const imageUrl = card.coverImage || card.image_url;
                             if (!imageUrl || imageUrl.startsWith('data:')) {
@@ -2528,6 +2531,7 @@ const FigmaDesktop = () => {
                           alt={card.image_alt_text || `${card.title} event cover`}
                           title={card.image_title || card.title}
                           loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             // Only log in development to reduce console spam
                             if (process.env.NODE_ENV === 'development') {
@@ -2543,6 +2547,7 @@ const FigmaDesktop = () => {
                               console.log('✅ Event image loaded:', card.title);
                             }
                             e.target.style.backgroundColor = 'transparent';
+                            e.target.style.opacity = '1';
                           }}
                           style={{
                             width: '100%', // Fill container
@@ -2550,7 +2555,8 @@ const FigmaDesktop = () => {
                             borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Match container border radius
                             objectFit: 'cover',
                             backgroundColor: '#2a2a2a',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            opacity: '0',
+                            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             transform: 'scale(1)',
                             boxShadow: 'none',
                             pointerEvents: 'none'
@@ -3391,6 +3397,7 @@ const FigmaDesktop = () => {
                   isolation: 'isolate',
                   transform: 'translateZ(0)',
                   willChange: 'transform',
+                  contain: 'layout style paint', // 🚀 PERFORMANCE: CSS containment for optimized rendering
                   zIndex: 1, // Ensure proper stacking
                   clear: 'both' // Prevent float issues
                 }}
@@ -3434,6 +3441,8 @@ const FigmaDesktop = () => {
                     <img
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
+                      width="120"
+                      height="120"
                       src={(() => {
                         const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
                         console.log(`🖼️ DESKTOP: Loading homepage image for "${card.title}":`, {
@@ -3451,6 +3460,7 @@ const FigmaDesktop = () => {
                       alt={card.image_alt_text || `${card.title} event cover`}
                       title={card.image_title || card.title}
                       loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         // Only log in development to reduce console spam
                         if (process.env.NODE_ENV === 'development') {
@@ -3476,6 +3486,7 @@ const FigmaDesktop = () => {
                       onLoad={(e) => {
                         console.log('✅ DESKTOP: Homepage event image loaded successfully:', card.title, e.target.src);
                         e.target.style.backgroundColor = 'transparent';
+                        e.target.style.opacity = '1';
                       }}
                       style={{
                         position: 'absolute',
@@ -3486,7 +3497,8 @@ const FigmaDesktop = () => {
                         borderRadius: '17px',
                         objectFit: 'cover',
                         backgroundColor: '#2a2a2a',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        opacity: '0',
+                        transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         transform: 'scale(1)',
                         boxShadow: 'none',
                         pointerEvents: 'none'

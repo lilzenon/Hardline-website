@@ -3773,6 +3773,7 @@ const FigmaMobile = () => {
                       isolation: 'isolate',
                       transform: 'translateZ(0)',
                       willChange: 'transform, opacity',
+                      contain: 'layout style paint', // 🚀 PERFORMANCE: CSS containment for optimized rendering
                       zIndex: 1, // Ensure proper stacking
                       clear: 'both', // Prevent float issues
                       // No transition delay for cleaner expand/collapse animation
@@ -3840,6 +3841,8 @@ const FigmaMobile = () => {
                         <img
                           crossOrigin="anonymous"
                           referrerPolicy="no-referrer"
+                          width="120"
+                          height="120"
                           src={(() => {
                             const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
                             console.log(`🖼️ Loading homepage image for "${card.title}":`, {
@@ -3856,6 +3859,7 @@ const FigmaMobile = () => {
                           alt={card.image_alt_text || `${card.title} event cover`}
                           title={card.image_title || card.title}
                           loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             // 🚨 CRITICAL FIX: Enhanced circuit breaker to prevent infinite loops
                             const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
@@ -3925,6 +3929,7 @@ const FigmaMobile = () => {
                             delete e.target.dataset.fallbackAttempt;
                             console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);
                             e.target.style.backgroundColor = 'transparent';
+                            e.target.style.opacity = '1';
                           }}
                           style={{
                             position: 'absolute',
@@ -3935,7 +3940,8 @@ const FigmaMobile = () => {
                             borderRadius: '17px',
                             objectFit: 'cover',
                             backgroundColor: '#2a2a2a',
-                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            opacity: '0',
+                            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             transform: 'scale(1)',
                             boxShadow: 'none',
                             pointerEvents: 'none'
