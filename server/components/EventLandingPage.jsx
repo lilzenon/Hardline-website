@@ -1,430 +1,294 @@
 const React = require('react');
 
 /**
- * EventLandingPage - Simple SEO-Optimized Redirect Page
- *
- * Purpose:
- * - Serve proper meta tags to social media crawlers (Facebook, Twitter, LinkedIn)
- * - Redirect users to the actual ticket platform (external_ticket_url or posh_embed_url)
- * - Maintain BOUNCE2BOUNCE glassmorphism design aesthetic
- *
- * Features:
- * - Server-side rendered meta tags for SEO
- * - Bot detection for immediate redirect (crawlers read meta tags first)
- * - Brief preview for human visitors before redirect
- * - Fallback to homepage if no ticket URL is configured
- * - Simple, maintainable code (<500 lines)
+ * EventLandingPage - Simple React SSR component for event redirect pages
+ * 
+ * This component renders a complete HTML document with:
+ * - SEO meta tags for social media crawlers (Open Graph, Twitter Cards)
+ * - Event structured data (schema.org/Event) for Google
+ * - Glassmorphism design matching BOUNCE2BOUNCE homepage
+ * - Smart redirect logic (immediate for bots, 2s delay for humans)
+ * - Event cover image, title, artist, date, location display
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.event - Event object from database
+ * @param {Object} props.metaTags - SEO meta tags object
+ * @param {string} props.redirectUrl - URL to redirect to (ticket platform)
+ * @param {boolean} props.isBot - Whether request is from a bot/crawler
+ * @param {string} props.defaultDomain - Default domain (e.g., 'bounce2bounce.com')
+ * @returns {React.Element} Complete HTML document
  */
-
 function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }) {
-    // Event data with defaults
-    const eventData = event || {};
-    const domain = defaultDomain || 'b2b.click';
-    const ticketUrl = redirectUrl || `https://${domain}`;
-
-    // ✅ SEO FIX: Redirect timing - 2 seconds for humans, NO redirect for bots
-    // Bots see full HTML content (HTTP 200) for indexing, humans get JavaScript redirect
-    const redirectDelay = 2000; // Only used for humans (bots don't get redirected)
-
+    // Redirect timing: immediate for bots, 2 seconds for humans
+    const redirectDelay = isBot ? 0 : 2000;
+    
     // Format event date for display
-    const formatEventDate = (dateString) => {
-        if (!dateString) return null;
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit'
-            });
-        } catch (e) {
-            return null;
-        }
-    };
-
-    const formattedDate = formatEventDate(eventData.event_date);
-
-    // ✅ GOOGLE IMAGE SEO: Enhanced Event structured data with ImageObject for rich search results
-    // Google requires proper image metadata for Event rich results to display cover images as thumbnails
-    // Reference: https://developers.google.com/search/docs/appearance/structured-data/event
-
-    // Prepare image data for Google Search rich results
-    const coverImageUrl = eventData.cover_image || `https://${domain}/images/bounce-logo.svg`;
-    const imageCaption = `${eventData.title}${eventData.artist_name ? ` featuring ${eventData.artist_name}` : ''}`;
-
-    // ✅ GOOGLE IMAGE SEO: Use full ImageObject instead of simple URL for maximum visibility
-    // Provides width, height, format, and caption metadata that Google uses for rich results
-    const eventImageObject = {
-        "@type": "ImageObject",
-        "url": coverImageUrl,
-        "contentUrl": coverImageUrl,
-        "caption": imageCaption,
-        "description": imageCaption,
-        // Google recommends 1920px width (minimum 720px) for Event images
-        // These dimensions ensure optimal display in Google Search rich results
-        "width": "1920",
-        "height": "1080",
-        "encodingFormat": "image/jpeg"
-    };
-
-    // ✅ GOOGLE IMAGE SEO: Provide multiple aspect ratios for best Google Search display
-    // Google's documentation shows examples with 1x1, 4x3, and 16x9 variants
-    // This maximizes the chance of images appearing in various Google Search layouts
-    const eventImageArray = [
-        coverImageUrl, // Simple URL for backward compatibility
-        eventImageObject, // Full ImageObject with metadata
-        // Additional aspect ratio variants (if available in future)
-        // Google will choose the best one based on search result layout
-    ];
-
-    // Structured Data for SEO
-    const eventStructuredData = {
+    const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    }) : '';
+    
+    // Build structured data for SEO
+    const structuredData = {
         "@context": "https://schema.org",
         "@type": "Event",
-        "name": eventData.title,
-        "description": eventData.description || `Join us for ${eventData.title}`,
-        "url": `https://${domain}/event/${eventData.slug}`,
-        // ✅ GOOGLE IMAGE SEO: Use ImageObject array instead of simple string
-        // This provides Google with rich image metadata for search result thumbnails
-        "image": eventImageArray,
+        "name": event.title,
+        "description": event.description || `Join us for ${event.title}${event.artist_name ? ` featuring ${event.artist_name}` : ''}`,
+        "url": `https://${defaultDomain}/event/${event.slug}`,
+        "image": event.cover_image ? [event.cover_image] : [],
+        "startDate": event.event_datetime_utc || event.event_date,
+        "eventStatus": `https://schema.org/${event.event_status || 'EventScheduled'}`,
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "location": {
+            "@type": "Place",
+            "name": event.venue_name || event.event_address || "TBA",
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": event.venue_street_address || "",
+                "addressLocality": event.venue_city || "",
+                "addressRegion": event.venue_state || "",
+                "postalCode": event.venue_postal_code || "",
+                "addressCountry": event.venue_country || "US"
+            }
+        },
         "organizer": {
             "@type": "Organization",
             "name": "BOUNCE2BOUNCE",
-            "url": `https://${domain}`
-        },
-        "eventStatus": eventData.event_status || "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+            "url": `https://${defaultDomain}`
+        }
     };
 
-    // Add performer if artist name is available
-    // ✅ GOOGLE SEO FIX: Always provide performer with fallback to BOUNCE2BOUNCE
-    if (eventData.artist_name) {
-        eventStructuredData.performer = {
-            "@type": eventData.performer_type || "Person",
-            "name": eventData.artist_name
+    // Add endDate (required by Google)
+    if (event.event_end_date) {
+        structuredData.endDate = event.event_end_date;
+    } else {
+        // Fallback: add 4 hours to start date
+        const startDate = new Date(event.event_datetime_utc || event.event_date);
+        const endDate = new Date(startDate.getTime() + (4 * 60 * 60 * 1000));
+        structuredData.endDate = endDate.toISOString();
+    }
+
+    // Add performer (required by Google)
+    if (event.artist_name) {
+        structuredData.performer = {
+            "@type": event.performer_type || "Person",
+            "name": event.artist_name
         };
     } else {
-        // Fallback to BOUNCE2BOUNCE as the performer/organizer
-        eventStructuredData.performer = {
+        // Fallback: use BOUNCE2BOUNCE as performer
+        structuredData.performer = {
             "@type": "Organization",
             "name": "BOUNCE2BOUNCE"
         };
     }
 
-    // Add date if available
-    // ✅ GOOGLE SEO FIX: startDate is REQUIRED for Event rich results - always provide with fallback
-    if (eventData.event_date) {
-        eventStructuredData.startDate = eventData.event_date;
-    } else if (eventData.event_datetime_utc) {
-        eventStructuredData.startDate = eventData.event_datetime_utc;
-    } else {
-        // ✅ CRITICAL FIX: If no date is set, use created_at or current date
-        eventStructuredData.startDate = eventData.created_at || new Date().toISOString();
-    }
+    // Add offers with validFrom (required by Google)
+    if (redirectUrl && (event.external_ticket_url || event.posh_embed_url)) {
+        const validFromDate = event.ticket_sale_start_date || event.created_at || new Date().toISOString();
 
-    // ✅ GOOGLE SEO FIX: Generate endDate from startDate if not provided
-    if (eventData.event_end_date) {
-        eventStructuredData.endDate = eventData.event_end_date;
-    } else {
-        // Generate endDate by adding 4 hours to startDate (typical event duration)
-        const startDate = new Date(eventStructuredData.startDate);
-        const endDate = new Date(startDate.getTime() + (4 * 60 * 60 * 1000)); // +4 hours
-        eventStructuredData.endDate = endDate.toISOString();
-    }
-
-    // Add location if available
-    // ✅ GOOGLE SEO FIX: Always provide location name with fallback
-    if (eventData.venue_name || eventData.event_address) {
-        eventStructuredData.location = {
-            "@type": "Place",
-            "name": eventData.venue_name || eventData.event_address,
-            "address": {
-                "@type": "PostalAddress",
-                "streetAddress": eventData.venue_street_address || eventData.event_address,
-                "addressLocality": eventData.venue_city,
-                "addressRegion": eventData.venue_state,
-                "postalCode": eventData.venue_postal_code,
-                "addressCountry": eventData.venue_country || "US"
-            }
-        };
-    } else {
-        // Fallback to generic location
-        eventStructuredData.location = {
-            "@type": "Place",
-            "name": "Event Location - Details TBA",
-            "address": {
-                "@type": "PostalAddress",
-                "addressCountry": "US"
-            }
-        };
-    }
-
-    // Add offers/tickets if available
-    if (ticketUrl && ticketUrl !== `https://${domain}`) {
-        // ✅ GOOGLE SEO FIX: Ensure validFrom is always present and properly formatted
-        // validFrom indicates when tickets become available for purchase
-        // Use ticket_sale_start_date if available, otherwise fall back to created_at or current date
-        const validFromDate = eventData.ticket_sale_start_date || eventData.created_at || new Date().toISOString();
-
-        eventStructuredData.offers = {
+        structuredData.offers = {
             "@type": "Offer",
-            "url": ticketUrl,
-            "price": eventData.ticket_price_amount || "0",
-            "priceCurrency": eventData.ticket_price_currency || "USD",
-            "availability": `https://schema.org/${eventData.ticket_availability || 'InStock'}`,
-            "validFrom": validFromDate  // ✅ Always present with fallback values
+            "url": redirectUrl,
+            "price": event.ticket_price_amount ? event.ticket_price_amount.toString() : "0",
+            "priceCurrency": event.ticket_price_currency || "USD",
+            "availability": `https://schema.org/${event.ticket_availability || 'InStock'}`,
+            "validFrom": validFromDate
         };
     }
-
+    
+    // JavaScript redirect code (only for humans)
+    const redirectScript = `
+        setTimeout(function() {
+            window.location.href = '${redirectUrl.replace(/'/g, "\\'")}';
+        }, ${redirectDelay});
+    `;
+    
     // Inline CSS for glassmorphism design
     const styles = `
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #161616;
-            color: #ffffff;
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000000;
+            color: #FFFFFF;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            min-height: 100vh;
+            padding: 1rem;
         }
-
-        .event-redirect-container {
+        
+        .container {
+            text-align: center;
             max-width: 600px;
             width: 100%;
+            animation: fadeIn 0.3s ease-out;
         }
-
-        .event-card {
+        
+        .event-cover {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+            border-radius: 16px;
+            overflow: hidden;
             background: rgba(22, 22, 22, 0.8);
             border: 1px solid rgba(56, 56, 56, 0.3);
-            border-radius: 16px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            padding: 32px;
-            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
-
-        .event-cover-image {
+        
+        .event-cover img {
             width: 100%;
-            max-height: 400px;
-            object-fit: cover;
-            border-radius: 12px;
-            margin-bottom: 24px;
+            height: auto;
+            display: block;
         }
-
-        .event-title {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #ffffff;
-            line-height: 1.2;
+        
+        .card {
+            background: rgba(22, 22, 22, 0.8);
+            border: 1px solid rgba(56, 56, 56, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
-
-        .event-artist {
-            font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .event-date,
-        .event-location {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .event-description {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 24px;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .redirect-message {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-top: 24px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-        }
-
+        
         .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #ffffff;
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1.5rem;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #319DFF;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
         }
-
+        
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        @media (max-width: 768px) {
-            .event-card {
-                padding: 24px;
-            }
-
-            .event-title {
-                font-size: 24px;
-            }
-
-            .event-artist {
-                font-size: 18px;
-            }
+        
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+        
+        .artist {
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1rem;
+        }
+        
+        .message {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 1.5rem;
+        }
+        
+        .link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.875rem 2rem;
+            background: rgba(49, 157, 255, 0.2);
+            border: 1px solid rgba(49, 157, 255, 0.4);
+            color: #319DFF;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .link:hover {
+            background: rgba(49, 157, 255, 0.3);
+            border-color: rgba(49, 157, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 640px) {
+            .card { padding: 1.5rem; }
+            .event-cover { margin-bottom: 1.5rem; }
         }
     `;
-
-    // Redirect script for client-side
-    const redirectScript = `
-        // Redirect to ticket platform after delay
-        setTimeout(function() {
-            window.location.href = '${ticketUrl}';
-        }, ${redirectDelay});
-    `;
-
+    
+    // Return complete HTML document
     return React.createElement('html', { lang: 'en' }, [
-        // Head section with meta tags
         React.createElement('head', { key: 'head' }, [
-            React.createElement('meta', { key: 'charset', charSet: 'utf-8' }),
-            React.createElement('meta', {
-                key: 'viewport',
-                name: 'viewport',
-                content: 'width=device-width, initial-scale=1, shrink-to-fit=no'
-            }),
+            React.createElement('meta', { key: 'charset', charSet: 'UTF-8' }),
+            React.createElement('meta', { key: 'viewport', name: 'viewport', content: 'width=device-width, initial-scale=1.0' }),
+            React.createElement('title', { key: 'title' }, `${event.title} - BOUNCE2BOUNCE`),
 
-            // ✅ SEO FIX: NO meta refresh for bots - Google treats meta refresh as redirect
-            // Bots should see full HTML content (HTTP 200) without any redirect
-            // Only humans get JavaScript redirect (client-side, doesn't affect indexing)
+            // CRITICAL: NO meta refresh for bots - Google treats meta refresh as redirect
+            // Bots see full HTML content (HTTP 200), humans get JavaScript redirect
 
+            // SEO meta tags
+            React.createElement('meta', { key: 'description', name: 'description', content: event.description || `Join us for ${event.title}` }),
+            React.createElement('meta', { key: 'robots', name: 'robots', content: 'index, follow' }),
+            
+            // Open Graph tags
+            metaTags && metaTags.openGraph && Object.entries(metaTags.openGraph).map(([key, value]) =>
+                React.createElement('meta', { key: `og-${key}`, property: `og:${key}`, content: value })
+            ),
+            
+            // Twitter Card tags
+            metaTags && metaTags.twitter && Object.entries(metaTags.twitter).map(([key, value]) =>
+                React.createElement('meta', { key: `twitter-${key}`, name: `twitter:${key}`, content: value })
+            ),
+            
             // Fonts
-            React.createElement('link', {
-                key: 'font-preconnect',
-                rel: 'preconnect',
-                href: 'https://fonts.googleapis.com'
-            }),
-            React.createElement('link', {
-                key: 'font-preconnect-gstatic',
-                rel: 'preconnect',
-                href: 'https://fonts.gstatic.com',
-                crossOrigin: 'anonymous'
-            }),
-            React.createElement('link', {
-                key: 'font-inter',
-                rel: 'stylesheet',
-                href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap'
-            }),
-
-            // Structured Data
+            React.createElement('link', { key: 'font-preconnect', rel: 'preconnect', href: 'https://fonts.googleapis.com' }),
+            React.createElement('link', { key: 'font-gstatic', rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' }),
+            React.createElement('link', { key: 'font-inter', rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' }),
+            
+            // Structured data
             React.createElement('script', {
                 key: 'structured-data',
                 type: 'application/ld+json',
-                dangerouslySetInnerHTML: { __html: JSON.stringify(eventStructuredData) }
+                dangerouslySetInnerHTML: { __html: JSON.stringify(structuredData, null, 2) }
             }),
-
+            
             // Inline CSS
-            React.createElement('style', {
-                key: 'styles',
-                dangerouslySetInnerHTML: { __html: styles }
-            })
+            React.createElement('style', { key: 'styles', dangerouslySetInnerHTML: { __html: styles } })
         ]),
-
-        // Body section
+        
         React.createElement('body', { key: 'body' }, [
-            React.createElement('div', {
-                key: 'container',
-                className: 'event-redirect-container'
-            }, React.createElement('div', {
-                className: 'event-card'
-            }, [
-                // Cover Image
-                eventData.cover_image && React.createElement('img', {
-                    key: 'cover-image',
-                    src: eventData.cover_image,
-                    alt: eventData.title,
-                    className: 'event-cover-image'
-                }),
-
-                // Event Title
-                React.createElement('h1', {
-                    key: 'title',
-                    className: 'event-title'
-                }, eventData.title),
-
-                // Artist Name
-                eventData.artist_name && React.createElement('div', {
-                    key: 'artist',
-                    className: 'event-artist'
-                }, eventData.artist_name),
-
-                // Event Date
-                formattedDate && React.createElement('div', {
-                    key: 'date',
-                    className: 'event-date'
-                }, formattedDate),
-
-                // Event Location
-                (eventData.venue_name || eventData.event_address) && React.createElement('div', {
-                    key: 'location',
-                    className: 'event-location'
-                }, eventData.venue_name || eventData.event_address),
-
-                // Event Description
-                eventData.description && React.createElement('div', {
-                    key: 'description',
-                    className: 'event-description'
-                }, eventData.description),
-
-                // Redirect Message (only for humans)
-                !isBot && React.createElement('div', {
-                    key: 'redirect-message',
-                    className: 'redirect-message'
-                }, [
-                    React.createElement('div', {
-                        key: 'spinner',
-                        className: 'spinner'
-                    }),
-                    'Redirecting to tickets...'
-                ]),
-
-                // Get Tickets Button (only for bots - provides clickable link for indexing)
-                isBot && React.createElement('a', {
-                    key: 'get-tickets-button',
-                    href: ticketUrl,
-                    className: 'get-tickets-button',
-                    style: {
-                        display: 'inline-block',
-                        marginTop: '24px',
-                        padding: '16px 32px',
-                        background: 'rgba(49, 157, 255, 0.2)',
-                        border: '1px solid rgba(49, 157, 255, 0.4)',
-                        borderRadius: '12px',
-                        color: '#319DFF',
-                        textDecoration: 'none',
-                        fontWeight: '600',
-                        fontSize: '16px',
-                        transition: 'all 0.2s ease'
-                    }
-                }, 'Get Tickets')
-            ])),
-
-            // Redirect Script (only for non-bots)
+            React.createElement('div', { key: 'container', className: 'container' }, [
+                // Event cover image
+                event.cover_image && React.createElement('div', { key: 'cover', className: 'event-cover' },
+                    React.createElement('img', {
+                        src: event.cover_image,
+                        alt: `${event.title} event cover`,
+                        loading: 'eager'
+                    })
+                ),
+                
+                // Content card
+                React.createElement('div', { key: 'card', className: 'card' }, [
+                    React.createElement('div', { key: 'spinner', className: 'spinner' }),
+                    React.createElement('h1', { key: 'title' }, event.title),
+                    event.artist_name && React.createElement('p', { key: 'artist', className: 'artist' }, `Featuring ${event.artist_name}`),
+                    React.createElement('p', { key: 'message', className: 'message' }, 'Redirecting to tickets...'),
+                    React.createElement('a', {
+                        key: 'link',
+                        href: redirectUrl,
+                        className: 'link'
+                    }, 'Click here if not redirected')
+                ])
+            ]),
+            
+            // JavaScript redirect (only for humans)
             !isBot && React.createElement('script', {
-                key: 'redirect-script',
+                key: 'redirect',
                 dangerouslySetInnerHTML: { __html: redirectScript }
             })
         ])

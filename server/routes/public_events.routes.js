@@ -3,15 +3,27 @@ const { validationResult } = require("express-validator");
 
 const events = require("../handlers/events.handler");
 const asyncHandler = require("../utils/asyncHandler");
-// Analytics middleware moved to dashboard repository
 const { CustomError } = require("../utils");
 const query = require("../queries");
 const { renderReactPage } = require("../utils/ssr.utils");
-const { isBot, logBotAccess } = require("../utils/bot-detection.utils");
 const seoUtils = require("../utils/seo.utils");
-const EventLandingPage = require("../components/EventLandingPage.jsx");
+const EventLandingPage = require("../components/EventLandingPage");
 
 const router = Router();
+
+/**
+ * Bot detection helper
+ * Detects if the request is from a search engine crawler or social media bot
+ */
+function isBot(req) {
+    const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+    const botPatterns = [
+        'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider', 'yandexbot',
+        'facebookexternalhit', 'twitterbot', 'linkedinbot', 'whatsapp', 'telegrambot',
+        'slackbot', 'discordbot', 'applebot', 'ia_archiver', 'archive.org_bot'
+    ];
+    return botPatterns.some(pattern => userAgent.includes(pattern));
+}
 
 /**
  * Generate Google Event structured data (schema.org/Event) for SEO
@@ -359,7 +371,6 @@ router.get(
 
         // 🤖 Detect if request is from a bot/crawler
         const isBotRequest = isBot(req);
-        logBotAccess(req, slug);
 
         // 🎯 Determine redirect URL (priority: external_ticket_url → posh_embed_url → homepage)
         const redirectUrl = foundEvent.external_ticket_url || foundEvent.posh_embed_url || `https://${defaultDomain}`;
