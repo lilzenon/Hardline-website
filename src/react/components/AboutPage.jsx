@@ -30,60 +30,12 @@ const AboutPage = () => {
     textUsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 299px to 380px
     scale: 1
   });
-  // SEO: Page-specific meta tags and structured data for About page
+  // 🚀 SEO FIX: Removed hardcoded meta tags - now using SEO service from SEOContext
+  // The SEOProvider automatically detects the /about page and applies dashboard settings
+  // via the seoService.js detectPageType() and getPageSpecificSEO() functions
   useEffect(() => {
     const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/about`;
-    const title = 'About BOUNCE2BOUNCE';
-    const description = 'Learn about BOUNCE2BOUNCE — curating premium live music events and unforgettable experiences. Discover our mission, story, and how we connect artists and fans.';
-    const keywords = 'about bounce2bounce, live music events, edm collective, concerts, event platform, artist community';
-    const ogImage = `${siteUrl}/images/og-image.png`;
-
-    const setMeta = (selectorAttr, name, content) => {
-      let el = document.head.querySelector(`meta[${selectorAttr}="${name}"]`);
-      if (!el) {
-        el = document.createElement('meta');
-        el.setAttribute(selectorAttr, name);
-        document.head.appendChild(el);
-      }
-      el.setAttribute('content', content);
-    };
-
-    const setLink = (rel, href) => {
-      let link = document.head.querySelector(`link[rel="${rel}"]`);
-      if (!link) {
-        link = document.createElement('link');
-        link.setAttribute('rel', rel);
-        document.head.appendChild(link);
-      }
-      link.setAttribute('href', href);
-    };
-
-    // Title
-    document.title = title;
-
-    // Basic meta
-    setMeta('name', 'description', description);
-    setMeta('name', 'keywords', keywords);
-    setMeta('name', 'robots', 'index,follow');
-
-    // Open Graph
-    setMeta('property', 'og:type', 'website');
-    setMeta('property', 'og:site_name', 'BOUNCE2BOUNCE');
-    setMeta('property', 'og:title', title);
-    setMeta('property', 'og:description', description);
-    setMeta('property', 'og:url', pageUrl);
-    setMeta('property', 'og:image', ogImage);
-
-    // Twitter
-    setMeta('name', 'twitter:card', 'summary_large_image');
-    setMeta('name', 'twitter:title', title);
-    setMeta('name', 'twitter:description', description);
-    setMeta('name', 'twitter:image', ogImage);
-    setMeta('name', 'twitter:site', '@bounce2bounce');
-
-    // Canonical
-    setLink('canonical', pageUrl);
 
     // JSON-LD Structured Data (AboutPage + Organization)
     const ldId = 'ld-json-about';
