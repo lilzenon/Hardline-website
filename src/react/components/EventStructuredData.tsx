@@ -222,9 +222,29 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
 
     console.log(`🔍 EventStructuredData: Processing ${events.length} events for schema.org markup`)
 
+    // 🚨 CRITICAL FIX: Deduplicate events by ID before generating schemas
+    // The backend may return the same event in both featuredEvents and homepageEvents arrays
+    // This causes duplicate Event schemas in the JSON-LD, which Google flags as an error
+    const uniqueEventsMap = new Map<number, Event>()
+    events.forEach(event => {
+      if (event && event.id) {
+        // Keep the first occurrence (featured events come first, so they take priority)
+        if (!uniqueEventsMap.has(event.id)) {
+          uniqueEventsMap.set(event.id, event)
+        }
+      }
+    })
+
+    const uniqueEvents = Array.from(uniqueEventsMap.values())
+
+    if (uniqueEvents.length < events.length) {
+      console.warn(`⚠️ EventStructuredData: Removed ${events.length - uniqueEvents.length} duplicate events (same event in featured + homepage arrays)`)
+      console.log(`📊 EventStructuredData: ${events.length} total events → ${uniqueEvents.length} unique events`)
+    }
+
     // Validate event data structure against Google's REQUIRED fields
     // Google requires: name, startDate, location (with name and address)
-    const validEvents = events.filter(event => {
+    const validEvents = uniqueEvents.filter(event => {
       if (!event) {
         console.warn('⚠️ EventStructuredData: Null/undefined event detected, skipping')
         return false
@@ -262,8 +282,8 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       return
     }
 
-    if (validEvents.length < events.length) {
-      console.warn(`⚠️ EventStructuredData: Filtered out ${events.length - validEvents.length} invalid events`)
+    if (validEvents.length < uniqueEvents.length) {
+      console.warn(`⚠️ EventStructuredData: Filtered out ${uniqueEvents.length - validEvents.length} invalid events`)
     }
 
     // Generate Event schemas for all valid events
