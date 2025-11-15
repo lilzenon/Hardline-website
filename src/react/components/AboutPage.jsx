@@ -37,6 +37,10 @@ const AboutPage = () => {
     const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/about`;
 
+    // Define SEO variables for JSON-LD structured data
+    const description = DEFAULT_SEO_SETTINGS?.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
+    const ogImage = DEFAULT_SEO_SETTINGS?.about_page_og_image || `${siteUrl}/images/og-image.png`;
+
     // JSON-LD Structured Data (AboutPage + Organization)
     const ldId = 'ld-json-about';
     const existing = document.getElementById(ldId);

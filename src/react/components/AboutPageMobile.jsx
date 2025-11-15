@@ -5,6 +5,7 @@ import { useNavHeight } from '../hooks/useNavHeight';
 import MasonryGallery from './ui/MasonryGallery';
 import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
+import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 
 /**
  * Mobile-only About page component with shared navigation
@@ -39,6 +40,10 @@ const AboutPageMobile = () => {
   useEffect(() => {
     const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/about`;
+
+    // Define SEO variables for JSON-LD structured data
+    const description = DEFAULT_SEO_SETTINGS?.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
+    const ogImage = DEFAULT_SEO_SETTINGS?.about_page_og_image || `${siteUrl}/images/og-image.png`;
 
     const ldId = 'ld-json-about';
     const existing = document.getElementById(ldId);
