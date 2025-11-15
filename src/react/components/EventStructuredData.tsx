@@ -181,11 +181,40 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
   useEffect(() => {
     // Only generate structured data if we have events
     if (!events || events.length === 0) {
+      console.log('⚠️ EventStructuredData: No events provided, skipping schema injection')
       return
     }
 
-    // Generate Event schemas for all events
-    const eventSchemas = events.map(event => generateEventSchema(event, domain))
+    console.log(`🔍 EventStructuredData: Processing ${events.length} events for schema.org markup`)
+
+    // Validate event data structure
+    const validEvents = events.filter(event => {
+      if (!event) {
+        console.warn('⚠️ EventStructuredData: Null/undefined event detected, skipping')
+        return false
+      }
+      if (!event.title && !event.artist_name) {
+        console.warn('⚠️ EventStructuredData: Event missing title/artist_name:', event)
+        return false
+      }
+      if (!event.slug) {
+        console.warn('⚠️ EventStructuredData: Event missing slug (required for URL):', event.title || event.id)
+        return false
+      }
+      return true
+    })
+
+    if (validEvents.length === 0) {
+      console.warn('❌ EventStructuredData: No valid events after validation, skipping schema injection')
+      return
+    }
+
+    if (validEvents.length < events.length) {
+      console.warn(`⚠️ EventStructuredData: Filtered out ${events.length - validEvents.length} invalid events`)
+    }
+
+    // Generate Event schemas for all valid events
+    const eventSchemas = validEvents.map(event => generateEventSchema(event, domain))
 
     // Wrap in ItemList for better SEO (recommended by Google for event listings)
     const structuredData = {
@@ -209,17 +238,26 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       scriptTag.id = scriptId
       scriptTag.type = 'application/ld+json'
       document.head.appendChild(scriptTag)
+      console.log('📝 EventStructuredData: Created new script tag in <head>')
+    } else {
+      console.log('🔄 EventStructuredData: Updating existing script tag')
     }
 
     scriptTag.textContent = JSON.stringify(structuredData)
 
-    console.log(`✅ Injected structured data for ${events.length} events`)
+    console.log(`✅ EventStructuredData: Injected structured data for ${validEvents.length} events`)
+    console.log('📊 EventStructuredData: Schema preview:', {
+      totalEvents: validEvents.length,
+      firstEvent: eventSchemas[0]?.name,
+      schemaType: structuredData['@type']
+    })
 
     // Cleanup function to remove the script tag when component unmounts
     return () => {
       const existingScript = document.getElementById(scriptId)
       if (existingScript) {
         existingScript.remove()
+        console.log('🧹 EventStructuredData: Removed schema script tag on unmount')
       }
     }
   }, [events, domain])

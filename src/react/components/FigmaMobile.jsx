@@ -648,6 +648,8 @@ const FigmaMobile = () => {
     setShowAllEvents,
     filteredFeaturedEvents,
     filteredHomepageEvents,
+    featuredEvents,
+    homepageEvents,
     normalizeEvent
   } = useHomepageData();
 
@@ -2066,8 +2068,10 @@ const FigmaMobile = () => {
   return (
     <>
       {/* SEO: Inject JSON-LD structured data for all events */}
+      {/* 🚨 FIX: Pass raw event data (featuredEvents, homepageEvents) instead of processed data */}
+      {/* EventStructuredData expects raw events with fields like slug, event_date, artist_name, etc. */}
       <EventStructuredData
-        events={[...filteredFeaturedEvents, ...filteredHomepageEvents]}
+        events={[...featuredEvents, ...homepageEvents]}
         domain="bounce2bounce.com"
       />
 
