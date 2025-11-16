@@ -88,16 +88,32 @@ function generateEventSchema(event: Event, domain: string) {
   }
 
   // START DATE: ISO 8601 with timezone - REQUIRED
+  let startDate: string | undefined
   if (event.event_datetime_utc) {
     schema.startDate = event.event_datetime_utc
+    startDate = event.event_datetime_utc
   } else if (event.event_date) {
     schema.startDate = event.event_date
+    startDate = event.event_date
   }
 
-  // END DATE: ISO 8601 with timezone - RECOMMENDED
-  // This field was missing and causing Google Search Console errors
+  // END DATE: ISO 8601 with timezone - REQUIRED by Google
+  // Google Rich Results Test requires this field for ALL events
+  // If missing from database, generate a default (startDate + 4 hours)
   if (event.event_end_date) {
     schema.endDate = event.event_end_date
+  } else if (startDate) {
+    // Generate default end date: start date + 4 hours (typical event duration)
+    const startDateTime = new Date(startDate)
+    const endDateTime = new Date(startDateTime.getTime() + (4 * 60 * 60 * 1000)) // Add 4 hours
+    schema.endDate = endDateTime.toISOString()
+    console.warn(`⚠️ EventStructuredData: Event "${event.title}" missing end_date, generated default: ${schema.endDate}`)
+  } else {
+    // Fallback: if no start date either, use current time + 4 hours
+    const now = new Date()
+    const endDateTime = new Date(now.getTime() + (4 * 60 * 60 * 1000))
+    schema.endDate = endDateTime.toISOString()
+    console.error(`❌ EventStructuredData: Event "${event.title}" missing both start and end dates, using fallback: ${schema.endDate}`)
   }
 
   // EVENT STATUS: EventScheduled, EventCancelled, EventRescheduled, EventPostponed - RECOMMENDED
@@ -214,32 +230,64 @@ function generateEventSchema(event: Event, domain: string) {
  */
 export default function EventStructuredData({ events, domain = 'bounce2bounce.com' }: EventStructuredDataProps) {
   useEffect(() => {
+    console.log('═══════════════════════════════════════════════════════════')
+    console.log('🚀 EventStructuredData: Component useEffect triggered')
+    console.log('   Component props:', { eventsCount: events?.length, domain })
+    console.log('   Timestamp:', new Date().toISOString())
+    console.log('   Call stack:', new Error().stack?.split('\n').slice(2, 5).join('\n'))
+    console.log('═══════════════════════════════════════════════════════════')
+
     // Only generate structured data if we have events
     if (!events || events.length === 0) {
       console.log('⚠️ EventStructuredData: No events provided, skipping schema injection')
       return
     }
 
-    console.log(`🔍 EventStructuredData: Processing ${events.length} events for schema.org markup`)
+    console.log(`🔍 EventStructuredData: Received ${events.length} events from parent component`)
+    console.log('📋 EventStructuredData: Event IDs received:', events.map(e => ({ id: e.id, title: e.title || e.artist_name, slug: e.slug })))
 
     // 🚨 CRITICAL FIX: Deduplicate events by ID before generating schemas
     // The backend may return the same event in both featuredEvents and homepageEvents arrays
     // This causes duplicate Event schemas in the JSON-LD, which Google flags as an error
+    console.log('🔄 EventStructuredData: Starting deduplication process...')
+
     const uniqueEventsMap = new Map<number, Event>()
-    events.forEach(event => {
-      if (event && event.id) {
-        // Keep the first occurrence (featured events come first, so they take priority)
-        if (!uniqueEventsMap.has(event.id)) {
-          uniqueEventsMap.set(event.id, event)
-        }
+    const duplicateIds: number[] = []
+
+    events.forEach((event, index) => {
+      if (!event) {
+        console.warn(`⚠️ EventStructuredData: Null/undefined event at index ${index}`)
+        return
+      }
+
+      if (!event.id) {
+        console.warn(`⚠️ EventStructuredData: Event missing ID at index ${index}:`, event.title || event.artist_name)
+        return
+      }
+
+      // Keep the first occurrence (featured events come first, so they take priority)
+      if (!uniqueEventsMap.has(event.id)) {
+        uniqueEventsMap.set(event.id, event)
+        console.log(`✅ EventStructuredData: Added event ID ${event.id} (${event.title || event.artist_name}) - first occurrence`)
+      } else {
+        duplicateIds.push(event.id)
+        console.warn(`🔁 EventStructuredData: Skipped duplicate event ID ${event.id} (${event.title || event.artist_name}) - already in map`)
       }
     })
 
     const uniqueEvents = Array.from(uniqueEventsMap.values())
 
+    console.log(`📊 EventStructuredData: Deduplication complete:`)
+    console.log(`   - Total events received: ${events.length}`)
+    console.log(`   - Duplicate events removed: ${duplicateIds.length}`)
+    console.log(`   - Duplicate event IDs: [${duplicateIds.join(', ')}]`)
+    console.log(`   - Unique events remaining: ${uniqueEvents.length}`)
+    console.log(`   - Unique event IDs: [${Array.from(uniqueEventsMap.keys()).join(', ')}]`)
+
     if (uniqueEvents.length < events.length) {
       console.warn(`⚠️ EventStructuredData: Removed ${events.length - uniqueEvents.length} duplicate events (same event in featured + homepage arrays)`)
-      console.log(`📊 EventStructuredData: ${events.length} total events → ${uniqueEvents.length} unique events`)
+    } else {
+      console.log('✅ EventStructuredData: No duplicates found - all events are unique')
     }
 
     // Validate event data structure against Google's REQUIRED fields
@@ -287,17 +335,29 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
     }
 
     // Generate Event schemas for all valid events
-    const eventSchemas = validEvents.map(event => generateEventSchema(event, domain))
+    console.log(`🏗️ EventStructuredData: Generating schemas for ${validEvents.length} valid events...`)
+    const eventSchemas = validEvents.map((event, index) => {
+      const schema = generateEventSchema(event, domain)
+      console.log(`   - Schema ${index + 1}: ${schema.name} (URL: ${schema.url})`)
+      return schema
+    })
 
     // 🚨 CRITICAL FIX: Google requires EACH event to have a unique @id
     // Without unique @id values, Google shows "Identical property values given, but unique values are required"
     // Add unique @id to each event schema based on the event URL
+    console.log('🔗 EventStructuredData: Assigning unique @id to each event schema...')
     eventSchemas.forEach((schema, index) => {
-      schema['@id'] = schema.url // Use the event URL as the unique identifier
+      const eventId = schema.url // Use the event URL as the unique identifier
+      schema['@id'] = eventId
+      console.log(`   - Event ${index + 1}: @id = "${eventId}"`)
     })
+
+    console.log(`✅ EventStructuredData: All ${eventSchemas.length} schemas have @id assigned`)
+    console.log('📋 EventStructuredData: Final schema @id values:', eventSchemas.map(s => s['@id']))
 
     // Wrap in ItemList for better SEO (recommended by Google for event listings)
     // Google requires ItemList for event carousels in search results
+    console.log('📦 EventStructuredData: Wrapping schemas in ItemList...')
     const structuredData = {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
@@ -309,6 +369,29 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
         item: schema
       }))
     }
+
+    console.log(`📊 EventStructuredData: ItemList created with ${structuredData.itemListElement.length} items`)
+
+    // 🔍 AUDIT: Check for ALL JSON-LD script tags in the document
+    console.log('🔍 EventStructuredData: Auditing ALL JSON-LD script tags in document...')
+    const allJsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]')
+    console.log(`📊 EventStructuredData: Found ${allJsonLdScripts.length} total JSON-LD script tags in document`)
+
+    allJsonLdScripts.forEach((script, index) => {
+      const scriptElement = script as HTMLScriptElement
+      const scriptId = scriptElement.id || '(no id)'
+      const scriptContent = scriptElement.textContent || ''
+      const hasEventType = scriptContent.includes('"@type":"Event"') || scriptContent.includes('"@type": "Event"')
+      const hasItemListType = scriptContent.includes('"@type":"ItemList"') || scriptContent.includes('"@type": "ItemList"')
+
+      console.log(`   Script ${index + 1}:`, {
+        id: scriptId,
+        hasEventType,
+        hasItemListType,
+        contentLength: scriptContent.length,
+        preview: scriptContent.substring(0, 100) + '...'
+      })
+    })
 
     // Create or update the structured data script tag
     const scriptId = 'event-structured-data'
@@ -324,14 +407,30 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       console.log('🔄 EventStructuredData: Updating existing script tag')
     }
 
-    scriptTag.textContent = JSON.stringify(structuredData)
+    const newContent = JSON.stringify(structuredData, null, 2)
+    const oldContent = scriptTag.textContent || ''
 
-    console.log(`✅ EventStructuredData: Injected structured data for ${validEvents.length} events`)
-    console.log('📊 EventStructuredData: Schema preview:', {
-      totalEvents: validEvents.length,
-      firstEvent: eventSchemas[0]?.name,
+    if (oldContent === newContent) {
+      console.log('⏭️ EventStructuredData: Content unchanged, skipping update')
+    } else {
+      scriptTag.textContent = newContent
+      console.log('✏️ EventStructuredData: Updated script tag content')
+    }
+
+    console.log(`✅ EventStructuredData: Successfully injected structured data for ${validEvents.length} events`)
+    console.log('📊 EventStructuredData: Final Summary:', {
+      totalEventsReceived: events.length,
+      duplicatesRemoved: events.length - uniqueEvents.length,
+      invalidEventsFiltered: uniqueEvents.length - validEvents.length,
+      finalEventCount: validEvents.length,
+      itemListElementCount: structuredData.itemListElement.length,
+      allEventsHaveId: eventSchemas.every(s => s['@id']),
       schemaType: structuredData['@type']
     })
+
+    // Log the actual JSON-LD for debugging
+    console.log('🔍 EventStructuredData: Complete JSON-LD output:')
+    console.log(JSON.stringify(structuredData, null, 2))
 
     // Cleanup function to remove the script tag when component unmounts
     return () => {
