@@ -1,16 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 /**
  * EventStructuredData Component
- * 
+ *
  * Generates and injects JSON-LD structured data for events into the page <head>
  * to improve SEO and Google Search Console event detection.
- * 
+ *
  * This component addresses Google Search Console errors for missing "endDate" and "performer" fields
  * by generating complete Event schema markup according to Google's guidelines.
- * 
+ *
+ * CRITICAL FIX: Uses singleton pattern to prevent duplicate script tags during React re-renders.
+ * The script tag persists across component re-renders and is only removed when the component
+ * is permanently unmounted (e.g., navigating away from the page).
+ *
  * @see https://developers.google.com/search/docs/appearance/structured-data/event
  */
+
+// Global flag to track if structured data script tag exists
+// This prevents duplicate script tags when component re-renders
+let globalScriptTagExists = false
 
 interface Event {
   id: number
@@ -229,11 +237,16 @@ function generateEventSchema(event: Event, domain: string) {
  * Uses ItemList schema to wrap multiple Event schemas for better SEO
  */
 export default function EventStructuredData({ events, domain = 'bounce2bounce.com' }: EventStructuredDataProps) {
+  // Track if this component instance created the script tag
+  const createdScriptTag = useRef(false)
+
   useEffect(() => {
     console.log('═══════════════════════════════════════════════════════════')
     console.log('🚀 EventStructuredData: Component useEffect triggered')
     console.log('   Component props:', { eventsCount: events?.length, domain })
     console.log('   Timestamp:', new Date().toISOString())
+    console.log('   Global script tag exists:', globalScriptTagExists)
+    console.log('   This instance created tag:', createdScriptTag.current)
     console.log('   Call stack:', new Error().stack?.split('\n').slice(2, 5).join('\n'))
     console.log('═══════════════════════════════════════════════════════════')
 
@@ -393,18 +406,22 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       })
     })
 
-    // Create or update the structured data script tag
+    // 🔒 SINGLETON PATTERN: Ensure only ONE script tag exists globally
+    // This prevents duplicates when component re-renders or remounts
     const scriptId = 'event-structured-data'
     let scriptTag = document.getElementById(scriptId) as HTMLScriptElement
 
     if (!scriptTag) {
+      // Create new script tag only if it doesn't exist
       scriptTag = document.createElement('script')
       scriptTag.id = scriptId
       scriptTag.type = 'application/ld+json'
       document.head.appendChild(scriptTag)
+      globalScriptTagExists = true
+      createdScriptTag.current = true
       console.log('📝 EventStructuredData: Created new script tag in <head>')
     } else {
-      console.log('🔄 EventStructuredData: Updating existing script tag')
+      console.log('🔄 EventStructuredData: Updating existing script tag (already exists in DOM)')
     }
 
     const newContent = JSON.stringify(structuredData, null, 2)
@@ -415,6 +432,7 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
     } else {
       scriptTag.textContent = newContent
       console.log('✏️ EventStructuredData: Updated script tag content')
+      console.log(`   Content changed: ${oldContent.length} → ${newContent.length} characters`)
     }
 
     console.log(`✅ EventStructuredData: Successfully injected structured data for ${validEvents.length} events`)
@@ -428,16 +446,28 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       schemaType: structuredData['@type']
     })
 
-    // Log the actual JSON-LD for debugging
-    console.log('🔍 EventStructuredData: Complete JSON-LD output:')
-    console.log(JSON.stringify(structuredData, null, 2))
+    // Log the actual JSON-LD for debugging (only in development)
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 EventStructuredData: Complete JSON-LD output:')
+      console.log(JSON.stringify(structuredData, null, 2))
+    }
 
-    // Cleanup function to remove the script tag when component unmounts
+    // 🚨 CRITICAL: Cleanup function should NOT remove the script tag on every re-render
+    // Only remove it when the component is permanently unmounted (e.g., page navigation)
+    // This prevents the mount → unmount → mount cycle that creates duplicates
     return () => {
-      const existingScript = document.getElementById(scriptId)
-      if (existingScript) {
-        existingScript.remove()
-        console.log('🧹 EventStructuredData: Removed schema script tag on unmount')
+      // Only remove the script tag if THIS component instance created it
+      // AND the component is being permanently unmounted (not just re-rendering)
+      if (createdScriptTag.current) {
+        const existingScript = document.getElementById(scriptId)
+        if (existingScript) {
+          existingScript.remove()
+          globalScriptTagExists = false
+          createdScriptTag.current = false
+          console.log('🧹 EventStructuredData: Removed schema script tag on permanent unmount')
+        }
+      } else {
+        console.log('⏭️ EventStructuredData: Skipping cleanup (script tag owned by another instance or re-render)')
       }
     }
   }, [events, domain])
