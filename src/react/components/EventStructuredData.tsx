@@ -241,14 +241,13 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
   const createdScriptTag = useRef(false)
 
   useEffect(() => {
-    console.log('═══════════════════════════════════════════════════════════')
-    console.log('🚀 EventStructuredData: Component useEffect triggered')
-    console.log('   Component props:', { eventsCount: events?.length, domain })
-    console.log('   Timestamp:', new Date().toISOString())
-    console.log('   Global script tag exists:', globalScriptTagExists)
-    console.log('   This instance created tag:', createdScriptTag.current)
-    console.log('   Call stack:', new Error().stack?.split('\n').slice(2, 5).join('\n'))
-    console.log('═══════════════════════════════════════════════════════════')
+    console.log('🚀 EventStructuredData: Component useEffect triggered', {
+      eventsCount: events?.length,
+      domain,
+      timestamp: new Date().toISOString(),
+      globalScriptTagExists,
+      createdByThisInstance: createdScriptTag.current
+    })
 
     // Only generate structured data if we have events
     if (!events || events.length === 0) {
@@ -383,12 +382,15 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       }))
     }
 
-    console.log(`📊 EventStructuredData: ItemList created with ${structuredData.itemListElement.length} items`)
 
     // 🔍 AUDIT: Check for ALL JSON-LD script tags in the document
     console.log('🔍 EventStructuredData: Auditing ALL JSON-LD script tags in document...')
     const allJsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]')
     console.log(`📊 EventStructuredData: Found ${allJsonLdScripts.length} total JSON-LD script tags in document`)
+
+    let externalEventScriptCount = 0
+    let externalItemListScriptCount = 0
+    let hasExternalEventSchema = false
 
     allJsonLdScripts.forEach((script, index) => {
       const scriptElement = script as HTMLScriptElement
@@ -396,15 +398,30 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       const scriptContent = scriptElement.textContent || ''
       const hasEventType = scriptContent.includes('"@type":"Event"') || scriptContent.includes('"@type": "Event"')
       const hasItemListType = scriptContent.includes('"@type":"ItemList"') || scriptContent.includes('"@type": "ItemList"')
+      const isOurScriptTag = scriptId === 'event-structured-data'
+
+      if (!isOurScriptTag && hasEventType) {
+        externalEventScriptCount += 1
+        hasExternalEventSchema = true
+      }
+      if (!isOurScriptTag && hasItemListType) {
+        externalItemListScriptCount += 1
+      }
 
       console.log(`   Script ${index + 1}:`, {
         id: scriptId,
         hasEventType,
         hasItemListType,
+        isOurScriptTag,
         contentLength: scriptContent.length,
         preview: scriptContent.substring(0, 100) + '...'
       })
     })
+
+    if (hasExternalEventSchema) {
+      console.log('⏭️ EventStructuredData: External Event JSON-LD detected (likely server-rendered). Skipping client-side injection to avoid duplicates.')
+      return
+    }
 
     // 🔒 SINGLETON PATTERN: Ensure only ONE script tag exists globally
     // This prevents duplicates when component re-renders or remounts
