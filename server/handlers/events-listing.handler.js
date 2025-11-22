@@ -31,7 +31,7 @@ async function eventsListing(req, res) {
             type: 'website'
         });
         
-        // Generate structured data for events list
+        // Generate structured data for events list, optimized for carousel eligibility
         const eventsListStructuredData = {
             "@context": "https://schema.org",
             "@type": "ItemList",
@@ -41,31 +41,7 @@ async function eventsListing(req, res) {
             "itemListElement": sortedEvents.map((event, index) => ({
                 "@type": "ListItem",
                 "position": index + 1,
-                "item": {
-                    "@type": "Event",
-                    "name": event.title,
-                    "url": `https://${env.DEFAULT_DOMAIN}/event/${event.slug}`,
-                    "image": event.cover_image,
-                    "description": event.description || `Join us for ${event.title}`,
-                    "performer": event.artist_name ? {
-                        "@type": "Person",
-                        "name": event.artist_name
-                    } : undefined,
-                    "startDate": event.event_date,
-                    "location": event.event_address ? {
-                        "@type": "Place",
-                        "name": event.event_address,
-                        "address": {
-                            "@type": "PostalAddress",
-                            "streetAddress": event.event_address
-                        }
-                    } : undefined,
-                    "organizer": {
-                        "@type": "Organization",
-                        "name": "BOUNCE2BOUNCE",
-                        "url": `https://${env.DEFAULT_DOMAIN}`
-                    }
-                }
+                "item": seoUtils.buildCarouselEventItem(event)
             }))
         };
         

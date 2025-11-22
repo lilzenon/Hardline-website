@@ -285,6 +285,92 @@ function generateEventStructuredData(event) {
 }
 
 /**
+ * Build an Event object suitable for use inside an ItemList for carousels.
+ * This follows Google's "Structured data carousels (beta)" guidelines,
+ * which recommend name, image (1x1, 4x3, 16x9), url, and offers.price/priceCurrency.
+ *
+ * @param {Object} event - Event object from database
+ * @returns {Object} Carousel-optimized Event structured data
+ */
+function buildCarouselEventItem(event) {
+    const baseUrl = env.PRODUCTION_HOMEPAGE_URL || `https://${env.DEFAULT_DOMAIN}`;
+    const eventUrl = `${baseUrl}/event/${event.slug}`;
+
+    // Ensure we always have at least one valid image URL
+    const fallbackImage = `${baseUrl}/images/bounce-logo.svg`;
+    const primaryImage = event.cover_image || fallbackImage;
+
+    // Google recommends 3 aspect ratios: 1x1, 4x3, 16x9
+    // TODO: Wire true variants from event.images.variants JSON when available
+    const imageArray = [primaryImage, primaryImage, primaryImage];
+
+    const item = {
+        "@type": "Event",
+        "name": event.title,
+        "url": eventUrl,
+        "image": imageArray,
+        "description": event.description || `Join us for ${event.title}`,
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "organizer": {
+            "@type": "Organization",
+            "name": "BOUNCE2BOUNCE",
+            "url": baseUrl
+        }
+    };
+
+    // Add performer information if available
+    if (event.artist_name) {
+        item.performer = {
+            "@type": "Person",
+            "name": event.artist_name
+        };
+    }
+
+    // Add start date if available
+    if (event.event_date) {
+        item.startDate = event.event_date;
+    }
+
+    // Add location if available
+    if (event.event_address) {
+        item.location = {
+            "@type": "Place",
+            "name": event.event_address,
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": event.event_address
+            }
+        };
+    }
+
+    // Add offers (ticket information) - CRITICAL for carousel eligibility
+    // Robust price handling: convert strings/numbers to valid numeric values
+    const rawPrice = event.ticket_price_amount;
+    const numericPrice = rawPrice !== undefined && rawPrice !== null ? Number(rawPrice) : NaN;
+    const hasTicketPrice = Number.isFinite(numericPrice);
+    const hasTicketUrl = Boolean(event.external_ticket_url || event.posh_embed_url);
+
+    if (hasTicketPrice || hasTicketUrl) {
+        const price = hasTicketPrice ? numericPrice : 0;
+        const priceCurrency = event.ticket_price_currency || 'USD';
+
+        item.offers = {
+            "@type": "Offer",
+            "price": price,
+            "priceCurrency": priceCurrency
+        };
+
+        // Add ticket URL if available (use external_ticket_url, NOT tickets_url)
+        if (hasTicketUrl) {
+            item.offers.url = event.external_ticket_url || event.posh_embed_url;
+        }
+    }
+
+    return item;
+}
+
+/**
  * Generate homepage structured data
  */
 function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
@@ -304,7 +390,7 @@ function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
         ].filter(Boolean)
     };
 
-    // Add featured events as ItemList
+    // Add featured events as ItemList with carousel-optimized Event items
     if (featuredEvents.length > 0) {
         const eventListData = {
             "@context": "https://schema.org",
@@ -314,13 +400,7 @@ function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
             "itemListElement": featuredEvents.map((event, index) => ({
                 "@type": "ListItem",
                 "position": index + 1,
-                "item": {
-                    "@type": "Event",
-                    "name": event.title,
-                    "url": `${baseUrl}/event/${event.slug}`,
-                    "image": event.cover_image,
-                    "description": event.description
-                }
+                "item": buildCarouselEventItem(event)
             }))
         };
 
@@ -377,5 +457,6 @@ module.exports = {
     generateEventStructuredData,
     generateHomepageStructuredData,
     generateBreadcrumbData,
-    optimizeTextForSEO
+    optimizeTextForSEO,
+    buildCarouselEventItem
 };
