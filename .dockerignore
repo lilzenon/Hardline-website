@@ -17,7 +17,6 @@ yarn-debug.log*
 yarn-error.log*
 .npm
 .yarn
-package-lock.json
 
 # Build artifacts (will be generated during build)
 dist
