@@ -36,10 +36,11 @@ WORKDIR /kutt
 COPY package.json package-lock.json ./
 
 # Install dependencies with BuildKit cache mount for faster rebuilds
-# Use npm ci for deterministic builds that respect package-lock.json
+# Use npm install instead of npm ci to work around npm bug with optional dependencies
+# (https://github.com/npm/cli/issues/4828)
 # Use --legacy-peer-deps to handle React 19 compatibility issues with react-helmet-async
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --legacy-peer-deps
+    npm install --legacy-peer-deps
 
 # Copy source code (excluding files in .dockerignore)
 COPY . .
