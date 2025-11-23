@@ -33,13 +33,13 @@ WORKDIR /kutt
 
 # Copy package files for dependency installation
 # This layer will be cached unless package files change
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
 # Install dependencies with BuildKit cache mount for faster rebuilds
-# Use npm install since package-lock.json is excluded by .dockerignore
+# Use npm ci for deterministic builds that respect package-lock.json
 # Use --legacy-peer-deps to handle React 19 compatibility issues with react-helmet-async
 RUN --mount=type=cache,target=/root/.npm \
-    npm install --include=dev --prefer-offline --legacy-peer-deps
+    npm ci --legacy-peer-deps
 
 # Copy source code (excluding files in .dockerignore)
 COPY . .
