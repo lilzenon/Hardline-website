@@ -7,6 +7,7 @@ import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
+import { injectAboutGalleryJsonLd, removeAboutGalleryJsonLd } from '../utils/aboutGalleryJsonLd';
 
 const AboutPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -314,6 +315,15 @@ Our mission is to unite top talent, immersive production, and passionate fans to
       setGalleryImages([]);
     }
   };
+
+  // Inject ImageObject JSON-LD for About gallery images to improve Google Image SEO
+  useEffect(() => {
+    injectAboutGalleryJsonLd(galleryImages);
+    return () => {
+      removeAboutGalleryJsonLd();
+    };
+  }, [galleryImages]);
+
 
   // Format content with proper paragraphs
   const formatContent = (content) => {

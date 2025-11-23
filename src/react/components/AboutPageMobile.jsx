@@ -6,6 +6,7 @@ import MasonryGallery from './ui/MasonryGallery';
 import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
+import { injectAboutGalleryJsonLd, removeAboutGalleryJsonLd } from '../utils/aboutGalleryJsonLd';
 
 /**
  * Mobile-only About page component with shared navigation
@@ -127,6 +128,14 @@ const AboutPageMobile = () => {
     fetchAboutContent();
     fetchGalleryImages();
   }, []);
+
+  // Inject ImageObject JSON-LD for About gallery images on mobile
+  useEffect(() => {
+    injectAboutGalleryJsonLd(galleryImages);
+    return () => {
+      removeAboutGalleryJsonLd();
+    };
+  }, [galleryImages]);
 
   const fetchAboutContent = async () => {
     try {
