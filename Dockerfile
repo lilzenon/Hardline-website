@@ -26,7 +26,7 @@ RUN apk add --no-cache \
     pangomm-dev \
     libjpeg-turbo-dev \
     freetype-dev && \
-    npm install -g npm@latest
+    npm install -g npm@11.5.2
 
 # Set working directory
 WORKDIR /kutt
