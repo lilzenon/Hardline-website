@@ -90,6 +90,10 @@ COPY --from=builder --chown=kutt:nodejs /kutt/server ./server
 # Copy custom configurations
 COPY --from=builder --chown=kutt:nodejs /kutt/custom ./custom
 
+# Copy knex configuration files for migrations
+COPY --from=builder --chown=kutt:nodejs /kutt/knexfile.js ./knexfile.js
+COPY --from=builder --chown=kutt:nodejs /kutt/knexfile.crm.js ./knexfile.crm.js
+
 # Create necessary directories with proper permissions
 RUN mkdir -p /var/lib/kutt uploads/og-images && \
     chown -R kutt:nodejs /var/lib/kutt uploads
