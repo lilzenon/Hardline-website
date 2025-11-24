@@ -72,11 +72,9 @@ const FAQPageMobile = () => {
       try {
         console.log('📥 Loading FAQ content from API (mobile)...');
 
-        // Determine API base URL based on environment
-        const isDevelopment = window.location.hostname === 'localhost';
-        const apiBaseUrl = isDevelopment ? 'http://localhost:3002' : 'https://admin.b2b.click';
-
-        const response = await fetch(`${apiBaseUrl}/api/settings/faq?ts=${Date.now()}` , {
+        // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
+        // The backend at /api/settings/faq proxies to the dashboard server
+        const response = await fetch(`/api/settings/faq?ts=${Date.now()}` , {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

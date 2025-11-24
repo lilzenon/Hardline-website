@@ -124,25 +124,21 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
       try {
         console.log(`🔍 Fetching social media links (attempt ${retryCount + 1}/${maxRetries + 1})`);
 
-        // Determine the correct dashboard API URL based on environment
-        const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const dashboardApiUrl = isLocalDevelopment
-          ? 'http://localhost:3002/api/social-media'
-          : 'https://admin.b2b.click/api/social-media';
+        // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
+        // The backend at /api/social-media proxies to the dashboard server
+        const apiUrl = '/api/social-media';
 
-        console.log('🔍 Using dashboard API URL:', dashboardApiUrl);
+        console.log('🔍 Fetching social media links from local proxy:', apiUrl);
 
         // Enhanced fetch with timeout and abort signal
         const timeoutId = setTimeout(() => abortController.abort(), 10000); // 10 second timeout
 
-        const response = await fetch(dashboardApiUrl, {
+        const response = await fetch(apiUrl, {
           signal: abortController.signal,
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
-          },
-          mode: 'cors',
-          credentials: 'omit' // Don't send credentials for public endpoint
+          }
         });
 
         clearTimeout(timeoutId);

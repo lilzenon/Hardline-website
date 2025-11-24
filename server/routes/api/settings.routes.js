@@ -159,5 +159,77 @@ router.get('/about/gallery/public', async (req, res) => {
     }
 });
 
+// GET /api/social-media - Social media links endpoint
+router.get('/social-media', async (req, res) => {
+    try {
+        console.log('🔍 Homepage: Fetching social media links...');
+
+        // Proxy to dashboard server for social media links
+        const env = require('../../env');
+        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+
+        console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/social-media`);
+
+        const response = await fetch(`${dashboardUrl}/api/social-media`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Homepage: Social media links fetched from dashboard');
+            res.json(data);
+        } else {
+            throw new Error(`Dashboard responded with ${response.status}`);
+        }
+    } catch (error) {
+        console.error('❌ Homepage: Error fetching social media links:', error);
+
+        // Fallback empty social media if dashboard is unavailable
+        res.json({
+            success: true,
+            data: []
+        });
+    }
+});
+
+// GET /api/settings/faq - FAQ content endpoint
+router.get('/faq', async (req, res) => {
+    try {
+        console.log('🔍 Homepage: Fetching FAQ content...');
+
+        // Proxy to dashboard server for FAQ content
+        const env = require('../../env');
+        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+
+        console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/faq`);
+
+        const response = await fetch(`${dashboardUrl}/api/settings/faq`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Homepage: FAQ content fetched from dashboard');
+            res.json(data);
+        } else {
+            throw new Error(`Dashboard responded with ${response.status}`);
+        }
+    } catch (error) {
+        console.error('❌ Homepage: Error fetching FAQ content:', error);
+
+        // Fallback empty FAQ if dashboard is unavailable
+        res.json({
+            success: true,
+            data: []
+        });
+    }
+});
+
 module.exports = router;
 

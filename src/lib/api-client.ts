@@ -28,12 +28,14 @@ class APIClient {
   private fallbackCache: Map<string, { data: any; expires: number }>;
 
   constructor() {
-    // Environment-aware configuration
-    const isDevelopment = window.location.hostname === 'localhost' || 
+    // CRITICAL FIX: Always use local proxy endpoints to avoid CORS issues
+    // The backend proxies all requests to admin.b2b.click, so we use /api for all environments
+    // This ensures beta.bounce2bounce.com and bounce2bounce.com both work correctly
+    const isDevelopment = window.location.hostname === 'localhost' ||
                          window.location.hostname === '127.0.0.1';
-    
+
     this.config = {
-      baseURL: isDevelopment ? '/api' : 'https://admin.b2b.click/api',
+      baseURL: '/api', // ALWAYS use local proxy - backend handles cross-domain proxying
       timeout: 10000, // 10 seconds
       retries: 3,
       retryDelay: 1000, // 1 second
@@ -42,9 +44,9 @@ class APIClient {
     };
 
     this.fallbackCache = new Map();
-    
+
     console.log(`🔧 API Client initialized for ${isDevelopment ? 'development' : 'production'}`);
-    console.log(`📡 Base URL: ${this.config.baseURL}`);
+    console.log(`📡 Base URL: ${this.config.baseURL} (using local proxy for all requests)`);
   }
 
   /**
