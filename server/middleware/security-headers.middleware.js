@@ -28,6 +28,7 @@ function getCSPDirectives() {
             "https://cdnjs.cloudflare.com",
             "https://www.googletagmanager.com",
             "https://www.google-analytics.com",
+            "https://static.cloudflareinsights.com", // Allow Cloudflare Insights analytics
             "https://laylo.com", // Allow Laylo main domain scripts
             "https://*.laylo.com", // Allow all Laylo subdomain scripts
             "https://embed.laylo.com", // Allow Laylo embed scripts and SDK
