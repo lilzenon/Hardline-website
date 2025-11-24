@@ -11,7 +11,12 @@ const router = Router();
 router.post("/csp-violation", asyncHandler(async (req, res) => {
     try {
         const violation = req.body;
-        
+
+        // Validate that we have a violation report
+        if (!violation || typeof violation !== 'object' || Object.keys(violation).length === 0) {
+            return res.status(204).send(); // Return 204 for empty reports (browsers expect this)
+        }
+
         // Log the CSP violation for security monitoring
         await securityMonitor.logSecurityEvent('csp_violation', {
             message: 'Content Security Policy violation detected',
