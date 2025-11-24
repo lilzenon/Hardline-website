@@ -89,7 +89,12 @@ router.get('/about', async (req, res) => {
         console.log('🔍 Homepage: Fetching About page content...');
 
         // Proxy to dashboard server for about page content
-        const dashboardUrl = process.env.DASHBOARD_PROXY_URL || 'http://localhost:3002';
+        // Use DASHBOARD_URL from env.js (defaults to http://localhost:3002 in development)
+        const env = require('../../env');
+        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+
+        console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/about`);
+
         const response = await fetch(`${dashboardUrl}/api/settings/about`, {
             method: 'GET',
             headers: {

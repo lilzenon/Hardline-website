@@ -159,13 +159,12 @@ const AboutPage = () => {
     try {
       setContentError(null);
 
-      // Determine API base URL based on environment
-      const isDevelopment = window.location.hostname === 'localhost';
-      const apiBaseUrl = isDevelopment ? '' : 'https://admin.b2b.click';
+      // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
+      // The backend at /api/settings/about proxies to the dashboard server
+      // This avoids CORS issues and ensures content is always accessible
+      console.log('🔍 Fetching About page content from local proxy...');
 
-      console.log('🔍 Fetching About page content from API...');
-
-      const response = await fetch(`${apiBaseUrl}/api/settings/about`, {
+      const response = await fetch('/api/settings/about', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
