@@ -123,5 +123,41 @@ router.get('/about', async (req, res) => {
     }
 });
 
+// GET /api/settings/about/gallery/public - About page gallery images endpoint
+router.get('/about/gallery/public', async (req, res) => {
+    try {
+        console.log('🔍 Homepage: Fetching About page gallery...');
+
+        // Proxy to dashboard server for gallery images
+        const env = require('../../env');
+        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+
+        console.log(`📡 Proxying gallery request to: ${dashboardUrl}/api/settings/about/gallery/public`);
+
+        const response = await fetch(`${dashboardUrl}/api/settings/about/gallery/public`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Homepage: Gallery images fetched from dashboard');
+            res.json(data);
+        } else {
+            throw new Error(`Dashboard responded with ${response.status}`);
+        }
+    } catch (error) {
+        console.error('❌ Homepage: Error fetching gallery images:', error);
+
+        // Return empty gallery if dashboard is unavailable
+        res.json({
+            success: true,
+            data: []
+        });
+    }
+});
+
 module.exports = router;
 

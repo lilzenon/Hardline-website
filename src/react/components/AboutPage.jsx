@@ -253,15 +253,11 @@ Our mission is to unite top talent, immersive production, and passionate fans to
 
   const fetchGalleryImages = async () => {
     try {
-      // Determine API base URL based on environment
-      const isDevelopment = window.location.hostname === 'localhost';
-      const apiBaseUrl = isDevelopment
-        ? 'http://localhost:3002'
-        : 'https://admin.b2b.click';
-
+      // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
+      // The backend at /api/settings/about/gallery/public proxies to the dashboard server
       const cacheBuster = `cb=${Date.now()}`;
-      const galleryUrl = `${apiBaseUrl}/api/settings/about/gallery/public?${cacheBuster}`;
-      console.log('🔍 Fetching gallery from:', galleryUrl);
+      const galleryUrl = `/api/settings/about/gallery/public?${cacheBuster}`;
+      console.log('🔍 Fetching gallery from local proxy:', galleryUrl);
 
       const response = await fetch(galleryUrl, {
         method: 'GET',
