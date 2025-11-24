@@ -8,6 +8,8 @@ console.log('🔍 Queue System Environment Debug:');
 console.log('   NODE_ENV:', process.env.NODE_ENV);
 console.log('   REDIS_ENABLED (raw):', process.env.REDIS_ENABLED);
 console.log('   REDIS_ENABLED (parsed):', env.REDIS_ENABLED);
+console.log('   REDIS_URL (raw):', process.env.REDIS_URL ? `${process.env.REDIS_URL.substring(0, 20)}...` : 'NOT SET');
+console.log('   REDIS_URL (parsed):', env.REDIS_URL ? 'SET' : 'NOT SET');
 console.log('   REDIS_HOST:', env.REDIS_HOST);
 console.log('   REDIS_PORT:', env.REDIS_PORT);
 

@@ -4,11 +4,18 @@ const env = require("./env");
 
 let client;
 
+// CRITICAL DEBUG: Log at module load time
+console.log('🔧 [REDIS MODULE] Loading redis.js...');
+console.log('🔧 [REDIS MODULE] REDIS_ENABLED:', env.REDIS_ENABLED);
+console.log('🔧 [REDIS MODULE] REDIS_URL from env:', process.env.REDIS_URL ? 'SET' : 'NOT SET');
+console.log('🔧 [REDIS MODULE] REDIS_URL parsed:', env.REDIS_URL ? 'SET' : 'NOT SET');
+
 if (env.REDIS_ENABLED) {
     try {
         // CRITICAL DEBUG: Log environment variables
         console.log('🔍 Redis Environment Variables:');
-        console.log('   REDIS_URL:', env.REDIS_URL ? '(set)' : '(not set)');
+        console.log('   REDIS_URL (raw):', process.env.REDIS_URL ? `${process.env.REDIS_URL.substring(0, 20)}...` : '(not set)');
+        console.log('   REDIS_URL (parsed):', env.REDIS_URL ? '(set)' : '(not set)');
         console.log('   REDIS_HOST:', env.REDIS_HOST);
         console.log('   REDIS_PORT:', env.REDIS_PORT);
         console.log('   REDIS_DB:', env.REDIS_DB);
