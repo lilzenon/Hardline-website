@@ -72,6 +72,7 @@ const seoTest = require("./seo-test.routes");
 const webhooks = require("./webhooks.routes");
 const settingsRoutes = require("./api/settings.routes");
 const analyticsRoutes = require("./api/analytics.routes");
+const socialMediaProxy = require("./social-media-proxy.routes");
 
 const renderRouter = Router();
 renderRouter.use(renders);
@@ -106,6 +107,8 @@ apiRouter.use("/seo-test", seoTest);
 apiRouter.use("/settings", settingsRoutes);
 // Enable local analytics endpoints (bypass proxy in dev)
 apiRouter.use("/analytics", analyticsRoutes);
+// Enable social media proxy endpoint
+apiRouter.use("/social-media", socialMediaProxy);
 
 module.exports = {
     api: apiRouter,
