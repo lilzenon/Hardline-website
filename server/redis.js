@@ -6,51 +6,82 @@ let client;
 
 if (env.REDIS_ENABLED) {
     try {
-        // CRITICAL: Determine connection method (REDIS_URL takes precedence)
-        let connectionConfig;
+        // CRITICAL DEBUG: Log environment variables
+        console.log('🔍 Redis Environment Variables:');
+        console.log('   REDIS_URL:', env.REDIS_URL ? '(set)' : '(not set)');
+        console.log('   REDIS_HOST:', env.REDIS_HOST);
+        console.log('   REDIS_PORT:', env.REDIS_PORT);
+        console.log('   REDIS_DB:', env.REDIS_DB);
 
-        if (env.REDIS_URL) {
+        // CRITICAL: Determine connection method (REDIS_URL takes precedence)
+        if (env.REDIS_URL && env.REDIS_URL.trim() !== '') {
             // Use REDIS_URL for external connections (e.g., DigitalOcean → Render)
             console.log('🔗 Using REDIS_URL for connection');
-            connectionConfig = env.REDIS_URL;
+            const maskedUrl = env.REDIS_URL.replace(/:([^@]+)@/, ':****@');
+            console.log('📊 Connection URL:', maskedUrl);
+
+            // UNIFIED REDIS CONFIG: When using URL, pass it as first argument
+            client = new Redis(env.REDIS_URL, {
+                // UNIFIED CONFIG: Balanced timeouts for stability and performance
+                connectTimeout: 10000, // 10 seconds - increased for Render Redis
+                commandTimeout: 15000, // 15s timeout - reduced for faster fallback
+                retryDelayOnFailover: 150, // 150ms - balanced retry delay
+                maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
+                lazyConnect: true, // Connect only when needed
+                keepAlive: 30000, // Keep connections alive for 30 seconds
+                // Connection pool settings
+                family: 4, // Use IPv4
+                // UNIFIED CONFIG: Optimized error handling
+                retryDelayOnClusterDown: 200, // Balanced retry delay
+                enableOfflineQueue: true, // CRITICAL: Enable for queue reliability
+                // Performance optimizations
+                enableReadyCheck: true,
+                maxLoadingTimeout: 6000, // Balanced loading timeout
+                // Logging
+                showFriendlyErrorStack: env.NODE_ENV === 'development',
+                // UNIFIED CONFIG: Balanced reconnection strategy
+                enableAutoPipelining: false, // Disable for better error handling
+                autoResubscribe: true, // Enable for queue reliability
+                autoResendUnfulfilledCommands: true, // Enable for queue reliability
+                // CRITICAL: Set connection name for debugging
+                connectionName: 'kutt-homepage-unified'
+            });
         } else {
             // Fallback to individual parameters for local/internal connections
             console.log('🔗 Using individual Redis parameters for connection');
-            connectionConfig = {
+            console.log(`📊 Connection: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
+
+            client = new Redis({
                 host: env.REDIS_HOST,
                 port: env.REDIS_PORT,
                 db: env.REDIS_DB,
                 ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
                 ...(env.REDIS_TLS ? { tls: {} } : {}),
-            };
+                // UNIFIED CONFIG: Balanced timeouts for stability and performance
+                connectTimeout: 10000, // 10 seconds - increased for Render Redis
+                commandTimeout: 15000, // 15s timeout - reduced for faster fallback
+                retryDelayOnFailover: 150, // 150ms - balanced retry delay
+                maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
+                lazyConnect: true, // Connect only when needed
+                keepAlive: 30000, // Keep connections alive for 30 seconds
+                // Connection pool settings
+                family: 4, // Use IPv4
+                // UNIFIED CONFIG: Optimized error handling
+                retryDelayOnClusterDown: 200, // Balanced retry delay
+                enableOfflineQueue: true, // CRITICAL: Enable for queue reliability
+                // Performance optimizations
+                enableReadyCheck: true,
+                maxLoadingTimeout: 6000, // Balanced loading timeout
+                // Logging
+                showFriendlyErrorStack: env.NODE_ENV === 'development',
+                // UNIFIED CONFIG: Balanced reconnection strategy
+                enableAutoPipelining: false, // Disable for better error handling
+                autoResubscribe: true, // Enable for queue reliability
+                autoResendUnfulfilledCommands: true, // Enable for queue reliability
+                // CRITICAL: Set connection name for debugging
+                connectionName: 'kutt-homepage-unified'
+            });
         }
-
-        // UNIFIED REDIS CONFIG: Optimized for both performance and reliability
-        client = new Redis(connectionConfig, {
-            // UNIFIED CONFIG: Balanced timeouts for stability and performance
-            connectTimeout: 10000, // 10 seconds - increased for Render Redis
-            commandTimeout: 15000, // 15s timeout - reduced for faster fallback
-            retryDelayOnFailover: 150, // 150ms - balanced retry delay
-            maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ compatibility
-            lazyConnect: true, // Connect only when needed
-            keepAlive: 30000, // Keep connections alive for 30 seconds
-            // Connection pool settings
-            family: 4, // Use IPv4
-            // UNIFIED CONFIG: Optimized error handling
-            retryDelayOnClusterDown: 200, // Balanced retry delay
-            enableOfflineQueue: true, // CRITICAL: Enable for queue reliability
-            // Performance optimizations
-            enableReadyCheck: true,
-            maxLoadingTimeout: 6000, // Balanced loading timeout
-            // Logging
-            showFriendlyErrorStack: env.NODE_ENV === 'development',
-            // UNIFIED CONFIG: Balanced reconnection strategy
-            enableAutoPipelining: false, // Disable for better error handling
-            autoResubscribe: true, // Enable for queue reliability
-            autoResendUnfulfilledCommands: true, // Enable for queue reliability
-            // CRITICAL: Set connection name for debugging
-            connectionName: 'kutt-homepage-unified'
-        });
 
         console.log('🔄 Redis client created with unified configuration...');
     } catch (error) {

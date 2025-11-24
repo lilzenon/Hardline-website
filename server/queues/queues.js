@@ -18,44 +18,46 @@ if (env.REDIS_ENABLED) {
     try {
         console.log('🔄 Initializing Redis connection for BullMQ...');
 
-        // CRITICAL: Determine connection method (REDIS_URL takes precedence)
-        let connection;
+        // CRITICAL DEBUG: Log environment variables
+        console.log('🔍 BullMQ Redis Environment Variables:');
+        console.log('   REDIS_URL:', env.REDIS_URL ? '(set)' : '(not set)');
+        console.log('   REDIS_HOST:', env.REDIS_HOST);
+        console.log('   REDIS_PORT:', env.REDIS_PORT);
+        console.log('   REDIS_DB:', env.REDIS_DB);
 
-        if (env.REDIS_URL) {
+        // CRITICAL: Determine connection method (REDIS_URL takes precedence)
+        let connectionOptions;
+
+        if (env.REDIS_URL && env.REDIS_URL.trim() !== '') {
             // Use REDIS_URL for external connections (e.g., DigitalOcean → Render)
             console.log('🔗 Using REDIS_URL for BullMQ connection');
             const maskedUrl = env.REDIS_URL.replace(/:([^@]+)@/, ':****@');
             console.log(`📊 Redis Config: ${maskedUrl}`);
 
-            // BullMQ accepts connection string directly
-            connection = env.REDIS_URL;
+            // BullMQ with connection string - pass URL directly
+            connectionOptions = env.REDIS_URL;
         } else {
             // Fallback to individual parameters for local/internal connections
             console.log('🔗 Using individual Redis parameters for BullMQ connection');
             console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
 
-            connection = {
+            connectionOptions = {
                 port: env.REDIS_PORT,
                 host: env.REDIS_HOST,
                 db: env.REDIS_DB,
                 ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+                // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
+                connectTimeout: 10000, // PRODUCTION: 10s connection timeout for stability
+                commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
+                retryDelayOnFailover: 200,
+                maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
+                lazyConnect: true, // Don't connect immediately
+                enableOfflineQueue: true, // Enable for queue reliability
+                // Add BullMQ-specific optimizations
+                enableReadyCheck: true,
+                maxLoadingTimeout: 30000, // PRODUCTION: 30s timeout for production stability
             };
         }
-
-        // Add common connection options (works for both URL and object config)
-        const connectionOptions = typeof connection === 'string' ? connection : {
-            ...connection,
-            // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
-            connectTimeout: 10000, // PRODUCTION: 10s connection timeout for stability
-            commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
-            retryDelayOnFailover: 200,
-            maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
-            lazyConnect: true, // Don't connect immediately
-            enableOfflineQueue: true, // Enable for queue reliability
-            // Add BullMQ-specific optimizations
-            enableReadyCheck: true,
-            maxLoadingTimeout: 30000, // PRODUCTION: 30s timeout for production stability
-        };
 
         // Create the queue with error handling
         visit = new Queue("visit", {
