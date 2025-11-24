@@ -1,4 +1,5 @@
 const { Queue, Worker } = require("bullmq");
+const Redis = require("ioredis");
 const path = require("node:path");
 
 const env = require("../env");
@@ -28,7 +29,7 @@ if (env.REDIS_ENABLED) {
         console.log('   REDIS_DB:', env.REDIS_DB);
 
         // CRITICAL: Determine connection method (REDIS_URL takes precedence)
-        let connectionOptions;
+        let queueOptions;
 
         if (env.REDIS_URL && env.REDIS_URL.trim() !== '') {
             // Use REDIS_URL for external connections (e.g., DigitalOcean → Render)
@@ -36,34 +37,50 @@ if (env.REDIS_ENABLED) {
             const maskedUrl = env.REDIS_URL.replace(/:([^@]+)@/, ':****@');
             console.log(`📊 Redis Config: ${maskedUrl}`);
 
-            // BullMQ with connection string - pass URL directly
-            connectionOptions = env.REDIS_URL;
+            // CRITICAL FIX: BullMQ requires a Redis client instance, not a connection string
+            // Create a Redis client from the connection URL
+            const redisClient = new Redis(env.REDIS_URL, {
+                connectTimeout: 10000,
+                commandTimeout: 30000,
+                retryDelayOnFailover: 200,
+                maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
+                lazyConnect: true,
+                enableOfflineQueue: true,
+                enableReadyCheck: true,
+                maxLoadingTimeout: 30000,
+            });
+
+            queueOptions = {
+                connection: redisClient,
+            };
         } else {
             // Fallback to individual parameters for local/internal connections
             console.log('🔗 Using individual Redis parameters for BullMQ connection');
             console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
 
-            connectionOptions = {
-                port: env.REDIS_PORT,
-                host: env.REDIS_HOST,
-                db: env.REDIS_DB,
-                ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
-                // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
-                connectTimeout: 10000, // PRODUCTION: 10s connection timeout for stability
-                commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
-                retryDelayOnFailover: 200,
-                maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
-                lazyConnect: true, // Don't connect immediately
-                enableOfflineQueue: true, // Enable for queue reliability
-                // Add BullMQ-specific optimizations
-                enableReadyCheck: true,
-                maxLoadingTimeout: 30000, // PRODUCTION: 30s timeout for production stability
+            queueOptions = {
+                connection: {
+                    port: env.REDIS_PORT,
+                    host: env.REDIS_HOST,
+                    db: env.REDIS_DB,
+                    ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+                    // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
+                    connectTimeout: 10000, // PRODUCTION: 10s connection timeout for stability
+                    commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
+                    retryDelayOnFailover: 200,
+                    maxRetriesPerRequest: null, // CRITICAL: Must be null for BullMQ
+                    lazyConnect: true, // Don't connect immediately
+                    enableOfflineQueue: true, // Enable for queue reliability
+                    // Add BullMQ-specific optimizations
+                    enableReadyCheck: true,
+                    maxLoadingTimeout: 30000, // PRODUCTION: 30s timeout for production stability
+                },
             };
         }
 
         // Create the queue with error handling
         visit = new Queue("visit", {
-            connection: connectionOptions,
+            ...queueOptions,
             defaultJobOptions: {
                 removeOnComplete: 10, // Keep only 10 completed jobs
                 removeOnFail: 5, // Keep only 5 failed jobs
@@ -78,7 +95,7 @@ if (env.REDIS_ENABLED) {
 
         // Create the worker with enhanced error handling and timeouts
         visitWorker = new Worker("visit", path.resolve(__dirname, "visit.js"), {
-            connection: connectionOptions,
+            ...queueOptions,
             concurrency: 2, // CRITICAL FIX: Reduced to 2 for better stability
             stalledInterval: 10000, // Check every 10 seconds
             maxStalledCount: 1, // Max 1 stalled job before considering it failed
