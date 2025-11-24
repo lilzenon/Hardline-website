@@ -159,7 +159,8 @@ const spec = {
 
     // 🔴 REDIS CONFIGURATION (CRITICAL FOR VISIT PROCESSING)
     REDIS_ENABLED: bool({ default: false }),
-    REDIS_HOST: str({ default: "127.0.0.1" }),
+    REDIS_URL: str({ default: "" }), // Primary: Full Redis connection URL (e.g., rediss://user:pass@host:port/db)
+    REDIS_HOST: str({ default: "127.0.0.1" }), // Fallback: Individual connection parameters
     REDIS_PORT: num({ default: 6379 }),
     REDIS_PASSWORD: str({ default: "" }),
     REDIS_DB: num({ default: 0 }),

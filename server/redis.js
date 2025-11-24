@@ -6,13 +6,27 @@ let client;
 
 if (env.REDIS_ENABLED) {
     try {
+        // CRITICAL: Determine connection method (REDIS_URL takes precedence)
+        let connectionConfig;
+
+        if (env.REDIS_URL) {
+            // Use REDIS_URL for external connections (e.g., DigitalOcean → Render)
+            console.log('🔗 Using REDIS_URL for connection');
+            connectionConfig = env.REDIS_URL;
+        } else {
+            // Fallback to individual parameters for local/internal connections
+            console.log('🔗 Using individual Redis parameters for connection');
+            connectionConfig = {
+                host: env.REDIS_HOST,
+                port: env.REDIS_PORT,
+                db: env.REDIS_DB,
+                ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+                ...(env.REDIS_TLS ? { tls: {} } : {}),
+            };
+        }
+
         // UNIFIED REDIS CONFIG: Optimized for both performance and reliability
-        client = new Redis({
-            host: env.REDIS_HOST,
-            port: env.REDIS_PORT,
-            db: env.REDIS_DB,
-            ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
-            ...(env.REDIS_TLS ? { tls: {} } : {}),
+        client = new Redis(connectionConfig, {
             // UNIFIED CONFIG: Balanced timeouts for stability and performance
             connectTimeout: 10000, // 10 seconds - increased for Render Redis
             commandTimeout: 15000, // 15s timeout - reduced for faster fallback
@@ -76,7 +90,13 @@ if (client) {
 
     client.on('ready', async() => {
         console.log('🚀 Redis ready for commands');
-        console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
+        if (env.REDIS_URL) {
+            // Mask password in URL for security
+            const maskedUrl = env.REDIS_URL.replace(/:([^@]+)@/, ':****@');
+            console.log(`📊 Redis Config: ${maskedUrl}`);
+        } else {
+            console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
+        }
 
         // CRITICAL: Enhanced connection testing with timeout verification
         try {

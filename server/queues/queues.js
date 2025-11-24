@@ -17,13 +17,34 @@ let visitWorker;
 if (env.REDIS_ENABLED) {
     try {
         console.log('🔄 Initializing Redis connection for BullMQ...');
-        console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
 
-        const connection = {
-            port: env.REDIS_PORT,
-            host: env.REDIS_HOST,
-            db: env.REDIS_DB,
-            ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+        // CRITICAL: Determine connection method (REDIS_URL takes precedence)
+        let connection;
+
+        if (env.REDIS_URL) {
+            // Use REDIS_URL for external connections (e.g., DigitalOcean → Render)
+            console.log('🔗 Using REDIS_URL for BullMQ connection');
+            const maskedUrl = env.REDIS_URL.replace(/:([^@]+)@/, ':****@');
+            console.log(`📊 Redis Config: ${maskedUrl}`);
+
+            // BullMQ accepts connection string directly
+            connection = env.REDIS_URL;
+        } else {
+            // Fallback to individual parameters for local/internal connections
+            console.log('🔗 Using individual Redis parameters for BullMQ connection');
+            console.log(`📊 Redis Config: ${env.REDIS_HOST}:${env.REDIS_PORT} DB:${env.REDIS_DB}`);
+
+            connection = {
+                port: env.REDIS_PORT,
+                host: env.REDIS_HOST,
+                db: env.REDIS_DB,
+                ...(env.REDIS_PASSWORD && { password: env.REDIS_PASSWORD }),
+            };
+        }
+
+        // Add common connection options (works for both URL and object config)
+        const connectionOptions = typeof connection === 'string' ? connection : {
+            ...connection,
             // CRITICAL FIX: BullMQ requires maxRetriesPerRequest to be null
             connectTimeout: 10000, // PRODUCTION: 10s connection timeout for stability
             commandTimeout: 30000, // PRODUCTION: 30s timeout for production stability
@@ -38,7 +59,7 @@ if (env.REDIS_ENABLED) {
 
         // Create the queue with error handling
         visit = new Queue("visit", {
-            connection,
+            connection: connectionOptions,
             defaultJobOptions: {
                 removeOnComplete: 10, // Keep only 10 completed jobs
                 removeOnFail: 5, // Keep only 5 failed jobs
@@ -53,7 +74,7 @@ if (env.REDIS_ENABLED) {
 
         // Create the worker with enhanced error handling and timeouts
         visitWorker = new Worker("visit", path.resolve(__dirname, "visit.js"), {
-            connection,
+            connection: connectionOptions,
             concurrency: 2, // CRITICAL FIX: Reduced to 2 for better stability
             stalledInterval: 10000, // Check every 10 seconds
             maxStalledCount: 1, // Max 1 stalled job before considering it failed
