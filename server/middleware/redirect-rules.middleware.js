@@ -7,6 +7,24 @@ const knex = require("../knex");
 
 const cache = new Map(); // slug -> { enabled, destinationUrl, expiresAt }
 
+/**
+ * Track a redirect hit asynchronously (non-blocking)
+ * @param {string} slug - The redirect slug
+ */
+function trackRedirectHit(slug) {
+  setImmediate(async () => {
+    try {
+      await knex("redirects")
+        .where("slug", slug.toLowerCase())
+        .increment("hits", 1)
+        .update("last_accessed_at", knex.fn.now());
+      console.log(`📊 Redirect hit tracked: /${slug}`);
+    } catch (error) {
+      console.error(`❌ Error tracking redirect hit for "${slug}":`, error.message);
+    }
+  });
+}
+
 function shouldBypass(path) {
   if (!path || path === "/") return true;
   return /^(\/api|\/assets|\/dist|\/static|\/uploads|\/css|\/js|\/custom-images)\//.test(path);
@@ -66,6 +84,8 @@ async function redirectRulesMiddleware(req, res, next) {
     const cached = cache.get(slug);
     if (cached && cached.expiresAt > now) {
       if (cached.enabled && cached.destinationUrl) {
+        // Track the hit even for cached redirects
+        trackRedirectHit(slug);
         return res.redirect(302, cached.destinationUrl);
       }
       return next();
@@ -88,6 +108,8 @@ async function redirectRulesMiddleware(req, res, next) {
 
       // Only redirect if enabled and valid absolute URL
       if (enabled && typeof destinationUrl === "string" && /^https?:\/\//i.test(destinationUrl)) {
+        // Track the redirect hit asynchronously
+        trackRedirectHit(slug);
         return res.redirect(302, destinationUrl);
       }
 
