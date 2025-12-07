@@ -295,7 +295,8 @@ const MobileNavigation = ({
 
         style={{
           position: 'fixed',
-          top: '0px',
+          /* 🚀 iOS SAFARI FIX: Position below safe area (Dynamic Island/notch) */
+          top: 'env(safe-area-inset-top, 0px)',
           left: '0px',
           right: '0px',
           /* 🚀 JITTER FIX: Use fixed width to prevent layout shifts during scroll */

@@ -1667,8 +1667,9 @@ const FigmaMobile = () => {
     const baseSpacing = parseInt(drawerHeight.replace('px', ''));
 
     if (isRealMobileDevice) {
-      // Real mobile device: Drastically reduced spacing while keeping social buttons visible
-      return `calc(${drawerHeight} + 20px)`;
+      // 🚀 iOS SAFARI FIX: Include safe-area-inset-bottom for proper spacing above drawer
+      // This accounts for the home indicator and Safari's bottom UI
+      return `calc(${drawerHeight} + 20px + env(safe-area-inset-bottom, 0px))`;
     } else {
       // Desktop browser mobile simulation: Minimal spacing
       const reducedSpacing = Math.max(15, baseSpacing * 0.2); // Minimum 15px, or 20% of drawer height
@@ -2224,9 +2225,12 @@ const FigmaMobile = () => {
           /* 🚀 PWA Standalone Mode: Adjust container for safe areas */
           @media (display-mode: standalone) {
             .mobile-container {
-              /* Account for safe areas in standalone mode */
+              /* Account for safe areas in standalone mode - full height with padding */
               padding-top: env(safe-area-inset-top, 0px) !important;
-              height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+              padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+              /* Keep full viewport height - padding is inside the box */
+              height: 100dvh !important;
+              box-sizing: border-box !important;
             }
           }
 

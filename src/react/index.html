@@ -394,10 +394,13 @@
             html, body {
                 /* In standalone mode, content should respect safe areas */
                 padding-top: env(safe-area-inset-top, 0px);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                box-sizing: border-box;
             }
             #root {
-                /* Ensure root container accounts for safe areas */
-                min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+                /* Full viewport height with safe areas handled by padding */
+                min-height: 100dvh;
+                box-sizing: border-box;
             }
         }
 

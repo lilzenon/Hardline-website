@@ -18,11 +18,14 @@
     html {
         /* In standalone mode, ensure content respects notch/Dynamic Island */
         padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: border-box;
     }
 
     body {
-        /* Ensure body fills available space minus safe areas */
-        min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+        /* Full viewport height with safe areas handled by html padding */
+        min-height: 100dvh;
+        box-sizing: border-box;
     }
 }
 
