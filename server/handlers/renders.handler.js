@@ -1595,15 +1595,73 @@ async function reactHomepage(req, res) {
     } catch (error) {
         console.error('🚨 CRITICAL: React homepage failed:', error);
         console.error('📍 Error stack:', error.stack);
+        console.error('📍 Request path:', req.path);
+        console.error('📍 User-Agent:', req.headers['user-agent']);
 
-        // NEVER fallback to Handlebars - always serve React or proper error
-        // Return a proper error response instead of falling back to legacy templates
-        return res.status(500).json({
-            error: 'Homepage temporarily unavailable',
-            message: 'The React homepage failed to load. Please try refreshing the page.',
-            timestamp: new Date().toISOString(),
-            requestId: req.id || 'unknown'
-        });
+        // 🔧 FIX: Return a proper HTML error page instead of JSON
+        // This ensures Instagram's in-app browser and other WebViews display a user-friendly error
+        const errorHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>BOUNCE2BOUNCE - Page Loading</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            background: #000;
+            color: #fff;
+            font-family: Inter, system-ui, -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .logo { width: 180px; margin-bottom: 32px; }
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+        p { font-size: 16px; opacity: 0.8; margin-bottom: 24px; max-width: 400px; }
+        .btn {
+            display: inline-block;
+            background: #319DFF;
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #2080DD; }
+        .retry-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            margin-left: 12px;
+        }
+        .retry-btn:hover { background: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <img src="/images/figma-exact/b2b-logo-nav.svg" alt="BOUNCE2BOUNCE" class="logo">
+    <h1>Just a moment...</h1>
+    <p>The page is loading. If it doesn't load automatically, tap the button below.</p>
+    <div>
+        <a href="/" class="btn">Go to Homepage</a>
+        <a href="javascript:location.reload()" class="btn retry-btn">Retry</a>
+    </div>
+    <script>
+        // Auto-retry after 2 seconds
+        setTimeout(function() {
+            window.location.reload();
+        }, 2000);
+    </script>
+</body>
+</html>`;
+
+        res.status(500).send(errorHtml);
     }
 }
 
