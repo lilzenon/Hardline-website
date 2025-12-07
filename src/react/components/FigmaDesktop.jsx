@@ -565,7 +565,7 @@ const FigmaDesktop = () => {
   const layloContainerRef = useRef(null);
   const socialContainerRef = useRef(null);
   const [socialMarginTop, setSocialMarginTop] = useState(null);
-  const [maxSocialButtonSize, setMaxSocialButtonSize] = useState(null);
+  // Note: maxSocialButtonSize was removed - buttons now use fixed sizes to prevent resize shrinking bug
 
 
   // Featured hero title spacing control (desktop only)
@@ -1491,13 +1491,8 @@ const FigmaDesktop = () => {
       const mt = Math.max(0, Math.round(desiredBottom + bias - currentBottom));
       setSocialMarginTop(mt);
 
-      // Compute maximum allowed button size so the row never extends past the video bottom
-      const availableRowHeight = Math.max(0, Math.floor(desiredBottom - (socialRect.top + mt)) - 8); // subtract small padding
-      if (availableRowHeight > 0) {
-        // Constrain between 64px and 160px to preserve aesthetics
-        const clamped = Math.max(64, Math.min(160, availableRowHeight));
-        setMaxSocialButtonSize(clamped);
-      }
+      // Note: maxSocialButtonSize calculation was removed to fix resize shrinking bug
+      // Buttons now use fixed 96px size regardless of available space
     } catch (_) {}
   }, [scaledDimensions?.containerWidth, scaledDimensions?.scale]);
 
@@ -2855,9 +2850,9 @@ const FigmaDesktop = () => {
             >
               <SocialMediaButtons
                 isDesktop={true}
-                containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth} // Pass actual container width
+                containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth}
                 responsive={true}
-                maxButtonSizePx={maxSocialButtonSize}
+                // maxButtonSizePx removed - buttons use fixed 96px size to prevent resize shrinking
               />
             </div>
         </div>

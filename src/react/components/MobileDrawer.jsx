@@ -540,7 +540,8 @@ const MobileDrawer = ({
           /* Enhanced drawer animations with momentum support */
           .mobile-drawer {
             position: fixed !important;
-            bottom: 0 !important;
+            /* 🚀 iOS SAFARI FIX: Respect safe-area-inset-bottom for home indicator */
+            bottom: env(safe-area-inset-bottom, 0px) !important;
             left: 25px !important;
             right: 25px !important;
             margin: 0 auto !important;
@@ -691,6 +692,14 @@ const MobileDrawer = ({
               left: 10px !important;
               right: 10px !important;
               width: calc(100% - 20px) !important;
+            }
+          }
+
+          /* 🚀 PWA Standalone Mode: Ensure drawer respects safe areas when launched from home screen */
+          @media (display-mode: standalone) {
+            .mobile-drawer {
+              /* In standalone mode, ensure proper bottom spacing for home indicator */
+              bottom: env(safe-area-inset-bottom, 0px) !important;
             }
           }
         `}

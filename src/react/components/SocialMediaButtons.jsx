@@ -223,12 +223,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
   const FIXED_MOBILE_BUTTON_SIZE = 80; // Fixed size for mobile
 
   // Use fixed sizes instead of responsive calculations to prevent resize issues
-  let computedButtonSize = isDesktop ? FIXED_DESKTOP_BUTTON_SIZE : FIXED_MOBILE_BUTTON_SIZE;
-
-  // Desktop overflow guard: only apply maxButtonSizePx if explicitly provided
-  if (isDesktop && typeof maxButtonSizePx === 'number' && maxButtonSizePx > 0) {
-    computedButtonSize = Math.min(computedButtonSize, Math.max(64, Math.floor(maxButtonSizePx)));
-  }
+  // 🚨 FIX: Use ONLY fixed button sizes - the dynamic maxButtonSizePx constraint was causing
+  // buttons to shrink during browser resize because it was recalculated on every resize event.
+  // Fixed sizes (96px desktop, 80px mobile) remain stable regardless of layout changes.
+  const computedButtonSize = isDesktop ? FIXED_DESKTOP_BUTTON_SIZE : FIXED_MOBILE_BUTTON_SIZE;
 
   const computedIconSize = isDesktop ? Math.round(computedButtonSize * 0.66) : 40;
 

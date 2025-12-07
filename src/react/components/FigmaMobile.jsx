@@ -2208,8 +2208,10 @@ const FigmaMobile = () => {
           .mobile-container {
             position: relative !important;
             width: 100vw !important;
+            /* 🚀 iOS SAFARI FIX: Use dynamic viewport height for proper sizing */
             height: 100vh !important;
-            height: -webkit-fill-available !important;
+            height: 100dvh !important; /* Modern dynamic viewport height */
+            height: -webkit-fill-available !important; /* iOS Safari fallback */
             /* 🚨 CRITICAL: Control overflow to prevent footer/hidden elements from showing */
             overflow: hidden !important;
             /* Ensure proper scroll containment */
@@ -2217,6 +2219,15 @@ const FigmaMobile = () => {
             -webkit-overscroll-behavior: contain !important;
             /* 🚨 CRITICAL: Prevent any content from escaping container bounds */
             isolation: isolate !important;
+          }
+
+          /* 🚀 PWA Standalone Mode: Adjust container for safe areas */
+          @media (display-mode: standalone) {
+            .mobile-container {
+              /* Account for safe areas in standalone mode */
+              padding-top: env(safe-area-inset-top, 0px) !important;
+              height: calc(100dvh - env(safe-area-inset-top, 0px)) !important;
+            }
           }
 
           /* Optimize touch interactions for iOS */

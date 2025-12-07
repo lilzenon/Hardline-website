@@ -527,8 +527,63 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         `;
     }
 
-    // About Page: Render about content
-    if (pageType === 'about' && pageData && pageData.content) {
+    // About Page: Render about content AND gallery images for Google Image SEO
+    if (pageType === 'about' && pageData) {
+        // 🖼️ GOOGLE IMAGE SEO FIX: Render gallery images as actual <img> tags for bot indexing
+        // This is CRITICAL - Google Images indexes images from <img> tags, not just structured data
+        let galleryHtml = '';
+        if (pageData.galleryImages && Array.isArray(pageData.galleryImages) && pageData.galleryImages.length > 0) {
+            const imageBaseUrl = 'https://admin.b2b.click';
+            const galleryImagesHtml = pageData.galleryImages.map((image, index) => {
+                // Get the best available image URL
+                const imageUrl = image.urls?.large || image.urls?.medium || image.url || image.src || '';
+                const absoluteImageUrl = imageUrl.startsWith('http') ? imageUrl : `${imageBaseUrl}${imageUrl}`;
+
+                // Get alt text with proper fallbacks
+                const altText = escapeHtml(image.alt || image.title || image.description || `BOUNCE2BOUNCE Gallery Image ${index + 1}`);
+                const titleText = escapeHtml(image.title || image.alt || `Gallery Image ${index + 1}`);
+
+                // Build srcset for responsive images
+                const thumbnailUrl = image.urls?.thumbnail ? (image.urls.thumbnail.startsWith('http') ? image.urls.thumbnail : `${imageBaseUrl}${image.urls.thumbnail}`) : '';
+                const smallUrl = image.urls?.small ? (image.urls.small.startsWith('http') ? image.urls.small : `${imageBaseUrl}${image.urls.small}`) : '';
+                const mediumUrl = image.urls?.medium ? (image.urls.medium.startsWith('http') ? image.urls.medium : `${imageBaseUrl}${image.urls.medium}`) : '';
+                const largeUrl = image.urls?.large ? (image.urls.large.startsWith('http') ? image.urls.large : `${imageBaseUrl}${image.urls.large}`) : '';
+
+                let srcset = '';
+                if (thumbnailUrl) srcset += `${thumbnailUrl} 200w, `;
+                if (smallUrl) srcset += `${smallUrl} 400w, `;
+                if (mediumUrl) srcset += `${mediumUrl} 800w, `;
+                if (largeUrl) srcset += `${largeUrl} 1200w`;
+                srcset = srcset.replace(/, $/, ''); // Remove trailing comma
+
+                return `
+                    <figure style="margin: 0 0 1rem 0; break-inside: avoid;">
+                        <img
+                            src="${absoluteImageUrl}"
+                            alt="${altText}"
+                            title="${titleText}"
+                            ${srcset ? `srcset="${srcset}"` : ''}
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                            style="width: 100%; height: auto; border-radius: 8px; display: block;"
+                            loading="eager"
+                            decoding="async"
+                        >
+                        ${image.title ? `<figcaption style="font-size: 0.875rem; color: #a0a0a0; margin-top: 0.5rem; text-align: center;">${escapeHtml(image.title)}</figcaption>` : ''}
+                    </figure>
+                `;
+            }).join('');
+
+            galleryHtml = `
+                <section style="margin-top: 3rem;">
+                    <h2 style="font-size: 2rem; font-weight: 600; margin-bottom: 1.5rem; text-align: center; color: #ffffff;">Gallery</h2>
+                    <div style="column-count: 2; column-gap: 1rem;">
+                        ${galleryImagesHtml}
+                    </div>
+                </section>
+            `;
+            console.log(`✅ SSR: Rendered ${pageData.galleryImages.length} gallery images as <img> tags for Google indexing`);
+        }
+
         return `
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
@@ -537,6 +592,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                     <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
                         ${pageData.content || ''}
                     </div>
+                    ${galleryHtml}
                 </div>
             </div>
         `;
@@ -1292,27 +1348,50 @@ async function reactHomepage(req, res) {
                 console.warn('⚠️ Failed to fetch FAQ data for SSR:', error.message);
             }
         } else if (pageType === 'about') {
-            // Fetch About page content
+            // Fetch About page content AND gallery images for SSR
             try {
                 const dashboardApiUrl = env.NODE_ENV === 'production' ?
                     'https://admin.b2b.click/api/settings/about' :
                     'http://localhost:3002/api/settings/about';
+                const galleryApiUrl = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click/api/settings/about/gallery/public' :
+                    'http://localhost:3002/api/settings/about/gallery/public';
 
+                // Fetch both About content and gallery images in parallel
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-                const response = await fetch(dashboardApiUrl, {
-                    signal: controller.signal,
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-                });
+                const [aboutResponse, galleryResponse] = await Promise.all([
+                    fetch(dashboardApiUrl, {
+                        signal: controller.signal,
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                    }),
+                    fetch(galleryApiUrl, {
+                        signal: controller.signal,
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                    })
+                ]);
                 clearTimeout(timeoutId);
 
-                if (response.ok) {
-                    const apiResponse = await response.json();
+                if (aboutResponse.ok) {
+                    const apiResponse = await aboutResponse.json();
                     pageData = apiResponse.data || apiResponse;
                     console.log('✅ About page content fetched for SSR');
                 } else {
-                    console.warn('⚠️ About API responded with', response.status);
+                    console.warn('⚠️ About API responded with', aboutResponse.status);
+                }
+
+                // 🖼️ GOOGLE IMAGE SEO FIX: Include gallery images in SSR for bot indexing
+                if (galleryResponse.ok) {
+                    const galleryData = await galleryResponse.json();
+                    const galleryImages = galleryData.data || galleryData || [];
+                    if (Array.isArray(galleryImages) && galleryImages.length > 0) {
+                        pageData = pageData || {};
+                        pageData.galleryImages = galleryImages;
+                        console.log(`✅ Gallery images fetched for SSR: ${galleryImages.length} images`);
+                    }
+                } else {
+                    console.warn('⚠️ Gallery API responded with', galleryResponse.status);
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch About content for SSR:', error.message);
