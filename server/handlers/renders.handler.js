@@ -1465,6 +1465,14 @@ async function reactHomepage(req, res) {
             return `${base}${url.startsWith('/') ? url : '/' + url}`;
         };
 
+        // Generate structured data with error handling to prevent page failures
+        let structuredDataJson = '{}';
+        try {
+            structuredDataJson = await generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl);
+        } catch (structuredDataError) {
+            console.warn('⚠️ Failed to generate structured data, using empty object:', structuredDataError.message);
+        }
+
         // Generate dynamic meta tags HTML
         const dynamicMetaTags = `
     <!-- Dynamic SEO Meta Tags -->
@@ -1508,7 +1516,7 @@ async function reactHomepage(req, res) {
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-    ${await generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl)}
+    ${structuredDataJson}
     </script>`;
 
         // Replace the existing title and inject meta tags
