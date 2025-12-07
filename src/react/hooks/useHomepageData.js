@@ -555,37 +555,56 @@ export const useHomepageData = () => {
     return sorted;
   }, [featuredEvents, showAllEvents, normalizeEvent, filterEvents, sortEvents]);
 
-  // Process and filter homepage events (exclude featured events to avoid duplicates)
+  // Process and filter homepage events
+  // In "Next" mode: exclude featured events to avoid duplicates (they show in hero)
+  // In "Past" mode: include ALL events (featured hero is hidden, so featured past events must appear in list)
   const processedHomepageEvents = useMemo(() => {
     console.log('🔍 Processing homepage events:', homepageEvents.length, 'showAllEvents:', showAllEvents);
-    const featuredEventIds = new Set(featuredEvents.map(event => event.id));
-    console.log('🔍 Featured event IDs to exclude:', featuredEventIds);
 
-    const afterDeduplication = homepageEvents.filter(event => !featuredEventIds.has(event.id));
-    console.log('🔍 Homepage events after deduplication:', afterDeduplication.length);
+    // 🚀 FIX: Only deduplicate in "Next" mode (showAllEvents=true)
+    // In "Past" mode (showAllEvents=false), include featured events since the hero is hidden
+    let eventsToProcess;
+    if (showAllEvents) {
+      // "Next" mode: exclude featured events (they appear in hero section)
+      const featuredEventIds = new Set(featuredEvents.map(event => event.id));
+      console.log('🔍 Featured event IDs to exclude (Next mode):', [...featuredEventIds]);
+      eventsToProcess = homepageEvents.filter(event => !featuredEventIds.has(event.id));
+      console.log('🔍 Homepage events after deduplication:', eventsToProcess.length);
+    } else {
+      // "Past" mode: combine all events (featured + homepage) since hero is hidden
+      // Use a Map to deduplicate by event ID
+      const allEventsMap = new Map();
+      [...featuredEvents, ...homepageEvents].forEach(event => {
+        if (!allEventsMap.has(event.id)) {
+          allEventsMap.set(event.id, event);
+        }
+      });
+      eventsToProcess = [...allEventsMap.values()];
+      console.log('🔍 Combined all events for Past mode:', eventsToProcess.length);
+    }
 
     // Log raw event dates for debugging
-    if (afterDeduplication.length > 0) {
-      console.log('🔍 Raw homepage event dates:', afterDeduplication.map(e => ({
+    if (eventsToProcess.length > 0) {
+      console.log('🔍 Raw event dates:', eventsToProcess.map(e => ({
         id: e.id,
         title: e.title || e.artist_name,
         event_date: e.event_date
       })));
     }
 
-    const normalized = afterDeduplication
+    const normalized = eventsToProcess
       .map(event => normalizeEvent(event, 'homepage-event', true))
       .filter(Boolean);
-    console.log('🔍 Normalized homepage events:', normalized.length);
+    console.log('🔍 Normalized events:', normalized.length);
 
     const filtered = filterEvents(normalized, showAllEvents);
-    console.log('🔍 Filtered homepage events:', filtered.length);
+    console.log('🔍 Filtered events:', filtered.length);
     const sorted = sortEvents(filtered, showAllEvents);
-    console.log('🔍 Final homepage events:', sorted.length);
+    console.log('🔍 Final events:', sorted.length);
 
     // Log final sorted order for debugging
     if (sorted.length > 0) {
-      console.log('🔍 Final homepage events order:', sorted.map(e => ({
+      console.log('🔍 Final events order:', sorted.map(e => ({
         title: e.title,
         eventDate: e.eventDate,
         formattedDate: e.date
