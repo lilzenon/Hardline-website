@@ -461,6 +461,17 @@ async function eventEdit(req, res) {
 // 🤖 BOT-FRIENDLY RENDERING: All pages now get server-side rendered content
 // This prevents soft 404 errors and ensures bots can index page content
 function generateStaticContent(pageType, metaTags, seoSettings, pageData = null) {
+    // Local escapeHtml function for this scope
+    const escapeHtml = (text) => {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    };
+
     const baseStyles = `
         min-height: 100vh;
         background: #000000;
