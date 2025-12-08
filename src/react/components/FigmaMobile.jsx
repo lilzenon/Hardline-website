@@ -8,6 +8,7 @@ import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import MobileDrawer from './MobileDrawer';
 import Footer from './Footer';
+import LayloIframeSimple from './LayloIframeSimple';
 
 import BrandedLoader from './BrandedLoader';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
@@ -1635,47 +1636,13 @@ const FigmaMobile = () => {
     }
   }, [drawerFullyClosed, showVerification, drawerExpanded, showDisclaimer, iframeExpanded]);
 
-  // Dynamic bottom spacing calculation based on viewport context
+  // Dynamic bottom spacing calculation - simplified now that drawer is archived
+  // Only provides safe-area-aware minimal spacing for Footer
   const getDynamicBottomSpacing = useCallback(() => {
-    const drawerHeight = getDrawerHeight();
-
-    // Detect if we're on a real mobile device vs desktop browser mobile simulation
-    const isRealMobileDevice = (() => {
-      // Check for touch capability and mobile user agent
-      const hasTouchScreen = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isMobileUserAgent = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-      // Check viewport characteristics
-      const viewportWidth = window.innerWidth;
-      const screenWidth = window.screen.width;
-      const devicePixelRatio = window.devicePixelRatio || 1;
-
-      // Real mobile devices typically have:
-      // - Touch capability
-      // - Mobile user agent
-      // - Viewport width close to screen width
-      // - Device pixel ratio > 1
-      const isLikelyRealMobile = hasTouchScreen &&
-                                isMobileUserAgent &&
-                                Math.abs(viewportWidth - screenWidth) < 50 &&
-                                devicePixelRatio > 1;
-
-      return isLikelyRealMobile;
-    })();
-
-    // Calculate base spacing from drawer height
-    const baseSpacing = parseInt(drawerHeight.replace('px', ''));
-
-    if (isRealMobileDevice) {
-      // 🚀 iOS SAFARI FIX: Include safe-area-inset-bottom for proper spacing above drawer
-      // This accounts for the home indicator and Safari's bottom UI
-      return `calc(${drawerHeight} + 20px + env(safe-area-inset-bottom, 0px))`;
-    } else {
-      // Desktop browser mobile simulation: Minimal spacing
-      const reducedSpacing = Math.max(15, baseSpacing * 0.2); // Minimum 15px, or 20% of drawer height
-      return `calc(${drawerHeight} + ${reducedSpacing}px)`;
-    }
-  }, [getDrawerHeight, viewportContext]); // Include viewportContext to recalculate when viewport changes
+    // 🚀 iOS SAFARI FIX: Include safe-area-inset-bottom for home indicator
+    // Minimal 16px base padding + safe area inset for proper Footer spacing
+    return 'calc(16px + env(safe-area-inset-bottom, 0px))';
+  }, []); // No dependencies - simplified calculation
 
   // Handle viewport changes for dynamic spacing
   useEffect(() => {
@@ -3051,7 +3018,7 @@ const FigmaMobile = () => {
             style={{
               width: '100%',
               marginTop: '2px', // Minimal top margin
-              marginBottom: '4px', // Drastically reduced spacing after events
+              marginBottom: '2px', // Reduced by 50% (from 4px) for tighter spacing with Follow Us
               // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
               opacity: sectionsAnimated ? 1 : 0,
               transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
@@ -4322,7 +4289,7 @@ const FigmaMobile = () => {
             aria-labelledby="follow-us-section-title"
             style={{
               width: '100%',
-              marginTop: '2px', // Reduced by ~50% (from 4px to 2px) to bring closer to expand button
+              marginTop: '1px', // Further reduced for tighter spacing with events section
               marginBottom: '4px', // Consistent 4px spacing above and below
               // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
               opacity: sectionsAnimated ? 1 : 0,
@@ -4570,13 +4537,13 @@ const FigmaMobile = () => {
           </article>
           </section>
 
-          {/* Social Media Buttons Section - Moved after YouTube */}
+          {/* Social Media Buttons Section - After YouTube video */}
           <section
             style={{
               width: '100%',
               padding: '0',
               margin: '0',
-              marginTop: '8px', // Increased spacing between YouTube video and social media buttons
+              marginTop: '8px', // Spacing after YouTube video
               boxSizing: 'border-box',
               display: 'flex',
               justifyContent: 'center',
@@ -4585,39 +4552,144 @@ const FigmaMobile = () => {
               opacity: sectionsAnimated ? 1 : 0,
               transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
               transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
-              transitionDelay: '300ms' // Third section in cascade
+              transitionDelay: '280ms' // After YouTube in cascade
             }}
           >
             <div
               style={{
-                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                width: 'min(344px, calc(100vw - 4px))',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                margin: '0 auto' // Center the container
+                margin: '0 auto'
               }}
             >
               <SocialMediaButtons />
             </div>
           </section>
-        </div>
 
-        {/* Footer Section - FIXED: Hidden when drawer is active to prevent scroll visibility */}
-        <div
-          style={{
-            /* 🚨 CRITICAL FIX: Hide footer when drawer is active to prevent unwanted text visibility */
-            display: drawerExpanded ? 'none' : 'block',
-            visibility: drawerExpanded ? 'hidden' : 'visible'
-          }}
-        >
+          {/* ============================================
+              TEXT US INLINE SECTION - Laylo Integration
+              Moved from MobileDrawer to inline for better UX
+              Position: After Social Media Buttons (last content section)
+              ============================================ */}
+          <section
+            aria-labelledby="text-us-section-title"
+            style={{
+              width: '100%',
+              marginTop: '12px', // 8px grid: better visual separation from social buttons
+              padding: '0',
+              boxSizing: 'border-box',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              // 🎬 OPTIMIZED: Modern load-in animation
+              opacity: sectionsAnimated ? 1 : 0,
+              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+              transitionDelay: '320ms' // After social buttons in cascade
+            }}
+          >
+            <article
+              style={{
+                width: 'min(344px, calc(100vw - 4px))',
+                margin: '0 auto',
+                // Glassmorphism styling matching event cards
+                background: 'rgba(22, 22, 22, 0.8)',
+                border: '1px solid rgba(56, 56, 56, 0.3)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '20px',
+                // Reduced bottom padding - iframe extends to edge
+                padding: '20px 20px 0 20px',
+                boxSizing: 'border-box',
+                overflow: 'hidden' // Clip iframe to card border radius
+              }}
+            >
+              {/* Text Us Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  marginBottom: '8px' // 8px grid: tighter connection to iframe
+                }}
+              >
+                <h3
+                  id="text-us-section-title"
+                  style={{
+                    fontFamily: 'Inter',
+                    fontWeight: '800',
+                    fontSize: '20px',
+                    lineHeight: '1.2em',
+                    color: '#FFFFFF',
+                    margin: 0
+                  }}
+                >
+                  Text us
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'Inter',
+                    fontWeight: '300',
+                    fontSize: '12px',
+                    lineHeight: '1.3em',
+                    color: '#FFFFFF',
+                    opacity: 0.8,
+                    margin: 0
+                  }}
+                >
+                  Exclusive events, contests, and more
+                </p>
+              </div>
+
+              {/* Laylo Integration - CRITICAL: Keep iframe unchanged */}
+              <div
+                style={{
+                  // Extend iframe to full card width using negative margins
+                  width: 'calc(100% + 40px)',
+                  marginLeft: '-20px',
+                  marginRight: '-20px',
+                  marginBottom: '0', // No bottom margin - extend to card edge
+                  height: '180px', // Fixed height for inline display
+                  borderRadius: '0 0 20px 20px', // Match card's bottom border radius
+                  overflow: 'hidden',
+                  background: 'transparent'
+                }}
+              >
+                <LayloIframeSimple
+                  dropId="1nTsX"
+                  color="ff0409"
+                  theme="dark"
+                  background="solid"
+                  minimal={true}
+                  visible={true}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    borderRadius: '0 0 20px 20px',
+                    background: 'transparent',
+                    display: 'block'
+                  }}
+                />
+              </div>
+            </article>
+          </section>
+
+          {/* Footer Section - Inside scroll container so it scrolls with content */}
           <Footer compact={true} />
         </div>
       </main>
 
-      {/* REMOVED: Duplicate inline drawer implementation - now using MobileDrawer component */}
-
-
-      {/* REFACTORED: Using Shared Mobile Drawer Component - Hidden when navigation menu is open */}
+      {/* ============================================
+          ARCHIVED: Text Us drawer - kept for potential revert
+          Date: 2024-12-08
+          Reason: Moved "Text Us" Laylo integration to inline section above
+          The drawer functionality is preserved in MobileDrawer.jsx
+          To revert: uncomment this block and remove the inline section
+          ============================================ */}
+      {/* ARCHIVED: MobileDrawer component
       {!navigationMenuOpen && (
         <MobileDrawer
           contentRef={contentRef}
@@ -4629,6 +4701,7 @@ const FigmaMobile = () => {
           }}
         />
       )}
+      */}
     </div>
 
     {/* Expanded Image Modal */}

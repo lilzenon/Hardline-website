@@ -68,8 +68,9 @@ const SOCIAL_PLATFORMS = {
  * @param {number} containerWidth - The width of the container (for desktop sizing)
  * @param {boolean} responsive - Whether to use responsive sizing that scales with container
  * @param {number|null} maxButtonSizePx - Optional hard ceiling for button size to avoid overflow
+ * @param {boolean} iconOnly - When true, displays only icons without button backgrounds/borders (for mobile nav overlay)
  */
-const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsive = false, maxButtonSizePx = null }) => {
+const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsive = false, maxButtonSizePx = null, iconOnly = false }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -384,6 +385,10 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
           const platform = SOCIAL_PLATFORMS[link.platform];
           if (!platform) return null;
 
+          // Icon-only mode: larger icons, 44px touch target, no button styling
+          const iconOnlySize = 44; // Minimum touch target size for accessibility
+          const iconOnlyIconSize = 32; // Larger icon for visibility
+
           return (
             <a
               key={link.platform}
@@ -391,7 +396,29 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Follow us on ${platform.name}`}
-              style={{
+              style={iconOnly ? {
+                // Icon-only mode: no backgrounds, borders, or button styling
+                width: `${iconOnlySize}px`,
+                height: `${iconOnlySize}px`,
+                minWidth: `${iconOnlySize}px`,
+                minHeight: `${iconOnlySize}px`,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '0',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                boxSizing: 'border-box',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s ease, transform 0.2s ease',
+                transform: 'scale(1)',
+                opacity: 1,
+                flexShrink: 0
+              } : {
                 // 🚨 FIX: Fixed button sizes with consistent dimensions regardless of container width
                 width: `${computedButtonSize}px`,
                 height: `${computedButtonSize}px`,
@@ -418,42 +445,67 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                 aspectRatio: '1 / 1' // Ensure square buttons
               }}
               onTouchStart={(e) => {
-                e.currentTarget.style.transform = 'scale(0.95)';
-                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
-                e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
-                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
+                if (iconOnly) {
+                  e.currentTarget.style.transform = 'scale(0.9)';
+                  e.currentTarget.style.opacity = '0.7';
+                } else {
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
+                  e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
+                  e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
+                }
               }}
               onTouchEnd={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
-                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
+                if (iconOnly) {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.opacity = '1';
+                } else {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                  e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }
               }}
               onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.95)';
-                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
-                e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
-                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
+                if (iconOnly) {
+                  e.currentTarget.style.transform = 'scale(0.9)';
+                  e.currentTarget.style.opacity = '0.7';
+                } else {
+                  e.currentTarget.style.transform = 'scale(0.95)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
+                  e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
+                  e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
+                }
               }}
               onMouseUp={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
-                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
+                if (iconOnly) {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.opacity = '1';
+                } else {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                  e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
-                e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
-                e.currentTarget.style.boxShadow = 'none';
+                if (iconOnly) {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.opacity = '1';
+                } else {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                  e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }
               }}
               onFocus={(e) => {
-                if (isDesktop) {
+                if (!iconOnly && isDesktop) {
                   e.currentTarget.style.boxShadow = '0 0 0 2px rgba(255,255,255,0.5)';
                 }
               }}
               onBlur={(e) => {
-                if (isDesktop) {
+                if (!iconOnly && isDesktop) {
                   e.currentTarget.style.boxShadow = 'none';
                 }
               }}
@@ -461,8 +513,8 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
               {/* Social Media Icon */}
               <div
                 style={{
-                  width: `${computedIconSize}px`,
-                  height: `${computedIconSize}px`,
+                  width: iconOnly ? `${iconOnlyIconSize}px` : `${computedIconSize}px`,
+                  height: iconOnly ? `${iconOnlyIconSize}px` : `${computedIconSize}px`,
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center'

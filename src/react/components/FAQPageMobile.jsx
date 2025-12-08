@@ -3,6 +3,7 @@ import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/saniti
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
+import Footer from './Footer';
 
 
 const FAQPageMobile = () => {
@@ -170,11 +171,11 @@ const FAQPageMobile = () => {
         fontFamily: 'Inter, sans-serif'
       }}
     >
-      {/* Main Mobile Device Frame - 430x932 */}
+      {/* Main Mobile Device Frame - Full Viewport */}
       <div
         style={{
-          width: '430px',
-          height: '932px',
+          width: '100%',
+          height: '100%', // Fill parent's 100vh
           maxWidth: '100vw',
           maxHeight: '100vh',
           margin: '0 auto',
@@ -229,7 +230,7 @@ const FAQPageMobile = () => {
             style={{
               width: '100%',
               maxWidth: '430px',
-              padding: '0px 24px 48px 24px', // Top padding handled by dynamic nav height
+              padding: '0px 24px 0px 24px', // No bottom padding - Footer handles its own spacing
               boxSizing: 'border-box'
             }}
           >
@@ -321,6 +322,9 @@ const FAQPageMobile = () => {
         })}
             </div>
           </div>
+
+          {/* Footer Section - Full width footer at natural position */}
+          <Footer compact={true} />
         </div>
       </div>
 

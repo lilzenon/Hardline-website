@@ -360,11 +360,11 @@ Our mission is to unite top talent, immersive production, and passionate fans to
           fontFamily: 'Inter, sans-serif'
         }}
       >
-        {/* Main Mobile Device Frame - 430x932 */}
+        {/* Main Mobile Device Frame - Full Viewport */}
         <div
           style={{
-            width: '430px',
-            height: '932px',
+            width: '100%',
+            height: '100%', // Fill parent's 100vh
             maxWidth: '100vw',
             maxHeight: '100vh',
             margin: '0 auto',
@@ -501,7 +501,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 maxWidth: '430px',
                 margin: '0 auto',
                 marginTop: '0px',
-                marginBottom: '24px',
+                marginBottom: '0px', // Footer handles its own top margin
                 padding: '0 24px', // Match page content horizontal padding for consistency
                 boxSizing: 'border-box'
               }}
@@ -531,27 +531,10 @@ Our mission is to unite top talent, immersive production, and passionate fans to
               />
             </div>
 
-            {/* Content Wrapper Continued */}
-            <div
-              style={{
-                width: '100%',
-                maxWidth: '430px',
-                padding: '0 24px 80px 24px',
-                boxSizing: 'border-box',
-                margin: '0 auto'
-              }}
-            >
-              {/* Footer - Hidden on mobile but present for SEO */}
-              <div style={{ display: 'none' }}>
-                <Footer compact={true} />
-              </div>
-
-            </div>
+            {/* Footer Section - Full width footer at natural position */}
+            <Footer compact={true} />
           </div>
         </div>
-
-        {/* OLD NAVIGATION OVERLAY COMPLETELY REMOVED - Now using shared MobileNavigation component above */}
-
       </div>
     </>
   );

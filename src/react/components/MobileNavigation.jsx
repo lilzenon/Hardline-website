@@ -692,12 +692,13 @@ const MobileNavigation = ({
             </a>
           </div>
 
-          {/* 🎭 SOCIAL MEDIA BUTTONS: Elegant final entrance */}
+          {/* 🎭 SOCIAL MEDIA ICONS: Icon-only display for mobile nav overlay */}
           <div
             style={{
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
+              gap: '24px', // Consistent spacing between icon-only buttons
               padding: '0px 25px 0px 25px', // Consistent padding
               /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Social Media (4th item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
@@ -711,7 +712,7 @@ const MobileNavigation = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <SocialMediaButtons />
+            <SocialMediaButtons iconOnly={true} />
           </div>
         </div>
       </div>

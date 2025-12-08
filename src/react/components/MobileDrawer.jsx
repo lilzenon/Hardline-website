@@ -4,6 +4,16 @@ import useLayloSDK from '../hooks/useLayloSDK';
 
 
 /**
+ * ============================================
+ * ARCHIVED: Text Us Drawer Component
+ * Date: 2024-12-08
+ * Status: Not currently used in FigmaMobile.jsx
+ * Reason: "Text Us" feature moved to inline section for better UX
+ *
+ * This component is preserved for potential revert.
+ * To reactivate: uncomment the MobileDrawer usage in FigmaMobile.jsx
+ * ============================================
+ *
  * Shared Mobile Drawer Component
  * Extracted from FigmaMobile.jsx to eliminate code duplication
  * Maintains 100% identical functionality, animations, and behavior

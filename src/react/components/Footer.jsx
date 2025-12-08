@@ -1,122 +1,183 @@
 import React from 'react';
-import SocialMediaButtons from './SocialMediaButtons';
 
 /**
  * Footer Component
  *
- * Compact footer with navigation links for SEO purposes.
- * Minimal visual impact with small font sizes and compact layout.
+ * Modern mobile-optimized footer with navigation links for SEO purposes.
+ * Solid black background matching site aesthetic with proper iOS safe area support.
  *
- * Features:
- * - Internal links to About, FAQ pages
- * - Social media integration
- * - Compact single-row layout on desktop
- * - Minimal padding and spacing
+ * Mobile Footer Best Practices Applied:
+ * - Solid black background (#000000) matching page background for seamless integration
+ * - Subtle top border for visual separation
+ * - Adequate padding (16px+ on mobile) for comfortable touch interactions
+ * - 44px minimum touch targets for all interactive elements (WCAG 2.1 AA)
+ * - Safe-area-inset-bottom for iOS home indicator compatibility
+ * - Centered content with proper spacing (8px grid system)
+ * - Links stacked or in a single row depending on space
+ * - Inter font family for consistency with site design
+ * - Natural document flow positioning (not fixed/sticky)
+ *
+ * @param {Object} props
+ * @param {boolean} props.compact - Use compact mobile layout (default: false)
+ *
+ * Example:
+ *   <Footer compact={true} />
  */
 const Footer = ({ compact = false }) => {
+  // Link styling helper for hover/touch states
+  const linkBaseStyle = {
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontSize: compact ? '14px' : '14px', // Slightly larger for better readability on mobile
+    fontWeight: '500',
+    color: 'rgba(255, 255, 255, 0.7)',
+    textDecoration: 'none',
+    transition: 'color 0.2s ease',
+    // Ensure 44px minimum touch target (WCAG 2.1 AA compliance)
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '44px',
+    minWidth: '44px',
+    padding: '0 12px' // Increased horizontal padding for easier tapping
+  };
+
   return (
     <footer
+      role="contentinfo"
+      aria-label="Site footer"
       style={{
+        // Full width - override parent's alignItems: 'center'
         width: '100%',
-        padding: compact ? '20px 16px' : '24px 20px',
-        marginTop: compact ? '20px' : '24px',
-        background: 'transparent',
-        borderTop: '1px solid rgba(56, 56, 56, 0.2)'
+        alignSelf: 'stretch', // CRITICAL: Override flex parent's centering
+        flexShrink: 0, // Prevent footer from shrinking
+        // Solid black background - matches page background for seamless look
+        background: '#000000',
+        // Subtle top border for visual separation from content
+        borderTop: '1px solid rgba(56, 56, 56, 0.3)',
+        // Padding: top includes safe-area for iOS, generous horizontal padding
+        // Bottom padding includes safe-area-inset-bottom for iOS home indicator
+        paddingTop: compact ? '20px' : '24px',
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        paddingBottom: compact
+          ? 'calc(20px + env(safe-area-inset-bottom, 0px))'
+          : 'calc(24px + env(safe-area-inset-bottom, 0px))',
+        // Top margin for separation from page content (8px grid)
+        marginTop: compact ? '24px' : '32px',
+        marginBottom: 0, // No extra space below footer
+        boxSizing: 'border-box'
       }}
     >
       <div
         style={{
-          maxWidth: '1200px',
+          // Content container - centered with appropriate max-width
+          maxWidth: compact ? '430px' : '1200px', // Match mobile page width
           margin: '0 auto',
           display: 'flex',
-          flexDirection: compact ? 'column' : 'row',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: compact ? '12px' : '24px',
-          flexWrap: 'wrap'
+          gap: compact ? '12px' : '16px' // Slightly more gap for better spacing
         }}
       >
         {/* Navigation Links */}
-        <div
+        <nav
+          aria-label="Footer navigation"
           style={{
             display: 'flex',
-            gap: compact ? '16px' : '20px',
+            gap: compact ? '4px' : '16px', // Tighter gap since links have padding
             alignItems: 'center',
-            flexWrap: 'wrap',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            flexWrap: 'wrap'
           }}
         >
           <a
             href="/"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: compact ? '12px' : '13px',
-              fontWeight: '400',
-              color: 'rgba(255, 255, 255, 0.6)',
-              textDecoration: 'none',
-              transition: 'color 0.2s ease'
-            }}
+            aria-label="Go to Events page"
+            style={linkBaseStyle}
             onMouseEnter={(e) => {
-              e.target.style.color = '#319DFF';
+              e.currentTarget.style.color = '#319DFF';
             }}
             onMouseLeave={(e) => {
-              e.target.style.color = 'rgba(255, 255, 255, 0.6)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.color = '#319DFF';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
           >
             Events
           </a>
-          <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: compact ? '10px' : '12px' }}>•</span>
+          <span
+            style={{
+              color: 'rgba(255, 255, 255, 0.3)',
+              fontSize: compact ? '10px' : '12px'
+            }}
+            aria-hidden="true"
+          >
+            •
+          </span>
           <a
             href="/about"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: compact ? '12px' : '13px',
-              fontWeight: '400',
-              color: 'rgba(255, 255, 255, 0.6)',
-              textDecoration: 'none',
-              transition: 'color 0.2s ease'
-            }}
+            aria-label="Go to About page"
+            style={linkBaseStyle}
             onMouseEnter={(e) => {
-              e.target.style.color = '#319DFF';
+              e.currentTarget.style.color = '#319DFF';
             }}
             onMouseLeave={(e) => {
-              e.target.style.color = 'rgba(255, 255, 255, 0.6)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.color = '#319DFF';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
           >
             About
           </a>
-          <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: compact ? '10px' : '12px' }}>•</span>
+          <span
+            style={{
+              color: 'rgba(255, 255, 255, 0.3)',
+              fontSize: compact ? '10px' : '12px'
+            }}
+            aria-hidden="true"
+          >
+            •
+          </span>
           <a
             href="/faq"
-            style={{
-              fontFamily: 'Inter',
-              fontSize: compact ? '12px' : '13px',
-              fontWeight: '400',
-              color: 'rgba(255, 255, 255, 0.6)',
-              textDecoration: 'none',
-              transition: 'color 0.2s ease'
-            }}
+            aria-label="Go to FAQ page"
+            style={linkBaseStyle}
             onMouseEnter={(e) => {
-              e.target.style.color = '#319DFF';
+              e.currentTarget.style.color = '#319DFF';
             }}
             onMouseLeave={(e) => {
-              e.target.style.color = 'rgba(255, 255, 255, 0.6)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.color = '#319DFF';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
           >
             FAQ
           </a>
-        </div>
+        </nav>
 
         {/* Copyright */}
-        {!compact && <span style={{ color: 'rgba(255, 255, 255, 0.3)', fontSize: '12px' }}>•</span>}
         <p
           style={{
-            fontFamily: 'Inter',
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
             fontSize: compact ? '11px' : '12px',
-            fontWeight: '300',
+            fontWeight: '400',
             color: 'rgba(255, 255, 255, 0.5)',
             margin: 0,
-            lineHeight: '1.5'
+            lineHeight: '1.5',
+            textAlign: 'center'
           }}
         >
           © {new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.
