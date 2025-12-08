@@ -3064,13 +3064,16 @@ const FigmaMobile = () => {
                   alignItems: 'center',
                   flexShrink: 0,
                   borderRadius: '9px',
-                  background: 'rgba(22, 22, 22, 0.30)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
+                  background: 'rgba(22, 22, 22, 0.50)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   position: 'relative',
                   cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                  transform: 'translateZ(0) scale(1)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  isolation: 'isolate',
                   WebkitTapHighlightColor: 'transparent',
                   boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                 }}
@@ -3086,19 +3089,19 @@ const FigmaMobile = () => {
                   }
                 }}
                 onTouchStart={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.98)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
                 }}
                 onTouchEnd={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                 }}
                 onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'scale(0.98)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
                 }}
                 onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                 }}
               >
                 {/* Sliding Button Background */}
@@ -3506,32 +3509,32 @@ const FigmaMobile = () => {
                   <div
                     style={{
                       display: 'flex',
-                      width: '116px', // Match new container width minus padding
-                      height: '40px', // Increased height for better presence
+                      width: '116px',
+                      height: '40px',
                       justifyContent: 'center',
                       alignItems: 'center',
                       gap: '8px',
-                      borderRadius: '22px', // More rounded for modern look
-                      background: 'rgba(15, 15, 15, 0.95)', // Darker, more opaque glassmorphism
-                      backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
-                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                      border: '1px solid rgba(255, 255, 255, 0.2)', // More visible border
+                      borderRadius: '22px',
+                      background: 'rgba(22, 22, 22, 0.50)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
                       cursor: 'pointer',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      transform: 'scale(1)',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow with inset highlight
+                      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                      transform: 'translateZ(0) scale(1)',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      isolation: 'isolate',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
                     }}
                     onTouchStart={(e) => {
                       e.stopPropagation();
-                      e.target.style.transform = 'scale(0.95)';
-                      e.target.style.background = 'rgba(35, 35, 35, 0.98)';
-                      e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
+                      e.target.style.transform = 'translateZ(0) scale(0.95)';
+                      e.target.style.background = 'rgba(22, 22, 22, 0.65)';
                     }}
                     onTouchEnd={(e) => {
                       e.stopPropagation();
-                      e.target.style.transform = 'scale(1)';
-                      e.target.style.background = 'rgba(15, 15, 15, 0.95)';
-                      e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                      e.target.style.transform = 'translateZ(0) scale(1)';
+                      e.target.style.background = 'rgba(22, 22, 22, 0.50)';
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -3742,27 +3745,25 @@ const FigmaMobile = () => {
                     className={`mobile-event-card-item ${cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}`}
                     style={{
                       width: '100%',
-                      minHeight: '132px', // Consistent height for better layout calculation
-                      height: 'auto', // Dynamic height to accommodate multi-line titles
+                      minHeight: '132px',
+                      height: 'auto',
                       borderRadius: '20px',
-                      background: 'rgba(15, 15, 15, 0.95)',
-                      backdropFilter: 'blur(20px) saturate(180%)',
-                      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                      background: 'rgba(22, 22, 22, 0.50)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                       position: 'relative',
-                      margin: '0 0 4px 0', // Consistent spacing
-                      padding: '2px', // Compact design
-                      // No animation delay for cleaner expand/collapse
+                      margin: '0 0 4px 0',
+                      padding: '2px',
                       overflow: 'hidden',
                       boxSizing: 'border-box',
                       isolation: 'isolate',
                       transform: 'translateZ(0)',
                       willChange: 'transform, opacity',
-                      contain: 'layout style paint', // 🚀 PERFORMANCE: CSS containment for optimized rendering
-                      zIndex: 1, // Ensure proper stacking
-                      clear: 'both', // Prevent float issues
-                      // No transition delay for cleaner expand/collapse animation
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      contain: 'layout style paint',
+                      zIndex: 1,
+                      clear: 'both'
                     }}
                   >
                     {/* Mobile Event Card Content - Compact Horizontal Layout */}
@@ -4174,26 +4175,31 @@ const FigmaMobile = () => {
                       fontSize: '14px',
                       fontWeight: 600,
                       color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.60)',
+                      background: 'rgba(22, 22, 22, 0.70)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                      transform: 'translateZ(0) scale(1)',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      isolation: 'isolate',
                       boxSizing: 'border-box',
                       cursor: 'pointer',
                       WebkitTapHighlightColor: 'transparent'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
+                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)';
+                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
                     }}
                     onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'scale(0.98)';
+                      e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
                     }}
                     onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
                     }}
                   >
                     {homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
@@ -4215,26 +4221,31 @@ const FigmaMobile = () => {
                       fontSize: '14px',
                       fontWeight: 600,
                       color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.60)',
+                      background: 'rgba(22, 22, 22, 0.70)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                      transform: 'translateZ(0) scale(1)',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      isolation: 'isolate',
                       boxSizing: 'border-box',
                       cursor: 'pointer',
                       WebkitTapHighlightColor: 'transparent'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
+                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)';
+                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
                     }}
                     onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'scale(0.98)';
+                      e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
                     }}
                     onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
                     }}
                   >
                     View Past Events
@@ -4597,16 +4608,14 @@ const FigmaMobile = () => {
               style={{
                 width: 'min(344px, calc(100vw - 4px))',
                 margin: '0 auto',
-                // Glassmorphism styling matching event cards
-                background: 'rgba(22, 22, 22, 0.8)',
-                border: '1px solid rgba(56, 56, 56, 0.3)',
-                backdropFilter: 'blur(20px)',
-                WebkitBackdropFilter: 'blur(20px)',
+                // Solid background to prevent visual artifacts - matches desktop TextUsSection
+                background: 'rgba(22, 22, 22, 0.50)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: '20px',
-                // Reduced bottom padding - iframe extends to edge
                 padding: '20px 20px 0 20px',
                 boxSizing: 'border-box',
-                overflow: 'hidden' // Clip iframe to card border radius
+                overflow: 'hidden',
+                isolation: 'isolate'
               }}
             >
               {/* Text Us Header */}
@@ -4774,7 +4783,7 @@ const FigmaMobile = () => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Share Button - Modern glassmorphism styling */}
+          {/* Share Button - Solid background to match desktop styling */}
           <button
             onClick={() => {
               if (navigator.share) {
@@ -4784,54 +4793,52 @@ const FigmaMobile = () => {
                   url: window.location.href
                 });
               } else {
-                // Fallback: copy to clipboard
                 navigator.clipboard.writeText(window.location.href);
                 alert('Link copied to clipboard!');
               }
             }}
             style={{
-              background: 'rgba(15, 15, 15, 0.95)', // Dark glassmorphism to match homepage
-              backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-              border: '1px solid rgba(255, 255, 255, 0.2)', // Subtle white border
-              borderRadius: '25px',
+              background: 'rgba(22, 22, 22, 0.50)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '22px',
               padding: '12px 24px',
               color: '#FFFFFF',
               fontFamily: 'Inter',
               fontSize: '14px',
               fontWeight: '500',
               cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth modern transition
+              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+              transform: 'translateZ(0) scale(1)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              isolation: 'isolate',
               minWidth: '80px',
               height: '44px',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)', // Enhanced shadow with inset highlight
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
-              e.currentTarget.style.transform = 'scale(0.95)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+              e.currentTarget.style.transform = 'translateZ(0) scale(0.95)';
             }}
             onTouchEnd={(e) => {
-              e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+              e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
             }}
           >
             Share
           </button>
 
-          {/* View Event Button - Modern glassmorphism styling */}
+          {/* View Event Button - Solid background to match desktop styling */}
           {expandedImage.isRealEvent && expandedImage.hasTicketLink ? (
             <button
               onClick={() => {
@@ -4840,48 +4847,46 @@ const FigmaMobile = () => {
                 handleImageCollapse();
               }}
               style={{
-                background: 'rgba(15, 15, 15, 0.95)', // Dark glassmorphism to match homepage
-                backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                border: '1px solid rgba(255, 255, 255, 0.2)', // Subtle white border
-                borderRadius: '25px',
+                background: 'rgba(22, 22, 22, 0.50)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '22px',
                 padding: '12px 24px',
                 color: '#FFFFFF',
                 fontFamily: 'Inter',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth modern transition
+                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                transform: 'translateZ(0) scale(1)',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                isolation: 'isolate',
                 minWidth: '100px',
                 height: '44px',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)', // Enhanced shadow with inset highlight
-                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
               }}
               onTouchStart={(e) => {
-                e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
-                e.currentTarget.style.transform = 'scale(0.95)';
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+                e.currentTarget.style.transform = 'translateZ(0) scale(0.95)';
               }}
               onTouchEnd={(e) => {
-                e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                e.currentTarget.style.transform = 'translateZ(0) scale(1)';
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(35, 35, 35, 0.98)';
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+                e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(15, 15, 15, 0.95)';
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                e.currentTarget.style.transform = 'translateZ(0) scale(1)';
               }}
             >
               {expandedImage.buttonText || 'View Event'}
             </button>
           ) : (
-            /* Hidden when no ticket link */
             null
           )}
         </div>

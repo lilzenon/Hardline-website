@@ -272,16 +272,14 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                 minHeight: `${computedButtonSize}px`,
                 maxHeight: `${computedButtonSize}px`,
                 borderRadius: '20px',
-                background: 'rgba(22, 22, 22, 0.4)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(22, 22, 22, 0.50)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
                 flexShrink: 0,
                 opacity: 0.6,
-                aspectRatio: '1 / 1' // Ensure square skeleton buttons
+                aspectRatio: '1 / 1'
               }}
             />
           ))}
@@ -326,9 +324,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                     minHeight: `${computedButtonSize}px`,
                     maxHeight: `${computedButtonSize}px`,
                     borderRadius: '20px',
-                    background: 'rgba(22, 22, 22, 0.30)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
+                    background: 'rgba(22, 22, 22, 0.50)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                     display: 'flex',
                     justifyContent: 'center',

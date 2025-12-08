@@ -2009,32 +2009,32 @@ const FigmaDesktop = () => {
               <div
                 style={{
                   display: 'flex',
-                  width: '116px', // Match new container width minus padding
-                  height: '40px', // Increased height for better presence
+                  width: '116px',
+                  height: '40px',
                   justifyContent: 'center',
                   alignItems: 'center',
                   gap: '8px',
-                  borderRadius: '22px', // More rounded for modern look
-                  background: 'rgba(15, 15, 15, 0.95)', // Darker, more opaque glassmorphism
-                  backdropFilter: 'blur(20px) saturate(180%)', // Enhanced glassmorphism
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)', // More visible border
+                  borderRadius: '22px',
+                  background: 'rgba(22, 22, 22, 0.50)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                   cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: 'scale(1)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)' // Enhanced shadow with inset highlight
+                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                  transform: 'translateZ(0) scale(1)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  isolation: 'isolate',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
                 }}
                 onMouseEnter={(e) => {
                   e.stopPropagation();
-                  e.target.style.transform = 'scale(1.05)';
-                  e.target.style.background = 'rgba(35, 35, 35, 0.98)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15)';
+                  e.target.style.transform = 'translateZ(0) scale(1.05)';
+                  e.target.style.background = 'rgba(22, 22, 22, 0.65)';
                 }}
                 onMouseLeave={(e) => {
                   e.stopPropagation();
-                  e.target.style.transform = 'scale(1)';
-                  e.target.style.background = 'rgba(15, 15, 15, 0.95)';
-                  e.target.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                  e.target.style.transform = 'translateZ(0) scale(1)';
+                  e.target.style.background = 'rgba(22, 22, 22, 0.50)';
                 }}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -2213,13 +2213,16 @@ const FigmaDesktop = () => {
                   alignItems: 'center',
                   flexShrink: 0,
                   borderRadius: '10px',
-                  background: 'rgba(22, 22, 22, 0.30)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
+                  background: 'rgba(22, 22, 22, 0.50)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   position: 'relative',
                   cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                  transform: 'translateZ(0)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  isolation: 'isolate',
                   WebkitTapHighlightColor: 'transparent',
                   boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
                 }}
@@ -2419,19 +2422,22 @@ const FigmaDesktop = () => {
                       fontSize: '14px',
                       fontWeight: 600,
                       color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.60)',
+                      background: 'rgba(22, 22, 22, 0.70)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
-                      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                      transform: 'translateZ(0) scale(1)',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      isolation: 'isolate',
                       boxSizing: 'border-box',
                       cursor: 'pointer',
                       WebkitTapHighlightColor: 'transparent'
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)'; }}
-                    onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-                    onTouchEnd={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)'; }}
+                    onTouchStart={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(0.98)'; }}
+                    onTouchEnd={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(1)'; }}
                   >
                     View Past Events
                   </button>
@@ -2446,11 +2452,9 @@ const FigmaDesktop = () => {
                       display: 'block',
                       width: '100%',
                       height: '100%',
-                      minHeight: '90px', // Reduced from 128px to 90px
+                      minHeight: '90px',
                       borderRadius: '20px',
-                      background: 'rgba(22, 22, 22, 0.30)',
-                      backdropFilter: 'blur(12px)',
-                      WebkitBackdropFilter: 'blur(12px)',
+                      background: 'rgba(22, 22, 22, 0.50)',
                       border: '1px solid rgba(255, 255, 255, 0.12)',
                       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                       position: 'relative',
@@ -2461,7 +2465,9 @@ const FigmaDesktop = () => {
                       isolation: 'isolate',
                       transform: 'translateZ(0)',
                       willChange: 'transform',
-                      contain: 'layout style paint', // 🚀 PERFORMANCE: CSS containment for optimized rendering
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      contain: 'layout style paint',
                       zIndex: 1,
                       clear: 'both'
                     }}
@@ -3361,19 +3367,22 @@ const FigmaDesktop = () => {
                     fontSize: '14px',
                     fontWeight: 600,
                     color: '#FFF',
-                    background: 'rgba(22, 22, 22, 0.60)',
+                    background: 'rgba(22, 22, 22, 0.70)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                    transform: 'translateZ(0) scale(1)',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    isolation: 'isolate',
                     boxSizing: 'border-box',
                     cursor: 'pointer',
                     WebkitTapHighlightColor: 'transparent'
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.60)'; }}
-                  onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-                  onTouchEnd={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)'; }}
+                  onTouchStart={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(0.98)'; }}
+                  onTouchEnd={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(1)'; }}
                 >
                   View Past Events
                 </button>
@@ -3384,27 +3393,27 @@ const FigmaDesktop = () => {
               <article
                 key={`homepage-${card.id}`}
                 style={{
-                  display: 'block', // Change to block to prevent flex issues
+                  display: 'block',
                   width: '100%',
-                  minHeight: '128px', // Minimum height for layout stability
-                  height: 'auto', // Dynamic height to accommodate multi-line titles
+                  minHeight: '128px',
+                  height: 'auto',
                   borderRadius: '20px',
-                  background: 'rgba(15, 15, 15, 0.95)',
-                  backdropFilter: 'blur(20px) saturate(180%)',
-                  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  background: 'rgba(22, 22, 22, 0.50)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
                   position: 'relative',
-                  margin: '0 0 4px 0', // Slightly increased margin for better card separation
-                  padding: '2px', // Reduced to 2px maximum for compact design
+                  margin: '0 0 4px 0',
+                  padding: '2px',
                   overflow: 'hidden',
                   boxSizing: 'border-box',
                   isolation: 'isolate',
                   transform: 'translateZ(0)',
                   willChange: 'transform',
-                  contain: 'layout style paint', // 🚀 PERFORMANCE: CSS containment for optimized rendering
-                  zIndex: 1, // Ensure proper stacking
-                  clear: 'both' // Prevent float issues
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  contain: 'layout style paint',
+                  zIndex: 1,
+                  clear: 'both'
                 }}
               >
                 {/* Mobile Event Card Content - Compact Horizontal Layout */}
