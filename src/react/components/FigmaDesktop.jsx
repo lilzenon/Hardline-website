@@ -2789,7 +2789,7 @@ const FigmaDesktop = () => {
             columnGap: '24px' // Standardized desktop gap between left/right columns
           }}
         >
-          {/* Left Side - Follow Us (Social Media Buttons) */}
+          {/* Left Side - Follow Us (Social Media) above Text Us (Laylo) */}
           <div
             ref={leftColumnRef}
             style={{
@@ -2801,59 +2801,65 @@ const FigmaDesktop = () => {
               minWidth: '400px'
             }}
           >
-            {/* Follow Us: Laylo (top) + Social buttons (bottom) */}
-            <div ref={layloContainerRef} style={{ width: `${Math.round(scaledDimensions.eventsWidth)}px`, display: 'flex', justifyContent: 'flex-start' }}>
-              <TextUsSection
-                scaledDimensions={scaledDimensions}
-                phoneNumber={phoneNumber}
-                setPhoneNumber={setPhoneNumber}
-                phoneSubmitting={phoneSubmitting}
-                phoneSubmitted={phoneSubmitted}
-                phoneInputState={phoneInputState}
-                selectedCountryId={selectedCountryId}
-                setSelectedCountryId={setSelectedCountryId}
-                flagImageRef={flagImageRef}
-                phoneContainerRef={phoneContainerRef}
-                showVerification={showVerification}
-                verificationPhone={verificationPhone}
-                verificationCode={verificationCode}
-                setVerificationCode={setVerificationCode}
-                verificationSubmitting={verificationSubmitting}
-                verificationState={verificationState}
-                resendCountdown={resendCountdown}
-                canResend={canResend}
-                resendSubmitting={resendSubmitting}
-                handlePhoneSubmit={handlePhoneSubmit}
-                handleVerificationSubmit={handleVerificationSubmit}
-                handleResendCode={handleResendCode}
-                handlePhoneChange={handlePhoneChange}
-                handlePhoneKeyDown={handlePhoneKeyDown}
-                handleCountryChange={handleCountryChange}
-                handleVerificationChange={handleVerificationCodeChange}
-                handleBackToPhone={handleBackToPhone}
-              />
-            </div>
-
-            {/* Social Media Buttons - Desktop Left Side */}
+            {/* Follow Us Section - Title + Social Media Buttons */}
             <div
-              ref={socialContainerRef}
               style={{
                 width: `${Math.round(scaledDimensions.eventsWidth)}px`,
                 display: 'flex',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-                padding: '0',
-                marginTop: socialMarginTop != null ? `${socialMarginTop}px` : `${Math.max(20, Math.round(scaledDimensions.scale * 28))}px`,
-                marginRight: '-18px',
-                zIndex: 0
+                flexDirection: 'column',
+                gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`,
+                alignItems: 'flex-start'
               }}
             >
-              <SocialMediaButtons
-                isDesktop={true}
-                containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth}
-                responsive={true}
-                // maxButtonSizePx removed - buttons use fixed 96px size to prevent resize shrinking
-              />
+              {/* Follow Us Title - Standardized Typography */}
+              <div
+                style={{
+                  color: '#FFF',
+                  fontFamily: 'Inter',
+                  fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
+                  fontWeight: '800',
+                  lineHeight: 'normal',
+                  letterSpacing: '-0.02em',
+                  margin: '0',
+                  padding: '0',
+                  height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                Follow Us
+              </div>
+
+              {/* Social Media Buttons */}
+              <div
+                ref={socialContainerRef}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  padding: '0',
+                  marginTop: '0',
+                  marginRight: '-18px',
+                  zIndex: 0
+                }}
+              >
+                <SocialMediaButtons
+                  isDesktop={true}
+                  containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth}
+                  responsive={true}
+                />
+              </div>
+            </div>
+
+            {/* Text Us: Laylo section (below Follow Us) */}
+            <div ref={layloContainerRef} style={{
+              width: `${Math.round(scaledDimensions.eventsWidth)}px`,
+              display: 'flex',
+              justifyContent: 'flex-start',
+              marginTop: socialMarginTop != null ? `${socialMarginTop}px` : `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px`
+            }}>
+              <TextUsSection scaledDimensions={scaledDimensions} />
             </div>
         </div>
 
