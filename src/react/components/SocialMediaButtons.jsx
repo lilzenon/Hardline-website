@@ -426,77 +426,75 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                 maxWidth: `${computedButtonSize}px`,
                 minHeight: `${computedButtonSize}px`,
                 maxHeight: `${computedButtonSize}px`,
-                borderRadius: '20px', // Optimized radius
-                background: isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)', // Glassmorphism (desktop uses 0.30)
-                backdropFilter: 'blur(12px)', // Increased blur for better glass effect
-                WebkitBackdropFilter: 'blur(12px)',
-                border: isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)', // Standard border (desktop uses 0.12)
+                borderRadius: '20px',
+                // Solid background instead of blur to prevent visual artifacts during animations
+                background: isDesktop ? 'rgba(22, 22, 22, 0.50)' : 'rgba(22, 22, 22, 0.7)',
+                border: isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                padding: '10px', // Optimized padding for better icon ratio
+                padding: '10px',
                 boxSizing: 'border-box',
                 textDecoration: 'none',
                 cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'scale(1)',
+                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, border 0.3s ease',
+                transform: 'translateZ(0) scale(1)',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                isolation: 'isolate',
                 animationDelay: buttonsAnimated ? `${0.2 + (index * 0.1)}s` : '0s',
-                flexShrink: 0, // Prevent buttons from shrinking
-                aspectRatio: '1 / 1' // Ensure square buttons
+                flexShrink: 0,
+                aspectRatio: '1 / 1'
               }}
               onTouchStart={(e) => {
                 if (iconOnly) {
-                  e.currentTarget.style.transform = 'scale(0.9)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.9)';
                   e.currentTarget.style.opacity = '0.7';
                 } else {
-                  e.currentTarget.style.transform = 'scale(0.95)';
-                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
-                  e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.95)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.65)' : 'rgba(120, 120, 120, 0.8)';
                   e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
                 }
               }}
               onTouchEnd={(e) => {
                 if (iconOnly) {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                   e.currentTarget.style.opacity = '1';
                 } else {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.50)' : 'rgba(22, 22, 22, 0.7)';
                   e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.boxShadow = 'none';
                 }
               }}
               onMouseDown={(e) => {
                 if (iconOnly) {
-                  e.currentTarget.style.transform = 'scale(0.9)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.9)';
                   e.currentTarget.style.opacity = '0.7';
                 } else {
-                  e.currentTarget.style.transform = 'scale(0.95)';
-                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.40)' : 'rgba(120, 120, 120, 0.8)';
-                  e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 0, 0, 0.25)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.95)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.65)' : 'rgba(120, 120, 120, 0.8)';
                   e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.20)' : '1px solid rgba(255, 255, 255, 0.3)';
                 }
               }}
               onMouseUp={(e) => {
                 if (iconOnly) {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                   e.currentTarget.style.opacity = '1';
                 } else {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.50)' : 'rgba(22, 22, 22, 0.7)';
                   e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.boxShadow = 'none';
                 }
               }}
               onMouseLeave={(e) => {
                 if (iconOnly) {
-                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                   e.currentTarget.style.opacity = '1';
                 } else {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.30)' : 'rgba(22, 22, 22, 0.6)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                  e.currentTarget.style.background = isDesktop ? 'rgba(22, 22, 22, 0.50)' : 'rgba(22, 22, 22, 0.7)';
                   e.currentTarget.style.border = isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)';
-                  e.currentTarget.style.boxShadow = 'none';
                 }
               }}
               onFocus={(e) => {

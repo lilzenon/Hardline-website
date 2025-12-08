@@ -23,20 +23,18 @@ const TextUsSection = ({ scaledDimensions }) => {
         paddingBottom: '0'
       }}
     >
-      {/* Glassmorphism Card Container - Matches desktop event card styling */}
+      {/* Card Container - Solid background to prevent visual artifacts */}
       <article
         style={{
           width: '100%',
-          // Glassmorphism styling matching desktop event cards exactly
-          background: 'rgba(22, 22, 22, 0.30)',
+          // Solid background instead of blur for cleaner rendering
+          background: 'rgba(22, 22, 22, 0.50)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '16px',
-          // No padding needed - iframe fills entire card
           padding: '0',
           boxSizing: 'border-box',
-          overflow: 'hidden' // Clip iframe to card border radius
+          overflow: 'hidden',
+          isolation: 'isolate'
         }}
       >
         {/* Laylo Iframe - No title/subtitle, fills entire card */}

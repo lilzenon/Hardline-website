@@ -2714,37 +2714,39 @@ const FigmaDesktop = () => {
                                 window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
                               }}
                               style={{
-                                background: 'rgba(22, 22, 22, 0.30)',
-                              backdropFilter: 'blur(12px)',
-                              WebkitBackdropFilter: 'blur(12px)',
-                              border: '1px solid rgba(255, 255, 255, 0.12)',
-                                borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`, // Scale border radius
+                                background: 'rgba(22, 22, 22, 0.50)',
+                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`,
                                 display: 'flex',
                                 flexDirection: 'row',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`, // Scale gap
-                                padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`, // Scale padding
+                                gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`,
+                                padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`,
                                 width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
-                                height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
+                                height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`,
                                 cursor: 'pointer',
                                 fontFamily: 'Inter',
                                 fontWeight: '500',
-                                fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale font size
+                                fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`,
                                 lineHeight: '1.21',
                                 textAlign: 'center',
                                 color: '#FFFFFF',
-                                transition: 'all 0.2s ease',
-                                transform: 'scale(1)',
+                                transition: 'transform 0.2s ease, background 0.2s ease',
+                                transform: 'translateZ(0) scale(1)',
+                                willChange: 'transform',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                                isolation: 'isolate',
                                 boxSizing: 'border-box'
                               }}
                               onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'scale(1.02)';
-                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.45)';
+                                e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
+                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.30)';
+                                e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
                               }}
                             >
                               {card.buttonText || 'View Event'}
@@ -3066,29 +3068,31 @@ const FigmaDesktop = () => {
                     justifyContent: 'center',
                     alignItems: 'center',
                     borderRadius: '22px',
-                    background: 'rgba(22, 22, 22, 0.30)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
+                    background: 'rgba(22, 22, 22, 0.50)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                     boxShadow: '0px 4px 8px rgba(0,0,0,0.20)',
                     cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    transform: 'scale(1)',
+                    transition: 'transform 0.3s ease, background 0.3s ease',
+                    transform: 'translateZ(0) scale(1)',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    isolation: 'isolate',
                     boxSizing: 'border-box'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.40)';
+                    e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
+                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.30)';
+                    e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
                   }}
                   onMouseDown={(e) => {
-                    e.target.style.transform = 'scale(0.95)';
+                    e.target.style.transform = 'translateZ(0) scale(0.95)';
                   }}
                   onMouseUp={(e) => {
-                    e.target.style.transform = 'scale(1.05)';
+                    e.target.style.transform = 'translateZ(0) scale(1.05)';
                   }}
                 >
                   <span
@@ -3680,16 +3684,20 @@ const FigmaDesktop = () => {
                             lineHeight: '1.21',
                             textAlign: 'center',
                             color: '#FFFFFF',
-                            transition: 'all 0.2s ease',
-                            transform: 'scale(1)',
+                            transition: 'transform 0.2s ease, background 0.2s ease',
+                            transform: 'translateZ(0) scale(1)',
+                            willChange: 'transform',
+                            backfaceVisibility: 'hidden',
+                            WebkitBackfaceVisibility: 'hidden',
+                            isolation: 'isolate',
                             boxSizing: 'border-box'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'scale(1.02)';
+                            e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
                             e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                             e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
                           }}
                         >
