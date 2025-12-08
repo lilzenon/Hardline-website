@@ -306,8 +306,8 @@ const MobileNavigation = ({
           /* 🚀 JITTER FIX: Use transform instead of height for smooth scaling */
           height: '97px', // Fixed height to prevent layout reflows
           minHeight: '97px', // Consistent height
-          background: 'rgba(0, 0, 0, 0.95)',
-          backdropFilter: 'blur(10px)',
+          background: 'transparent', // Transparent to let content show through
+          backdropFilter: 'none', // No blur on transparent background
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
