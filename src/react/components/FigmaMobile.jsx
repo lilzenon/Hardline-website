@@ -4572,6 +4572,8 @@ const FigmaMobile = () => {
               TEXT US INLINE SECTION - Laylo Integration
               Moved from MobileDrawer to inline for better UX
               Position: After Social Media Buttons (last content section)
+              NOTE: Using opacity: 0.01 (not 0) to ensure iframe loads immediately
+              (browsers defer loading iframes in opacity:0 containers)
               ============================================ */}
           <section
             aria-labelledby="text-us-section-title"
@@ -4583,8 +4585,9 @@ const FigmaMobile = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              // 🎬 OPTIMIZED: Modern load-in animation
-              opacity: sectionsAnimated ? 1 : 0,
+              // 🎬 FIX: Use 0.01 opacity instead of 0 so iframe loads immediately
+              // Browsers optimize by not loading iframes with opacity: 0
+              opacity: sectionsAnimated ? 1 : 0.01,
               transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
               transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
               transitionDelay: '320ms' // After social buttons in cascade

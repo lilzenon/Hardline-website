@@ -2,49 +2,78 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * LayloIframeSimple
- * Minimal, reliability-first Laylo iframe embed.
- * - Always renders with src immediately (no delayed initialization)
- * - Lightweight retry on load timeout or error
- * - Verbose debug logs to trace lifecycle
+ * Laylo iframe embed that loads the official SDK first.
+ * Based on official Laylo embed code structure.
  */
 const LayloIframeSimple = ({
   dropId,
-  color = 'ff0409',
+  color = 'f60509',
   theme = 'dark',
-  background = 'solid',
+  background = 'transparent',
   minimal = true,
   style = {},
   visible = true,
 }) => {
+  const [sdkLoaded, setSdkLoaded] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const loadStartRef = useRef(Date.now());
   const loadTimeoutRef = useRef(null);
   const loadedRef = useRef(false);
   const MAX_RETRIES = 2;
-  const LOAD_TIMEOUT_MS = 8000;
-
-  // Build the Laylo embed URL - computed directly, no useMemo needed for simple string
-  const buildLayloUrl = useCallback((bustCache = false) => {
-    if (!dropId) return null;
-    const params = new URLSearchParams({
-      dropId,
-      color,
-      theme,
-      background,
-      ...(minimal && { minimal: 'true' }),
-      ...(bustCache && { _ts: String(Date.now()) }),
-    });
-    return `https://embed.laylo.com/?${params.toString()}`;
-  }, [dropId, color, theme, background, minimal]);
-
-  // Compute src directly - ALWAYS have a valid src on first render
-  const iframeSrc = buildLayloUrl(retryCount > 0);
+  const LOAD_TIMEOUT_MS = 10000;
 
   const log = useCallback((msg, extra) => {
     const ts = new Date().toISOString();
     // eslint-disable-next-line no-console
     console.log(`[LayloSimple ${ts}] ${msg}`, extra ?? '');
   }, []);
+
+  // Load the Laylo SDK script first (required for iframe to work properly)
+  useEffect(() => {
+    // Check if SDK is already loaded
+    if (document.getElementById('laylo-sdk-script')) {
+      log('SDK already loaded');
+      setSdkLoaded(true);
+      return;
+    }
+
+    log('Loading Laylo SDK...');
+    const script = document.createElement('script');
+    script.id = 'laylo-sdk-script';
+    script.src = 'https://embed.laylo.com/laylo-sdk.js';
+    script.async = true;
+
+    script.onload = () => {
+      log('Laylo SDK loaded successfully');
+      setSdkLoaded(true);
+    };
+
+    script.onerror = () => {
+      log('Laylo SDK failed to load, proceeding anyway');
+      // Still set as loaded so iframe renders - it may work without SDK
+      setSdkLoaded(true);
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      // Don't remove script on unmount - keep it for reuse
+    };
+  }, [log]);
+
+  // Build the Laylo embed URL - matching official format
+  const buildLayloUrl = useCallback((bustCache = false) => {
+    if (!dropId) return null;
+    // Match official Laylo URL format (no leading ? before params)
+    let url = `https://embed.laylo.com?dropId=${dropId}&color=${color}&minimal=${minimal}&theme=${theme}&background=${background}`;
+    if (bustCache) {
+      url += `&_ts=${Date.now()}`;
+    }
+    return url;
+  }, [dropId, color, theme, background, minimal]);
+
+  // Compute src directly
+  const iframeSrc = buildLayloUrl(retryCount > 0);
 
   // Log initial mount
   useEffect(() => {
@@ -53,7 +82,7 @@ const LayloIframeSimple = ({
 
   // Handle load timeout and retry logic
   useEffect(() => {
-    if (!visible || !iframeSrc) return;
+    if (!visible || !iframeSrc || !sdkLoaded) return;
 
     // Clear any existing timeout
     if (loadTimeoutRef.current) {
@@ -82,7 +111,7 @@ const LayloIframeSimple = ({
         loadTimeoutRef.current = null;
       }
     };
-  }, [iframeSrc, visible, retryCount, log]);
+  }, [iframeSrc, visible, retryCount, sdkLoaded, log]);
 
   const handleLoad = useCallback(() => {
     const elapsed = Date.now() - (loadStartRef.current || 0);
@@ -112,7 +141,7 @@ const LayloIframeSimple = ({
   if (!dropId) {
     return (
       <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60 }}>
-        <span style={{ color: '#999', fontSize: 14 }}>[LayloSimple] Missing dropId</span>
+        <span style={{ color: '#999', fontSize: 14 }}>[Laylo] Missing dropId</span>
       </div>
     );
   }
@@ -121,28 +150,36 @@ const LayloIframeSimple = ({
     return <div style={{ ...style }} />;
   }
 
+  // Show loading state while SDK loads
+  if (!sdkLoaded) {
+    return (
+      <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60 }}>
+        <span style={{ color: '#666', fontSize: 12 }}>Loading...</span>
+      </div>
+    );
+  }
+
   if (!iframeSrc) {
     return <div style={{ ...style }} />;
   }
 
+  // Match official Laylo iframe attributes exactly
   return (
     <iframe
       key={`laylo-${dropId}-${retryCount}`}
       id={`laylo-drop-${dropId}`}
       title="Laylo Signup"
-      width="100%"
-      height="100%"
       frameBorder="0"
       scrolling="no"
-      allow="web-share; clipboard-write; fullscreen; autoplay; encrypted-media; picture-in-picture"
-      loading="eager"
+      allow="web-share"
+      allowtransparency="true"
       onLoad={handleLoad}
       onError={handleError}
       style={{
+        width: '1px',
+        minWidth: '100%',
+        maxWidth: '1000px',
         ...style,
-        WebkitTransform: 'translateZ(0)',
-        transform: 'translateZ(0)',
-        display: 'block'
       }}
       src={iframeSrc}
     />
