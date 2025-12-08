@@ -3205,7 +3205,7 @@ const FigmaMobile = () => {
                 transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 opacity: showAllEvents ? 1 : 0,
                 transform: showAllEvents ? 'translateY(0)' : 'translateY(-20px)',
-                marginBottom: showAllEvents ? '20px' : '0px',
+                marginBottom: showAllEvents ? '0px' : '0px', // Reduced from 20px for tighter spacing
                 overflow: 'hidden'
               }}
             >
