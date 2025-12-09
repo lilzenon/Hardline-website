@@ -87,6 +87,9 @@ export async function fetchProduct(idOrSlug) {
   return data.product;
 }
 
+// Alias for fetchProduct for consistency
+export const fetchProductById = fetchProduct;
+
 /**
  * Create a Stripe checkout session
  * @param {Array} items - Cart items with { id, quantity }
@@ -130,6 +133,7 @@ export async function verifyCheckoutSession(sessionId) {
 const shopService = {
   fetchProducts,
   fetchProduct,
+  fetchProductById,
   createCheckoutSession,
   verifyCheckoutSession,
 };

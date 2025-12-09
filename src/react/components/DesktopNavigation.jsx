@@ -30,6 +30,12 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
       } else {
         window.location.href = '/faq';
       }
+    } else if (tabName === 'Shop') {
+      if (window.navigateWithTransition) {
+        window.navigateWithTransition('/shop');
+      } else {
+        window.location.href = '/shop';
+      }
     } else if (tabName === 'Events') {
       if (window.navigateWithTransition) {
         window.navigateWithTransition('/');
@@ -85,19 +91,19 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
     <div
       style={{
         position: 'relative',
-        width: '294.45px', // Scaled up by 30% (226.49 × 1.30) for better prominence
+        width: '388px', // Expanded to fit 4 nav items (was 294.45px)
         height: '44.2px',  // Scaled up by 30% (34 × 1.30) for better touch targets
         gridColumn: '3',  // Place in third column (right side)
         justifySelf: 'end'  // Align to right edge of grid cell
       }}
     >
-      {/* Background pill container - EXACT MATCH to homepage */}
+      {/* Background pill container - EXPANDED for 4 nav items */}
       <div
         style={{
           position: 'absolute',
           left: '0px',
           top: '0px',
-          width: '294.45px', // Scaled up by 30% (226.49 × 1.30)
+          width: '388px', // Expanded to fit 4 items (was 294.45px)
           height: '44.2px',  // Scaled up by 30% (34 × 1.30)
           background: '#232323',
           borderRadius: '14px', // Slightly increased border radius
@@ -105,7 +111,7 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
         }}
       />
 
-      {/* Events - Scaled up by 30% (3.24 × 1.30) */}
+      {/* Events */}
       <div
         style={getNavPillStyles('Events', '4.21px')}
       >
@@ -116,9 +122,20 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
         </a>
       </div>
 
-      {/* About - Scaled up by 30% (77.03 × 1.30) */}
+      {/* Shop */}
       <div
-        style={getNavPillStyles('About', '100.14px')}
+        style={getNavPillStyles('Shop', '100.14px')}
+      >
+        <a href="/shop" aria-label="Shop" onClick={(e)=>{e.preventDefault(); handleNavClick('Shop')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+          <span style={getNavTextStyles('Shop')}>
+            Shop
+          </span>
+        </a>
+      </div>
+
+      {/* About */}
+      <div
+        style={getNavPillStyles('About', '196.07px')}
       >
         <a href="/about" aria-label="About" onClick={(e)=>{e.preventDefault(); handleNavClick('About')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
           <span style={getNavTextStyles('About')}>
@@ -127,9 +144,9 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
         </a>
       </div>
 
-      {/* FAQ - Scaled up by 30% (150.82 × 1.30) */}
+      {/* FAQ */}
       <div
-        style={getNavPillStyles('FAQ', '196.07px')}
+        style={getNavPillStyles('FAQ', '292px')}
       >
         <a href="/faq" aria-label="FAQ" onClick={(e)=>{e.preventDefault(); handleNavClick('FAQ')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
           <span style={getNavTextStyles('FAQ')}>

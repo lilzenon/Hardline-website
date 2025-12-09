@@ -8,8 +8,8 @@ import React, { useState, useCallback, useEffect } from 'react';
  * - Active/inactive font weights: 800 (active), 500 (inactive)
  *
  * Props:
- * - currentPage: 'Events' | 'About' | 'FAQ' (default 'Events')
- * - onNavigate?: (tabName: 'Events' | 'About' | 'FAQ') => void
+ * - currentPage: 'Events' | 'About' | 'FAQ' | 'Shop' (default 'Events')
+ * - onNavigate?: (tabName: 'Events' | 'About' | 'FAQ' | 'Shop') => void
  */
 const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
   const [activeNavTab, setActiveNavTab] = useState(currentPage);
@@ -23,6 +23,9 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
     } else if (tabName === 'FAQ') {
       if (window.navigateWithTransition) window.navigateWithTransition('/faq');
       else window.location.href = '/faq';
+    } else if (tabName === 'Shop') {
+      if (window.navigateWithTransition) window.navigateWithTransition('/shop');
+      else window.location.href = '/shop';
     } else {
       if (window.navigateWithTransition) window.navigateWithTransition('/');
       else window.location.href = '/';
@@ -104,7 +107,7 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
     <div
       style={{
         position: 'relative',
-        width: '294.45px',
+        width: '390px',
         height: '44.2px',
         gridColumn: '3',
         justifySelf: 'end'
@@ -116,7 +119,7 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
           position: 'absolute',
           left: '0px',
           top: '0px',
-          width: '294.45px',
+          width: '390px',
           height: '44.2px',
           background: 'rgba(22, 22, 22, 0.30)',
           backdropFilter: 'blur(12px)',
@@ -179,6 +182,24 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
         aria-current={activeNavTab === 'FAQ' ? 'page' : undefined}
       >
         <span style={getNavTextStyles('FAQ')}>FAQ</span>
+      </div>
+
+      {/* Shop */}
+      <div
+        role="button"
+        tabIndex={0}
+        style={getNavPillStyles('Shop', '292px')}
+        onClick={() => handleNavClick('Shop')}
+        onMouseEnter={() => setHoveredNavTab('Shop')}
+        onMouseLeave={() => setHoveredNavTab(null)}
+        onFocus={() => setFocusedNavTab('Shop')}
+        onBlur={() => setFocusedNavTab(null)}
+        onKeyDown={keyHandler('Shop')}
+        aria-label="Navigate to Shop"
+        aria-pressed={activeNavTab === 'Shop'}
+        aria-current={activeNavTab === 'Shop' ? 'page' : undefined}
+      >
+        <span style={getNavTextStyles('Shop')}>Shop</span>
       </div>
     </div>
   );

@@ -89,6 +89,15 @@ router.get(
     asyncHandler(renders.reactHomepage)
 );
 
+// 🛍️ Shop product detail page - Individual product view (React version)
+router.get(
+    "/shop/:productId",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
 // REMOVED: Handlebars homepage fallback - React-only serving to prevent template conflicts
 
 // ✅ SEO FIX: Removed /events redirect - this was causing "Page with redirect" errors in Google Search Console

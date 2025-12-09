@@ -691,6 +691,35 @@ const MobileNavigation = ({
               FAQ
             </a>
           </div>
+          <div
+            onClick={() => handleNavigation('/shop')}
+            className={`mobile-nav-item ${currentPage === 'shop' ? 'active' : ''}`}
+            style={{
+              fontFamily: 'Inter',
+              fontWeight: '800',
+              fontSize: 'clamp(28px, 7.5vh, 64px)',
+              lineHeight: '1.21em',
+              color: '#FFFFFF',
+              cursor: 'pointer',
+              textAlign: 'center',
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Shop (4th item) */
+              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
+              opacity: showMenu ? 1 : 0,
+              transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
+              transitionDelay: showMenu ? '0.25s' : '0s',
+              /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
+              willChange: 'transform, opacity',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              /* 🎨 CRISP TEXT: Improve text rendering */
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
+            }}
+          >
+            <a href="/shop" aria-label="Shop" onClick={(e)=>{e.preventDefault(); handleNavigation('/shop')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+              Shop
+            </a>
+          </div>
 
           {/* 🎭 SOCIAL MEDIA ICONS: Icon-only display for mobile nav overlay */}
           <div
@@ -700,11 +729,11 @@ const MobileNavigation = ({
               alignItems: 'center',
               gap: '24px', // Consistent spacing between icon-only buttons
               padding: '0px 25px 0px 25px', // Consistent padding
-              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Social Media (4th item) */
+              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Social Media (5th item) */
               transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
               opacity: showMenu ? 1 : 0,
               transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.25s' : '0s',
+              transitionDelay: showMenu ? '0.30s' : '0s',
               /* 🎯 PERFORMANCE: Hardware acceleration */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',

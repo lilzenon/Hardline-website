@@ -11,7 +11,13 @@ import { initializeFrontendSecurity } from './react/utils/security';
 // Maintenance page (React) for /maintenance route
 const ReactMaintenancePage = lazy(() => import('./react/components/MaintenancePage'));
 
+// 🛍️ Shop pages - customer-facing product catalog and checkout
+const ShopPage = lazy(() => import('./react/components/shop/ShopPage'));
+const ProductPage = lazy(() => import('./react/components/shop/ProductPage'));
+const CheckoutSuccess = lazy(() => import('./react/components/shop/CheckoutSuccess'));
+
 import { SEOProvider, SEODebug, useSEO } from './react/contexts/SEOContext';
+import { CartProvider } from './react/contexts/CartContext';
 
 // 🚀 OPTIMIZED: Dynamic imports for utilities to reduce main bundle size
 const initializeUtilities = async () => {
@@ -170,7 +176,32 @@ const App = () => {
             <ReactMaintenancePage />
           </Suspense>
         );
+      case '/shop':
+        // 🛍️ Shop page - customer-facing product catalog
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <ShopPage />
+          </Suspense>
+        );
+      case '/shop/success':
+        // 🛍️ Checkout success page - order confirmation
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <CheckoutSuccess />
+          </Suspense>
+        );
       default:
+        // 🛍️ Check for product detail page pattern: /shop/:productId
+        const shopProductMatch = currentPath.match(/^\/shop\/([^/]+)$/);
+        if (shopProductMatch && shopProductMatch[1] !== 'success') {
+          const productId = shopProductMatch[1];
+          return (
+            <Suspense fallback={<PageLoader />}>
+              <ProductPage productId={productId} />
+            </Suspense>
+          );
+        }
+
         // Handle all unknown routes with modern React 404 page
         return (
           <Suspense fallback={<PageLoader />}>
@@ -182,9 +213,11 @@ const App = () => {
 
   return (
     <SEOProvider>
-      <MaintenanceRedirect />
-      {renderCurrentPage()}
-      <SEODebug />
+      <CartProvider>
+        <MaintenanceRedirect />
+        {renderCurrentPage()}
+        <SEODebug />
+      </CartProvider>
     </SEOProvider>
   );
 };
