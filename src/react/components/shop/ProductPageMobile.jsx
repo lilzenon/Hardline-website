@@ -17,7 +17,7 @@ import Footer from '../Footer';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
 import { useCart } from '../../contexts/CartContext';
-import { Heart, Share2, ShoppingCart, Camera, Tag, CheckCircle, ChevronRight } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, Camera, Tag, ChevronRight } from 'lucide-react';
 
 export default function ProductPageMobile({
   product,
@@ -30,7 +30,12 @@ export default function ProductPageMobile({
   const [scrollY, setScrollY] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [selectedSize, setSelectedSize] = useState(null);
   const { addItem, toggleCart } = useCart();
+
+  // Available sizes (will be dynamic when variants are added to DB)
+  const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const outOfStockSizes = ['XXL']; // Example: XXL is out of stock
 
   // Track scroll position for navigation effects
   useEffect(() => {
@@ -76,29 +81,44 @@ export default function ProductPageMobile({
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#FFFFFF',
-        fontFamily: 'Inter, sans-serif',
-        position: 'relative',
-      }}
-    >
-      {/* Mobile Navigation */}
+    <>
+      {/* Smooth viewport transition styles */}
+      <style>
+        {`
+          .shop-layout-container {
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .shop-layout-container {
+              transition: none !important;
+            }
+          }
+        `}
+      </style>
+      <div
+        className="shop-layout-container"
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#000000',
+          color: '#FFFFFF',
+          fontFamily: 'Inter, sans-serif',
+          position: 'relative',
+        }}
+      >
+        {/* Mobile Navigation */}
       <MobileNavigation
         currentPage="shop"
         scrollY={scrollY}
         onNavigate={onNavigate}
       />
 
-      {/* Cart Icon - Fixed position */}
+      {/* Cart Icon - Fixed position on LEFT side of header, logo centered */}
       <div
         style={{
           position: 'fixed',
-          top: '16px',
-          right: '16px',
-          zIndex: 90,
+          top: 'calc(env(safe-area-inset-top, 0px) + 26px)',
+          left: '16px',
+          zIndex: 1001,
         }}
       >
         <CartIcon />
@@ -278,9 +298,9 @@ export default function ProductPageMobile({
         </h1>
 
         {/* Price with Shipping */}
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '16px' }}>
           <span style={{
-            fontSize: '32px',
+            fontSize: '28px',
             fontWeight: 700,
             color: '#319DFF',
             fontFamily: 'Inter',
@@ -298,11 +318,87 @@ export default function ProductPageMobile({
           )}
         </div>
 
+        {/* Size Selector - Nike/SSENSE style chips */}
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '10px',
+          }}>
+            <span style={{
+              fontFamily: 'Inter',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.9)',
+            }}>
+              Size
+            </span>
+            <button
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '13px',
+                fontFamily: 'Inter',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                padding: 0,
+              }}
+            >
+              Size Guide
+            </button>
+          </div>
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}>
+            {availableSizes.map((size) => {
+              const isOutOfStock = outOfStockSizes.includes(size);
+              const isSelected = selectedSize === size;
+              return (
+                <button
+                  key={size}
+                  onClick={() => !isOutOfStock && setSelectedSize(size)}
+                  disabled={isOutOfStock}
+                  style={{
+                    minWidth: '44px',
+                    height: '44px',
+                    padding: '0 14px',
+                    background: isSelected
+                      ? 'rgba(255, 255, 255, 0.95)'
+                      : 'rgba(22, 22, 22, 0.6)',
+                    border: isSelected
+                      ? '2px solid #FFFFFF'
+                      : '1px solid rgba(255, 255, 255, 0.15)',
+                    borderRadius: '8px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    color: isOutOfStock
+                      ? 'rgba(255, 255, 255, 0.25)'
+                      : isSelected
+                        ? '#000000'
+                        : '#FFFFFF',
+                    cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: isOutOfStock ? 0.5 : 1,
+                    textDecoration: isOutOfStock ? 'line-through' : 'none',
+                  }}
+                >
+                  {size}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Action Buttons */}
         <div style={{
           display: 'flex',
           gap: '12px',
-          marginBottom: '20px',
+          marginBottom: '16px',
         }}>
           {/* Buy Now Button */}
           <button
@@ -355,23 +451,45 @@ export default function ProductPageMobile({
           </button>
         </div>
 
-        {/* Product Tags/Badges */}
-        {product.tags && product.tags.length > 0 && (
+        {/* Product Tags/Category Badges */}
+        {(product.tags?.length > 0 || product.category) && (
           <div style={{
             display: 'flex',
             flexWrap: 'wrap',
             gap: '8px',
-            marginBottom: '20px',
+            marginBottom: '16px',
           }}>
-            {product.tags.map((tag, idx) => (
+            {/* Show tags if available, otherwise show category */}
+            {product.tags?.length > 0 ? (
+              product.tags.map((tag, idx) => (
+                <span
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '20px',
+                    fontSize: '13px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                  }}
+                >
+                  <Tag size={12} />
+                  {tag}
+                </span>
+              ))
+            ) : product.category && (
               <span
-                key={idx}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  padding: '8px 12px',
+                  padding: '6px 12px',
                   background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '20px',
                   fontSize: '13px',
                   fontFamily: 'Inter, sans-serif',
@@ -379,20 +497,29 @@ export default function ProductPageMobile({
                 }}
               >
                 <Tag size={12} />
-                {tag}
+                {product.category}
               </span>
-            ))}
+            )}
           </div>
         )}
 
         {/* Description */}
         {product.description && (
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <h3 style={{
+              fontFamily: 'Inter',
+              fontSize: '14px',
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.9)',
+              marginBottom: '8px',
+            }}>
+              Description
+            </h3>
             <p
               style={{
                 fontSize: '14px',
                 lineHeight: 1.7,
-                color: 'rgba(255, 255, 255, 0.6)',
+                color: 'rgba(255, 255, 255, 0.7)',
                 margin: 0,
               }}
             >
@@ -420,72 +547,6 @@ export default function ProductPageMobile({
             </p>
           </div>
         )}
-
-        {/* Brand Section */}
-        <div style={{
-          paddingTop: '20px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #319DFF 0%, #1E7ACC 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <span style={{ fontSize: '18px', fontWeight: 700, color: '#FFF' }}>B</span>
-              </div>
-              <div>
-                <p style={{
-                  fontFamily: 'Inter',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  color: '#FFFFFF',
-                  margin: 0,
-                }}>
-                  BOUNCE2BOUNCE
-                </p>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  marginTop: '2px',
-                }}>
-                  <CheckCircle size={12} color="#22c55e" />
-                  <span style={{
-                    fontSize: '12px',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                  }}>
-                    Verified Seller
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => onNavigate('/shop')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#319DFF',
-                fontWeight: 500,
-                fontSize: '13px',
-                cursor: 'pointer',
-                fontFamily: 'Inter, sans-serif',
-                padding: 0,
-              }}
-            >
-              All products →
-            </button>
-          </div>
-        </div>
       </main>
 
       {/* Footer */}
@@ -494,6 +555,7 @@ export default function ProductPageMobile({
       {/* Cart Modal */}
       <CartModal />
     </div>
+    </>
   );
 }
 

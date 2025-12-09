@@ -34,15 +34,30 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#000000',
-        color: '#FFFFFF',
-        fontFamily: 'Inter, sans-serif',
-        position: 'relative',
-      }}
-    >
+    <>
+      {/* Smooth viewport transition styles */}
+      <style>
+        {`
+          .shop-layout-container {
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .shop-layout-container {
+              transition: none !important;
+            }
+          }
+        `}
+      </style>
+      <div
+        className="shop-layout-container"
+        style={{
+          minHeight: '100vh',
+          backgroundColor: '#000000',
+          color: '#FFFFFF',
+          fontFamily: 'Inter, sans-serif',
+          position: 'relative',
+        }}
+      >
       {/* Mobile Navigation */}
       <MobileNavigation
         currentPage="shop"
@@ -50,13 +65,13 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
         onNavigate={handleNavigation}
       />
 
-      {/* Cart Icon - Fixed position */}
+      {/* Cart Icon - Fixed position on LEFT side of header, logo centered */}
       <div
         style={{
           position: 'fixed',
-          top: '16px',
-          right: '16px',
-          zIndex: 90,
+          top: 'calc(env(safe-area-inset-top, 0px) + 26px)',
+          left: '16px',
+          zIndex: 1001,
         }}
       >
         <CartIcon />
@@ -147,6 +162,7 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
       {/* Cart Modal */}
       <CartModal />
     </div>
+    </>
   );
 }
 

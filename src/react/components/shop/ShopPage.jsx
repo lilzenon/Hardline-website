@@ -106,7 +106,7 @@ export default function ShopPage() {
   // Desktop version - matches AboutPage structure
   return (
     <>
-      {/* Modern CSS Animations */}
+      {/* Modern CSS Animations + Smooth Viewport Transitions */}
       <style>
         {`
           @keyframes fadeInUp {
@@ -117,6 +117,12 @@ export default function ShopPage() {
             from { opacity: 0; }
             to { opacity: 1; }
           }
+
+          /* Smooth desktop/mobile layout transitions */
+          .shop-layout-container {
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+
           @media (prefers-reduced-motion: reduce) {
             * {
               animation-duration: 0.01ms !important;
@@ -127,7 +133,7 @@ export default function ShopPage() {
         `}
       </style>
 
-      <div className="homepage-content" style={{
+      <div className="homepage-content shop-layout-container" style={{
         minHeight: '100vh',
         background: '#000000',
         width: '100%',

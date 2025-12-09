@@ -1,7 +1,7 @@
 /**
  * CartModal - Modern glassmorphism cart modal
  * Replaces CartDrawer with a centered modal design
- * 
+ *
  * Features:
  * - Transparent glassmorphism design
  * - Smooth open/close animations
@@ -15,15 +15,15 @@ import { useCart } from '../../contexts/CartContext';
 import CheckoutButton from './CheckoutButton';
 
 export default function CartModal() {
-  const { 
-    state, 
-    isOpen, 
-    toggleCart, 
-    removeFromCart, 
-    updateQuantity, 
+  const {
+    items,
+    isOpen,
+    toggleCart,
+    removeItem,
+    updateQuantity,
     clearCart,
-    getCartTotal,
-    getCartCount 
+    subtotal,
+    itemCount
   } = useCart();
 
   // Close modal on escape key
@@ -58,7 +58,8 @@ export default function CartModal() {
 
   if (!isOpen) return null;
 
-  const cartItems = state.items || [];
+  // Safe access to items array with fallback
+  const cartItems = items || [];
   const isEmpty = cartItems.length === 0;
 
   return (
@@ -121,7 +122,7 @@ export default function CartModal() {
                 margin: 0,
               }}
             >
-              Your Cart ({getCartCount()})
+              Your Cart ({itemCount})
             </h2>
             <button
               onClick={toggleCart}
@@ -167,7 +168,7 @@ export default function CartModal() {
                 <CartItem
                   key={item.id}
                   item={item}
-                  onRemove={() => removeFromCart(item.id)}
+                  onRemove={() => removeItem(item.id)}
                   onUpdateQuantity={(qty) => updateQuantity(item.id, qty)}
                 />
               ))
@@ -196,7 +197,7 @@ export default function CartModal() {
                   Total
                 </span>
                 <span style={{ color: '#FFFFFF', fontSize: '24px', fontWeight: 700 }}>
-                  ${getCartTotal().toFixed(2)}
+                  ${(subtotal / 100).toFixed(2)}
                 </span>
               </div>
 

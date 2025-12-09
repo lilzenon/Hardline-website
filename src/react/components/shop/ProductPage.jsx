@@ -22,7 +22,7 @@ import Breadcrumb from '../Breadcrumb';
 import BrandedLoader from '../BrandedLoader';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
-import { Heart, Share2, ShoppingCart, Camera, Tag, CheckCircle } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, Camera, Tag } from 'lucide-react';
 
 // Lazy load mobile version
 const ProductPageMobile = lazy(() => import('./ProductPageMobile'));
@@ -37,7 +37,12 @@ export default function ProductPage({ productId }) {
   const [isFavorited, setIsFavorited] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [selectedSize, setSelectedSize] = useState(null);
   const { addItem, toggleCart } = useCart();
+
+  // Available sizes (will be dynamic when variants are added to DB)
+  const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const outOfStockSizes = ['XXL']; // Example: XXL is out of stock
 
   // Use performant resize hook for responsive detection
   const { isMobile: isMobileByWidth } = usePerformantResize();
@@ -236,9 +241,20 @@ export default function ProductPage({ productId }) {
           from { opacity: 0; }
           to { opacity: 1; }
         }
+
+        /* Smooth desktop/mobile layout transitions */
+        .shop-layout-container {
+          transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .shop-layout-container {
+            transition: none !important;
+          }
+        }
       `}</style>
 
-      <div className="homepage-content" style={{
+      <div className="homepage-content shop-layout-container" style={{
         minHeight: '100vh',
         background: '#000000',
         width: '100%',
@@ -353,8 +369,8 @@ export default function ProductPage({ productId }) {
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                gap: '48px',
-                padding: '24px 0 48px 0',
+                gap: '40px',
+                padding: '16px 0 40px 0',
                 opacity: 0,
                 animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
               }}
@@ -457,9 +473,9 @@ export default function ProductPage({ productId }) {
                 </h1>
 
                 {/* Price with Shipping */}
-                <div style={{ marginBottom: '24px' }}>
+                <div style={{ marginBottom: '16px' }}>
                   <span style={{
-                    fontSize: '36px',
+                    fontSize: '32px',
                     fontWeight: 700,
                     color: '#319DFF',
                     fontFamily: 'Inter',
@@ -477,11 +493,87 @@ export default function ProductPage({ productId }) {
                   )}
                 </div>
 
+                {/* Size Selector - Nike/SSENSE style chips */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '10px',
+                  }}>
+                    <span style={{
+                      fontFamily: 'Inter',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: 'rgba(255, 255, 255, 0.9)',
+                    }}>
+                      Size
+                    </span>
+                    <button
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'rgba(255, 255, 255, 0.5)',
+                        fontSize: '13px',
+                        fontFamily: 'Inter',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        padding: 0,
+                      }}
+                    >
+                      Size Guide
+                    </button>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                  }}>
+                    {availableSizes.map((size) => {
+                      const isOutOfStock = outOfStockSizes.includes(size);
+                      const isSelected = selectedSize === size;
+                      return (
+                        <button
+                          key={size}
+                          onClick={() => !isOutOfStock && setSelectedSize(size)}
+                          disabled={isOutOfStock}
+                          style={{
+                            minWidth: '48px',
+                            height: '44px',
+                            padding: '0 16px',
+                            background: isSelected
+                              ? 'rgba(255, 255, 255, 0.95)'
+                              : 'rgba(22, 22, 22, 0.6)',
+                            border: isSelected
+                              ? '2px solid #FFFFFF'
+                              : '1px solid rgba(255, 255, 255, 0.15)',
+                            borderRadius: '8px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontWeight: 600,
+                            fontSize: '14px',
+                            color: isOutOfStock
+                              ? 'rgba(255, 255, 255, 0.25)'
+                              : isSelected
+                                ? '#000000'
+                                : '#FFFFFF',
+                            cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2s ease',
+                            opacity: isOutOfStock ? 0.5 : 1,
+                            textDecoration: isOutOfStock ? 'line-through' : 'none',
+                          }}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Action Buttons Row */}
                 <div style={{
                   display: 'flex',
                   gap: '12px',
-                  marginBottom: '24px',
+                  marginBottom: '16px',
                 }}>
                   {/* Buy Now Button */}
                   <button
@@ -552,44 +644,75 @@ export default function ProductPage({ productId }) {
                   </button>
                 </div>
 
-                {/* Product Tags/Badges */}
-                {product.tags && product.tags.length > 0 && (
+                {/* Product Tags/Category Badges */}
+                {(product.tags?.length > 0 || product.category) && (
                   <div style={{
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: '8px',
-                    marginBottom: '24px',
+                    marginBottom: '16px',
                   }}>
-                    {product.tags.map((tag, idx) => (
+                    {/* Show tags if available, otherwise show category */}
+                    {product.tags?.length > 0 ? (
+                      product.tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '20px',
+                            fontSize: '13px',
+                            fontFamily: 'Inter, sans-serif',
+                            color: 'rgba(255, 255, 255, 0.8)',
+                          }}
+                        >
+                          <Tag size={12} />
+                          {tag}
+                        </span>
+                      ))
+                    ) : product.category && (
                       <span
-                        key={idx}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '8px 14px',
+                          padding: '6px 12px',
                           background: 'rgba(255, 255, 255, 0.08)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
                           borderRadius: '20px',
                           fontSize: '13px',
                           fontFamily: 'Inter, sans-serif',
                           color: 'rgba(255, 255, 255, 0.8)',
                         }}
                       >
-                        <Tag size={14} />
-                        {tag}
+                        <Tag size={12} />
+                        {product.category}
                       </span>
-                    ))}
+                    )}
                   </div>
                 )}
 
                 {/* Description */}
                 {product.description && (
-                  <div style={{ marginBottom: '24px' }}>
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{
+                      fontFamily: 'Inter',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      marginBottom: '8px',
+                    }}>
+                      Description
+                    </h3>
                     <p style={{
                       fontFamily: 'Inter',
-                      fontSize: '15px',
+                      fontSize: '14px',
                       lineHeight: 1.7,
-                      color: 'rgba(255, 255, 255, 0.6)',
+                      color: 'rgba(255, 255, 255, 0.7)',
                       margin: 0,
                     }}>
                       {showFullDescription || product.description.length <= 200
@@ -606,7 +729,7 @@ export default function ProductPage({ productId }) {
                             cursor: 'pointer',
                             marginLeft: '8px',
                             fontFamily: 'Inter, sans-serif',
-                            fontSize: '15px',
+                            fontSize: '14px',
                           }}
                         >
                           {showFullDescription ? 'Show less' : 'Read more'}
@@ -615,87 +738,18 @@ export default function ProductPage({ productId }) {
                     </p>
                   </div>
                 )}
-
-                {/* Brand Section (replacing Seller) */}
-                <div style={{
-                  marginTop: 'auto',
-                  paddingTop: '24px',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #319DFF 0%, #1E7ACC 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        <span style={{ fontSize: '20px', fontWeight: 700, color: '#FFF' }}>B</span>
-                      </div>
-                      <div>
-                        <p style={{
-                          fontFamily: 'Inter',
-                          fontWeight: 600,
-                          fontSize: '15px',
-                          color: '#FFFFFF',
-                          margin: 0,
-                        }}>
-                          BOUNCE2BOUNCE
-                        </p>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          marginTop: '2px',
-                        }}>
-                          <CheckCircle size={14} color="#22c55e" />
-                          <span style={{
-                            fontSize: '13px',
-                            color: 'rgba(255, 255, 255, 0.5)',
-                          }}>
-                            Verified Seller
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleNavigation('/shop')}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: '#319DFF',
-                        fontWeight: 500,
-                        fontSize: '14px',
-                        cursor: 'pointer',
-                        fontFamily: 'Inter, sans-serif',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                      }}
-                    >
-                      All products →
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
 
             {/* You Might Also Like Section */}
             {relatedProducts.length > 0 && (
-              <div style={{ marginBottom: '48px' }}>
+              <div style={{ marginBottom: '32px' }}>
                 <h2 style={{
                   fontFamily: 'Inter',
-                  fontSize: '24px',
+                  fontSize: '20px',
                   fontWeight: 700,
                   color: '#FFFFFF',
-                  marginBottom: '24px',
+                  marginBottom: '16px',
                 }}>
                   You might also like
                 </h2>
