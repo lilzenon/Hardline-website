@@ -182,17 +182,21 @@ export default function ProductPage({ productId }) {
         }
       `}</style>
 
-      <div className="homepage-content" style={{ minHeight: 'auto' }}>
+      <div className="homepage-content" style={{
+        minHeight: '100vh',
+        background: '#000000',
+        width: '100%',
+      }}>
         <div
           className="desktop-container"
           style={{
             width: '100%',
-            maxWidth: '1192px',
+            maxWidth: '1200px', // Optimal for 2-column product detail layout
             margin: '0 auto',
             position: 'relative',
             background: '#000000',
             minHeight: 'auto',
-            padding: '0 20px',
+            padding: '0 40px',
             boxSizing: 'border-box'
           }}
         >

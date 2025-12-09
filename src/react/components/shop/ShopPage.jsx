@@ -127,17 +127,21 @@ export default function ShopPage() {
         `}
       </style>
 
-      <div className="homepage-content" style={{ minHeight: 'auto' }}>
+      <div className="homepage-content" style={{
+        minHeight: '100vh',
+        background: '#000000',
+        width: '100%',
+      }}>
         <div
           className="desktop-container"
           style={{
             width: '100%',
-            maxWidth: '1192px',
+            maxWidth: '1400px', // Increased for ultrawide displays with 4-column grid
             margin: '0 auto',
             position: 'relative',
             background: '#000000',
             minHeight: 'auto',
-            padding: '0 20px',
+            padding: '0 40px', // Increased horizontal padding for better breathing room
             boxSizing: 'border-box'
           }}
         >
@@ -237,7 +241,7 @@ export default function ShopPage() {
               style={{
                 width: '100%',
                 margin: '0 auto',
-                padding: '0 20px 20px 20px',
+                paddingBottom: '40px',
                 boxSizing: 'border-box',
                 opacity: 0,
                 animation: 'fadeInUp 0.8s ease-out 0.4s forwards'

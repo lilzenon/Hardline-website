@@ -1,13 +1,26 @@
 /**
  * ProductCard - Individual product card with glassmorphism styling
  * Features 1:1 aspect ratio image, title, price, and Add to Cart button
- * 
+ * Clicking the card navigates to the product detail page (/shop/:productId)
+ *
  * @example
  * <ProductCard product={product} onAddToCart={handleAdd} />
  */
 
 import React, { useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
+
+/**
+ * Navigate to a path using the app's navigation system
+ * @param {string} path - The path to navigate to
+ */
+const navigateTo = (path) => {
+  if (window.navigateWithTransition) {
+    window.navigateWithTransition(path);
+  } else {
+    window.location.href = path;
+  }
+};
 
 // Glassmorphism card styles
 const cardStyles = {
@@ -111,16 +124,27 @@ export default function ProductCard({ product, onAddToCart }) {
 
   const isOutOfStock = product.stock_quantity !== null && product.stock_quantity <= 0;
 
+  /**
+   * Handle add to cart button click
+   * Stops propagation to prevent card click navigation
+   */
   const handleAddToCart = (e) => {
     e.stopPropagation();
     if (isOutOfStock) return;
-    
+
     addItem(product, 1);
-    toggleCart(true); // Open cart drawer
-    
+    toggleCart(true); // Open cart modal
+
     if (onAddToCart) {
       onAddToCart(product);
     }
+  };
+
+  /**
+   * Handle card click - navigates to product detail page
+   */
+  const handleCardClick = () => {
+    navigateTo(`/shop/${product.id}`);
   };
 
   // Get image URL with fallback
@@ -132,10 +156,18 @@ export default function ProductCard({ product, onAddToCart }) {
         ...cardStyles.container,
         ...(isHovered ? cardStyles.containerHover : {}),
       }}
+      onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="article"
-      aria-label={`${product.name} - ${formatPrice(product.price)}`}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
+      aria-label={`${product.name} - ${formatPrice(product.price)}. Click to view details.`}
     >
       {/* Product Image */}
       <div style={cardStyles.imageContainer}>

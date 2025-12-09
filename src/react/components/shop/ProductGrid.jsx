@@ -79,30 +79,41 @@ const gridStyles = {
 };
 
 // CSS for animations and responsive grid
+// Responsive breakpoints:
+// - Mobile (320-767px): 1 column
+// - Tablet (768-1023px): 2 columns
+// - Desktop (1024-1439px): 3 columns
+// - Large Desktop (1440px+): 4 columns
 const gridCSS = `
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
-  
+
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.7; }
   }
-  
+
   .shop-product-grid {
     grid-template-columns: 1fr;
   }
-  
+
   @media (min-width: 768px) {
     .shop-product-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-  
+
   @media (min-width: 1024px) {
     .shop-product-grid {
       grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (min-width: 1440px) {
+    .shop-product-grid {
+      grid-template-columns: repeat(4, 1fr);
     }
   }
 `;
