@@ -17,7 +17,7 @@ import Footer from '../Footer';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
 import { useCart } from '../../contexts/CartContext';
-import { Heart, Share2, ShoppingCart, Camera, Tag, ChevronRight } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, Tag, ChevronRight } from 'lucide-react';
 
 export default function ProductPageMobile({
   product,
@@ -112,12 +112,12 @@ export default function ProductPageMobile({
         onNavigate={onNavigate}
       />
 
-      {/* Cart Icon - Fixed position on LEFT side of header, logo centered */}
+      {/* Cart Icon - Fixed position on LEFT side of header, matching hamburger menu alignment */}
       <div
         style={{
           position: 'fixed',
-          top: 'calc(env(safe-area-inset-top, 0px) + 26px)',
-          left: '16px',
+          top: 'calc(env(safe-area-inset-top, 0px) + 32px)',
+          left: 'max(8px, calc((100vw - min(360px, calc(100vw - 16px))) / 2))',
           zIndex: 1001,
         }}
       >
@@ -127,7 +127,7 @@ export default function ProductPageMobile({
       {/* Main Content */}
       <main
         style={{
-          paddingTop: '80px',
+          paddingTop: '104px',
           paddingBottom: '32px',
           paddingLeft: '16px',
           paddingRight: '16px',
@@ -135,14 +135,14 @@ export default function ProductPageMobile({
           margin: '0 auto',
         }}
       >
-        {/* Breadcrumb Navigation */}
+        {/* Breadcrumb Navigation - Positioned closer to product image */}
         <nav
           style={{
             display: 'flex',
             alignItems: 'center',
             fontSize: '13px',
             color: 'rgba(255, 255, 255, 0.5)',
-            marginBottom: '12px',
+            marginBottom: '8px',
             flexWrap: 'wrap',
           }}
           aria-label="Breadcrumb"
@@ -237,12 +237,12 @@ export default function ProductPageMobile({
           />
         </div>
 
-        {/* Image Dots and Find Similar Row */}
+        {/* Image Dots and Tags Row */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '24px',
+          marginBottom: '12px',
         }}>
           {/* Dots */}
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -263,26 +263,53 @@ export default function ProductPageMobile({
             ))}
           </div>
 
-          {/* Find Similar Button */}
-          <button
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 12px',
-              background: 'rgba(22, 22, 22, 0.6)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '8px',
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontSize: '13px',
-              fontFamily: 'Inter, sans-serif',
-              cursor: 'pointer',
-            }}
-          >
-            <Camera size={14} />
-            Find Similar
-          </button>
+          {/* Product Tags/Category - Replacing Find Similar */}
+          {(product.tags?.length > 0 || product.category) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'flex-end' }}>
+              {product.tags?.length > 0 ? (
+                product.tags.slice(0, 2).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 10px',
+                      background: 'rgba(22, 22, 22, 0.6)',
+                      backdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '16px',
+                      fontSize: '12px',
+                      fontFamily: 'Inter, sans-serif',
+                      color: 'rgba(255, 255, 255, 0.8)',
+                    }}
+                  >
+                    <Tag size={11} />
+                    {tag}
+                  </span>
+                ))
+              ) : product.category && (
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 10px',
+                    background: 'rgba(22, 22, 22, 0.6)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '16px',
+                    fontSize: '12px',
+                    fontFamily: 'Inter, sans-serif',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                  }}
+                >
+                  <Tag size={11} />
+                  {product.category}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Product Name */}
@@ -451,57 +478,7 @@ export default function ProductPageMobile({
           </button>
         </div>
 
-        {/* Product Tags/Category Badges */}
-        {(product.tags?.length > 0 || product.category) && (
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '8px',
-            marginBottom: '16px',
-          }}>
-            {/* Show tags if available, otherwise show category */}
-            {product.tags?.length > 0 ? (
-              product.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 12px',
-                    background: 'rgba(255, 255, 255, 0.08)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '20px',
-                    fontSize: '13px',
-                    fontFamily: 'Inter, sans-serif',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                  }}
-                >
-                  <Tag size={12} />
-                  {tag}
-                </span>
-              ))
-            ) : product.category && (
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  borderRadius: '20px',
-                  fontSize: '13px',
-                  fontFamily: 'Inter, sans-serif',
-                  color: 'rgba(255, 255, 255, 0.8)',
-                }}
-              >
-                <Tag size={12} />
-                {product.category}
-              </span>
-            )}
-          </div>
-        )}
+
 
         {/* Description */}
         {product.description && (
