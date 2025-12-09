@@ -4,12 +4,17 @@ import HomePage from './components/HomePage';
 import AdminLogin from './components/AdminLoginFigma';
 import { initializeFrontendSecurity } from './utils/security';
 import { SEOProvider, SEODebug, useSEO } from './contexts/SEOContext';
+import { CartProvider } from './contexts/CartContext';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy load About, FAQ, and Maintenance pages for better performance
 const AboutPage = lazy(() => import('./components/AboutPage'));
 const FAQPage = lazy(() => import('./components/FAQPage'));
 const MaintenancePage = lazy(() => import('./components/MaintenancePage'));
+
+// 🛍️ Lazy load Shop pages for code splitting
+const ShopPage = lazy(() => import('./components/shop/ShopPage'));
+const CheckoutSuccess = lazy(() => import('./components/shop/CheckoutSuccess'));
 
 // Import any additional CSS if needed
 import './styles.css';
@@ -69,6 +74,20 @@ const App = () => {
           <MaintenancePage />
         </Suspense>
       );
+    } else if (currentPath === '/shop') {
+      // 🛍️ Shop page - customer-facing product catalog
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <ShopPage />
+        </Suspense>
+      );
+    } else if (currentPath === '/shop/success') {
+      // 🛍️ Checkout success page - order confirmation
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <CheckoutSuccess />
+        </Suspense>
+      );
     } else {
       return <HomePage />;
     }
@@ -76,11 +95,13 @@ const App = () => {
 
   return (
     <SEOProvider>
-      <MaintenanceRedirect />
-      <div className="app-container">
-        {renderPage()}
-      </div>
-      <SEODebug />
+      <CartProvider>
+        <MaintenanceRedirect />
+        <div className="app-container">
+          {renderPage()}
+        </div>
+        <SEODebug />
+      </CartProvider>
     </SEOProvider>
   );
 };
