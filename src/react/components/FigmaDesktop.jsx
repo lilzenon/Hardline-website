@@ -11,6 +11,7 @@ import DesktopNavigationPills from './DesktopNavigationPills';
 import Footer from './Footer';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 import EventStructuredData from './EventStructuredData';
+import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
 
 
 // CSS for custom scrollbar styling
@@ -66,8 +67,8 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
         else variant = 'large';
       }
 
-      // Always use dashboard domain for image serving - with fallback for development
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+      // Environment-aware: use appropriate API domain for production/beta
+      const dashboardDomain = isDevelopment() ? 'http://localhost:3002' : getApiBaseUrl();
 
       // 🚨 CRITICAL FIX: Build URL preserving existing cache-busting parameters
       let optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;

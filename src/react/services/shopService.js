@@ -1,27 +1,26 @@
 /**
  * Shop Service - API client for shop endpoints
- * Connects to admin.b2b.click/api/shop/* for product and checkout operations
- * 
+ * Connects to the appropriate API server for product and checkout operations
+ *
+ * Environment Configuration:
+ * - Production: admin.b2b.click (serves bounce2bounce.com)
+ * - Beta: beta.b2b.click (serves beta.bounce2bounce.com)
+ * - Development: localhost:3002
+ *
+ * Uses centralized API configuration from ../utils/apiConfig.js
+ *
  * @example
  * // Fetch all products
  * const products = await shopService.fetchProducts();
- * 
+ *
  * // Create checkout session
  * const session = await shopService.createCheckoutSession(items);
  */
 
-// API base URL - uses local proxy in production, direct URL in development
-const getApiBase = () => {
-  const hostname = window.location.hostname;
-  
-  // Development: direct to admin API
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:3002';
-  }
-  
-  // Production: use admin.b2b.click directly (CORS is configured)
-  return 'https://admin.b2b.click';
-};
+import { getApiBaseUrl } from '../utils/apiConfig';
+
+// API base URL - uses centralized configuration
+const getApiBase = () => getApiBaseUrl();
 
 /**
  * Fetch with error handling and timeout

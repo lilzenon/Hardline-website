@@ -48,7 +48,8 @@ class AnalyticsBeacon {
     constructor(userConfig: AnalyticsConfig = {}) {
         // Determine API endpoint based on environment and domain
         const hostname = window.location.hostname;
-        const isDevelopment = hostname === 'localhost';
+        const isDevelopment = hostname === 'localhost' || hostname === '127.0.0.1';
+        const isBeta = hostname === 'beta.bounce2bounce.com' || hostname.startsWith('beta.');
 
         let apiEndpoint;
         if (userConfig.apiEndpoint) {
@@ -61,11 +62,14 @@ class AnalyticsBeacon {
             apiEndpoint = '/api';
             console.log('🔧 Development mode detected, using Vite proxy:', apiEndpoint);
             console.log('🔧 Current location:', window.location.href);
+        } else if (isBeta) {
+            // Beta environment - beta.bounce2bounce.com sends to beta.b2b.click
+            apiEndpoint = 'https://beta.b2b.click/api';
         } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
             // Current temporary setup - b2b.click homepage sends to admin.b2b.click
             apiEndpoint = 'https://admin.b2b.click/api';
         } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
-            // Future production setup - bounce2bounce.com sends to admin.b2b.click
+            // Production setup - bounce2bounce.com sends to admin.b2b.click
             apiEndpoint = 'https://admin.b2b.click/api';
         } else {
             // Fallback to same domain

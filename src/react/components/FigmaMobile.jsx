@@ -13,6 +13,7 @@ import LayloIframeSimple from './LayloIframeSimple';
 import BrandedLoader from './BrandedLoader';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 import EventStructuredData from './EventStructuredData';
+import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
 
 // REMOVED: LayloIframe component definition - now using shared component from ./LayloIframe
 
@@ -268,14 +269,14 @@ const getDashboardImageUrl = (imageUrl) => {
   if (imageUrl.startsWith('/')) {
     // Check if it's a working API endpoint (preferred method)
     if (imageUrl.startsWith('/api/images/serve/')) {
-      // 🚨 CRITICAL FIX: Always use admin domain in production
+      // Environment-aware: use appropriate API domain for production/beta
       // For development: use proxy path
-      // For production: use production dashboard domain
-      if (window.location.hostname === 'localhost') {
+      // For production/beta: use respective dashboard domain
+      if (isDevelopment()) {
         return imageUrl; // Vite proxy will handle /api/* routes
       } else {
-        // PRODUCTION: Always use admin domain to avoid 500 errors
-        return `https://admin.b2b.click${imageUrl}`;
+        // Production/Beta: use environment-appropriate API domain
+        return `${getApiBaseUrl()}${imageUrl}`;
       }
     }
 
@@ -992,10 +993,10 @@ const FigmaMobile = () => {
 
       console.log('📱 Submitting phone number:', { phone: trimmedPhone, countryCode: currentCountry.code });
 
-      // Environment-aware API URL construction
-      const apiBaseUrl = window.location.hostname === 'localhost'
+      // Environment-aware API URL construction (supports production, beta, and development)
+      const apiBaseUrl = isDevelopment()
         ? '' // Development: use Vite proxy
-        : 'https://admin.b2b.click'; // Production: use dashboard server directly
+        : getApiBaseUrl(); // Production/Beta: use appropriate dashboard server
 
       const response = await fetch(`${apiBaseUrl}/api/home-settings/submit-phone`, {
         method: 'POST',

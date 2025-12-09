@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
 
 // Simple cache for API responses - shared across components
 const apiCache = new Map();
@@ -379,7 +380,7 @@ export const useHomepageData = () => {
         // 🔄 Background revalidation to pick up admin changes immediately
         (async () => {
           try {
-            const apiBaseUrl = window.location.hostname === 'localhost' ? '' : 'https://admin.b2b.click';
+            const apiBaseUrl = isDevelopment() ? '' : getApiBaseUrl();
             const url = `${apiBaseUrl}/api/home-settings/homepage-data`;
             const response = await fetch(url, { cache: 'no-store' });
             if (!response.ok) return;
@@ -422,10 +423,10 @@ export const useHomepageData = () => {
         return;
       }
 
-      // Environment-aware API URL construction
-      const apiBaseUrl = window.location.hostname === 'localhost'
+      // Environment-aware API URL construction (supports production, beta, and development)
+      const apiBaseUrl = isDevelopment()
         ? '' // Development: use Vite proxy
-        : 'https://admin.b2b.click'; // Production: use dashboard server directly
+        : getApiBaseUrl(); // Production/Beta: use appropriate dashboard server
 
       console.log('🔍 Fetching homepage data from:', `${apiBaseUrl}/api/home-settings/homepage-data`);
 
