@@ -209,9 +209,30 @@ export default function ProductPage({ productId }) {
   }
 
   // Get product images (use placeholder if none)
-  const images = product.images?.length > 0 
-    ? product.images 
-    : ['/images/placeholder-product.png'];
+  // Support both new format (array of objects with url) and legacy format (array of strings)
+  const getImageUrls = () => {
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      // Check if it's new format (objects with url property)
+      if (typeof product.images[0] === 'object' && product.images[0].url) {
+        // Sort by sort_order, primary first
+        return product.images
+          .sort((a, b) => {
+            if (a.is_primary && !b.is_primary) return -1;
+            if (!a.is_primary && b.is_primary) return 1;
+            return (a.sort_order || 0) - (b.sort_order || 0);
+          })
+          .map(img => img.url);
+      }
+      // Legacy format: array of strings
+      return product.images;
+    }
+    // Fallback to single image_url
+    if (product.image_url) {
+      return [product.image_url];
+    }
+    return ['/images/placeholder-product.png'];
+  };
+  const images = getImageUrls();
 
   // Mobile version
   if (isMobile) {

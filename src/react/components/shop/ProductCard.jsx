@@ -147,8 +147,23 @@ export default function ProductCard({ product, onAddToCart }) {
     navigateTo(`/shop/${product.id}`);
   };
 
-  // Get image URL with fallback
-  const imageUrl = product.image_url || product.images?.[0] || '/images/placeholder-product.png';
+  // Get image URL with fallback - support both new format (array of objects) and legacy format
+  const getImageUrl = () => {
+    // New format: images is array of objects with url property
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      // Find primary image or use first
+      const primaryImage = product.images.find(img => img.is_primary) || product.images[0];
+      return primaryImage?.url || primaryImage;
+    }
+    // Legacy format: image_url string
+    if (product.image_url) {
+      return product.image_url;
+    }
+    // Fallback
+    return '/images/placeholder-product.png';
+  };
+  const imageUrl = getImageUrl();
+  const imageCount = product.images?.length || (product.image_url ? 1 : 0);
 
   return (
     <div
@@ -170,7 +185,7 @@ export default function ProductCard({ product, onAddToCart }) {
       aria-label={`${product.name} - ${formatPrice(product.price)}. Click to view details.`}
     >
       {/* Product Image */}
-      <div style={cardStyles.imageContainer}>
+      <div style={{ ...cardStyles.imageContainer, position: 'relative' }}>
         <img
           src={imageUrl}
           alt={product.name}
@@ -180,6 +195,27 @@ export default function ProductCard({ product, onAddToCart }) {
           }}
           loading="lazy"
         />
+        {/* Image count badge */}
+        {imageCount > 1 && (
+          <div style={{
+            position: 'absolute',
+            bottom: '8px',
+            right: '8px',
+            background: 'rgba(0, 0, 0, 0.7)',
+            color: '#FFFFFF',
+            fontSize: '10px',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+            {imageCount}
+          </div>
+        )}
       </div>
 
       {/* Product Info */}
