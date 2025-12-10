@@ -34,9 +34,21 @@ export default function ProductPageMobile({
   const [quantity, setQuantity] = useState(1);
   const { addItem, toggleCart } = useCart();
 
-  // Available sizes (will be dynamic when variants are added to DB)
-  const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  const outOfStockSizes = ['XXL']; // Example: XXL is out of stock
+  // Get size variants from product data (if available)
+  const hasVariants = product?.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
+  const availableSizes = hasVariants
+    ? product.sizes.map(v => v.size)
+    : [];
+  const outOfStockSizes = hasVariants
+    ? product.sizes.filter(v => v.stock === 0 || v.stock <= 0).map(v => v.size)
+    : [];
+
+  // Get stock for selected size (for quantity limit)
+  const getSelectedSizeStock = () => {
+    if (!hasVariants || !selectedSize) return product?.stock_quantity || 999;
+    const variant = product.sizes.find(v => v.size === selectedSize);
+    return variant?.stock || 0;
+  };
 
   // Track scroll position for navigation effects
   useEffect(() => {
@@ -395,81 +407,110 @@ export default function ProductPageMobile({
           </div>
         )}
 
-        {/* Size Selector - Nike/SSENSE style chips */}
-        <div style={{ marginBottom: '16px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '10px',
-          }}>
-            <span style={{
-              fontFamily: 'Inter',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.9)',
+        {/* Size Selector - Only show if product has size variants */}
+        {hasVariants && (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '10px',
             }}>
-              Size
-            </span>
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'rgba(255, 255, 255, 0.5)',
-                fontSize: '13px',
+              <span style={{
                 fontFamily: 'Inter',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                padding: 0,
-              }}
-            >
-              Size Guide
-            </button>
+                fontSize: '14px',
+                fontWeight: 600,
+                color: 'rgba(255, 255, 255, 0.9)',
+              }}>
+                Size
+              </span>
+              <button
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontSize: '13px',
+                  fontFamily: 'Inter',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: 0,
+                }}
+              >
+                Size Guide
+              </button>
+            </div>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}>
+              {availableSizes.map((size) => {
+                const isOutOfStock = outOfStockSizes.includes(size);
+                const isSelected = selectedSize === size;
+                const variant = product.sizes.find(v => v.size === size);
+                const stockCount = variant?.stock || 0;
+                return (
+                  <button
+                    key={size}
+                    onClick={() => !isOutOfStock && setSelectedSize(size)}
+                    disabled={isOutOfStock}
+                    title={isOutOfStock ? 'Out of stock' : `${stockCount} in stock`}
+                    style={{
+                      minWidth: '44px',
+                      height: '44px',
+                      padding: '0 14px',
+                      background: isSelected
+                        ? 'rgba(255, 255, 255, 0.95)'
+                        : 'rgba(22, 22, 22, 0.6)',
+                      border: isSelected
+                        ? '2px solid #FFFFFF'
+                        : '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '8px',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      color: isOutOfStock
+                        ? 'rgba(255, 255, 255, 0.25)'
+                        : isSelected
+                          ? '#000000'
+                          : '#FFFFFF',
+                      cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s ease',
+                      opacity: isOutOfStock ? 0.5 : 1,
+                      textDecoration: isOutOfStock ? 'line-through' : 'none',
+                      position: 'relative',
+                    }}
+                  >
+                    {size}
+                    {/* Low stock indicator */}
+                    {!isOutOfStock && stockCount > 0 && stockCount <= 5 && (
+                      <span style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        right: '-4px',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: stockCount <= 2 ? '#ef4444' : '#f59e0b',
+                      }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {/* Size selection prompt */}
+            {!selectedSize && (
+              <p style={{
+                fontFamily: 'Inter',
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.5)',
+                marginTop: '8px',
+              }}>
+                Please select a size
+              </p>
+            )}
           </div>
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '8px',
-          }}>
-            {availableSizes.map((size) => {
-              const isOutOfStock = outOfStockSizes.includes(size);
-              const isSelected = selectedSize === size;
-              return (
-                <button
-                  key={size}
-                  onClick={() => !isOutOfStock && setSelectedSize(size)}
-                  disabled={isOutOfStock}
-                  style={{
-                    minWidth: '44px',
-                    height: '44px',
-                    padding: '0 14px',
-                    background: isSelected
-                      ? 'rgba(255, 255, 255, 0.95)'
-                      : 'rgba(22, 22, 22, 0.6)',
-                    border: isSelected
-                      ? '2px solid #FFFFFF'
-                      : '1px solid rgba(255, 255, 255, 0.15)',
-                    borderRadius: '8px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    color: isOutOfStock
-                      ? 'rgba(255, 255, 255, 0.25)'
-                      : isSelected
-                        ? '#000000'
-                        : '#FFFFFF',
-                    cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    opacity: isOutOfStock ? 0.5 : 1,
-                    textDecoration: isOutOfStock ? 'line-through' : 'none',
-                  }}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
 
         {/* Quantity Selector - Glassmorphism style */}
         <div style={{ marginBottom: '16px' }}>

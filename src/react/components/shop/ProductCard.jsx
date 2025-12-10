@@ -147,6 +147,9 @@ export default function ProductCard({ product, onAddToCart }) {
     navigateTo(`/shop/${product.id}`);
   };
 
+  // Inline SVG placeholder as data URI - no external file needed
+  const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='%23666'%3E%3Crect width='200' height='200' fill='%23222'/%3E%3Cpath d='M80 70h40v60H80z' fill='%23444'/%3E%3Ccircle cx='95' cy='85' r='8' fill='%23555'/%3E%3Cpath d='M80 130l20-25 10 15 10-10 20 20H80z' fill='%23555'/%3E%3C/svg%3E";
+
   // Get image URL with fallback - support both new format (array of objects) and legacy format
   const getImageUrl = () => {
     // New format: images is array of objects with url property
@@ -159,8 +162,8 @@ export default function ProductCard({ product, onAddToCart }) {
     if (product.image_url) {
       return product.image_url;
     }
-    // Fallback
-    return '/images/placeholder-product.png';
+    // Fallback to inline SVG placeholder
+    return PLACEHOLDER_IMAGE;
   };
   const imageUrl = getImageUrl();
   const imageCount = product.images?.length || (product.image_url ? 1 : 0);
