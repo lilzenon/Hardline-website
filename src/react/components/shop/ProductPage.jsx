@@ -38,6 +38,7 @@ export default function ProductPage({ productId }) {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const { addItem, toggleCart } = useCart();
 
   // Available sizes (will be dynamic when variants are added to DB)
@@ -99,28 +100,43 @@ export default function ProductPage({ productId }) {
     }
   };
 
+  // Helper to get primary image URL from product
+  const getPrimaryImageUrl = () => {
+    if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+      // New format: array of objects with url property
+      if (typeof product.images[0] === 'object' && product.images[0].url) {
+        const primary = product.images.find(img => img.is_primary) || product.images[0];
+        return primary.url;
+      }
+      // Legacy format: array of strings
+      return product.images[0];
+    }
+    // Fallback to image_url
+    return product?.image_url || product?.imageUrl || null;
+  };
+
   // Add to cart handler
-  const handleAddToCart = () => {
+  const handleAddToCart = (qty = 1) => {
     if (product) {
       addItem({
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.images?.[0] || null,
-      });
+        image_url: getPrimaryImageUrl(),
+      }, qty);
       toggleCart();
     }
   };
 
   // Buy Now handler (add to cart and navigate to checkout)
-  const handleBuyNow = () => {
+  const handleBuyNow = (qty = 1) => {
     if (product) {
       addItem({
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.images?.[0] || null,
-      });
+        image_url: getPrimaryImageUrl(),
+      }, qty);
       handleNavigation('/shop/checkout');
     }
   };
@@ -208,6 +224,9 @@ export default function ProductPage({ productId }) {
     );
   }
 
+  // Inline SVG placeholder as data URI - no external file needed
+  const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='%23666'%3E%3Crect width='200' height='200' fill='%23222'/%3E%3Cpath d='M80 70h40v60H80z' fill='%23444'/%3E%3Ccircle cx='95' cy='85' r='8' fill='%23555'/%3E%3Cpath d='M80 130l20-25 10 15 10-10 20 20H80z' fill='%23555'/%3E%3C/svg%3E";
+
   // Get product images (use placeholder if none)
   // Support both new format (array of objects with url) and legacy format (array of strings)
   const getImageUrls = () => {
@@ -230,7 +249,7 @@ export default function ProductPage({ productId }) {
     if (product.image_url) {
       return [product.image_url];
     }
-    return ['/images/placeholder-product.png'];
+    return [PLACEHOLDER_IMAGE];
   };
   const images = getImageUrls();
 
@@ -514,6 +533,40 @@ export default function ProductPage({ productId }) {
                   )}
                 </div>
 
+                {/* Description - Moved under price */}
+                {product.description && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{
+                      fontFamily: 'Inter',
+                      fontSize: '14px',
+                      lineHeight: 1.7,
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      margin: 0,
+                    }}>
+                      {showFullDescription || product.description.length <= 200
+                        ? product.description
+                        : `${product.description.slice(0, 200)}...`}
+                      {product.description.length > 200 && (
+                        <button
+                          onClick={() => setShowFullDescription(!showFullDescription)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#319DFF',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            marginLeft: '8px',
+                            fontFamily: 'Inter, sans-serif',
+                            fontSize: '14px',
+                          }}
+                        >
+                          {showFullDescription ? 'Show less' : 'Read more'}
+                        </button>
+                      )}
+                    </p>
+                  </div>
+                )}
+
                 {/* Size Selector - Nike/SSENSE style chips */}
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{
@@ -590,6 +643,124 @@ export default function ProductPage({ productId }) {
                   </div>
                 </div>
 
+                {/* Quantity Selector - Glassmorphism style */}
+                <div style={{ marginBottom: '16px' }}>
+                  <span style={{
+                    fontFamily: 'Inter',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    display: 'block',
+                    marginBottom: '10px',
+                  }}>
+                    Quantity
+                  </span>
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0',
+                    background: 'rgba(22, 22, 22, 0.8)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(56, 56, 56, 0.3)',
+                    borderRadius: '12px',
+                    padding: '4px',
+                  }}>
+                    <button
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      disabled={quantity <= 1}
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: quantity <= 1 ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '20px',
+                        fontWeight: 500,
+                        cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (quantity > 1) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                      aria-label="Decrease quantity"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 1;
+                        const maxStock = product.stock_quantity || 99;
+                        setQuantity(Math.max(1, Math.min(val, maxStock)));
+                      }}
+                      min="1"
+                      max={product.stock_quantity || 99}
+                      style={{
+                        width: '48px',
+                        height: '44px',
+                        background: 'transparent',
+                        border: 'none',
+                        textAlign: 'center',
+                        fontFamily: 'Inter, sans-serif',
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        color: '#FFFFFF',
+                        outline: 'none',
+                        MozAppearance: 'textfield',
+                      }}
+                      aria-label="Quantity"
+                    />
+                    <button
+                      onClick={() => setQuantity(q => Math.min(product.stock_quantity || 99, q + 1))}
+                      disabled={quantity >= (product.stock_quantity || 99)}
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '8px',
+                        color: quantity >= (product.stock_quantity || 99) ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+                        fontSize: '20px',
+                        fontWeight: 500,
+                        cursor: quantity >= (product.stock_quantity || 99) ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (quantity < (product.stock_quantity || 99)) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
+                  {product.stock_quantity && product.stock_quantity <= 10 && (
+                    <span style={{
+                      display: 'block',
+                      marginTop: '8px',
+                      fontSize: '12px',
+                      color: '#ef4444',
+                      fontFamily: 'Inter, sans-serif',
+                    }}>
+                      Only {product.stock_quantity} left in stock
+                    </span>
+                  )}
+                </div>
+
                 {/* Action Buttons Row */}
                 <div style={{
                   display: 'flex',
@@ -598,7 +769,7 @@ export default function ProductPage({ productId }) {
                 }}>
                   {/* Buy Now Button */}
                   <button
-                    onClick={handleBuyNow}
+                    onClick={() => handleBuyNow(quantity)}
                     style={{
                       flex: 1,
                       padding: '14px 24px',
@@ -632,7 +803,7 @@ export default function ProductPage({ productId }) {
 
                   {/* Add to Cart Button */}
                   <button
-                    onClick={handleAddToCart}
+                    onClick={() => handleAddToCart(quantity)}
                     style={{
                       flex: 1,
                       padding: '14px 24px',
@@ -716,49 +887,6 @@ export default function ProductPage({ productId }) {
                     )}
                   </div>
                 )}
-
-                {/* Description */}
-                {product.description && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 style={{
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: 'rgba(255, 255, 255, 0.9)',
-                      marginBottom: '8px',
-                    }}>
-                      Description
-                    </h3>
-                    <p style={{
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      lineHeight: 1.7,
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      margin: 0,
-                    }}>
-                      {showFullDescription || product.description.length <= 200
-                        ? product.description
-                        : `${product.description.slice(0, 200)}...`}
-                      {product.description.length > 200 && (
-                        <button
-                          onClick={() => setShowFullDescription(!showFullDescription)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: '#319DFF',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            marginLeft: '8px',
-                            fontFamily: 'Inter, sans-serif',
-                            fontSize: '14px',
-                          }}
-                        >
-                          {showFullDescription ? 'Show less' : 'Read more'}
-                        </button>
-                      )}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -803,7 +931,7 @@ export default function ProductPage({ productId }) {
                     >
                       <div style={{ aspectRatio: '1/1', overflow: 'hidden' }}>
                         <img
-                          src={relatedProduct.images?.[0] || '/images/placeholder-product.png'}
+                          src={relatedProduct.images?.[0] || PLACEHOLDER_IMAGE}
                           alt={relatedProduct.name}
                           style={{
                             width: '100%',

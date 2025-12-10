@@ -31,6 +31,7 @@ export default function ProductPageMobile({
   const [isFavorited, setIsFavorited] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [selectedSize, setSelectedSize] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const { addItem, toggleCart } = useCart();
 
   // Available sizes (will be dynamic when variants are added to DB)
@@ -49,15 +50,30 @@ export default function ProductPageMobile({
   // Format price helper
   const formatPrice = (cents) => `$${(cents / 100).toFixed(2)}`;
 
+  // Helper to get primary image URL from product
+  const getPrimaryImageUrl = () => {
+    if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
+      // New format: array of objects with url property
+      if (typeof product.images[0] === 'object' && product.images[0].url) {
+        const primary = product.images.find(img => img.is_primary) || product.images[0];
+        return primary.url;
+      }
+      // Legacy format: array of strings
+      return product.images[0];
+    }
+    // Fallback to image_url
+    return product?.image_url || product?.imageUrl || null;
+  };
+
   // Buy Now handler
-  const handleBuyNow = () => {
+  const handleBuyNow = (qty = 1) => {
     if (product) {
       addItem({
         id: product.id,
         name: product.name,
         price: product.price,
-        image: product.images?.[0] || null,
-      });
+        image_url: getPrimaryImageUrl(),
+      }, qty);
       onNavigate('/shop/checkout');
     }
   };
@@ -345,6 +361,40 @@ export default function ProductPageMobile({
           )}
         </div>
 
+        {/* Description - Moved under price */}
+        {product.description && (
+          <div style={{ marginBottom: '20px' }}>
+            <p style={{
+              fontFamily: 'Inter',
+              fontSize: '14px',
+              lineHeight: 1.7,
+              color: 'rgba(255, 255, 255, 0.7)',
+              margin: 0,
+            }}>
+              {showFullDescription || product.description.length <= 150
+                ? product.description
+                : `${product.description.slice(0, 150)}...`}
+              {product.description.length > 150 && (
+                <button
+                  onClick={() => setShowFullDescription(!showFullDescription)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#319DFF',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    marginLeft: '8px',
+                    fontFamily: 'Inter, sans-serif',
+                    fontSize: '14px',
+                  }}
+                >
+                  {showFullDescription ? 'Show less' : 'Read more'}
+                </button>
+              )}
+            </p>
+          </div>
+        )}
+
         {/* Size Selector - Nike/SSENSE style chips */}
         <div style={{ marginBottom: '16px' }}>
           <div style={{
@@ -421,6 +471,100 @@ export default function ProductPageMobile({
           </div>
         </div>
 
+        {/* Quantity Selector - Glassmorphism style */}
+        <div style={{ marginBottom: '16px' }}>
+          <span style={{
+            fontFamily: 'Inter',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'rgba(255, 255, 255, 0.9)',
+            display: 'block',
+            marginBottom: '10px',
+          }}>
+            Quantity
+          </span>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0',
+            background: 'rgba(22, 22, 22, 0.8)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(56, 56, 56, 0.3)',
+            borderRadius: '12px',
+            padding: '4px',
+          }}>
+            <button
+              onClick={() => setQuantity(q => Math.max(1, q - 1))}
+              disabled={quantity <= 1}
+              style={{
+                width: '44px',
+                height: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                color: quantity <= 1 ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+                fontSize: '20px',
+                fontWeight: 500,
+                cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+            <span style={{
+              width: '48px',
+              height: '44px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 600,
+              fontSize: '16px',
+              color: '#FFFFFF',
+            }}>
+              {quantity}
+            </span>
+            <button
+              onClick={() => setQuantity(q => Math.min(product.stock_quantity || 99, q + 1))}
+              disabled={quantity >= (product.stock_quantity || 99)}
+              style={{
+                width: '44px',
+                height: '44px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                color: quantity >= (product.stock_quantity || 99) ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+                fontSize: '20px',
+                fontWeight: 500,
+                cursor: quantity >= (product.stock_quantity || 99) ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+          {product.stock_quantity && product.stock_quantity <= 10 && (
+            <span style={{
+              display: 'block',
+              marginTop: '8px',
+              fontSize: '12px',
+              color: '#ef4444',
+              fontFamily: 'Inter, sans-serif',
+            }}>
+              Only {product.stock_quantity} left in stock
+            </span>
+          )}
+        </div>
+
         {/* Action Buttons */}
         <div style={{
           display: 'flex',
@@ -429,7 +573,7 @@ export default function ProductPageMobile({
         }}>
           {/* Buy Now Button */}
           <button
-            onClick={handleBuyNow}
+            onClick={() => handleBuyNow(quantity)}
             style={{
               flex: 1,
               padding: '14px 16px',
@@ -454,7 +598,15 @@ export default function ProductPageMobile({
 
           {/* Add to Cart Button */}
           <button
-            onClick={onAddToCart}
+            onClick={() => {
+              addItem({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                image_url: images[0] || product.image_url || null,
+              }, quantity);
+              toggleCart();
+            }}
             style={{
               flex: 1,
               padding: '14px 16px',
@@ -477,53 +629,6 @@ export default function ProductPageMobile({
             Add to Cart
           </button>
         </div>
-
-
-
-        {/* Description */}
-        {product.description && (
-          <div style={{ marginBottom: '16px' }}>
-            <h3 style={{
-              fontFamily: 'Inter',
-              fontSize: '14px',
-              fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.9)',
-              marginBottom: '8px',
-            }}>
-              Description
-            </h3>
-            <p
-              style={{
-                fontSize: '14px',
-                lineHeight: 1.7,
-                color: 'rgba(255, 255, 255, 0.7)',
-                margin: 0,
-              }}
-            >
-              {showFullDescription || product.description.length <= 150
-                ? product.description
-                : `${product.description.slice(0, 150)}...`}
-              {product.description.length > 150 && (
-                <button
-                  onClick={() => setShowFullDescription(!showFullDescription)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#319DFF',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    marginLeft: '6px',
-                    fontFamily: 'Inter, sans-serif',
-                    fontSize: '14px',
-                    padding: 0,
-                  }}
-                >
-                  {showFullDescription ? 'Show less' : 'Read more'}
-                </button>
-              )}
-            </p>
-          </div>
-        )}
       </main>
 
       {/* Footer */}

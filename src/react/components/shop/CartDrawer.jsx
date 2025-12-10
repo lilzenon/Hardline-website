@@ -10,6 +10,9 @@ import React, { useEffect, useRef } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import CheckoutButton from './CheckoutButton';
 
+// Inline SVG placeholder as data URI - no external file needed
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='%23666'%3E%3Crect width='200' height='200' fill='%23222'/%3E%3Cpath d='M80 70h40v60H80z' fill='%23444'/%3E%3Ccircle cx='95' cy='85' r='8' fill='%23555'/%3E%3Cpath d='M80 130l20-25 10 15 10-10 20 20H80z' fill='%23555'/%3E%3C/svg%3E";
+
 // Drawer styles
 const drawerStyles = {
   overlay: {
@@ -266,12 +269,27 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div style={drawerStyles.itemList}>
-              {items.map((item) => (
+              {items.map((item) => {
+                // Get image URL - support multiple formats
+                const getItemImageUrl = () => {
+                  // Direct image_url property
+                  if (item.image_url) return item.image_url;
+                  // imageUrl property (camelCase)
+                  if (item.imageUrl) return item.imageUrl;
+                  // image property as string
+                  if (item.image && typeof item.image === 'string') return item.image;
+                  // image property as object with url
+                  if (item.image && typeof item.image === 'object' && item.image.url) return item.image.url;
+                  return PLACEHOLDER_IMAGE;
+                };
+
+                return (
                 <div key={item.id} style={drawerStyles.item}>
                   <img
-                    src={item.image_url || '/images/placeholder-product.png'}
+                    src={getItemImageUrl()}
                     alt={item.name}
                     style={drawerStyles.itemImage}
+                    onError={(e) => { e.target.src = PLACEHOLDER_IMAGE; }}
                   />
                   <div style={drawerStyles.itemInfo}>
                     <div>
@@ -303,7 +321,8 @@ export default function CartDrawer() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
