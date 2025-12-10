@@ -111,6 +111,7 @@ function getCSPDirectives() {
             "https://www.gstatic.com", // Allow Google static resources for reCAPTCHA
             "https://recaptcha.google.com", // Allow reCAPTCHA API
             "https://admin.b2b.click", // Allow analytics dashboard connections
+            "https://beta.b2b.click", // Allow beta dashboard API connections
             "https://ipapi.co", // Allow location API for analytics
             "https://connect.facebook.net", // Allow Facebook Pixel connections
             "https://www.facebook.com", // Allow Facebook API connections
