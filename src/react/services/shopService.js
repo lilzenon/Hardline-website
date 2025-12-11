@@ -31,18 +31,22 @@ const getApiBase = () => getApiBaseUrl();
 async function fetchWithTimeout(endpoint, options = {}) {
   const API_BASE = getApiBase();
   const url = `${API_BASE}${endpoint}`;
-  
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-  
+
   try {
     console.log(`🛍️ Shop API: ${options.method || 'GET'} ${endpoint}`);
-    
+
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
+      // 🔧 FIX: Add cache: 'no-store' to prevent browser caching of product data
+      // This ensures fresh images and variants are always fetched
+      cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
         ...options.headers,
       },
     });
