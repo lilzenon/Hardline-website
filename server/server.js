@@ -799,7 +799,30 @@ try {
           }
       }));
 
-      console.log('✅ Cross-domain API proxy configured successfully');
+      // 🛍️ Proxy shop API endpoints to dashboard API (products, checkout, orders)
+      app.use('/api/shop', createProxyMiddleware({
+          target: dashboardApiUrl,
+          changeOrigin: true,
+          secure: env.NODE_ENV === 'production',
+          timeout: 15000,  // Longer timeout for checkout operations
+          proxyTimeout: 15000,
+          onError: (err, req, res) => {
+              console.error('🚨 Proxy error for /api/shop:', err.message);
+              res.status(500).json({
+                  error: 'Shop API unavailable',
+                  message: 'Unable to connect to shop server',
+                  timestamp: new Date().toISOString()
+              });
+          },
+          onProxyReq: (proxyReq, req, res) => {
+              console.log(`🛍️ Proxying shop: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
+          },
+          onProxyRes: (proxyRes, req, res) => {
+              console.log(`✅ Shop proxy response: ${proxyRes.statusCode} for ${req.url}`);
+          }
+      }));
+
+      console.log('✅ Cross-domain API proxy configured successfully (including shop API)');
     } else {
       console.log('🛑 Proxy DISABLED via DASHBOARD_PROXY_ENABLED=false. Using local /api routes for settings and analytics.');
     }

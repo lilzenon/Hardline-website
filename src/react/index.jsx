@@ -14,6 +14,7 @@ const MaintenancePage = lazy(() => import('./components/MaintenancePage'));
 
 // 🛍️ Lazy load Shop pages for code splitting
 const ShopPage = lazy(() => import('./components/shop/ShopPage'));
+const ProductPage = lazy(() => import('./components/shop/ProductPage'));
 const CheckoutSuccess = lazy(() => import('./components/shop/CheckoutSuccess'));
 
 // Import any additional CSS if needed
@@ -86,6 +87,22 @@ const App = () => {
       return (
         <Suspense fallback={<PageLoader />}>
           <CheckoutSuccess />
+        </Suspense>
+      );
+    } else if (currentPath === '/shop/checkout' || currentPath === '/shop/cart') {
+      // 🛍️ Checkout/Cart page - redirect to shop with cart open
+      // The cart modal handles checkout, so we just show the shop page
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <ShopPage openCart={true} />
+        </Suspense>
+      );
+    } else if (currentPath.startsWith('/shop/')) {
+      // 🛍️ Product detail page - /shop/:productId
+      const productId = currentPath.replace('/shop/', '');
+      return (
+        <Suspense fallback={<PageLoader />}>
+          <ProductPage productId={productId} />
         </Suspense>
       );
     } else {

@@ -89,7 +89,26 @@ router.get(
     asyncHandler(renders.reactHomepage)
 );
 
+// 🛍️ Shop checkout page - Cart review and checkout (React version)
+router.get(
+    "/shop/checkout",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
+// 🛍️ Shop cart page - Shopping cart (React version)
+router.get(
+    "/shop/cart",
+    asyncHandler(auth.jwtLoosePage),
+    asyncHandler(helpers.adminSetup),
+    asyncHandler(locals.user),
+    asyncHandler(renders.reactHomepage)
+);
+
 // 🛍️ Shop product detail page - Individual product view (React version)
+// NOTE: This MUST come AFTER all specific /shop/* routes since :productId is a catch-all
 router.get(
     "/shop/:productId",
     asyncHandler(auth.jwtLoosePage),

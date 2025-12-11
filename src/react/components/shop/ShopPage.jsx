@@ -22,7 +22,7 @@ import BrandedLoader from '../BrandedLoader';
 // Lazy load mobile version
 const ShopPageMobile = lazy(() => import('./ShopPageMobile'));
 
-export default function ShopPage() {
+export default function ShopPage({ openCart = false }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,6 +32,13 @@ export default function ShopPage() {
 
   // Use performant resize hook for responsive detection
   const { isMobile: isMobileByWidth } = usePerformantResize();
+
+  // Open cart on mount if openCart prop is true (for /shop/checkout and /shop/cart routes)
+  useEffect(() => {
+    if (openCart && !isOpen) {
+      toggleCart();
+    }
+  }, [openCart]); // Only run on mount, not when isOpen changes
 
   // Device detection
   useEffect(() => {

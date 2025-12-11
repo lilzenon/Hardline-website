@@ -130,26 +130,42 @@ export default function ProductPage({ productId }) {
   // Add to cart handler
   const handleAddToCart = (qty = 1) => {
     if (product) {
-      addItem({
+      const itemData = {
         id: product.id,
         name: product.name,
         price: product.price,
         image_url: getPrimaryImageUrl(),
-      }, qty);
+      };
+
+      // Add size to item if variants exist and a size is selected
+      if (hasVariants && selectedSize) {
+        itemData.size = selectedSize;
+      }
+
+      addItem(itemData, qty);
       toggleCart();
     }
   };
 
-  // Buy Now handler (add to cart and navigate to checkout)
+  // Buy Now handler (add to cart and open cart modal for checkout)
   const handleBuyNow = (qty = 1) => {
     if (product) {
-      addItem({
+      // Include size if variants are available and a size is selected
+      const itemData = {
         id: product.id,
         name: product.name,
         price: product.price,
         image_url: getPrimaryImageUrl(),
-      }, qty);
-      handleNavigation('/shop/checkout');
+      };
+
+      // Add size to item if variants exist
+      if (hasVariants && selectedSize) {
+        itemData.size = selectedSize;
+      }
+
+      addItem(itemData, qty);
+      // Open cart modal which contains the checkout button
+      toggleCart();
     }
   };
 
