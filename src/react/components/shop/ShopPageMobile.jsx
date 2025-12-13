@@ -9,6 +9,7 @@ import Footer from '../Footer';
 import ProductGrid from './ProductGrid';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
+import Breadcrumb from '../Breadcrumb';
 import { useCart } from '../../contexts/CartContext';
 
 export default function ShopPageMobile({ products, loading, error, onRetry }) {
@@ -94,7 +95,16 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
             margin: '0 auto',
           }}
         >
-          {/* Page Title */}
+          {/* Breadcrumb - MATCH PRODUCTPAGEMOBILE */}
+          <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+            <Breadcrumb
+              items={[
+                { name: 'Home', url: '/' },
+                { name: 'Shop' }
+              ]}
+            />
+          </div>
+
           {/* Page Title */}
           <h1
             style={{

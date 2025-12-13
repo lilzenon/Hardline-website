@@ -261,24 +261,24 @@ const FAQPage = () => {
         className="desktop-container"
         style={{
           width: '100%',
-          maxWidth: `${scaledDimensions.containerWidth}px`,
+          maxWidth: '1400px', // 🚨 MATCH SHOPPAGE: Fixed width instead of dynamic
           margin: '0 auto',
           position: 'relative',
           background: '#000000',
-          minHeight: 'auto', // 🚨 CRITICAL FIX: Removed 100vh to prevent forced spacing
-          padding: '0 20px', // 🚨 MATCH HOMEPAGE: INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
+          minHeight: 'auto',
+          padding: '0 40px', // 🚨 MATCH SHOPPAGE: Consistent horizontal padding
           boxSizing: 'border-box'
         }}
       >
         <div style={{ width: '100%', position: 'relative' }}>
-        {/* Frame 12 - Navigation - EXACT MATCH to FigmaDesktop */}
+        {/* Navigation Header - Logo and Pills only - MATCH SHOPPAGE */}
         <div
           style={{
             position: 'relative',
             display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto',
+            gridTemplateColumns: 'auto 1fr',
             width: '100%',
-            height: '48px',
+            height: '56px', // Match logo height to prevent overflow
             alignItems: 'center',
             margin: '35px 0 0 0'
           }}
@@ -324,12 +324,49 @@ const FAQPage = () => {
 
         </div>
 
+        {/* Breadcrumb Row - MATCH SHOPPAGE spacing */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '24px', // Increased for better spacing from nav header
+            marginBottom: '8px',
+            width: '100%'
+          }}
+        >
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { name: 'Home', url: '/' },
+              { name: 'FAQ' }
+            ]}
+          />
+        </div>
+
+        {/* Page Title - MATCH SHOPPAGE */}
+        <div
+          style={{
+            color: '#FFF',
+            fontFamily: 'Inter',
+            fontSize: '32px',
+            fontWeight: '600',
+            textAlign: 'left',
+            marginBottom: '16px',
+            opacity: 0,
+            animation: 'fadeInUp 0.8s ease-out 0.2s forwards',
+            letterSpacing: '-0.02em'
+          }}
+        >
+          FAQ
+        </div>
+
         {/* FAQ Content Section - Transparent container (no outer card) */}
         <div
           style={{
             width: '100%',
             maxWidth: '800px',
-            margin: '48px auto 0 auto',
+            margin: '0 auto',
             background: 'transparent',
             backdropFilter: 'none',
             WebkitBackdropFilter: 'none',
@@ -340,26 +377,6 @@ const FAQPage = () => {
             animation: 'fadeInUp 0.6s ease-out 0.2s forwards'
           }}
         >
-          {/* Breadcrumb Navigation */}
-          <Breadcrumb
-            items={[
-              { name: 'Home', url: '/' },
-              { name: 'FAQ' }
-            ]}
-          />
-
-          {/* FAQ Title */}
-          <h1 style={{
-            color: '#FFFFFF',
-            fontFamily: 'Inter',
-            fontWeight: '800',
-            fontSize: '48px',
-            lineHeight: '1.2em',
-            margin: '0 0 32px 0',
-            textAlign: 'center'
-          }}>
-            FAQ
-          </h1>
 
           {/* Error State */}
           {contentError && (

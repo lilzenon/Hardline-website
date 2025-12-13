@@ -73,19 +73,12 @@ export default function ShopPage({ openCart = false }) {
     loadProducts();
   }, []);
 
-  // Navigation handler
-  const handleNavigation = (path) => {
-    if (window.navigateWithTransition) {
-      window.navigateWithTransition(path);
-    } else if (window.history && window.history.pushState) {
-      // Fallback for when navigateWithTransition is not available
-      window.history.pushState({}, '', path);
-      // Dispatch popstate event so App component detects the change
-      const navEvent = new PopStateEvent('popstate');
-      window.dispatchEvent(navEvent);
-    } else {
-      window.location.href = path;
-    }
+  // Navigation handler for DesktopNavigationPills component
+  // Note: DesktopNavigationPills handles actual navigation internally via navigateDefault()
+  // This callback receives the TAB NAME (e.g., 'FAQ', 'About'), not the path
+  // We only use it for local UI state updates, NOT for navigation
+  const handleNavigation = (tabName) => {
+    console.log(`🧭 Shop Page Navigation: Switched to ${tabName} tab`);
   };
 
   // Loading state
@@ -168,14 +161,14 @@ export default function ShopPage({ openCart = false }) {
           }}
         >
           <div style={{ width: '100%', position: 'relative' }}>
-            {/* Navigation Header - Matches AboutPage */}
+            {/* Navigation Header - Logo and Pills only */}
             <div
               style={{
                 position: 'relative',
                 display: 'grid',
-                gridTemplateColumns: 'auto 1fr auto',
+                gridTemplateColumns: 'auto 1fr',
                 width: '100%',
-                height: '48px',
+                height: '56px', // Match logo height
                 alignItems: 'center',
                 margin: '35px 0 0 0'
               }}
@@ -211,34 +204,46 @@ export default function ShopPage({ openCart = false }) {
                 currentPage="Shop"
                 onNavigate={handleNavigation}
               />
+            </div>
 
-              {/* Cart Icon */}
-              <div style={{ justifySelf: 'end' }}>
+            {/* Breadcrumb + Cart Row */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px', // Increased for better spacing from nav header
+                marginBottom: '8px',
+                width: '100%'
+              }}
+            >
+              {/* Breadcrumb Navigation */}
+              <Breadcrumb
+                items={[
+                  { name: 'Home', url: '/' },
+                  { name: 'Shop' }
+                ]}
+              />
+
+              {/* Cart Icon - Right aligned under nav pills */}
+              <div>
                 <CartIcon />
               </div>
             </div>
-
-            {/* Breadcrumb Navigation */}
-            <Breadcrumb
-              items={[
-                { name: 'Home', url: '/' },
-                { name: 'Shop' }
-              ]}
-            />
 
             {/* Page Title */}
             <div
               style={{
                 color: '#FFF',
                 fontFamily: 'Inter',
-                fontSize: '24px',
+                fontSize: '32px',
                 fontWeight: '600',
                 textAlign: 'left',
-                marginTop: '24px',
-                marginBottom: '16px',
+                marginBottom: '16px', // Reduced for tighter spacing
                 opacity: 0,
                 animation: 'fadeInUp 0.8s ease-out 0.2s forwards',
-                paddingLeft: '0px'
+                paddingLeft: '0px',
+                letterSpacing: '-0.02em'
               }}
             >
               Shop

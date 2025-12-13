@@ -4,6 +4,7 @@ import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import Footer from './Footer';
+import Breadcrumb from './Breadcrumb';
 
 
 const FAQPageMobile = () => {
@@ -234,16 +235,31 @@ const FAQPageMobile = () => {
               boxSizing: 'border-box'
             }}
           >
-            {/* Page Title */}
-            <h1 style={{
-              margin: '16px 0 24px 0',
-              fontSize: '32px',
-              fontWeight: 800,
-              lineHeight: 1.15,
-              letterSpacing: '-0.02em',
-              textAlign: 'center',
-              color: '#FFFFFF'
-            }}>FAQ</h1>
+            {/* Breadcrumb - MATCH SHOPPAGEMOBILE */}
+            <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+              <Breadcrumb
+                items={[
+                  { name: 'Home', url: '/' },
+                  { name: 'FAQ' }
+                ]}
+              />
+            </div>
+
+            {/* Page Title - MATCH SHOPPAGEMOBILE */}
+            <h1
+              style={{
+                fontSize: '24px',
+                fontWeight: 600,
+                marginBottom: '16px',
+                letterSpacing: '-0.02em',
+                textAlign: 'left',
+                color: '#FFFFFF',
+                fontFamily: 'Inter',
+                paddingLeft: '0px'
+              }}
+            >
+              FAQ
+            </h1>
 
             <div style={{ padding: '0 10px' }}>
         {faqItems.map((item, idx) => {

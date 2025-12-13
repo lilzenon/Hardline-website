@@ -1560,12 +1560,12 @@ const FigmaDesktop = () => {
           className="desktop-container"
           style={{
             width: '100%',
-            maxWidth: `${scaledDimensions.containerWidth}px`,
+            maxWidth: '1400px', // 🚨 MATCH SHOPPAGE: Fixed width instead of dynamic 1192px
             margin: '0 auto',
             position: 'relative',
             background: '#000000',
             minHeight: '100vh',
-            padding: '0 20px', // INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
+            padding: '0 40px', // 🚨 MATCH SHOPPAGE: Consistent horizontal padding
             boxSizing: 'border-box'
           }}
         >
@@ -1575,9 +1575,9 @@ const FigmaDesktop = () => {
         style={{
           position: 'relative',
           display: 'grid',
-          gridTemplateColumns: 'auto 1fr auto',
+          gridTemplateColumns: 'auto 1fr', // 🚨 MATCH SHOPPAGE: 2 columns only
           width: '100%',
-          height: '48px',
+          height: '56px', // 🚨 MATCH SHOPPAGE: Match logo height
           alignItems: 'center',
           margin: '35px 0 0 0',
           ...fadeIn(0)

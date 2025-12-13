@@ -2,14 +2,14 @@ import React from 'react';
 
 /**
  * Breadcrumb Component
- * 
+ *
  * Provides breadcrumb navigation for better UX and SEO.
- * Matches the glassmorphism design system.
- * 
+ * Matches the glassmorphism design system and ProductPage styling.
+ *
  * Props:
  * - items: Array of breadcrumb items { name: string, url?: string }
  * - separator: String separator between items (default: '›')
- * 
+ *
  * Example:
  * <Breadcrumb items={[
  *   { name: 'Home', url: '/' },
@@ -25,8 +25,8 @@ const Breadcrumb = ({ items = [], separator = '›' }) => {
     <nav
       aria-label="Breadcrumb"
       style={{
-        padding: '16px 20px',
-        marginBottom: '20px'
+        padding: '0',
+        marginBottom: '0'
       }}
     >
       <ol
@@ -52,8 +52,8 @@ const Breadcrumb = ({ items = [], separator = '›' }) => {
             {index > 0 && (
               <span
                 style={{
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '13px', // MATCH PRODUCTPAGEMOBILE
                   color: 'rgba(255, 255, 255, 0.4)',
                   userSelect: 'none'
                 }}
@@ -66,10 +66,10 @@ const Breadcrumb = ({ items = [], separator = '›' }) => {
               <a
                 href={item.url}
                 style={{
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '13px', // MATCH PRODUCTPAGEMOBILE
                   fontWeight: '400',
-                  color: 'rgba(255, 255, 255, 0.7)',
+                  color: 'rgba(255, 255, 255, 0.5)', // MATCH PRODUCTPAGEMOBILE
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   display: 'inline-block'
@@ -78,7 +78,7 @@ const Breadcrumb = ({ items = [], separator = '›' }) => {
                   e.target.style.color = '#319DFF';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                  e.target.style.color = 'rgba(255, 255, 255, 0.5)';
                 }}
               >
                 {item.name}
@@ -86,10 +86,10 @@ const Breadcrumb = ({ items = [], separator = '›' }) => {
             ) : (
               <span
                 style={{
-                  fontFamily: 'Inter',
-                  fontSize: '14px',
+                  fontFamily: 'Inter, sans-serif',
+                  fontSize: '13px', // MATCH PRODUCTPAGEMOBILE
                   fontWeight: '500',
-                  color: '#FFFFFF'
+                  color: 'rgba(255, 255, 255, 0.7)' // MATCH PRODUCTPAGEMOBILE
                 }}
                 aria-current="page"
               >

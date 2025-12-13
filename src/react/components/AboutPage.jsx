@@ -459,24 +459,24 @@ Our mission is to unite top talent, immersive production, and passionate fans to
         className="desktop-container"
         style={{
           width: '100%',
-          maxWidth: `${scaledDimensions.containerWidth}px`,
+          maxWidth: '1400px', // 🚨 MATCH SHOPPAGE: Fixed width instead of dynamic
           margin: '0 auto',
           position: 'relative',
           background: '#000000',
-          minHeight: 'auto', // 🚨 CRITICAL FIX: Removed 100vh to prevent forced spacing
-          padding: '0 20px', // 🚨 MATCH HOMEPAGE: INCREASED from 16px to 20px (adding 4px on each side for tighter layout)
+          minHeight: 'auto',
+          padding: '0 40px', // 🚨 MATCH SHOPPAGE: Consistent horizontal padding
           boxSizing: 'border-box'
         }}
       >
         <div style={{ width: '100%', position: 'relative' }}>
-        {/* Frame 12 - Navigation - EXACT MATCH to FigmaDesktop */}
+        {/* Navigation Header - Logo and Pills only - MATCH SHOPPAGE */}
         <div
           style={{
             position: 'relative',
             display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto',
+            gridTemplateColumns: 'auto 1fr',
             width: '100%',
-            height: '48px',
+            height: '56px', // Match logo height to prevent overflow
             alignItems: 'center',
             margin: '35px 0 0 0'
           }}
@@ -521,26 +521,38 @@ Our mission is to unite top talent, immersive production, and passionate fans to
           />
         </div>
 
-        {/* Breadcrumb Navigation */}
-        <Breadcrumb
-          items={[
-            { name: 'Home', url: '/' },
-            { name: 'About' }
-          ]}
-        />
+        {/* Breadcrumb Row - MATCH SHOPPAGE spacing */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '24px', // Increased for better spacing from nav header
+            marginBottom: '8px',
+            width: '100%'
+          }}
+        >
+          {/* Breadcrumb Navigation */}
+          <Breadcrumb
+            items={[
+              { name: 'Home', url: '/' },
+              { name: 'About' }
+            ]}
+          />
+        </div>
 
         {/* Page Title */}
         <div
           style={{
             color: '#FFF',
             fontFamily: 'Inter',
-            fontSize: '48px',
-            fontWeight: '800',
-            textAlign: 'center',
-            marginTop: '8px',
-            marginBottom: '4px',
+            fontSize: '32px',
+            fontWeight: '600',
+            textAlign: 'left',
+            marginBottom: '2px', // Reduced for tighter spacing with content
             opacity: 0,
-            animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
+            animation: 'fadeInUp 0.8s ease-out 0.2s forwards',
+            letterSpacing: '-0.02em'
           }}
         >
           About
@@ -552,10 +564,9 @@ Our mission is to unite top talent, immersive production, and passionate fans to
               width: '100%',
               margin: '0 auto',
               background: 'transparent',
-              padding: '8px 20px 20px 20px',
               boxSizing: 'border-box',
               opacity: 0,
-              animation: 'fadeInUp 0.8s ease-out 0.4s forwards'
+              animation: 'fadeInUp 0.8s ease-out 0.25s forwards' // Faster animation start
             }}
           >
             {contentError ? (
@@ -563,7 +574,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 role="alert"
                 aria-live="polite"
                 style={{
-                  marginTop: '16px',
+                  marginTop: '8px',
                   padding: '16px',
                   background: 'rgba(22, 22, 22, 0.30)',
                   backdropFilter: 'blur(12px)',
@@ -585,29 +596,13 @@ Our mission is to unite top talent, immersive production, and passionate fans to
             )}
           </div>
 
-          {/* Gallery Section - Masonry Layout with Optimized Spacing */}
+          {/* Gallery Section - Masonry Layout */}
           <div
             style={{
-              marginTop: isMobile ? '0px' : '8px', // CRITICAL FIX: Reduced desktop spacing further
+              marginTop: '24px', // Tight spacing below about text
               marginBottom: '32px'
             }}
           >
-            <div
-              style={{
-                color: '#FFFFFF',
-                fontFamily: 'Inter',
-                fontWeight: '600',
-                fontSize: '48px',
-                lineHeight: '1.3em',
-                marginBottom: isMobile ? '8px' : '16px', // CRITICAL FIX: Further reduced spacing
-                textAlign: 'center',
-                opacity: 0,
-                animation: 'fadeInUp 0.6s ease-out 0.3s forwards'
-              }}
-            >
-              Gallery
-            </div>
-
             <MasonryGallery
               images={galleryImages}
               columns={{ desktop: 4, tablet: 3, mobile: 2 }}

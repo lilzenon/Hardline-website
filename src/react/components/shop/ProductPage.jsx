@@ -366,12 +366,12 @@ export default function ProductPage({ productId }) {
           }}
         >
           <div style={{ width: '100%', position: 'relative' }}>
-            {/* Navigation Header */}
+            {/* Navigation Header - Logo and Pills only */}
             <div
               style={{
                 position: 'relative',
                 display: 'grid',
-                gridTemplateColumns: 'auto 1fr auto',
+                gridTemplateColumns: 'auto 1fr',
                 width: '100%',
                 height: '48px',
                 alignItems: 'center',
@@ -394,18 +394,17 @@ export default function ProductPage({ productId }) {
                 }}
               />
               <DesktopNavigationPills currentPage="Shop" onNavigate={handleNavigation} />
-              <div style={{ justifySelf: 'end' }}>
-                <CartIcon />
-              </div>
             </div>
 
-            {/* Top Row: Breadcrumb + Share */}
+            {/* Breadcrumb + Cart + Share Row */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '24px',
+              marginTop: '24px', // Increased for better spacing from nav header
+              marginBottom: '8px',
             }}>
+              {/* Breadcrumb */}
               <Breadcrumb
                 items={[
                   { name: 'Home', url: '/' },
@@ -413,23 +412,28 @@ export default function ProductPage({ productId }) {
                   { name: product.name }
                 ]}
               />
-              <button
-                onClick={handleShare}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  background: 'transparent',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  padding: 0,
-                }}
-                aria-label="Share product"
-              >
-                <Share2 size={20} color="rgba(255, 255, 255, 0.6)" />
-              </button>
+
+              {/* Cart and Share Icons */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <button
+                  onClick={handleShare}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                  aria-label="Share product"
+                >
+                  <Share2 size={20} color="rgba(255, 255, 255, 0.6)" />
+                </button>
+                <CartIcon />
+              </div>
             </div>
 
             {/* Product Content - 2 Column Grid */}

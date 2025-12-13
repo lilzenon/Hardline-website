@@ -419,8 +419,8 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 boxSizing: 'border-box'
               }}
             >
-            {/* Breadcrumb - Hidden on mobile but present for SEO */}
-            <div style={{ display: 'none' }}>
+            {/* Breadcrumb - MATCH SHOPPAGEMOBILE */}
+            <div style={{ marginTop: '8px', marginBottom: '16px' }}>
               <Breadcrumb
                 items={[
                   { name: 'Home', url: '/' },
@@ -429,20 +429,21 @@ Our mission is to unite top talent, immersive production, and passionate fans to
               />
             </div>
 
-            {/* Page Title */}
-            <div
+            {/* Page Title - MATCH SHOPPAGEMOBILE */}
+            <h1
               style={{
+                fontSize: '24px',
+                fontWeight: 600,
+                marginBottom: '16px',
+                letterSpacing: '-0.02em',
+                textAlign: 'left',
                 color: '#FFFFFF',
                 fontFamily: 'Inter',
-                fontWeight: '800',
-                fontSize: '32px',
-                lineHeight: '1.2em',
-                marginBottom: '24px',
-                textAlign: 'center'
+                paddingLeft: '0px'
               }}
             >
               About
-            </div>
+            </h1>
 
             {/* About Content */}
             <div
@@ -494,33 +495,18 @@ Our mission is to unite top talent, immersive production, and passionate fans to
 
             </div>
 
-            {/* Gallery Section - Mobile Masonry */}
+            {/* Gallery Section - Mobile Masonry (No title - removed to match desktop) */}
             <div
               style={{
                 width: '100%',
                 maxWidth: '430px',
                 margin: '0 auto',
-                marginTop: '0px',
+                marginTop: '24px', // Spacing from about content
                 marginBottom: '0px', // Footer handles its own top margin
                 padding: '0 24px', // Match page content horizontal padding for consistency
                 boxSizing: 'border-box'
               }}
             >
-              <div
-                style={{
-                  color: '#FFFFFF',
-                  fontFamily: 'Inter',
-                  fontWeight: '600',
-                  fontSize: '32px',
-                  lineHeight: '1.3em',
-                  marginTop: '8px',
-                  marginBottom: '24px',
-                  textAlign: 'center'
-                }}
-              >
-                Gallery
-              </div>
-
               <MasonryGallery
                 images={galleryImages}
                 columns={{ desktop: 3, tablet: 2, mobile: 2 }}
