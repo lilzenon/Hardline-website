@@ -109,7 +109,8 @@ export default function CartModal() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              padding: '20px 24px',
+              alignItems: 'center',
+              padding: '16px 20px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             }}
           >
@@ -125,7 +126,7 @@ export default function CartModal() {
               Your Cart ({itemCount})
             </h2>
             <button
-              onClick={toggleCart}
+              onClick={() => toggleCart(false)}
               aria-label="Close cart"
               style={{
                 width: '44px',
@@ -153,7 +154,7 @@ export default function CartModal() {
             style={{
               flex: 1,
               overflowY: 'auto',
-              padding: '16px 24px',
+              padding: '0 20px',
             }}
           >
             {isEmpty ? (
@@ -166,10 +167,10 @@ export default function CartModal() {
             ) : (
               cartItems.map((item) => (
                 <CartItem
-                  key={item.id}
+                  key={item.cartItemId || `${item.id}-${item.size || 'default'}`}
                   item={item}
-                  onRemove={() => removeItem(item.id)}
-                  onUpdateQuantity={(qty) => updateQuantity(item.id, qty)}
+                  onRemove={() => removeItem(item.cartItemId || (item.size ? `${item.id}-${item.size}` : item.id))}
+                  onUpdateQuantity={(qty) => updateQuantity(item.cartItemId || (item.size ? `${item.id}-${item.size}` : item.id), qty)}
                 />
               ))
             )}
@@ -179,7 +180,7 @@ export default function CartModal() {
           {!isEmpty && (
             <div
               style={{
-                padding: '20px 24px',
+                padding: '16px 20px',
                 borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                 background: 'rgba(0, 0, 0, 0.3)',
               }}
@@ -203,34 +204,6 @@ export default function CartModal() {
 
               {/* Checkout Button */}
               <CheckoutButton />
-
-              {/* Clear Cart */}
-              <button
-                onClick={clearCart}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  marginTop: '12px',
-                  background: 'transparent',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '12px',
-                  color: 'rgba(255, 255, 255, 0.6)',
-                  fontSize: '14px',
-                  fontFamily: 'Inter, sans-serif',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 100, 100, 0.5)';
-                  e.currentTarget.style.color = 'rgba(255, 100, 100, 0.8)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
-                }}
-              >
-                Clear Cart
-              </button>
             </div>
           )}
         </div>
@@ -259,7 +232,7 @@ function CartItem({ item, onRemove, onUpdateQuantity }) {
     <div
       style={{
         display: 'flex',
-        gap: '16px',
+        gap: '12px',
         padding: '16px 0',
         borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
       }}
@@ -267,17 +240,22 @@ function CartItem({ item, onRemove, onUpdateQuantity }) {
       {/* Product Image */}
       <div
         style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '12px',
+          width: '72px',
+          height: '72px',
+          borderRadius: '8px',
           overflow: 'hidden',
           background: 'rgba(255, 255, 255, 0.05)',
           flexShrink: 0,
         }}
       >
-        {item.image ? (
+        {(item.images && item.images.length > 0) || item.image_url || item.image ? (
           <img
-            src={item.image}
+            src={
+              (item.images && item.images[0]?.url) ||
+              (item.images && typeof item.images[0] === 'string' ? item.images[0] : null) ||
+              item.image_url ||
+              item.image
+            }
             alt={item.name}
             style={{
               width: '100%',
@@ -302,99 +280,120 @@ function CartItem({ item, onRemove, onUpdateQuantity }) {
       </div>
 
       {/* Product Details */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h4
-          style={{
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '14px',
-            fontWeight: 600,
-            color: '#FFFFFF',
-            margin: '0 0 4px 0',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {item.name}
-        </h4>
-        <p
-          style={{
-            fontSize: '16px',
-            fontWeight: 700,
-            color: '#319DFF',
-            margin: '0 0 8px 0',
-          }}
-        >
-          ${(item.price / 100).toFixed(2)}
-        </p>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
-        {/* Quantity Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={() => onUpdateQuantity(Math.max(1, item.quantity - 1))}
+        {/* Header: Name and Price */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+          <h4
             style={{
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: 'none',
-              borderRadius: '8px',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              fontWeight: 500,
               color: '#FFFFFF',
-              fontSize: '16px',
-              cursor: 'pointer',
+              margin: 0,
+              paddingRight: '12px',
+              lineHeight: '1.4',
             }}
           >
-            −
-          </button>
-          <span style={{ color: '#FFFFFF', fontSize: '14px', minWidth: '24px', textAlign: 'center' }}>
-            {item.quantity}
+            {item.name}
+          </h4>
+          <span
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '14px',
+              fontWeight: 500,
+              color: 'rgba(255, 255, 255, 0.8)', // Gray/White price
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ${(item.price / 100).toFixed(2)}
           </span>
-          <button
-            onClick={() => onUpdateQuantity(item.quantity + 1)}
+        </div>
+
+        {/* Variant Info (Size) */}
+        {item.size && (
+          <div
             style={{
-              width: '32px',
-              height: '32px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(255, 255, 255, 0.08)',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#FFFFFF',
-              fontSize: '16px',
-              cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif',
+              fontSize: '13px',
+              color: 'rgba(255, 255, 255, 0.5)',
+              marginBottom: '8px',
             }}
           >
-            +
+            Size: {item.size}
+          </div>
+        )}
+
+        {/* Footer: Quantity and Remove */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: item.size ? '0' : '4px' }}>
+          {/* Quantity Controls */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            borderRadius: '6px',
+            padding: '2px'
+          }}>
+            <button
+              onClick={() => onUpdateQuantity(Math.max(1, item.quantity - 1))}
+              style={{
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              −
+            </button>
+            <span style={{ fontSize: '13px', color: '#FFFFFF', minWidth: '16px', textAlign: 'center', fontWeight: 500 }}>
+              {item.quantity}
+            </span>
+            <button
+              onClick={() => onUpdateQuantity(item.quantity + 1)}
+              style={{
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'transparent',
+                border: 'none',
+                color: '#FFFFFF',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              +
+            </button>
+          </div>
+
+          {/* Remove Button */}
+          <button
+            onClick={onRemove}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(255, 255, 255, 0.4)',
+              fontSize: '12px',
+              fontFamily: 'Inter, sans-serif',
+              cursor: 'pointer',
+              padding: '4px',
+              transition: 'color 0.2s ease',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'}
+          >
+            Remove
           </button>
         </div>
       </div>
-
-      {/* Remove Button */}
-      <button
-        onClick={onRemove}
-        aria-label="Remove item"
-        style={{
-          width: '32px',
-          height: '32px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'transparent',
-          border: 'none',
-          color: 'rgba(255, 255, 255, 0.4)',
-          fontSize: '18px',
-          cursor: 'pointer',
-          alignSelf: 'flex-start',
-          transition: 'color 0.2s ease',
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.color = 'rgba(255, 100, 100, 0.8)'}
-        onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.4)'}
-      >
-        ✕
-      </button>
     </div>
   );
 }

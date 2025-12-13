@@ -16,6 +16,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { usePerformantResize } from '../../hooks/usePerformantResize';
 import { fetchProductById, fetchProducts } from '../../services/shopService';
 import { useCart } from '../../contexts/CartContext';
+import { useSEO } from '../../hooks/useSEO';
 import DesktopNavigationPills from '../DesktopNavigationPills';
 import Footer from '../Footer';
 import Breadcrumb from '../Breadcrumb';
@@ -40,6 +41,7 @@ export default function ProductPage({ productId }) {
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const { addItem, toggleCart } = useCart();
+  const { updateTitle, updateDescription, updateOGImage } = useSEO();
 
   // Get size variants from product data (if available)
   const hasVariants = product?.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
@@ -63,13 +65,28 @@ export default function ProductPage({ productId }) {
   // Device detection
   useEffect(() => {
     const checkMobile = () => {
-      const isMobileDevice = window.innerWidth < 768 || 
+      const isMobileDevice = window.innerWidth < 768 ||
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(isMobileDevice || isMobileByWidth);
       setIsPageLoading(false);
     };
     checkMobile();
   }, [isMobileByWidth]);
+
+  // Helper to get primary image URL from product
+  const getPrimaryImageUrl = (prod) => {
+    if (prod?.images && Array.isArray(prod.images) && prod.images.length > 0) {
+      // New format: array of objects with url property
+      if (typeof prod.images[0] === 'object' && prod.images[0].url) {
+        const primary = prod.images.find(img => img.is_primary) || prod.images[0];
+        return primary.url;
+      }
+      // Legacy format: array of strings
+      return prod.images[0];
+    }
+    // Fallback to image_url
+    return prod?.image_url || prod?.imageUrl || null;
+  };
 
   // Fetch product data and related products
   useEffect(() => {
@@ -80,6 +97,16 @@ export default function ProductPage({ productId }) {
         const data = await fetchProductById(productId);
         setProduct(data);
         console.log('📦 Loaded product:', data.name);
+
+        // Update SEO tags
+        if (data) {
+          updateTitle(`${data.name} | Shop`);
+          updateDescription(data.description || `Buy ${data.name} at BOUNCE2BOUNCE.`);
+          const ogImage = getPrimaryImageUrl(data);
+          if (ogImage) {
+            updateOGImage(ogImage);
+          }
+        }
 
         // Load related products (exclude current product)
         try {
@@ -112,20 +139,7 @@ export default function ProductPage({ productId }) {
     }
   };
 
-  // Helper to get primary image URL from product
-  const getPrimaryImageUrl = () => {
-    if (product?.images && Array.isArray(product.images) && product.images.length > 0) {
-      // New format: array of objects with url property
-      if (typeof product.images[0] === 'object' && product.images[0].url) {
-        const primary = product.images.find(img => img.is_primary) || product.images[0];
-        return primary.url;
-      }
-      // Legacy format: array of strings
-      return product.images[0];
-    }
-    // Fallback to image_url
-    return product?.image_url || product?.imageUrl || null;
-  };
+
 
   // Add to cart handler
   const handleAddToCart = (qty = 1) => {

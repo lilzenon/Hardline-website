@@ -18,42 +18,38 @@ const gridStyles = {
   },
   // Loading skeleton styles
   skeleton: {
-    background: 'rgba(22, 22, 22, 0.8)',
-    backdropFilter: 'blur(20px)',
-    border: '1px solid rgba(56, 56, 56, 0.3)',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    animation: 'pulse 1.5s ease-in-out infinite',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    width: '100%',
+    // Removed card background/border for minimalist look
   },
   skeletonImage: {
     width: '100%',
-    paddingBottom: '100%',
-    background: 'linear-gradient(90deg, rgba(40,40,40,0.5) 25%, rgba(60,60,60,0.5) 50%, rgba(40,40,40,0.5) 75%)',
-    backgroundSize: '200% 100%',
-    animation: 'shimmer 1.5s infinite',
+    aspectRatio: '3/4', // Match ProductCard aspect ratio
+    background: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '0', // Sharp corners or minimal radius
+    animation: 'pulse 1.5s ease-in-out infinite',
   },
   skeletonContent: {
-    padding: '16px',
+    padding: '0 4px', // Minimal padding
   },
   skeletonTitle: {
-    height: '20px',
+    height: '14px',
     width: '70%',
-    background: 'rgba(60, 60, 60, 0.5)',
-    borderRadius: '4px',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '2px',
     marginBottom: '8px',
   },
   skeletonPrice: {
-    height: '24px',
-    width: '40%',
-    background: 'rgba(60, 60, 60, 0.5)',
-    borderRadius: '4px',
-    marginBottom: '12px',
+    height: '14px',
+    width: '30%',
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '2px',
+    marginBottom: '0',
   },
   skeletonButton: {
-    height: '44px',
-    width: '100%',
-    background: 'rgba(60, 60, 60, 0.5)',
-    borderRadius: '8px',
+    display: 'none', // No button in minimalist skeleton
   },
   emptyState: {
     gridColumn: '1 / -1',
@@ -96,7 +92,9 @@ const gridCSS = `
   }
 
   .shop-product-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 12px;
+    row-gap: 24px; /* Increased row gap for separation without cards */
   }
 
   @media (min-width: 768px) {
@@ -151,7 +149,7 @@ export default function ProductGrid({ products = [], loading = false, onAddToCar
   return (
     <>
       <style>{gridCSS}</style>
-      <div 
+      <div
         className="shop-product-grid"
         style={gridStyles.container}
         role="list"

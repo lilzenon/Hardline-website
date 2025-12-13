@@ -9,8 +9,8 @@ import SocialMediaButtons from './SocialMediaButtons';
 const MobileNavigation = ({
   currentPage = 'events',
   scrollY = 0,
-  onNavigate = () => {},
-  onMenuToggle = () => {} // New callback to notify parent of menu state changes
+  onNavigate = () => { },
+  onMenuToggle = () => { } // New callback to notify parent of menu state changes
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   // Dynamic overlay height to handle iOS/Android dynamic viewports and notches
@@ -52,7 +52,7 @@ const MobileNavigation = ({
   // 📱 ENHANCED: Body scroll lock when menu is expanded (iOS Safari support)
   useEffect(() => {
     const body = document.body;
-    
+
     if (showMenu) {
       // Lock main page scroll when menu is expanded
       const scrollY = window.scrollY;
@@ -353,91 +353,91 @@ const MobileNavigation = ({
         >
           {/* 🎯 HAMBURGER MENU BUTTON - CONSISTENT POSITIONING */}
           <div
-          onClick={toggleMenu}
-          className="mobile-menu-button"
-          style={{
-            position: 'absolute',
-            right: '0px', // FIXED: Align with content right edge (no padding offset)
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '34px', // Match original size
-            height: '34px', // Match original size
-            cursor: 'pointer',
-            /* 🎯 LAYERING FIX: Ensure menu button stays visible above overlay */
-            zIndex: 1002, // Higher than logo (1001) and overlay (1000)
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '4px', // Match original gap
-            /* 🎯 CONSISTENT POSITIONING: Prevent layout shifts during animation */
-            transformOrigin: 'center center',
-            contain: 'layout style',
-            /* 🎯 SMOOTH TRANSITIONS: Consistent animation timing */
-            transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease'
-          }}
-
-        >
-          <div
+            onClick={toggleMenu}
+            className="mobile-menu-button"
             style={{
-              width: '24px',
-              height: '2px',
-              background: '#FFFFFF',
-              borderRadius: '1px',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
-              transformOrigin: 'center'
-            }}
-          />
-          <div
-            style={{
-              width: '24px',
-              height: '2px',
-              background: '#FFFFFF',
-              borderRadius: '1px',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              opacity: showMenu ? 0 : 1,
-              transform: showMenu ? 'scale(0)' : 'scale(1)'
-            }}
-          />
-          <div
-            style={{
-              width: '24px',
-              height: '2px',
-              background: '#FFFFFF',
-              borderRadius: '1px',
-              transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
-              transformOrigin: 'center'
-            }}
-          />
-        </div>
-
-        {/* 🎯 B2B LOGO - CONSISTENT POSITIONING: Same appearance whether menu is open or closed */}
-        <a href="/" aria-label="Home" onClick={(e)=>{e.preventDefault(); onNavigate('/');}}
-          style={{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%, -50%)',zIndex:1001}}
-        >
-          <img
-            src="/images/mobile-figma/b2b-logo-mobile.svg"
-            alt="B2B Logo"
-            className="mobile-navigation-logo"
-            style={{
-              /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
-              width: '160px',
-              height: '50px',
+              position: 'absolute',
+              right: '0px', // FIXED: Align with content right edge (no padding offset)
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '34px', // Match original size
+              height: '34px', // Match original size
               cursor: 'pointer',
-              userSelect: 'none',
-              /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
-              transition: 'none !important',
-              willChange: 'auto',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
+              /* 🎯 LAYERING FIX: Ensure menu button stays visible above overlay */
+              zIndex: 1002, // Higher than logo (1001) and overlay (1000)
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '4px', // Match original gap
+              /* 🎯 CONSISTENT POSITIONING: Prevent layout shifts during animation */
+              transformOrigin: 'center center',
+              contain: 'layout style',
+              /* 🎯 SMOOTH TRANSITIONS: Consistent animation timing */
+              transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease'
             }}
-            onMouseDown={undefined}
-            onMouseUp={undefined}
-            onMouseLeave={undefined}
-          />
-        </a>
+
+          >
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: showMenu ? 'rotate(45deg) translateY(6px)' : 'rotate(0deg) translateY(0px)',
+                transformOrigin: 'center'
+              }}
+            />
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                opacity: showMenu ? 0 : 1,
+                transform: showMenu ? 'scale(0)' : 'scale(1)'
+              }}
+            />
+            <div
+              style={{
+                width: '24px',
+                height: '2px',
+                background: '#FFFFFF',
+                borderRadius: '1px',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: showMenu ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0deg) translateY(0px)',
+                transformOrigin: 'center'
+              }}
+            />
+          </div>
+
+          {/* 🎯 B2B LOGO - CONSISTENT POSITIONING: Same appearance whether menu is open or closed */}
+          <a href="/" aria-label="Home" onClick={(e) => { e.preventDefault(); onNavigate('/'); }}
+            style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001 }}
+          >
+            <img
+              src="/images/mobile-figma/b2b-logo-mobile.svg"
+              alt="B2B Logo"
+              className="mobile-navigation-logo"
+              style={{
+                /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
+                width: '160px',
+                height: '50px',
+                cursor: 'pointer',
+                userSelect: 'none',
+                /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
+                transition: 'none !important',
+                willChange: 'auto',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden'
+              }}
+              onMouseDown={undefined}
+              onMouseUp={undefined}
+              onMouseLeave={undefined}
+            />
+          </a>
         </div> {/* Close content wrapper */}
       </header>
 
@@ -552,8 +552,8 @@ const MobileNavigation = ({
           </div>
 
           {/* Logo in Menu - FIXED: Static size, no scaling effects */}
-          <a href="/" aria-label="Home" onClick={(e)=>{e.preventDefault(); e.stopPropagation(); onNavigate('/');}}
-            style={{position:'absolute',left:'50%',top:'50%',transform:'translate(-50%, -50%)',zIndex:1001}}
+          <a href="/" aria-label="Home" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onNavigate('/'); }}
+            style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001 }}
           >
             <img
               src="/images/mobile-figma/b2b-logo-mobile.svg"
@@ -583,13 +583,13 @@ const MobileNavigation = ({
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'center', // Center vertically if space allows
             /* 🎯 POSITIONING FIX: Fill the space and align with page content */
             width: 'min(360px, calc(100vw - 16px))',
             maxWidth: '360px',
             margin: '0 auto',
             padding: 'clamp(8px, 2vh, 16px) 8px max(24px, env(safe-area-inset-bottom)) 8px',
-            gap: 'clamp(16px, 4vh, 32px)',
+            gap: 'clamp(12px, 3vh, 24px)', // Reduced gap to prevent overflow
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
             opacity: 1,
@@ -600,7 +600,9 @@ const MobileNavigation = ({
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
             /* Ensure menu fits within viewport without internal scrolling */
-            flex: '1 0 auto'
+            flex: '1 1 auto', // Allow shrinking/growing
+            overflowY: 'auto', // Enable scrolling if content overflows
+            maxHeight: 'calc(100dvh - 100px)' // Reserve space for header
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -610,7 +612,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(28px, 7.5vh, 64px)',
+              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',
@@ -629,7 +631,7 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            <a href="/" aria-label="Events" onClick={(e)=>{e.preventDefault(); handleNavigation('/')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+            <a href="/" aria-label="Events" onClick={(e) => { e.preventDefault(); handleNavigation('/') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
               Events
             </a>
           </div>
@@ -639,7 +641,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(28px, 7.5vh, 64px)',
+              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',
@@ -658,7 +660,7 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            <a href="/about" aria-label="About" onClick={(e)=>{e.preventDefault(); handleNavigation('/about')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+            <a href="/about" aria-label="About" onClick={(e) => { e.preventDefault(); handleNavigation('/about') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
               About
             </a>
           </div>
@@ -668,7 +670,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(28px, 7.5vh, 64px)',
+              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',
@@ -687,7 +689,7 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            <a href="/faq" aria-label="FAQ" onClick={(e)=>{e.preventDefault(); handleNavigation('/faq')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+            <a href="/faq" aria-label="FAQ" onClick={(e) => { e.preventDefault(); handleNavigation('/faq') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
               FAQ
             </a>
           </div>
@@ -697,7 +699,7 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(28px, 7.5vh, 64px)',
+              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
               lineHeight: '1.21em',
               color: '#FFFFFF',
               cursor: 'pointer',
@@ -716,8 +718,8 @@ const MobileNavigation = ({
               MozOsxFontSmoothing: 'grayscale'
             }}
           >
-            <a href="/shop" aria-label="Shop" onClick={(e)=>{e.preventDefault(); handleNavigation('/shop')}} style={{display:'block',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
-              Shop
+            <a href="/shop" aria-label="Merch" onClick={(e) => { e.preventDefault(); handleNavigation('/shop') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
+              Merch
             </a>
           </div>
 
@@ -737,7 +739,8 @@ const MobileNavigation = ({
               /* 🎯 PERFORMANCE: Hardware acceleration */
               willChange: 'transform, opacity',
               backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
+              WebkitBackfaceVisibility: 'hidden',
+              flexShrink: 0
             }}
             onClick={(e) => e.stopPropagation()}
           >

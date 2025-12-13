@@ -14,6 +14,7 @@ import CartModal from './CartModal';
 import CartIcon from './CartIcon';
 import { fetchProducts } from '../../services/shopService';
 import { useCart } from '../../contexts/CartContext';
+import { useSEO } from '../../hooks/useSEO';
 import DesktopNavigationPills from '../DesktopNavigationPills';
 import Footer from '../Footer';
 import Breadcrumb from '../Breadcrumb';
@@ -29,9 +30,18 @@ export default function ShopPage({ openCart = false }) {
   const [isMobile, setIsMobile] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(true);
   const { isOpen, toggleCart } = useCart();
+  const { updateTitle, updateDescription, updateOGImage } = useSEO();
 
   // Use performant resize hook for responsive detection
   const { isMobile: isMobileByWidth } = usePerformantResize();
+
+  // Set SEO tags
+  useEffect(() => {
+    updateTitle('Shop | BOUNCE2BOUNCE');
+    updateDescription('Official BOUNCE2BOUNCE merchandise. Shop exclusive clothing, accessories, and more.');
+    // Optional: Set a default shop OG image if available
+    // updateOGImage('/images/shop-og.jpg');
+  }, []);
 
   // Open cart on mount if openCart prop is true (for /shop/checkout and /shop/cart routes)
   useEffect(() => {
@@ -74,6 +84,12 @@ export default function ShopPage({ openCart = false }) {
   const handleNavigation = (path) => {
     if (window.navigateWithTransition) {
       window.navigateWithTransition(path);
+    } else if (window.history && window.history.pushState) {
+      // Fallback for when navigateWithTransition is not available
+      window.history.pushState({}, '', path);
+      // Dispatch popstate event so App component detects the change
+      const navEvent = new PopStateEvent('popstate');
+      window.dispatchEvent(navEvent);
     } else {
       window.location.href = path;
     }
@@ -222,31 +238,17 @@ export default function ShopPage({ openCart = false }) {
               style={{
                 color: '#FFF',
                 fontFamily: 'Inter',
-                fontSize: '48px',
-                fontWeight: '800',
-                textAlign: 'center',
-                marginTop: '8px',
-                marginBottom: '4px',
+                fontSize: '24px',
+                fontWeight: '600',
+                textAlign: 'left',
+                marginTop: '24px',
+                marginBottom: '16px',
                 opacity: 0,
-                animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
+                animation: 'fadeInUp 0.8s ease-out 0.2s forwards',
+                paddingLeft: '0px'
               }}
             >
               Shop
-            </div>
-
-            {/* Subtitle */}
-            <div
-              style={{
-                color: 'rgba(255, 255, 255, 0.6)',
-                fontFamily: 'Inter',
-                fontSize: '16px',
-                textAlign: 'center',
-                marginBottom: '32px',
-                opacity: 0,
-                animation: 'fadeInUp 0.8s ease-out 0.3s forwards'
-              }}
-            >
-              Official BOUNCE2BOUNCE merchandise
             </div>
 
             {/* Products Grid or Error */}

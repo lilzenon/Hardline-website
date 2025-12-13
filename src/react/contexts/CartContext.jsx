@@ -48,8 +48,18 @@ function cartReducer(state, action) {
   switch (action.type) {
     case ACTIONS.ADD_ITEM: {
       const { product, quantity = 1 } = action.payload;
-      const existingIndex = state.items.findIndex(item => item.id === product.id);
-      
+
+      // Generate a unique cart item ID based on product ID and size
+      // If no size, it falls back to just the product ID
+      const cartItemId = product.size
+        ? `${product.id}-${product.size}`
+        : product.id;
+
+      const existingIndex = state.items.findIndex(item => {
+        const itemCartId = item.size ? `${item.id}-${item.size}` : item.id;
+        return itemCartId === cartItemId;
+      });
+
       if (existingIndex >= 0) {
         // Update quantity of existing item
         const updatedItems = [...state.items];
@@ -59,53 +69,60 @@ function cartReducer(state, action) {
         };
         return { ...state, items: updatedItems };
       }
-      
-      // Add new item
+
+      // Add new item with the unique cartItemId attached for easier lookups later
       return {
         ...state,
-        items: [...state.items, { ...product, quantity }],
+        items: [...state.items, { ...product, quantity, cartItemId }],
       };
     }
-    
+
     case ACTIONS.REMOVE_ITEM: {
-      const { productId } = action.payload;
+      const { cartItemId } = action.payload;
       return {
         ...state,
-        items: state.items.filter(item => item.id !== productId),
+        items: state.items.filter(item => {
+          const itemKey = item.cartItemId || (item.size ? `${item.id}-${item.size}` : item.id);
+          return itemKey !== cartItemId;
+        }),
       };
     }
-    
+
     case ACTIONS.UPDATE_QUANTITY: {
-      const { productId, quantity } = action.payload;
+      const { cartItemId, quantity } = action.payload;
       if (quantity <= 0) {
         return {
           ...state,
-          items: state.items.filter(item => item.id !== productId),
+          items: state.items.filter(item => {
+            const itemKey = item.cartItemId || (item.size ? `${item.id}-${item.size}` : item.id);
+            return itemKey !== cartItemId;
+          }),
         };
       }
       return {
         ...state,
-        items: state.items.map(item =>
-          item.id === productId ? { ...item, quantity } : item
-        ),
+        items: state.items.map(item => {
+          const itemKey = item.cartItemId || (item.size ? `${item.id}-${item.size}` : item.id);
+          return itemKey === cartItemId ? { ...item, quantity } : item;
+        }),
       };
     }
-    
+
     case ACTIONS.CLEAR_CART:
       return { ...state, items: [], isOpen: false };
-    
+
     case ACTIONS.TOGGLE_CART:
       return { ...state, isOpen: action.payload ?? !state.isOpen };
-    
+
     case ACTIONS.SET_LOADING:
       return { ...state, isLoading: action.payload };
-    
+
     case ACTIONS.SET_ERROR:
       return { ...state, error: action.payload };
-    
+
     case ACTIONS.HYDRATE:
       return { ...state, items: action.payload };
-    
+
     default:
       return state;
   }
@@ -152,12 +169,12 @@ export function CartProvider({ children }) {
     console.log('🛒 Added to cart:', product.name);
   }, []);
 
-  const removeItem = useCallback((productId) => {
-    dispatch({ type: ACTIONS.REMOVE_ITEM, payload: { productId } });
+  const removeItem = useCallback((cartItemId) => {
+    dispatch({ type: ACTIONS.REMOVE_ITEM, payload: { cartItemId } });
   }, []);
 
-  const updateQuantity = useCallback((productId, quantity) => {
-    dispatch({ type: ACTIONS.UPDATE_QUANTITY, payload: { productId, quantity } });
+  const updateQuantity = useCallback((cartItemId, quantity) => {
+    dispatch({ type: ACTIONS.UPDATE_QUANTITY, payload: { cartItemId, quantity } });
   }, []);
 
   const clearCart = useCallback(() => {

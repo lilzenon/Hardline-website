@@ -20,20 +20,25 @@ const buttonStyles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '8px',
-    background: 'linear-gradient(135deg, #319DFF 0%, #1E7ACC 100%)',
-    border: 'none',
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
     borderRadius: '12px',
     fontFamily: 'Inter, sans-serif',
     fontWeight: 700,
     fontSize: '16px',
     color: '#FFFFFF',
     cursor: 'pointer',
-    transition: 'opacity 200ms ease, transform 100ms ease',
+    transition: 'all 200ms ease',
   },
   buttonHover: {
-    opacity: 0.9,
+    background: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   buttonActive: {
+    background: '#FFFFFF',
+    color: '#000000',
     transform: 'scale(0.98)',
   },
   buttonDisabled: {
@@ -115,7 +120,7 @@ export default function CheckoutButton() {
   return (
     <>
       <style>{spinnerCSS}</style>
-      
+
       <button
         style={{
           ...buttonStyles.button,
@@ -149,7 +154,7 @@ export default function CheckoutButton() {
 
       <div style={buttonStyles.secureText}>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
         </svg>
         Secure checkout powered by Stripe
       </div>
