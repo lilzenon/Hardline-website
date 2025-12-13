@@ -13,7 +13,7 @@ import ProductCard from './ProductCard';
 const gridStyles = {
   container: {
     display: 'grid',
-    gap: '24px',
+    gap: '8px',
     width: '100%',
   },
   // Loading skeleton styles
@@ -93,25 +93,31 @@ const gridCSS = `
 
   .shop-product-grid {
     grid-template-columns: repeat(2, 1fr);
-    column-gap: 12px;
-    row-gap: 24px; /* Increased row gap for separation without cards */
+    column-gap: 0px; /* Removed gap */
+    row-gap: 0px; /* Removed gap */
   }
 
   @media (min-width: 768px) {
     .shop-product-grid {
       grid-template-columns: repeat(2, 1fr);
+      column-gap: 12px;
+      row-gap: 16px;
     }
   }
 
   @media (min-width: 1024px) {
     .shop-product-grid {
       grid-template-columns: repeat(3, 1fr);
+      column-gap: 16px;
+      row-gap: 24px;
     }
   }
 
   @media (min-width: 1440px) {
     .shop-product-grid {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
+      column-gap: 20px;
+      row-gap: 32px;
     }
   }
 `;

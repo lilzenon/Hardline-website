@@ -12,7 +12,7 @@
  * Route: /shop/:productId
  */
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
 import { usePerformantResize } from '../../hooks/usePerformantResize';
 import { fetchProductById, fetchProducts } from '../../services/shopService';
 import { useCart } from '../../contexts/CartContext';
@@ -23,7 +23,7 @@ import Breadcrumb from '../Breadcrumb';
 import BrandedLoader from '../BrandedLoader';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
-import { Heart, Share2, ShoppingCart, Camera, Tag } from 'lucide-react';
+import { Heart, Share2, ShoppingCart, Camera, Tag, ChevronRight, Loader2 } from 'lucide-react';
 
 // Lazy load mobile version
 const ProductPageMobile = lazy(() => import('./ProductPageMobile'));
@@ -40,6 +40,9 @@ export default function ProductPage({ productId }) {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+  const scrollRef = useRef(null);
   const { addItem, toggleCart } = useCart();
   const { updateTitle, updateDescription, updateOGImage } = useSEO();
 
@@ -141,14 +144,43 @@ export default function ProductPage({ productId }) {
 
 
 
-  // Add to cart handler
-  const handleAddToCart = (qty = 1) => {
+
+
+  // Scroll to image handler
+  const scrollToImage = (index) => {
+    if (scrollRef.current) {
+      const width = scrollRef.current.offsetWidth;
+      scrollRef.current.scrollTo({
+        left: index * width,
+        behavior: 'smooth'
+      });
+      setCurrentImageIndex(index);
+    }
+  };
+
+  // Add to cart handler with animation
+  const handleAddToCart = async () => {
+    if (isAdded) {
+      toggleCart();
+      return;
+    }
+
+    if (hasVariants && !selectedSize) {
+      alert('Please select a size');
+      return;
+    }
+
+    setIsAdding(true);
+
+    // Simulate network delay for animation
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     if (product) {
       const itemData = {
         id: product.id,
         name: product.name,
         price: product.price,
-        image_url: getPrimaryImageUrl(),
+        image_url: images[0] || product.image_url || null,
       };
 
       // Add size to item if variants exist and a size is selected
@@ -156,30 +188,9 @@ export default function ProductPage({ productId }) {
         itemData.size = selectedSize;
       }
 
-      addItem(itemData, qty);
-      toggleCart();
-    }
-  };
-
-  // Buy Now handler (add to cart and open cart modal for checkout)
-  const handleBuyNow = (qty = 1) => {
-    if (product) {
-      // Include size if variants are available and a size is selected
-      const itemData = {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image_url: getPrimaryImageUrl(),
-      };
-
-      // Add size to item if variants exist
-      if (hasVariants && selectedSize) {
-        itemData.size = selectedSize;
-      }
-
-      addItem(itemData, qty);
-      // Open cart modal which contains the checkout button
-      toggleCart();
+      addItem(itemData, quantity);
+      setIsAdding(false);
+      setIsAdded(true);
     }
   };
 
@@ -388,61 +399,36 @@ export default function ProductPage({ productId }) {
               </div>
             </div>
 
-            {/* Breadcrumb */}
-            <Breadcrumb
-              items={[
-                { name: 'Home', url: '/' },
-                { name: 'Shop', url: '/shop' },
-                { name: product.name }
-              ]}
-            />
-
-            {/* Heart and Share Icons Row */}
+            {/* Top Row: Breadcrumb + Share */}
             <div style={{
               display: 'flex',
-              justifyContent: 'flex-end',
-              gap: '8px',
-              marginTop: '16px',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '24px',
             }}>
-              <button
-                onClick={() => setIsFavorited(!isFavorited)}
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-                aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                <Heart
-                  size={22}
-                  fill={isFavorited ? '#ef4444' : 'none'}
-                  color={isFavorited ? '#ef4444' : 'rgba(255, 255, 255, 0.6)'}
-                  style={{ transition: 'all 0.2s ease' }}
-                />
-              </button>
+              <Breadcrumb
+                items={[
+                  { name: 'Home', url: '/' },
+                  { name: 'Shop', url: '/shop' },
+                  { name: product.name }
+                ]}
+              />
               <button
                 onClick={handleShare}
                 style={{
-                  width: '44px',
-                  height: '44px',
+                  width: '32px',
+                  height: '32px',
                   background: 'transparent',
                   border: 'none',
-                  borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
+                  padding: 0,
                 }}
                 aria-label="Share product"
               >
-                <Share2 size={22} color="rgba(255, 255, 255, 0.6)" />
+                <Share2 size={20} color="rgba(255, 255, 255, 0.6)" />
               </button>
             </div>
 
@@ -452,16 +438,17 @@ export default function ProductPage({ productId }) {
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
                 gap: '40px',
-                padding: '16px 0 40px 0',
+                padding: '0 0 40px 0',
                 opacity: 0,
                 animation: 'fadeInUp 0.8s ease-out 0.2s forwards'
               }}
             >
               {/* Image Gallery Column */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {/* Main Image */}
+                {/* Main Image - Swipeable */}
                 <div
                   style={{
+                    position: 'relative',
                     aspectRatio: '4/5',
                     borderRadius: '16px',
                     overflow: 'hidden',
@@ -470,38 +457,81 @@ export default function ProductPage({ productId }) {
                     border: '1px solid rgba(255, 255, 255, 0.08)',
                   }}
                 >
-                  <img
-                    src={images[currentImageIndex]}
-                    alt={`${product.name} image ${currentImageIndex + 1}`}
+                  <div
+                    ref={scrollRef}
                     style={{
+                      display: 'flex',
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover',
-                      transition: 'opacity 0.3s ease',
+                      overflowX: 'auto',
+                      scrollSnapType: 'x mandatory',
+                      scrollbarWidth: 'none',
+                      msOverflowStyle: 'none',
                     }}
-                  />
+                    className="no-scrollbar"
+                    onScroll={(e) => {
+                      const scrollLeft = e.target.scrollLeft;
+                      const width = e.target.offsetWidth;
+                      const newIndex = Math.round(scrollLeft / width);
+                      if (newIndex !== currentImageIndex) {
+                        setCurrentImageIndex(newIndex);
+                      }
+                    }}
+                  >
+                    <style>{`
+                      .no-scrollbar::-webkit-scrollbar { display: none; }
+                      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                    `}</style>
+                    {images.map((img, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          flex: '0 0 100%',
+                          minWidth: '100%',
+                          width: '100%',
+                          height: '100%',
+                          scrollSnapAlign: 'start',
+                          scrollSnapStop: 'always',
+                          margin: 0,
+                          padding: 0,
+                        }}
+                      >
+                        <img
+                          src={img}
+                          alt={`${product.name} image ${idx + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                          }}
+                          draggable="false"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Image Dots and Find Similar Row */}
+                {/* Image Indicators and Find Similar Row */}
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                 }}>
-                  {/* Dots */}
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  {/* Subtle Bar Indicators - Clickable */}
+                  <div style={{ display: 'flex', gap: '4px' }}>
                     {images.map((_, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setCurrentImageIndex(idx)}
+                        onClick={() => scrollToImage(idx)}
                         style={{
-                          width: '8px',
-                          height: '8px',
-                          borderRadius: '50%',
+                          width: '24px',
+                          height: '4px',
+                          padding: 0,
                           border: 'none',
-                          background: currentImageIndex === idx ? '#FFFFFF' : 'rgba(255, 255, 255, 0.3)',
-                          cursor: 'pointer',
+                          borderRadius: '2px',
+                          background: currentImageIndex === idx ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)',
                           transition: 'background 0.2s ease',
+                          cursor: 'pointer',
                         }}
                         aria-label={`View image ${idx + 1}`}
                       />
@@ -542,81 +572,121 @@ export default function ProductPage({ productId }) {
 
               {/* Product Details Column */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {/* Product Name */}
-                <h1 style={{
-                  fontFamily: 'Inter',
-                  fontSize: '32px',
-                  fontWeight: 700,
-                  color: '#FFFFFF',
-                  marginBottom: '8px',
-                  lineHeight: 1.2,
+                {/* Product Title and Price Row */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: '24px',
+                  marginBottom: '24px',
                 }}>
-                  {product.name}
-                </h1>
-
-                {/* Price with Shipping */}
-                <div style={{ marginBottom: '16px' }}>
-                  <span style={{
+                  <h1 style={{
+                    fontFamily: 'Inter',
                     fontSize: '32px',
                     fontWeight: 700,
-                    color: '#319DFF',
-                    fontFamily: 'Inter',
+                    color: '#FFFFFF',
+                    margin: 0,
+                    lineHeight: 1.2,
+                    flex: 1,
                   }}>
-                    {formatPrice(product.price)}
-                  </span>
-                  {product.shipping_cost > 0 && (
+                    {product.name}
+                  </h1>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                     <span style={{
-                      fontSize: '14px',
-                      color: 'rgba(255, 255, 255, 0.5)',
-                      marginLeft: '12px',
+                      fontSize: '32px',
+                      fontWeight: 700,
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontFamily: 'Inter',
+                      whiteSpace: 'nowrap',
                     }}>
-                      + {formatPrice(product.shipping_cost)} Shipping
+                      {formatPrice(product.price)}
                     </span>
-                  )}
+                    {product.shipping_cost > 0 && (
+                      <span style={{
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.5)',
+                        marginTop: '4px',
+                        fontWeight: 400,
+                      }}>
+                        + {formatPrice(product.shipping_cost)} Shipping
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Description - Moved under price */}
+                {/* Description Section */}
                 {product.description && (
-                  <div style={{ marginBottom: '20px' }}>
-                    <p style={{
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      lineHeight: 1.7,
-                      color: 'rgba(255, 255, 255, 0.7)',
-                      margin: 0,
+                  <div style={{ marginBottom: '24px' }}>
+                    <h3 style={{
+                      fontFamily: 'Inter, sans-serif',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      color: 'rgba(255, 255, 255, 0.5)',
+                      marginBottom: '8px',
                     }}>
-                      {showFullDescription || product.description.length <= 200
-                        ? product.description
-                        : `${product.description.slice(0, 200)}...`}
+                      Description
+                    </h3>
+                    <div style={{ position: 'relative' }}>
+                      <p style={{
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: '16px',
+                        lineHeight: 1.7,
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        margin: 0,
+                        // If not showing full description, clamp text
+                        ...(!showFullDescription && product.description.length > 200 ? {
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        } : {})
+                      }}>
+                        {product.description}
+                      </p>
                       {product.description.length > 200 && (
                         <button
                           onClick={() => setShowFullDescription(!showFullDescription)}
                           style={{
                             background: 'none',
                             border: 'none',
-                            color: '#319DFF',
-                            fontWeight: 600,
+                            color: '#FFFFFF',
+                            fontWeight: 500,
                             cursor: 'pointer',
-                            marginLeft: '8px',
+                            marginTop: '8px',
                             fontFamily: 'Inter, sans-serif',
                             fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: 0,
+                            opacity: 0.8,
                           }}
                         >
                           {showFullDescription ? 'Show less' : 'Read more'}
+                          <ChevronRight
+                            size={16}
+                            style={{
+                              transform: showFullDescription ? 'rotate(-90deg)' : 'rotate(90deg)',
+                              transition: 'transform 0.2s ease',
+                            }}
+                          />
                         </button>
                       )}
-                    </p>
+                    </div>
                   </div>
                 )}
 
                 {/* Size Selector - Only show if product has size variants */}
                 {hasVariants && (
-                  <div style={{ marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '24px' }}>
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: '10px',
+                      marginBottom: '12px',
                     }}>
                       <span style={{
                         fontFamily: 'Inter',
@@ -624,7 +694,7 @@ export default function ProductPage({ productId }) {
                         fontWeight: 600,
                         color: 'rgba(255, 255, 255, 0.9)',
                       }}>
-                        Size
+                        Select Size
                       </span>
                       <button
                         style={{
@@ -649,261 +719,154 @@ export default function ProductPage({ productId }) {
                       {availableSizes.map((size) => {
                         const isOutOfStock = outOfStockSizes.includes(size);
                         const isSelected = selectedSize === size;
-                        const variant = product.sizes.find(v => v.size === size);
-                        const stockCount = variant?.stock || 0;
                         return (
                           <button
                             key={size}
                             onClick={() => !isOutOfStock && setSelectedSize(size)}
                             disabled={isOutOfStock}
-                            title={isOutOfStock ? 'Out of stock' : `${stockCount} in stock`}
                             style={{
                               minWidth: '48px',
-                              height: '44px',
+                              height: '40px',
                               padding: '0 16px',
                               background: isSelected
-                                ? 'rgba(255, 255, 255, 0.95)'
-                                : 'rgba(22, 22, 22, 0.6)',
+                                ? '#FFFFFF'
+                                : 'transparent',
                               border: isSelected
-                                ? '2px solid #FFFFFF'
-                                : '1px solid rgba(255, 255, 255, 0.15)',
-                              borderRadius: '8px',
+                                ? '1px solid #FFFFFF'
+                                : '1px solid rgba(255, 255, 255, 0.2)',
+                              borderRadius: '20px', // Pill shape
                               fontFamily: 'Inter, sans-serif',
-                              fontWeight: 600,
-                              fontSize: '14px',
+                              fontWeight: 500,
+                              fontSize: '13px',
                               color: isOutOfStock
-                                ? 'rgba(255, 255, 255, 0.25)'
+                                ? 'rgba(255, 255, 255, 0.2)'
                                 : isSelected
                                   ? '#000000'
                                   : '#FFFFFF',
                               cursor: isOutOfStock ? 'not-allowed' : 'pointer',
                               transition: 'all 0.2s ease',
-                              opacity: isOutOfStock ? 0.5 : 1,
                               textDecoration: isOutOfStock ? 'line-through' : 'none',
-                              position: 'relative',
                             }}
                           >
                             {size}
-                            {/* Low stock indicator */}
-                            {!isOutOfStock && stockCount > 0 && stockCount <= 5 && (
-                              <span style={{
-                                position: 'absolute',
-                                top: '-4px',
-                                right: '-4px',
-                                width: '8px',
-                                height: '8px',
-                                borderRadius: '50%',
-                                background: stockCount <= 2 ? '#ef4444' : '#f59e0b',
-                              }} />
-                            )}
                           </button>
                         );
                       })}
                     </div>
-                    {/* Size selection prompt */}
-                    {!selectedSize && (
-                      <p style={{
-                        fontFamily: 'Inter',
-                        fontSize: '12px',
-                        color: 'rgba(255, 255, 255, 0.5)',
-                        marginTop: '8px',
-                      }}>
-                        Please select a size
-                      </p>
-                    )}
                   </div>
                 )}
 
-                {/* Quantity Selector - Glassmorphism style */}
-                <div style={{ marginBottom: '16px' }}>
-                  <span style={{
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    display: 'block',
-                    marginBottom: '10px',
-                  }}>
-                    Quantity
-                  </span>
+                {/* Quantity + Add to Cart Row */}
+                <div style={{
+                  display: 'flex',
+                  gap: '16px',
+                  alignItems: 'stretch',
+                  marginBottom: '32px',
+                }}>
+                  {/* Quantity Selector */}
                   <div style={{
-                    display: 'inline-flex',
+                    display: 'flex',
                     alignItems: 'center',
-                    gap: '0',
-                    background: 'rgba(22, 22, 22, 0.8)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(56, 56, 56, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '12px',
-                    padding: '4px',
+                    height: '56px',
                   }}>
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
                       disabled={quantity <= 1}
                       style={{
-                        width: '44px',
-                        height: '44px',
+                        width: '48px',
+                        height: '100%',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: 'transparent',
                         border: 'none',
-                        borderRadius: '8px',
-                        color: quantity <= 1 ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+                        color: quantity <= 1 ? 'rgba(255, 255, 255, 0.2)' : '#FFFFFF',
                         fontSize: '20px',
-                        fontWeight: 500,
                         cursor: quantity <= 1 ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s ease',
                       }}
-                      onMouseEnter={(e) => {
-                        if (quantity > 1) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                      aria-label="Decrease quantity"
                     >
                       −
                     </button>
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value) || 1;
-                        const maxStock = product.stock_quantity || 99;
-                        setQuantity(Math.max(1, Math.min(val, maxStock)));
-                      }}
-                      min="1"
-                      max={product.stock_quantity || 99}
-                      style={{
-                        width: '48px',
-                        height: '44px',
-                        background: 'transparent',
-                        border: 'none',
-                        textAlign: 'center',
-                        fontFamily: 'Inter, sans-serif',
-                        fontWeight: 600,
-                        fontSize: '16px',
-                        color: '#FFFFFF',
-                        outline: 'none',
-                        MozAppearance: 'textfield',
-                      }}
-                      aria-label="Quantity"
-                    />
+                    <span style={{
+                      width: '40px',
+                      textAlign: 'center',
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 500,
+                      fontSize: '16px',
+                      color: '#FFFFFF',
+                    }}>
+                      {quantity}
+                    </span>
                     <button
                       onClick={() => setQuantity(q => Math.min(product.stock_quantity || 99, q + 1))}
                       disabled={quantity >= (product.stock_quantity || 99)}
                       style={{
-                        width: '44px',
-                        height: '44px',
+                        width: '48px',
+                        height: '100%',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: 'transparent',
                         border: 'none',
-                        borderRadius: '8px',
-                        color: quantity >= (product.stock_quantity || 99) ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.9)',
+                        color: quantity >= (product.stock_quantity || 99) ? 'rgba(255, 255, 255, 0.2)' : '#FFFFFF',
                         fontSize: '20px',
-                        fontWeight: 500,
                         cursor: quantity >= (product.stock_quantity || 99) ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s ease',
                       }}
-                      onMouseEnter={(e) => {
-                        if (quantity < (product.stock_quantity || 99)) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'transparent';
-                      }}
-                      aria-label="Increase quantity"
                     >
                       +
                     </button>
                   </div>
-                  {product.stock_quantity && product.stock_quantity <= 10 && (
-                    <span style={{
-                      display: 'block',
-                      marginTop: '8px',
-                      fontSize: '12px',
-                      color: '#ef4444',
-                      fontFamily: 'Inter, sans-serif',
-                    }}>
-                      Only {product.stock_quantity} left in stock
-                    </span>
-                  )}
-                </div>
 
-                {/* Action Buttons Row */}
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                  marginBottom: '16px',
-                }}>
-                  {/* Buy Now Button */}
+                  {/* Add to Cart Button - Full Width Remainder */}
                   <button
-                    onClick={() => handleBuyNow(quantity)}
+                    onClick={handleAddToCart}
+                    disabled={isAdding || (hasVariants && !selectedSize)}
                     style={{
                       flex: 1,
-                      padding: '14px 24px',
-                      minHeight: '52px',
-                      background: 'rgba(255, 255, 255, 0.95)',
+                      height: '56px',
+                      background: isAdded
+                        ? '#22c55e'
+                        : (hasVariants && !selectedSize)
+                          ? 'rgba(255, 255, 255, 0.2)'
+                          : '#FFFFFF',
                       border: 'none',
                       borderRadius: '12px',
                       fontFamily: 'Inter, sans-serif',
                       fontWeight: 600,
-                      fontSize: '15px',
-                      color: '#000000',
-                      cursor: 'pointer',
+                      fontSize: '16px',
+                      color: isAdded
+                        ? '#FFFFFF'
+                        : (hasVariants && !selectedSize)
+                          ? 'rgba(255, 255, 255, 0.5)'
+                          : '#000000',
+                      cursor: (isAdding || (hasVariants && !selectedSize)) ? 'not-allowed' : 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px',
-                      transition: 'all 0.2s ease',
+                      gap: '12px',
+                      transition: 'all 0.3s ease',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#FFFFFF';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
+                    onMouseEnter={(e) => !isAdding && !(hasVariants && !selectedSize) && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                    onMouseLeave={(e) => !isAdding && !(hasVariants && !selectedSize) && (e.currentTarget.style.transform = 'translateY(0)')}
+                    onMouseDown={(e) => !isAdding && !(hasVariants && !selectedSize) && (e.currentTarget.style.transform = 'scale(0.98)')}
+                    onMouseUp={(e) => !isAdding && !(hasVariants && !selectedSize) && (e.currentTarget.style.transform = 'translateY(-2px)')}
                   >
-                    <ShoppingCart size={18} />
-                    Buy Now
-                  </button>
-
-                  {/* Add to Cart Button */}
-                  <button
-                    onClick={() => handleAddToCart(quantity)}
-                    style={{
-                      flex: 1,
-                      padding: '14px 24px',
-                      minHeight: '52px',
-                      background: 'transparent',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      borderRadius: '12px',
-                      fontFamily: 'Inter, sans-serif',
-                      fontWeight: 600,
-                      fontSize: '15px',
-                      color: 'rgba(255, 255, 255, 0.9)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                    }}
-                  >
-                    <ShoppingCart size={18} />
-                    Add to Cart
+                    {isAdding ? (
+                      <Loader2 size={24} className="animate-spin" />
+                    ) : isAdded ? (
+                      <>
+                        <ShoppingCart size={20} />
+                        View Cart
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={20} />
+                        Add to Cart
+                      </>
+                    )}
                   </button>
                 </div>
 
@@ -1021,10 +984,10 @@ export default function ProductPage({ productId }) {
             <Footer compact={false} />
           </div>
         </div>
-      </div>
+      </div >
 
       {/* Cart Modal */}
-      <CartModal />
+      < CartModal />
     </>
   );
 }

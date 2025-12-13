@@ -59,10 +59,14 @@ const cardStyles = {
   },
   imageWrapper: {
     flex: '0 0 100%',
+    minWidth: '100%',
     width: '100%',
     height: '100%',
     scrollSnapAlign: 'start',
+    scrollSnapStop: 'always',
     position: 'relative',
+    margin: 0,
+    padding: 0,
   },
   image: {
     width: '100%',
@@ -74,7 +78,7 @@ const cardStyles = {
     transform: 'scale(1.03)', // Subtle zoom
   },
   content: {
-    padding: '12px 0 0 0', // Top padding only
+    padding: '8px 0 0 0', // Top padding only
   },
   title: {
     fontFamily: 'Inter, sans-serif',
@@ -180,6 +184,13 @@ export default function ProductCard({ product, onAddToCart }) {
   const handleScroll = (e) => {
     const scrollLeft = e.target.scrollLeft;
     const width = e.target.offsetWidth;
+
+    // Prevent rubber-banding to the left on first image
+    if (scrollLeft < 0) {
+      e.target.scrollLeft = 0;
+      return;
+    }
+
     const newIndex = Math.round(scrollLeft / width);
     if (newIndex !== currentImageIndex) {
       setCurrentImageIndex(newIndex);
@@ -251,16 +262,18 @@ export default function ProductCard({ product, onAddToCart }) {
   };
 
   // Calculate expanded width based on number of sizes
-  // 32px per size + 8px padding
+  // 40px per size + 8px padding
   const expandedWidth = availableSizes.length > 0
-    ? `${Math.min(availableSizes.length * 36 + 8, 200)}px`
-    : '32px';
+    ? `${Math.min(availableSizes.length * 44 + 8, 220)}px`
+    : '40px';
 
   return (
     <div
       style={{
         ...cardStyles.container,
         ...(isHovered ? cardStyles.containerHover : {}),
+        opacity: 0,
+        animation: 'fadeInUp 0.6s ease-out forwards',
       }}
       onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -279,6 +292,12 @@ export default function ProductCard({ product, onAddToCart }) {
       }}
       aria-label={`${product.name} - ${formatPrice(product.price)}. Click to view details.`}
     >
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Product Image Container */}
       <div style={cardStyles.imageContainer}>
         {/* Scrollable Image Track */}
@@ -342,17 +361,17 @@ export default function ProductCard({ product, onAddToCart }) {
           <div
             style={{
               position: 'absolute',
-              bottom: '8px',
-              right: '8px',
-              height: '32px',
-              width: showSizes ? expandedWidth : '32px',
+              bottom: '12px',
+              right: '12px',
+              height: '40px',
+              width: showSizes ? expandedWidth : '40px',
               background: '#FFFFFF',
-              borderRadius: showSizes ? '16px' : '50%',
+              borderRadius: showSizes ? '20px' : '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: showSizes ? 'center' : 'center',
               cursor: showSizes ? 'default' : 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               zIndex: 10,
               overflow: 'hidden',
@@ -382,17 +401,17 @@ export default function ProductCard({ product, onAddToCart }) {
                     key={size}
                     onClick={(e) => handleSizeSelect(e, size)}
                     style={{
-                      minWidth: '28px',
-                      height: '24px',
+                      minWidth: '36px',
+                      height: '32px',
                       border: 'none',
                       background: 'transparent',
-                      borderRadius: '12px',
+                      borderRadius: '16px',
                       fontFamily: 'Inter, sans-serif',
-                      fontSize: '12px',
+                      fontSize: '13px',
                       fontWeight: 700,
                       color: '#000000',
                       cursor: 'pointer',
-                      padding: '0 6px',
+                      padding: '0 8px',
                       transition: 'background 0.2s ease',
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
@@ -403,7 +422,7 @@ export default function ProductCard({ product, onAddToCart }) {
                 ))}
               </div>
             ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#000000', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#000000', flexShrink: 0 }}>
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>

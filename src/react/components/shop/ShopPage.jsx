@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { usePerformantResize } from '../../hooks/usePerformantResize';
+import { usePerformantResize, useViewportDimensions } from '../../hooks/usePerformantResize';
 import ProductGrid from './ProductGrid';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
@@ -32,34 +32,27 @@ export default function ShopPage({ openCart = false }) {
   const { isOpen, toggleCart } = useCart();
   const { updateTitle, updateDescription, updateOGImage } = useSEO();
 
-  // Use performant resize hook for responsive detection
-  const { isMobile: isMobileByWidth } = usePerformantResize();
+  // Use viewport dimensions hook for responsive detection
+  const { isMobile: isMobileView } = useViewportDimensions();
 
   // Set SEO tags
   useEffect(() => {
     updateTitle('Shop | BOUNCE2BOUNCE');
     updateDescription('Official BOUNCE2BOUNCE merchandise. Shop exclusive clothing, accessories, and more.');
-    // Optional: Set a default shop OG image if available
-    // updateOGImage('/images/shop-og.jpg');
   }, []);
 
-  // Open cart on mount if openCart prop is true (for /shop/checkout and /shop/cart routes)
+  // Open cart on mount if openCart prop is true
   useEffect(() => {
     if (openCart && !isOpen) {
       toggleCart();
     }
-  }, [openCart]); // Only run on mount, not when isOpen changes
+  }, [openCart]);
 
   // Device detection
   useEffect(() => {
-    const checkMobile = () => {
-      const isMobileDevice = window.innerWidth < 768 ||
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setIsMobile(isMobileDevice || isMobileByWidth);
-      setIsPageLoading(false);
-    };
-    checkMobile();
-  }, [isMobileByWidth]);
+    setIsMobile(isMobileView);
+    setIsPageLoading(false);
+  }, [isMobileView]);
 
   const loadProducts = async () => {
     try {
