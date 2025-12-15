@@ -113,6 +113,7 @@ export async function createCheckoutSession(items, options = {}) {
       items: items.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
+        size: item.size || null,
       })),
       success_url: successUrl || defaultSuccessUrl,
       cancel_url: cancelUrl || defaultCancelUrl,

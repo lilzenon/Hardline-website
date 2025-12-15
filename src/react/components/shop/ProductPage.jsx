@@ -115,7 +115,7 @@ export default function ProductPage({ productId }) {
         try {
           const allProducts = await fetchProducts();
           const related = allProducts
-            .filter(p => p.id !== productId)
+            .filter(p => String(p.id) !== String(productId))
             .slice(0, 4);
           setRelatedProducts(related);
         } catch (relatedErr) {
@@ -141,10 +141,6 @@ export default function ProductPage({ productId }) {
       window.location.href = path;
     }
   };
-
-
-
-
 
   // Scroll to image handler
   const scrollToImage = (index) => {
@@ -393,7 +389,7 @@ export default function ProductPage({ productId }) {
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               />
-              <DesktopNavigationPills currentPage="Shop" onNavigate={handleNavigation} />
+              <DesktopNavigationPills currentPage="Shop" />
             </div>
 
             {/* Breadcrumb + Cart + Share Row */}
@@ -515,11 +511,11 @@ export default function ProductPage({ productId }) {
                   </div>
                 </div>
 
-                {/* Image Indicators and Find Similar Row */}
+                {/* Image Indicators */}
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
                 }}>
                   {/* Subtle Bar Indicators - Clickable */}
                   <div style={{ display: 'flex', gap: '4px' }}>
@@ -541,36 +537,6 @@ export default function ProductPage({ productId }) {
                       />
                     ))}
                   </div>
-
-                  {/* Find Similar Button */}
-                  <button
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 16px',
-                      background: 'rgba(22, 22, 22, 0.6)',
-                      backdropFilter: 'blur(12px)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      borderRadius: '8px',
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      fontSize: '14px',
-                      fontFamily: 'Inter, sans-serif',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.8)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.6)';
-                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
-                    }}
-                  >
-                    <Camera size={16} />
-                    Find Similar
-                  </button>
                 </div>
               </div>
 
@@ -969,7 +935,7 @@ export default function ProductPage({ productId }) {
                     >
                       <div style={{ aspectRatio: '1/1', overflow: 'hidden' }}>
                         <img
-                          src={relatedProduct.images?.[0] || PLACEHOLDER_IMAGE}
+                          src={getPrimaryImageUrl(relatedProduct) || PLACEHOLDER_IMAGE}
                           alt={relatedProduct.name}
                           style={{
                             width: '100%',
