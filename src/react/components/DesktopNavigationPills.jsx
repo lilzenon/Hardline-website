@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import shopService from '../services/shopService';
 
 /**
  * DesktopNavigationPills
@@ -15,6 +16,25 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
   const [activeNavTab, setActiveNavTab] = useState(currentPage);
   const [hoveredNavTab, setHoveredNavTab] = useState(null);
   const [focusedNavTab, setFocusedNavTab] = useState(null);
+  const [shopEnabled, setShopEnabled] = useState(true); // Default to true until loaded
+
+  // Fetch shop settings
+  useEffect(() => {
+    const loadShopSettings = async () => {
+      try {
+        const config = await shopService.fetchConfig();
+        if (config) {
+          const enabled = config.shopEnabled ?? config.shop_enabled;
+          if (typeof enabled !== 'undefined') {
+            setShopEnabled(enabled);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load shop settings:', error);
+      }
+    };
+    loadShopSettings();
+  }, []);
 
   const navigateDefault = (tabName) => {
     if (tabName === 'About') {
@@ -103,14 +123,17 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
     }
   };
 
+  const containerWidth = shopEnabled ? '390px' : '294px';
+
   return (
     <div
       style={{
         position: 'relative',
-        width: '390px',
+        width: containerWidth,
         height: '44.2px',
         gridColumn: '3',
-        justifySelf: 'end'
+        justifySelf: 'end',
+        transition: 'width 0.3s ease'
       }}
     >
       {/* Glassmorphism background container */}
@@ -119,14 +142,15 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
           position: 'absolute',
           left: '0px',
           top: '0px',
-          width: '390px',
+          width: containerWidth,
           height: '44.2px',
           background: 'rgba(22, 22, 22, 0.30)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
           borderRadius: '14px',
-          boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+          boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+          transition: 'width 0.3s ease'
         }}
       />
 
@@ -185,22 +209,24 @@ const DesktopNavigationPills = ({ currentPage = 'Events', onNavigate }) => {
       </div>
 
       {/* Shop */}
-      <div
-        role="button"
-        tabIndex={0}
-        style={getNavPillStyles('Shop', '292px')}
-        onClick={() => handleNavClick('Shop')}
-        onMouseEnter={() => setHoveredNavTab('Shop')}
-        onMouseLeave={() => setHoveredNavTab(null)}
-        onFocus={() => setFocusedNavTab('Shop')}
-        onBlur={() => setFocusedNavTab(null)}
-        onKeyDown={keyHandler('Shop')}
-        aria-label="Navigate to Shop"
-        aria-pressed={activeNavTab === 'Shop'}
-        aria-current={activeNavTab === 'Shop' ? 'page' : undefined}
-      >
-        <span style={getNavTextStyles('Shop')}>Shop</span>
-      </div>
+      {shopEnabled && (
+        <div
+          role="button"
+          tabIndex={0}
+          style={getNavPillStyles('Shop', '292px')}
+          onClick={() => handleNavClick('Shop')}
+          onMouseEnter={() => setHoveredNavTab('Shop')}
+          onMouseLeave={() => setHoveredNavTab(null)}
+          onFocus={() => setFocusedNavTab('Shop')}
+          onBlur={() => setFocusedNavTab(null)}
+          onKeyDown={keyHandler('Shop')}
+          aria-label="Navigate to Shop"
+          aria-pressed={activeNavTab === 'Shop'}
+          aria-current={activeNavTab === 'Shop' ? 'page' : undefined}
+        >
+          <span style={getNavTextStyles('Shop')}>Shop</span>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import shopService from '../services/shopService';
 
 /**
  * Reusable Desktop Navigation Component
@@ -11,6 +12,25 @@ import React, { useState, useCallback } from 'react';
  */
 const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
   const [activeNavTab, setActiveNavTab] = useState(currentPage);
+  const [shopEnabled, setShopEnabled] = useState(true); // Default to true until loaded
+
+  // Fetch shop settings
+  useEffect(() => {
+    const loadShopSettings = async () => {
+      try {
+        const config = await shopService.fetchConfig();
+        if (config) {
+          const enabled = config.shopEnabled ?? config.shop_enabled;
+          if (typeof enabled !== 'undefined') {
+            setShopEnabled(enabled);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load shop settings:', error);
+      }
+    };
+    loadShopSettings();
+  }, []);
 
   // Navigation handler with modern transitions - EXACT MATCH to homepage
   const handleNavClick = useCallback((tabName) => {
@@ -87,57 +107,71 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
     };
   }, [activeNavTab]);
 
+  // Calculate positions based on shopEnabled
+  const positions = {
+    Events: '4.21px',
+    Shop: '100.14px',
+    About: shopEnabled ? '196.07px' : '100.14px',
+    FAQ: shopEnabled ? '292px' : '196.07px'
+  };
+
+  const containerWidth = shopEnabled ? '388px' : '294px';
+
   return (
     <div
       style={{
         position: 'relative',
-        width: '388px', // Expanded to fit 4 nav items (was 294.45px)
+        width: containerWidth, // Dynamic width
         height: '44.2px',  // Scaled up by 30% (34 × 1.30) for better touch targets
         gridColumn: '3',  // Place in third column (right side)
-        justifySelf: 'end'  // Align to right edge of grid cell
+        justifySelf: 'end',  // Align to right edge of grid cell
+        transition: 'width 0.3s ease' // Smooth width transition
       }}
     >
-      {/* Background pill container - EXPANDED for 4 nav items */}
+      {/* Background pill container */}
       <div
         style={{
           position: 'absolute',
           left: '0px',
           top: '0px',
-          width: '388px', // Expanded to fit 4 items (was 294.45px)
+          width: containerWidth, // Dynamic width
           height: '44.2px',  // Scaled up by 30% (34 × 1.30)
           background: '#232323',
           borderRadius: '14px', // Slightly increased border radius
-          boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+          boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)',
+          transition: 'width 0.3s ease' // Smooth width transition
         }}
       />
 
       {/* Events */}
       <div
-        style={getNavPillStyles('Events', '4.21px')}
+        style={getNavPillStyles('Events', positions.Events)}
       >
-        <a href="/" aria-label="Events" onClick={(e)=>{e.preventDefault(); handleNavClick('Events')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+        <a href="/" aria-label="Events" onClick={(e) => { e.preventDefault(); handleNavClick('Events') }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
           <span style={getNavTextStyles('Events')}>
             Events
           </span>
         </a>
       </div>
 
-      {/* Shop */}
-      <div
-        style={getNavPillStyles('Shop', '100.14px')}
-      >
-        <a href="/shop" aria-label="Shop" onClick={(e)=>{e.preventDefault(); handleNavClick('Shop')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
-          <span style={getNavTextStyles('Shop')}>
-            Shop
-          </span>
-        </a>
-      </div>
+      {/* Shop - Conditionally Rendered */}
+      {shopEnabled && (
+        <div
+          style={getNavPillStyles('Shop', positions.Shop)}
+        >
+          <a href="/shop" aria-label="Shop" onClick={(e) => { e.preventDefault(); handleNavClick('Shop') }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
+            <span style={getNavTextStyles('Shop')}>
+              Shop
+            </span>
+          </a>
+        </div>
+      )}
 
       {/* About */}
       <div
-        style={getNavPillStyles('About', '196.07px')}
+        style={getNavPillStyles('About', positions.About)}
       >
-        <a href="/about" aria-label="About" onClick={(e)=>{e.preventDefault(); handleNavClick('About')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+        <a href="/about" aria-label="About" onClick={(e) => { e.preventDefault(); handleNavClick('About') }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
           <span style={getNavTextStyles('About')}>
             About
           </span>
@@ -146,9 +180,9 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
 
       {/* FAQ */}
       <div
-        style={getNavPillStyles('FAQ', '292px')}
+        style={getNavPillStyles('FAQ', positions.FAQ)}
       >
-        <a href="/faq" aria-label="FAQ" onClick={(e)=>{e.preventDefault(); handleNavClick('FAQ')}} style={{display:'flex',alignItems:'center',justifyContent:'center',width:'100%',height:'100%',color:'inherit',textDecoration:'none'}}>
+        <a href="/faq" aria-label="FAQ" onClick={(e) => { e.preventDefault(); handleNavClick('FAQ') }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
           <span style={getNavTextStyles('FAQ')}>
             FAQ
           </span>

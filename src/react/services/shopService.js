@@ -50,22 +50,22 @@ async function fetchWithTimeout(endpoint, options = {}) {
         ...options.headers,
       },
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error.name === 'AbortError') {
       throw new Error('Request timed out. Please try again.');
     }
-    
+
     console.error(`❌ Shop API Error: ${endpoint}`, error.message);
     throw error;
   }
@@ -101,12 +101,12 @@ export const fetchProductById = fetchProduct;
  */
 export async function createCheckoutSession(items, options = {}) {
   const { successUrl, cancelUrl } = options;
-  
+
   // Build URLs with current origin
   const origin = window.location.origin;
   const defaultSuccessUrl = `${origin}/shop/success?session_id={CHECKOUT_SESSION_ID}`;
   const defaultCancelUrl = `${origin}/shop`;
-  
+
   const data = await fetchWithTimeout('/api/shop/checkout', {
     method: 'POST',
     body: JSON.stringify({
@@ -118,7 +118,7 @@ export async function createCheckoutSession(items, options = {}) {
       cancel_url: cancelUrl || defaultCancelUrl,
     }),
   });
-  
+
   return data;
 }
 
@@ -132,6 +132,15 @@ export async function verifyCheckoutSession(sessionId) {
   return data;
 }
 
+/**
+ * Fetch shop configuration (enabled status, settings)
+ * @returns {Promise<Object>} Shop configuration
+ */
+export async function fetchConfig() {
+  const data = await fetchWithTimeout('/api/shop/config');
+  return data;
+}
+
 // Export as default object for convenience
 const shopService = {
   fetchProducts,
@@ -139,6 +148,7 @@ const shopService = {
   fetchProductById,
   createCheckoutSession,
   verifyCheckoutSession,
+  fetchConfig,
 };
 
 export default shopService;

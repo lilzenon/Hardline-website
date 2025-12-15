@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SocialMediaButtons from './SocialMediaButtons';
+import shopService from '../services/shopService';
 
 /**
  * Shared Mobile Navigation Component
@@ -13,6 +14,26 @@ const MobileNavigation = ({
   onMenuToggle = () => { } // New callback to notify parent of menu state changes
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [shopEnabled, setShopEnabled] = useState(true); // Default to true until loaded
+
+  // Fetch shop settings
+  useEffect(() => {
+    const loadShopSettings = async () => {
+      try {
+        const config = await shopService.fetchConfig();
+        if (config) {
+          const enabled = config.shopEnabled ?? config.shop_enabled;
+          if (typeof enabled !== 'undefined') {
+            setShopEnabled(enabled);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load shop settings:', error);
+      }
+    };
+    loadShopSettings();
+  }, []);
+
   // Dynamic overlay height to handle iOS/Android dynamic viewports and notches
   const [overlayHeight, setOverlayHeight] = useState('100vh');
   useEffect(() => {
@@ -693,35 +714,38 @@ const MobileNavigation = ({
               FAQ
             </a>
           </div>
-          <div
-            onClick={() => handleNavigation('/shop')}
-            className={`mobile-nav-item ${currentPage === 'shop' ? 'active' : ''}`}
-            style={{
-              fontFamily: 'Inter',
-              fontWeight: '800',
-              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
-              lineHeight: '1.21em',
-              color: '#FFFFFF',
-              cursor: 'pointer',
-              textAlign: 'center',
-              /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Shop (4th item) */
-              transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
-              opacity: showMenu ? 1 : 0,
-              transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
-              transitionDelay: showMenu ? '0.25s' : '0s',
-              /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
-              willChange: 'transform, opacity',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              /* 🎨 CRISP TEXT: Improve text rendering */
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale'
-            }}
-          >
-            <a href="/shop" aria-label="Merch" onClick={(e) => { e.preventDefault(); handleNavigation('/shop') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
-              Merch
-            </a>
-          </div>
+          {/* Shop - Conditionally Rendered */}
+          {shopEnabled && (
+            <div
+              onClick={() => handleNavigation('/shop')}
+              className={`mobile-nav-item ${currentPage === 'shop' ? 'active' : ''}`}
+              style={{
+                fontFamily: 'Inter',
+                fontWeight: '800',
+                fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
+                lineHeight: '1.21em',
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                textAlign: 'center',
+                /* 🎭 ELEGANT ENTRANCE: Smooth slide-up with fade - Shop (4th item) */
+                transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, 40px, 0)',
+                opacity: showMenu ? 1 : 0,
+                transition: 'all 0.21s cubic-bezier(0.4, 0, 0.2, 1)',
+                transitionDelay: showMenu ? '0.25s' : '0s',
+                /* 🎯 PERFORMANCE: Hardware acceleration for smooth text animations */
+                willChange: 'transform, opacity',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+                /* 🎨 CRISP TEXT: Improve text rendering */
+                WebkitFontSmoothing: 'antialiased',
+                MozOsxFontSmoothing: 'grayscale'
+              }}
+            >
+              <a href="/shop" aria-label="Merch" onClick={(e) => { e.preventDefault(); handleNavigation('/shop') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
+                Merch
+              </a>
+            </div>
+          )}
 
           {/* 🎭 SOCIAL MEDIA ICONS: Icon-only display for mobile nav overlay */}
           <div

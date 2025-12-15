@@ -109,7 +109,6 @@ export default function CartModal() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              alignItems: 'center',
               padding: '16px 20px',
               borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
             }}
