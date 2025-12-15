@@ -77,17 +77,34 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
           style={{
             position: 'fixed',
             top: 'calc(env(safe-area-inset-top, 0px) + 26px)',
-            left: '16px',
+            left: '50%', // Centered horizontally
+            transform: 'translateX(-50%)', // Centered horizontally
+            width: 'min(398px, calc(100vw - 32px))', // Match content width (16px padding each side)
             zIndex: 1001,
+            display: 'flex',
+            justifyContent: 'flex-start', // Align icon to the far left of the content area
+            pointerEvents: 'none', // Allow clicks to pass through the empty container space
           }}
         >
-          <CartIcon />
+          <div style={{
+            pointerEvents: 'auto',
+            width: '40px',
+            height: '40px',
+            background: '#000000',
+            borderRadius: '12px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer'
+          }}>
+            <CartIcon />
+          </div>
         </div>
 
         {/* Main Content */}
         <main
           style={{
-            paddingTop: '80px', // Account for fixed nav
+            paddingTop: '70px', // Account for fixed nav
             paddingBottom: '32px',
             paddingLeft: '16px',
             paddingRight: '16px',
@@ -96,7 +113,7 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
           }}
         >
           {/* Breadcrumb - MATCH PRODUCTPAGEMOBILE */}
-          <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+          <div style={{ marginTop: '0px', marginBottom: '16px' }}>
             <Breadcrumb
               items={[
                 { name: 'Home', url: '/' },

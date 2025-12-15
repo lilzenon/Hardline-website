@@ -25,6 +25,24 @@ import CartModal from './CartModal';
 import CartIcon from './CartIcon';
 import { Heart, Share2, ShoppingCart, Camera, Tag, ChevronRight, Loader2 } from 'lucide-react';
 
+const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'];
+
+const sortSizes = (sizes) => {
+  return [...sizes].sort((a, b) => {
+    const indexA = SIZE_ORDER.indexOf(a.toUpperCase());
+    const indexB = SIZE_ORDER.indexOf(b.toUpperCase());
+
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    if (indexA !== -1) return -1; // Known size comes first
+    if (indexB !== -1) return 1;
+
+    // Fallback for unknown sizes (e.g. numeric)
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  });
+};
+
 // Lazy load mobile version
 const ProductPageMobile = lazy(() => import('./ProductPageMobile'));
 
@@ -49,7 +67,7 @@ export default function ProductPage({ productId }) {
   // Get size variants from product data (if available)
   const hasVariants = product?.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
   const availableSizes = hasVariants
-    ? product.sizes.map(v => v.size)
+    ? sortSizes(product.sizes.map(v => v.size))
     : [];
   const outOfStockSizes = hasVariants
     ? product.sizes.filter(v => v.stock === 0 || v.stock <= 0).map(v => v.size)

@@ -557,9 +557,7 @@ const FigmaDesktop = ({ onReady }) => {
 
 
   const leftColumnRef = useRef(null);
-  const [videoMaxWidthPx, setVideoMaxWidthPx] = useState(null);
-
-  const [videoSizeFromLaylo, setVideoSizeFromLaylo] = useState({ width: null, height: null });
+  const [videoTargetHeight, setVideoTargetHeight] = useState(null);
 
   const videoContainerRef = useRef(null);
 
@@ -600,7 +598,7 @@ const FigmaDesktop = ({ onReady }) => {
     const baseHeroHeight = 299;
     const baseRightHeroWidth = 498;
     const baseRightHeroHeight = 299;
-    const baseGap = 32;
+    const baseGap = 16;
     const baseContainerWidth = 1192; // REDUCED by 8px (1200px - 8px) for tighter layout alignment
     const containerPadding = 48; // Increased padding for larger container (24px on each side)
     const availableContainerWidth = baseContainerWidth - containerPadding; // 1144px (1192px - 48px)
@@ -657,28 +655,13 @@ const FigmaDesktop = ({ onReady }) => {
   // Compute the maximum usable width for the right video column based on available space
   useLayoutEffect(() => {
     const recompute = () => {
-      try {
-        const desktop = document.querySelector('.desktop-container');
-        const left = leftColumnRef.current;
-        if (desktop && left) {
-          const gapPx = 24; // desktop gap between left and right columns (standardized)
-          const rightPadding = 20; // desktop container has 20px right padding
-          const desktopRect = desktop.getBoundingClientRect();
-          const leftRect = left.getBoundingClientRect();
-          const available = Math.floor(desktopRect.right - leftRect.right - gapPx - rightPadding);
-          setVideoMaxWidthPx(available > 0 ? available : 0);
+      const left = leftColumnRef.current;
+      if (left) {
+        const h = Math.round(left.getBoundingClientRect().height);
+        if (h && h > 0) {
+          setVideoTargetHeight(h);
         }
-
-        // Match YouTube video height to Laylo iframe height (desktop only)
-        const laylo = document.getElementById('laylo-drop-1nTsX');
-        if (laylo) {
-          const h = Math.round(laylo.getBoundingClientRect().height);
-          if (h && h > 0) {
-            const w = Math.round((h * 16) / 9);
-            setVideoSizeFromLaylo({ width: w, height: h });
-          }
-        }
-      } catch (_) { }
+      }
     };
 
     // Initial sync before first paint and again on next frame (covers hydration/layout shifts)
@@ -1645,7 +1628,7 @@ const FigmaDesktop = ({ onReady }) => {
                 margin: '24px 0 0 0', // Reduced from 32px to 24px for better visual flow
                 padding: '0',
                 flexDirection: scaledDimensions.containerWidth >= 1024 ? 'row' : 'column',
-                gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(24, Math.round(scaledDimensions.scale * 32))}px` : '20px', // Scale gap for desktop
+                gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px` : '20px', // Scale gap for desktop
                 alignItems: 'flex-start'
               }}
             >
@@ -1663,23 +1646,35 @@ const FigmaDesktop = ({ onReady }) => {
                     isolation: 'isolate'
                   }}
                 >
-                  {/* Up Next Title - Scaled down for better proportion */}
+                  {/* Up Next Header Wrapper - Wrapped to match Events alignment */}
                   <div
                     style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced from 32px to 26px for better proportion
-                      fontWeight: '800',
-                      lineHeight: 'normal',
-                      margin: '0',
-                      padding: '0',
-                      height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
                       display: 'flex',
-                      alignItems: 'center', // Center text vertically within the height
-                      // Removed fadeIn(200) to prevent double-fade/black screen relative to loader reveal
+                      alignItems: 'center',
+                      // Use toggle height to match events section alignment to fix vertical misalignment
+                      height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`,
+                      margin: '0',
+                      padding: '0'
                     }}
                   >
-                    Up Next
+                    {/* Up Next Title - Scaled down for better proportion */}
+                    <div
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Reduced scaling base to match ~32px target
+                        fontWeight: '800',
+                        lineHeight: 'normal',
+                        margin: '0',
+                        padding: '0',
+                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Explicit height to match font size
+                        display: 'flex',
+                        alignItems: 'center', // Center text vertically within the height
+                        // Removed fadeIn(200) to prevent double-fade/black screen relative to loader reveal
+                      }}
+                    >
+                      Up Next
+                    </div>
                   </div>
 
                   {/* Hero Featured Event or Fallback - Perfect Square */}
@@ -2178,7 +2173,7 @@ const FigmaDesktop = ({ onReady }) => {
 
                     height: (() => {
                       // Calculate total height to match Up Next title + gap + square hero image
-                      const titleHeight = Math.max(20, Math.round(scaledDimensions.scale * 26)); // Up Next title height (updated)
+                      const titleHeight = Math.max(22, Math.round(scaledDimensions.scale * 28)); // Up Next title height (updated to match toggle wrapper)
                       const sectionGap = Math.max(6, Math.round(scaledDimensions.scale * 8)); // Gap between title and hero
                       const squareHeroHeight = scaledDimensions.heroWidth; // Square hero uses heroWidth for height
                       const totalLeftSideHeight = titleHeight + sectionGap + squareHeroHeight;
@@ -2203,10 +2198,10 @@ const FigmaDesktop = ({ onReady }) => {
                       style={{
                         color: '#FFF',
                         fontFamily: 'Inter',
-                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced to match Up Next title
+                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Reduced scaling base to match ~32px target
                         fontWeight: '800',
                         lineHeight: 'normal',
-                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match Up Next title
+                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Explicit height to match Up Next title
                         display: 'flex',
                         alignItems: 'center' // Center text vertically within the height
                       }}
@@ -2801,13 +2796,12 @@ const FigmaDesktop = ({ onReady }) => {
                 style={{
                   ...(fadeIn(1000)),
                   position: 'relative',
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 1fr',
+                  display: 'flex',
                   width: '100%',
                   margin: '24px 0 0 0', // Standardized vertical gap between top and bottom rows (desktop-only)
                   padding: '0',
                   alignItems: 'flex-start',
-                  columnGap: '24px' // Standardized desktop gap between left/right columns
+                  gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px` : '20px' // Match exact gap from Row 1
                 }}
               >
                 {/* Left Side - Follow Us (Social Media) above Text Us (Laylo) */}
@@ -2818,98 +2812,70 @@ const FigmaDesktop = ({ onReady }) => {
                     flexDirection: 'column',
                     gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as other sections
                     alignItems: 'flex-start',
-                    flex: '1 1 auto',
-                    minWidth: '400px'
+                    flexShrink: 0,
+                    // Use scale-based width instead of forced min-width to ensure proper scaling on tight viewports
+                    width: `${scaledDimensions.eventsWidth}px`
                   }}
                 >
-                  {/* Follow Us Section - Title + Social Media Buttons */}
+                  {/* Follow Us Title - Standardized Typography - Moved to Top */}
                   <div
                     style={{
-                      width: `${Math.round(scaledDimensions.eventsWidth)}px`,
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`,
+                      fontWeight: '800',
+                      lineHeight: 'normal',
+                      letterSpacing: '-0.02em',
+                      margin: '0',
+                      padding: '0',
+                      height: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`,
                       display: 'flex',
-                      flexDirection: 'column',
-                      gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`,
-                      alignItems: 'flex-start'
+                      alignItems: 'center'
                     }}
                   >
-                    {/* Follow Us Title - Standardized Typography */}
-                    <div
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
-                        fontWeight: '800',
-                        lineHeight: 'normal',
-                        letterSpacing: '-0.02em',
-                        margin: '0',
-                        padding: '0',
-                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
-                        display: 'flex',
-                        alignItems: 'center'
-                      }}
-                    >
-                      Follow Us
-                    </div>
-
-                    {/* Social Media Buttons */}
-                    <div
-                      ref={socialContainerRef}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'flex-start',
-                        alignItems: 'center',
-                        padding: '0',
-                        marginTop: '0',
-                        marginRight: '-18px',
-                        zIndex: 0
-                      }}
-                    >
-                      <SocialMediaButtons
-                        isDesktop={true}
-                        containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth}
-                        responsive={true}
-                      />
-                    </div>
+                    Follow Us
                   </div>
 
-                  {/* Text Us: Laylo section (below Follow Us) */}
+                  {/* Text Us: Laylo section (Middle) */}
                   <div ref={layloContainerRef} style={{
-                    width: `${Math.round(scaledDimensions.eventsWidth)}px`,
+                    width: '100%',
                     display: 'flex',
                     justifyContent: 'flex-start',
-                    marginTop: socialMarginTop != null ? `${socialMarginTop}px` : `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px`
+                    marginTop: '0'
                   }}>
                     <TextUsSection scaledDimensions={scaledDimensions} />
                   </div>
+
+                  {/* Social Media Buttons (Bottom) */}
+                  <div
+                    ref={socialContainerRef}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'flex-start',
+                      alignItems: 'center',
+                      padding: '0',
+                      marginTop: '0',
+                      zIndex: 0
+                    }}
+                  >
+                    <SocialMediaButtons
+                      isDesktop={true}
+                      containerWidth={scaledDimensions.eventsWidth} // Allow buttons to scale down naturally
+                      responsive={true}
+                    />
+                  </div>
                 </div>
 
-                {/* Right Side - Text Us Section with Laylo and Social Media Buttons */}
+                {/* Right Side - Video Section */}
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: (() => {
-                      // 🚨 AGGRESSIVE RESPONSIVE GAP: Dynamic gap calculation with substantial spacing to prevent overlap
-                      const containerWidth = scaledDimensions.eventsWidth * 1.2;
-
-                      // 🚨 AGGRESSIVE GAP SCALING: Increase gap substantially for narrower screens where iframe content wraps
-                      if (containerWidth < 350) {
-                        return '95px'; // Very aggressive gap for very narrow screens (mobile portrait)
-                      } else if (containerWidth < 450) {
-                        return '85px'; // Aggressive gap for narrow screens (mobile landscape)
-                      } else if (containerWidth < 550) {
-                        return '75px'; // Substantial gap for small tablet screens
-                      } else if (containerWidth < 650) {
-                        return '68px'; // Moderate gap for medium tablet screens
-                      } else if (containerWidth < 750) {
-                        return '60px'; // Small gap adjustment for larger tablet screens
-                      }
-
-                      return '52px'; // Default gap for wide desktop screens
-                    })(),
+                    flex: 1, // Fill remaining space
                     alignItems: 'flex-start',
-                    width: '100%',
+                    width: 'auto',
+                    minWidth: 0, // Allow flex item to shrink below content size if needed
                     maxWidth: '100%'
                   }}
                 >
@@ -2918,16 +2884,21 @@ const FigmaDesktop = ({ onReady }) => {
                     ref={videoContainerRef}
                     onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
                     style={{
+                      // Scale video to fill the container completely
                       width: '100%',
-                      height: 'auto',
-                      aspectRatio: '16 / 9',
+                      height: videoTargetHeight ? `${videoTargetHeight}px` : 'auto',
                       position: 'relative',
                       flexShrink: 0,
                       cursor: 'pointer',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       transformOrigin: 'right top',
                       borderRadius: '24px',
-                      marginLeft: 'auto' // Right-align within container to match elements above
+                      overflow: 'hidden', // Highlight: Ensure we crop the zoomed video
+                      marginLeft: '0',
+                      // Standardized hardware-accelerated clipping
+                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)',
+                      zIndex: 1
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
@@ -2952,8 +2923,8 @@ const FigmaDesktop = ({ onReady }) => {
                         top: '0px',
                         width: '100%', // Match parent container width
                         height: '100%',
-                        borderRadius: '24px',
-                        overflow: 'hidden',
+                        borderRadius: '0', // Remove inner radius
+                        overflow: 'visible', // Let parent handle clipping
                         ...fadeIn(400)
                       }}
                     >
@@ -2978,15 +2949,17 @@ const FigmaDesktop = ({ onReady }) => {
                           loading="eager"
                           style={{
                             position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            width: '100%',
-                            height: '100%',
+                            top: '50%',
+                            left: '50%',
+                            right: 'auto',
+                            bottom: 'auto',
+                            width: '150%', // Increased zoom to ensure full coverage
+                            height: '150%',
                             border: 'none',
                             pointerEvents: 'none',
-                            opacity: 1
+                            opacity: 1,
+                            transform: 'translate(-50%, -50%)', // Robust centering
+                            transformOrigin: 'center center'
                           }}
                         />
                       </div>

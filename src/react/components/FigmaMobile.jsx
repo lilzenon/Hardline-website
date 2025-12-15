@@ -835,7 +835,7 @@ const FigmaMobile = ({ onReady }) => {
   const drawerRef = useRef(null);
   const contentRef = useRef(null);
   const navHeight = useNavHeight();
-  const topSpacer = Math.max(navHeight || 0, 0) + 12;
+  const topSpacer = Math.max(navHeight || 0, 0);
 
   // 🚀 JITTER FIX: Optimized scroll state to prevent navigation jitter
   const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
@@ -3039,7 +3039,7 @@ const FigmaMobile = ({ onReady }) => {
               <div
                 style={{
                   display: 'flex',
-                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width (430px container - 48px padding)
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   marginBottom: '8px', // Drastically reduced spacing
@@ -3253,8 +3253,8 @@ const FigmaMobile = ({ onReady }) => {
                           }
                         }}
                         style={{
-                          width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                          height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
+                          width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width
+                          height: 'min(382px, calc(100vw - 48px))', // Maintain square aspect ratio with new width
                           position: 'relative',
                           margin: '0 auto', // Center the hero
                           cursor: 'pointer',
@@ -3649,8 +3649,8 @@ const FigmaMobile = ({ onReady }) => {
                 >
                   <div
                     style={{
-                      width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                      height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
+                      width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width
+                      height: 'min(382px, calc(100vw - 48px))', // Maintain square aspect ratio with new width
                       position: 'relative',
                       margin: '0 auto',
                       borderRadius: '20px',
@@ -3709,7 +3709,7 @@ const FigmaMobile = ({ onReady }) => {
               {/* 📱 REFINED EXPANDABLE EVENTS SECTION */}
               <div
                 style={{
-                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width
                   margin: '0 auto',
                   position: 'relative',
                   paddingBottom: filteredHomepageEvents.length > 3 ? '4px' : '0', // Tightened spacing for gradient/handle (>=50% reduction)
@@ -4321,7 +4321,7 @@ const FigmaMobile = ({ onReady }) => {
               {/* Follow Us Section Title */}
               <div
                 style={{
-                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width
                   marginBottom: '8px', // Consistent spacing with Events section
                   margin: '0 auto 8px auto', // Center the container with minimal spacing
                   boxSizing: 'border-box'
@@ -4346,8 +4346,9 @@ const FigmaMobile = ({ onReady }) => {
 
               <article
                 style={{
-                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                  height: '200px', // Mobile-optimized height
+                  width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width
+                  height: 'auto', // Allow height to adjust based on aspect ratio
+                  aspectRatio: '16 / 9', // Standard YouTube aspect ratio
                   position: 'relative',
                   flexShrink: 0,
                   margin: '0 auto', // Center the video
@@ -4577,7 +4578,7 @@ const FigmaMobile = ({ onReady }) => {
             >
               <div
                 style={{
-                  width: 'min(344px, calc(100vw - 4px))',
+                  width: 'min(382px, calc(100% - 48px))',
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
@@ -4615,7 +4616,7 @@ const FigmaMobile = ({ onReady }) => {
             >
               <article
                 style={{
-                  width: 'min(344px, calc(100vw - 4px))',
+                  width: 'min(382px, calc(100% - 48px))',
                   margin: '0 auto',
                   // Solid background to prevent visual artifacts - matches desktop TextUsSection
                   background: 'rgba(22, 22, 22, 0.50)',

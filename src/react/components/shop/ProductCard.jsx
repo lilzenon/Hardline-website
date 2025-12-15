@@ -34,6 +34,24 @@ function formatPrice(cents) {
   }).format(cents / 100);
 }
 
+const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'];
+
+const sortSizes = (sizes) => {
+  return [...sizes].sort((a, b) => {
+    const indexA = SIZE_ORDER.indexOf(a.toUpperCase());
+    const indexB = SIZE_ORDER.indexOf(b.toUpperCase());
+
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    if (indexA !== -1) return -1; // Known size comes first
+    if (indexB !== -1) return 1;
+
+    // Fallback for unknown sizes (e.g. numeric)
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  });
+};
+
 export default function ProductCard({ product, onAddToCart }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -47,7 +65,7 @@ export default function ProductCard({ product, onAddToCart }) {
   // Get available sizes
   const hasVariants = product?.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
   const availableSizes = hasVariants
-    ? product.sizes.filter(v => v.stock > 0).map(v => v.size)
+    ? sortSizes(product.sizes.filter(v => v.stock > 0).map(v => v.size))
     : [];
 
   // Inline SVG placeholder as data URI

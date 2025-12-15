@@ -39,7 +39,7 @@ const AboutPageMobile = () => {
   const navHeight = useNavHeight();
   const iosScrollStateRef = useRef({ startY: 0, lastY: 0 });
 
-  const topSpacer = Math.max(navHeight || 0, 0) + 12;
+  const topSpacer = Math.max(navHeight || 0, 0);
 
   // Viewport context state for dynamic spacing (matching FigmaMobile.jsx)
   const [viewportContext, setViewportContext] = useState(0);
@@ -455,7 +455,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
               }}
             >
               {/* Breadcrumb - MATCH SHOPPAGEMOBILE */}
-              <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+              <div style={{ marginTop: '0px', marginBottom: '16px' }}>
                 <Breadcrumb
                   items={[
                     { name: 'Home', url: '/' },
@@ -469,7 +469,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 style={{
                   fontSize: '24px',
                   fontWeight: 600,
-                  marginBottom: '16px',
+                  marginBottom: '6px', // Reduced from 16px to bring text closer
                   letterSpacing: '-0.02em',
                   textAlign: 'left',
                   color: '#FFFFFF',
@@ -488,7 +488,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                   color: '#FFFFFF',
                   fontFamily: 'Inter',
                   fontWeight: '400',
-                  fontSize: '16px',
+                  fontSize: '17px', // Increased from 16px for better readability
                   lineHeight: '1.5em',
                   marginBottom: '0px',
                   textAlign: 'left',

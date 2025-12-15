@@ -10,7 +10,7 @@ import Breadcrumb from './Breadcrumb';
 const FAQPageMobile = () => {
   const contentRef = useRef(null);
   const navHeight = useNavHeight();
-  const topSpacer = Math.max(navHeight || 0, 0) + 12;
+  const topSpacer = Math.max(navHeight || 0, 0);
   const iosScrollStateRef = useRef({ startY: 0, lastY: 0 });
 
 
@@ -236,7 +236,7 @@ const FAQPageMobile = () => {
             }}
           >
             {/* Breadcrumb - MATCH SHOPPAGEMOBILE */}
-            <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+            <div style={{ marginTop: '0px', marginBottom: '16px' }}>
               <Breadcrumb
                 items={[
                   { name: 'Home', url: '/' },

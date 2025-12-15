@@ -56,14 +56,14 @@ const Footer = ({ compact = false }) => {
         borderTop: '1px solid rgba(56, 56, 56, 0.3)',
         // Padding: top includes safe-area for iOS, generous horizontal padding
         // Bottom padding includes safe-area-inset-bottom for iOS home indicator
-        paddingTop: compact ? '20px' : '24px',
+        paddingTop: compact ? '16px' : '16px', // Reduced for slimmer look
         paddingLeft: '16px',
         paddingRight: '16px',
         paddingBottom: compact
-          ? 'calc(20px + env(safe-area-inset-bottom, 0px))'
-          : 'calc(24px + env(safe-area-inset-bottom, 0px))',
+          ? 'calc(16px + env(safe-area-inset-bottom, 0px))'
+          : 'calc(16px + env(safe-area-inset-bottom, 0px))', // Reduced
         // Top margin for separation from page content (8px grid)
-        marginTop: compact ? '24px' : '32px',
+        marginTop: compact ? '16px' : '24px',
         marginBottom: 0, // No extra space below footer
         boxSizing: 'border-box'
       }}
@@ -96,13 +96,13 @@ const Footer = ({ compact = false }) => {
             aria-label="Go to Events page"
             style={linkBaseStyle}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#319DFF';
+              e.currentTarget.style.color = '#FFFFFF';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.color = '#319DFF';
+              e.currentTarget.style.color = '#FFFFFF';
             }}
             onTouchEnd={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
@@ -124,13 +124,13 @@ const Footer = ({ compact = false }) => {
             aria-label="Go to About page"
             style={linkBaseStyle}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#319DFF';
+              e.currentTarget.style.color = '#FFFFFF';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.color = '#319DFF';
+              e.currentTarget.style.color = '#FFFFFF';
             }}
             onTouchEnd={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
@@ -152,19 +152,47 @@ const Footer = ({ compact = false }) => {
             aria-label="Go to FAQ page"
             style={linkBaseStyle}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = '#319DFF';
+              e.currentTarget.style.color = '#FFFFFF';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.color = '#319DFF';
+              e.currentTarget.style.color = '#FFFFFF';
             }}
             onTouchEnd={(e) => {
               e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
             }}
           >
             FAQ
+          </a>
+          <span
+            style={{
+              color: 'rgba(255, 255, 255, 0.3)',
+              fontSize: compact ? '10px' : '12px'
+            }}
+            aria-hidden="true"
+          >
+            •
+          </span>
+          <a
+            href="/terms"
+            aria-label="Go to Terms page"
+            style={linkBaseStyle}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+          >
+            Terms
           </a>
         </nav>
 

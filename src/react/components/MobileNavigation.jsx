@@ -376,8 +376,8 @@ const MobileNavigation = ({
         {/* 🚀 PROPORTIONAL SCALING FIX: Content wrapper optimized for uniform scaling */}
         <div
           style={{
-            width: 'min(360px, calc(100vw - 16px))', // FIXED: Match menu width for consistency
-            maxWidth: '360px', // FIXED: Match menu max width
+            width: 'min(398px, calc(100vw - 32px))', // FIXED: Match content width (16px padding each side)
+            maxWidth: '398px', // FIXED: Match content max width
             margin: '0 auto', // Center the content
             position: 'relative',
             height: '100%',
@@ -401,8 +401,8 @@ const MobileNavigation = ({
               right: '0px', // FIXED: Align with content right edge (no padding offset)
               top: '50%',
               transform: 'translateY(-50%)',
-              width: '34px', // Match original size
-              height: '34px', // Match original size
+              width: '40px', // Slightly larger for touch target with background
+              height: '40px', // Slightly larger for touch target with background
               cursor: 'pointer',
               /* 🎯 LAYERING FIX: Ensure menu button stays visible above overlay */
               zIndex: 1002, // Higher than logo (1001) and overlay (1000)
@@ -411,6 +411,10 @@ const MobileNavigation = ({
               justifyContent: 'center',
               alignItems: 'center',
               gap: '4px', // Match original gap
+              /* 🎯 VISUAL UPDATE: Black background with rounded corners */
+              background: '#000000',
+              borderRadius: '12px',
+              border: 'none',
               /* 🎯 CONSISTENT POSITIONING: Prevent layout shifts during animation */
               transformOrigin: 'center center',
               contain: 'layout style',
@@ -518,9 +522,9 @@ const MobileNavigation = ({
         {/* Navigation Bar in Menu */}
         <div
           style={{
-            /* FIXED: Use wider content width to fill the space properly */
-            width: 'min(360px, calc(100vw - 16px))', // FIXED: Wider width with 8px padding each side
-            maxWidth: '360px', // FIXED: Increased max width to fill space
+            /* FIXED: Match content width logic for alignment */
+            width: 'min(398px, calc(100vw - 32px))', // FIXED: Match content with 16px padding each side
+            maxWidth: '398px', // FIXED: Increased max width to match content
             margin: '0 auto', // Center like main content
             height: '97px',
             position: 'relative',
@@ -544,8 +548,8 @@ const MobileNavigation = ({
               right: '0px', // FIXED: Align with content right edge (no padding offset)
               top: '50%',
               transform: 'translateY(-50%)',
-              width: '34px', // Match original size
-              height: '34px', // Match original size
+              width: '40px', // Slightly larger for touch target with background
+              height: '40px', // Slightly larger for touch target with background
               cursor: 'pointer',
               /* 🎯 LAYERING FIX: Ensure close button stays visible */
               zIndex: 1002, // Same as hamburger menu button for consistency
@@ -553,7 +557,11 @@ const MobileNavigation = ({
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              gap: '4px' // Match original gap
+              gap: '4px', // Match original gap
+              /* 🎯 VISUAL UPDATE: Black background with rounded corners */
+              background: '#000000',
+              borderRadius: '12px',
+              border: 'none'
             }}
 
           >
@@ -625,9 +633,9 @@ const MobileNavigation = ({
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center', // Center vertically if space allows
-            /* 🎯 POSITIONING FIX: Fill the space and align with page content */
-            width: 'min(360px, calc(100vw - 16px))',
-            maxWidth: '360px',
+            /* 🎯 POSITIONING FIX: Align with page content */
+            width: 'min(398px, calc(100vw - 32px))',
+            maxWidth: '398px',
             margin: '0 auto',
             padding: 'clamp(8px, 2vh, 16px) 8px max(24px, env(safe-area-inset-bottom)) 8px',
             gap: 'clamp(16px, 3vh, 32px)', // 🚀 SPACING FIX: Tighter, balanced gap
@@ -761,8 +769,8 @@ const MobileNavigation = ({
                 MozOsxFontSmoothing: 'grayscale'
               }}
             >
-              <a href="/shop" aria-label="Merch" onClick={(e) => { e.preventDefault(); handleNavigation('/shop') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
-                Merch
+              <a href="/shop" aria-label="Shop" onClick={(e) => { e.preventDefault(); handleNavigation('/shop') }} style={{ display: 'block', width: '100%', height: '100%', color: 'inherit', textDecoration: 'none' }}>
+                Shop
               </a>
             </div>
           )}

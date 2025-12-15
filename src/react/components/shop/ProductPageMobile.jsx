@@ -19,6 +19,24 @@ import CartIcon from './CartIcon';
 import { useCart } from '../../contexts/CartContext';
 import { Heart, Share2, ShoppingCart, Tag, ChevronRight, Loader2 } from 'lucide-react';
 
+const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'];
+
+const sortSizes = (sizes) => {
+  return [...sizes].sort((a, b) => {
+    const indexA = SIZE_ORDER.indexOf(a.toUpperCase());
+    const indexB = SIZE_ORDER.indexOf(b.toUpperCase());
+
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    if (indexA !== -1) return -1; // Known size comes first
+    if (indexB !== -1) return 1;
+
+    // Fallback for unknown sizes (e.g. numeric)
+    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+  });
+};
+
 export default function ProductPageMobile({
   product,
   images,
@@ -40,7 +58,7 @@ export default function ProductPageMobile({
   // Get size variants from product data (if available)
   const hasVariants = product?.sizes && Array.isArray(product.sizes) && product.sizes.length > 0;
   const availableSizes = hasVariants
-    ? product.sizes.map(v => v.size)
+    ? sortSizes(product.sizes.map(v => v.size))
     : [];
   const outOfStockSizes = hasVariants
     ? product.sizes.filter(v => v.stock === 0 || v.stock <= 0).map(v => v.size)
@@ -182,12 +200,29 @@ export default function ProductPageMobile({
         <div
           style={{
             position: 'fixed',
-            top: 'calc(env(safe-area-inset-top, 0px) + 32px)',
-            left: 'max(8px, calc((100vw - min(360px, calc(100vw - 16px))) / 2))',
+            top: 'calc(env(safe-area-inset-top, 0px) + 26px)',
+            left: '50%', // Centered horizontally
+            transform: 'translateX(-50%)', // Centered horizontally
+            width: 'min(398px, calc(100vw - 32px))', // Match content width (16px padding each side)
             zIndex: 1001,
+            display: 'flex',
+            justifyContent: 'flex-start', // Align icon to the far left of the content area
+            pointerEvents: 'none', // Allow clicks to pass through the empty container space
           }}
         >
-          <CartIcon />
+          <div style={{
+            pointerEvents: 'auto',
+            width: '40px',
+            height: '40px',
+            background: '#000000',
+            borderRadius: '12px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            cursor: 'pointer'
+          }}>
+            <CartIcon />
+          </div>
         </div>
 
         {/* Main Content */}

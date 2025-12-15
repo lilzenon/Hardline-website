@@ -96,8 +96,8 @@ const ContactPageMobile = () => {
           }
         `}
       </style>
-      
-      <div 
+
+      <div
         style={{
           width: '100vw',
           height: '100vh',
@@ -132,7 +132,7 @@ const ContactPageMobile = () => {
             style={{
               position: 'absolute',
               left: '0px',
-              top: '97px',
+              top: '85px',
               width: '430px',
               height: '835px', // 932 - 97 = 835px
               background: '#000000',
