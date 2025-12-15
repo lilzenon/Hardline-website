@@ -9,30 +9,12 @@ const BrandedLoader = ({
   message = "Loading...",
   showMessage = false, // Default to false for minimalist design
   fullScreen = true,
-  minDisplayTime = 800 // Minimum time to show loader for smooth UX
+  minDisplayTime = 800, // Minimum time to show loader for smooth UX
+  className = '',
+  style = {}
 }) => {
-  // Prevent double-rendering across page transitions: only one loader at a time
-  // Also suppress a second loader within a short cooldown window after the previous one ends
-  const [suppressRender] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const active = window.__B2B_LOADER_ACTIVE === true;
-    const lastEnded = window.__B2B_LOADER_LAST_ENDED || 0;
-    const withinCooldown = Date.now() - lastEnded < 600; // 600ms cooldown to avoid back-to-back loaders
-    return active || withinCooldown;
-  });
-
-  useEffect(() => {
-    if (suppressRender) return;
-    try {
-      window.__B2B_LOADER_ACTIVE = true;
-      return () => {
-        window.__B2B_LOADER_ACTIVE = false;
-        window.__B2B_LOADER_LAST_ENDED = Date.now();
-      };
-    } catch (_) {
-      // no-op in non-browser environments
-    }
-  }, [suppressRender]);
+  // Removed suppressRender logic to prevent black screen issues.
+  // The loader visibility is now fully controlled by the parent HomePage component.
 
   const [isVisible, setIsVisible] = useState(true);
   const [shouldAnimate, setShouldAnimate] = useState(true);
@@ -43,25 +25,6 @@ const BrandedLoader = ({
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setShouldAnimate(!prefersReducedMotion);
   }, []);
-
-  // Prevent auto-hiding to avoid black screen issues
-  // The loader should be controlled by the parent component (mounting/unmounting)
-  /*
-  useEffect(() => {
-    if (suppressRender) return;
-    const timer = setTimeout(() => {
-      setFadeOut(true);
-      // Complete fade out after animation duration
-      setTimeout(() => {
-        setIsVisible(false);
-      }, 300); // Match CSS transition duration
-    }, minDisplayTime);
-
-    return () => clearTimeout(timer);
-  }, [minDisplayTime, suppressRender]);
-  */
-
-
 
   const containerStyle = {
     position: fullScreen ? 'fixed' : 'absolute',
@@ -79,7 +42,9 @@ const BrandedLoader = ({
     opacity: fadeOut ? 0 : 1,
     transition: shouldAnimate ? 'opacity 0.3s ease-out, transform 0.3s ease-out' : 'none',
     transform: fadeOut ? 'scale(0.95)' : 'scale(1)',
-    pointerEvents: fadeOut ? 'none' : 'auto'
+    // 🚨 FIX: Use 'inherit' instead of 'auto' so parent wrappers can control pointer events (e.g. for Reveal effects)
+    pointerEvents: fadeOut ? 'none' : 'inherit',
+    ...style
   };
 
   const logoContainerStyle = {
@@ -112,9 +77,8 @@ const BrandedLoader = ({
     animation: shouldAnimate ? 'brandedLoaderDots 1.5s ease-in-out infinite' : 'none'
   };
 
-  // Inject keyframe animations (global, single insertion)
   useEffect(() => {
-    if (suppressRender || !shouldAnimate) return;
+    if (!shouldAnimate) return;
 
     let styleSheet = document.getElementById('b2b-branded-loader-animations');
     if (styleSheet) {
@@ -174,16 +138,16 @@ const BrandedLoader = ({
 
     document.head.appendChild(styleSheet);
     // Note: we intentionally do not remove this global style on unmount to prevent flicker across transitions
-  }, [shouldAnimate, suppressRender]);
+  }, [shouldAnimate]);
 
-  if (suppressRender || !isVisible) {
+  if (!isVisible) {
     return null;
   }
 
   return (
     <div
       style={containerStyle}
-      className={shouldAnimate ? 'branded-loader-container' : ''}
+      className={`${shouldAnimate ? 'branded-loader-container' : ''} ${className}`}
       role="status"
       aria-live="polite"
       aria-busy={!fadeOut}

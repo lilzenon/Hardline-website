@@ -12,7 +12,21 @@ import shopService from '../services/shopService';
  */
 const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
   const [activeNavTab, setActiveNavTab] = useState(currentPage);
-  const [shopEnabled, setShopEnabled] = useState(true); // Default to true until loaded
+
+  // 🚀 OPTIMIZATION: Initialize from storage to prevent layout shifts
+  // Defaults to FALSE to prevent "flash of content" if disabled (user requirement)
+  const [shopEnabled, setShopEnabled] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('b2b_shop_enabled');
+        // Only return true if explicitly set to 'true'
+        return cached === 'true';
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+    return false; // Safe default
+  });
 
   // Fetch shop settings
   useEffect(() => {
@@ -23,6 +37,12 @@ const DesktopNavigation = ({ currentPage = 'Events', onNavigate }) => {
           const enabled = config.shopEnabled ?? config.shop_enabled;
           if (typeof enabled !== 'undefined') {
             setShopEnabled(enabled);
+            // 💾 Persist to storage for instant load next time
+            try {
+              localStorage.setItem('b2b_shop_enabled', String(enabled));
+            } catch (e) {
+              // Ignore storage errors
+            }
           }
         }
       } catch (error) {

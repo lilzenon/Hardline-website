@@ -14,7 +14,21 @@ const MobileNavigation = ({
   onMenuToggle = () => { } // New callback to notify parent of menu state changes
 }) => {
   const [showMenu, setShowMenu] = useState(false);
-  const [shopEnabled, setShopEnabled] = useState(true); // Default to true until loaded
+
+  // 🚀 OPTIMIZATION: Initialize from storage to prevent layout shifts
+  // Defaults to FALSE to prevent "flash of content" if disabled (user requirement)
+  const [shopEnabled, setShopEnabled] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('b2b_shop_enabled');
+        // Only return true if explicitly set to 'true'
+        return cached === 'true';
+      }
+    } catch (e) {
+      // Ignore storage errors
+    }
+    return false; // Safe default
+  });
 
   // Fetch shop settings
   useEffect(() => {
@@ -25,6 +39,12 @@ const MobileNavigation = ({
           const enabled = config.shopEnabled ?? config.shop_enabled;
           if (typeof enabled !== 'undefined') {
             setShopEnabled(enabled);
+            // 💾 Persist to storage for instant load next time
+            try {
+              localStorage.setItem('b2b_shop_enabled', String(enabled));
+            } catch (e) {
+              // Ignore storage errors
+            }
           }
         }
       } catch (error) {
@@ -185,7 +205,7 @@ const MobileNavigation = ({
             transition: all 0.225s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
             padding: clamp(12px, 3vh, 20px) clamp(16px, 6vw, 40px); /* Responsive padding: keep 44px+ targets while fitting shorter viewports */
             border-radius: 24px; /* Larger radius for modern feel */
-            margin: 12px 0; /* Increased margin for better spacing */
+            margin: 0; /* 🚀 SPACNG FIX: Remove margin, let flex gap handle spacing */
             /* 🎨 GLASSMORPHISM: Enhanced background for better contrast */
             background: transparent;
             backdrop-filter: blur(0px);
@@ -439,13 +459,13 @@ const MobileNavigation = ({
             style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001 }}
           >
             <img
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
+              src="/images/b2b-logo-updated.svg"
               alt="B2B Logo"
               className="mobile-navigation-logo"
               style={{
                 /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
-                width: '160px',
-                height: '50px',
+                width: '200px',
+                height: '60px',
                 cursor: 'pointer',
                 userSelect: 'none',
                 /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
@@ -577,12 +597,12 @@ const MobileNavigation = ({
             style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 1001 }}
           >
             <img
-              src="/images/mobile-figma/b2b-logo-mobile.svg"
+              src="/images/b2b-logo-updated.svg"
               alt="B2B Logo"
               className="mobile-navigation-logo"
               style={{
-                width: '160px',
-                height: '50px',
+                width: '200px',
+                height: '60px',
                 cursor: 'pointer',
                 userSelect: 'none',
                 /* 🎯 ALIGNMENT FIX: Disable transitions to prevent logo jumping during menu transitions */
@@ -610,7 +630,7 @@ const MobileNavigation = ({
             maxWidth: '360px',
             margin: '0 auto',
             padding: 'clamp(8px, 2vh, 16px) 8px max(24px, env(safe-area-inset-bottom)) 8px',
-            gap: 'clamp(12px, 3vh, 24px)', // Reduced gap to prevent overflow
+            gap: 'clamp(16px, 3vh, 32px)', // 🚀 SPACING FIX: Tighter, balanced gap
             /* 🎭 SMOOTH CONTAINER ANIMATION: Gentle entrance */
             transform: showMenu ? 'translate3d(0, 0, 0)' : 'translate3d(0, -30px, 0)',
             opacity: 1,
@@ -633,8 +653,8 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
-              lineHeight: '1.21em',
+              fontSize: 'clamp(30px, 7vh, 60px)', // 🚀 TEXT SIZE: Slightly larger
+              lineHeight: '1.1em',
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
@@ -662,8 +682,8 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
-              lineHeight: '1.21em',
+              fontSize: 'clamp(30px, 7vh, 60px)', // 🚀 TEXT SIZE: Slightly larger
+              lineHeight: '1.1em',
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
@@ -691,8 +711,8 @@ const MobileNavigation = ({
             style={{
               fontFamily: 'Inter',
               fontWeight: '800',
-              fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
-              lineHeight: '1.21em',
+              fontSize: 'clamp(30px, 7vh, 60px)', // 🚀 TEXT SIZE: Slightly larger
+              lineHeight: '1.1em',
               color: '#FFFFFF',
               cursor: 'pointer',
               textAlign: 'center',
@@ -722,8 +742,8 @@ const MobileNavigation = ({
               style={{
                 fontFamily: 'Inter',
                 fontWeight: '800',
-                fontSize: 'clamp(24px, 6vh, 48px)', // Reduced font size
-                lineHeight: '1.21em',
+                fontSize: 'clamp(30px, 7vh, 60px)', // 🚀 TEXT SIZE: Slightly larger
+                lineHeight: '1.1em',
                 color: '#FFFFFF',
                 cursor: 'pointer',
                 textAlign: 'center',

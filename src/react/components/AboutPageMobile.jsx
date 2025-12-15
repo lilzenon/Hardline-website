@@ -13,10 +13,26 @@ import { injectAboutGalleryJsonLd, removeAboutGalleryJsonLd } from '../utils/abo
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const AboutPageMobile = () => {
-  const [aboutContent, setAboutContent] = useState('');
+  const [aboutContent, setAboutContent] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('b2b_about_content');
+        return cached || '';
+      }
+    } catch (e) { }
+    return '';
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [galleryImages, setGalleryImages] = useState([]);
+  const [galleryImages, setGalleryImages] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('b2b_gallery_images');
+        return cached ? JSON.parse(cached) : [];
+      }
+    } catch (e) { }
+    return [];
+  });
   // REMOVED: showMenu state - no longer needed after removing old navigation
   const contentRef = useRef(null);
   const aboutContentRef = useRef(null);
@@ -163,6 +179,7 @@ const AboutPageMobile = () => {
 
       if (data.success && data.data) {
         setAboutContent(data.data.content);
+        try { localStorage.setItem('b2b_about_content', data.data.content); } catch (e) { }
         console.log('✅ About page content loaded successfully');
       } else {
         throw new Error('Invalid response format');
@@ -171,14 +188,15 @@ const AboutPageMobile = () => {
     } catch (error) {
       console.error('❌ Error fetching About page content:', error);
 
-      // 🔧 FIX: Use static content from server-side rendered HTML as fallback
-      // This ensures Googlebot sees content even if API is blocked by robots.txt
-      const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
+      // 🔧 FIX: Only use fallback if we don't have cached content
+      if (!aboutContent) {
+        const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
 
 Our mission is to unite top talent, immersive production, and passionate fans to create the ultimate electronic music experiences in the tri-state area.`;
 
-      setAboutContent(staticContent);
-      console.log('✅ Using static fallback content for About page (API blocked or unavailable)');
+        setAboutContent(staticContent);
+        console.log('✅ Using static fallback content for About page (API blocked or unavailable)');
+      }
       // Don't set error state - just use fallback content silently
 
     } finally {
@@ -253,6 +271,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
             return { ...n, urls: absUrls, srcSet: absUrls };
           });
           setGalleryImages(normalized);
+          try { localStorage.setItem('b2b_gallery_images', JSON.stringify(normalized)); } catch (e) { }
         } else {
           console.warn('Invalid gallery response format:', data);
           setGalleryImages([]);
@@ -299,6 +318,22 @@ Our mission is to unite top talent, immersive production, and passionate fans to
       {/* Mobile-specific CSS */}
       <style>
         {`
+          @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+          }
+          
+          .skeleton-shimmer {
+            background: linear-gradient(90deg, 
+              rgba(22, 22, 22, 0.8) 25%, 
+              rgba(56, 56, 56, 0.4) 50%, 
+              rgba(22, 22, 22, 0.8) 75%
+            );
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+          }
+
           .mobile-content-fade {
             animation: fadeInUp 0.6s ease-out;
           }
@@ -419,79 +454,86 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 boxSizing: 'border-box'
               }}
             >
-            {/* Breadcrumb - MATCH SHOPPAGEMOBILE */}
-            <div style={{ marginTop: '8px', marginBottom: '16px' }}>
-              <Breadcrumb
-                items={[
-                  { name: 'Home', url: '/' },
-                  { name: 'About' }
-                ]}
-              />
-            </div>
+              {/* Breadcrumb - MATCH SHOPPAGEMOBILE */}
+              <div style={{ marginTop: '8px', marginBottom: '16px' }}>
+                <Breadcrumb
+                  items={[
+                    { name: 'Home', url: '/' },
+                    { name: 'About' }
+                  ]}
+                />
+              </div>
 
-            {/* Page Title - MATCH SHOPPAGEMOBILE */}
-            <h1
-              style={{
-                fontSize: '24px',
-                fontWeight: 600,
-                marginBottom: '16px',
-                letterSpacing: '-0.02em',
-                textAlign: 'left',
-                color: '#FFFFFF',
-                fontFamily: 'Inter',
-                paddingLeft: '0px'
-              }}
-            >
-              About
-            </h1>
+              {/* Page Title - MATCH SHOPPAGEMOBILE */}
+              <h1
+                style={{
+                  fontSize: '24px',
+                  fontWeight: 600,
+                  marginBottom: '16px',
+                  letterSpacing: '-0.02em',
+                  textAlign: 'left',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  paddingLeft: '0px'
+                }}
+              >
+                About
+              </h1>
 
-            {/* About Content */}
-            <div
-              ref={aboutContentRef}
-              className="about-inner-scroll"
-              style={{
-                color: '#FFFFFF',
-                fontFamily: 'Inter',
-                fontWeight: '400',
-                fontSize: '16px',
-                lineHeight: '1.5em',
-                marginBottom: '0px',
-                textAlign: 'left',
-                /* Limit about section height on mobile to surface gallery sooner */
-                maxHeight: 'min(44vh, 380px)',
-                overflowY: 'auto',
-                overflowX: 'hidden',
-                WebkitOverflowScrolling: 'touch',
-                overscrollBehavior: 'contain',
-                overscrollBehaviorY: 'contain'
-              }}
-              role="region"
-              aria-label="About content"
-            >
-              {error ? (
-                <div
-                  role="alert"
-                  aria-live="polite"
-                  style={{
-                    marginTop: '16px',
-                    padding: '16px',
-                    background: 'rgba(22, 22, 22, 0.30)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    borderRadius: '12px',
-                    textAlign: 'center',
-                    color: '#FF4D4D',
-                    fontWeight: 600,
-                    fontSize: '14px'
-                  }}
-                >
-                  Connection issue — please try again later.
-                </div>
-              ) : (
-                <>{formatContent(aboutContent)}</>
-              )}
-            </div>
+              {/* About Content */}
+              <div
+                ref={aboutContentRef}
+                className="about-inner-scroll"
+                style={{
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontWeight: '400',
+                  fontSize: '16px',
+                  lineHeight: '1.5em',
+                  marginBottom: '0px',
+                  textAlign: 'left',
+                  /* Limit about section height on mobile to surface gallery sooner */
+                  maxHeight: 'min(44vh, 380px)',
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  WebkitOverflowScrolling: 'touch',
+                  overscrollBehavior: 'contain',
+                  overscrollBehaviorY: 'contain'
+                }}
+                role="region"
+                aria-label="About content"
+              >
+                {error ? (
+                  <div
+                    role="alert"
+                    aria-live="polite"
+                    style={{
+                      marginTop: '16px',
+                      padding: '16px',
+                      background: 'rgba(22, 22, 22, 0.30)',
+                      backdropFilter: 'blur(12px)',
+                      WebkitBackdropFilter: 'blur(12px)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '12px',
+                      textAlign: 'center',
+                      color: '#FF4D4D',
+                      fontWeight: 600,
+                      fontSize: '14px'
+                    }}
+                  >
+                    Connection issue — please try again later.
+                  </div>
+                ) : !aboutContent ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '4px' }}>
+                    <div className="skeleton-shimmer" style={{ width: '100%', height: '16px' }} />
+                    <div className="skeleton-shimmer" style={{ width: '90%', height: '16px' }} />
+                    <div className="skeleton-shimmer" style={{ width: '95%', height: '16px' }} />
+                    <div className="skeleton-shimmer" style={{ width: '85%', height: '16px' }} />
+                  </div>
+                ) : (
+                  <>{formatContent(aboutContent)}</>
+                )}
+              </div>
 
             </div>
 
@@ -507,14 +549,22 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 boxSizing: 'border-box'
               }}
             >
-              <MasonryGallery
-                images={galleryImages}
-                columns={{ desktop: 3, tablet: 2, mobile: 2 }}
-                gap={12}
-                onImageClick={(image) => {
-                  console.log('Mobile image clicked:', image);
-                }}
-              />
+              {galleryImages.length === 0 && !error ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="skeleton-shimmer" style={{ width: '100%', paddingTop: '100%', borderRadius: '12px' }} />
+                  ))}
+                </div>
+              ) : (
+                <MasonryGallery
+                  images={galleryImages}
+                  columns={{ desktop: 3, tablet: 2, mobile: 2 }}
+                  gap={12}
+                  onImageClick={(image) => {
+                    console.log('Mobile image clicked:', image);
+                  }}
+                />
+              )}
             </div>
 
             {/* Footer Section - Full width footer at natural position */}

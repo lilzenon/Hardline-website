@@ -14,26 +14,48 @@ const AboutPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeNavTab, setActiveNavTab] = useState('About');
-  const [aboutContent, setAboutContent] = useState('');
+
+  // 🚀 OPTIMIZATION: Initialize from storage for instant load
+  const [aboutContent, setAboutContent] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('b2b_about_content');
+        return cached || '';
+      }
+    } catch (e) { }
+    return '';
+  });
+
   const [contentError, setContentError] = useState(null);
-  const [galleryImages, setGalleryImages] = useState([]);
+
+  // 🚀 OPTIMIZATION: Initialize gallery from storage
+  const [galleryImages, setGalleryImages] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('b2b_gallery_images');
+        return cached ? JSON.parse(cached) : [];
+      }
+    } catch (e) { }
+    return [];
+  });
+
   const [scaledDimensions, setScaledDimensions] = useState({
     heroWidth: 299,
     heroHeight: 299,
     rightHeroWidth: 498,
     rightHeroHeight: 299,
     gap: 32,
-    containerWidth: 1192, // 🚨 MATCH HOMEPAGE: Updated from 825px to 1192px for consistency
+    containerWidth: 1192,
     eventsTextGap: 18,
     eventCardWidth: 220,
     eventCardHeight: 85,
-    eventsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 440px to 380px
-    textUsWidth: 380, // 🚨 MATCH HOMEPAGE: Updated from 299px to 380px
+    eventsWidth: 380,
+    textUsWidth: 380,
     scale: 1
   });
-  // 🚀 SEO FIX: Removed hardcoded meta tags - now using SEO service from SEOContext
-  // The SEOProvider automatically detects the /about page and applies dashboard settings
-  // via the seoService.js detectPageType() and getPageSpecificSEO() functions
+
+  // ... (SEO effect omitted for brevity as it is unchanged) ...
+
   useEffect(() => {
     const siteUrl = 'https://bounce2bounce.com';
     const pageUrl = `${siteUrl}/about`;
@@ -180,6 +202,10 @@ const AboutPage = () => {
 
       if (data.success && data.data) {
         setAboutContent(data.data.content);
+        // 💾 Persist to storage for instant load
+        try {
+          localStorage.setItem('b2b_about_content', data.data.content);
+        } catch (e) { }
         console.log('✅ About page content loaded successfully');
       } else {
         throw new Error('Invalid response format');
@@ -188,14 +214,15 @@ const AboutPage = () => {
     } catch (error) {
       console.error('❌ Error fetching About page content:', error);
 
-      // 🔧 FIX: Use static content from server-side rendered HTML as fallback
-      // This ensures Googlebot sees content even if API is blocked by robots.txt
-      const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
+      // 🔧 FIX: Only use fallback if we don't have cached content
+      if (!aboutContent) {
+        const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
 
 Our mission is to unite top talent, immersive production, and passionate fans to create the ultimate electronic music experiences in the tri-state area.`;
 
-      setAboutContent(staticContent);
-      console.log('✅ Using static fallback content for About page (API blocked or unavailable)');
+        setAboutContent(staticContent);
+        console.log('✅ Using static fallback content for About page (API blocked or unavailable)');
+      }
       // Don't set error state - just use fallback content silently
 
     } finally {
@@ -296,18 +323,22 @@ Our mission is to unite top talent, immersive production, and passionate fans to
             return withVariants;
           });
           setGalleryImages(normalized);
+          // 💾 Persist to storage for instant load
+          try {
+            localStorage.setItem('b2b_gallery_images', JSON.stringify(normalized));
+          } catch (e) { }
         } else {
           console.warn('Invalid gallery response format:', data);
-          setGalleryImages([]);
+          if (galleryImages.length === 0) setGalleryImages([]);
         }
       } else {
         console.warn('Failed to fetch gallery images:', response.status);
-        setGalleryImages([]);
+        if (galleryImages.length === 0) setGalleryImages([]);
       }
 
     } catch (error) {
       console.error('❌ Error fetching gallery images:', error);
-      setGalleryImages([]);
+      if (galleryImages.length === 0) setGalleryImages([]);
     }
   };
 
@@ -455,167 +486,183 @@ Our mission is to unite top talent, immersive production, and passionate fans to
       </style>
 
       <div className="homepage-content" style={{ minHeight: 'auto' }}>
-      <div
-        className="desktop-container"
-        style={{
-          width: '100%',
-          maxWidth: '1400px', // 🚨 MATCH SHOPPAGE: Fixed width instead of dynamic
-          margin: '0 auto',
-          position: 'relative',
-          background: '#000000',
-          minHeight: 'auto',
-          padding: '0 40px', // 🚨 MATCH SHOPPAGE: Consistent horizontal padding
-          boxSizing: 'border-box'
-        }}
-      >
-        <div style={{ width: '100%', position: 'relative' }}>
-        {/* Navigation Header - Logo and Pills only - MATCH SHOPPAGE */}
         <div
+          className="desktop-container"
           style={{
-            position: 'relative',
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr',
             width: '100%',
-            height: '56px', // Match logo height to prevent overflow
-            alignItems: 'center',
-            margin: '35px 0 0 0'
+            maxWidth: '1400px', // 🚨 MATCH SHOPPAGE: Fixed width instead of dynamic
+            margin: '0 auto',
+            position: 'relative',
+            background: '#000000',
+            minHeight: 'auto',
+            padding: '0 40px', // 🚨 MATCH SHOPPAGE: Consistent horizontal padding
+            boxSizing: 'border-box'
           }}
         >
-          {/* Group 4 - B2B Logo Nav - 🚨 HOMEPAGE CONSISTENCY: Match logo size */}
-          <img
-            crossOrigin="anonymous"
-            referrerPolicy="no-referrer"
-            src="/images/figma-exact/b2b-logo-nav.svg"
-            alt="B2B Logo"
-            loading="lazy"
-            decoding="async"
-            fetchpriority="high"
-            onClick={() => {
-              if (window.navigateWithTransition) {
-                window.navigateWithTransition('/');
-              } else {
-                window.location.href = '/';
-              }
-            }}
-            style={{
-              width: '180px', // 🚨 MATCH HOMEPAGE: Increased from 138.41px for better desktop prominence
-              height: '56px', // 🚨 MATCH HOMEPAGE: Increased from 43px proportionally
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.filter = 'brightness(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.filter = 'brightness(1)';
-            }}
-          />
-
-          {/* Reusable Desktop Navigation Component (Pills) */}
-          <DesktopNavigationPills
-            currentPage="About"
-            onNavigate={handleNavigation}
-          />
-        </div>
-
-        {/* Breadcrumb Row - MATCH SHOPPAGE spacing */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginTop: '24px', // Increased for better spacing from nav header
-            marginBottom: '8px',
-            width: '100%'
-          }}
-        >
-          {/* Breadcrumb Navigation */}
-          <Breadcrumb
-            items={[
-              { name: 'Home', url: '/' },
-              { name: 'About' }
-            ]}
-          />
-        </div>
-
-        {/* Page Title */}
-        <div
-          style={{
-            color: '#FFF',
-            fontFamily: 'Inter',
-            fontSize: '32px',
-            fontWeight: '600',
-            textAlign: 'left',
-            marginBottom: '2px', // Reduced for tighter spacing with content
-            opacity: 0,
-            animation: 'fadeInUp 0.8s ease-out 0.2s forwards',
-            letterSpacing: '-0.02em'
-          }}
-        >
-          About
-        </div>
-
-          {/* Content Area - Dynamic About Content */}
-          <div
-            style={{
-              width: '100%',
-              margin: '0 auto',
-              background: 'transparent',
-              boxSizing: 'border-box',
-              opacity: 0,
-              animation: 'fadeInUp 0.8s ease-out 0.25s forwards' // Faster animation start
-            }}
-          >
-            {contentError ? (
-              <div
-                role="alert"
-                aria-live="polite"
-                style={{
-                  marginTop: '8px',
-                  padding: '16px',
-                  background: 'rgba(22, 22, 22, 0.30)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  borderRadius: '12px',
-                  textAlign: 'center',
-                  color: '#FF4D4D',
-                  fontWeight: 600,
-                  fontSize: '14px'
+          <div style={{ width: '100%', position: 'relative' }}>
+            {/* Navigation Header - Logo and Pills only - MATCH SHOPPAGE */}
+            <div
+              style={{
+                position: 'relative',
+                display: 'grid',
+                gridTemplateColumns: 'auto 1fr',
+                width: '100%',
+                height: '56px', // Match logo height to prevent overflow
+                alignItems: 'center',
+                margin: '35px 0 0 0'
+              }}
+            >
+              {/* Group 4 - B2B Logo Nav - 🚨 HOMEPAGE CONSISTENCY: Match logo size */}
+              <img
+                crossOrigin="anonymous"
+                referrerPolicy="no-referrer"
+                src="/images/figma-exact/b2b-logo-nav.svg"
+                alt="B2B Logo"
+                loading="lazy"
+                decoding="async"
+                fetchpriority="high"
+                onClick={() => {
+                  if (window.navigateWithTransition) {
+                    window.navigateWithTransition('/');
+                  } else {
+                    window.location.href = '/';
+                  }
                 }}
-              >
-                Connection issue — please try again later.
-              </div>
-            ) : (
-              <div style={{ textAlign: 'left' }}>
-                {formatContent(aboutContent)}
-              </div>
-            )}
+                style={{
+                  width: '180px', // 🚨 MATCH HOMEPAGE: Increased from 138.41px for better desktop prominence
+                  height: '56px', // 🚨 MATCH HOMEPAGE: Increased from 43px proportionally
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: 'scale(1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.filter = 'brightness(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.filter = 'brightness(1)';
+                }}
+              />
+
+              {/* Reusable Desktop Navigation Component (Pills) */}
+              <DesktopNavigationPills
+                currentPage="About"
+                onNavigate={handleNavigation}
+              />
+            </div>
+
+            {/* Breadcrumb Row - MATCH SHOPPAGE spacing */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '24px', // Increased for better spacing from nav header
+                marginBottom: '8px',
+                width: '100%'
+              }}
+            >
+              {/* Breadcrumb Navigation */}
+              <Breadcrumb
+                items={[
+                  { name: 'Home', url: '/' },
+                  { name: 'About' }
+                ]}
+              />
+            </div>
+
+            {/* Page Title */}
+            <div
+              style={{
+                color: '#FFF',
+                fontFamily: 'Inter',
+                fontSize: '32px',
+                fontWeight: '600',
+                textAlign: 'left',
+                marginBottom: '2px', // Reduced for tighter spacing with content
+                opacity: 0,
+                animation: 'fadeInUp 0.8s ease-out 0.2s forwards',
+                letterSpacing: '-0.02em'
+              }}
+            >
+              About
+            </div>
+
+            {/* Content Area - Dynamic About Content */}
+            <div
+              style={{
+                width: '100%',
+                margin: '0 auto',
+                background: 'transparent',
+                boxSizing: 'border-box',
+                opacity: 0,
+                animation: 'fadeInUp 0.8s ease-out 0.25s forwards' // Faster animation start
+              }}
+            >
+              {contentError ? (
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  style={{
+                    marginTop: '8px',
+                    padding: '16px',
+                    background: 'rgba(22, 22, 22, 0.30)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '12px',
+                    textAlign: 'center',
+                    color: '#FF4D4D',
+                    fontWeight: 600,
+                    fontSize: '14px'
+                  }}
+                >
+                  Connection issue — please try again later.
+                </div>
+              ) : !aboutContent ? (
+                /* 🦴 SKELETON LOADER: Show while loading and no cache exists */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '12px' }}>
+                  <div className="skeleton-shimmer" style={{ width: '100%', height: '20px', borderRadius: '4px' }} />
+                  <div className="skeleton-shimmer" style={{ width: '90%', height: '20px', borderRadius: '4px' }} />
+                  <div className="skeleton-shimmer" style={{ width: '95%', height: '20px', borderRadius: '4px' }} />
+                </div>
+              ) : (
+                <div style={{ textAlign: 'left' }}>
+                  {formatContent(aboutContent)}
+                </div>
+              )}
+            </div>
+
+            {/* Gallery Section - Masonry Layout */}
+            <div
+              style={{
+                marginTop: '24px', // Tight spacing below about text
+                marginBottom: '32px'
+              }}
+            >
+              {galleryImages.length === 0 && !contentError ? (
+                /* 🦴 GALLERY SKELETON */
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="skeleton-shimmer" style={{ width: '100%', paddingTop: '100%', borderRadius: '12px' }} />
+                  ))}
+                </div>
+              ) : (
+                <MasonryGallery
+                  images={galleryImages}
+                  columns={{ desktop: 4, tablet: 3, mobile: 2 }}
+                  gap={isMobile ? 12 : 16}
+                />
+              )}
+            </div>
+
+            {/* Footer */}
+            <Footer compact={false} />
+
           </div>
-
-          {/* Gallery Section - Masonry Layout */}
-          <div
-            style={{
-              marginTop: '24px', // Tight spacing below about text
-              marginBottom: '32px'
-            }}
-          >
-            <MasonryGallery
-              images={galleryImages}
-              columns={{ desktop: 4, tablet: 3, mobile: 2 }}
-              gap={isMobile ? 12 : 16}
-            />
-          </div>
-
-          {/* Footer */}
-          <Footer compact={false} />
-
         </div>
       </div>
-    </div>
     </>
   );
 

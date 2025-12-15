@@ -91,7 +91,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   // Handle relative URLs that might be from the new system but without full path
   // FIXED: Also handle /api/images/serve/ URLs specifically by checking for them OR excluding regular /images/ paths
   if (typeof originalUrl === 'string' && originalUrl.startsWith('/') &&
-      (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
+    (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
     console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
 
     // If it looks like a UUID-based path, treat it as new system
@@ -461,63 +461,63 @@ const formatPhoneNumber = (value, countryId) => {
       // US/Canada format: (XXX) XXX-XXXX
       if (limitedNumber.length <= 3) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `(${limitedNumber.slice(0,3)}) ${limitedNumber.slice(3)}`;
+        return `(${limitedNumber.slice(0, 3)}) ${limitedNumber.slice(3)}`;
       }
-      return `(${limitedNumber.slice(0,3)}) ${limitedNumber.slice(3,6)}-${limitedNumber.slice(6)}`;
+      return `(${limitedNumber.slice(0, 3)}) ${limitedNumber.slice(3, 6)}-${limitedNumber.slice(6)}`;
 
     case 'gb':
       // UK format: XXXX XXX XXXX
       if (limitedNumber.length <= 4) return limitedNumber;
       if (limitedNumber.length <= 7) {
-        return `${limitedNumber.slice(0,4)} ${limitedNumber.slice(4)}`;
+        return `${limitedNumber.slice(0, 4)} ${limitedNumber.slice(4)}`;
       }
-      return `${limitedNumber.slice(0,4)} ${limitedNumber.slice(4,7)} ${limitedNumber.slice(7)}`;
+      return `${limitedNumber.slice(0, 4)} ${limitedNumber.slice(4, 7)} ${limitedNumber.slice(7)}`;
 
     case 'jp':
     case 'kr':
       // Japan/Korea format: XX XXXX XXXX
       if (limitedNumber.length <= 2) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+        return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2)}`;
       }
-      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2, 6)} ${limitedNumber.slice(6)}`;
 
     case 'cn':
       // China format: XXX XXXX XXXX
       if (limitedNumber.length <= 3) return limitedNumber;
       if (limitedNumber.length <= 7) {
-        return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3)}`;
+        return `${limitedNumber.slice(0, 3)} ${limitedNumber.slice(3)}`;
       }
-      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,7)} ${limitedNumber.slice(7)}`;
+      return `${limitedNumber.slice(0, 3)} ${limitedNumber.slice(3, 7)} ${limitedNumber.slice(7)}`;
 
     case 'in':
       // India format: XXXXX XXXXX
       if (limitedNumber.length <= 5) return limitedNumber;
-      return `${limitedNumber.slice(0,5)} ${limitedNumber.slice(5)}`;
+      return `${limitedNumber.slice(0, 5)} ${limitedNumber.slice(5)}`;
 
     case 'br':
       // Brazil format: XX XXXXX XXXX
       if (limitedNumber.length <= 2) return limitedNumber;
       if (limitedNumber.length <= 7) {
-        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+        return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2)}`;
       }
-      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,7)} ${limitedNumber.slice(7)}`;
+      return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2, 7)} ${limitedNumber.slice(7)}`;
 
     case 'mx':
       // Mexico format: XX XXXX XXXX
       if (limitedNumber.length <= 2) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+        return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2)}`;
       }
-      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2, 6)} ${limitedNumber.slice(6)}`;
 
     default:
       // Generic formatting for other countries - XXX XXX XXXX
       if (limitedNumber.length <= 3) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3)}`;
+        return `${limitedNumber.slice(0, 3)} ${limitedNumber.slice(3)}`;
       }
-      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0, 3)} ${limitedNumber.slice(3, 6)} ${limitedNumber.slice(6)}`;
   }
 };
 
@@ -537,7 +537,7 @@ const getCurrentCountry = (countryId) => {
  * Mobile-only homepage component built exactly from Figma Mobile Device frames
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
-const FigmaMobile = () => {
+const FigmaMobile = ({ onReady }) => {
   // Initialize analytics
   const { trackEvent, trackLinkClick } = useAnalytics();
 
@@ -2023,15 +2023,23 @@ const FigmaMobile = () => {
     />
   ), [handleYoutubeThumbnailClick]);
 
+  // Signal parent when regular loading finishes
+  useEffect(() => {
+    if (!loading && onReady) {
+      // 🚀 PERFORMANCE: Wait for 2 frames to ensure DOM is fully painted
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          onReady();
+        });
+      });
+    }
+  }, [loading, onReady]);
+
   // Show smooth branded loading state for mobile
   if (loading) {
-    return (
-      <BrandedLoader
-        fullScreen={true}
-        minDisplayTime={600}
-        showMessage={false}
-      />
-    );
+    // Render invisible placeholder while loading data
+    // This ensures we don't crash on missing data while parent loader covers us
+    return <div style={{ opacity: 0 }} />;
   }
 
   return (
@@ -2936,416 +2944,725 @@ const FigmaMobile = () => {
         role="main"
         aria-label="BOUNCE2BOUNCE Mobile Experience"
       >
-      {/* Main Mobile Container - Responsive Full Viewport */}
-      <main
-        style={{
-          width: '100vw',
-          height: '100vh',
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-          margin: '0',
-          position: 'relative',
-          background: '#000000',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden', // FIXED: Prevent hidden elements from becoming visible
-          // Mobile-specific viewport fixes
-          minHeight: '100vh',
-          minWidth: '100vw',
-          isolation: 'isolate', // Create new stacking context
-          transform: 'none', // Remove forced hardware acceleration
-          willChange: 'auto', // Let browser optimize naturally
-          WebkitOverflowScrolling: 'auto', // Use native scrolling
-          WebkitTransform: 'none', // Remove iOS forced optimization
-          // Essential mobile optimizations only
-          touchAction: 'manipulation', // Improve touch responsiveness
-          overscrollBehavior: 'contain' // Prevent scroll chaining only
-        }}
-        aria-label="Mobile homepage content"
-      >
-        {/* REFACTORED: Using Shared Mobile Navigation Component */}
-        <MobileNavigation
-          currentPage={currentPage}
-          scrollY={scrollY}
-          onNavigate={handleNavigation}
-          onMenuToggle={setNavigationMenuOpen}
-        />
-
-        {/* OLD NAVIGATION REMOVED - Now using shared MobileNavigation component above */}
-
-        {/* Main Content Area - Scrollable Flex Container */}
-        <div
-          ref={contentRef}
-          className="mobile-content-container"
+        {/* Main Mobile Container - Responsive Full Viewport */}
+        <main
           style={{
-            flex: '1 1 auto', // Take remaining space in flex container
-            width: '100%',
+            width: '100vw',
+            height: '100vh',
+            maxWidth: '100vw',
+            maxHeight: '100vh',
+            margin: '0',
+            position: 'relative',
             background: '#000000',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            paddingTop: topSpacer, // Dynamic spacing below fixed nav
-            paddingLeft: '0px',
-            paddingRight: '0px',
-            paddingBottom: getDynamicBottomSpacing(),
-            boxSizing: 'border-box',
-            overflow: 'auto',
-            overflowX: 'hidden',
-            // 📱 MOBILE SCROLL PERFORMANCE FIX - Simplified optimizations
-            WebkitOverflowScrolling: 'touch', // Native iOS momentum
-            overscrollBehavior: 'contain', // Prevent scroll chaining
-            WebkitOverscrollBehavior: 'contain',
-            scrollBehavior: 'auto', // Remove problematic smooth scrolling
-            // Minimal hardware acceleration
-            transform: 'translateZ(0)',
-            WebkitTransform: 'translateZ(0)',
-            willChange: 'auto', // Remove scroll-position to prevent compositing issues
-            // Essential touch optimizations
-            touchAction: 'pan-y', // Allow only vertical scrolling
-            WebkitTouchCallout: 'none',
-            WebkitUserSelect: 'none',
-            // Disable scroll snapping that causes jitter
-            scrollSnapType: 'none',
-            WebkitScrollSnapType: 'none',
-            // Essential rendering optimizations only
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
+            overflow: 'hidden', // FIXED: Prevent hidden elements from becoming visible
+            // Mobile-specific viewport fixes
+            minHeight: '100vh',
+            minWidth: '100vw',
+            isolation: 'isolate', // Create new stacking context
+            transform: 'none', // Remove forced hardware acceleration
+            willChange: 'auto', // Let browser optimize naturally
+            WebkitOverflowScrolling: 'auto', // Use native scrolling
+            WebkitTransform: 'none', // Remove iOS forced optimization
+            // Essential mobile optimizations only
+            touchAction: 'manipulation', // Improve touch responsiveness
+            overscrollBehavior: 'contain' // Prevent scroll chaining only
           }}
+          aria-label="Mobile homepage content"
         >
-          {/* Events Section - Moved to top */}
-          <section
-            aria-labelledby="events-section-title"
+          {/* REFACTORED: Using Shared Mobile Navigation Component */}
+          <MobileNavigation
+            currentPage={currentPage}
+            scrollY={scrollY}
+            onNavigate={handleNavigation}
+            onMenuToggle={setNavigationMenuOpen}
+          />
+
+          {/* OLD NAVIGATION REMOVED - Now using shared MobileNavigation component above */}
+
+          {/* Main Content Area - Scrollable Flex Container */}
+          <div
+            ref={contentRef}
+            className="mobile-content-container"
             style={{
+              flex: '1 1 auto', // Take remaining space in flex container
               width: '100%',
-              marginTop: '2px', // Minimal top margin
-              marginBottom: '2px', // Reduced by 50% (from 4px) for tighter spacing with Follow Us
-              // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
-              opacity: sectionsAnimated ? 1 : 0,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
-              transitionDelay: '0ms' // First section loads immediately
+              background: '#000000',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              paddingTop: topSpacer, // Dynamic spacing below fixed nav
+              paddingLeft: '0px',
+              paddingRight: '0px',
+              paddingBottom: getDynamicBottomSpacing(),
+              boxSizing: 'border-box',
+              overflow: 'auto',
+              overflowX: 'hidden',
+              // 📱 MOBILE SCROLL PERFORMANCE FIX - Simplified optimizations
+              WebkitOverflowScrolling: 'touch', // Native iOS momentum
+              overscrollBehavior: 'contain', // Prevent scroll chaining
+              WebkitOverscrollBehavior: 'contain',
+              scrollBehavior: 'auto', // Remove problematic smooth scrolling
+              // Minimal hardware acceleration
+              transform: 'translateZ(0)',
+              WebkitTransform: 'translateZ(0)',
+              willChange: 'auto', // Remove scroll-position to prevent compositing issues
+              // Essential touch optimizations
+              touchAction: 'pan-y', // Allow only vertical scrolling
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              // Disable scroll snapping that causes jitter
+              scrollSnapType: 'none',
+              WebkitScrollSnapType: 'none',
+              // Essential rendering optimizations only
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden'
             }}
           >
-            {/* Events Title with Filter Toggle */}
-            <div
+            {/* Events Section - Moved to top */}
+            <section
+              aria-labelledby="events-section-title"
               style={{
-                display: 'flex',
-                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '8px', // Drastically reduced spacing
-                margin: '0 auto 8px auto', // Center the container with minimal spacing
-                boxSizing: 'border-box'
+                width: '100%',
+                marginTop: '2px', // Minimal top margin
+                marginBottom: '2px', // Reduced by 50% (from 4px) for tighter spacing with Follow Us
+                // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
+                opacity: sectionsAnimated ? 1 : 0,
+                transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+                transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+                transitionDelay: '0ms' // First section loads immediately
               }}
             >
-              <h2
-                id="events-section-title"
-                style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '32px', // Increased for better visual balance with 34px toggle button
-                  fontWeight: '800',
-                  lineHeight: 'normal',
-                  margin: 0,
-                  textAlign: 'left'
-                }}
-              >
-                Events
-              </h2>
-
-              {/* Event Filter Toggle */}
+              {/* Events Title with Filter Toggle */}
               <div
                 style={{
                   display: 'flex',
-                  width: '118px',
-                  height: '34px',
-                  padding: '2px',
-                  justifyContent: 'center',
+                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  flexShrink: 0,
-                  borderRadius: '9px',
-                  background: 'rgba(22, 22, 22, 0.50)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  position: 'relative',
-                  cursor: 'pointer',
-                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
-                  transform: 'translateZ(0) scale(1)',
-                  willChange: 'transform',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  isolation: 'isolate',
-                  WebkitTapHighlightColor: 'transparent',
-                  boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                }}
-                onClick={() => setShowAllEvents(!showAllEvents)}
-                role="switch"
-                aria-checked={showAllEvents}
-                aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setShowAllEvents(!showAllEvents);
-                  }
-                }}
-                onTouchStart={(e) => {
-                  e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
-                }}
-                onTouchEnd={(e) => {
-                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                }}
-                onMouseDown={(e) => {
-                  e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
-                }}
-                onMouseUp={(e) => {
-                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                  marginBottom: '8px', // Drastically reduced spacing
+                  margin: '0 auto 8px auto', // Center the container with minimal spacing
+                  boxSizing: 'border-box'
                 }}
               >
-                {/* Sliding Button Background */}
-                <div
+                <h2
+                  id="events-section-title"
                   style={{
-                    position: 'absolute',
-                    width: '57px',
-                    height: '30px',
-                    borderRadius: '7px',
-                    border: '0.5px solid rgba(0, 0, 0, 0.04)',
-                    background: '#FFF',
-                    boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
-                    left: showAllEvents ? '2px' : '59px',
-                    top: '2px',
-                    transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    zIndex: 1
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '32px', // Increased for better visual balance with 34px toggle button
+                    fontWeight: '800',
+                    lineHeight: 'normal',
+                    margin: 0,
+                    textAlign: 'left'
                   }}
-                />
+                >
+                  Events
+                </h2>
 
-                {/* All Button */}
+                {/* Event Filter Toggle */}
                 <div
                   style={{
                     display: 'flex',
-                    padding: '3px 10px',
+                    width: '118px',
+                    height: '34px',
+                    padding: '2px',
+                    justifyContent: 'center',
                     alignItems: 'center',
-                    flex: '1 0 0',
-                    alignSelf: 'stretch',
-                    borderRadius: '7px',
+                    flexShrink: 0,
+                    borderRadius: '9px',
+                    background: 'rgba(22, 22, 22, 0.50)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
                     position: 'relative',
-                    zIndex: 2
+                    cursor: 'pointer',
+                    transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                    transform: 'translateZ(0) scale(1)',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    isolation: 'isolate',
+                    WebkitTapHighlightColor: 'transparent',
+                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                  }}
+                  onClick={() => setShowAllEvents(!showAllEvents)}
+                  role="switch"
+                  aria-checked={showAllEvents}
+                  aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowAllEvents(!showAllEvents);
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                  }}
+                  onMouseDown={(e) => {
+                    e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+                  }}
+                  onMouseUp={(e) => {
+                    e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateZ(0) scale(1)';
                   }}
                 >
-                  <span
+                  {/* Sliding Button Background */}
+                  <div
                     style={{
-                      display: '-webkit-box',
-                      WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 1,
-                      flex: '1 0 0',
-                      overflow: 'hidden',
-                      color: showAllEvents ? '#000' : '#FFF',
-                      textAlign: 'center',
-                      fontFeatureSettings: "'liga' off, 'clig' off",
-                      textOverflow: 'ellipsis',
-                      fontFamily: 'Inter',
-                      fontSize: '13px',
-                      fontStyle: 'normal',
-                      fontWeight: showAllEvents ? '590' : '400',
-                      lineHeight: '18px',
-                      letterSpacing: '-0.08px',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                      position: 'absolute',
+                      width: '57px',
+                      height: '30px',
+                      borderRadius: '7px',
+                      border: '0.5px solid rgba(0, 0, 0, 0.04)',
+                      background: '#FFF',
+                      boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+                      left: showAllEvents ? '2px' : '59px',
+                      top: '2px',
+                      transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      zIndex: 1
                     }}
-                  >
-                    Next
-                  </span>
-                </div>
+                  />
 
-                {/* Past Button */}
-                <div
-                  style={{
-                    display: 'flex',
-                    padding: '3px 10px',
-                    alignItems: 'center',
-                    flex: '1 0 0',
-                    alignSelf: 'stretch',
-                    position: 'relative',
-                    zIndex: 2
-                  }}
-                >
-                  <span
+                  {/* All Button */}
+                  <div
                     style={{
-                      display: '-webkit-box',
-                      WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 1,
+                      display: 'flex',
+                      padding: '3px 10px',
+                      alignItems: 'center',
                       flex: '1 0 0',
-                      overflow: 'hidden',
-                      color: !showAllEvents ? '#000' : '#FFF',
-                      textAlign: 'center',
-                      fontFeatureSettings: "'liga' off, 'clig' off",
-                      textOverflow: 'ellipsis',
-                      fontFamily: 'Inter',
-                      fontSize: '13px',
-                      fontStyle: 'normal',
-                      fontWeight: !showAllEvents ? '590' : '400',
-                      lineHeight: '18px',
-                      letterSpacing: '-0.08px',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                      alignSelf: 'stretch',
+                      borderRadius: '7px',
+                      position: 'relative',
+                      zIndex: 2
                     }}
                   >
-                    Past
-                  </span>
+                    <span
+                      style={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: 1,
+                        flex: '1 0 0',
+                        overflow: 'hidden',
+                        color: showAllEvents ? '#000' : '#FFF',
+                        textAlign: 'center',
+                        fontFeatureSettings: "'liga' off, 'clig' off",
+                        textOverflow: 'ellipsis',
+                        fontFamily: 'Inter',
+                        fontSize: '13px',
+                        fontStyle: 'normal',
+                        fontWeight: showAllEvents ? '590' : '400',
+                        lineHeight: '18px',
+                        letterSpacing: '-0.08px',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      Next
+                    </span>
+                  </div>
+
+                  {/* Past Button */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      padding: '3px 10px',
+                      alignItems: 'center',
+                      flex: '1 0 0',
+                      alignSelf: 'stretch',
+                      position: 'relative',
+                      zIndex: 2
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: '-webkit-box',
+                        WebkitBoxOrient: 'vertical',
+                        WebkitLineClamp: 1,
+                        flex: '1 0 0',
+                        overflow: 'hidden',
+                        color: !showAllEvents ? '#000' : '#FFF',
+                        textAlign: 'center',
+                        fontFeatureSettings: "'liga' off, 'clig' off",
+                        textOverflow: 'ellipsis',
+                        fontFamily: 'Inter',
+                        fontSize: '13px',
+                        fontStyle: 'normal',
+                        fontWeight: !showAllEvents ? '590' : '400',
+                        lineHeight: '18px',
+                        letterSpacing: '-0.08px',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      Past
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-          {/* 🚀 ENHANCED: Featured Events - Completely hidden in "Past" mode with smooth transitions */}
-          {showAllEvents && filteredFeaturedEvents.length > 0 && (
-            <div
-              style={{
-                width: '100%',
-                // 🚀 ENHANCED: Smooth transition for layout changes
-                transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                opacity: showAllEvents ? 1 : 0,
-                transform: showAllEvents ? 'translateY(0)' : 'translateY(-20px)',
-                marginBottom: showAllEvents ? '0px' : '0px', // Reduced from 20px for tighter spacing
-                overflow: 'hidden'
-              }}
-            >
-              {filteredFeaturedEvents.map((featuredEvent, heroIndex) => (
-            <div
-              key={`hero-${featuredEvent.id}`}
-              className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
-              style={{
-                width: '100%',
-                padding: '0', // Remove padding to let inner element control width
-                marginBottom: '2px', // Reduced spacing for more compact layout (>=50% reduction)
-                boxSizing: 'border-box',
-                display: 'flex',
-                justifyContent: 'center', // Center the hero card
-                // 🎬 OPTIMIZED: Modern staggered load-in animation
-                opacity: cardsAnimated ? 1 : 0,
-                transform: cardsAnimated ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
-                transition: 'opacity var(--animation-duration-slow) var(--animation-easing-standard), transform var(--animation-duration-slow) var(--animation-easing-standard)',
-                transitionDelay: cardsAnimated ? `${heroIndex * 120}ms` : '0s' // Optimal stagger timing
-              }}
-            >
-            <div
-              onClick={(e) => {
-                console.log('🔍 Mobile Featured Event: Click detected!', e.target);
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Navigate directly to ticket purchase page in new tab
-                if (featuredEvent?.ticketsUrl && featuredEvent.ticketsUrl !== '#') {
-                  console.log(`🎫 Mobile Featured Event: Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
-                  window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
-                } else {
-                  console.log('🎫 Mobile Featured Event: No ticket link available for', featuredEvent?.title);
-                  console.log('🔍 Mobile Featured Event data:', featuredEvent);
-                  console.log('🔍 Available fields:', Object.keys(featuredEvent || {}));
-                }
-              }}
-              style={{
-                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
-                position: 'relative',
-                margin: '0 auto', // Center the hero
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'scale(1)',
-                borderRadius: '20px', // Slightly smaller radius for mobile
-                overflow: 'hidden'
-              }}
-              onTouchStart={(e) => {
-                e.currentTarget.style.transform = 'scale(0.98)';
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              role="button"
-              tabIndex={0}
-              aria-label="View featured event details"
-            >
-              {/* Background Image with Gradient Overlay */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '20px',
-                  overflow: 'hidden'
-                }}
-              >
-                {/* Dynamic Event Image or Fallback */}
-                {featuredEvent.coverImage ? (
-                  <picture>
-                    <source
-                      srcSet={getAVIFSrcSet(featuredEvent.coverImage, 'hero')}
-                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                      type="image/avif"
-                    />
-                    <source
-                      srcSet={getResponsiveSrcSet(featuredEvent.coverImage, 'hero')}
-                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                      type="image/webp"
-                    />
-                    <img
-                      crossOrigin="anonymous"
-                      referrerPolicy="no-referrer"
-                      src={getOptimizedImageUrl(featuredEvent.coverImage, 375)}
-                      alt={`${featuredEvent.title} - Featured Event`}
-                      loading="eager"
-                      decoding="async"
-                      fetchpriority="high"
-                      onLoad={() => console.log('✅ MOBILE FEATURED EVENT HERO IMAGE LOADED:', featuredEvent.title)}
-                      onError={(e) => {
-                        console.error('❌ MOBILE FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
-                        // Prevent infinite loops with circuit breaker
-                        if (!e.target.dataset.heroFallbackAttempted) {
-                          e.target.dataset.heroFallbackAttempted = 'true';
-                          e.target.src = '/images/optimized/hero-left-image-375w.jpg';
-                        } else {
-                          // Remove error handler to prevent further attempts
-                          e.target.removeAttribute('onError');
-                          console.error('❌ Hero fallback also failed, removing error handler');
-                        }
-                      }}
+              {/* 🚀 ENHANCED: Featured Events - Completely hidden in "Past" mode with smooth transitions */}
+              {showAllEvents && filteredFeaturedEvents.length > 0 && (
+                <div
+                  style={{
+                    width: '100%',
+                    // 🚀 ENHANCED: Smooth transition for layout changes
+                    transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    opacity: showAllEvents ? 1 : 0,
+                    transform: showAllEvents ? 'translateY(0)' : 'translateY(-20px)',
+                    marginBottom: showAllEvents ? '0px' : '0px', // Reduced from 20px for tighter spacing
+                    overflow: 'hidden'
+                  }}
+                >
+                  {filteredFeaturedEvents.map((featuredEvent, heroIndex) => (
+                    <div
+                      key={`hero-${featuredEvent.id}`}
+                      className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
                       style={{
-                        position: 'absolute',
-                        left: '0px',
-                        top: '0px',
                         width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center',
-                        zIndex: 1
+                        padding: '0', // Remove padding to let inner element control width
+                        marginBottom: '2px', // Reduced spacing for more compact layout (>=50% reduction)
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        justifyContent: 'center', // Center the hero card
+                        // 🎬 OPTIMIZED: Modern staggered load-in animation
+                        opacity: cardsAnimated ? 1 : 0,
+                        transform: cardsAnimated ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.96)',
+                        transition: 'opacity var(--animation-duration-slow) var(--animation-easing-standard), transform var(--animation-duration-slow) var(--animation-easing-standard)',
+                        transitionDelay: cardsAnimated ? `${heroIndex * 120}ms` : '0s' // Optimal stagger timing
                       }}
-                    />
-                  </picture>
-                ) : (
-                  /* Fallback to default hero image when no featured events */
-                  <picture>
-                    <source
-                      srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
-                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                      type="image/avif"
-                    />
-                    <source
-                      srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
-                      sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                      type="image/webp"
-                    />
+                    >
+                      <div
+                        onClick={(e) => {
+                          console.log('🔍 Mobile Featured Event: Click detected!', e.target);
+                          e.preventDefault();
+                          e.stopPropagation();
+
+                          // Navigate directly to ticket purchase page in new tab
+                          if (featuredEvent?.ticketsUrl && featuredEvent.ticketsUrl !== '#') {
+                            console.log(`🎫 Mobile Featured Event: Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
+                            window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                          } else {
+                            console.log('🎫 Mobile Featured Event: No ticket link available for', featuredEvent?.title);
+                            console.log('🔍 Mobile Featured Event data:', featuredEvent);
+                            console.log('🔍 Available fields:', Object.keys(featuredEvent || {}));
+                          }
+                        }}
+                        style={{
+                          width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                          height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
+                          position: 'relative',
+                          margin: '0 auto', // Center the hero
+                          cursor: 'pointer',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: 'scale(1)',
+                          borderRadius: '20px', // Slightly smaller radius for mobile
+                          overflow: 'hidden'
+                        }}
+                        onTouchStart={(e) => {
+                          e.currentTarget.style.transform = 'scale(0.98)';
+                        }}
+                        onTouchEnd={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="View featured event details"
+                      >
+                        {/* Background Image with Gradient Overlay */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            top: '0px',
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '20px',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          {/* Dynamic Event Image or Fallback */}
+                          {featuredEvent.coverImage ? (
+                            <picture>
+                              <source
+                                srcSet={getAVIFSrcSet(featuredEvent.coverImage, 'hero')}
+                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                type="image/avif"
+                              />
+                              <source
+                                srcSet={getResponsiveSrcSet(featuredEvent.coverImage, 'hero')}
+                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                type="image/webp"
+                              />
+                              <img
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
+                                src={getOptimizedImageUrl(featuredEvent.coverImage, 375)}
+                                alt={`${featuredEvent.title} - Featured Event`}
+                                loading="eager"
+                                decoding="async"
+                                fetchpriority="high"
+                                onLoad={() => console.log('✅ MOBILE FEATURED EVENT HERO IMAGE LOADED:', featuredEvent.title)}
+                                onError={(e) => {
+                                  console.error('❌ MOBILE FEATURED EVENT HERO IMAGE FAILED:', e.target.src);
+                                  // Prevent infinite loops with circuit breaker
+                                  if (!e.target.dataset.heroFallbackAttempted) {
+                                    e.target.dataset.heroFallbackAttempted = 'true';
+                                    e.target.src = '/images/optimized/hero-left-image-375w.jpg';
+                                  } else {
+                                    // Remove error handler to prevent further attempts
+                                    e.target.removeAttribute('onError');
+                                    console.error('❌ Hero fallback also failed, removing error handler');
+                                  }
+                                }}
+                                style={{
+                                  position: 'absolute',
+                                  left: '0px',
+                                  top: '0px',
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  objectPosition: 'center',
+                                  zIndex: 1
+                                }}
+                              />
+                            </picture>
+                          ) : (
+                            /* Fallback to default hero image when no featured events */
+                            <picture>
+                              <source
+                                srcSet="/images/optimized/hero-left-image-320w.avif 320w, /images/optimized/hero-left-image-375w.avif 375w, /images/optimized/hero-left-image-414w.avif 414w, /images/optimized/hero-left-image-640w.avif 640w"
+                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                type="image/avif"
+                              />
+                              <source
+                                srcSet="/images/optimized/hero-left-image-320w.webp 320w, /images/optimized/hero-left-image-375w.webp 375w, /images/optimized/hero-left-image-414w.webp 414w, /images/optimized/hero-left-image-640w.webp 640w"
+                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                type="image/webp"
+                              />
+                              <img
+                                crossOrigin="anonymous"
+                                referrerPolicy="no-referrer"
+                                src="/images/optimized/hero-left-image-375w.jpg"
+                                alt="Default Hero Background"
+                                loading="eager"
+                                decoding="async"
+                                fetchpriority="high"
+                                onLoad={() => console.log('✅ MOBILE DEFAULT HERO IMAGE LOADED')}
+                                onError={(e) => console.error('❌ MOBILE DEFAULT HERO IMAGE FAILED:', e.target.src)}
+                                style={{
+                                  position: 'absolute',
+                                  left: '0px',
+                                  top: '0px',
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                  objectPosition: 'center',
+                                  zIndex: 1
+                                }}
+                              />
+                            </picture>
+                          )}
+                        </div>
+
+                        {/* Mobile-Optimized Gradient Overlay - Outside image container for better mobile rendering */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            top: '0px',
+                            width: '100%',
+                            height: '100%',
+                            background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
+                            borderRadius: '20px',
+                            pointerEvents: 'none',
+                            zIndex: 2,
+                            // Mobile-specific optimizations
+                            WebkitTransform: 'translateZ(0)', // Force hardware acceleration on iOS
+                            transform: 'translateZ(0)',
+                            WebkitBackfaceVisibility: 'hidden',
+                            backfaceVisibility: 'hidden'
+                          }}
+                        />
+
+                        {/* Bottom overlay with date and location - Fixed positioning */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            bottom: '8px', // Positioned lower in the card for better visual balance
+                            display: 'flex',
+                            width: '100%',
+                            justifyContent: 'space-between',
+                            padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
+                            gap: '12px', // Reduced gap to make more room for wider button
+                            boxSizing: 'border-box',
+                            zIndex: 3,
+                            minHeight: '44px', // Ensure minimum height for button container
+                            // Ensure crisp, bright text on iOS Safari at initial load
+                            WebkitFontSmoothing: 'antialiased',
+                            MozOsxFontSmoothing: 'grayscale',
+                            textRendering: 'optimizeLegibility',
+                            opacity: 1,
+                            transform: 'translateZ(0)',
+                            willChange: 'transform'
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              flex: '1',
+                              padding: '0px 0px',
+                              flexDirection: 'column',
+                              minWidth: 0,
+                              maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
+                            }}
+                          >
+                            {/* Date row - Enhanced styling */}
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignSelf: 'stretch',
+                                alignItems: 'center',
+                                gap: '6px', // Slightly more gap for better readability
+                                minWidth: 0,
+                                marginBottom: '1px' // Tighten spacing between date and location
+                              }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                                <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5" />
+                              </svg>
+                              <span
+                                style={{
+                                  color: '#FFF',
+                                  fontFamily: 'Inter',
+                                  fontSize: '12px', // Fixed size for mobile
+                                  fontWeight: '200',
+                                  lineHeight: 'normal',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  flex: 1,
+                                  minWidth: 0,
+                                  // Improve initial visibility on mobile (iOS Safari)
+                                  WebkitFontSmoothing: 'antialiased',
+                                  MozOsxFontSmoothing: 'grayscale',
+                                  textRendering: 'optimizeLegibility',
+                                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
+                                  opacity: 1
+                                }}
+                              >
+                                {normalizeEvent
+                                  ? (normalizeEvent(featuredEvent.eventData || featuredEvent, 'hero', true)?.date || (featuredEvent.date || "March 29th, 9:00 P.M."))
+                                  : (featuredEvent.date || "March 29th, 9:00 P.M.")
+                                }
+                              </span>
+                            </div>
+
+                            {/* Location row */}
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignSelf: 'stretch',
+                                alignItems: 'center',
+                                gap: '4px',
+                                minWidth: 0
+                              }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                                <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5" />
+                                <circle cx="5" cy="4" r="1" fill="#FFF" />
+                              </svg>
+                              <span
+                                style={{
+                                  color: '#FFF',
+                                  fontFamily: 'Inter',
+                                  fontSize: '12px', // Fixed size for mobile
+                                  fontWeight: '200',
+                                  lineHeight: 'normal',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  flex: 1,
+                                  minWidth: 0,
+                                  // Improve initial visibility on mobile (iOS Safari)
+                                  WebkitFontSmoothing: 'antialiased',
+                                  MozOsxFontSmoothing: 'grayscale',
+                                  textRendering: 'optimizeLegibility',
+                                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
+                                  opacity: 1
+                                }}
+                              >
+                                {featuredEvent.location || "Asbury Park, NJ"}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* CTA Button - Enhanced styling and positioning */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              width: '120px', // Increased width for better presence
+                              height: '44px', // Increased height for better touch target
+                              padding: '2px',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              flexShrink: 0,
+                              zIndex: 3
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: 'flex',
+                                width: '116px',
+                                height: '40px',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '8px',
+                                borderRadius: '22px',
+                                background: 'rgba(22, 22, 22, 0.50)',
+                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                cursor: 'pointer',
+                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                                transform: 'translateZ(0) scale(1)',
+                                willChange: 'transform',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                                isolation: 'isolate',
+                                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                              }}
+                              onTouchStart={(e) => {
+                                e.stopPropagation();
+                                e.target.style.transform = 'translateZ(0) scale(0.95)';
+                                e.target.style.background = 'rgba(22, 22, 22, 0.65)';
+                              }}
+                              onTouchEnd={(e) => {
+                                e.stopPropagation();
+                                e.target.style.transform = 'translateZ(0) scale(1)';
+                                e.target.style.background = 'rgba(22, 22, 22, 0.50)';
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (featuredEvent.isRealEvent && featuredEvent.hasTicketLink) {
+                                  console.log(`🎫 Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
+                                  window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                }
+                              }}
+                            >
+                              <span
+                                style={{
+                                  color: '#FFF',
+                                  fontFamily: 'Inter',
+                                  fontSize: '15px', // Slightly larger for better readability
+                                  fontWeight: '500', // Medium weight for better presence
+                                  lineHeight: 'normal',
+                                  pointerEvents: 'none',
+                                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
+                                }}
+                              >
+                                {featuredEvent.isRealEvent && featuredEvent.hasTicketLink ?
+                                  (featuredEvent.buttonText || 'Get Tickets') :
+                                  'View Event'
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Event title overlay - Responsive */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            bottom: '50px', // Fine-tuned: balanced spacing to date/location
+                            display: 'flex',
+                            width: '100%', // Use full width of responsive hero card
+                            height: 'auto',
+                            minHeight: '32px',
+                            padding: '8px 16px', // Slightly more padding for mobile
+                            justifyContent: 'flex-start',
+                            alignItems: 'flex-end',
+                            gap: '10px',
+                            boxSizing: 'border-box',
+                            // Layer and compositing fixes to prevent title disappearing under drawer overlay on iOS
+                            zIndex: 2,
+                            pointerEvents: 'none', // allow underlying card button clicks
+                            backfaceVisibility: 'hidden',
+                            WebkitBackfaceVisibility: 'hidden',
+                            transform: 'translateZ(0)',
+                            willChange: 'transform'
+                          }}
+                        >
+                          <div
+                            style={{
+                              // 🚀 ENHANCED: Improved text visibility for iPhone devices
+                              color: '#FFFFFF', // Pure white for maximum contrast
+                              fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                              fontSize: '24px', // Fixed size for mobile
+                              fontWeight: '800',
+                              lineHeight: '1.1',
+                              flex: '1',
+                              display: '-webkit-box',
+                              WebkitBoxOrient: 'vertical',
+                              WebkitLineClamp: 2, // clamp to 2 lines on mobile
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'normal',
+                              maxWidth: '100%', // Use full available width within padding
+                              margin: '0px 0px 4px 0px', // Slightly increased for better spacing
+                              // 🚀 ENHANCED: iOS Safari specific text rendering optimizations
+                              WebkitFontSmoothing: 'antialiased',
+                              MozOsxFontSmoothing: 'grayscale',
+                              textRendering: 'optimizeLegibility',
+                              // 🚀 ENHANCED: Text shadow for better contrast on iPhone
+                              textShadow: '0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6)',
+                              // 🚀 ENHANCED: Force hardware acceleration for better rendering
+                              transform: 'translateZ(0)',
+                              willChange: 'transform'
+                            }}
+                          >
+                            {featuredEvent.title || "FEATURED EVENT"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 🚀 ENHANCED: Fallback Hero when no featured events - only in "Next" mode and only if there ARE upcoming homepage events */}
+              {showAllEvents && filteredFeaturedEvents.length === 0 && filteredHomepageEvents.length > 0 && (
+                <div
+                  className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
+                  style={{
+                    width: '100%',
+                    padding: '0',
+                    marginBottom: '0px',
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                      height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
+                      position: 'relative',
+                      margin: '0 auto',
+                      borderRadius: '20px',
+                      overflow: 'hidden',
+                      background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.90) 90%)'
+                    }}
+                  >
                     <img
                       crossOrigin="anonymous"
                       referrerPolicy="no-referrer"
                       src="/images/optimized/hero-left-image-375w.jpg"
                       alt="Default Hero Background"
-                      loading="eager"
-                      decoding="async"
-                      fetchpriority="high"
-                      onLoad={() => console.log('✅ MOBILE DEFAULT HERO IMAGE LOADED')}
-                      onError={(e) => console.error('❌ MOBILE DEFAULT HERO IMAGE FAILED:', e.target.src)}
                       style={{
                         position: 'absolute',
                         left: '0px',
@@ -3357,1352 +3674,1043 @@ const FigmaMobile = () => {
                         zIndex: 1
                       }}
                     />
-                  </picture>
-                )}
-              </div>
-
-              {/* Mobile-Optimized Gradient Overlay - Outside image container for better mobile rendering */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  width: '100%',
-                  height: '100%',
-                  background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
-                  borderRadius: '20px',
-                  pointerEvents: 'none',
-                  zIndex: 2,
-                  // Mobile-specific optimizations
-                  WebkitTransform: 'translateZ(0)', // Force hardware acceleration on iOS
-                  transform: 'translateZ(0)',
-                  WebkitBackfaceVisibility: 'hidden',
-                  backfaceVisibility: 'hidden'
-                }}
-              />
-
-              {/* Bottom overlay with date and location - Fixed positioning */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  bottom: '8px', // Positioned lower in the card for better visual balance
-                  display: 'flex',
-                  width: '100%',
-                  justifyContent: 'space-between',
-                  padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
-                  gap: '12px', // Reduced gap to make more room for wider button
-                  boxSizing: 'border-box',
-                  zIndex: 3,
-                  minHeight: '44px', // Ensure minimum height for button container
-                  // Ensure crisp, bright text on iOS Safari at initial load
-                  WebkitFontSmoothing: 'antialiased',
-                  MozOsxFontSmoothing: 'grayscale',
-                  textRendering: 'optimizeLegibility',
-                  opacity: 1,
-                  transform: 'translateZ(0)',
-                  willChange: 'transform'
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    flex: '1',
-                    padding: '0px 0px',
-                    flexDirection: 'column',
-                    minWidth: 0,
-                    maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
-                  }}
-                >
-                  {/* Date row - Enhanced styling */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignSelf: 'stretch',
-                      alignItems: 'center',
-                      gap: '6px', // Slightly more gap for better readability
-                      minWidth: 0,
-                      marginBottom: '1px' // Tighten spacing between date and location
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
-                    </svg>
-                    <span
+                    <div
                       style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '12px', // Fixed size for mobile
-                        fontWeight: '200',
-                        lineHeight: 'normal',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        flex: 1,
-                        minWidth: 0,
-                        // Improve initial visibility on mobile (iOS Safari)
-                        WebkitFontSmoothing: 'antialiased',
-                        MozOsxFontSmoothing: 'grayscale',
-                        textRendering: 'optimizeLegibility',
-                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
-                        opacity: 1
+                        position: 'absolute',
+                        left: '0px',
+                        bottom: '95px',
+                        display: 'flex',
+                        width: '100%',
+                        height: '48px',
+                        padding: '8px 16px',
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-end',
+                        gap: '10px',
+                        boxSizing: 'border-box',
+                        zIndex: 2
                       }}
                     >
-                      {normalizeEvent
-                        ? (normalizeEvent(featuredEvent.eventData || featuredEvent, 'hero', true)?.date || (featuredEvent.date || "March 29th, 9:00 P.M."))
-                        : (featuredEvent.date || "March 29th, 9:00 P.M.")
-                      }
-                    </span>
-                  </div>
-
-                  {/* Location row */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignSelf: 'stretch',
-                      alignItems: 'center',
-                      gap: '4px',
-                      minWidth: 0
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                      <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
-                      <circle cx="5" cy="4" r="1" fill="#FFF"/>
-                    </svg>
-                    <span
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '12px', // Fixed size for mobile
-                        fontWeight: '200',
-                        lineHeight: 'normal',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        flex: 1,
-                        minWidth: 0,
-                        // Improve initial visibility on mobile (iOS Safari)
-                        WebkitFontSmoothing: 'antialiased',
-                        MozOsxFontSmoothing: 'grayscale',
-                        textRendering: 'optimizeLegibility',
-                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.7)',
-                        opacity: 1
-                      }}
-                    >
-                      {featuredEvent.location || "Asbury Park, NJ"}
-                    </span>
+                      <div
+                        style={{
+                          color: '#FFF',
+                          fontFamily: 'Inter',
+                          fontSize: '24px',
+                          fontWeight: '800',
+                          lineHeight: '1.1'
+                        }}
+                      >
+                        {showAllEvents ? 'UPCOMING EVENTS' : 'PAST EVENTS'}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {/* CTA Button - Enhanced styling and positioning */}
-                <div
-                  style={{
-                    display: 'flex',
-                    width: '120px', // Increased width for better presence
-                    height: '44px', // Increased height for better touch target
-                    padding: '2px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    flexShrink: 0,
-                    zIndex: 3
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      width: '116px',
-                      height: '40px',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      gap: '8px',
-                      borderRadius: '22px',
-                      background: 'rgba(22, 22, 22, 0.50)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      cursor: 'pointer',
-                      transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
-                      transform: 'translateZ(0) scale(1)',
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      isolation: 'isolate',
-                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                    }}
-                    onTouchStart={(e) => {
-                      e.stopPropagation();
-                      e.target.style.transform = 'translateZ(0) scale(0.95)';
-                      e.target.style.background = 'rgba(22, 22, 22, 0.65)';
-                    }}
-                    onTouchEnd={(e) => {
-                      e.stopPropagation();
-                      e.target.style.transform = 'translateZ(0) scale(1)';
-                      e.target.style.background = 'rgba(22, 22, 22, 0.50)';
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (featuredEvent.isRealEvent && featuredEvent.hasTicketLink) {
-                        console.log(`🎫 Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
-                        window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
-                      }
-                    }}
-                  >
-                    <span
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: '15px', // Slightly larger for better readability
-                        fontWeight: '500', // Medium weight for better presence
-                        lineHeight: 'normal',
-                        pointerEvents: 'none',
-                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
-                      }}
-                    >
-                      {featuredEvent.isRealEvent && featuredEvent.hasTicketLink ?
-                        (featuredEvent.buttonText || 'Get Tickets') :
-                        'View Event'
-                      }
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Event title overlay - Responsive */}
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  bottom: '50px', // Fine-tuned: balanced spacing to date/location
-                  display: 'flex',
-                  width: '100%', // Use full width of responsive hero card
-                  height: 'auto',
-                  minHeight: '32px',
-                  padding: '8px 16px', // Slightly more padding for mobile
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-end',
-                  gap: '10px',
-                  boxSizing: 'border-box',
-                  // Layer and compositing fixes to prevent title disappearing under drawer overlay on iOS
-                  zIndex: 2,
-                  pointerEvents: 'none', // allow underlying card button clicks
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  transform: 'translateZ(0)',
-                  willChange: 'transform'
-                }}
-              >
-                <div
-                  style={{
-                    // 🚀 ENHANCED: Improved text visibility for iPhone devices
-                    color: '#FFFFFF', // Pure white for maximum contrast
-                    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                    fontSize: '24px', // Fixed size for mobile
-                    fontWeight: '800',
-                    lineHeight: '1.1',
-                    flex: '1',
-                    display: '-webkit-box',
-                    WebkitBoxOrient: 'vertical',
-                    WebkitLineClamp: 2, // clamp to 2 lines on mobile
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'normal',
-                    maxWidth: '100%', // Use full available width within padding
-                    margin: '0px 0px 4px 0px', // Slightly increased for better spacing
-                    // 🚀 ENHANCED: iOS Safari specific text rendering optimizations
-                    WebkitFontSmoothing: 'antialiased',
-                    MozOsxFontSmoothing: 'grayscale',
-                    textRendering: 'optimizeLegibility',
-                    // 🚀 ENHANCED: Text shadow for better contrast on iPhone
-                    textShadow: '0 1px 3px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6)',
-                    // 🚀 ENHANCED: Force hardware acceleration for better rendering
-                    transform: 'translateZ(0)',
-                    willChange: 'transform'
-                  }}
-                >
-                  {featuredEvent.title || "FEATURED EVENT"}
-                </div>
-              </div>
-            </div>
-          </div>
-              ))}
-            </div>
-          )}
-
-          {/* 🚀 ENHANCED: Fallback Hero when no featured events - only in "Next" mode and only if there ARE upcoming homepage events */}
-          {showAllEvents && filteredFeaturedEvents.length === 0 && filteredHomepageEvents.length > 0 && (
-            <div
-              className={cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}
-              style={{
-                width: '100%',
-                padding: '0',
-                marginBottom: '0px',
-                boxSizing: 'border-box',
-                display: 'flex',
-                justifyContent: 'center'
-              }}
-            >
+              {/* 📱 REFINED EXPANDABLE EVENTS SECTION */}
               <div
                 style={{
                   width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                  height: 'min(344px, calc(100vw - 4px))', // Maintain square aspect ratio with new width
-                  position: 'relative',
                   margin: '0 auto',
-                  borderRadius: '20px',
-                  overflow: 'hidden',
-                  background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.90) 90%)'
+                  position: 'relative',
+                  paddingBottom: filteredHomepageEvents.length > 3 ? '4px' : '0', // Tightened spacing for gradient/handle (>=50% reduction)
+                  background: '#000000' // Match main page background - pure black
                 }}
               >
-                <img
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                  src="/images/optimized/hero-left-image-375w.jpg"
-                  alt="Default Hero Background"
+                {/* Events List Container with Expandable Functionality */}
+                <div
+                  className={`mobile-event-cards-container ${isEventSectionExpanded ? 'expanded' : 'collapsed'}`}
+                  style={{
+                    width: '100%',
+                    position: 'relative',
+                    background: '#000000' // Match main page background - pure black
+                  }}
+                >
+                  {/* Events List - Vertical Stack */}
+                  <div
+                    role="list"
+                    aria-label={showAllEvents ? "Upcoming live music events" : "Past live music events"}
+                    style={{
+                      display: 'flex',
+                      width: '100%',
+                      flexDirection: 'column',
+                      justifyContent: 'center', // FIXED: Center cards vertically for even spacing
+                      alignItems: 'stretch',
+                      gap: '4px', // Slightly increased gap for better card separation
+                      flexShrink: 0,
+                      padding: '4px 0', // Reduced padding for compact spacing (>=50% reduction)
+                      boxSizing: 'border-box',
+                      minHeight: 'auto',
+                      overflow: 'visible',
+                      position: 'relative',
+                      zIndex: 1
+                    }}
+                  >
+                    {/* Homepage Event Cards - Enhanced Layout with Refined Animations */}
+                    {filteredHomepageEvents.length > 0 ? (
+                      filteredHomepageEvents.map((card, index) => {
+                        return (
+                          <article
+                            key={`homepage-${card.id}`}
+                            className={`mobile-event-card-item ${cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}`}
+                            style={{
+                              width: '100%',
+                              minHeight: '132px',
+                              height: 'auto',
+                              borderRadius: '20px',
+                              background: 'rgba(22, 22, 22, 0.50)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                              position: 'relative',
+                              margin: '0 0 4px 0',
+                              padding: '2px',
+                              overflow: 'hidden',
+                              boxSizing: 'border-box',
+                              isolation: 'isolate',
+                              transform: 'translateZ(0)',
+                              willChange: 'transform, opacity',
+                              backfaceVisibility: 'hidden',
+                              WebkitBackfaceVisibility: 'hidden',
+                              contain: 'layout style paint',
+                              zIndex: 1,
+                              clear: 'both'
+                            }}
+                          >
+                            {/* Mobile Event Card Content - Compact Horizontal Layout */}
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
+                                position: 'relative',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxSizing: 'border-box',
+                                padding: '2px' // Reduced padding for compact design
+                              }}
+                            >
+                              {/* Image Section - Compact Horizontal Layout */}
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  left: '2px',
+                                  top: '2px',
+                                  width: '120px',
+                                  height: '120px',
+                                  flexShrink: 0,
+                                  borderRadius: '20px',
+                                  overflow: 'hidden',
+                                  cursor: 'pointer',
+                                  zIndex: 100,
+                                  transition: 'transform 0.1s ease',
+                                  boxSizing: 'border-box'
+                                }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  const imgElement = e.currentTarget.querySelector('img');
+                                  handleImageExpand(card, imgElement);
+                                }}
+                                onTouchStart={(e) => {
+                                  e.currentTarget.style.transform = 'scale(0.95)';
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                  const imgElement = e.currentTarget.querySelector('img');
+                                  handleImageExpand(card, imgElement);
+                                }}
+                                onTouchCancel={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                                onMouseDown={(e) => {
+                                  e.currentTarget.style.transform = 'scale(0.95)';
+                                }}
+                                onMouseUp={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.transform = 'scale(1)';
+                                }}
+                              >
+                                {/* Event Background Image */}
+                                <img
+                                  crossOrigin="anonymous"
+                                  referrerPolicy="no-referrer"
+                                  width="120"
+                                  height="120"
+                                  src={(() => {
+                                    const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
+                                    console.log(`🖼️ Loading homepage image for "${card.title}":`, {
+                                      original: card.coverImage,
+                                      optimized: optimizedUrl,
+                                      isDataUrl: card.coverImage?.startsWith('data:'),
+                                      isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
+                                      hostname: window.location.hostname
+                                    });
+                                    return optimizedUrl;
+                                  })()}
+                                  srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
+                                  sizes="(max-width: 768px) 100vw, 400px"
+                                  alt={card.image_alt_text || `${card.title} event cover`}
+                                  title={card.image_title || card.title}
+                                  loading="lazy"
+                                  decoding="async"
+                                  onError={(e) => {
+                                    // 🚨 CRITICAL FIX: Enhanced circuit breaker to prevent infinite loops
+                                    const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
+                                    const maxAttempts = 2; // Reduced from 3 to 2 for faster fallback
+                                    const imageUrl = e.target.src;
+                                    const cardId = card.id || card.title;
+
+                                    // Global circuit breaker: track failed images to prevent repeated attempts
+                                    if (!window.failedImages) window.failedImages = new Set();
+
+                                    // If this exact URL has failed before, skip to final fallback immediately
+                                    if (window.failedImages.has(imageUrl)) {
+                                      console.log('🛑 Global circuit breaker: Image URL previously failed, using placeholder immediately');
+                                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                      e.target.dataset.fallbackAttempt = 'final';
+                                      e.target.removeAttribute('onError'); // Prevent further error events
+                                      return;
+                                    }
+
+                                    // Circuit breaker: prevent infinite loops
+                                    if (currentAttempt >= maxAttempts) {
+                                      console.log(`🛑 Circuit breaker: Max fallback attempts (${maxAttempts}) reached for ${cardId}, using placeholder`);
+                                      window.failedImages.add(imageUrl); // Remember this failed URL
+                                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                      e.target.dataset.fallbackAttempt = 'final';
+                                      e.target.removeAttribute('onError'); // Prevent further error events
+                                      return;
+                                    }
+
+                                    console.log(`❌ Homepage event image failed (attempt ${currentAttempt + 1}/${maxAttempts}):`, cardId, 'URL:', imageUrl);
+
+                                    // Add failed URL to tracking set
+                                    window.failedImages.add(imageUrl);
+
+                                    // Enhanced error logging for persistent storage pipeline
+                                    if (imageUrl.includes('/api/images/serve/')) {
+                                      console.error('🚨 API image serving failed - check persistent storage pipeline');
+                                      console.error('📋 UUID extraction:', imageUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})/));
+                                    }
+
+                                    // 🚨 CRITICAL FIX: Simplified fallback sequence to prevent loops
+                                    if (currentAttempt === 0) {
+                                      // First fallback: try placeholder from dashboard
+                                      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
+                                      const placeholderUrl = `${dashboardDomain}/api/images/placeholder`;
+                                      console.log('🔄 Trying dashboard placeholder:', placeholderUrl);
+                                      e.target.src = placeholderUrl;
+                                      e.target.dataset.fallbackAttempt = '1';
+                                      return;
+                                    } else if (currentAttempt === 1) {
+                                      // Second fallback: use inline SVG placeholder immediately
+                                      console.log('🔄 Using final inline SVG placeholder');
+                                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                      e.target.dataset.fallbackAttempt = 'final';
+                                      e.target.removeAttribute('onError'); // Prevent further error events
+                                      return;
+                                    }
+
+                                    // Fallback safety: should never reach here, but just in case
+                                    console.log('🔄 Safety fallback: Using inline SVG placeholder');
+                                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                    e.target.dataset.fallbackAttempt = 'final';
+                                    e.target.removeAttribute('onError'); // Prevent further error events
+                                  }}
+                                  onLoad={(e) => {
+                                    // Clear fallback tracking on successful load
+                                    delete e.target.dataset.fallbackAttempt;
+                                    console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);
+                                    e.target.style.backgroundColor = 'transparent';
+                                    e.target.style.opacity = '1';
+                                  }}
+                                  style={{
+                                    position: 'absolute',
+                                    left: '4px',
+                                    top: '4px',
+                                    width: '112px',
+                                    height: '112px',
+                                    borderRadius: '17px',
+                                    objectFit: 'cover',
+                                    backgroundColor: '#2a2a2a',
+                                    opacity: '0',
+                                    transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    transform: 'scale(1)',
+                                    boxShadow: 'none',
+                                    pointerEvents: 'none'
+                                  }}
+                                />
+                              </div>
+
+                              {/* Text Content Section - Compact Horizontal Layout */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  width: 'calc(100% - 130px)',
+                                  padding: '2px 2px 2px 4px',
+                                  flexDirection: 'column',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                  position: 'absolute',
+                                  left: '126px',
+                                  top: '2px',
+                                  height: '120px',
+                                  boxSizing: 'border-box'
+                                }}
+                              >
+                                {/* Event Information */}
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    minHeight: '84px',
+                                    height: 'auto',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignSelf: 'stretch',
+                                    flex: '1 1 auto'
+                                  }}
+                                >
+                                  {/* Event Title */}
+                                  <h3
+                                    style={{
+                                      fontFamily: 'Inter',
+                                      fontWeight: '700',
+                                      fontSize: '16px',
+                                      lineHeight: '1.25',
+                                      textAlign: 'left',
+                                      color: '#FFFFFF',
+                                      width: '100%',
+                                      minHeight: '20px',
+                                      height: 'auto',
+                                      margin: '0 0 4px 0',
+                                      padding: '0',
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap'
+                                    }}
+                                  >
+                                    {card.title}
+                                  </h3>
+
+                                  {/* Event DateTime */}
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      alignSelf: 'stretch',
+                                      gap: '6px',
+                                      padding: '0px 0px 0px 2px'
+                                    }}
+                                  >
+                                    <svg
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                    >
+                                      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor" />
+                                    </svg>
+                                    <span
+                                      style={{
+                                        fontFamily: 'Inter',
+                                        fontWeight: '300',
+                                        fontSize: '12px',
+                                        lineHeight: '1.4',
+                                        textAlign: 'left',
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        width: '100%',
+                                        height: '14px',
+                                        margin: '0',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      {card.date}
+                                    </span>
+                                  </div>
+
+                                  {/* Event Location */}
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      alignSelf: 'stretch',
+                                      gap: '6px',
+                                      padding: '0px 2px'
+                                    }}
+                                  >
+                                    <svg
+                                      width="12"
+                                      height="12"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                    >
+                                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                    </svg>
+                                    <span
+                                      style={{
+                                        fontFamily: 'Inter',
+                                        fontWeight: '300',
+                                        fontSize: '12px',
+                                        lineHeight: '1.4',
+                                        textAlign: 'left',
+                                        color: 'rgba(255, 255, 255, 0.65)',
+                                        width: '100%',
+                                        height: '14px',
+                                        margin: '0',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      {card.location}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Event Button - Aligned with image bottom edge */}
+                                <div
+                                  style={{
+                                    width: '100%',
+                                    height: '32px',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    justifyContent: 'flex-start',
+                                    alignItems: 'flex-end',
+                                    gap: '6px',
+                                    padding: '0px 2px 0px 0px',
+                                    position: 'absolute',
+                                    bottom: '4px', // Fine-tuned to perfectly align button bottom with image bottom edge
+                                    left: '0px'
+                                  }}
+                                >
+                                  {card.isRealEvent && card.hasTicketLink ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                                        window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                      }}
+                                      style={{
+                                        background: 'rgba(23, 23, 23, 0.8)',
+                                        borderRadius: '46px',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '16px 15px',
+                                        width: 'calc(100% - 4px)',
+                                        height: '32px',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        fontFamily: 'Inter',
+                                        fontWeight: '500',
+                                        fontSize: '14px',
+                                        lineHeight: '1.21',
+                                        textAlign: 'center',
+                                        color: '#FFFFFF',
+                                        transition: 'all 0.2s ease',
+                                        transform: 'scale(1)',
+                                        boxSizing: 'border-box'
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1.02)';
+                                        e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
+                                      }}
+                                    >
+                                      {card.buttonText || 'View Event'}
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })
+                    ) : (showAllEvents && filteredFeaturedEvents.length > 0 ? null : (
+                      /* Empty State - No Events */
+                      <div
+                        style={{
+                          display: 'flex',
+                          width: '100%',
+                          height: '200px',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          gap: '16px',
+                          color: '#FFF',
+                          fontFamily: 'Inter',
+                          textAlign: 'center'
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: '18px',
+                            fontWeight: '600',
+                            opacity: 0.8
+                          }}
+                        >
+                          {showAllEvents ? 'No upcoming events' : 'No past events'}
+                        </div>
+                        {showAllEvents && homeSettings?.mobile_laylo_cta_url ? (
+                          /* Laylo CTA Button - Opens in new tab */
+                          <button
+                            type="button"
+                            aria-label={homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
+                            onClick={() => {
+                              window.open(homeSettings.mobile_laylo_cta_url, '_blank', 'noopener,noreferrer');
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '12px 16px',
+                              minHeight: '44px',
+                              borderRadius: '14px',
+                              fontFamily: 'Inter',
+                              fontSize: '14px',
+                              fontWeight: 600,
+                              color: '#FFF',
+                              background: 'rgba(22, 22, 22, 0.70)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                              transform: 'translateZ(0) scale(1)',
+                              willChange: 'transform',
+                              backfaceVisibility: 'hidden',
+                              WebkitBackfaceVisibility: 'hidden',
+                              isolation: 'isolate',
+                              boxSizing: 'border-box',
+                              cursor: 'pointer',
+                              WebkitTapHighlightColor: 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
+                            }}
+                            onTouchStart={(e) => {
+                              e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+                              e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
+                            }}
+                            onTouchEnd={(e) => {
+                              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
+                            }}
+                          >
+                            {homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
+                          </button>
+                        ) : (
+                          /* Default "View Past Events" Button */
+                          <button
+                            type="button"
+                            aria-label="View Past Events"
+                            onClick={() => setShowAllEvents(false)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '12px 16px',
+                              minHeight: '44px',
+                              borderRadius: '14px',
+                              fontFamily: 'Inter',
+                              fontSize: '14px',
+                              fontWeight: 600,
+                              color: '#FFF',
+                              background: 'rgba(22, 22, 22, 0.70)',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                              transform: 'translateZ(0) scale(1)',
+                              willChange: 'transform',
+                              backfaceVisibility: 'hidden',
+                              WebkitBackfaceVisibility: 'hidden',
+                              isolation: 'isolate',
+                              boxSizing: 'border-box',
+                              cursor: 'pointer',
+                              WebkitTapHighlightColor: 'transparent'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
+                            }}
+                            onTouchStart={(e) => {
+                              e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
+                              e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
+                            }}
+                            onTouchEnd={(e) => {
+                              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
+                            }}
+                          >
+                            View Past Events
+                          </button>
+                        )}
+                      </div>
+                    ))}
+
+                  </div>
+
+                  {/* 📱 GLASSMORPHISM GRADIENT OVERLAY - Only show when collapsed and has more than 3 cards */}
+                  {!isEventSectionExpanded && filteredHomepageEvents.length > 3 && (
+                    <div
+                      className="mobile-event-cards-overlay"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+
+                {/* 📱 ENHANCED EXPAND/COLLAPSE HANDLE - Positioned within gradient overlay */}
+                {filteredHomepageEvents.length > 3 && (
+                  <div
+                    className={`mobile-expand-handle ${isEventSectionExpanded ? 'expanded' : ''}`}
+                    onClick={toggleEventSection}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={isEventSectionExpanded ? "Show fewer events" : "Show more events"}
+                    aria-expanded={isEventSectionExpanded}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleEventSection();
+                      }
+                    }}
+                    style={{
+                      // Ensure handle is always visible and properly positioned
+                      opacity: 1,
+                      visibility: 'visible'
+                    }}
+                  >
+                    <div
+                      className={`mobile-expand-chevron ${isEventSectionExpanded ? 'expanded' : ''}`}
+                      aria-hidden="true"
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Follow Us Section - YouTube Video */}
+            <section
+              aria-labelledby="follow-us-section-title"
+              style={{
+                width: '100%',
+                marginTop: '1px', // Further reduced for tighter spacing with events section
+                marginBottom: '4px', // Consistent 4px spacing above and below
+                // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
+                opacity: sectionsAnimated ? 1 : 0,
+                transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+                transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+                transitionDelay: '150ms' // Second section in cascade
+              }}
+            >
+              {/* Follow Us Section Title */}
+              <div
+                style={{
+                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  marginBottom: '8px', // Consistent spacing with Events section
+                  margin: '0 auto 8px auto', // Center the container with minimal spacing
+                  boxSizing: 'border-box'
+                }}
+              >
+                <h2
+                  id="follow-us-section-title"
+                  style={{
+                    color: '#FFF',
+                    fontFamily: 'Inter',
+                    fontSize: '32px', // Match Events section title
+                    fontWeight: '800', // Match Events section title
+                    lineHeight: '1.2', // Match Events section title
+                    margin: 0,
+                    textAlign: 'left' // Match Events section title
+                  }}
+                >
+                  Follow Us
+                </h2>
+              </div>
+
+
+              <article
+                style={{
+                  width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
+                  height: '200px', // Mobile-optimized height
+                  position: 'relative',
+                  flexShrink: 0,
+                  margin: '0 auto', // Center the video
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: 'scale(1)',
+                  borderRadius: '20px', // Slightly smaller radius for mobile
+                  overflow: 'hidden'
+                }}
+                aria-label="Henry Fong live performance video"
+              >
+                {/* Video background container */}
+                <div
                   style={{
                     position: 'absolute',
                     left: '0px',
                     top: '0px',
                     width: '100%',
                     height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    zIndex: 1
+                    borderRadius: '20px',
+                    overflow: 'hidden'
                   }}
-                />
+                >
+                  {/* YouTube iframe wrapper - FIXED: Simplified positioning to prevent scroll glitches */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: '100%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      // FIXED: Remove complex transforms that cause scroll issues
+                      transform: 'translateZ(0)', // Only GPU acceleration
+                      willChange: 'auto' // Let browser optimize
+                    }}
+                  >
+
+                    {showYoutubeThumbnail ? (
+                      // Show thumbnail preloader for faster loading
+                      YouTubeThumbnail
+                    ) : shouldLoadYoutube ? (
+                      // Show actual YouTube iframe - FIXED: Simplified positioning
+                      <iframe
+                        src={buildYouTubeURL}
+                        title="Henry Fong YouTube Video - Adaptive Quality"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+
+                        loading="lazy"
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '0',
+                          width: '100%',
+                          height: '100%',
+                          // FIXED: Remove problematic scale and complex transforms
+                          transform: 'translateZ(0)',
+                          pointerEvents: 'none',
+                          border: 'none',
+                          opacity: 1,
+                          // FIXED: Ensure stable rendering during scroll
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden'
+                        }}
+                      />
+                    ) : (
+                      // Loading state (rarely shown) - FIXED: Simplified positioning
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '0',
+                          width: '100%',
+                          height: '100%',
+                          background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+                          border: 'none',
+                          transform: 'translateZ(0)'
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Gradient overlay - FIXED: Stable positioning and optimized for mobile scroll */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
+                      borderRadius: '20px',
+                      zIndex: 1,
+                      // FIXED: Optimize for mobile scroll performance
+                      transform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      willChange: 'auto', // Let browser optimize
+                      pointerEvents: 'none' // Ensure clicks pass through to video
+                    }}
+                  />
+                </div>
+
+                {/* Video text overlay - FIXED: Stable positioning for mobile scroll */}
                 <div
                   style={{
                     position: 'absolute',
                     left: '0px',
-                    bottom: '95px',
+                    bottom: '16px', // Position from bottom
                     display: 'flex',
                     width: '100%',
-                    height: '48px',
+                    height: '40px',
                     padding: '8px 16px',
-                    justifyContent: 'flex-start',
+                    justifyContent: 'space-between',
                     alignItems: 'flex-end',
-                    gap: '10px',
+                    gap: '12px',
+                    zIndex: 2,
                     boxSizing: 'border-box',
-                    zIndex: 2
+                    pointerEvents: 'none', // Allow clicks to pass through to video
+                    // FIXED: Optimize for mobile scroll performance
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    willChange: 'auto' // Let browser optimize
                   }}
                 >
+                  {/* Left - Title and subtitle */}
                   <div
                     style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '24px',
-                      fontWeight: '800',
-                      lineHeight: '1.1'
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      gap: '2px',
+                      flex: '1'
                     }}
                   >
-                    {showAllEvents ? 'UPCOMING EVENTS' : 'PAST EVENTS'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 📱 REFINED EXPANDABLE EVENTS SECTION */}
-          <div
-            style={{
-              width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-              margin: '0 auto',
-              position: 'relative',
-              paddingBottom: filteredHomepageEvents.length > 3 ? '4px' : '0', // Tightened spacing for gradient/handle (>=50% reduction)
-              background: '#000000' // Match main page background - pure black
-            }}
-          >
-            {/* Events List Container with Expandable Functionality */}
-            <div
-              className={`mobile-event-cards-container ${isEventSectionExpanded ? 'expanded' : 'collapsed'}`}
-              style={{
-                width: '100%',
-                position: 'relative',
-                background: '#000000' // Match main page background - pure black
-              }}
-            >
-              {/* Events List - Vertical Stack */}
-              <div
-                role="list"
-                aria-label={showAllEvents ? "Upcoming live music events" : "Past live music events"}
-                style={{
-                  display: 'flex',
-                  width: '100%',
-                  flexDirection: 'column',
-                  justifyContent: 'center', // FIXED: Center cards vertically for even spacing
-                  alignItems: 'stretch',
-                  gap: '4px', // Slightly increased gap for better card separation
-                  flexShrink: 0,
-                  padding: '4px 0', // Reduced padding for compact spacing (>=50% reduction)
-                  boxSizing: 'border-box',
-                  minHeight: 'auto',
-                  overflow: 'visible',
-                  position: 'relative',
-                  zIndex: 1
-                }}
-              >
-            {/* Homepage Event Cards - Enhanced Layout with Refined Animations */}
-            {filteredHomepageEvents.length > 0 ? (
-              filteredHomepageEvents.map((card, index) => {
-                return (
-                  <article
-                    key={`homepage-${card.id}`}
-                    className={`mobile-event-card-item ${cardsAnimated ? 'event-card-spring' : 'event-card-hidden'}`}
-                    style={{
-                      width: '100%',
-                      minHeight: '132px',
-                      height: 'auto',
-                      borderRadius: '20px',
-                      background: 'rgba(22, 22, 22, 0.50)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-                      position: 'relative',
-                      margin: '0 0 4px 0',
-                      padding: '2px',
-                      overflow: 'hidden',
-                      boxSizing: 'border-box',
-                      isolation: 'isolate',
-                      transform: 'translateZ(0)',
-                      willChange: 'transform, opacity',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      contain: 'layout style paint',
-                      zIndex: 1,
-                      clear: 'both'
-                    }}
-                  >
-                    {/* Mobile Event Card Content - Compact Horizontal Layout */}
                     <div
                       style={{
-                        width: '100%',
-                        height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxSizing: 'border-box',
-                        padding: '2px' // Reduced padding for compact design
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '18px', // Mobile-optimized size
+                        fontWeight: '800',
+                        lineHeight: '1.1',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
                       }}
                     >
-                      {/* Image Section - Compact Horizontal Layout */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: '2px',
-                          top: '2px',
-                          width: '120px',
-                          height: '120px',
-                          flexShrink: 0,
-                          borderRadius: '20px',
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          zIndex: 100,
-                          transition: 'transform 0.1s ease',
-                          boxSizing: 'border-box'
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const imgElement = e.currentTarget.querySelector('img');
-                          handleImageExpand(card, imgElement);
-                        }}
-                        onTouchStart={(e) => {
-                          e.currentTarget.style.transform = 'scale(0.95)';
-                        }}
-                        onTouchEnd={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          e.currentTarget.style.transform = 'scale(1)';
-                          const imgElement = e.currentTarget.querySelector('img');
-                          handleImageExpand(card, imgElement);
-                        }}
-                        onTouchCancel={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                        onMouseDown={(e) => {
-                          e.currentTarget.style.transform = 'scale(0.95)';
-                        }}
-                        onMouseUp={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                      >
-                        {/* Event Background Image */}
-                        <img
-                          crossOrigin="anonymous"
-                          referrerPolicy="no-referrer"
-                          width="120"
-                          height="120"
-                          src={(() => {
-                            const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
-                            console.log(`🖼️ Loading homepage image for "${card.title}":`, {
-                              original: card.coverImage,
-                              optimized: optimizedUrl,
-                              isDataUrl: card.coverImage?.startsWith('data:'),
-                              isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
-                              hostname: window.location.hostname
-                            });
-                            return optimizedUrl;
-                          })()}
-                          srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
-                          sizes="(max-width: 768px) 100vw, 400px"
-                          alt={card.image_alt_text || `${card.title} event cover`}
-                          title={card.image_title || card.title}
-                          loading="lazy"
-                          decoding="async"
-                          onError={(e) => {
-                            // 🚨 CRITICAL FIX: Enhanced circuit breaker to prevent infinite loops
-                            const currentAttempt = parseInt(e.target.dataset.fallbackAttempt || '0');
-                            const maxAttempts = 2; // Reduced from 3 to 2 for faster fallback
-                            const imageUrl = e.target.src;
-                            const cardId = card.id || card.title;
-
-                            // Global circuit breaker: track failed images to prevent repeated attempts
-                            if (!window.failedImages) window.failedImages = new Set();
-
-                            // If this exact URL has failed before, skip to final fallback immediately
-                            if (window.failedImages.has(imageUrl)) {
-                              console.log('🛑 Global circuit breaker: Image URL previously failed, using placeholder immediately');
-                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                              e.target.dataset.fallbackAttempt = 'final';
-                              e.target.removeAttribute('onError'); // Prevent further error events
-                              return;
-                            }
-
-                            // Circuit breaker: prevent infinite loops
-                            if (currentAttempt >= maxAttempts) {
-                              console.log(`🛑 Circuit breaker: Max fallback attempts (${maxAttempts}) reached for ${cardId}, using placeholder`);
-                              window.failedImages.add(imageUrl); // Remember this failed URL
-                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                              e.target.dataset.fallbackAttempt = 'final';
-                              e.target.removeAttribute('onError'); // Prevent further error events
-                              return;
-                            }
-
-                            console.log(`❌ Homepage event image failed (attempt ${currentAttempt + 1}/${maxAttempts}):`, cardId, 'URL:', imageUrl);
-
-                            // Add failed URL to tracking set
-                            window.failedImages.add(imageUrl);
-
-                            // Enhanced error logging for persistent storage pipeline
-                            if (imageUrl.includes('/api/images/serve/')) {
-                              console.error('🚨 API image serving failed - check persistent storage pipeline');
-                              console.error('📋 UUID extraction:', imageUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})/));
-                            }
-
-                            // 🚨 CRITICAL FIX: Simplified fallback sequence to prevent loops
-                            if (currentAttempt === 0) {
-                              // First fallback: try placeholder from dashboard
-                              const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-                              const placeholderUrl = `${dashboardDomain}/api/images/placeholder`;
-                              console.log('🔄 Trying dashboard placeholder:', placeholderUrl);
-                              e.target.src = placeholderUrl;
-                              e.target.dataset.fallbackAttempt = '1';
-                              return;
-                            } else if (currentAttempt === 1) {
-                              // Second fallback: use inline SVG placeholder immediately
-                              console.log('🔄 Using final inline SVG placeholder');
-                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                              e.target.dataset.fallbackAttempt = 'final';
-                              e.target.removeAttribute('onError'); // Prevent further error events
-                              return;
-                            }
-
-                            // Fallback safety: should never reach here, but just in case
-                            console.log('🔄 Safety fallback: Using inline SVG placeholder');
-                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                            e.target.dataset.fallbackAttempt = 'final';
-                            e.target.removeAttribute('onError'); // Prevent further error events
-                          }}
-                          onLoad={(e) => {
-                            // Clear fallback tracking on successful load
-                            delete e.target.dataset.fallbackAttempt;
-                            console.log('✅ Homepage event image loaded successfully:', card.title, e.target.src);
-                            e.target.style.backgroundColor = 'transparent';
-                            e.target.style.opacity = '1';
-                          }}
-                          style={{
-                            position: 'absolute',
-                            left: '4px',
-                            top: '4px',
-                            width: '112px',
-                            height: '112px',
-                            borderRadius: '17px',
-                            objectFit: 'cover',
-                            backgroundColor: '#2a2a2a',
-                            opacity: '0',
-                            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            transform: 'scale(1)',
-                            boxShadow: 'none',
-                            pointerEvents: 'none'
-                          }}
-                        />
-                      </div>
-
-                      {/* Text Content Section - Compact Horizontal Layout */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          width: 'calc(100% - 130px)',
-                          padding: '2px 2px 2px 4px',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
-                          position: 'absolute',
-                          left: '126px',
-                          top: '2px',
-                          height: '120px',
-                          boxSizing: 'border-box'
-                        }}
-                      >
-                        {/* Event Information */}
-                        <div
-                          style={{
-                            width: '100%',
-                            minHeight: '84px',
-                            height: 'auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignSelf: 'stretch',
-                            flex: '1 1 auto'
-                          }}
-                        >
-                          {/* Event Title */}
-                          <h3
-                            style={{
-                              fontFamily: 'Inter',
-                              fontWeight: '700',
-                              fontSize: '16px',
-                              lineHeight: '1.25',
-                              textAlign: 'left',
-                              color: '#FFFFFF',
-                              width: '100%',
-                              minHeight: '20px',
-                              height: 'auto',
-                              margin: '0 0 4px 0',
-                              padding: '0',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {card.title}
-                          </h3>
-
-                          {/* Event DateTime */}
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              alignSelf: 'stretch',
-                              gap: '6px',
-                              padding: '0px 0px 0px 2px'
-                            }}
-                          >
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            >
-                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor"/>
-                            </svg>
-                            <span
-                              style={{
-                                fontFamily: 'Inter',
-                                fontWeight: '300',
-                                fontSize: '12px',
-                                lineHeight: '1.4',
-                                textAlign: 'left',
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                width: '100%',
-                                height: '14px',
-                                margin: '0',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {card.date}
-                            </span>
-                          </div>
-
-                          {/* Event Location */}
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              alignSelf: 'stretch',
-                              gap: '6px',
-                              padding: '0px 2px'
-                            }}
-                          >
-                            <svg
-                              width="12"
-                              height="12"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            >
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
-                            </svg>
-                            <span
-                              style={{
-                                fontFamily: 'Inter',
-                                fontWeight: '300',
-                                fontSize: '12px',
-                                lineHeight: '1.4',
-                                textAlign: 'left',
-                                color: 'rgba(255, 255, 255, 0.65)',
-                                width: '100%',
-                                height: '14px',
-                                margin: '0',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {card.location}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Event Button - Aligned with image bottom edge */}
-                        <div
-                          style={{
-                            width: '100%',
-                            height: '32px',
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            alignItems: 'flex-end',
-                            gap: '6px',
-                            padding: '0px 2px 0px 0px',
-                            position: 'absolute',
-                            bottom: '4px', // Fine-tuned to perfectly align button bottom with image bottom edge
-                            left: '0px'
-                          }}
-                        >
-                          {card.isRealEvent && card.hasTicketLink ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                                window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                              }}
-                              style={{
-                                background: 'rgba(23, 23, 23, 0.8)',
-                                borderRadius: '46px',
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '16px 15px',
-                                width: 'calc(100% - 4px)',
-                                height: '32px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                fontFamily: 'Inter',
-                                fontWeight: '500',
-                                fontSize: '14px',
-                                lineHeight: '1.21',
-                                textAlign: 'center',
-                                color: '#FFFFFF',
-                                transition: 'all 0.2s ease',
-                                transform: 'scale(1)',
-                                boxSizing: 'border-box'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'scale(1.02)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
-                              }}
-                            >
-                              {card.buttonText || 'View Event'}
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
+                      Watch on YouTube
                     </div>
-                  </article>
-                );
-              })
-            ) : (showAllEvents && filteredFeaturedEvents.length > 0 ? null : (
-              /* Empty State - No Events */
-              <div
-                style={{
-                  display: 'flex',
-                  width: '100%',
-                  height: '200px',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '16px',
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  textAlign: 'center'
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    opacity: 0.8
-                  }}
-                >
-                  {showAllEvents ? 'No upcoming events' : 'No past events'}
-                </div>
-                {showAllEvents && homeSettings?.mobile_laylo_cta_url ? (
-                  /* Laylo CTA Button - Opens in new tab */
-                  <button
-                    type="button"
-                    aria-label={homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
-                    onClick={() => {
-                      window.open(homeSettings.mobile_laylo_cta_url, '_blank', 'noopener,noreferrer');
-                    }}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '12px 16px',
-                      minHeight: '44px',
-                      borderRadius: '14px',
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.70)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
-                      transform: 'translateZ(0) scale(1)',
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      isolation: 'isolate',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
-                    }}
-                    onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
-                    }}
-                    onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
-                    }}
-                  >
-                    {homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
-                  </button>
-                ) : (
-                  /* Default "View Past Events" Button */
-                  <button
-                    type="button"
-                    aria-label="View Past Events"
-                    onClick={() => setShowAllEvents(false)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '12px 16px',
-                      minHeight: '44px',
-                      borderRadius: '14px',
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.70)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
-                      transform: 'translateZ(0) scale(1)',
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      isolation: 'isolate',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
-                    }}
-                    onTouchStart={(e) => {
-                      e.currentTarget.style.transform = 'translateZ(0) scale(0.98)';
-                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)';
-                    }}
-                    onTouchEnd={(e) => {
-                      e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                      e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)';
-                    }}
-                  >
-                    View Past Events
-                  </button>
-                )}
-              </div>
-            ))}
+                    <div
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '9px', // Mobile-optimized size
+                        fontWeight: '200',
+                        lineHeight: 'normal'
+                      }}
+                    >
+                      Henry Fong full set live
+                    </div>
+                  </div>
 
-              </div>
-
-              {/* 📱 GLASSMORPHISM GRADIENT OVERLAY - Only show when collapsed and has more than 3 cards */}
-              {!isEventSectionExpanded && filteredHomepageEvents.length > 3 && (
-                <div
-                  className="mobile-event-cards-overlay"
-                  aria-hidden="true"
-                />
-              )}
-            </div>
-
-            {/* 📱 ENHANCED EXPAND/COLLAPSE HANDLE - Positioned within gradient overlay */}
-            {filteredHomepageEvents.length > 3 && (
-              <div
-                className={`mobile-expand-handle ${isEventSectionExpanded ? 'expanded' : ''}`}
-                onClick={toggleEventSection}
-                role="button"
-                tabIndex={0}
-                aria-label={isEventSectionExpanded ? "Show fewer events" : "Show more events"}
-                aria-expanded={isEventSectionExpanded}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    toggleEventSection();
-                  }
-                }}
-                style={{
-                  // Ensure handle is always visible and properly positioned
-                  opacity: 1,
-                  visibility: 'visible'
-                }}
-              >
-                <div
-                  className={`mobile-expand-chevron ${isEventSectionExpanded ? 'expanded' : ''}`}
-                  aria-hidden="true"
-                />
-              </div>
-            )}
-          </div>
-          </section>
-
-          {/* Follow Us Section - YouTube Video */}
-          <section
-            aria-labelledby="follow-us-section-title"
-            style={{
-              width: '100%',
-              marginTop: '1px', // Further reduced for tighter spacing with events section
-              marginBottom: '4px', // Consistent 4px spacing above and below
-              // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
-              opacity: sectionsAnimated ? 1 : 0,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
-              transitionDelay: '150ms' // Second section in cascade
-            }}
-          >
-            {/* Follow Us Section Title */}
-            <div
-              style={{
-                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                marginBottom: '8px', // Consistent spacing with Events section
-                margin: '0 auto 8px auto', // Center the container with minimal spacing
-                boxSizing: 'border-box'
-              }}
-            >
-              <h2
-                id="follow-us-section-title"
-                style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: '32px', // Match Events section title
-                  fontWeight: '800', // Match Events section title
-                  lineHeight: '1.2', // Match Events section title
-                  margin: 0,
-                  textAlign: 'left' // Match Events section title
-                }}
-              >
-                Follow Us
-              </h2>
-            </div>
-
-
-            <article
-              style={{
-                width: 'min(344px, calc(100vw - 4px))', // 🔧 EXPANDED: 2px padding each side (was 12px) - 20px wider total
-                height: '200px', // Mobile-optimized height
-                position: 'relative',
-                flexShrink: 0,
-                margin: '0 auto', // Center the video
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: 'scale(1)',
-                borderRadius: '20px', // Slightly smaller radius for mobile
-                overflow: 'hidden'
-              }}
-              aria-label="Henry Fong live performance video"
-            >
-            {/* Video background container */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '0px',
-                top: '0px',
-                width: '100%',
-                height: '100%',
-                borderRadius: '20px',
-                overflow: 'hidden'
-              }}
-            >
-              {/* YouTube iframe wrapper - FIXED: Simplified positioning to prevent scroll glitches */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '0',
-                  left: '0',
-                  width: '100%',
-                  height: '100%',
-                  overflow: 'hidden',
-                  // FIXED: Remove complex transforms that cause scroll issues
-                  transform: 'translateZ(0)', // Only GPU acceleration
-                  willChange: 'auto' // Let browser optimize
-                }}
-              >
-
-                {showYoutubeThumbnail ? (
-                  // Show thumbnail preloader for faster loading
-                  YouTubeThumbnail
-                ) : shouldLoadYoutube ? (
-                  // Show actual YouTube iframe - FIXED: Simplified positioning
-                  <iframe
-                    src={buildYouTubeURL}
-                    title="Henry Fong YouTube Video - Adaptive Quality"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-
-                    loading="lazy"
-                    style={{
-                      position: 'absolute',
-                      top: '0',
-                      left: '0',
-                      width: '100%',
-                      height: '100%',
-                      // FIXED: Remove problematic scale and complex transforms
-                      transform: 'translateZ(0)',
-                      pointerEvents: 'none',
-                      border: 'none',
-                      opacity: 1,
-                      // FIXED: Ensure stable rendering during scroll
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden'
-                    }}
-                  />
-                ) : (
-                  // Loading state (rarely shown) - FIXED: Simplified positioning
+                  {/* Right - CTA Button */}
                   <div
-                    style={{
-                      position: 'absolute',
-                      top: '0',
-                      left: '0',
-                      width: '100%',
-                      height: '100%',
-                      background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-                      border: 'none',
-                      transform: 'translateZ(0)'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
                     }}
-                  />
-                )}
-              </div>
+                    style={{
+                      display: 'flex',
+                      minWidth: '90px', // Mobile-optimized width
+                      height: '36px', // Mobile-optimized height
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      pointerEvents: 'auto', // Re-enable clicks for the button only
+                      borderRadius: '18px',
+                      background: 'rgba(38, 38, 38, 0.80)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      transform: 'scale(1)',
+                      boxSizing: 'border-box'
+                    }}
+                    onTouchStart={(e) => {
+                      e.stopPropagation();
+                      e.currentTarget.style.transform = 'scale(0.95)';
+                      e.currentTarget.style.background = 'rgba(58, 58, 58, 0.90)';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: '11px', // Mobile-optimized size
+                        fontWeight: '600',
+                        lineHeight: 'normal'
+                      }}
+                    >
+                      Watch now
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </section>
 
-              {/* Gradient overlay - FIXED: Stable positioning and optimized for mobile scroll */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '0',
-                  left: '0',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
-                  borderRadius: '20px',
-                  zIndex: 1,
-                  // FIXED: Optimize for mobile scroll performance
-                  transform: 'translateZ(0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  willChange: 'auto', // Let browser optimize
-                  pointerEvents: 'none' // Ensure clicks pass through to video
-                }}
-              />
-            </div>
-
-            {/* Video text overlay - FIXED: Stable positioning for mobile scroll */}
-            <div
+            {/* Social Media Buttons Section - After YouTube video */}
+            <section
               style={{
-                position: 'absolute',
-                left: '0px',
-                bottom: '16px', // Position from bottom
-                display: 'flex',
                 width: '100%',
-                height: '40px',
-                padding: '8px 16px',
-                justifyContent: 'space-between',
-                alignItems: 'flex-end',
-                gap: '12px',
-                zIndex: 2,
+                padding: '0',
+                margin: '0',
+                marginTop: '8px', // Spacing after YouTube video
                 boxSizing: 'border-box',
-                pointerEvents: 'none', // Allow clicks to pass through to video
-                // FIXED: Optimize for mobile scroll performance
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden',
-                WebkitBackfaceVisibility: 'hidden',
-                willChange: 'auto' // Let browser optimize
-              }}
-            >
-              {/* Left - Title and subtitle */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-end',
-                  gap: '2px',
-                  flex: '1'
-                }}
-              >
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '18px', // Mobile-optimized size
-                    fontWeight: '800',
-                    lineHeight: '1.1',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  Watch on YouTube
-                </div>
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '9px', // Mobile-optimized size
-                    fontWeight: '200',
-                    lineHeight: 'normal'
-                  }}
-                >
-                  Henry Fong full set live
-                </div>
-              </div>
-
-              {/* Right - CTA Button */}
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
-                }}
-                style={{
-                  display: 'flex',
-                  minWidth: '90px', // Mobile-optimized width
-                  height: '36px', // Mobile-optimized height
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  pointerEvents: 'auto', // Re-enable clicks for the button only
-                  borderRadius: '18px',
-                  background: 'rgba(38, 38, 38, 0.80)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  transform: 'scale(1)',
-                  boxSizing: 'border-box'
-                }}
-                onTouchStart={(e) => {
-                  e.stopPropagation();
-                  e.currentTarget.style.transform = 'scale(0.95)';
-                  e.currentTarget.style.background = 'rgba(58, 58, 58, 0.90)';
-                }}
-                onTouchEnd={(e) => {
-                  e.stopPropagation();
-                  e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.background = 'rgba(38, 38, 38, 0.80)';
-                }}
-              >
-                <span
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '11px', // Mobile-optimized size
-                    fontWeight: '600',
-                    lineHeight: 'normal'
-                  }}
-                >
-                  Watch now
-                </span>
-              </div>
-            </div>
-          </article>
-          </section>
-
-          {/* Social Media Buttons Section - After YouTube video */}
-          <section
-            style={{
-              width: '100%',
-              padding: '0',
-              margin: '0',
-              marginTop: '8px', // Spacing after YouTube video
-              boxSizing: 'border-box',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
-              opacity: sectionsAnimated ? 1 : 0,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
-              transitionDelay: '280ms' // After YouTube in cascade
-            }}
-          >
-            <div
-              style={{
-                width: 'min(344px, calc(100vw - 4px))',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                margin: '0 auto'
+                // 🎬 OPTIMIZED: Modern load-in animation with CSS variables
+                opacity: sectionsAnimated ? 1 : 0,
+                transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+                transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+                transitionDelay: '280ms' // After YouTube in cascade
               }}
             >
-              <SocialMediaButtons />
-            </div>
-          </section>
+              <div
+                style={{
+                  width: 'min(344px, calc(100vw - 4px))',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  margin: '0 auto'
+                }}
+              >
+                <SocialMediaButtons />
+              </div>
+            </section>
 
-          {/* ============================================
+            {/* ============================================
               TEXT US INLINE SECTION - Laylo Integration
               Moved from MobileDrawer to inline for better UX
               Position: After Social Media Buttons (last content section)
               NOTE: Using opacity: 0.01 (not 0) to ensure iframe loads immediately
               (browsers defer loading iframes in opacity:0 containers)
               ============================================ */}
-          <section
-            aria-labelledby="text-us-section-title"
-            style={{
-              width: '100%',
-              marginTop: '12px', // 8px grid: better visual separation from social buttons
-              padding: '0',
-              boxSizing: 'border-box',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              // 🎬 FIX: Use 0.01 opacity instead of 0 so iframe loads immediately
-              // Browsers optimize by not loading iframes with opacity: 0
-              opacity: sectionsAnimated ? 1 : 0.01,
-              transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
-              transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
-              transitionDelay: '320ms' // After social buttons in cascade
-            }}
-          >
-            <article
+            <section
+              aria-labelledby="text-us-section-title"
               style={{
-                width: 'min(344px, calc(100vw - 4px))',
-                margin: '0 auto',
-                // Solid background to prevent visual artifacts - matches desktop TextUsSection
-                background: 'rgba(22, 22, 22, 0.50)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '20px',
-                padding: '20px 20px 0 20px',
+                width: '100%',
+                marginTop: '12px', // 8px grid: better visual separation from social buttons
+                padding: '0',
                 boxSizing: 'border-box',
-                overflow: 'hidden',
-                isolation: 'isolate'
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                // 🎬 FIX: Use 0.01 opacity instead of 0 so iframe loads immediately
+                // Browsers optimize by not loading iframes with opacity: 0
+                opacity: sectionsAnimated ? 1 : 0.01,
+                transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
+                transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
+                transitionDelay: '320ms' // After social buttons in cascade
               }}
             >
-              {/* Text Us Header */}
-              <div
+              <article
                 style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  marginBottom: '8px' // 8px grid: tighter connection to iframe
-                }}
-              >
-                <h3
-                  id="text-us-section-title"
-                  style={{
-                    fontFamily: 'Inter',
-                    fontWeight: '800',
-                    fontSize: '20px',
-                    lineHeight: '1.2em',
-                    color: '#FFFFFF',
-                    margin: 0
-                  }}
-                >
-                  Text us
-                </h3>
-                <p
-                  style={{
-                    fontFamily: 'Inter',
-                    fontWeight: '300',
-                    fontSize: '12px',
-                    lineHeight: '1.3em',
-                    color: '#FFFFFF',
-                    opacity: 0.8,
-                    margin: 0
-                  }}
-                >
-                  Exclusive events, contests, and more
-                </p>
-              </div>
-
-              {/* Laylo Integration - CRITICAL: Keep iframe unchanged */}
-              <div
-                style={{
-                  // Extend iframe to full card width using negative margins
-                  width: 'calc(100% + 40px)',
-                  marginLeft: '-20px',
-                  marginRight: '-20px',
-                  marginBottom: '0', // No bottom margin - extend to card edge
-                  height: '180px', // Fixed height for inline display
-                  borderRadius: '0 0 20px 20px', // Match card's bottom border radius
+                  width: 'min(344px, calc(100vw - 4px))',
+                  margin: '0 auto',
+                  // Solid background to prevent visual artifacts - matches desktop TextUsSection
+                  background: 'rgba(22, 22, 22, 0.50)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '20px',
+                  padding: '20px 20px 0 20px',
+                  boxSizing: 'border-box',
                   overflow: 'hidden',
-                  background: 'transparent'
+                  isolation: 'isolate'
                 }}
               >
-                <LayloIframeSimple
-                  dropId="1nTsX"
-                  color="ff0409"
-                  theme="dark"
-                  background="solid"
-                  minimal={true}
-                  visible={true}
+                {/* Text Us Header */}
+                <div
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                    borderRadius: '0 0 20px 20px',
-                    background: 'transparent',
-                    display: 'block'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    marginBottom: '8px' // 8px grid: tighter connection to iframe
                   }}
-                />
-              </div>
-            </article>
-          </section>
+                >
+                  <h3
+                    id="text-us-section-title"
+                    style={{
+                      fontFamily: 'Inter',
+                      fontWeight: '800',
+                      fontSize: '20px',
+                      lineHeight: '1.2em',
+                      color: '#FFFFFF',
+                      margin: 0
+                    }}
+                  >
+                    Text us
+                  </h3>
+                  <p
+                    style={{
+                      fontFamily: 'Inter',
+                      fontWeight: '300',
+                      fontSize: '12px',
+                      lineHeight: '1.3em',
+                      color: '#FFFFFF',
+                      opacity: 0.8,
+                      margin: 0
+                    }}
+                  >
+                    Exclusive events, contests, and more
+                  </p>
+                </div>
 
-          {/* Footer Section - Inside scroll container so it scrolls with content */}
-          <Footer compact={true} />
-        </div>
-      </main>
+                {/* Laylo Integration - CRITICAL: Keep iframe unchanged */}
+                <div
+                  style={{
+                    // Extend iframe to full card width using negative margins
+                    width: 'calc(100% + 40px)',
+                    marginLeft: '-20px',
+                    marginRight: '-20px',
+                    marginBottom: '0', // No bottom margin - extend to card edge
+                    height: '180px', // Fixed height for inline display
+                    borderRadius: '0 0 20px 20px', // Match card's bottom border radius
+                    overflow: 'hidden',
+                    background: 'transparent'
+                  }}
+                >
+                  <LayloIframeSimple
+                    dropId="1nTsX"
+                    color="ff0409"
+                    theme="dark"
+                    background="solid"
+                    minimal={true}
+                    visible={true}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      borderRadius: '0 0 20px 20px',
+                      background: 'transparent',
+                      display: 'block'
+                    }}
+                  />
+                </div>
+              </article>
+            </section>
 
-      {/* ============================================
+            {/* Footer Section - Inside scroll container so it scrolls with content */}
+            <Footer compact={true} />
+          </div>
+        </main>
+
+        {/* ============================================
           ARCHIVED: Text Us drawer - kept for potential revert
           Date: 2024-12-08
           Reason: Moved "Text Us" Laylo integration to inline section above
           The drawer functionality is preserved in MobileDrawer.jsx
           To revert: uncomment this block and remove the inline section
           ============================================ */}
-      {/* ARCHIVED: MobileDrawer component
+        {/* ARCHIVED: MobileDrawer component
       {!navigationMenuOpen && (
         <MobileDrawer
           contentRef={contentRef}
@@ -4715,137 +4723,88 @@ const FigmaMobile = () => {
         />
       )}
       */}
-    </div>
+      </div>
 
-    {/* Expanded Image Modal */}
-    {expandedImage && (
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)', // Opaque enough to fully hide underlying content
-          backdropFilter: 'blur(30px)', // Strong blur for glassmorphism while reducing GPU cost
-          WebkitBackdropFilter: 'blur(30px)',
-          zIndex: 10001, // Above drawer and nav
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '20px',
-          boxSizing: 'border-box',
-          overflow: 'hidden',
-          overscrollBehavior: 'none',
-          touchAction: 'none',
-          animation: 'expandedImageFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
-        }}
-        onClick={handleImageCollapse}
-        onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); }}
-        onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
-      >
-        {/* Expanded Image */}
+      {/* Expanded Image Modal */}
+      {expandedImage && (
         <div
           style={{
-            width: 'min(80vw, 80vh)',
-            height: 'min(80vw, 80vh)',
-            aspectRatio: '1 / 1',
-            borderRadius: '20px',
-            overflow: 'hidden',
-            marginBottom: '20px',
-            animation: 'expandedImageScale 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
-            border: '1px solid rgba(255, 255, 255, 0.1)', // Subtle border for definition
-            cursor: 'pointer'
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <img
-            crossOrigin="anonymous"
-            referrerPolicy="no-referrer"
-            src={expandedImage.imageUrl}
-            alt={expandedImage.title}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block'
-            }}
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div
-          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)', // Opaque enough to fully hide underlying content
+            backdropFilter: 'blur(30px)', // Strong blur for glassmorphism while reducing GPU cost
+            WebkitBackdropFilter: 'blur(30px)',
+            zIndex: 10001, // Above drawer and nav
             display: 'flex',
-            gap: '16px',
-            animation: 'expandedButtonsSlideUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both'
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '20px',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            overscrollBehavior: 'none',
+            touchAction: 'none',
+            animation: 'expandedImageFadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards'
           }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={handleImageCollapse}
+          onTouchMove={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
         >
-          {/* Share Button - Solid background to match desktop styling */}
-          <button
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: expandedImage.title,
-                  text: `Check out this event: ${expandedImage.title}`,
-                  url: window.location.href
-                });
-              } else {
-                navigator.clipboard.writeText(window.location.href);
-                alert('Link copied to clipboard!');
-              }
-            }}
+          {/* Expanded Image */}
+          <div
             style={{
-              background: 'rgba(22, 22, 22, 0.50)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '22px',
-              padding: '12px 24px',
-              color: '#FFFFFF',
-              fontFamily: 'Inter',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
-              transform: 'translateZ(0) scale(1)',
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
-              isolation: 'isolate',
-              minWidth: '80px',
-              height: '44px',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+              width: 'min(80vw, 80vh)',
+              height: 'min(80vw, 80vh)',
+              aspectRatio: '1 / 1',
+              borderRadius: '20px',
+              overflow: 'hidden',
+              marginBottom: '20px',
+              animation: 'expandedImageScale 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.1)', // Subtle border for definition
+              cursor: 'pointer'
             }}
-            onTouchStart={(e) => {
-              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
-              e.currentTarget.style.transform = 'translateZ(0) scale(0.95)';
-            }}
-            onTouchEnd={(e) => {
-              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
-              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
-              e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
-              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            Share
-          </button>
+            <img
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
+              src={expandedImage.imageUrl}
+              alt={expandedImage.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block'
+              }}
+            />
+          </div>
 
-          {/* View Event Button - Solid background to match desktop styling */}
-          {expandedImage.isRealEvent && expandedImage.hasTicketLink ? (
+          {/* Action Buttons */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '16px',
+              animation: 'expandedButtonsSlideUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Share Button - Solid background to match desktop styling */}
             <button
               onClick={() => {
-                console.log(`🎫 Opening ticket link from modal for ${expandedImage.title}:`, expandedImage.ticketsUrl);
-                window.open(expandedImage.ticketsUrl, '_blank', 'noopener,noreferrer');
-                handleImageCollapse();
+                if (navigator.share) {
+                  navigator.share({
+                    title: expandedImage.title,
+                    text: `Check out this event: ${expandedImage.title}`,
+                    url: window.location.href
+                  });
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert('Link copied to clipboard!');
+                }
               }}
               style={{
                 background: 'rgba(22, 22, 22, 0.50)',
@@ -4863,7 +4822,7 @@ const FigmaMobile = () => {
                 backfaceVisibility: 'hidden',
                 WebkitBackfaceVisibility: 'hidden',
                 isolation: 'isolate',
-                minWidth: '100px',
+                minWidth: '80px',
                 height: '44px',
                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
                 textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
@@ -4885,16 +4844,65 @@ const FigmaMobile = () => {
                 e.currentTarget.style.transform = 'translateZ(0) scale(1)';
               }}
             >
-              {expandedImage.buttonText || 'View Event'}
+              Share
             </button>
-          ) : (
-            null
-          )}
-        </div>
-      </div>
-    )}
 
-    {/* OLD NAVIGATION OVERLAY REMOVED - Now using shared MobileNavigation component */}
+            {/* View Event Button - Solid background to match desktop styling */}
+            {expandedImage.isRealEvent && expandedImage.hasTicketLink ? (
+              <button
+                onClick={() => {
+                  console.log(`🎫 Opening ticket link from modal for ${expandedImage.title}:`, expandedImage.ticketsUrl);
+                  window.open(expandedImage.ticketsUrl, '_blank', 'noopener,noreferrer');
+                  handleImageCollapse();
+                }}
+                style={{
+                  background: 'rgba(22, 22, 22, 0.50)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '22px',
+                  padding: '12px 24px',
+                  color: '#FFFFFF',
+                  fontFamily: 'Inter',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                  transform: 'translateZ(0) scale(1)',
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  isolation: 'isolate',
+                  minWidth: '100px',
+                  height: '44px',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(0.95)';
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                  e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                }}
+              >
+                {expandedImage.buttonText || 'View Event'}
+              </button>
+            ) : (
+              null
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* OLD NAVIGATION OVERLAY REMOVED - Now using shared MobileNavigation component */}
 
 
 

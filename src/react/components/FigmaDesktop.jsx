@@ -417,7 +417,7 @@ const EventCard = memo(({ card, scaledDimensions }) => {
   return null; // Will be implemented in next chunk
 });
 
-const FigmaDesktop = () => {
+const FigmaDesktop = ({ onReady }) => {
   console.log('🖥️ FIGMA DESKTOP COMPONENT RENDERING');
 
   // Inject CSS for custom scrollbar styling
@@ -648,11 +648,11 @@ const FigmaDesktop = () => {
 
   // MEMORY OPTIMIZATION: Lazy load Laylo SDK with error handling - RESTORED ORIGINAL IMPLEMENTATION
   // Desktop-only fade-in animation helper
-  const fadeIn = useCallback((delayMs = 0) => (
-    scaledDimensions.containerWidth >= 1024
-      ? { opacity: 0, animation: `fadeInUp 0.8s ease-out ${delayMs}ms forwards` }
-      : {}
-  ), [scaledDimensions.containerWidth]);
+  // Desktop-only fade-in animation helper - DISABLED to prevent black screen interference
+  // The HomePage parent loader now handles the "Reveal" fade transition.
+  const fadeIn = useCallback((delayMs = 0) => ({
+    // opacity: 0, animation: `fadeInUp 0.8s ease-out ${delayMs}ms forwards` 
+  }), []);
 
   // Compute the maximum usable width for the right video column based on available space
   useLayoutEffect(() => {
@@ -1530,15 +1530,25 @@ const FigmaDesktop = () => {
     return () => observers.forEach((ro) => ro.disconnect());
   }, [recalcSocialAlignment]);
 
+  // Signal parent when regular loading finishes
+  useEffect(() => {
+    if (!loading && onReady) {
+      // 🚀 PERFORMANCE: Wait for 2 frames to ensure DOM is fully painted
+      // This prevents the "black screen" flash where the loader fades out
+      // before the heavy DOM has actually rendered to the screen.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          onReady();
+        });
+      });
+    }
+  }, [loading, onReady]);
+
   // Show smooth branded loading state
   if (loading) {
-    return (
-      <BrandedLoader
-        fullScreen={true}
-        minDisplayTime={600}
-        showMessage={false}
-      />
-    );
+    // Render invisible placeholder while loading data
+    // This ensures we don't crash on missing data while parent loader covers us
+    return <div style={{ opacity: 0 }} />;
   }
 
   // Error boundary fallback
@@ -1580,7 +1590,7 @@ const FigmaDesktop = () => {
                 height: '56px', // 🚨 MATCH SHOPPAGE: Match logo height
                 alignItems: 'center',
                 margin: '35px 0 0 0',
-                ...fadeIn(0)
+                // Removed fadeIn(0) to prevent double-fade/black screen relative to loader reveal
               }}
             >
               {/* Group 4 - B2B Logo Nav - CLICKABLE - INCREASED SIZE */}
@@ -1666,7 +1676,7 @@ const FigmaDesktop = () => {
                       height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
                       display: 'flex',
                       alignItems: 'center', // Center text vertically within the height
-                      ...fadeIn(200)
+                      // Removed fadeIn(200) to prevent double-fade/black screen relative to loader reveal
                     }}
                   >
                     Up Next

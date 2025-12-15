@@ -76,7 +76,7 @@ const FAQPageMobile = () => {
 
         // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
         // The backend at /api/settings/faq proxies to the dashboard server
-        const response = await fetch(`/api/settings/faq?ts=${Date.now()}` , {
+        const response = await fetch(`/api/settings/faq?ts=${Date.now()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -261,81 +261,82 @@ const FAQPageMobile = () => {
               FAQ
             </h1>
 
-            <div style={{ padding: '0 10px' }}>
-        {faqItems.map((item, idx) => {
-          const isOpen = openIndex === idx;
-          return (
-            <div key={idx} style={{
-              background: 'rgba(22,22,22,0.4)',
-              border: '1px solid rgba(56,56,56,0.3)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              borderRadius: '14px',
-              marginBottom: '10px',
-              overflow: 'hidden',
-              transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-              willChange: 'transform, opacity',
-              transform: isOpen ? 'translateZ(0) scale(1.01)' : 'translateZ(0) scale(1)',
-              boxShadow: isOpen ? '0 8px 24px rgba(0,0,0,0.25)' : '0 4px 12px rgba(0,0,0,0.15)',
-              opacity: 0,
-              animation: `fadeInUp 0.4s ease-out ${0.1 + idx * 0.05}s forwards`
-            }}>
-              <button
-                onClick={() => toggleIndex(idx)}
-                id={`faq-mobile-question-${idx}`}
-                aria-expanded={isOpen}
-                aria-controls={`faq-mobile-answer-${idx}`}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '20px 24px',
-                  background: 'transparent',
-                  color: '#FFF',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '18px',
-                  lineHeight: 1.3,
-                  fontWeight: 600,
-                  minHeight: '44px'
-                }}
-              >
-                <span className="rich-text-content">{item.qText}</span>
-                <span
-                  className="faq-arrow"
-                  aria-hidden="true"
-                  style={{
-                    display: 'inline-flex',
-                    width: '20px',
-                    height: '20px',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transform: isOpen ? 'rotate(180deg) translateZ(0)' : 'rotate(0deg) translateZ(0)',
-                    transformOrigin: '50% 50%'
-                  }}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    style={{ display: 'block' }}
-                  >
-                    <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </span>
-              </button>
+            {/* 🚀 LAYOUT FIX: Removed extra padding so items align with title width */}
+            <div style={{ padding: '0 0px' }}>
+              {faqItems.map((item, idx) => {
+                const isOpen = openIndex === idx;
+                return (
+                  <div key={idx} style={{
+                    background: 'rgba(22,22,22,0.4)',
+                    border: '1px solid rgba(56,56,56,0.3)',
+                    backdropFilter: 'blur(20px)',
+                    WebkitBackdropFilter: 'blur(20px)',
+                    borderRadius: '14px',
+                    marginBottom: '10px',
+                    overflow: 'hidden',
+                    transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    willChange: 'transform, opacity',
+                    transform: isOpen ? 'translateZ(0) scale(1.01)' : 'translateZ(0) scale(1)',
+                    boxShadow: isOpen ? '0 8px 24px rgba(0,0,0,0.25)' : '0 4px 12px rgba(0,0,0,0.15)',
+                    opacity: 0,
+                    animation: `fadeInUp 0.4s ease-out ${0.1 + idx * 0.05}s forwards`
+                  }}>
+                    <button
+                      onClick={() => toggleIndex(idx)}
+                      id={`faq-mobile-question-${idx}`}
+                      aria-expanded={isOpen}
+                      aria-controls={`faq-mobile-answer-${idx}`}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '20px 24px',
+                        background: 'transparent',
+                        color: '#FFF',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        lineHeight: 1.3,
+                        fontWeight: 600,
+                        minHeight: '44px'
+                      }}
+                    >
+                      <span className="rich-text-content">{item.qText}</span>
+                      <span
+                        className="faq-arrow"
+                        aria-hidden="true"
+                        style={{
+                          display: 'inline-flex',
+                          width: '20px',
+                          height: '20px',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transform: isOpen ? 'rotate(180deg) translateZ(0)' : 'rotate(0deg) translateZ(0)',
+                          transformOrigin: '50% 50%'
+                        }}
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                          style={{ display: 'block' }}
+                        >
+                          <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                    </button>
 
 
-              <div id={`faq-mobile-answer-${idx}`} role="region" aria-labelledby={`faq-mobile-question-${idx}`} style={{ maxHeight: isOpen ? 'min(70vh, 560px)' : '0px', transition: 'max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'max-height, padding', overflow: 'hidden' }}>
-                <div style={{ padding: isOpen ? '12px 24px 24px 24px' : '0 24px', color: 'rgba(255,255,255,0.84)', borderTop: '1px solid rgba(56,56,56,0.3)', borderTopColor: isOpen ? 'rgba(56,56,56,0.3)' : 'rgba(56,56,56,0)', opacity: isOpen ? 1 : 0, transform: isOpen ? 'translateY(0)' : 'translateY(4px)', transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s' }}>
-                  <div className="faq-answer-scroll" style={{ maxHeight: 'min(68vh, 520px)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}><div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} /></div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+                    <div id={`faq-mobile-answer-${idx}`} role="region" aria-labelledby={`faq-mobile-question-${idx}`} style={{ maxHeight: isOpen ? 'min(70vh, 560px)' : '0px', transition: 'max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1)', willChange: 'max-height, padding', overflow: 'hidden' }}>
+                      <div style={{ padding: isOpen ? '12px 24px 24px 24px' : '0 24px', color: 'rgba(255,255,255,0.84)', borderTop: '1px solid rgba(56,56,56,0.3)', borderTopColor: isOpen ? 'rgba(56,56,56,0.3)' : 'rgba(56,56,56,0)', opacity: isOpen ? 1 : 0, transform: isOpen ? 'translateY(0)' : 'translateY(4px)', transition: 'opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) 0.06s, border-top-color 0.28s ease 0.04s' }}>
+                        <div className="faq-answer-scroll" style={{ maxHeight: 'min(68vh, 520px)', overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}><div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(item.aHtml || item.a) }} /></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
