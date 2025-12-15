@@ -44,7 +44,9 @@ const BrandedLoader = ({
     setShouldAnimate(!prefersReducedMotion);
   }, []);
 
-  // Handle smooth fade out after minimum display time
+  // Prevent auto-hiding to avoid black screen issues
+  // The loader should be controlled by the parent component (mounting/unmounting)
+  /*
   useEffect(() => {
     if (suppressRender) return;
     const timer = setTimeout(() => {
@@ -57,6 +59,7 @@ const BrandedLoader = ({
 
     return () => clearTimeout(timer);
   }, [minDisplayTime, suppressRender]);
+  */
 
 
 

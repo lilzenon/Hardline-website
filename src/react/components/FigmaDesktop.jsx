@@ -68,7 +68,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       }
 
       // Environment-aware: use appropriate API domain for production/beta
-      const dashboardDomain = isDevelopment() ? 'http://localhost:3002' : getApiBaseUrl();
+      const dashboardDomain = isDevelopment() ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       // 🚨 CRITICAL FIX: Build URL preserving existing cache-busting parameters
       let optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
@@ -103,7 +103,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   // Handle relative URLs that might be from the new system but without full path
   // FIXED: Also handle /api/images/serve/ URLs specifically by checking for them OR excluding regular /images/ paths
   if (typeof originalUrl === 'string' && originalUrl.startsWith('/') &&
-      (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
+    (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
     console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
 
     // If it looks like a UUID-based path, treat it as new system
@@ -321,44 +321,44 @@ const formatPhoneNumber = (value, countryId) => {
         return limitedNumber.length > 0 ? `(${limitedNumber}` : '';
       }
       if (limitedNumber.length <= 6) {
-        return `(${limitedNumber.slice(0,3)}) ${limitedNumber.slice(3)}`;
+        return `(${limitedNumber.slice(0, 3)}) ${limitedNumber.slice(3)}`;
       }
-      return `(${limitedNumber.slice(0,3)}) ${limitedNumber.slice(3,6)}-${limitedNumber.slice(6)}`;
+      return `(${limitedNumber.slice(0, 3)}) ${limitedNumber.slice(3, 6)}-${limitedNumber.slice(6)}`;
 
     case '+44': // UK - 20 1234 5678
       if (limitedNumber.length <= 2) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+        return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2)}`;
       }
-      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2, 6)} ${limitedNumber.slice(6)}`;
 
     case '+49': // Germany - 30 12345678
       if (limitedNumber.length <= 2) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2)}`;
+        return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2)}`;
       }
-      return `${limitedNumber.slice(0,2)} ${limitedNumber.slice(2,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0, 2)} ${limitedNumber.slice(2, 6)} ${limitedNumber.slice(6)}`;
 
     case '+33': // France - 1 23 45 67 89
       if (limitedNumber.length <= 1) return limitedNumber;
       if (limitedNumber.length <= 3) {
-        return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1)}`;
+        return `${limitedNumber.slice(0, 1)} ${limitedNumber.slice(1)}`;
       }
       if (limitedNumber.length <= 5) {
-        return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1,3)} ${limitedNumber.slice(3)}`;
+        return `${limitedNumber.slice(0, 1)} ${limitedNumber.slice(1, 3)} ${limitedNumber.slice(3)}`;
       }
       if (limitedNumber.length <= 7) {
-        return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1,3)} ${limitedNumber.slice(3,5)} ${limitedNumber.slice(5)}`;
+        return `${limitedNumber.slice(0, 1)} ${limitedNumber.slice(1, 3)} ${limitedNumber.slice(3, 5)} ${limitedNumber.slice(5)}`;
       }
-      return `${limitedNumber.slice(0,1)} ${limitedNumber.slice(1,3)} ${limitedNumber.slice(3,5)} ${limitedNumber.slice(5,7)} ${limitedNumber.slice(7)}`;
+      return `${limitedNumber.slice(0, 1)} ${limitedNumber.slice(1, 3)} ${limitedNumber.slice(3, 5)} ${limitedNumber.slice(5, 7)} ${limitedNumber.slice(7)}`;
 
     default:
       // Generic formatting for other countries - XXX XXX XXXX
       if (limitedNumber.length <= 3) return limitedNumber;
       if (limitedNumber.length <= 6) {
-        return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3)}`;
+        return `${limitedNumber.slice(0, 3)} ${limitedNumber.slice(3)}`;
       }
-      return `${limitedNumber.slice(0,3)} ${limitedNumber.slice(3,6)} ${limitedNumber.slice(6)}`;
+      return `${limitedNumber.slice(0, 3)} ${limitedNumber.slice(3, 6)} ${limitedNumber.slice(6)}`;
   }
 };
 
@@ -678,7 +678,7 @@ const FigmaDesktop = () => {
             setVideoSizeFromLaylo({ width: w, height: h });
           }
         }
-      } catch (_) {}
+      } catch (_) { }
     };
 
     // Initial sync before first paint and again on next frame (covers hydration/layout shifts)
@@ -1473,7 +1473,7 @@ const FigmaDesktop = () => {
       const lines = Math.max(1, Math.round(height / lineHeight));
       // Adjusted: move title slightly lower and tighten spacing to date row
       setHeroTitleBottom(lines <= 1 ? 52 : 70);
-    } catch (_) {}
+    } catch (_) { }
   }, [mostRecentEvent, scaledDimensions.heroWidth, scaledDimensions.containerWidth, homeSettings?.event_title]);
 
   // Desktop-only: function to (re)calculate social buttons top margin so their bottom aligns to video bottom
@@ -1494,7 +1494,7 @@ const FigmaDesktop = () => {
 
       // Note: maxSocialButtonSize calculation was removed to fix resize shrinking bug
       // Buttons now use fixed 96px size regardless of available space
-    } catch (_) {}
+    } catch (_) { }
   }, [scaledDimensions?.containerWidth, scaledDimensions?.scale]);
 
   // Run on layout changes driven by our scaling calculations
@@ -1570,2131 +1570,1518 @@ const FigmaDesktop = () => {
           }}
         >
           <div style={{ width: '100%', position: 'relative' }}>
-      {/* Frame 12 - Navigation */}
-      <div
-        style={{
-          position: 'relative',
-          display: 'grid',
-          gridTemplateColumns: 'auto 1fr', // 🚨 MATCH SHOPPAGE: 2 columns only
-          width: '100%',
-          height: '56px', // 🚨 MATCH SHOPPAGE: Match logo height
-          alignItems: 'center',
-          margin: '35px 0 0 0',
-          ...fadeIn(0)
-        }}
-      >
-        {/* Group 4 - B2B Logo Nav - CLICKABLE - INCREASED SIZE */}
-        <img
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
-          src="/images/figma-exact/b2b-logo-nav.svg"
-          alt="B2B Logo"
-          loading="lazy"
-          decoding="async"
-          fetchpriority="high"
-          onClick={() => {
-            if (window.navigateWithTransition) {
-              window.navigateWithTransition('/');
-            } else {
-              window.location.href = '/';
-            }
-          }}
-          style={{
-            width: '180px', // Increased from 138.41px for better desktop prominence
-            height: '56px', // Increased from 43px proportionally
-            cursor: 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: 'scale(1)'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.filter = 'brightness(1.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.filter = 'brightness(1)';
-          }}
-          onMouseDown={(e) => {
-            e.currentTarget.style.transform = 'scale(0.98)';
-          }}
-          onMouseUp={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-          }}
-        />
-
-        {/* Group 5 - Navigation Pills (Reusable) */}
-        <DesktopNavigationPills currentPage="Events" />
-      </div>
-
-      {/* Desktop Layout: Hero Left + Events Right (1024px+) */}
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          width: '100%',
-          margin: '24px 0 0 0', // Reduced from 32px to 24px for better visual flow
-          padding: '0',
-          flexDirection: scaledDimensions.containerWidth >= 1024 ? 'row' : 'column',
-          gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(24, Math.round(scaledDimensions.scale * 32))}px` : '20px', // Scale gap for desktop
-          alignItems: 'flex-start'
-        }}
-      >
-        {/* Left Side - Up Next Section (Desktop Only) */}
-        {scaledDimensions.containerWidth >= 1024 ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'stretch',
-              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as events section
-              width: `${scaledDimensions.heroWidth}px`,
-              flexShrink: 0,
-              contain: 'paint',
-              isolation: 'isolate'
-            }}
-          >
-            {/* Up Next Title - Scaled down for better proportion */}
+            {/* Frame 12 - Navigation */}
             <div
               style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced from 32px to 26px for better proportion
-                fontWeight: '800',
-                lineHeight: 'normal',
-                margin: '0',
-                padding: '0',
-                height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
-                display: 'flex',
-                alignItems: 'center', // Center text vertically within the height
-                ...fadeIn(200)
+                position: 'relative',
+                display: 'grid',
+                gridTemplateColumns: 'auto 1fr', // 🚨 MATCH SHOPPAGE: 2 columns only
+                width: '100%',
+                height: '56px', // 🚨 MATCH SHOPPAGE: Match logo height
+                alignItems: 'center',
+                margin: '35px 0 0 0',
+                ...fadeIn(0)
               }}
             >
-              Up Next
-            </div>
-
-            {/* Hero Featured Event or Fallback - Perfect Square */}
-            <div
-              onClick={(e) => {
-                console.log('🔍 Desktop Featured Event: Click detected!', e.target);
-                e.preventDefault();
-                e.stopPropagation();
-
-                // If showing fallback, use fallback CTA URL
-                if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
-                  console.log('🎫 Desktop Fallback: Opening CTA link:', homeSettings.desktop_fallback_cta_url);
-                  window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
-                }
-                // Otherwise use event ticket URL
-                else if (mostRecentEvent?.external_ticket_url) {
-                  console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                  window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
-                } else {
-                  console.log('🎫 Desktop Featured Event: No ticket link available for', mostRecentEvent?.title);
-                  console.log('🔍 Desktop Featured Event data:', mostRecentEvent);
-                }
-              }}
-              style={{
-                width: `${scaledDimensions.heroWidth}px`, // Use heroWidth for perfect square
-                height: `${scaledDimensions.heroWidth}px`, // Same as width for perfect square
-                position: 'relative',
-                flexShrink: 0,
-                margin: '0',
-                cursor: 'pointer',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: 'scale(1)',
-            borderRadius: '20px',
-            overflow: 'hidden',
-            WebkitTransform: 'translateZ(0)',
-            willChange: 'transform',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            contain: 'paint',
-            isolation: 'isolate',
-            ...fadeIn(400)
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1) translateY(0px)';
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-          role="button"
-          tabIndex={0}
-          aria-label="View featured event details"
-        >
-          {/* Background Image with Gradient Overlay */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: '100%',
-              height: '100%',
-              borderRadius: '20px',
-              overflow: 'hidden',
-              WebkitTransform: 'translateZ(0)',
-              transform: 'translateZ(0)',
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden'
-            }}
-          >
-            {/* Dynamic Event Image, Custom Fallback, or Default Placeholder */}
-            {mostRecentEvent?.cover_image ? (
-              /* Event Cover Image */
-              <picture>
-                <source
-                  srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
-                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                  type="image/avif"
-                />
-                <source
-                  srcSet={getResponsiveSrcSet(mostRecentEvent.cover_image, 'hero')}
-                  sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                  type="image/webp"
-                />
-                <img
-                  crossOrigin="anonymous"
-                  referrerPolicy="no-referrer"
-                  src={getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
-                  alt={`${mostRecentEvent.artist_name || mostRecentEvent.title} - Featured Event`}
-                  loading="eager"
-                  decoding="async"
-                  fetchpriority="high"
-                  onLoad={() => {
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log('✅ Hero image loaded:', mostRecentEvent.title);
-                    }
-                  }}
-                  onError={(e) => {
-                    const img = e.target;
-                    const url = img?.src || '';
-
-                    // Prevent infinite error loops
-                    if (img && !img.dataset.fallbackTried) {
-                      img.dataset.fallbackTried = '1';
-
-                      // Try different image variants before giving up
-                      if (url.includes('/event_hero')) {
-                        img.src = url.replace('/event_hero', '/medium');
-                        return;
-                      }
-                      if (url.includes('/event_card')) {
-                        img.src = url.replace('/event_card', '/medium');
-                        return;
-                      }
-                      if (url.includes('/medium')) {
-                        img.src = url.replace('/medium', '/small');
-                        return;
-                      }
-                      if (url.includes('/small')) {
-                        img.src = url.replace('/small', '/thumbnail');
-                        return;
-                      }
-                      if (url.includes('/api/images/serve/')) {
-                        img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
-                        return;
-                      }
-
-                      // Final fallback to static image
-                      img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                    } else {
-                      // If all fallbacks failed, hide the image gracefully
-                      if (process.env.NODE_ENV === 'development') {
-                        console.warn('⚠️ All hero image fallbacks failed');
-                      }
-                      img.style.backgroundColor = '#222222';
-                    }
-                  }}
-                  style={{
-                    position: 'absolute',
-                    left: '0px',
-                    top: '0px',
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    zIndex: 1
-                  }}
-                />
-              </picture>
-            ) : !mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_image_uuid ? (
-              /* Custom Fallback Image from Dashboard Settings */
+              {/* Group 4 - B2B Logo Nav - CLICKABLE - INCREASED SIZE */}
               <img
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
-                src={`/api/images/serve/${homeSettings.desktop_fallback_image_uuid}/medium`}
-                alt={homeSettings.desktop_fallback_title || 'Coming Soon'}
-                loading="eager"
+                src="/images/figma-exact/b2b-logo-nav.svg"
+                alt="B2B Logo"
+                loading="lazy"
                 decoding="async"
                 fetchpriority="high"
-                onError={(e) => {
-                  const img = e.target;
-                  if (img && !img.dataset.fallbackTried) {
-                    img.dataset.fallbackTried = '1';
-                    // Try small variant if medium fails
-                    img.src = `/api/images/serve/${homeSettings.desktop_fallback_image_uuid}/small`;
+                onClick={() => {
+                  if (window.navigateWithTransition) {
+                    window.navigateWithTransition('/');
                   } else {
-                    // Final fallback to placeholder
-                    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                    window.location.href = '/';
                   }
                 }}
                 style={{
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                  zIndex: 1
-                }}
-              />
-            ) : (
-              /* Default Placeholder when no event and no custom fallback */
-              <img
-                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K"
-                alt="No upcoming featured event"
-                loading="eager"
-                decoding="async"
-                fetchpriority="high"
-                style={{
-                  position: 'absolute',
-                  left: '0px',
-                  top: '0px',
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                  zIndex: 1
-                }}
-              />
-            )}
-          </div>
-
-          {/* Mobile-Optimized Gradient Overlay - Outside image container for better rendering */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              top: '0px',
-              width: '100%',
-              height: '100%',
-              background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
-              borderRadius: '20px',
-              pointerEvents: 'none',
-              zIndex: 2,
-              // Desktop optimizations
-              WebkitTransform: 'translateZ(0)', // Force hardware acceleration
-              transform: 'translateZ(0)',
-              WebkitBackfaceVisibility: 'hidden',
-              backfaceVisibility: 'hidden'
-            }}
-          />
-
-          {/* Bottom overlay with date/location (events only) or CTA button (fallback) - Fixed positioning */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              bottom: '8px', // Positioned lower in the card for better visual balance
-              display: 'flex',
-              width: '100%',
-              justifyContent: mostRecentEvent ? 'space-between' : 'flex-end', // Right-align button for fallback
-              padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
-              gap: '12px', // Reduced gap to make more room for wider button
-              boxSizing: 'border-box',
-              zIndex: 3,
-              // Promote to its own compositor layer to prevent flicker during events scroll
-              WebkitTransform: 'translateZ(0)',
-              transform: 'translateZ(0)',
-              willChange: 'transform',
-              WebkitBackfaceVisibility: 'hidden',
-              backfaceVisibility: 'hidden',
-              minHeight: '44px' // Ensure minimum height for button container
-            }}
-          >
-            {/* Date and Location - Only show for actual events, not fallback */}
-            {mostRecentEvent && (
-              <div
-                style={{
-                  display: 'flex',
-                  flex: '1',
-                  padding: '4px 0px',
-                  flexDirection: 'column',
-                  minWidth: 0,
-                  maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
-                }}
-              >
-                {/* Date row - Enhanced styling */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignSelf: 'stretch',
-                    alignItems: 'center',
-                    gap: '6px', // Slightly more gap for better readability
-                    minWidth: 0,
-                    marginBottom: '2px' // Small margin for separation
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                    <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5"/>
-                  </svg>
-                  <span
-                    style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '12px', // Fixed size like mobile
-                      fontWeight: '200',
-                      lineHeight: 'normal',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flex: 1,
-                      minWidth: 0
-                    }}
-                  >
-                    {heroDateText}
-                  </span>
-                </div>
-
-                {/* Location row */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignSelf: 'stretch',
-                    alignItems: 'center',
-                    gap: '4px',
-                    minWidth: 0
-                  }}
-                >
-                  <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
-                    <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5"/>
-                    <circle cx="5" cy="4" r="1" fill="#FFF"/>
-                  </svg>
-                  <span
-                    style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '12px', // Fixed size like mobile
-                      fontWeight: '200',
-                      lineHeight: 'normal',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      flex: 1,
-                      minWidth: 0
-                    }}
-                  >
-                    {formatLocation(mostRecentEvent?.event_address || homeSettings?.event_address)}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* CTA Button - Enhanced styling and positioning */}
-            <div
-              style={{
-                display: 'flex',
-                width: '120px', // Increased width for better presence
-                height: '44px', // Increased height for better touch target
-                padding: '2px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexShrink: 0,
-                zIndex: 3
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  width: '116px',
-                  height: '40px',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '8px',
-                  borderRadius: '22px',
-                  background: 'rgba(22, 22, 22, 0.50)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  width: '180px', // Increased from 138.41px for better desktop prominence
+                  height: '56px', // Increased from 43px proportionally
                   cursor: 'pointer',
-                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
-                  transform: 'translateZ(0) scale(1)',
-                  willChange: 'transform',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  isolation: 'isolate',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: 'scale(1)'
                 }}
                 onMouseEnter={(e) => {
-                  e.stopPropagation();
-                  e.target.style.transform = 'translateZ(0) scale(1.05)';
-                  e.target.style.background = 'rgba(22, 22, 22, 0.65)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.filter = 'brightness(1.1)';
                 }}
                 onMouseLeave={(e) => {
-                  e.stopPropagation();
-                  e.target.style.transform = 'translateZ(0) scale(1)';
-                  e.target.style.background = 'rgba(22, 22, 22, 0.50)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.filter = 'brightness(1)';
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Handle fallback CTA or event ticket URL
-                  if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
-                    console.log('🎫 Opening fallback CTA link:', homeSettings.desktop_fallback_cta_url);
-                    window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
-                  } else if (mostRecentEvent?.external_ticket_url) {
-                    console.log(`🎫 Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                    window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer');
-                  }
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = 'scale(0.98)';
                 }}
-              >
-                <span
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '15px', // Slightly larger for better readability
-                    fontWeight: '500', // Medium weight for better presence
-                    lineHeight: 'normal',
-                    pointerEvents: 'none',
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
-                  }}
-                >
-                  {!mostRecentEvent && homeSettings?.desktop_fallback_enabled
-                    ? (homeSettings?.fallback_cta_button_text || 'Join Waitlist')
-                    : (mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Event/Fallback title overlay - Responsive */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '0px',
-              bottom: `${heroTitleBottom}px`, // Dynamic spacing based on single vs multi-line title
-              display: 'flex',
-              width: '100%', // Use full width of responsive hero card
-              height: '48px',
-              padding: '8px 16px', // Slightly more padding
-              justifyContent: 'flex-start',
-              alignItems: 'flex-end',
-              gap: '10px',
-              boxSizing: 'border-box',
-              zIndex: 4, // Ensure title renders above gradient overlay
-              // Promote to its own compositor layer to prevent flicker during events scroll
-              WebkitTransform: 'translateZ(0)',
-              transform: 'translateZ(0)',
-              willChange: 'transform',
-              WebkitBackfaceVisibility: 'hidden',
-              backfaceVisibility: 'hidden'
-            }}
-          >
-            <div
-              ref={heroTitleRef}
-              style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: '24px', // Fixed size like mobile
-                fontWeight: '800',
-                lineHeight: '1.1',
-                flex: '1',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                maxWidth: `${scaledDimensions.heroWidth - 24}px`
-              }}
-            >
-              {!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_title
-                ? homeSettings.desktop_fallback_title
-                : (mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE")}
-            </div>
-          </div>
-            </div>
-          </div>
-        ) : (
-          /* Mobile/Tablet Layout - Original Hero Image */
-          <div
-            onClick={(e) => {
-              // Navigate directly to ticket purchase page in new tab
-              if (mostRecentEvent?.external_ticket_url) {
-                console.log(`🎫 Mobile Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
-              } else {
-                console.log('🎫 Mobile Featured Event: No ticket link available for', mostRecentEvent?.title);
-              }
-            }}
-            style={{
-              width: '100%',
-              height: `${scaledDimensions.heroHeight}px`,
-              position: 'relative',
-              flexShrink: 0,
-              margin: '0',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: 'scale(1)',
-              borderRadius: '20px',
-              overflow: 'hidden',
-              background: '#161616',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'scale(1.005)';
-              e.target.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'scale(1)';
-              e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)';
-            }}
-          >
-            {/* Mobile Hero Content - Same as desktop hero content but without Up Next title */}
-            {/* Add mobile hero content here if needed */}
-          </div>
-        )}
-
-        {/* Right Side - Events Section (Desktop 1024px+) */}
-        {scaledDimensions.containerWidth >= 1024 && (
-          <div
-            style={{
-              display: 'flex',
-              flex: '1',
-              flexDirection: 'column',
-              justifyContent: 'flex-start',
-              alignItems: 'stretch',
-              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap
-              minWidth: `${Math.max(450, Math.round(scaledDimensions.eventsWidth))}px`, // Scale with eventsWidth
-
-              height: (() => {
-                // Calculate total height to match Up Next title + gap + square hero image
-                const titleHeight = Math.max(20, Math.round(scaledDimensions.scale * 26)); // Up Next title height (updated)
-                const sectionGap = Math.max(6, Math.round(scaledDimensions.scale * 8)); // Gap between title and hero
-                const squareHeroHeight = scaledDimensions.heroWidth; // Square hero uses heroWidth for height
-                const totalLeftSideHeight = titleHeight + sectionGap + squareHeroHeight;
-                return `${totalLeftSideHeight}px`; // Match total left side height
-              })(),
-              overflow: 'hidden' // Prevent any overflow
-            }}
-          >
-            {/* Events Title and Toggle - Aligned with Hero Top */}
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                margin: '0', // Remove margin to align with hero top
-                padding: '0',
-                ...fadeIn(600)
-              }}
-            >
-              {/* Event Title - Scaled down to match Up Next Title */}
-              <div
-                style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced to match Up Next title
-                  fontWeight: '800',
-                  lineHeight: 'normal',
-                  height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match Up Next title
-                  display: 'flex',
-                  alignItems: 'center' // Center text vertically within the height
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
                 }}
-              >
-                Events
-              </div>
-              {/* Event Filter Toggle - Responsive (Glass container, sliding mechanism preserved) */}
-              <div
-                style={{
-                  display: 'flex',
-                  width: `${Math.max(75, Math.round(scaledDimensions.scale * 95))}px`,
-                  height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`,
-                  padding: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexShrink: 0,
-                  borderRadius: '10px',
-                  background: 'rgba(22, 22, 22, 0.50)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  position: 'relative',
-                  cursor: 'pointer',
-                  transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
-                  transform: 'translateZ(0)',
-                  willChange: 'transform',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  isolation: 'isolate',
-                  WebkitTapHighlightColor: 'transparent',
-                  boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
-                }}
-                onClick={() => setShowAllEvents(!showAllEvents)}
-                role="switch"
-                aria-checked={showAllEvents}
-                aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setShowAllEvents(!showAllEvents);
-                  }
-                }}
-              >
-                {/* Sliding Button Background - Responsive (unchanged) */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    width: `${Math.max(36, Math.round(scaledDimensions.scale * 46))}px`,
-                    height: `${Math.max(19, Math.round(scaledDimensions.scale * 24))}px`,
-                    borderRadius: `${Math.max(4, Math.round(scaledDimensions.scale * 6))}px`,
-                    border: '0.5px solid rgba(0, 0, 0, 0.04)',
-                    background: '#FFF',
-                    boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
-                    left: showAllEvents ? `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px` : `${Math.max(37, Math.round(scaledDimensions.scale * 47))}px`,
-                    top: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
-                    transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    zIndex: 1
-                  }}
-                />
+              />
 
-                {/* Next Button - Responsive (unchanged) */}
-                <div
-                  style={{
-                    display: 'flex',
-                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`,
-                    alignItems: 'center',
-                    flex: '1 0 0',
-                    alignSelf: 'stretch',
-                    position: 'relative',
-                    zIndex: 2
-                  }}
-                >
-                  <span
-                    style={{
-                      display: '-webkit-box',
-                      WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 1,
-                      flex: '1 0 0',
-                      overflow: 'hidden',
-                      color: showAllEvents ? '#000' : '#FFF',
-                      textAlign: 'center',
-                      fontFeatureSettings: "'liga' off, 'clig' off",
-                      textOverflow: 'ellipsis',
-                      fontFamily: 'Inter',
-                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`,
-                      fontStyle: 'normal',
-                      fontWeight: showAllEvents ? '590' : '400',
-                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`,
-                      letterSpacing: '-0.08px',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                  >
-                    Next
-                  </span>
-                </div>
-
-                {/* Past Button - Responsive (unchanged) */}
-                <div
-                  style={{
-                    display: 'flex',
-                    padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`,
-                    alignItems: 'center',
-                    flex: '1 0 0',
-                    alignSelf: 'stretch',
-                    position: 'relative',
-                    zIndex: 2
-                  }}
-                >
-                  <span
-                    style={{
-                      display: '-webkit-box',
-                      WebkitBoxOrient: 'vertical',
-                      WebkitLineClamp: 1,
-                      flex: '1 0 0',
-                      overflow: 'hidden',
-                      color: !showAllEvents ? '#000' : '#FFF',
-                      textAlign: 'center',
-                      fontFeatureSettings: "'liga' off, 'clig' off",
-                      textOverflow: 'ellipsis',
-                      fontFamily: 'Inter',
-                      fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`,
-                      fontStyle: 'normal',
-                      fontWeight: !showAllEvents ? '590' : '400',
-                      lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`,
-                      letterSpacing: '-0.08px',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                  >
-                    Past
-                  </span>
-                </div>
-              </div>
+              {/* Group 5 - Navigation Pills (Reusable) */}
+              <DesktopNavigationPills currentPage="Events" />
             </div>
 
-            {/* Events Grid Container with Fade Gradients */}
+            {/* Desktop Layout: Hero Left + Events Right (1024px+) */}
             <div
               style={{
                 position: 'relative',
+                display: 'flex',
                 width: '100%',
-                height: (() => {
-                  // Simple calculation: match the hero image height exactly
-                  // The hero image height is scaledDimensions.heroWidth (since it's square and already scaled)
-                  const heroImageHeight = scaledDimensions.heroWidth;
-                  return `${heroImageHeight}px`; // Match hero height exactly for perfect alignment
-                })(),
-                  contain: 'paint',
-                  isolation: 'isolate',
-                  WebkitTransform: 'translateZ(0)'
+                margin: '24px 0 0 0', // Reduced from 32px to 24px for better visual flow
+                padding: '0',
+                flexDirection: scaledDimensions.containerWidth >= 1024 ? 'row' : 'column',
+                gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(24, Math.round(scaledDimensions.scale * 32))}px` : '20px', // Scale gap for desktop
+                alignItems: 'flex-start'
               }}
             >
-              {/* Scrollable Events Grid */}
-              <div
-                ref={gridScrollRef}
-                className="events-grid-scrollable"
-                onScroll={handleGridScroll}
-                style={{ ...(fadeIn(800)),
-                  position: 'relative',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)', // 2 columns
-                  gridAutoRows: 'min-content', // Allow natural content height instead of fixed 3 rows
-                  rowGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive row gap
-                  columnGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive column gap
-                  width: '100%',
-                  height: '100%',
-                  alignItems: 'stretch',
-                  // Scrolling properties
-                  overflowY: 'auto',
-                  overflowX: 'hidden',
-                  scrollBehavior: 'smooth',
-                  WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
-                  // Firefox scrollbar styling
-                  scrollbarWidth: 'thin',
-                  scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
-                  contain: 'paint'
-                }}
-              >
-              {(() => {
-                // Calculate available height per grid cell for responsive card scaling
-                const heroImageHeight = scaledDimensions.heroWidth; // Hero image height (square, already scaled)
-                const gridGap = Math.max(4, Math.round(scaledDimensions.scale * 8));
-                const availableHeightPerCell = (heroImageHeight - (2 * gridGap)) / 3; // 3 rows with 2 gaps
-                const baseCardHeight = 124; // Base card height for scaling reference
-                const cardScaleFactor = Math.min(1, availableHeightPerCell / baseCardHeight); // Never scale up, only down
-
-                return (
-                  <>
-                    {/* Show events or empty state */}
-                    {showAllEvents && filteredHomepageEvents.length === 0 && filteredFeaturedEvents.length === 0 ? (
-                /* Empty State - Spans all grid cells */
+              {/* Left Side - Up Next Section (Desktop Only) */}
+              {scaledDimensions.containerWidth >= 1024 ? (
                 <div
                   style={{
-                    gridColumn: '1 / -1',
-                    gridRow: '1 / -1',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '16px',
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    textAlign: 'center'
+                    alignItems: 'stretch',
+                    gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as events section
+                    width: `${scaledDimensions.heroWidth}px`,
+                    flexShrink: 0,
+                    contain: 'paint',
+                    isolation: 'isolate'
                   }}
                 >
+                  {/* Up Next Title - Scaled down for better proportion */}
                   <div
                     style={{
-                      fontSize: '18px',
-                      fontWeight: '600',
-                      opacity: 0.8
-                    }}
-                  >
-                    No upcoming events
-                  </div>
-                  <button
-                    type="button"
-                    aria-label="View Past Events"
-                    onClick={() => setShowAllEvents(false)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '12px 16px',
-                      minHeight: '44px',
-                      borderRadius: '14px',
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      fontWeight: 600,
                       color: '#FFF',
-                      background: 'rgba(22, 22, 22, 0.70)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
-                      transform: 'translateZ(0) scale(1)',
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      isolation: 'isolate',
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent'
+                      fontFamily: 'Inter',
+                      fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced from 32px to 26px for better proportion
+                      fontWeight: '800',
+                      lineHeight: 'normal',
+                      margin: '0',
+                      padding: '0',
+                      height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match font size
+                      display: 'flex',
+                      alignItems: 'center', // Center text vertically within the height
+                      ...fadeIn(200)
                     }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)'; }}
-                    onTouchStart={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(0.98)'; }}
-                    onTouchEnd={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(1)'; }}
                   >
-                    View Past Events
-                  </button>
-                </div>
-              ) : (
-                /* Event Cards - Render all events; scroll container shows more below */
-                [...filteredFeaturedEvents, ...filteredHomepageEvents]
-                  .map((card, index) => (
-                  <article
-                    key={`homepage-desktop-${card.id}`}
+                    Up Next
+                  </div>
+
+                  {/* Hero Featured Event or Fallback - Perfect Square */}
+                  <div
+                    onClick={(e) => {
+                      console.log('🔍 Desktop Featured Event: Click detected!', e.target);
+                      e.preventDefault();
+                      e.stopPropagation();
+
+                      // If showing fallback, use fallback CTA URL
+                      if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
+                        console.log('🎫 Desktop Fallback: Opening CTA link:', homeSettings.desktop_fallback_cta_url);
+                        window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
+                      }
+                      // Otherwise use event ticket URL
+                      else if (mostRecentEvent?.external_ticket_url) {
+                        console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                        window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                      } else {
+                        console.log('🎫 Desktop Featured Event: No ticket link available for', mostRecentEvent?.title);
+                        console.log('🔍 Desktop Featured Event data:', mostRecentEvent);
+                      }
+                    }}
                     style={{
-                      display: 'block',
-                      width: '100%',
-                      height: '100%',
-                      minHeight: '90px',
-                      borderRadius: '20px',
-                      background: 'rgba(22, 22, 22, 0.50)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                      width: `${scaledDimensions.heroWidth}px`, // Use heroWidth for perfect square
+                      height: `${scaledDimensions.heroWidth}px`, // Same as width for perfect square
                       position: 'relative',
-                      margin: '0 0 4px 0',
-                      padding: '2px',
+                      flexShrink: 0,
+                      margin: '0',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: 'scale(1)',
+                      borderRadius: '20px',
                       overflow: 'hidden',
-                      boxSizing: 'border-box',
-                      isolation: 'isolate',
-                      transform: 'translateZ(0)',
+                      WebkitTransform: 'translateZ(0)',
                       willChange: 'transform',
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
-                      contain: 'layout style paint',
-                      zIndex: 1,
-                      clear: 'both'
+                      contain: 'paint',
+                      isolation: 'isolate',
+                      ...fadeIn(400)
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="View featured event details"
                   >
-                    {/* Desktop Event Card Content - Scaled to Fit Grid (Remove duplicate styling) */}
+                    {/* Background Image with Gradient Overlay */}
                     <div
                       style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '0px',
                         width: '100%',
-                        height: `${Math.max(87, Math.round(baseCardHeight * cardScaleFactor) - 6)}px`, // Scale card height based on available space, reduced by 6px total
-                        position: 'relative',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxSizing: 'border-box',
-                        padding: `${Math.max(6, Math.round(8 * cardScaleFactor))}px` // Scale padding with better minimum
+                        height: '100%',
+                        borderRadius: '20px',
+                        overflow: 'hidden',
+                        WebkitTransform: 'translateZ(0)',
+                        transform: 'translateZ(0)',
+                        willChange: 'transform',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden'
                       }}
                     >
-                      {/* Image Section - Original Size with Fixed Rendering */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
-                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
-                          width: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
-                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
-                          flexShrink: 0,
-                          borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Back to original scale
-                          overflow: 'hidden',
-                          cursor: 'pointer',
-                          zIndex: 100,
-                          transition: 'transform 0.1s ease',
-                          boxSizing: 'border-box'
-                        }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          // Add image expand functionality if needed
-                        }}
-                      >
-                        {/* Event Background Image - Use optimized URL with cache-busting */}
+                      {/* Dynamic Event Image, Custom Fallback, or Default Placeholder */}
+                      {mostRecentEvent?.cover_image ? (
+                        /* Event Cover Image */
+                        <picture>
+                          <source
+                            srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
+                            sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                            type="image/avif"
+                          />
+                          <source
+                            srcSet={getResponsiveSrcSet(mostRecentEvent.cover_image, 'hero')}
+                            sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                            type="image/webp"
+                          />
+                          <img
+                            crossOrigin="anonymous"
+                            referrerPolicy="no-referrer"
+                            src={getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
+                            alt={`${mostRecentEvent.artist_name || mostRecentEvent.title} - Featured Event`}
+                            loading="eager"
+                            decoding="async"
+                            fetchpriority="high"
+                            onLoad={() => {
+                              if (process.env.NODE_ENV === 'development') {
+                                console.log('✅ Hero image loaded:', mostRecentEvent.title);
+                              }
+                            }}
+                            onError={(e) => {
+                              const img = e.target;
+                              const url = img?.src || '';
+
+                              // Prevent infinite error loops
+                              if (img && !img.dataset.fallbackTried) {
+                                img.dataset.fallbackTried = '1';
+
+                                // Try different image variants before giving up
+                                if (url.includes('/event_hero')) {
+                                  img.src = url.replace('/event_hero', '/medium');
+                                  return;
+                                }
+                                if (url.includes('/event_card')) {
+                                  img.src = url.replace('/event_card', '/medium');
+                                  return;
+                                }
+                                if (url.includes('/medium')) {
+                                  img.src = url.replace('/medium', '/small');
+                                  return;
+                                }
+                                if (url.includes('/small')) {
+                                  img.src = url.replace('/small', '/thumbnail');
+                                  return;
+                                }
+                                if (url.includes('/api/images/serve/')) {
+                                  img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
+                                  return;
+                                }
+
+                                // Final fallback to static image
+                                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                              } else {
+                                // If all fallbacks failed, hide the image gracefully
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.warn('⚠️ All hero image fallbacks failed');
+                                }
+                                img.style.backgroundColor = '#222222';
+                              }
+                            }}
+                            style={{
+                              position: 'absolute',
+                              left: '0px',
+                              top: '0px',
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              zIndex: 1
+                            }}
+                          />
+                        </picture>
+                      ) : !mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_image_uuid ? (
+                        /* Custom Fallback Image from Dashboard Settings */
                         <img
                           crossOrigin="anonymous"
                           referrerPolicy="no-referrer"
-                          width={Math.max(79, Math.round(105 * cardScaleFactor))}
-                          height={Math.max(79, Math.round(105 * cardScaleFactor))}
-                          src={(() => {
-                            const imageUrl = card.coverImage || card.image_url;
-                            if (!imageUrl || imageUrl.startsWith('data:')) {
-                              return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                            }
-                            const optimizedUrl = getOptimizedImageUrl(imageUrl, 111);
-                            console.log(`🖼️ DESKTOP FEATURED: Loading featured event image for "${card.title}":`, {
-                              original: imageUrl,
-                              optimized: optimizedUrl,
-                              isNewImageSystem: imageUrl?.includes('/api/images/serve/'),
-                              hasExistingCacheBusting: imageUrl?.includes('_cb=') || imageUrl?.includes('_t=')
-                            });
-                            return optimizedUrl;
-                          })()}
-                          srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 111px"
-                          alt={card.image_alt_text || `${card.title} event cover`}
-                          title={card.image_title || card.title}
-                          loading="lazy"
+                          src={`/api/images/serve/${homeSettings.desktop_fallback_image_uuid}/medium`}
+                          alt={homeSettings.desktop_fallback_title || 'Coming Soon'}
+                          loading="eager"
                           decoding="async"
+                          fetchpriority="high"
                           onError={(e) => {
-                            // Only log in development to reduce console spam
-                            if (process.env.NODE_ENV === 'development') {
-                              console.warn(`⚠️ Event image failed to load: "${card.title}"`);
+                            const img = e.target;
+                            if (img && !img.dataset.fallbackTried) {
+                              img.dataset.fallbackTried = '1';
+                              // Try small variant if medium fails
+                              img.src = `/api/images/serve/${homeSettings.desktop_fallback_image_uuid}/small`;
+                            } else {
+                              // Final fallback to placeholder
+                              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                             }
-                            // Prevent further error events by removing the src
-                            e.target.style.backgroundColor = '#222222';
-                            e.target.style.display = 'none';
-                          }}
-                          onLoad={(e) => {
-                            // Only log in development
-                            if (process.env.NODE_ENV === 'development') {
-                              console.log('✅ Event image loaded:', card.title);
-                            }
-                            e.target.style.backgroundColor = 'transparent';
-                            e.target.style.opacity = '1';
                           }}
                           style={{
-                            width: '100%', // Fill container
-                            height: '100%', // Fill container
-                            borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Match container border radius
+                            position: 'absolute',
+                            left: '0px',
+                            top: '0px',
+                            width: '100%',
+                            height: '100%',
                             objectFit: 'cover',
-                            backgroundColor: '#2a2a2a',
-                            opacity: '0',
-                            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            transform: 'scale(1)',
-                            boxShadow: 'none',
-                            pointerEvents: 'none'
+                            objectPosition: 'center',
+                            zIndex: 1
+                          }}
+                        />
+                      ) : (
+                        /* Default Placeholder when no event and no custom fallback */
+                        <img
+                          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K"
+                          alt="No upcoming featured event"
+                          loading="eager"
+                          decoding="async"
+                          fetchpriority="high"
+                          style={{
+                            position: 'absolute',
+                            left: '0px',
+                            top: '0px',
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: 'center',
+                            zIndex: 1
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Mobile-Optimized Gradient Overlay - Outside image container for better rendering */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '0px',
+                        width: '100%',
+                        height: '100%',
+                        background: `linear-gradient(180deg, rgba(0, 0, 0, 0.00) 30%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.65) 70%, rgba(0, 0, 0, 0.90) 90%)`,
+                        borderRadius: '20px',
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                        // Desktop optimizations
+                        WebkitTransform: 'translateZ(0)', // Force hardware acceleration
+                        transform: 'translateZ(0)',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    />
+
+                    {/* Bottom overlay with date/location (events only) or CTA button (fallback) - Fixed positioning */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        bottom: '8px', // Positioned lower in the card for better visual balance
+                        display: 'flex',
+                        width: '100%',
+                        justifyContent: mostRecentEvent ? 'space-between' : 'flex-end', // Right-align button for fallback
+                        padding: '0px 10px 0px 16px', // Reduced right padding to move button 6px total to the right
+                        gap: '12px', // Reduced gap to make more room for wider button
+                        boxSizing: 'border-box',
+                        zIndex: 3,
+                        // Promote to its own compositor layer to prevent flicker during events scroll
+                        WebkitTransform: 'translateZ(0)',
+                        transform: 'translateZ(0)',
+                        willChange: 'transform',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden',
+                        minHeight: '44px' // Ensure minimum height for button container
+                      }}
+                    >
+                      {/* Date and Location - Only show for actual events, not fallback */}
+                      {mostRecentEvent && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            flex: '1',
+                            padding: '4px 0px',
+                            flexDirection: 'column',
+                            minWidth: 0,
+                            maxWidth: 'calc(100% - 132px)' // Reserve space for wider button (120px + 12px gap)
+                          }}
+                        >
+                          {/* Date row - Enhanced styling */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignSelf: 'stretch',
+                              alignItems: 'center',
+                              gap: '6px', // Slightly more gap for better readability
+                              minWidth: 0,
+                              marginBottom: '2px' // Small margin for separation
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                              <path d="M1 3h8v6H1V3zm2-2v1m4-1v1M1 5h8" stroke="#FFF" strokeWidth="0.5" />
+                            </svg>
+                            <span
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px', // Fixed size like mobile
+                                fontWeight: '200',
+                                lineHeight: 'normal',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: 1,
+                                minWidth: 0
+                              }}
+                            >
+                              {heroDateText}
+                            </span>
+                          </div>
+
+                          {/* Location row */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignSelf: 'stretch',
+                              alignItems: 'center',
+                              gap: '4px',
+                              minWidth: 0
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 10 10" fill="none" style={{ flexShrink: 0 }}>
+                              <path d="M5 1a3 3 0 0 0-3 3c0 2 3 5 3 5s3-3 3-5a3 3 0 0 0-3-3z" stroke="#FFF" strokeWidth="0.5" />
+                              <circle cx="5" cy="4" r="1" fill="#FFF" />
+                            </svg>
+                            <span
+                              style={{
+                                color: '#FFF',
+                                fontFamily: 'Inter',
+                                fontSize: '12px', // Fixed size like mobile
+                                fontWeight: '200',
+                                lineHeight: 'normal',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: 1,
+                                minWidth: 0
+                              }}
+                            >
+                              {formatLocation(mostRecentEvent?.event_address || homeSettings?.event_address)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* CTA Button - Enhanced styling and positioning */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          width: '120px', // Increased width for better presence
+                          height: '44px', // Increased height for better touch target
+                          padding: '2px',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexShrink: 0,
+                          zIndex: 3
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            width: '116px',
+                            height: '40px',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '8px',
+                            borderRadius: '22px',
+                            background: 'rgba(22, 22, 22, 0.50)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            cursor: 'pointer',
+                            transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                            transform: 'translateZ(0) scale(1)',
+                            willChange: 'transform',
+                            backfaceVisibility: 'hidden',
+                            WebkitBackfaceVisibility: 'hidden',
+                            isolation: 'isolate',
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.stopPropagation();
+                            e.target.style.transform = 'translateZ(0) scale(1.05)';
+                            e.target.style.background = 'rgba(22, 22, 22, 0.65)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.stopPropagation();
+                            e.target.style.transform = 'translateZ(0) scale(1)';
+                            e.target.style.background = 'rgba(22, 22, 22, 0.50)';
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Handle fallback CTA or event ticket URL
+                            if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
+                              console.log('🎫 Opening fallback CTA link:', homeSettings.desktop_fallback_cta_url);
+                              window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
+                            } else if (mostRecentEvent?.external_ticket_url) {
+                              console.log(`🎫 Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                              window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer');
+                            }
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: '#FFF',
+                              fontFamily: 'Inter',
+                              fontSize: '15px', // Slightly larger for better readability
+                              fontWeight: '500', // Medium weight for better presence
+                              lineHeight: 'normal',
+                              pointerEvents: 'none',
+                              textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)' // Text shadow for better contrast
+                            }}
+                          >
+                            {!mostRecentEvent && homeSettings?.desktop_fallback_enabled
+                              ? (homeSettings?.fallback_cta_button_text || 'Join Waitlist')
+                              : (mostRecentEvent?.external_ticket_url ? 'Get Tickets' : 'View Event')}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Event/Fallback title overlay - Responsive */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        bottom: `${heroTitleBottom}px`, // Dynamic spacing based on single vs multi-line title
+                        display: 'flex',
+                        width: '100%', // Use full width of responsive hero card
+                        height: '48px',
+                        padding: '8px 16px', // Slightly more padding
+                        justifyContent: 'flex-start',
+                        alignItems: 'flex-end',
+                        gap: '10px',
+                        boxSizing: 'border-box',
+                        zIndex: 4, // Ensure title renders above gradient overlay
+                        // Promote to its own compositor layer to prevent flicker during events scroll
+                        WebkitTransform: 'translateZ(0)',
+                        transform: 'translateZ(0)',
+                        willChange: 'transform',
+                        WebkitBackfaceVisibility: 'hidden',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    >
+                      <div
+                        ref={heroTitleRef}
+                        style={{
+                          color: '#FFF',
+                          fontFamily: 'Inter',
+                          fontSize: '24px', // Fixed size like mobile
+                          fontWeight: '800',
+                          lineHeight: '1.1',
+                          flex: '1',
+                          overflow: 'hidden',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          maxWidth: `${scaledDimensions.heroWidth - 24}px`
+                        }}
+                      >
+                        {!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_title
+                          ? homeSettings.desktop_fallback_title
+                          : (mostRecentEvent?.artist_name || mostRecentEvent?.title || homeSettings?.event_title || "EVENT TITLE")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Mobile/Tablet Layout - Original Hero Image */
+                <div
+                  onClick={(e) => {
+                    // Navigate directly to ticket purchase page in new tab
+                    if (mostRecentEvent?.external_ticket_url) {
+                      console.log(`🎫 Mobile Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
+                      window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                    } else {
+                      console.log('🎫 Mobile Featured Event: No ticket link available for', mostRecentEvent?.title);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    height: `${scaledDimensions.heroHeight}px`,
+                    position: 'relative',
+                    flexShrink: 0,
+                    margin: '0',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'scale(1)',
+                    borderRadius: '20px',
+                    overflow: 'hidden',
+                    background: '#161616',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.005)';
+                    e.target.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)';
+                  }}
+                >
+                  {/* Mobile Hero Content - Same as desktop hero content but without Up Next title */}
+                  {/* Add mobile hero content here if needed */}
+                </div>
+              )}
+
+              {/* Right Side - Events Section (Desktop 1024px+) */}
+              {scaledDimensions.containerWidth >= 1024 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flex: '1',
+                    flexDirection: 'column',
+                    justifyContent: 'flex-start',
+                    alignItems: 'stretch',
+                    gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap
+                    minWidth: `${Math.max(450, Math.round(scaledDimensions.eventsWidth))}px`, // Scale with eventsWidth
+
+                    height: (() => {
+                      // Calculate total height to match Up Next title + gap + square hero image
+                      const titleHeight = Math.max(20, Math.round(scaledDimensions.scale * 26)); // Up Next title height (updated)
+                      const sectionGap = Math.max(6, Math.round(scaledDimensions.scale * 8)); // Gap between title and hero
+                      const squareHeroHeight = scaledDimensions.heroWidth; // Square hero uses heroWidth for height
+                      const totalLeftSideHeight = titleHeight + sectionGap + squareHeroHeight;
+                      return `${totalLeftSideHeight}px`; // Match total left side height
+                    })(),
+                    overflow: 'hidden' // Prevent any overflow
+                  }}
+                >
+                  {/* Events Title and Toggle - Aligned with Hero Top */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      margin: '0', // Remove margin to align with hero top
+                      padding: '0',
+                      ...fadeIn(600)
+                    }}
+                  >
+                    {/* Event Title - Scaled down to match Up Next Title */}
+                    <div
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Reduced to match Up Next title
+                        fontWeight: '800',
+                        lineHeight: 'normal',
+                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`, // Explicit height to match Up Next title
+                        display: 'flex',
+                        alignItems: 'center' // Center text vertically within the height
+                      }}
+                    >
+                      Events
+                    </div>
+                    {/* Event Filter Toggle - Responsive (Glass container, sliding mechanism preserved) */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        width: `${Math.max(75, Math.round(scaledDimensions.scale * 95))}px`,
+                        height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`,
+                        padding: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexShrink: 0,
+                        borderRadius: '10px',
+                        background: 'rgba(22, 22, 22, 0.50)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
+                        position: 'relative',
+                        cursor: 'pointer',
+                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease',
+                        transform: 'translateZ(0)',
+                        willChange: 'transform',
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        isolation: 'isolate',
+                        WebkitTapHighlightColor: 'transparent',
+                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.25)'
+                      }}
+                      onClick={() => setShowAllEvents(!showAllEvents)}
+                      role="switch"
+                      aria-checked={showAllEvents}
+                      aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setShowAllEvents(!showAllEvents);
+                        }
+                      }}
+                    >
+                      {/* Sliding Button Background - Responsive (unchanged) */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          width: `${Math.max(36, Math.round(scaledDimensions.scale * 46))}px`,
+                          height: `${Math.max(19, Math.round(scaledDimensions.scale * 24))}px`,
+                          borderRadius: `${Math.max(4, Math.round(scaledDimensions.scale * 6))}px`,
+                          border: '0.5px solid rgba(0, 0, 0, 0.04)',
+                          background: '#FFF',
+                          boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+                          left: showAllEvents ? `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px` : `${Math.max(37, Math.round(scaledDimensions.scale * 47))}px`,
+                          top: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
+                          transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          zIndex: 1
+                        }}
+                      />
+
+                      {/* Next Button - Responsive (unchanged) */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`,
+                          alignItems: 'center',
+                          flex: '1 0 0',
+                          alignSelf: 'stretch',
+                          position: 'relative',
+                          zIndex: 2
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: 1,
+                            flex: '1 0 0',
+                            overflow: 'hidden',
+                            color: showAllEvents ? '#000' : '#FFF',
+                            textAlign: 'center',
+                            fontFeatureSettings: "'liga' off, 'clig' off",
+                            textOverflow: 'ellipsis',
+                            fontFamily: 'Inter',
+                            fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`,
+                            fontStyle: 'normal',
+                            fontWeight: showAllEvents ? '590' : '400',
+                            lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`,
+                            letterSpacing: '-0.08px',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                          }}
+                        >
+                          Next
+                        </span>
+                      </div>
+
+                      {/* Past Button - Responsive (unchanged) */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          padding: `${Math.max(2, Math.round(scaledDimensions.scale * 3))}px ${Math.max(7, Math.round(scaledDimensions.scale * 10))}px`,
+                          alignItems: 'center',
+                          flex: '1 0 0',
+                          alignSelf: 'stretch',
+                          position: 'relative',
+                          zIndex: 2
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: '-webkit-box',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: 1,
+                            flex: '1 0 0',
+                            overflow: 'hidden',
+                            color: !showAllEvents ? '#000' : '#FFF',
+                            textAlign: 'center',
+                            fontFeatureSettings: "'liga' off, 'clig' off",
+                            textOverflow: 'ellipsis',
+                            fontFamily: 'Inter',
+                            fontSize: `${Math.max(9, Math.round(scaledDimensions.scale * 11))}px`,
+                            fontStyle: 'normal',
+                            fontWeight: !showAllEvents ? '590' : '400',
+                            lineHeight: `${Math.max(12, Math.round(scaledDimensions.scale * 15))}px`,
+                            letterSpacing: '-0.08px',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                          }}
+                        >
+                          Past
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Events Grid Container with Fade Gradients */}
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: (() => {
+                        // Simple calculation: match the hero image height exactly
+                        // The hero image height is scaledDimensions.heroWidth (since it's square and already scaled)
+                        const heroImageHeight = scaledDimensions.heroWidth;
+                        return `${heroImageHeight}px`; // Match hero height exactly for perfect alignment
+                      })(),
+                      contain: 'paint',
+                      isolation: 'isolate',
+                      WebkitTransform: 'translateZ(0)'
+                    }}
+                  >
+                    {/* Scrollable Events Grid */}
+                    <div
+                      ref={gridScrollRef}
+                      className="events-grid-scrollable"
+                      onScroll={handleGridScroll}
+                      style={{
+                        ...(fadeIn(800)),
+                        position: 'relative',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)', // 2 columns
+                        gridAutoRows: 'min-content', // Allow natural content height instead of fixed 3 rows
+                        rowGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive row gap
+                        columnGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive column gap
+                        width: '100%',
+                        height: '100%',
+                        alignItems: 'stretch',
+                        // Scrolling properties
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                        scrollBehavior: 'smooth',
+                        WebkitOverflowScrolling: 'touch', // iOS momentum scrolling
+                        // Firefox scrollbar styling
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.1)',
+                        contain: 'paint'
+                      }}
+                    >
+                      {(() => {
+                        // Calculate available height per grid cell for responsive card scaling
+                        const heroImageHeight = scaledDimensions.heroWidth; // Hero image height (square, already scaled)
+                        const gridGap = Math.max(4, Math.round(scaledDimensions.scale * 8));
+                        const availableHeightPerCell = (heroImageHeight - (2 * gridGap)) / 3; // 3 rows with 2 gaps
+                        const baseCardHeight = 124; // Base card height for scaling reference
+                        const cardScaleFactor = Math.min(1, availableHeightPerCell / baseCardHeight); // Never scale up, only down
+
+                        return (
+                          <>
+                            {/* Show events or empty state */}
+                            {showAllEvents && filteredHomepageEvents.length === 0 && filteredFeaturedEvents.length === 0 ? (
+                              /* Empty State - Spans all grid cells */
+                              <div
+                                style={{
+                                  gridColumn: '1 / -1',
+                                  gridRow: '1 / -1',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                  gap: '16px',
+                                  color: '#FFF',
+                                  fontFamily: 'Inter',
+                                  textAlign: 'center'
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: '18px',
+                                    fontWeight: '600',
+                                    opacity: 0.8
+                                  }}
+                                >
+                                  No upcoming events
+                                </div>
+                                <button
+                                  type="button"
+                                  aria-label="View Past Events"
+                                  onClick={() => setShowAllEvents(false)}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '12px 16px',
+                                    minHeight: '44px',
+                                    borderRadius: '14px',
+                                    fontFamily: 'Inter',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    color: '#FFF',
+                                    background: 'rgba(22, 22, 22, 0.70)',
+                                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                                    transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                                    transform: 'translateZ(0) scale(1)',
+                                    willChange: 'transform',
+                                    backfaceVisibility: 'hidden',
+                                    WebkitBackfaceVisibility: 'hidden',
+                                    isolation: 'isolate',
+                                    boxSizing: 'border-box',
+                                    cursor: 'pointer',
+                                    WebkitTapHighlightColor: 'transparent'
+                                  }}
+                                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)'; }}
+                                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)'; }}
+                                  onTouchStart={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(0.98)'; }}
+                                  onTouchEnd={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(1)'; }}
+                                >
+                                  View Past Events
+                                </button>
+                              </div>
+                            ) : (
+                              /* Event Cards - Render all events; scroll container shows more below */
+                              [...filteredFeaturedEvents, ...filteredHomepageEvents]
+                                .map((card, index) => (
+                                  <article
+                                    key={`homepage-desktop-${card.id}`}
+                                    style={{
+                                      display: 'block',
+                                      width: '100%',
+                                      height: '100%',
+                                      minHeight: '90px',
+                                      borderRadius: '20px',
+                                      background: 'rgba(22, 22, 22, 0.50)',
+                                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                                      position: 'relative',
+                                      margin: '0 0 4px 0',
+                                      padding: '2px',
+                                      overflow: 'hidden',
+                                      boxSizing: 'border-box',
+                                      isolation: 'isolate',
+                                      transform: 'translateZ(0)',
+                                      willChange: 'transform',
+                                      backfaceVisibility: 'hidden',
+                                      WebkitBackfaceVisibility: 'hidden',
+                                      contain: 'layout style paint',
+                                      zIndex: 1,
+                                      clear: 'both'
+                                    }}
+                                  >
+                                    {/* Desktop Event Card Content - Scaled to Fit Grid (Remove duplicate styling) */}
+                                    <div
+                                      style={{
+                                        width: '100%',
+                                        height: `${Math.max(87, Math.round(baseCardHeight * cardScaleFactor) - 6)}px`, // Scale card height based on available space, reduced by 6px total
+                                        position: 'relative',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        boxSizing: 'border-box',
+                                        padding: `${Math.max(6, Math.round(8 * cardScaleFactor))}px` // Scale padding with better minimum
+                                      }}
+                                    >
+                                      {/* Image Section - Original Size with Fixed Rendering */}
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          left: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                                          width: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
+                                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
+                                          flexShrink: 0,
+                                          borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Back to original scale
+                                          overflow: 'hidden',
+                                          cursor: 'pointer',
+                                          zIndex: 100,
+                                          transition: 'transform 0.1s ease',
+                                          boxSizing: 'border-box'
+                                        }}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          // Add image expand functionality if needed
+                                        }}
+                                      >
+                                        {/* Event Background Image - Use optimized URL with cache-busting */}
+                                        <img
+                                          crossOrigin="anonymous"
+                                          referrerPolicy="no-referrer"
+                                          width={Math.max(79, Math.round(105 * cardScaleFactor))}
+                                          height={Math.max(79, Math.round(105 * cardScaleFactor))}
+                                          src={(() => {
+                                            const imageUrl = card.coverImage || card.image_url;
+                                            if (!imageUrl || imageUrl.startsWith('data:')) {
+                                              return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                            }
+                                            const optimizedUrl = getOptimizedImageUrl(imageUrl, 111);
+                                            console.log(`🖼️ DESKTOP FEATURED: Loading featured event image for "${card.title}":`, {
+                                              original: imageUrl,
+                                              optimized: optimizedUrl,
+                                              isNewImageSystem: imageUrl?.includes('/api/images/serve/'),
+                                              hasExistingCacheBusting: imageUrl?.includes('_cb=') || imageUrl?.includes('_t=')
+                                            });
+                                            return optimizedUrl;
+                                          })()}
+                                          srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
+                                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 111px"
+                                          alt={card.image_alt_text || `${card.title} event cover`}
+                                          title={card.image_title || card.title}
+                                          loading="lazy"
+                                          decoding="async"
+                                          onError={(e) => {
+                                            // Only log in development to reduce console spam
+                                            if (process.env.NODE_ENV === 'development') {
+                                              console.warn(`⚠️ Event image failed to load: "${card.title}"`);
+                                            }
+                                            // Prevent further error events by removing the src
+                                            e.target.style.backgroundColor = '#222222';
+                                            e.target.style.display = 'none';
+                                          }}
+                                          onLoad={(e) => {
+                                            // Only log in development
+                                            if (process.env.NODE_ENV === 'development') {
+                                              console.log('✅ Event image loaded:', card.title);
+                                            }
+                                            e.target.style.backgroundColor = 'transparent';
+                                            e.target.style.opacity = '1';
+                                          }}
+                                          style={{
+                                            width: '100%', // Fill container
+                                            height: '100%', // Fill container
+                                            borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Match container border radius
+                                            objectFit: 'cover',
+                                            backgroundColor: '#2a2a2a',
+                                            opacity: '0',
+                                            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            transform: 'scale(1)',
+                                            boxShadow: 'none',
+                                            pointerEvents: 'none'
+                                          }}
+                                        />
+                                      </div>
+
+                                      {/* Text Content Section - Better Spacing from Image */}
+                                      <div
+                                        style={{
+                                          display: 'flex',
+                                          width: `calc(100% - ${Math.max(99, Math.round(125 * cardScaleFactor))}px)`, // More space for image + gap
+                                          padding: `${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px ${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Better padding with 8px grid
+                                          flexDirection: 'column',
+                                          justifyContent: 'space-between',
+                                          alignItems: 'flex-start',
+                                          position: 'absolute',
+                                          left: `${Math.max(99, Math.round(125 * cardScaleFactor))}px`, // More space from image (image width + container padding + 8px gap)
+                                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Scale height to match image
+                                          boxSizing: 'border-box'
+                                        }}
+                                      >
+                                        {/* Event Information */}
+                                        <div
+                                          style={{
+                                            width: '100%',
+                                            minHeight: `${Math.max(50, Math.round(84 * cardScaleFactor))}px`, // Scale minHeight
+                                            height: 'auto',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignSelf: 'stretch',
+                                            flex: '1 1 auto'
+                                          }}
+                                        >
+                                          {/* Event Title - Grid-Responsive Typography */}
+                                          <h3
+                                            style={{
+                                              fontFamily: 'Inter',
+                                              fontWeight: '700',
+                                              fontSize: `${Math.max(10, Math.round(16 * cardScaleFactor))}px`, // Scale font size
+                                              lineHeight: '1.25',
+                                              textAlign: 'left',
+                                              color: '#FFFFFF',
+                                              width: '100%',
+                                              minHeight: `${Math.max(12, Math.round(20 * cardScaleFactor))}px`, // Scale minHeight
+                                              height: 'auto',
+                                              margin: `0 0 ${Math.max(2, Math.round(4 * cardScaleFactor))}px 0`, // Scale margin
+                                              padding: '0',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap'
+                                            }}
+                                          >
+                                            {card.title}
+                                          </h3>
+
+                                          {/* Event DateTime - Grid-Responsive with Icon */}
+                                          <div
+                                            style={{
+                                              display: 'flex',
+                                              flexDirection: 'row',
+                                              alignItems: 'center',
+                                              alignSelf: 'stretch',
+                                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                                              padding: `0px 0px 0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
+                                            }}
+                                          >
+                                            <svg
+                                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
+                                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor" />
+                                            </svg>
+                                            <span
+                                              style={{
+                                                fontFamily: 'Inter',
+                                                fontWeight: '300',
+                                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
+                                                lineHeight: '1.4',
+                                                textAlign: 'left',
+                                                color: 'rgba(255, 255, 255, 0.7)',
+                                                width: '100%',
+                                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
+                                                margin: '0',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                            >
+                                              {card.date}
+                                            </span>
+                                          </div>
+
+                                          {/* Event Location - Grid-Responsive with Icon */}
+                                          <div
+                                            style={{
+                                              display: 'flex',
+                                              flexDirection: 'row',
+                                              alignItems: 'center',
+                                              alignSelf: 'stretch',
+                                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                                              padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
+                                            }}
+                                          >
+                                            <svg
+                                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
+                                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
+                                              viewBox="0 0 24 24"
+                                              fill="none"
+                                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                            >
+                                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                            </svg>
+                                            <span
+                                              style={{
+                                                fontFamily: 'Inter',
+                                                fontWeight: '300',
+                                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
+                                                lineHeight: '1.4',
+                                                textAlign: 'left',
+                                                color: 'rgba(255, 255, 255, 0.65)',
+                                                width: '100%',
+                                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
+                                                margin: '0',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                            >
+                                              {card.location}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Event Button - Grid-Responsive Aligned with Image Bottom Edge */}
+                                        <div
+                                          style={{
+                                            width: '100%',
+                                            height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            justifyContent: 'flex-start',
+                                            alignItems: 'flex-end',
+                                            gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                                            padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px 0px 0px`, // Scale padding
+                                            position: 'absolute',
+                                            bottom: `calc(100% - ${Math.max(80, Math.round(105 * cardScaleFactor))}px)`, // Adjust button position - middle ground
+                                            left: '0px'
+                                          }}
+                                        >
+                                          {card.isRealEvent && card.hasTicketLink ? (
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                                                window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                              }}
+                                              style={{
+                                                background: 'rgba(22, 22, 22, 0.50)',
+                                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                                borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`,
+                                                display: 'flex',
+                                                flexDirection: 'row',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`,
+                                                padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`,
+                                                width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
+                                                height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`,
+                                                cursor: 'pointer',
+                                                fontFamily: 'Inter',
+                                                fontWeight: '500',
+                                                fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`,
+                                                lineHeight: '1.21',
+                                                textAlign: 'center',
+                                                color: '#FFFFFF',
+                                                transition: 'transform 0.2s ease, background 0.2s ease',
+                                                transform: 'translateZ(0) scale(1)',
+                                                willChange: 'transform',
+                                                backfaceVisibility: 'hidden',
+                                                WebkitBackfaceVisibility: 'hidden',
+                                                isolation: 'isolate',
+                                                boxSizing: 'border-box'
+                                              }}
+                                              onMouseEnter={(e) => {
+                                                e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
+                                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                                              }}
+                                            >
+                                              {card.buttonText || 'View Event'}
+                                            </button>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </article>
+                                ))
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Modern CSS Mask-based Fade Effect - Applied directly to scrollable container */}
+                  </div>
+                </div>
+              )}
+            </div>
+
+
+
+
+
+
+
+
+
+            {/* YouTube Video and Text Us Section - Side by Side Layout (Desktop 1024px+) */}
+            {scaledDimensions.containerWidth >= 1024 && (
+              <div
+                style={{
+                  ...(fadeIn(1000)),
+                  position: 'relative',
+                  display: 'grid',
+                  gridTemplateColumns: 'auto 1fr',
+                  width: '100%',
+                  margin: '24px 0 0 0', // Standardized vertical gap between top and bottom rows (desktop-only)
+                  padding: '0',
+                  alignItems: 'flex-start',
+                  columnGap: '24px' // Standardized desktop gap between left/right columns
+                }}
+              >
+                {/* Left Side - Follow Us (Social Media) above Text Us (Laylo) */}
+                <div
+                  ref={leftColumnRef}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as other sections
+                    alignItems: 'flex-start',
+                    flex: '1 1 auto',
+                    minWidth: '400px'
+                  }}
+                >
+                  {/* Follow Us Section - Title + Social Media Buttons */}
+                  <div
+                    style={{
+                      width: `${Math.round(scaledDimensions.eventsWidth)}px`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`,
+                      alignItems: 'flex-start'
+                    }}
+                  >
+                    {/* Follow Us Title - Standardized Typography */}
+                    <div
+                      style={{
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
+                        fontWeight: '800',
+                        lineHeight: 'normal',
+                        letterSpacing: '-0.02em',
+                        margin: '0',
+                        padding: '0',
+                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      Follow Us
+                    </div>
+
+                    {/* Social Media Buttons */}
+                    <div
+                      ref={socialContainerRef}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        padding: '0',
+                        marginTop: '0',
+                        marginRight: '-18px',
+                        zIndex: 0
+                      }}
+                    >
+                      <SocialMediaButtons
+                        isDesktop={true}
+                        containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth}
+                        responsive={true}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Text Us: Laylo section (below Follow Us) */}
+                  <div ref={layloContainerRef} style={{
+                    width: `${Math.round(scaledDimensions.eventsWidth)}px`,
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    marginTop: socialMarginTop != null ? `${socialMarginTop}px` : `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px`
+                  }}>
+                    <TextUsSection scaledDimensions={scaledDimensions} />
+                  </div>
+                </div>
+
+                {/* Right Side - Text Us Section with Laylo and Social Media Buttons */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: (() => {
+                      // 🚨 AGGRESSIVE RESPONSIVE GAP: Dynamic gap calculation with substantial spacing to prevent overlap
+                      const containerWidth = scaledDimensions.eventsWidth * 1.2;
+
+                      // 🚨 AGGRESSIVE GAP SCALING: Increase gap substantially for narrower screens where iframe content wraps
+                      if (containerWidth < 350) {
+                        return '95px'; // Very aggressive gap for very narrow screens (mobile portrait)
+                      } else if (containerWidth < 450) {
+                        return '85px'; // Aggressive gap for narrow screens (mobile landscape)
+                      } else if (containerWidth < 550) {
+                        return '75px'; // Substantial gap for small tablet screens
+                      } else if (containerWidth < 650) {
+                        return '68px'; // Moderate gap for medium tablet screens
+                      } else if (containerWidth < 750) {
+                        return '60px'; // Small gap adjustment for larger tablet screens
+                      }
+
+                      return '52px'; // Default gap for wide desktop screens
+                    })(),
+                    alignItems: 'flex-start',
+                    width: '100%',
+                    maxWidth: '100%'
+                  }}
+                >
+                  {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
+                  <div
+                    ref={videoContainerRef}
+                    onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      aspectRatio: '16 / 9',
+                      position: 'relative',
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transformOrigin: 'right top',
+                      borderRadius: '24px',
+                      marginLeft: 'auto' // Right-align within container to match elements above
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1) translateY(0px)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
+                    }}
+                  >
+                    {/* Video background container */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '0px',
+                        top: '0px',
+                        width: '100%', // Match parent container width
+                        height: '100%',
+                        borderRadius: '24px',
+                        overflow: 'hidden',
+                        ...fadeIn(400)
+                      }}
+                    >
+                      {/* YouTube iframe wrapper with aspect ratio preservation */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: '100%',
+                          height: '100%',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
+                        <iframe
+                          src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
+                          title="Henry Fong YouTube Video"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          allowFullScreen
+                          loading="eager"
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            width: '100%',
+                            height: '100%',
+                            border: 'none',
+                            pointerEvents: 'none',
+                            opacity: 1
                           }}
                         />
                       </div>
 
-                      {/* Text Content Section - Better Spacing from Image */}
+                      {/* Gradient overlay */}
                       <div
                         style={{
-                          display: 'flex',
-                          width: `calc(100% - ${Math.max(99, Math.round(125 * cardScaleFactor))}px)`, // More space for image + gap
-                          padding: `${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px ${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Better padding with 8px grid
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                          alignItems: 'flex-start',
                           position: 'absolute',
-                          left: `${Math.max(99, Math.round(125 * cardScaleFactor))}px`, // More space from image (image width + container padding + 8px gap)
-                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
-                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Scale height to match image
-                          boxSizing: 'border-box'
-                        }}
-                      >
-                        {/* Event Information */}
-                        <div
-                          style={{
-                            width: '100%',
-                            minHeight: `${Math.max(50, Math.round(84 * cardScaleFactor))}px`, // Scale minHeight
-                            height: 'auto',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignSelf: 'stretch',
-                            flex: '1 1 auto'
-                          }}
-                        >
-                          {/* Event Title - Grid-Responsive Typography */}
-                          <h3
-                            style={{
-                              fontFamily: 'Inter',
-                              fontWeight: '700',
-                              fontSize: `${Math.max(10, Math.round(16 * cardScaleFactor))}px`, // Scale font size
-                              lineHeight: '1.25',
-                              textAlign: 'left',
-                              color: '#FFFFFF',
-                              width: '100%',
-                              minHeight: `${Math.max(12, Math.round(20 * cardScaleFactor))}px`, // Scale minHeight
-                              height: 'auto',
-                              margin: `0 0 ${Math.max(2, Math.round(4 * cardScaleFactor))}px 0`, // Scale margin
-                              padding: '0',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}
-                          >
-                            {card.title}
-                          </h3>
-
-                          {/* Event DateTime - Grid-Responsive with Icon */}
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              alignSelf: 'stretch',
-                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
-                              padding: `0px 0px 0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
-                            }}
-                          >
-                            <svg
-                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
-                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            >
-                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor"/>
-                            </svg>
-                            <span
-                              style={{
-                                fontFamily: 'Inter',
-                                fontWeight: '300',
-                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
-                                lineHeight: '1.4',
-                                textAlign: 'left',
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                width: '100%',
-                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
-                                margin: '0',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {card.date}
-                            </span>
-                          </div>
-
-                          {/* Event Location - Grid-Responsive with Icon */}
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                              alignSelf: 'stretch',
-                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
-                              padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
-                            }}
-                          >
-                            <svg
-                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
-                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                            >
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
-                            </svg>
-                            <span
-                              style={{
-                                fontFamily: 'Inter',
-                                fontWeight: '300',
-                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
-                                lineHeight: '1.4',
-                                textAlign: 'left',
-                                color: 'rgba(255, 255, 255, 0.65)',
-                                width: '100%',
-                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
-                                margin: '0',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap'
-                              }}
-                            >
-                              {card.location}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Event Button - Grid-Responsive Aligned with Image Bottom Edge */}
-                        <div
-                          style={{
-                            width: '100%',
-                            height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            alignItems: 'flex-end',
-                            gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
-                            padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px 0px 0px`, // Scale padding
-                            position: 'absolute',
-                            bottom: `calc(100% - ${Math.max(80, Math.round(105 * cardScaleFactor))}px)`, // Adjust button position - middle ground
-                            left: '0px'
-                          }}
-                        >
-                          {card.isRealEvent && card.hasTicketLink ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                                window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                              }}
-                              style={{
-                                background: 'rgba(22, 22, 22, 0.50)',
-                                border: '1px solid rgba(255, 255, 255, 0.12)',
-                                borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`,
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`,
-                                padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`,
-                                width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
-                                height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`,
-                                cursor: 'pointer',
-                                fontFamily: 'Inter',
-                                fontWeight: '500',
-                                fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`,
-                                lineHeight: '1.21',
-                                textAlign: 'center',
-                                color: '#FFFFFF',
-                                transition: 'transform 0.2s ease, background 0.2s ease',
-                                transform: 'translateZ(0) scale(1)',
-                                willChange: 'transform',
-                                backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden',
-                                isolation: 'isolate',
-                                boxSizing: 'border-box'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
-                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
-                              }}
-                            >
-                              {card.buttonText || 'View Event'}
-                            </button>
-                          ) : null}
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                ))
-              )}
-                  </>
-                );
-              })()}
-              </div>
-
-              {/* Modern CSS Mask-based Fade Effect - Applied directly to scrollable container */}
-            </div>
-            </div>
-        )}
-      </div>
-
-
-
-
-
-
-
-
-
-      {/* YouTube Video and Text Us Section - Side by Side Layout (Desktop 1024px+) */}
-      {scaledDimensions.containerWidth >= 1024 && (
-        <div
-          style={{ ...(fadeIn(1000)),
-            position: 'relative',
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr',
-            width: '100%',
-            margin: '24px 0 0 0', // Standardized vertical gap between top and bottom rows (desktop-only)
-            padding: '0',
-            alignItems: 'flex-start',
-            columnGap: '24px' // Standardized desktop gap between left/right columns
-          }}
-        >
-          {/* Left Side - Follow Us (Social Media) above Text Us (Laylo) */}
-          <div
-            ref={leftColumnRef}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as other sections
-              alignItems: 'flex-start',
-              flex: '1 1 auto',
-              minWidth: '400px'
-            }}
-          >
-            {/* Follow Us Section - Title + Social Media Buttons */}
-            <div
-              style={{
-                width: `${Math.round(scaledDimensions.eventsWidth)}px`,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`,
-                alignItems: 'flex-start'
-              }}
-            >
-              {/* Follow Us Title - Standardized Typography */}
-              <div
-                style={{
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
-                  fontWeight: '800',
-                  lineHeight: 'normal',
-                  letterSpacing: '-0.02em',
-                  margin: '0',
-                  padding: '0',
-                  height: `${Math.max(20, Math.round(scaledDimensions.scale * 26))}px`,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
-                Follow Us
-              </div>
-
-              {/* Social Media Buttons */}
-              <div
-                ref={socialContainerRef}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  padding: '0',
-                  marginTop: '0',
-                  marginRight: '-18px',
-                  zIndex: 0
-                }}
-              >
-                <SocialMediaButtons
-                  isDesktop={true}
-                  containerWidth={scaledDimensions.leftColumnWidth || scaledDimensions.eventsWidth}
-                  responsive={true}
-                />
-              </div>
-            </div>
-
-            {/* Text Us: Laylo section (below Follow Us) */}
-            <div ref={layloContainerRef} style={{
-              width: `${Math.round(scaledDimensions.eventsWidth)}px`,
-              display: 'flex',
-              justifyContent: 'flex-start',
-              marginTop: socialMarginTop != null ? `${socialMarginTop}px` : `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px`
-            }}>
-              <TextUsSection scaledDimensions={scaledDimensions} />
-            </div>
-        </div>
-
-        {/* Right Side - Text Us Section with Laylo and Social Media Buttons */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: (() => {
-              // 🚨 AGGRESSIVE RESPONSIVE GAP: Dynamic gap calculation with substantial spacing to prevent overlap
-              const containerWidth = scaledDimensions.eventsWidth * 1.2;
-
-              // 🚨 AGGRESSIVE GAP SCALING: Increase gap substantially for narrower screens where iframe content wraps
-              if (containerWidth < 350) {
-                return '95px'; // Very aggressive gap for very narrow screens (mobile portrait)
-              } else if (containerWidth < 450) {
-                return '85px'; // Aggressive gap for narrow screens (mobile landscape)
-              } else if (containerWidth < 550) {
-                return '75px'; // Substantial gap for small tablet screens
-              } else if (containerWidth < 650) {
-                return '68px'; // Moderate gap for medium tablet screens
-              } else if (containerWidth < 750) {
-                return '60px'; // Small gap adjustment for larger tablet screens
-              }
-
-              return '52px'; // Default gap for wide desktop screens
-            })(),
-            alignItems: 'flex-start',
-            width: '100%',
-            maxWidth: '100%'
-          }}
-        >
-          {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
-          <div
-            ref={videoContainerRef}
-            onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
-            style={{
-              width: '100%',
-              height: 'auto',
-              aspectRatio: '16 / 9',
-              position: 'relative',
-              flexShrink: 0,
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transformOrigin: 'right top',
-              borderRadius: '24px',
-              marginLeft: 'auto' // Right-align within container to match elements above
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.25)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1) translateY(0px)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.transform = 'scale(0.995) translateY(0px)';
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = 'scale(1.015) translateY(-2px)';
-            }}
-          >
-            {/* Video background container */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '0px',
-                top: '0px',
-                width: '100%', // Match parent container width
-                height: '100%',
-                borderRadius: '24px',
-                overflow: 'hidden',
-                ...fadeIn(400)
-              }}
-            >
-              {/* YouTube iframe wrapper with aspect ratio preservation */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '100%',
-                  height: '100%',
-                  overflow: 'hidden'
-                }}
-              >
-                {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
-                <iframe
-                  src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
-                  title="Henry Fong YouTube Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  loading="eager"
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                    pointerEvents: 'none',
-                    opacity: 1
-                  }}
-                />
-              </div>
-
-              {/* Gradient overlay */}
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '0',
-                  left: '0',
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
-                  borderRadius: '24px',
-                  zIndex: 1
-                }}
-              />
-            </div>
-
-            {/* Video Hero Text Box */}
-            <div
-              style={{
-                position: 'absolute',
-                left: '0px',
-                bottom: '12px',
-                display: 'flex',
-                width: '100%',
-                minHeight: '52px',
-                padding: '10px 16px 12px',
-                justifyContent: 'space-between',
-                alignItems: 'flex-end',
-                gap: '16px',
-                zIndex: 2
-              }}
-            >
-              {/* Left - Title */}
-              <div
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-end',
-                  gap: '4px',
-                  flex: '1'
-                }}
-              >
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '24px',
-                    fontWeight: '800',
-                    lineHeight: '1.1',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    maxWidth: `${(() => {
-                      const responsiveWidth = Math.min(Math.round(scaledDimensions.rightHeroWidth), Math.round(scaledDimensions.containerWidth * 0.4));
-                      return responsiveWidth >= 300 ? responsiveWidth - 150 : responsiveWidth - 60;
-                    })()}px`
-                  }}
-                >
-                  Watch on YouTube
-                </div>
-                <div
-                  style={{
-                    color: '#FFF',
-                    fontFamily: 'Inter',
-                    fontSize: '10px',
-                    fontWeight: '200',
-                    lineHeight: 'normal'
-                  }}
-                >
-                  Henry Fong full set live on YouTube
-                </div>
-              </div>
-
-              {/* Right - CTA */}
-              {Math.min(Math.round(scaledDimensions.rightHeroWidth * 1.25), Math.round(scaledDimensions.containerWidth * 0.5)) >= 300 && (
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Watch now on YouTube"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
-                    }
-                  }}
-                  style={{
-                    display: 'flex',
-                    minWidth: '112px',
-                    height: '44px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: '22px',
-                    background: 'rgba(22, 22, 22, 0.50)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    boxShadow: '0px 4px 8px rgba(0,0,0,0.20)',
-                    cursor: 'pointer',
-                    transition: 'transform 0.3s ease, background 0.3s ease',
-                    transform: 'translateZ(0) scale(1)',
-                    willChange: 'transform',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    isolation: 'isolate',
-                    boxSizing: 'border-box'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
-                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                    e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
-                  }}
-                  onMouseDown={(e) => {
-                    e.target.style.transform = 'translateZ(0) scale(0.95)';
-                  }}
-                  onMouseUp={(e) => {
-                    e.target.style.transform = 'translateZ(0) scale(1.05)';
-                  }}
-                >
-                  <span
-                    style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      lineHeight: '1.2',
-                      pointerEvents: 'none'
-                    }}
-                  >
-                    Watch now
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-
-
-
-        </div>
-        </div>
-      )}
-
-      {/* Events and Text Us Section - Hidden on Desktop 1024px+, Visible on Mobile/Tablet */}
-      <div
-        style={{
-          position: 'relative',
-          display: scaledDimensions.containerWidth >= 1024 ? 'none' : 'flex',
-          width: '100%',
-          margin: '8px 0 0 0',
-          padding: '0',
-          justifyContent: 'flex-start',
-          alignItems: 'flex-start',
-          gap: `${scaledDimensions.eventsTextGap}px`,
-          flexDirection: isMobile ? 'column' : 'row'
-        }}
-      >
-        {/* Event List */}
-        <div
-          style={{
-            display: 'flex',
-            width: `${scaledDimensions.eventsWidth}px`,
-            flexDirection: 'column',
-            justifyContent: 'flex-start',
-            alignItems: 'stretch',
-            gap: '21px',
-            flexShrink: 0
-          }}
-        >
-          {/* Events Title and Toggle - Scoped to Events Section Only */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              margin: '8px 0 0 0',
-              padding: '0',
-              alignSelf: 'stretch' // Match the event cards grid alignment
-            }}
-          >
-            {/* Event Title */}
-            <div
-              style={{
-                color: '#FFF',
-                fontFamily: 'Inter',
-                fontSize: '24px',
-                fontWeight: '800',
-                lineHeight: 'normal'
-              }}
-            >
-              Events
-            </div>
-
-            {/* Event Filter Toggle - Identical to Mobile */}
-            <div
-              style={{
-                display: 'flex',
-                width: '118px',
-                height: '34px',
-                padding: '2px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexShrink: 0,
-                borderRadius: '9px',
-                background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
-                position: 'relative',
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                WebkitTapHighlightColor: 'transparent'
-              }}
-              onClick={() => setShowAllEvents(!showAllEvents)}
-              role="switch"
-              aria-checked={showAllEvents}
-              aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setShowAllEvents(!showAllEvents);
-                }
-              }}
-              onTouchStart={(e) => {
-                e.currentTarget.style.transform = 'scale(0.98)';
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              onMouseDown={(e) => {
-                e.currentTarget.style.transform = 'scale(0.98)';
-              }}
-              onMouseUp={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              {/* Sliding Button Background */}
-              <div
-                style={{
-                  position: 'absolute',
-                  width: '57px',
-                  height: '30px',
-                  borderRadius: '7px',
-                  border: '0.5px solid rgba(0, 0, 0, 0.04)',
-                  background: '#FFF',
-                  boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
-                  left: showAllEvents ? '2px' : '59px',
-                  top: '2px',
-                  transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  zIndex: 1
-                }}
-              />
-
-              {/* All Button */}
-              <div
-                style={{
-                  display: 'flex',
-                  padding: '3px 10px',
-                  alignItems: 'center',
-                  flex: '1 0 0',
-                  alignSelf: 'stretch',
-                  borderRadius: '7px',
-                  position: 'relative',
-                  zIndex: 2
-                }}
-              >
-                <span
-                  style={{
-                    display: '-webkit-box',
-                    WebkitBoxOrient: 'vertical',
-                    WebkitLineClamp: 1,
-                    flex: '1 0 0',
-                    overflow: 'hidden',
-                    color: showAllEvents ? '#000' : '#FFF',
-                    textAlign: 'center',
-                    fontFeatureSettings: "'liga' off, 'clig' off",
-                    textOverflow: 'ellipsis',
-                    fontFamily: 'Inter',
-                    fontSize: '13px',
-                    fontStyle: 'normal',
-                    fontWeight: showAllEvents ? '590' : '400',
-                    lineHeight: '18px',
-                    letterSpacing: '-0.08px',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                >
-                  Next
-                </span>
-              </div>
-
-              {/* Past Button */}
-              <div
-                style={{
-                  display: 'flex',
-                  padding: '3px 10px',
-                  alignItems: 'center',
-                  flex: '1 0 0',
-                  alignSelf: 'stretch',
-                  position: 'relative',
-                  zIndex: 2
-                }}
-              >
-                <span
-                  style={{
-                    display: '-webkit-box',
-                    WebkitBoxOrient: 'vertical',
-                    WebkitLineClamp: 1,
-                    flex: '1 0 0',
-                    overflow: 'hidden',
-                    color: !showAllEvents ? '#000' : '#FFF',
-                    textAlign: 'center',
-                    fontFeatureSettings: "'liga' off, 'clig' off",
-                    textOverflow: 'ellipsis',
-                    fontFamily: 'Inter',
-                    fontSize: '13px',
-                    fontStyle: 'normal',
-                    fontWeight: !showAllEvents ? '590' : '400',
-                    lineHeight: '18px',
-                    letterSpacing: '-0.08px',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                  }}
-                >
-                  Past
-                </span>
-              </div>
-            </div>
-          </div>
-          {/* EVENT LIST Grid - Updated for mobile-style cards */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', // Responsive grid for mobile-style cards
-              rowGap: '16px',
-              columnGap: '16px',
-              alignSelf: 'stretch',
-              alignItems: 'start',
-              justifyItems: 'stretch', // Stretch cards to fill grid cells
-              width: '100%'
-            }}
-          >
-
-
-
-
-            {/* Show all events (mobile-style cards) or empty state */}
-            {showAllEvents && filteredHomepageEvents.length === 0 && filteredFeaturedEvents.length === 0 ? (
-              /* Empty State - No Events */
-              <div
-                style={{
-                  display: 'flex',
-                  width: '100%',
-                  height: '200px',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '16px',
-                  color: '#FFF',
-                  fontFamily: 'Inter',
-                  textAlign: 'center'
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '18px',
-                    fontWeight: '600',
-                    opacity: 0.8
-                  }}
-                >
-                  No upcoming events
-                </div>
-                <button
-                  type="button"
-                  aria-label="View Past Events"
-                  onClick={() => setShowAllEvents(false)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '12px 16px',
-                    minHeight: '44px',
-                    borderRadius: '14px',
-                    fontFamily: 'Inter',
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: '#FFF',
-                    background: 'rgba(22, 22, 22, 0.70)',
-                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                    transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
-                    transform: 'translateZ(0) scale(1)',
-                    willChange: 'transform',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    isolation: 'isolate',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)'; }}
-                  onTouchStart={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(0.98)'; }}
-                  onTouchEnd={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(1)'; }}
-                >
-                  View Past Events
-                </button>
-              </div>
-            ) : (
-              /* All Event Cards - Mobile-style Cards (including previously featured events) */
-              [...filteredFeaturedEvents, ...filteredHomepageEvents].map((card, index) => (
-              <article
-                key={`homepage-${card.id}`}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  minHeight: '128px',
-                  height: 'auto',
-                  borderRadius: '20px',
-                  background: 'rgba(22, 22, 22, 0.50)',
-                  border: '1px solid rgba(255, 255, 255, 0.12)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
-                  position: 'relative',
-                  margin: '0 0 4px 0',
-                  padding: '2px',
-                  overflow: 'hidden',
-                  boxSizing: 'border-box',
-                  isolation: 'isolate',
-                  transform: 'translateZ(0)',
-                  willChange: 'transform',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  contain: 'layout style paint',
-                  zIndex: 1,
-                  clear: 'both'
-                }}
-              >
-                {/* Mobile Event Card Content - Compact Horizontal Layout */}
-                <div
-                  style={{
-                    width: '100%',
-                    height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
-                    position: 'relative',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxSizing: 'border-box',
-                    padding: '2px' // Reduced padding for compact design
-                  }}
-                >
-                  {/* Image Section - Compact Horizontal Layout */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '2px',
-                      top: '2px',
-                      width: '120px',
-                      height: '120px',
-                      flexShrink: 0,
-                      borderRadius: '20px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      zIndex: 100,
-                      transition: 'transform 0.1s ease',
-                      boxSizing: 'border-box'
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // Handle image expansion if needed
-                    }}
-                  >
-                    {/* Event Background Image */}
-                    <img
-                      crossOrigin="anonymous"
-                      referrerPolicy="no-referrer"
-                      width="120"
-                      height="120"
-                      src={(() => {
-                        const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
-                        console.log(`🖼️ DESKTOP: Loading homepage image for "${card.title}":`, {
-                          original: card.coverImage,
-                          optimized: optimizedUrl,
-                          isDataUrl: card.coverImage?.startsWith('data:'),
-                          isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
-                          hasExistingCacheBusting: card.coverImage?.includes('_cb=') || card.coverImage?.includes('_t='),
-                          hostname: window.location.hostname
-                        });
-                        return optimizedUrl;
-                      })()}
-                      srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
-                      alt={card.image_alt_text || `${card.title} event cover`}
-                      title={card.image_title || card.title}
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        // Only log in development to reduce console spam
-                        if (process.env.NODE_ENV === 'development') {
-                          console.warn(`⚠️ Event image failed to load: "${card.title}"`);
-                        }
-                        // Prevent further error events by hiding the image
-                        e.target.style.backgroundColor = '#222222';
-                        e.target.style.display = 'none';
-
-                        if (img && !img.dataset.fallbackTried) {
-                          img.dataset.fallbackTried = '1';
-                          if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
-                          if (url.includes('/medium')) { img.src = url.replace('/medium', '/small'); return; }
-                          if (url.includes('/small')) { img.src = url.replace('/small', '/thumbnail'); return; }
-                          if (url.includes('/api/images/serve/')) {
-                            img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
-                            return;
-                          }
-                        }
-                        console.log('❌ DESKTOP: Using placeholder for:', card.title);
-                        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                      }}
-                      onLoad={(e) => {
-                        console.log('✅ DESKTOP: Homepage event image loaded successfully:', card.title, e.target.src);
-                        e.target.style.backgroundColor = 'transparent';
-                        e.target.style.opacity = '1';
-                      }}
-                      style={{
-                        position: 'absolute',
-                        left: '4px',
-                        top: '4px',
-                        width: '112px',
-                        height: '112px',
-                        borderRadius: '17px',
-                        objectFit: 'cover',
-                        backgroundColor: '#2a2a2a',
-                        opacity: '0',
-                        transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: 'scale(1)',
-                        boxShadow: 'none',
-                        pointerEvents: 'none'
-                      }}
-                    />
-                  </div>
-
-                  {/* Text Content Section - Compact Horizontal Layout */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      width: 'calc(100% - 130px)',
-                      padding: '2px 2px 2px 4px',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      position: 'absolute',
-                      left: '126px',
-                      top: '2px',
-                      height: '120px',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    {/* Event Information */}
-                    <div
-                      style={{
-                        width: '100%',
-                        minHeight: '84px',
-                        height: 'auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignSelf: 'stretch',
-                        flex: '1 1 auto'
-                      }}
-                    >
-                      {/* Event Title */}
-                      <h3
-                        style={{
-                          fontFamily: 'Inter',
-                          fontWeight: '700',
-                          fontSize: '16px',
-                          lineHeight: '1.25',
-                          textAlign: 'left',
-                          color: '#FFFFFF',
+                          top: '0',
+                          left: '0',
                           width: '100%',
-                          minHeight: '20px',
-                          height: 'auto',
-                          margin: '0 0 4px 0',
-                          padding: '0',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          height: '100%',
+                          background: 'linear-gradient(189deg, rgba(143, 143, 143, 0.00) 8.88%, rgba(0, 0, 0, 0.77) 77.64%)',
+                          borderRadius: '24px',
+                          zIndex: 1
                         }}
-                      >
-                        {card.title}
-                      </h3>
-
-                      {/* Event DateTime */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          alignSelf: 'stretch',
-                          gap: '6px',
-                          padding: '0px 0px 0px 2px'
-                        }}
-                      >
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        >
-                          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor"/>
-                        </svg>
-                        <span
-                          style={{
-                            fontFamily: 'Inter',
-                            fontWeight: '300',
-                            fontSize: '12px',
-                            lineHeight: '1.4',
-                            textAlign: 'left',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            width: '100%',
-                            height: '14px',
-                            margin: '0',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {card.date}
-                        </span>
-                      </div>
-
-                      {/* Event Location */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          alignSelf: 'stretch',
-                          gap: '6px',
-                          padding: '0px 2px'
-                        }}
-                      >
-                        <svg
-                          width="12"
-                          height="12"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                        >
-                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
-                        </svg>
-                        <span
-                          style={{
-                            fontFamily: 'Inter',
-                            fontWeight: '300',
-                            fontSize: '12px',
-                            lineHeight: '1.4',
-                            textAlign: 'left',
-                            color: 'rgba(255, 255, 255, 0.65)',
-                            width: '100%',
-                            height: '14px',
-                            margin: '0',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          {card.location}
-                        </span>
-                      </div>
+                      />
                     </div>
 
-                    {/* Event Button - Aligned with image bottom edge */}
+                    {/* Video Hero Text Box */}
                     <div
                       style={{
-                        width: '100%',
-                        height: '32px',
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'flex-start',
-                        alignItems: 'flex-end',
-                        gap: '6px',
-                        padding: '0px 2px 0px 0px',
                         position: 'absolute',
-                        bottom: '4px', // Fine-tuned to perfectly align button bottom with image bottom edge
-                        left: '0px'
+                        left: '0px',
+                        bottom: '12px',
+                        display: 'flex',
+                        width: '100%',
+                        minHeight: '52px',
+                        padding: '10px 16px 12px',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-end',
+                        gap: '16px',
+                        zIndex: 2
                       }}
                     >
-                      {card.isRealEvent && card.hasTicketLink ? (
-                        <button
+                      {/* Left - Title */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-end',
+                          gap: '4px',
+                          flex: '1'
+                        }}
+                      >
+                        <div
+                          style={{
+                            color: '#FFF',
+                            fontFamily: 'Inter',
+                            fontSize: '24px',
+                            fontWeight: '800',
+                            lineHeight: '1.1',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: `${(() => {
+                              const responsiveWidth = Math.min(Math.round(scaledDimensions.rightHeroWidth), Math.round(scaledDimensions.containerWidth * 0.4));
+                              return responsiveWidth >= 300 ? responsiveWidth - 150 : responsiveWidth - 60;
+                            })()}px`
+                          }}
+                        >
+                          Watch on YouTube
+                        </div>
+                        <div
+                          style={{
+                            color: '#FFF',
+                            fontFamily: 'Inter',
+                            fontSize: '10px',
+                            fontWeight: '200',
+                            lineHeight: 'normal'
+                          }}
+                        >
+                          Henry Fong full set live on YouTube
+                        </div>
+                      </div>
+
+                      {/* Right - CTA */}
+                      {Math.min(Math.round(scaledDimensions.rightHeroWidth * 1.25), Math.round(scaledDimensions.containerWidth * 0.5)) >= 300 && (
+                        <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                            window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                            window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Watch now on YouTube"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                            }
                           }}
                           style={{
-                            background: 'rgba(23, 23, 23, 0.8)',
-                            borderRadius: '46px',
                             display: 'flex',
-                            flexDirection: 'row',
+                            minWidth: '112px',
+                            height: '44px',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            gap: '12px',
-                            padding: '16px 15px',
-                            width: 'calc(100% - 4px)',
-                            height: '32px',
-                            border: 'none',
+                            borderRadius: '22px',
+                            background: 'rgba(22, 22, 22, 0.50)',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            boxShadow: '0px 4px 8px rgba(0,0,0,0.20)',
                             cursor: 'pointer',
-                            fontFamily: 'Inter',
-                            fontWeight: '500',
-                            fontSize: '14px',
-                            lineHeight: '1.21',
-                            textAlign: 'center',
-                            color: '#FFFFFF',
-                            transition: 'transform 0.2s ease, background 0.2s ease',
+                            transition: 'transform 0.3s ease, background 0.3s ease',
                             transform: 'translateZ(0) scale(1)',
                             willChange: 'transform',
                             backfaceVisibility: 'hidden',
@@ -3703,34 +3090,649 @@ const FigmaDesktop = () => {
                             boxSizing: 'border-box'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
-                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                            e.currentTarget.style.transform = 'translateZ(0) scale(1.05)';
+                            e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
                           }}
                           onMouseLeave={(e) => {
                             e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                            e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
+                            e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                          }}
+                          onMouseDown={(e) => {
+                            e.target.style.transform = 'translateZ(0) scale(0.95)';
+                          }}
+                          onMouseUp={(e) => {
+                            e.target.style.transform = 'translateZ(0) scale(1.05)';
                           }}
                         >
-                          {card.buttonText || 'View Event'}
-                        </button>
-                      ) : null}
+                          <span
+                            style={{
+                              color: '#FFF',
+                              fontFamily: 'Inter',
+                              fontSize: '14px',
+                              fontWeight: '500',
+                              lineHeight: '1.2',
+                              pointerEvents: 'none'
+                            }}
+                          >
+                            Watch now
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+
+
+                </div>
+              </div>
+            )}
+
+            {/* Events and Text Us Section - Hidden on Desktop 1024px+, Visible on Mobile/Tablet */}
+            <div
+              style={{
+                position: 'relative',
+                display: scaledDimensions.containerWidth >= 1024 ? 'none' : 'flex',
+                width: '100%',
+                margin: '8px 0 0 0',
+                padding: '0',
+                justifyContent: 'flex-start',
+                alignItems: 'flex-start',
+                gap: `${scaledDimensions.eventsTextGap}px`,
+                flexDirection: isMobile ? 'column' : 'row'
+              }}
+            >
+              {/* Event List */}
+              <div
+                style={{
+                  display: 'flex',
+                  width: `${scaledDimensions.eventsWidth}px`,
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  alignItems: 'stretch',
+                  gap: '21px',
+                  flexShrink: 0
+                }}
+              >
+                {/* Events Title and Toggle - Scoped to Events Section Only */}
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    margin: '8px 0 0 0',
+                    padding: '0',
+                    alignSelf: 'stretch' // Match the event cards grid alignment
+                  }}
+                >
+                  {/* Event Title */}
+                  <div
+                    style={{
+                      color: '#FFF',
+                      fontFamily: 'Inter',
+                      fontSize: '24px',
+                      fontWeight: '800',
+                      lineHeight: 'normal'
+                    }}
+                  >
+                    Events
+                  </div>
+
+                  {/* Event Filter Toggle - Identical to Mobile */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      width: '118px',
+                      height: '34px',
+                      padding: '2px',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexShrink: 0,
+                      borderRadius: '9px',
+                      background: showAllEvents ? 'rgba(111, 111, 111, 0.49)' : 'rgba(111, 111, 111, 0.69)',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      WebkitTapHighlightColor: 'transparent'
+                    }}
+                    onClick={() => setShowAllEvents(!showAllEvents)}
+                    role="switch"
+                    aria-checked={showAllEvents}
+                    aria-label={`Switch to ${showAllEvents ? 'Past' : 'Next'} events`}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setShowAllEvents(!showAllEvents);
+                      }
+                    }}
+                    onTouchStart={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                    }}
+                    onTouchEnd={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseDown={(e) => {
+                      e.currentTarget.style.transform = 'scale(0.98)';
+                    }}
+                    onMouseUp={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }}
+                  >
+                    {/* Sliding Button Background */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        width: '57px',
+                        height: '30px',
+                        borderRadius: '7px',
+                        border: '0.5px solid rgba(0, 0, 0, 0.04)',
+                        background: '#FFF',
+                        boxShadow: '0 3px 8px 0 rgba(0, 0, 0, 0.12), 0 3px 1px 0 rgba(0, 0, 0, 0.04)',
+                        left: showAllEvents ? '2px' : '59px',
+                        top: '2px',
+                        transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        zIndex: 1
+                      }}
+                    />
+
+                    {/* All Button */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        padding: '3px 10px',
+                        alignItems: 'center',
+                        flex: '1 0 0',
+                        alignSelf: 'stretch',
+                        borderRadius: '7px',
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: '-webkit-box',
+                          WebkitBoxOrient: 'vertical',
+                          WebkitLineClamp: 1,
+                          flex: '1 0 0',
+                          overflow: 'hidden',
+                          color: showAllEvents ? '#000' : '#FFF',
+                          textAlign: 'center',
+                          fontFeatureSettings: "'liga' off, 'clig' off",
+                          textOverflow: 'ellipsis',
+                          fontFamily: 'Inter',
+                          fontSize: '13px',
+                          fontStyle: 'normal',
+                          fontWeight: showAllEvents ? '590' : '400',
+                          lineHeight: '18px',
+                          letterSpacing: '-0.08px',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      >
+                        Next
+                      </span>
+                    </div>
+
+                    {/* Past Button */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        padding: '3px 10px',
+                        alignItems: 'center',
+                        flex: '1 0 0',
+                        alignSelf: 'stretch',
+                        position: 'relative',
+                        zIndex: 2
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: '-webkit-box',
+                          WebkitBoxOrient: 'vertical',
+                          WebkitLineClamp: 1,
+                          flex: '1 0 0',
+                          overflow: 'hidden',
+                          color: !showAllEvents ? '#000' : '#FFF',
+                          textAlign: 'center',
+                          fontFeatureSettings: "'liga' off, 'clig' off",
+                          textOverflow: 'ellipsis',
+                          fontFamily: 'Inter',
+                          fontSize: '13px',
+                          fontStyle: 'normal',
+                          fontWeight: !showAllEvents ? '590' : '400',
+                          lineHeight: '18px',
+                          letterSpacing: '-0.08px',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      >
+                        Past
+                      </span>
                     </div>
                   </div>
                 </div>
-              </article>
-            ))
-            )}
+                {/* EVENT LIST Grid - Updated for mobile-style cards */}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', // Responsive grid for mobile-style cards
+                    rowGap: '16px',
+                    columnGap: '16px',
+                    alignSelf: 'stretch',
+                    alignItems: 'start',
+                    justifyItems: 'stretch', // Stretch cards to fill grid cells
+                    width: '100%'
+                  }}
+                >
+
+
+
+
+                  {/* Show all events (mobile-style cards) or empty state */}
+                  {showAllEvents && filteredHomepageEvents.length === 0 && filteredFeaturedEvents.length === 0 ? (
+                    /* Empty State - No Events */
+                    <div
+                      style={{
+                        display: 'flex',
+                        width: '100%',
+                        height: '200px',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '16px',
+                        color: '#FFF',
+                        fontFamily: 'Inter',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: '18px',
+                          fontWeight: '600',
+                          opacity: 0.8
+                        }}
+                      >
+                        No upcoming events
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="View Past Events"
+                        onClick={() => setShowAllEvents(false)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '12px 16px',
+                          minHeight: '44px',
+                          borderRadius: '14px',
+                          fontFamily: 'Inter',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          color: '#FFF',
+                          background: 'rgba(22, 22, 22, 0.70)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.25s ease',
+                          transform: 'translateZ(0) scale(1)',
+                          willChange: 'transform',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                          isolation: 'isolate',
+                          boxSizing: 'border-box',
+                          cursor: 'pointer',
+                          WebkitTapHighlightColor: 'transparent'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(38, 38, 38, 0.85)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(22, 22, 22, 0.70)'; }}
+                        onTouchStart={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(0.98)'; }}
+                        onTouchEnd={(e) => { e.currentTarget.style.transform = 'translateZ(0) scale(1)'; }}
+                      >
+                        View Past Events
+                      </button>
+                    </div>
+                  ) : (
+                    /* All Event Cards - Mobile-style Cards (including previously featured events) */
+                    [...filteredFeaturedEvents, ...filteredHomepageEvents].map((card, index) => (
+                      <article
+                        key={`homepage-${card.id}`}
+                        style={{
+                          display: 'block',
+                          width: '100%',
+                          minHeight: '128px',
+                          height: 'auto',
+                          borderRadius: '20px',
+                          background: 'rgba(22, 22, 22, 0.50)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                          position: 'relative',
+                          margin: '0 0 4px 0',
+                          padding: '2px',
+                          overflow: 'hidden',
+                          boxSizing: 'border-box',
+                          isolation: 'isolate',
+                          transform: 'translateZ(0)',
+                          willChange: 'transform',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                          contain: 'layout style paint',
+                          zIndex: 1,
+                          clear: 'both'
+                        }}
+                      >
+                        {/* Mobile Event Card Content - Compact Horizontal Layout */}
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '124px', // Adjusted to accommodate square image (120px + 4px padding)
+                            position: 'relative',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxSizing: 'border-box',
+                            padding: '2px' // Reduced padding for compact design
+                          }}
+                        >
+                          {/* Image Section - Compact Horizontal Layout */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: '2px',
+                              top: '2px',
+                              width: '120px',
+                              height: '120px',
+                              flexShrink: 0,
+                              borderRadius: '20px',
+                              overflow: 'hidden',
+                              cursor: 'pointer',
+                              zIndex: 100,
+                              transition: 'transform 0.1s ease',
+                              boxSizing: 'border-box'
+                            }}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              // Handle image expansion if needed
+                            }}
+                          >
+                            {/* Event Background Image */}
+                            <img
+                              crossOrigin="anonymous"
+                              referrerPolicy="no-referrer"
+                              width="120"
+                              height="120"
+                              src={(() => {
+                                const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
+                                console.log(`🖼️ DESKTOP: Loading homepage image for "${card.title}":`, {
+                                  original: card.coverImage,
+                                  optimized: optimizedUrl,
+                                  isDataUrl: card.coverImage?.startsWith('data:'),
+                                  isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
+                                  hasExistingCacheBusting: card.coverImage?.includes('_cb=') || card.coverImage?.includes('_t='),
+                                  hostname: window.location.hostname
+                                });
+                                return optimizedUrl;
+                              })()}
+                              srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
+                              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
+                              alt={card.image_alt_text || `${card.title} event cover`}
+                              title={card.image_title || card.title}
+                              loading="lazy"
+                              decoding="async"
+                              onError={(e) => {
+                                // Only log in development to reduce console spam
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.warn(`⚠️ Event image failed to load: "${card.title}"`);
+                                }
+                                // Prevent further error events by hiding the image
+                                e.target.style.backgroundColor = '#222222';
+                                e.target.style.display = 'none';
+
+                                if (img && !img.dataset.fallbackTried) {
+                                  img.dataset.fallbackTried = '1';
+                                  if (url.includes('/event_card')) { img.src = url.replace('/event_card', '/medium'); return; }
+                                  if (url.includes('/medium')) { img.src = url.replace('/medium', '/small'); return; }
+                                  if (url.includes('/small')) { img.src = url.replace('/small', '/thumbnail'); return; }
+                                  if (url.includes('/api/images/serve/')) {
+                                    img.src = url.replace(/\/serve\/([a-f0-9-]{36})\/(\w+)/, '/serve/$1/medium');
+                                    return;
+                                  }
+                                }
+                                console.log('❌ DESKTOP: Using placeholder for:', card.title);
+                                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                              }}
+                              onLoad={(e) => {
+                                console.log('✅ DESKTOP: Homepage event image loaded successfully:', card.title, e.target.src);
+                                e.target.style.backgroundColor = 'transparent';
+                                e.target.style.opacity = '1';
+                              }}
+                              style={{
+                                position: 'absolute',
+                                left: '4px',
+                                top: '4px',
+                                width: '112px',
+                                height: '112px',
+                                borderRadius: '17px',
+                                objectFit: 'cover',
+                                backgroundColor: '#2a2a2a',
+                                opacity: '0',
+                                transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                transform: 'scale(1)',
+                                boxShadow: 'none',
+                                pointerEvents: 'none'
+                              }}
+                            />
+                          </div>
+
+                          {/* Text Content Section - Compact Horizontal Layout */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              width: 'calc(100% - 130px)',
+                              padding: '2px 2px 2px 4px',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                              position: 'absolute',
+                              left: '126px',
+                              top: '2px',
+                              height: '120px',
+                              boxSizing: 'border-box'
+                            }}
+                          >
+                            {/* Event Information */}
+                            <div
+                              style={{
+                                width: '100%',
+                                minHeight: '84px',
+                                height: 'auto',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignSelf: 'stretch',
+                                flex: '1 1 auto'
+                              }}
+                            >
+                              {/* Event Title */}
+                              <h3
+                                style={{
+                                  fontFamily: 'Inter',
+                                  fontWeight: '700',
+                                  fontSize: '16px',
+                                  lineHeight: '1.25',
+                                  textAlign: 'left',
+                                  color: '#FFFFFF',
+                                  width: '100%',
+                                  minHeight: '20px',
+                                  height: 'auto',
+                                  margin: '0 0 4px 0',
+                                  padding: '0',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                {card.title}
+                              </h3>
+
+                              {/* Event DateTime */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  alignSelf: 'stretch',
+                                  gap: '6px',
+                                  padding: '0px 0px 0px 2px'
+                                }}
+                              >
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                >
+                                  <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor" />
+                                </svg>
+                                <span
+                                  style={{
+                                    fontFamily: 'Inter',
+                                    fontWeight: '300',
+                                    fontSize: '12px',
+                                    lineHeight: '1.4',
+                                    textAlign: 'left',
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    width: '100%',
+                                    height: '14px',
+                                    margin: '0',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  {card.date}
+                                </span>
+                              </div>
+
+                              {/* Event Location */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
+                                  alignSelf: 'stretch',
+                                  gap: '6px',
+                                  padding: '0px 2px'
+                                }}
+                              >
+                                <svg
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                >
+                                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                </svg>
+                                <span
+                                  style={{
+                                    fontFamily: 'Inter',
+                                    fontWeight: '300',
+                                    fontSize: '12px',
+                                    lineHeight: '1.4',
+                                    textAlign: 'left',
+                                    color: 'rgba(255, 255, 255, 0.65)',
+                                    width: '100%',
+                                    height: '14px',
+                                    margin: '0',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap'
+                                  }}
+                                >
+                                  {card.location}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Event Button - Aligned with image bottom edge */}
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '32px',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'flex-start',
+                                alignItems: 'flex-end',
+                                gap: '6px',
+                                padding: '0px 2px 0px 0px',
+                                position: 'absolute',
+                                bottom: '4px', // Fine-tuned to perfectly align button bottom with image bottom edge
+                                left: '0px'
+                              }}
+                            >
+                              {card.isRealEvent && card.hasTicketLink ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                                    window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                  }}
+                                  style={{
+                                    background: 'rgba(23, 23, 23, 0.8)',
+                                    borderRadius: '46px',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '16px 15px',
+                                    width: 'calc(100% - 4px)',
+                                    height: '32px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontFamily: 'Inter',
+                                    fontWeight: '500',
+                                    fontSize: '14px',
+                                    lineHeight: '1.21',
+                                    textAlign: 'center',
+                                    color: '#FFFFFF',
+                                    transition: 'transform 0.2s ease, background 0.2s ease',
+                                    transform: 'translateZ(0) scale(1)',
+                                    willChange: 'transform',
+                                    backfaceVisibility: 'hidden',
+                                    WebkitBackfaceVisibility: 'hidden',
+                                    isolation: 'isolate',
+                                    boxSizing: 'border-box'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
+                                    e.currentTarget.style.background = 'rgba(23, 23, 23, 0.9)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                                    e.currentTarget.style.background = 'rgba(23, 23, 23, 0.8)';
+                                  }}
+                                >
+                                  {card.buttonText || 'View Event'}
+                                </button>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer - Placed outside hidden mobile section so it's visible on desktop */}
+            <Footer compact={false} />
+
           </div>
         </div>
-
       </div>
-
-      {/* Footer - Placed outside hidden mobile section so it's visible on desktop */}
-      <Footer compact={false} />
-
-    </div>
-    </div>
-    </div>
     </div>
   );
 };
