@@ -32,6 +32,8 @@ export const DEFAULT_SEO_SETTINGS = {
 // PERFORMANCE OPTIMIZATION: Staggered cache to prevent cascade expiration
 let seoCache = null;
 let cacheTimestamp = 0;
+const CACHE_KEY = 'seo_settings_cache';
+const LOCAL_CACHE_DURATION = 30 * 1000; // 30 seconds for faster updates
 const CACHE_DURATION = 6 * 60 * 1000; // 6 minutes (staggered from 5 minutes)
 const PROACTIVE_REFRESH_THRESHOLD = 0.8; // Refresh at 80% of cache duration
 
@@ -39,7 +41,7 @@ const PROACTIVE_REFRESH_THRESHOLD = 0.8; // Refresh at 80% of cache duration
  * Fetch SEO settings from dashboard API with caching
  * @returns {Promise<Object>} SEO settings object
  */
-export const fetchSEOSettings = async() => {
+export const fetchSEOSettings = async () => {
     const startTime = Date.now();
 
     try {
@@ -50,7 +52,7 @@ export const fetchSEOSettings = async() => {
 
         if (seoCache && cacheAge < CACHE_DURATION) {
             if (process.env.NODE_ENV !== 'production') {
-                console.log(`⚡ SEO settings served from cache (${Math.round(cacheAge/1000)}s old)`);
+                console.log(`⚡ SEO settings served from cache (${Math.round(cacheAge / 1000)}s old)`);
             }
 
             // Proactive refresh in background if approaching expiration
@@ -104,6 +106,26 @@ export const fetchSEOSettings = async() => {
             return seoCache;
         }
 
+        // FALLBACK: Try localStorage cache as a second line of defense
+        // This prevents overwriting good (but slightly stale) data with defaults on API failure
+        try {
+            if (typeof localStorage !== 'undefined') {
+                const localCache = localStorage.getItem(CACHE_KEY);
+                if (localCache) {
+                    const parsed = JSON.parse(localCache);
+                    if (parsed && parsed.data) {
+                        console.log('🔄 Using localStorage SEO settings (stale) due to API error');
+                        // Hydrate in-memory cache to prevent repeated disk reads
+                        seoCache = parsed.data;
+                        cacheTimestamp = parsed.timestamp || Date.now();
+                        return parsed.data;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Failed to fallback to localStorage:', e);
+        }
+
         if (error.name === 'AbortError') {
             console.warn('⚠️ SEO API request timed out after 8 seconds - using defaults');
         } else if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
@@ -126,7 +148,7 @@ export const fetchSEOSettings = async() => {
  * Fetch maintenance mode status
  * @returns {Promise<Object>} Maintenance status object
  */
-export const fetchMaintenanceStatus = async() => {
+export const fetchMaintenanceStatus = async () => {
     try {
         console.log('🔍 Checking maintenance mode status...');
 
@@ -240,7 +262,7 @@ const getPageSpecificSEO = (settings, pageType) => {
  * @returns {Object} Complete meta tags configuration
  */
 export const generateMetaTags = (seoSettings, options = {}) => {
-    const settings = {...DEFAULT_SEO_SETTINGS, ...seoSettings };
+    const settings = { ...DEFAULT_SEO_SETTINGS, ...seoSettings };
     const CANONICAL_HOST = 'bounce2bounce.com';
     const HOMEPAGE_ORIGIN = `https://${CANONICAL_HOST}`;
     const { isMobile = false, deviceType = 'unknown' } = options;
@@ -372,8 +394,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
 /**
  * Cache management for SEO settings
  */
-const CACHE_KEY = 'seo_settings_cache';
-const LOCAL_CACHE_DURATION = 30 * 1000; // 30 seconds for faster updates
+// Constants moved to top of file
 
 export const getCachedSEOSettings = () => {
     try {
