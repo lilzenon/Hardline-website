@@ -1,3 +1,5 @@
+import React from 'react';
+
 /**
  * Three.js Kill Switch and Global Error Handler
  * Provides emergency fallback when Three.js fails in production
@@ -23,7 +25,7 @@ export function isThreeJSDisabled() {
 export function disableThreeJS(reason = 'unknown') {
   THREEJS_DISABLED = true;
   console.warn(`🚨 Three.js DISABLED globally. Reason: ${reason}`);
-  
+
   // Store in localStorage to persist across page reloads
   try {
     localStorage.setItem('threejs-disabled', JSON.stringify({
@@ -35,7 +37,7 @@ export function disableThreeJS(reason = 'unknown') {
   } catch (e) {
     // Ignore localStorage errors
   }
-  
+
   // Send analytics event
   if (window.gtag) {
     window.gtag('event', 'threejs_disabled', {
@@ -79,19 +81,19 @@ export function checkPreviousDisable() {
  */
 export function recordThreeJSError(error, context = '') {
   THREEJS_ERROR_COUNT++;
-  
+
   console.error(`🚨 Three.js Error #${THREEJS_ERROR_COUNT} in ${context}:`, {
     message: error.message,
     stack: error.stack,
     userAgent: navigator.userAgent,
     timestamp: new Date().toISOString()
   });
-  
+
   // Disable Three.js if too many errors
   if (THREEJS_ERROR_COUNT >= MAX_ERRORS) {
     disableThreeJS(`too-many-errors-${THREEJS_ERROR_COUNT}`);
   }
-  
+
   // Send to analytics
   if (window.gtag) {
     window.gtag('event', 'exception', {
@@ -107,10 +109,10 @@ export function recordThreeJSError(error, context = '') {
 export function installGlobalThreeJSErrorHandlers() {
   // Check if previously disabled
   checkPreviousDisable();
-  
+
   // Global error handler
   const originalErrorHandler = window.onerror;
-  window.onerror = function(message, source, lineno, colno, error) {
+  window.onerror = function (message, source, lineno, colno, error) {
     // Check if this looks like a Three.js error
     if (
       message && (
@@ -126,17 +128,17 @@ export function installGlobalThreeJSErrorHandlers() {
       recordThreeJSError(error || new Error(message), 'global-error-handler');
       return true; // Prevent default error handling
     }
-    
+
     // Call original handler
     if (originalErrorHandler) {
       return originalErrorHandler.apply(this, arguments);
     }
     return false;
   };
-  
+
   // Unhandled promise rejection handler
   const originalRejectionHandler = window.onunhandledrejection;
-  window.onunhandledrejection = function(event) {
+  window.onunhandledrejection = function (event) {
     const error = event.reason;
     if (error && (
       error.message?.includes('three') ||
@@ -150,13 +152,13 @@ export function installGlobalThreeJSErrorHandlers() {
       event.preventDefault(); // Prevent default handling
       return;
     }
-    
+
     // Call original handler
     if (originalRejectionHandler) {
       return originalRejectionHandler.apply(this, arguments);
     }
   };
-  
+
   console.log('🛡️ Global Three.js error handlers installed');
 }
 
@@ -170,19 +172,19 @@ export function createSafeThreeJSWrapper(ThreeJSComponent, FallbackComponent) {
   return function SafeThreeJSWrapper(props) {
     // Check if Three.js is disabled
     if (isThreeJSDisabled()) {
-      return React.createElement(FallbackComponent, { 
-        ...props, 
-        reason: 'threejs-disabled' 
+      return React.createElement(FallbackComponent, {
+        ...props,
+        reason: 'threejs-disabled'
       });
     }
-    
+
     try {
       return React.createElement(ThreeJSComponent, props);
     } catch (error) {
       recordThreeJSError(error, 'component-wrapper');
-      return React.createElement(FallbackComponent, { 
-        ...props, 
-        reason: 'component-error' 
+      return React.createElement(FallbackComponent, {
+        ...props,
+        reason: 'component-error'
       });
     }
   };
