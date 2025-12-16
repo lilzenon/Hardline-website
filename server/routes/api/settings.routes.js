@@ -7,73 +7,110 @@
 const express = require("express");
 const router = express.Router();
 
-// GET /api/settings/seo
+// GET /api/settings/seo - Proxy to dashboard for SEO settings
 const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
 
-router.get("/seo", (req, res) => {
-const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
+router.get("/seo", async (req, res) => {
+    try {
+        console.log('🔍 Homepage: Fetching SEO settings from dashboard...');
 
-  return res.json({
-    success: true,
-    settings: {
-      default_title: "BOUNCE2BOUNCE - Premium Event Platform",
-      default_description:
-        "Discover and book premium events worldwide with BOUNCE2BOUNCE",
-      default_keywords:
-        "events, tickets, entertainment, concerts, festivals",
-      default_author: "BOUNCE2BOUNCE",
-      maintenance_mode: false,
-    },
-  });
+        // Proxy to dashboard server for SEO settings
+        const env = require('../../env');
+        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+
+        console.log(`📡 Proxying SEO request to: ${dashboardUrl}/api/settings/seo`);
+
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+
+        const response = await fetch(`${dashboardUrl}/api/settings/seo`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Homepage: SEO settings fetched from dashboard:', {
+                title: data.settings?.default_title?.substring(0, 40) + '...',
+                hasShopEnabled: data.settings?.shop_enabled !== undefined
+            });
+            return res.json(data);
+        } else {
+            throw new Error(`Dashboard responded with ${response.status}`);
+        }
+    } catch (error) {
+        console.error('❌ Homepage: Error fetching SEO settings from dashboard:', error.message);
+
+        // Fallback to hardcoded defaults only if dashboard is completely unavailable
+        console.warn('⚠️ Using fallback SEO settings (dashboard unreachable)');
+        return res.json({
+            success: true,
+            settings: {
+                default_title: "BOUNCE2BOUNCE - NJ'S PREMIERE EDM COLLECTIVE",
+                default_description: "Bounce2Bounce is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+                default_keywords: "edm events, electronic dance music, nj events, bounce2bounce, live music",
+                default_author: "BOUNCE2BOUNCE",
+                maintenance_mode: false,
+                shop_enabled: false
+            },
+            fallback: true
+        });
+    }
 });
 
 // GET /api/settings/maintenance-status
 router.get("/maintenance-status", async (req, res) => {
-  try {
-    const base = process.env.DASHBOARD_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
-    const resp = await fetch(`${base}/api/settings/maintenance-status`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      return res.json(data);
+    try {
+        const base = process.env.DASHBOARD_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+        const resp = await fetch(`${base}/api/settings/maintenance-status`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (resp.ok) {
+            const data = await resp.json();
+            return res.json(data);
+        }
+        throw new Error(`Dashboard responded ${resp.status}`);
+    } catch (err) {
+        console.warn('⚠️ Fallback maintenance-status (dashboard unreachable):', err.message);
+        return res.json({
+            success: true,
+            maintenance_mode: false,
+            maintenance_message: "Service temporarily unavailable",
+        });
     }
-    throw new Error(`Dashboard responded ${resp.status}`);
-  } catch (err) {
-    console.warn('⚠️ Fallback maintenance-status (dashboard unreachable):', err.message);
-    return res.json({
-      success: true,
-      maintenance_mode: false,
-      maintenance_message: "Service temporarily unavailable",
-    });
-  }
 });
 
 // POST /api/settings/maintenance-refresh
 // Force refresh maintenance status cache (for immediate updates)
 router.post("/maintenance-refresh", async (req, res) => {
-  try {
-    console.log('🔄 Maintenance cache refresh requested');
+    try {
+        console.log('🔄 Maintenance cache refresh requested');
 
-    const { refreshMaintenanceStatus } = require('../../middleware/maintenance.middleware');
-    const status = await refreshMaintenanceStatus();
+        const { refreshMaintenanceStatus } = require('../../middleware/maintenance.middleware');
+        const status = await refreshMaintenanceStatus();
 
-    res.json({
-      success: true,
-      message: 'Maintenance status cache refreshed',
-      status: status,
-      timestamp: new Date().toISOString()
-    });
+        res.json({
+            success: true,
+            message: 'Maintenance status cache refreshed',
+            status: status,
+            timestamp: new Date().toISOString()
+        });
 
-  } catch (error) {
-    console.error('❌ Failed to refresh maintenance cache:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to refresh maintenance status',
-      message: error.message
-    });
-  }
+    } catch (error) {
+        console.error('❌ Failed to refresh maintenance cache:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to refresh maintenance status',
+            message: error.message
+        });
+    }
 });
 
 // POST /api/analytics/track - Analytics tracking endpoint
@@ -91,7 +128,7 @@ router.get('/about', async (req, res) => {
         // Proxy to dashboard server for about page content
         // Use DASHBOARD_URL from env.js (defaults to http://localhost:3002 in development)
         const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/about`);
 
@@ -130,7 +167,7 @@ router.get('/about/gallery/public', async (req, res) => {
 
         // Proxy to dashboard server for gallery images
         const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
 
         console.log(`📡 Proxying gallery request to: ${dashboardUrl}/api/settings/about/gallery/public`);
 
@@ -166,7 +203,7 @@ router.get('/social-media', async (req, res) => {
 
         // Proxy to dashboard server for social media links
         const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/social-media`);
 
@@ -202,7 +239,7 @@ router.get('/faq', async (req, res) => {
 
         // Proxy to dashboard server for FAQ content
         const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || 'http://localhost:3002';
+        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/faq`);
 

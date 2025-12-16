@@ -8,15 +8,15 @@ class CircuitBreaker {
         this.failureThreshold = options.failureThreshold || 5;
         this.resetTimeout = options.resetTimeout || 60000; // 1 minute
         this.monitoringPeriod = options.monitoringPeriod || 10000; // 10 seconds
-        
+
         this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
         this.failureCount = 0;
         this.lastFailureTime = null;
         this.successCount = 0;
-        
+
         // Request deduplication
         this.pendingRequests = new Map();
-        
+
         console.log(`🔧 Circuit breaker initialized: threshold=${this.failureThreshold}, timeout=${this.resetTimeout}ms`);
     }
 
@@ -28,7 +28,7 @@ class CircuitBreaker {
         }
 
         const promise = this._executeInternal(operation, fallback);
-        
+
         if (requestKey) {
             this.pendingRequests.set(requestKey, promise);
             promise.finally(() => {
@@ -62,19 +62,19 @@ class CircuitBreaker {
             return result;
         } catch (error) {
             this._onFailure();
-            
+
             if (fallback) {
                 console.log('🔄 Operation failed, using fallback');
                 return fallback;
             }
-            
+
             throw error;
         }
     }
 
     _onSuccess() {
         this.failureCount = 0;
-        
+
         if (this.state === 'HALF_OPEN') {
             this.successCount++;
             if (this.successCount >= 3) { // Require 3 successes to close
@@ -87,7 +87,7 @@ class CircuitBreaker {
     _onFailure() {
         this.failureCount++;
         this.lastFailureTime = Date.now();
-        
+
         if (this.failureCount >= this.failureThreshold) {
             this.state = 'OPEN';
             console.log(`🚨 Circuit breaker OPEN - ${this.failureCount} failures detected`);
@@ -137,25 +137,25 @@ export const analyticsCircuitBreaker = new CircuitBreaker({
  */
 export const loadImageWithCircuitBreaker = async (imageUrl, fallbackUrl = null) => {
     const requestKey = `image:${imageUrl}`;
-    
+
     const operation = async () => {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            
+
             const timeout = setTimeout(() => {
                 reject(new Error('Image load timeout'));
             }, 10000); // 10 second timeout
-            
+
             img.onload = () => {
                 clearTimeout(timeout);
                 resolve(imageUrl);
             };
-            
+
             img.onerror = () => {
                 clearTimeout(timeout);
                 reject(new Error(`Failed to load image: ${imageUrl}`));
             };
-            
+
             img.src = imageUrl;
         });
     };
@@ -164,12 +164,12 @@ export const loadImageWithCircuitBreaker = async (imageUrl, fallbackUrl = null) 
         return await imageCircuitBreaker.execute(operation, requestKey, fallbackUrl);
     } catch (error) {
         console.warn(`⚠️ Image loading failed: ${error.message}`);
-        
+
         // Return fallback or placeholder
         if (fallbackUrl) {
             return fallbackUrl;
         }
-        
+
         // Return a data URL placeholder
         return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjIyIiBoZWlnaHQ9IjEyNCIgdmlld0JveD0iMCAwIDIyMiAxMjQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMjIiIGhlaWdodD0iMTI0IiBmaWxsPSIjMTYxNjE2Ii8+Cjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNTY1NjU2IiBmb250LWZhbWlseT0iSW50ZXIiIGZvbnQtc2l6ZT0iMTQiPkV2ZW50IEltYWdlPC90ZXh0Pgo8L3N2Zz4K';
     }
@@ -183,14 +183,15 @@ export function getDefaultFallback(endpoint) {
         return {
             success: true,
             settings: {
-                default_title: 'BOUNCE2BOUNCE - Premium Event Platform',
-                default_description: 'Discover and book premium events worldwide',
+                default_title: "BOUNCE2BOUNCE - NJ'S PREMIERE EDM COLLECTIVE",
+                default_description: "Bounce2Bounce is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
                 default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 twitter_handle: '@bounce2bounce'
-            }
+            },
+            fallback: true
         };
     }
-    
+
     if (endpoint.includes('/home-settings/homepage-data')) {
         return {
             success: true,
@@ -203,7 +204,7 @@ export function getDefaultFallback(endpoint) {
             homepageEvents: []
         };
     }
-    
+
     return null;
 }
 

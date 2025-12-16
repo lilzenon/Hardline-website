@@ -32,7 +32,7 @@ class APIClient {
     // The backend proxies all requests to admin.b2b.click, so we use /api for all environments
     // This ensures beta.bounce2bounce.com and bounce2bounce.com both work correctly
     const isDevelopment = window.location.hostname === 'localhost' ||
-                         window.location.hostname === '127.0.0.1';
+      window.location.hostname === '127.0.0.1';
 
     this.config = {
       baseURL: '/api', // ALWAYS use local proxy - backend handles cross-domain proxying
@@ -54,7 +54,7 @@ class APIClient {
    */
   private async fetchWithRetry(url: string, options: RequestInit = {}, attempt = 1): Promise<Response> {
     const fullUrl = url.startsWith('http') ? url : `${this.config.baseURL}${url}`;
-    
+
     const requestOptions: RequestInit = {
       ...options,
       headers: {
@@ -72,16 +72,16 @@ class APIClient {
 
     try {
       console.log(`📡 API Request (attempt ${attempt}): ${options.method || 'GET'} ${fullUrl}`);
-      
+
       const response = await fetch(fullUrl, requestOptions);
       clearTimeout(timeoutId);
-      
+
       console.log(`✅ API Response: ${response.status} ${response.statusText}`);
       return response;
-      
+
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       // Handle different types of errors
       if (error.name === 'AbortError') {
         console.warn(`⏰ API Request timeout (attempt ${attempt}): ${fullUrl}`);
@@ -115,12 +115,13 @@ class APIClient {
         return {
           success: true,
           settings: {
-            default_title: 'BOUNCE2BOUNCE - Premium Event Platform',
-            default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
-            default_keywords: 'events, tickets, entertainment, concerts, festivals',
+            default_title: "BOUNCE2BOUNCE - NJ'S PREMIERE EDM COLLECTIVE",
+            default_description: "Bounce2Bounce is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+            default_keywords: 'edm events, electronic dance music, nj events, bounce2bounce, live music',
             default_author: 'BOUNCE2BOUNCE',
             maintenance_mode: false
-          }
+          },
+          fallback: true
         };
       }
       if (endpoint.includes('/maintenance-status')) {
@@ -232,7 +233,7 @@ class APIClient {
       }
 
       const responseData = await response.json();
-      
+
       return {
         success: true,
         data: responseData
@@ -240,7 +241,7 @@ class APIClient {
 
     } catch (error) {
       console.error(`❌ API POST error for ${endpoint}:`, error.message);
-      
+
       return {
         success: false,
         error: error.message
