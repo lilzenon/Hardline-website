@@ -161,7 +161,7 @@ async function create(req, res) {
 
     return res
         .status(201)
-        .send(utils.sanitize.link({...link }));
+        .send(utils.sanitize.link({ ...link }));
 }
 
 async function edit(req, res) {
@@ -275,12 +275,12 @@ async function edit(req, res) {
         res.render("partials/links/edit", {
             swap_oob: true,
             success: "Link has been updated.",
-            ...utils.sanitize.link_html({...updatedLink }),
+            ...utils.sanitize.link_html({ ...updatedLink }),
         });
         return;
     }
 
-    return res.status(200).send(utils.sanitize.link({...updatedLink }));
+    return res.status(200).send(utils.sanitize.link({ ...updatedLink }));
 };
 
 async function editAdmin(req, res) {
@@ -394,12 +394,12 @@ async function editAdmin(req, res) {
         res.render("partials/admin/links/edit", {
             swap_oob: true,
             success: "Link has been updated.",
-            ...utils.sanitize.link_admin({...updatedLink }),
+            ...utils.sanitize.link_admin({ ...updatedLink }),
         });
         return;
     }
 
-    return res.status(200).send(utils.sanitize.link({...updatedLink }));
+    return res.status(200).send(utils.sanitize.link({ ...updatedLink }));
 };
 
 async function remove(req, res) {
@@ -457,7 +457,7 @@ async function ban(req, res) {
 
     // 3. ban target's domain
     if (req.body.domain) {
-        tasks.push(query.domain.add({...update, address: domain }));
+        tasks.push(query.domain.add({ ...update, address: domain }));
     }
 
     // 4. ban target's host
@@ -466,7 +466,7 @@ async function ban(req, res) {
             throw new CustomError("Couldn't fetch DNS info.");
         });
         const host = dnsRes && dnsRes.address;
-        tasks.push(query.host.add({...update, address: host }));
+        tasks.push(query.host.add({ ...update, address: host }));
     }
 
     // 5. ban link owner
@@ -509,8 +509,8 @@ async function redirect(req, res, next) {
     const host = utils.removeWww(req.headers.host);
     const domain =
         host !== env.DEFAULT_DOMAIN ?
-        await query.domain.find({ address: host }) :
-        null;
+            await query.domain.find({ address: host }) :
+            null;
 
     // 2. Get link
     const address = req.params.id.replace("+", "");
@@ -724,8 +724,27 @@ async function redirectCustomDomainHomepage(req, res, next) {
     ) {
         const domain = await query.domain.find({ address: host });
         if (domain && domain.homepage) {
-            res.redirect(302, domain.homepage);
-            return;
+            // CRITICAL FIX: Prevent infinite redirect loops
+            try {
+                // Construct absolute URL to check
+                const homepageUrl = domain.homepage.startsWith('http') ?
+                    new URL(domain.homepage) :
+                    new URL(domain.homepage, `https://${host}`);
+
+                // If redirect destination is same as current host and path is root, skip redirect
+                if ((homepageUrl.hostname === host || homepageUrl.hostname === 'www.' + host || 'www.' + homepageUrl.hostname === host) &&
+                    (homepageUrl.pathname === '/' || homepageUrl.pathname === '')) {
+                    console.log(`⚠️ Detected potential redirect loop for ${host} -> ${domain.homepage}, skipping redirect.`);
+                    return next();
+                }
+
+                res.redirect(302, domain.homepage);
+                return;
+            } catch (err) {
+                console.error('Error checking redirect loop:', err);
+                // If URL parsing fails, proceed with redirect (or next? safest is next)
+                return next();
+            }
         }
     }
 

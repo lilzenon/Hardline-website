@@ -37,10 +37,10 @@ process.on('uncaughtException', (error) => {
 
     // Don't crash for Redis-related errors
     if (error.message && (
-            error.message.includes('Redis') ||
-            error.message.includes('Stream isn\'t writeable') ||
-            error.message.includes('ECONNREFUSED') ||
-            error.message.includes('rate-limit-redis'))) {
+        error.message.includes('Redis') ||
+        error.message.includes('Stream isn\'t writeable') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('rate-limit-redis'))) {
         console.warn('⚠️ Redis-related uncaught exception handled gracefully, continuing...');
         return;
     }
@@ -293,28 +293,28 @@ const CURRENT_LOG_LEVEL = process.env.LOG_LEVEL ?
 
 // Optimized request logging middleware
 app.use((req, res, next) => {
-            const requestId = Math.random().toString(36).substr(2, 9);
-            const requestNumber = ++requestCounter;
-            const startTime = Date.now();
+    const requestId = Math.random().toString(36).substr(2, 9);
+    const requestNumber = ++requestCounter;
+    const startTime = Date.now();
 
-            // Add request tracking to request object
-            req.requestId = requestId;
-            req.requestNumber = requestNumber;
-            req.startTime = startTime;
+    // Add request tracking to request object
+    req.requestId = requestId;
+    req.requestNumber = requestNumber;
+    req.startTime = startTime;
 
-            const isWebhookRequest = req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
-                req.url.includes('instagram') || req.url.includes('facebook');
+    const isWebhookRequest = req.url.includes('/webhook') || req.url.includes('/api/webhook') ||
+        req.url.includes('instagram') || req.url.includes('facebook');
 
-            // Only log webhook requests at MINIMAL level, all requests at NORMAL+
-            if (CURRENT_LOG_LEVEL >= LOG_LEVELS.MINIMAL && isWebhookRequest) {
-                console.log(`\n🚨 WEBHOOK #${requestNumber} (${requestId}): ${req.method} ${req.url}`);
-                console.log(`🚨 IP: ${req.ip} | User-Agent: ${req.headers['user-agent'] && req.headers['user-agent'].substring(0, 50) || 'Unknown'}`);
+    // Only log webhook requests at MINIMAL level, all requests at NORMAL+
+    if (CURRENT_LOG_LEVEL >= LOG_LEVELS.MINIMAL && isWebhookRequest) {
+        console.log(`\n🚨 WEBHOOK #${requestNumber} (${requestId}): ${req.method} ${req.url}`);
+        console.log(`🚨 IP: ${req.ip} | User-Agent: ${req.headers['user-agent'] && req.headers['user-agent'].substring(0, 50) || 'Unknown'}`);
 
-                // Log webhook-specific headers
-                const webhookHeaders = ['x-hub-signature-256', 'x-hub-signature', 'content-type', 'content-length'];
-                const relevantHeaders = webhookHeaders.filter(h => req.headers[h]);
-                if (relevantHeaders.length > 0) {
-                    console.log(`🚨 Headers: ${relevantHeaders.map(h => `${h}=${req.headers[h]}`).join(', ')}`);
+        // Log webhook-specific headers
+        const webhookHeaders = ['x-hub-signature-256', 'x-hub-signature', 'content-type', 'content-length'];
+        const relevantHeaders = webhookHeaders.filter(h => req.headers[h]);
+        if (relevantHeaders.length > 0) {
+            console.log(`🚨 Headers: ${relevantHeaders.map(h => `${h}=${req.headers[h]}`).join(', ')}`);
         }
 
         if (Object.keys(req.query).length > 0) {
@@ -326,7 +326,7 @@ app.use((req, res, next) => {
 
     // Log response when it completes
     const originalSend = res.send;
-    res.send = function(data) {
+    res.send = function (data) {
         const endTime = Date.now();
         const duration = endTime - startTime;
 
@@ -376,7 +376,7 @@ app.use((req, res, next) => {
 // Payload size error handling middleware
 app.use((error, req, res, next) => {
     if (error && (error.name === 'PayloadTooLargeError' ||
-                  error.message?.includes('request entity too large'))) {
+        error.message?.includes('request entity too large'))) {
         console.warn(`⚠️ Payload too large for ${req.method} ${req.url}:`, {
             contentLength: req.headers['content-length'],
             contentType: req.headers['content-type'],
@@ -740,91 +740,91 @@ try {
         : 'http://localhost:3002';
 
     if (env.DASHBOARD_PROXY_ENABLED) {
-      console.log(`📡 Proxy ENABLED: forwarding API calls to dashboard server: ${dashboardApiUrl}`);
+        console.log(`📡 Proxy ENABLED: forwarding API calls to dashboard server: ${dashboardApiUrl}`);
 
-      // Proxy settings endpoints to dashboard API
-      app.use('/api/settings', createProxyMiddleware({
-          target: dashboardApiUrl,
-          changeOrigin: true,
-          secure: env.NODE_ENV === 'production',
-          timeout: 10000,
-          proxyTimeout: 10000,
-          onError: (err, req, res) => {
-              console.error('🚨 Proxy error for /api/settings:', err.message);
-              res.status(500).json({
-                  error: 'Dashboard API unavailable',
-                  message: 'Unable to connect to dashboard server',
-                  timestamp: new Date().toISOString()
-              });
-          },
-          onProxyReq: (proxyReq, req, res) => {
-              console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
-          },
-          onProxyRes: (proxyRes, req, res) => {
-              console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
-          }
-      }));
+        // Proxy settings endpoints to dashboard API
+        app.use('/api/settings', createProxyMiddleware({
+            target: dashboardApiUrl,
+            changeOrigin: true,
+            secure: env.NODE_ENV === 'production',
+            timeout: 10000,
+            proxyTimeout: 10000,
+            onError: (err, req, res) => {
+                console.error('🚨 Proxy error for /api/settings:', err.message);
+                res.status(500).json({
+                    error: 'Dashboard API unavailable',
+                    message: 'Unable to connect to dashboard server',
+                    timestamp: new Date().toISOString()
+                });
+            },
+            onProxyReq: (proxyReq, req, res) => {
+                console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
+            },
+            onProxyRes: (proxyRes, req, res) => {
+                console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
+            }
+        }));
 
-      // Proxy analytics endpoints to dashboard API (only track endpoint)
-      app.use('/api/analytics/track', createProxyMiddleware({
-          target: dashboardApiUrl,
-          changeOrigin: true,
-          secure: env.NODE_ENV === 'production',
-          timeout: 10000,
-          proxyTimeout: 10000,
-          onError: (err, req, res) => {
-              console.error('🚨 Proxy error for /api/analytics/track:', err.message);
-              res.status(500).json({
-                  error: 'Dashboard API unavailable',
-                  message: 'Unable to connect to dashboard server',
-                  timestamp: new Date().toISOString()
-              });
-          }
-      }));
+        // Proxy analytics endpoints to dashboard API (only track endpoint)
+        app.use('/api/analytics/track', createProxyMiddleware({
+            target: dashboardApiUrl,
+            changeOrigin: true,
+            secure: env.NODE_ENV === 'production',
+            timeout: 10000,
+            proxyTimeout: 10000,
+            onError: (err, req, res) => {
+                console.error('🚨 Proxy error for /api/analytics/track:', err.message);
+                res.status(500).json({
+                    error: 'Dashboard API unavailable',
+                    message: 'Unable to connect to dashboard server',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }));
 
-      // Proxy home-settings endpoints to dashboard API
-      app.use('/api/home-settings', createProxyMiddleware({
-          target: dashboardApiUrl,
-          changeOrigin: true,
-          secure: env.NODE_ENV === 'production',
-          timeout: 10000,
-          proxyTimeout: 10000,
-          onError: (err, req, res) => {
-              console.error('🚨 Proxy error for /api/home-settings:', err.message);
-              res.status(500).json({
-                  error: 'Dashboard API unavailable',
-                  message: 'Unable to connect to dashboard server',
-                  timestamp: new Date().toISOString()
-              });
-          }
-      }));
+        // Proxy home-settings endpoints to dashboard API
+        app.use('/api/home-settings', createProxyMiddleware({
+            target: dashboardApiUrl,
+            changeOrigin: true,
+            secure: env.NODE_ENV === 'production',
+            timeout: 10000,
+            proxyTimeout: 10000,
+            onError: (err, req, res) => {
+                console.error('🚨 Proxy error for /api/home-settings:', err.message);
+                res.status(500).json({
+                    error: 'Dashboard API unavailable',
+                    message: 'Unable to connect to dashboard server',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }));
 
-      // 🛍️ Proxy shop API endpoints to dashboard API (products, checkout, orders)
-      app.use('/api/shop', createProxyMiddleware({
-          target: dashboardApiUrl,
-          changeOrigin: true,
-          secure: env.NODE_ENV === 'production',
-          timeout: 15000,  // Longer timeout for checkout operations
-          proxyTimeout: 15000,
-          onError: (err, req, res) => {
-              console.error('🚨 Proxy error for /api/shop:', err.message);
-              res.status(500).json({
-                  error: 'Shop API unavailable',
-                  message: 'Unable to connect to shop server',
-                  timestamp: new Date().toISOString()
-              });
-          },
-          onProxyReq: (proxyReq, req, res) => {
-              console.log(`🛍️ Proxying shop: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
-          },
-          onProxyRes: (proxyRes, req, res) => {
-              console.log(`✅ Shop proxy response: ${proxyRes.statusCode} for ${req.url}`);
-          }
-      }));
+        // 🛍️ Proxy shop API endpoints to dashboard API (products, checkout, orders)
+        app.use('/api/shop', createProxyMiddleware({
+            target: dashboardApiUrl,
+            changeOrigin: true,
+            secure: env.NODE_ENV === 'production',
+            timeout: 15000,  // Longer timeout for checkout operations
+            proxyTimeout: 15000,
+            onError: (err, req, res) => {
+                console.error('🚨 Proxy error for /api/shop:', err.message);
+                res.status(500).json({
+                    error: 'Shop API unavailable',
+                    message: 'Unable to connect to shop server',
+                    timestamp: new Date().toISOString()
+                });
+            },
+            onProxyReq: (proxyReq, req, res) => {
+                console.log(`🛍️ Proxying shop: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
+            },
+            onProxyRes: (proxyRes, req, res) => {
+                console.log(`✅ Shop proxy response: ${proxyRes.statusCode} for ${req.url}`);
+            }
+        }));
 
-      console.log('✅ Cross-domain API proxy configured successfully (including shop API)');
+        console.log('✅ Cross-domain API proxy configured successfully (including shop API)');
     } else {
-      console.log('🛑 Proxy DISABLED via DASHBOARD_PROXY_ENABLED=false. Using local /api routes for settings and analytics.');
+        console.log('🛑 Proxy DISABLED via DASHBOARD_PROXY_ENABLED=false. Using local /api routes for settings and analytics.');
     }
 
 } catch (error) {
@@ -920,6 +920,19 @@ app.use(secureErrorHandler.handleDatabaseError);
 app.use(secureErrorHandler.handleRateLimitError);
 
 // 404 pages that don't exist
+// CRITICAL FIX: Add explicit root fallback for query parameters
+// This ensures that /?utm_source=... requests are always handled even if other routes miss
+app.get('/', (req, res) => {
+    console.log('🔄 Root fallback triggered for:', req.url);
+    const path = require('path');
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    if (require('fs').existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).json({ error: 'Root fallback: index.html not found' });
+    }
+});
+
 app.use(secureErrorHandler.notFoundHandler);
 
 // Secure error handling (replaces helpers.error)
