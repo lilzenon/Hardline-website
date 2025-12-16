@@ -159,8 +159,21 @@ if (container) {
       </ErrorBoundary>
     );
     console.log('🚀 REACT APP MOUNTED SUCCESSFULLY');
+
+    // 🔧 INSTAGRAM FIX: Add 'app-loaded' class to body to hide SSR fallback via CSS
+    // This provides a smoother transition for in-app browsers when React loads successfully
+    document.body.classList.add('app-loaded');
   } catch (error) {
     console.error('❌ REACT MOUNTING ERROR:', error);
+
+    // 🔧 CRITICAL: If React fails to mount, show the SSR content as fallback
+    // This prevents white pages in Instagram's in-app browser
+    const ssrContent = document.getElementById('ssr-content');
+    if (ssrContent) {
+      console.log('🔧 Showing SSR fallback due to React error');
+      ssrContent.style.display = 'block';
+      ssrContent.style.opacity = '1';
+    }
   }
 } else {
   console.log('No root element found - likely on admin login page, globals exported successfully');

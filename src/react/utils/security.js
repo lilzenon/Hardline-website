@@ -208,21 +208,25 @@ function isInAppBrowser() {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('utm_source') === 'ig' ||
             urlParams.has('fbclid') ||
-            urlParams.get('utm_medium') === 'social') {
+            urlParams.get('utm_medium') === 'social' ||
+            urlParams.has('igshid') ||
+            urlParams.has('ig_rid')) {
+            console.log('✅ In-app browser detected via URL parameters');
             return true;
         }
     }
 
     const userAgent = navigator.userAgent || navigator.vendor || '';
 
-    // Common in-app browser signatures
+    // 2. Check for specific in-app browser signatures
     const inAppBrowserPatterns = [
-        // Instagram
+        // Instagram (various signatures)
         /Instagram/i,
-        // Facebook
+        /INSTAGRAM/i,
+        // Facebook (FBAN = Facebook App Name, FBAV = Facebook App Version)
         /FBAN|FBAV|FB_IAB|FBIOS|FBSS/i,
-        // TikTok
-        /musical_ly|TikTok|BytedanceWebview|ByteLocale/i,
+        // TikTok and ByteDance
+        /musical_ly|TikTok|BytedanceWebview|ByteLocale|Bytedance/i,
         // Twitter/X
         /Twitter/i,
         // LinkedIn
@@ -233,17 +237,51 @@ function isInAppBrowser() {
         /Pinterest/i,
         // WeChat
         /MicroMessenger/i,
-        // Line
+        // Line messenger
         /Line\//i,
-        // Generic WebView patterns
-        /WebView|wv\)/i,
-        // iOS WebView
-        /AppleWebKit(?!.*Safari)/i,
-        // Android WebView
-        /; wv\)/i
+        // Telegram
+        /Telegram/i,
+        // WhatsApp
+        /WhatsApp/i,
+        // Discord
+        /Discordbot|Discord/i,
+        // Messenger (Facebook)
+        /Messenger/i,
+        // Generic WebView patterns (Android)
+        /; wv\)/i,
+        /WebView/i
     ];
 
-    return inAppBrowserPatterns.some(pattern => pattern.test(userAgent));
+    if (inAppBrowserPatterns.some(pattern => pattern.test(userAgent))) {
+        console.log('✅ In-app browser detected via User-Agent pattern');
+        return true;
+    }
+
+    // 3. Check for iOS WebView (more specific detection)
+    // iOS WebViews typically have AppleWebKit but NOT the full Safari version string
+    // Regular Safari has: AppleWebKit/XXX (KHTML, like Gecko) Version/XX Safari/XXX
+    // WebViews have: AppleWebKit/XXX (KHTML, like Gecko) Mobile/XXXXX
+    const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+    const hasAppleWebKit = /AppleWebKit/i.test(userAgent);
+    const hasSafariVersion = /Version\/[\d.]+ Safari/i.test(userAgent);
+    const hasChromeOrFirefox = /CriOS|FxiOS|OPiOS|EdgiOS/i.test(userAgent);
+
+    // It's an iOS WebView if it has AppleWebKit but NOT Safari Version and NOT Chrome/Firefox
+    if (isIOS && hasAppleWebKit && !hasSafariVersion && !hasChromeOrFirefox) {
+        console.log('✅ iOS WebView detected');
+        return true;
+    }
+
+    // 4. Check for standalone PWA mode (not technically in-app but similar constraints)
+    if (typeof window !== 'undefined' && window.matchMedia) {
+        if (window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true) {
+            console.log('✅ PWA standalone mode detected');
+            return true;
+        }
+    }
+
+    return false;
 }
 
 /**

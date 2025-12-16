@@ -1557,22 +1557,86 @@ async function reactHomepage(req, res) {
             `${dynamicMetaTags}\n    <!-- Server-side meta tags injected -->\n</head>`
         );
 
-        // 🔧 CRITICAL FIX: Inject static content ONLY for bots (not regular users)
-        // This prevents React hydration mismatch errors on mobile while still providing content for bots
-        // Detect bots by checking User-Agent header
+        // 🔧 CRITICAL FIX: Inject static content for bots AND in-app browsers
+        // Instagram's in-app browser often fails to execute JavaScript properly, causing white pages
+        // This ensures content is visible even when React fails to load
         const userAgent = req.headers['user-agent'] || '';
-        const isBot = /bot|crawler|spider|crawling|google|facebook|instagram|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(userAgent);
 
-        if (isBot) {
-            console.log('🤖 Bot detected, injecting SSR content:', userAgent.substring(0, 50));
+        // Detect social media bots and crawlers
+        const isBot = /bot|crawler|spider|crawling|google|bingbot|yandex|baidu|duckduck/i.test(userAgent);
+
+        // 🔧 INSTAGRAM FIX: Detect in-app browsers (Instagram, Facebook, TikTok, etc.)
+        // These WebViews often have JavaScript execution issues
+        const isInAppBrowser = /FBAN|FBAV|FB_IAB|FBIOS|FBSS|Instagram|musical_ly|TikTok|BytedanceWebview|Snapchat|Pinterest|Line\/|MicroMessenger|LinkedInApp/i.test(userAgent);
+
+        // Detect WebViews that may have JavaScript issues
+        const isWebView = /; wv\)|WebView/i.test(userAgent);
+
+        // Detect iOS WebView (Safari WebView without full Safari signature)
+        const isIOSWebView = /iPhone|iPad|iPod/i.test(userAgent) && /AppleWebKit/i.test(userAgent) && !/Safari|CriOS|FxiOS|OPiOS|mercury/i.test(userAgent);
+
+        // Check if request has Instagram/Facebook tracking parameters (strong indicator of in-app browser)
+        const urlParams = new URL(req.url, `https://${req.headers.host || 'bounce2bounce.com'}`).searchParams;
+        const hasInAppParams = urlParams.has('fbclid') || urlParams.get('utm_source') === 'ig' || urlParams.get('utm_medium') === 'social';
+
+        // Inject SSR content for bots OR in-app browsers to prevent white pages
+        const needsSSRContent = isBot || isInAppBrowser || isWebView || isIOSWebView || hasInAppParams;
+
+        if (needsSSRContent) {
+            const browserType = isBot ? 'Bot' : isInAppBrowser ? 'In-App Browser' : isWebView ? 'WebView' : isIOSWebView ? 'iOS WebView' : 'In-App Params';
+            console.log(`🤖 ${browserType} detected, injecting SSR content:`, userAgent.substring(0, 80));
             const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
+
+            // Create noscript fallback AND visible SSR content for in-app browsers
+            // The SSR content will be hidden by React once it loads, but remains visible if React fails
+            const ssrWrapper = isBot
+                ? `<div id="ssr-content" style="display: block;">${staticContent}</div>`
+                : `<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
+                   <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>`;
+
             htmlContent = htmlContent.replace(
                 /<div id="root"><\/div>/i,
-                `<div id="ssr-content" style="display: block;">${staticContent}</div><div id="root"></div>`
+                `${ssrWrapper}<div id="root"></div>`
             );
         } else {
             console.log('👤 Regular user detected, skipping SSR content injection');
         }
+
+        // 🔧 ALWAYS add noscript fallback for users with JavaScript disabled
+        const noscriptFallback = `
+    <noscript>
+        <style>
+            body { background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; margin: 0; padding: 0; }
+            .noscript-container { max-width: 600px; margin: 80px auto; padding: 20px; text-align: center; }
+            .noscript-logo { width: 200px; margin-bottom: 32px; }
+            .noscript-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+            .noscript-text { font-size: 16px; opacity: 0.8; line-height: 1.6; margin-bottom: 24px; }
+            .noscript-btn { 
+                display: inline-block; background: #319DFF; color: #fff; 
+                padding: 14px 28px; border-radius: 12px; text-decoration: none; 
+                font-weight: 600; font-size: 16px; margin: 8px;
+            }
+            .noscript-social { margin-top: 32px; }
+            .noscript-social a { color: #319DFF; margin: 0 12px; text-decoration: none; }
+        </style>
+        <div class="noscript-container">
+            <img src="/images/figma-exact/b2b-logo-nav.svg" alt="BOUNCE2BOUNCE" class="noscript-logo">
+            <h1 class="noscript-title">BOUNCE2BOUNCE</h1>
+            <p class="noscript-text">NJ's premiere EDM collective curating exclusive live music events and unforgettable experiences.</p>
+            <p class="noscript-text">For the best experience, please enable JavaScript or open this link in your default browser.</p>
+            <a href="https://bounce2bounce.com" class="noscript-btn">Open in Browser</a>
+            <div class="noscript-social">
+                <a href="https://instagram.com/bounce2bounce_">Instagram</a>
+                <a href="mailto:info@bounce2bounce.com">Email</a>
+            </div>
+        </div>
+    </noscript>`;
+
+        // Inject noscript fallback before closing body tag
+        htmlContent = htmlContent.replace(
+            '</body>',
+            `${noscriptFallback}\n</body>`
+        );
 
         // Set caching headers
         if (env.NODE_ENV === 'production') {
