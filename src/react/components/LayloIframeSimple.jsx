@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import useLayloSDK from '../hooks/useLayloSDK';
 
 /**
  * LayloIframeSimple
- * Laylo iframe embed that loads the official SDK first.
- * Based on official Laylo embed code structure.
+ * Laylo iframe embed that uses the shared useLayloSDK hook.
+ * Ensures strict compatibility with Laylo's official embed code.
  */
 const LayloIframeSimple = ({
   dropId,
@@ -14,156 +15,62 @@ const LayloIframeSimple = ({
   style = {},
   visible = true,
 }) => {
-  const [sdkLoaded, setSdkLoaded] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const loadStartRef = useRef(Date.now());
-  const loadTimeoutRef = useRef(null);
+  const isLayloReady = useLayloSDK(); // Use the shared hook
   const loadedRef = useRef(false);
-  const MAX_RETRIES = 2;
-  const LOAD_TIMEOUT_MS = 10000;
 
+  // Log callback for debugging
   const log = useCallback((msg, extra) => {
-    const ts = new Date().toISOString();
-    // eslint-disable-next-line no-console
-    console.log(`[LayloSimple ${ts}] ${msg}`, extra ?? '');
+    if (process.env.NODE_ENV === 'development') {
+      const ts = new Date().toISOString();
+      // eslint-disable-next-line no-console
+      console.log(`[LayloSimple ${ts}] ${msg}`, extra ?? '');
+    }
   }, []);
 
-  // Load the Laylo SDK script first (required for iframe to work properly)
-  useEffect(() => {
-    // Check if SDK is already loaded
-    if (document.getElementById('laylo-sdk-script')) {
-      log('SDK already loaded');
-      setSdkLoaded(true);
-      return;
-    }
-
-    log('Loading Laylo SDK...');
-    const script = document.createElement('script');
-    script.id = 'laylo-sdk-script';
-    script.src = 'https://embed.laylo.com/laylo-sdk.js';
-    script.async = true;
-
-    script.onload = () => {
-      log('Laylo SDK loaded successfully');
-      setSdkLoaded(true);
-    };
-
-    script.onerror = () => {
-      log('Laylo SDK failed to load, proceeding anyway');
-      // Still set as loaded so iframe renders - it may work without SDK
-      setSdkLoaded(true);
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      // Don't remove script on unmount - keep it for reuse
-    };
-  }, [log]);
-
-  // Build the Laylo embed URL - matching official format
-  const buildLayloUrl = useCallback((bustCache = false) => {
-    if (!dropId) return null;
-    // Match official Laylo URL format (no leading ? before params)
-    let url = `https://embed.laylo.com?dropId=${dropId}&color=${color}&minimal=${minimal}&theme=${theme}&background=${background}`;
-    if (bustCache) {
-      url += `&_ts=${Date.now()}`;
-    }
-    return url;
-  }, [dropId, color, theme, background, minimal]);
-
-  // Compute src directly
-  const iframeSrc = buildLayloUrl(retryCount > 0);
-
-  // Log initial mount
-  useEffect(() => {
-    log('Component mounted', { dropId, visible, src: iframeSrc });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Handle load timeout and retry logic
-  useEffect(() => {
-    if (!visible || !iframeSrc || !sdkLoaded) return;
-
-    // Clear any existing timeout
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
-      loadTimeoutRef.current = null;
-    }
-
-    loadStartRef.current = Date.now();
-    loadedRef.current = false;
-
-    // Set up load timeout
-    loadTimeoutRef.current = setTimeout(() => {
-      if (loadedRef.current) return;
-
-      if (retryCount < MAX_RETRIES) {
-        log('Load timeout -> retry', { retryCount: retryCount + 1 });
-        setRetryCount((r) => r + 1);
-      } else {
-        log('Final load timeout -> giving up after max retries');
-      }
-    }, LOAD_TIMEOUT_MS);
-
-    return () => {
-      if (loadTimeoutRef.current) {
-        clearTimeout(loadTimeoutRef.current);
-        loadTimeoutRef.current = null;
-      }
-    };
-  }, [iframeSrc, visible, retryCount, sdkLoaded, log]);
-
+  // Handle iframe load
   const handleLoad = useCallback(() => {
-    const elapsed = Date.now() - (loadStartRef.current || 0);
+    log('Iframe onLoad fired');
     loadedRef.current = true;
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
-      loadTimeoutRef.current = null;
-    }
-    log('Iframe onLoad fired', { elapsedMs: elapsed });
   }, [log]);
 
+  // Handle iframe error
   const handleError = useCallback(() => {
     log('Iframe onError');
-    if (loadTimeoutRef.current) {
-      clearTimeout(loadTimeoutRef.current);
-      loadTimeoutRef.current = null;
-    }
-    if (retryCount < MAX_RETRIES) {
-      log('Error -> retry', { retryCount: retryCount + 1 });
-      setRetryCount((r) => r + 1);
-    } else {
-      log('Final error -> giving up after max retries');
+    // Simple retry logic
+    if (retryCount < 2) {
+      setTimeout(() => setRetryCount(r => r + 1), 2000);
     }
   }, [retryCount, log]);
 
-  // Early returns for edge cases
-  if (!dropId) {
-    return (
-      <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60 }}>
-        <span style={{ color: '#999', fontSize: 14 }}>[Laylo] Missing dropId</span>
-      </div>
-    );
-  }
+  // Build Layout URL
+  const buildLayloUrl = useCallback(() => {
+    if (!dropId) return null;
+    let url = `https://embed.laylo.com?dropId=${dropId}&color=${color}&minimal=${minimal}&theme=${theme}&background=${background}`;
+    if (retryCount > 0) {
+      url += `&_retry=${retryCount}`;
+    }
+    return url;
+  }, [dropId, color, theme, background, minimal, retryCount]);
 
-  if (!visible) {
+  const iframeSrc = buildLayloUrl();
+
+  // If invisible, missing dropId, or SDK not ready, render placeholder or null
+  if (!dropId || !visible) {
     return <div style={{ ...style }} />;
   }
 
-  // Show loading state while SDK loads
-  if (!sdkLoaded) {
-    return (
-      <div style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 60 }}>
-        <span style={{ color: '#666', fontSize: 12 }}>Loading...</span>
-      </div>
-    );
+  // Show loading state or nothing while SDK loads?
+  // User's snippet puts script and iframe together.
+  // We wait for SDK to be ready to ensure reliability on Safari.
+  if (!isLayloReady) {
+    return <div style={{ ...style, minHeight: '1px' }} />;
   }
 
-  if (!iframeSrc) {
-    return <div style={{ ...style }} />;
-  }
-
-  // Match official Laylo iframe attributes exactly
+  // Exact attributes from user's request with React fixes
+  // allowtransparency -> allowTransparency
+  // frameborder -> frameBorder
+  // style width: 1px min-width: 100%
   return (
     <iframe
       key={`laylo-${dropId}-${retryCount}`}
@@ -172,13 +79,14 @@ const LayloIframeSimple = ({
       frameBorder="0"
       scrolling="no"
       allow="web-share"
-      allowtransparency="true"
+      allowTransparency={true} // Fixed React prop casing
       onLoad={handleLoad}
       onError={handleError}
       style={{
         width: '1px',
         minWidth: '100%',
         maxWidth: '1000px',
+        border: 'none',
         ...style,
       }}
       src={iframeSrc}
