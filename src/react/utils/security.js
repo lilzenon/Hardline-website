@@ -12,7 +12,7 @@
 export async function secureApiRequest(url, options = {}) {
     // Get CSRF token from meta tag or cookie
     const csrfToken = getCSRFToken();
-    
+
     const secureOptions = {
         ...options,
         credentials: 'include', // Always include cookies
@@ -23,7 +23,7 @@ export async function secureApiRequest(url, options = {}) {
             ...options.headers
         }
     };
-    
+
     // Add request timestamp for replay attack prevention
     if (secureOptions.body && typeof secureOptions.body === 'string') {
         try {
@@ -35,13 +35,13 @@ export async function secureApiRequest(url, options = {}) {
             secureOptions.headers['X-Request-Timestamp'] = Date.now().toString();
         }
     }
-    
+
     try {
         const response = await fetch(url, secureOptions);
-        
+
         // Check for security headers in response
         validateSecurityHeaders(response);
-        
+
         return response;
     } catch (error) {
         console.error('Secure API request failed:', error);
@@ -59,7 +59,7 @@ function getCSRFToken() {
     if (metaTag) {
         return metaTag.getAttribute('content');
     }
-    
+
     // Try cookie
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
@@ -68,7 +68,7 @@ function getCSRFToken() {
             return decodeURIComponent(value);
         }
     }
-    
+
     return null;
 }
 
@@ -82,11 +82,11 @@ function validateSecurityHeaders(response) {
         'X-Frame-Options',
         'Referrer-Policy'
     ];
-    
-    const missingHeaders = requiredHeaders.filter(header => 
+
+    const missingHeaders = requiredHeaders.filter(header =>
         !response.headers.get(header)
     );
-    
+
     if (missingHeaders.length > 0) {
         console.warn('Missing security headers:', missingHeaders);
     }
@@ -106,11 +106,11 @@ export const secureStorage = {
         if (!this.isValidKey(key)) {
             throw new Error('Invalid storage key');
         }
-        
+
         const sanitizedValue = this.sanitizeValue(value);
         localStorage.setItem(key, JSON.stringify(sanitizedValue));
     },
-    
+
     /**
      * Get item from localStorage with validation
      * @param {string} key - Storage key
@@ -120,7 +120,7 @@ export const secureStorage = {
         if (!this.isValidKey(key)) {
             return null;
         }
-        
+
         try {
             const item = localStorage.getItem(key);
             return item ? JSON.parse(item) : null;
@@ -129,7 +129,7 @@ export const secureStorage = {
             return null;
         }
     },
-    
+
     /**
      * Remove item from localStorage
      * @param {string} key - Storage key
@@ -139,19 +139,19 @@ export const secureStorage = {
             localStorage.removeItem(key);
         }
     },
-    
+
     /**
      * Validate storage key
      * @param {string} key - Key to validate
      * @returns {boolean} - Is valid
      */
     isValidKey(key) {
-        return typeof key === 'string' && 
-               key.length > 0 && 
-               key.length < 100 &&
-               /^[a-zA-Z0-9_-]+$/.test(key);
+        return typeof key === 'string' &&
+            key.length > 0 &&
+            key.length < 100 &&
+            /^[a-zA-Z0-9_-]+$/.test(key);
     },
-    
+
     /**
      * Sanitize value before storage
      * @param {any} value - Value to sanitize
@@ -181,9 +181,9 @@ export function setupCSPReporting() {
             columnNumber: event.columnNumber,
             timestamp: new Date().toISOString()
         };
-        
+
         console.warn('CSP Violation:', violation);
-        
+
         // Report to server (optional)
         if (window.location.hostname !== 'localhost') {
             secureApiRequest('/api/security/csp-violation', {
@@ -197,29 +197,87 @@ export function setupCSPReporting() {
 }
 
 /**
+ * Detect if the current browser is an in-app browser (WebView)
+ * These browsers appear as iframes but are legitimate browsing contexts
+ * @returns {boolean} - True if running in an in-app browser
+ */
+function isInAppBrowser() {
+    const userAgent = navigator.userAgent || navigator.vendor || '';
+
+    // Common in-app browser signatures
+    const inAppBrowserPatterns = [
+        // Instagram
+        /Instagram/i,
+        // Facebook
+        /FBAN|FBAV|FB_IAB|FBIOS|FBSS/i,
+        // TikTok
+        /musical_ly|TikTok|BytedanceWebview|ByteLocale/i,
+        // Twitter/X
+        /Twitter/i,
+        // LinkedIn
+        /LinkedInApp/i,
+        // Snapchat
+        /Snapchat/i,
+        // Pinterest
+        /Pinterest/i,
+        // WeChat
+        /MicroMessenger/i,
+        // Line
+        /Line\//i,
+        // Generic WebView patterns
+        /WebView|wv\)/i,
+        // iOS WebView
+        /AppleWebKit(?!.*Safari)/i,
+        // Android WebView
+        /; wv\)/i
+    ];
+
+    return inAppBrowserPatterns.some(pattern => pattern.test(userAgent));
+}
+
+/**
  * Detect and prevent clickjacking attacks
+ * Skips protection for in-app browsers (Instagram, Facebook, etc.) which are legitimate contexts
  */
 export function preventClickjacking() {
+    // Skip clickjacking protection for in-app browsers
+    // These appear as cross-origin iframes but are legitimate browsing contexts
+    if (isInAppBrowser()) {
+        console.log('✅ In-app browser detected, skipping clickjacking protection');
+        return;
+    }
+
     // Check if page is in an iframe
     if (window.top !== window.self) {
         // Check if it's an allowed iframe context
         const allowedOrigins = [
             window.location.origin,
             'https://b2b.click',
-            'https://www.b2b.click'
+            'https://www.b2b.click',
+            'https://bounce2bounce.com',
+            'https://www.bounce2bounce.com'
         ];
-        
+
         try {
             const parentOrigin = window.parent.location.origin;
             if (!allowedOrigins.includes(parentOrigin)) {
                 // Potential clickjacking attempt
-                console.warn('Potential clickjacking detected');
+                console.warn('Potential clickjacking detected from:', parentOrigin);
                 window.top.location = window.location;
             }
         } catch (error) {
-            // Cross-origin iframe - break out
-            console.warn('Cross-origin iframe detected');
-            window.top.location = window.location;
+            // Cross-origin iframe - only break out if NOT an in-app browser context
+            // Double-check in-app browser in case userAgent wasn't detected earlier
+            if (!isInAppBrowser()) {
+                console.warn('Cross-origin iframe detected, attempting redirect');
+                try {
+                    window.top.location = window.location;
+                } catch (redirectError) {
+                    // If redirect fails, we're likely in a WebView that blocks it
+                    // This is fine - the page will still render
+                    console.log('Redirect blocked by WebView, continuing normally');
+                }
+            }
         }
     }
 }
@@ -232,11 +290,11 @@ export function preventClickjacking() {
 export function secureFormSubmit(form, onSubmit) {
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        
+
         // Validate form data
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        
+
         // Check for suspicious patterns
         for (const [key, value] of Object.entries(data)) {
             if (typeof value === 'string' && containsSuspiciousContent(value)) {
@@ -244,12 +302,12 @@ export function secureFormSubmit(form, onSubmit) {
                 return;
             }
         }
-        
+
         // Add security metadata
         data._formId = form.id || 'unknown';
         data._timestamp = Date.now();
         data._userAgent = navigator.userAgent;
-        
+
         try {
             await onSubmit(data);
         } catch (error) {
@@ -271,7 +329,7 @@ function containsSuspiciousContent(content) {
         /data:text\/html/i,
         /on\w+\s*=/i // Event handlers
     ];
-    
+
     return suspiciousPatterns.some(pattern => pattern.test(content));
 }
 
@@ -291,33 +349,33 @@ export const secureCookies = {
             sameSite: 'Strict',
             path: '/'
         };
-        
+
         const cookieOptions = { ...defaults, ...options };
         let cookieString = `${name}=${encodeURIComponent(value)}`;
-        
+
         if (cookieOptions.maxAge) {
             cookieString += `; Max-Age=${cookieOptions.maxAge}`;
         }
-        
+
         if (cookieOptions.path) {
             cookieString += `; Path=${cookieOptions.path}`;
         }
-        
+
         if (cookieOptions.secure) {
             cookieString += '; Secure';
         }
-        
+
         if (cookieOptions.sameSite) {
             cookieString += `; SameSite=${cookieOptions.sameSite}`;
         }
-        
+
         if (cookieOptions.httpOnly) {
             console.warn('HttpOnly cookies cannot be set from JavaScript');
         }
-        
+
         document.cookie = cookieString;
     },
-    
+
     /**
      * Get cookie value
      * @param {string} name - Cookie name
@@ -333,7 +391,7 @@ export const secureCookies = {
         }
         return null;
     },
-    
+
     /**
      * Delete cookie
      * @param {string} name - Cookie name
@@ -349,21 +407,21 @@ export const secureCookies = {
 export function initializeFrontendSecurity() {
     // Set up CSP reporting
     setupCSPReporting();
-    
+
     // Prevent clickjacking
     preventClickjacking();
-    
+
     // Disable right-click context menu in production
     if (window.location.hostname !== 'localhost') {
         document.addEventListener('contextmenu', (event) => {
             event.preventDefault();
         });
     }
-    
+
     // Disable F12 and other developer shortcuts in production
     if (window.location.hostname !== 'localhost') {
         document.addEventListener('keydown', (event) => {
-            if (event.key === 'F12' || 
+            if (event.key === 'F12' ||
                 (event.ctrlKey && event.shiftKey && event.key === 'I') ||
                 (event.ctrlKey && event.shiftKey && event.key === 'C') ||
                 (event.ctrlKey && event.key === 'U')) {
@@ -371,6 +429,6 @@ export function initializeFrontendSecurity() {
             }
         });
     }
-    
+
     console.log('✅ Frontend security initialized');
 }

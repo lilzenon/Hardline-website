@@ -166,8 +166,13 @@ if (container) {
   console.log('No root element found - likely on admin login page, globals exported successfully');
 }
 
-// Initialize frontend security measures
-initializeFrontendSecurity();
+// Initialize frontend security measures (wrapped in try-catch to prevent white page on failure)
+try {
+  initializeFrontendSecurity();
+} catch (error) {
+  console.error('⚠️ Security initialization failed (non-fatal):', error);
+  // Continue without security features rather than crashing the page
+}
 
 // Analytics now handled by consolidated TypeScript beacon in main.tsx
 // No need for separate script loading
