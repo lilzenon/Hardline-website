@@ -202,6 +202,17 @@ export function setupCSPReporting() {
  * @returns {boolean} - True if running in an in-app browser
  */
 function isInAppBrowser() {
+    // 1. Check URL parameters (High confidence indicator for social traffic)
+    // If user arrives with fbclid or utm_source=ig, they are likely in an in-app browser
+    if (typeof window !== 'undefined' && window.location) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('utm_source') === 'ig' ||
+            urlParams.has('fbclid') ||
+            urlParams.get('utm_medium') === 'social') {
+            return true;
+        }
+    }
+
     const userAgent = navigator.userAgent || navigator.vendor || '';
 
     // Common in-app browser signatures

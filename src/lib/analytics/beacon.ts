@@ -55,9 +55,9 @@ class AnalyticsBeacon {
         if (userConfig.apiEndpoint) {
             apiEndpoint = userConfig.apiEndpoint;
         } else if (isDevelopment || import.meta.env.DEV || window.location.port ||
-                   window.location.hostname.includes('localhost') ||
-                   window.location.port === '3001' ||
-                   window.location.href.includes('localhost')) {
+            window.location.hostname.includes('localhost') ||
+            window.location.port === '3001' ||
+            window.location.href.includes('localhost')) {
             // Local development - use Vite proxy to dashboard dev server
             apiEndpoint = '/api';
             console.log('🔧 Development mode detected, using Vite proxy:', apiEndpoint);
@@ -112,7 +112,7 @@ class AnalyticsBeacon {
             'whatsapp', 'telegrambot', 'headless', 'phantom',
             'selenium', 'puppeteer', 'playwright'
         ];
-        
+
         if (botPatterns.some(pattern => userAgent.includes(pattern))) {
             return false;
         }
@@ -124,25 +124,34 @@ class AnalyticsBeacon {
      * Get or generate session ID
      */
     private getSessionId(): string {
-        const existingSessionId = localStorage.getItem('analytics_session_id');
-        const sessionExpiry = localStorage.getItem('analytics_session_expiry');
+        try {
+            const existingSessionId = localStorage.getItem('analytics_session_id');
+            const sessionExpiry = localStorage.getItem('analytics_session_expiry');
 
-        const now = Date.now();
-        const isSessionValid = existingSessionId && sessionExpiry && now < parseInt(sessionExpiry);
+            const now = Date.now();
+            const isSessionValid = existingSessionId && sessionExpiry && now < parseInt(sessionExpiry);
 
-        if (isSessionValid) {
-            return existingSessionId;
+            if (isSessionValid) {
+                return existingSessionId;
+            }
+
+            // Generate new session ID
+            const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+            try {
+                // Store session data
+                localStorage.setItem('analytics_session_id', sessionId);
+                const expiryTime = now + (30 * 60 * 1000); // 30 minutes
+                localStorage.setItem('analytics_session_expiry', expiryTime.toString());
+            } catch (storageError) {
+                console.warn('⚠️ Analytics: Failed to store session ID (storage likely blocked):', storageError);
+            }
+
+            return sessionId;
+        } catch (error) {
+            console.warn('⚠️ Analytics: localStorage access blocked, using transient session:', error);
+            return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         }
-
-        // Generate new session ID
-        const sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-        // Store session data
-        localStorage.setItem('analytics_session_id', sessionId);
-        const expiryTime = now + (30 * 60 * 1000); // 30 minutes
-        localStorage.setItem('analytics_session_expiry', expiryTime.toString());
-
-        return sessionId;
     }
 
     /**
@@ -180,12 +189,12 @@ class AnalyticsBeacon {
 
         try {
             const payload = JSON.stringify(data);
-            
+
             // Try sendBeacon first (preferred for page unload)
             if (navigator.sendBeacon) {
                 const blob = new Blob([payload], { type: 'application/json' });
                 const success = navigator.sendBeacon(this.config.endpoint, blob);
-                
+
                 if (success) {
                     if (this.config.debug) {
                         console.log('📊 Analytics sent via beacon:', data);
@@ -321,7 +330,7 @@ class AnalyticsBeacon {
         try {
             const linkUrl = new URL(url, window.location.href);
             const currentHost = window.location.hostname;
-            
+
             // Only track external links
             if (linkUrl.hostname !== currentHost) {
                 this.sendEvent({

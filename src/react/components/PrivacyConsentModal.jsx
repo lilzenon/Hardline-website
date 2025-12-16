@@ -25,38 +25,44 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
   // Check if consent modal should be shown - optimized timing
   useEffect(() => {
     const checkConsentStatus = () => {
-      const consent = localStorage.getItem('analytics_gdpr_consent');
-      const consentTimestamp = localStorage.getItem('analytics_consent_timestamp');
+      try {
+        const consent = localStorage.getItem('analytics_gdpr_consent');
+        const consentTimestamp = localStorage.getItem('analytics_consent_timestamp');
 
-      // Show modal if no consent given or consent is older than 1 year
-      if (!consent || !consentTimestamp) {
-        // Wait for page to be fully interactive, then show modal
-        if (document.readyState === 'complete') {
-          setTimeout(() => setShowModal(true), 800); // Shorter delay when page is ready
-        } else {
-          // Wait for page load completion
-          const handleLoad = () => {
-            setTimeout(() => setShowModal(true), 800);
-            window.removeEventListener('load', handleLoad);
-          };
-          window.addEventListener('load', handleLoad);
-        }
-      } else {
-        const consentAge = Date.now() - parseInt(consentTimestamp);
-        const oneYear = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
-
-        if (consentAge > oneYear) {
-          // Same optimized timing for expired consent
+        // Show modal if no consent given or consent is older than 1 year
+        if (!consent || !consentTimestamp) {
+          // Wait for page to be fully interactive, then show modal
           if (document.readyState === 'complete') {
-            setTimeout(() => setShowModal(true), 800);
+            setTimeout(() => setShowModal(true), 800); // Shorter delay when page is ready
           } else {
+            // Wait for page load completion
             const handleLoad = () => {
               setTimeout(() => setShowModal(true), 800);
               window.removeEventListener('load', handleLoad);
             };
             window.addEventListener('load', handleLoad);
           }
+        } else {
+          const consentAge = Date.now() - parseInt(consentTimestamp);
+          const oneYear = 365 * 24 * 60 * 60 * 1000; // 1 year in milliseconds
+
+          if (consentAge > oneYear) {
+            // Same optimized timing for expired consent
+            if (document.readyState === 'complete') {
+              setTimeout(() => setShowModal(true), 800);
+            } else {
+              const handleLoad = () => {
+                setTimeout(() => setShowModal(true), 800);
+                window.removeEventListener('load', handleLoad);
+              };
+              window.addEventListener('load', handleLoad);
+            }
+          }
         }
+      } catch (error) {
+        console.warn('⚠️ PrivacyConsentModal: Storage access blocked, showing modal by default', error);
+        // Fallback: If we can't read storage, assume we need to ask for consent
+        setTimeout(() => setShowModal(true), 800);
       }
     };
 
@@ -72,7 +78,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
   // Handle continue (accept consent by using site)
   const handleAccept = useCallback(async () => {
     setIsAnimating(true);
-    
+
     try {
       // Set localStorage consent
       localStorage.setItem('analytics_gdpr_consent', 'granted');
