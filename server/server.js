@@ -481,14 +481,16 @@ app.use("/css", express.static("custom/css", {
 // CRITICAL FIX: Static middleware with root path exclusion for dynamic SEO meta tags
 // This middleware serves static files but excludes the root path to allow server-side rendering
 app.use((req, res, next) => {
-    // Skip static serving for root path to allow dynamic meta tag injection
-    if (req.path === '/' || req.path === '/index.html') {
-        return next();
-    }
+    // CRITICAL FIX: Temporarily allow static serving for root path to resolve Instagram 404s
+    // unique query parameters from Instagram (?fbclid=...) were causing routing issues
+    // This allows express.static to handle the root request robustly
+    // if (req.path === '/' || req.path === '/index.html') {
+    //    return next();
+    // }
 
     // Use express.static for all other paths
     express.static("dist", {
-        index: false,
+        index: 'index.html', // Re-enable index.html serving
         dotfiles: 'ignore',
         etag: true,
         extensions: false,
@@ -919,19 +921,7 @@ try {
 app.use(secureErrorHandler.handleDatabaseError);
 app.use(secureErrorHandler.handleRateLimitError);
 
-// 404 pages that don't exist
-// CRITICAL FIX: Add explicit root fallback for query parameters
-// This ensures that /?utm_source=... requests are always handled even if other routes miss
-app.get('/', (req, res) => {
-    console.log('🔄 Root fallback triggered for:', req.url);
-    const path = require('path');
-    const indexPath = path.join(__dirname, '../dist/index.html');
-    if (require('fs').existsSync(indexPath)) {
-        res.sendFile(indexPath);
-    } else {
-        res.status(404).json({ error: 'Root fallback: index.html not found' });
-    }
-});
+
 
 app.use(secureErrorHandler.notFoundHandler);
 
