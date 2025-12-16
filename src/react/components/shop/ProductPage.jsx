@@ -213,8 +213,8 @@ export default function ProductPage({ productId }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product?.name || 'Check out this product',
-          text: product?.description || '',
+          title: product ? `${product.name} | BOUNCE2BOUNCE MERCH` : 'BOUNCE2BOUNCE MERCH',
+          text: product ? `${product.name} | BOUNCE2BOUNCE MERCH` : 'Check out this product from BOUNCE2BOUNCE',
           url: window.location.href,
         });
       } catch (err) {
