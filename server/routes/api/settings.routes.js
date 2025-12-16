@@ -10,13 +10,38 @@ const router = express.Router();
 // GET /api/settings/seo - Proxy to dashboard for SEO settings
 const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
 
+// Helper function to determine the correct dashboard URL
+function getDashboardUrl(req) {
+    const env = require('../../env');
+
+    // If explicitly set in environment, use that
+    if (env.DASHBOARD_URL && env.DASHBOARD_URL !== 'http://localhost:3002') {
+        return env.DASHBOARD_URL;
+    }
+
+    // Development mode
+    if (process.env.NODE_ENV === 'development') {
+        return 'http://localhost:3002';
+    }
+
+    // Detect beta environment from request host
+    const host = req?.get?.('host') || '';
+    const isBeta = host.includes('beta.');
+
+    if (isBeta) {
+        return 'https://beta.b2b.click';
+    }
+
+    // Default to production dashboard
+    return 'https://admin.b2b.click';
+}
+
 router.get("/seo", async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching SEO settings from dashboard...');
 
         // Proxy to dashboard server for SEO settings
-        const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+        const dashboardUrl = getDashboardUrl(req);
 
         console.log(`📡 Proxying SEO request to: ${dashboardUrl}/api/settings/seo`);
 
@@ -126,9 +151,7 @@ router.get('/about', async (req, res) => {
         console.log('🔍 Homepage: Fetching About page content...');
 
         // Proxy to dashboard server for about page content
-        // Use DASHBOARD_URL from env.js (defaults to http://localhost:3002 in development)
-        const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+        const dashboardUrl = getDashboardUrl(req);
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/about`);
 
@@ -166,8 +189,7 @@ router.get('/about/gallery/public', async (req, res) => {
         console.log('🔍 Homepage: Fetching About page gallery...');
 
         // Proxy to dashboard server for gallery images
-        const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+        const dashboardUrl = getDashboardUrl(req);
 
         console.log(`📡 Proxying gallery request to: ${dashboardUrl}/api/settings/about/gallery/public`);
 
@@ -202,8 +224,7 @@ router.get('/social-media', async (req, res) => {
         console.log('🔍 Homepage: Fetching social media links...');
 
         // Proxy to dashboard server for social media links
-        const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+        const dashboardUrl = getDashboardUrl(req);
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/social-media`);
 
@@ -238,8 +259,7 @@ router.get('/faq', async (req, res) => {
         console.log('🔍 Homepage: Fetching FAQ content...');
 
         // Proxy to dashboard server for FAQ content
-        const env = require('../../env');
-        const dashboardUrl = env.DASHBOARD_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+        const dashboardUrl = getDashboardUrl(req);
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/faq`);
 
