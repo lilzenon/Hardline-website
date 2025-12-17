@@ -584,27 +584,9 @@ const FigmaMobile = ({ onReady }) => {
     initializeBreadcrumbSchema('homepage');
   }, []);
 
-  // Add useEffect for Laylo SDK initialization - RESTORED ORIGINAL IMPLEMENTATION
-  useEffect(() => {
-    // Load Laylo SDK script only once with proper error handling
-    if (!document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]')) {
-      const layloScript = document.createElement('script');
-      layloScript.src = 'https://embed.laylo.com/laylo-sdk.js';
-      layloScript.async = true;
-      layloScript.defer = true; // Add defer to prevent blocking
-
-      // Add error handling to prevent crashes
-      layloScript.onerror = (error) => {
-        console.warn('⚠️ Laylo SDK failed to load in FigmaMobile:', error);
-      };
-
-      layloScript.onload = () => {
-        console.log('✅ Laylo SDK script loaded successfully in FigmaMobile');
-      };
-
-      document.head.appendChild(layloScript);
-    }
-  }, []);
+  // NOTE: Laylo SDK is now loaded by the useLayloSDK hook used by LayloIframeSimple component
+  // The hook uses a global singleton pattern to prevent race conditions
+  // Removed duplicate script loading that was causing timing issues on page refresh
 
   // Track navigation menu state to hide drawer when menu is open
   const [navigationMenuOpen, setNavigationMenuOpen] = useState(false);
