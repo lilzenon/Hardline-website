@@ -4,7 +4,17 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 let globalSDKState = {
   isLoading: false,
   isLoaded: false,
-  loadPromise: null
+  loadPromise: null,
+  scriptElement: null
+};
+
+// Reset global state (called on Safari bfcache restore)
+const resetGlobalSDKState = () => {
+  console.log('🔄 Resetting Laylo SDK global state (bfcache restore)');
+  globalSDKState.isLoading = false;
+  globalSDKState.isLoaded = false;
+  globalSDKState.loadPromise = null;
+  // Note: Don't remove the script element as it may still be valid
 };
 
 /**
@@ -12,8 +22,8 @@ let globalSDKState = {
  * Ensures SDK loads before iframe rendering, with automatic retry logic
  * No UI components - pure loading logic only
  * 
- * IMPORTANT: The Laylo iframe can render as soon as the SDK script tag 
- * exists in the document - it doesn't need to wait for window.Laylo
+ * IMPORTANT: Includes Safari bfcache handling to work around iOS Safari
+ * issues where the page is restored from bfcache but scripts don't execute properly.
  *
  * @returns {boolean} Whether SDK is ready for iframe rendering
  */
@@ -21,7 +31,7 @@ export const useLayloSDK = () => {
   const [isReady, setIsReady] = useState(() => {
     // Check immediately on initialization if SDK script already exists
     if (typeof window !== 'undefined') {
-      const scriptExists = document.querySelector('script[src="https://embed.laylo.com/laylo-sdk.js"]') !== null;
+      const scriptExists = document.querySelector('script[src*="laylo-sdk.js"]') !== null;
       if (scriptExists) {
         console.log('🔍 Laylo SDK script already in DOM, marking ready immediately');
         return true;
@@ -54,23 +64,25 @@ export const useLayloSDK = () => {
 
     globalSDKState.isLoading = true;
 
-    globalSDKState.loadPromise = new Promise((resolve, reject) => {
-      // Check if script already exists in document
-      const existingScript = document.querySelector(`script[src="${SCRIPT_SRC}"]`);
+    globalSDKState.loadPromise = new Promise((resolve) => {
+      // Check if script already exists in document (match any query param version)
+      const existingScript = document.querySelector('script[src*="laylo-sdk.js"]');
 
       if (existingScript) {
         console.log('✅ Laylo SDK script already exists, resolving immediately');
         globalSDKState.isLoaded = true;
         globalSDKState.isLoading = false;
+        globalSDKState.scriptElement = existingScript;
         resolve();
         return;
       }
 
-      // Create new script element
+      // Create new script element with cache-busting for Safari
       const script = document.createElement('script');
       script.src = SCRIPT_SRC;
       script.async = true;
       script.defer = true; // Don't block parsing
+      script.crossOrigin = 'anonymous'; // Help with CORS issues
 
       // Set up timeout with longer duration for mobile networks
       const timeoutId = setTimeout(() => {
@@ -87,6 +99,7 @@ export const useLayloSDK = () => {
         console.log('✅ Laylo SDK script loaded successfully');
         globalSDKState.isLoaded = true;
         globalSDKState.isLoading = false;
+        globalSDKState.scriptElement = script;
         // Small delay to ensure SDK initializes
         setTimeout(resolve, 100);
       };
@@ -154,6 +167,40 @@ export const useLayloSDK = () => {
       mountedRef.current = false;
     };
   }, [attemptLoad, isReady]);
+
+  // Handle Safari bfcache restoration
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handlePageShow = (event) => {
+      if (!mountedRef.current) return;
+
+      // If page was restored from bfcache (Safari/iOS specific)
+      if (event && event.persisted) {
+        console.log('📦 Laylo SDK hook: Safari bfcache restore detected');
+
+        // Reset global state to force re-evaluation
+        resetGlobalSDKState();
+
+        // Reset local state and try loading again
+        initCalledRef.current = false;
+        setIsReady(false);
+
+        // Small delay then attempt load
+        setTimeout(() => {
+          if (mountedRef.current) {
+            attemptLoad(0);
+          }
+        }, 100);
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [attemptLoad]);
 
   return isReady;
 };

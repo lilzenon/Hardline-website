@@ -6,8 +6,8 @@ import useLayloSDK from '../hooks/useLayloSDK';
  * Laylo iframe embed that uses the shared useLayloSDK hook.
  * Ensures strict compatibility with Laylo's official embed code.
  * 
- * IMPORTANT: The iframe can render even before SDK fully initializes.
- * The SDK script just needs to be in the document.
+ * IMPORTANT: This component includes Safari-specific bfcache handling
+ * to ensure the iframe loads reliably on page refresh.
  */
 const LayloIframeSimple = ({
   dropId,
@@ -21,18 +21,34 @@ const LayloIframeSimple = ({
   const [retryCount, setRetryCount] = useState(0);
   const [hasError, setHasError] = useState(false);
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0); // Key to force remount iframe
   const isLayloReady = useLayloSDK();
   const loadedRef = useRef(false);
   const iframeRef = useRef(null);
   const retryTimeoutRef = useRef(null);
+  const mountedRef = useRef(true);
+  const loadStartTimeRef = useRef(Date.now());
 
-  // Log callback for debugging
+  // Log callback for development debugging
   const log = useCallback((msg, extra) => {
     if (process.env.NODE_ENV === 'development') {
       const ts = new Date().toISOString();
-      // eslint-disable-next-line no-console
       console.log(`[LayloSimple ${ts}] ${msg}`, extra ?? '');
+    } else {
+      // In production, still log Safari-specific issues for debugging
+      if (msg.includes('Safari') || msg.includes('bfcache') || msg.includes('pageshow')) {
+        console.log(`[Laylo] ${msg}`, extra ?? '');
+      }
     }
+  }, []);
+
+  // Detect Safari browser
+  const isSafari = useCallback(() => {
+    if (typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent;
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
+    const isIOSSafari = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    return isSafariBrowser || isIOSSafari;
   }, []);
 
   // Handle iframe load
@@ -60,32 +76,120 @@ const LayloIframeSimple = ({
       log(`Scheduling retry ${retryCount + 1} in ${delay}ms`);
 
       retryTimeoutRef.current = setTimeout(() => {
-        setRetryCount(r => r + 1);
-        setHasError(false);
+        if (mountedRef.current) {
+          setRetryCount(r => r + 1);
+          setHasError(false);
+          setIframeKey(k => k + 1); // Force remount
+        }
       }, delay);
     }
   }, [retryCount, log]);
 
+  // Force refresh the iframe (used for bfcache/visibility recovery)
+  const forceRefreshIframe = useCallback(() => {
+    log('🔄 Force refreshing iframe');
+    loadedRef.current = false;
+    setIsIframeLoaded(false);
+    setHasError(false);
+    setRetryCount(0);
+    loadStartTimeRef.current = Date.now();
+    setIframeKey(k => k + 1); // Increment key to force React to remount iframe
+  }, [log]);
+
+  // Safari bfcache and visibility change handling
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Handle page restore from bfcache (Safari-specific issue)
+    const handlePageShow = (event) => {
+      if (!mountedRef.current) return;
+
+      // Check if page was restored from bfcache
+      if (event && event.persisted) {
+        log('📦 Safari bfcache restore detected (pageshow.persisted=true) - refreshing iframe');
+        forceRefreshIframe();
+      }
+    };
+
+    // Handle tab visibility changes (also affects Safari)
+    const handleVisibilityChange = () => {
+      if (!mountedRef.current) return;
+
+      if (document.visibilityState === 'visible' && visible) {
+        // Small delay to let Safari finish restoring the page
+        setTimeout(() => {
+          if (mountedRef.current && !isIframeLoaded && !loadedRef.current) {
+            log('👁️ Tab became visible and iframe not loaded - refreshing');
+            forceRefreshIframe();
+          }
+        }, 200);
+      }
+    };
+
+    // Safari-specific: Also handle focus event as backup
+    const handleFocus = () => {
+      if (!mountedRef.current || !isSafari()) return;
+
+      // Check if enough time passed since load started but iframe not loaded
+      const timeSinceStart = Date.now() - loadStartTimeRef.current;
+      if (timeSinceStart > 3000 && !isIframeLoaded && !loadedRef.current) {
+        log('🔍 Safari focus detected - iframe not loaded after 3s, refreshing');
+        forceRefreshIframe();
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener('pageshow', handlePageShow);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    log('🎧 Safari bfcache handlers registered');
+
+    return () => {
+      window.removeEventListener('pageshow', handlePageShow);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [visible, isIframeLoaded, forceRefreshIframe, isSafari, log]);
+
   // Cleanup on unmount
   useEffect(() => {
+    mountedRef.current = true;
+    loadStartTimeRef.current = Date.now();
+
     return () => {
+      mountedRef.current = false;
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
     };
   }, []);
 
+  // Safari-specific: Periodic check during initial load to detect stuck state
+  useEffect(() => {
+    if (!isSafari() || isIframeLoaded || !visible) return;
+
+    const checkTimeout = setTimeout(() => {
+      if (mountedRef.current && !isIframeLoaded && !loadedRef.current) {
+        log('⏰ Safari: iframe not loaded after 5s, forcing refresh');
+        forceRefreshIframe();
+      }
+    }, 5000);
+
+    return () => clearTimeout(checkTimeout);
+  }, [isSafari, isIframeLoaded, visible, forceRefreshIframe, log, iframeKey]);
+
   // Build Laylo URL with cache-busting on retry
   const buildLayloUrl = useCallback(() => {
     if (!dropId) return null;
     let url = `https://embed.laylo.com?dropId=${dropId}&color=${color}&minimal=${minimal}&theme=${theme}&background=${background}`;
 
-    // Add cache-buster on retries to force fresh load
-    if (retryCount > 0) {
-      url += `&_retry=${retryCount}&_t=${Date.now()}`;
+    // Add cache-buster on retries AND on key change to force fresh load
+    if (retryCount > 0 || iframeKey > 0) {
+      url += `&_v=${iframeKey}&_retry=${retryCount}&_t=${Date.now()}`;
     }
     return url;
-  }, [dropId, color, theme, background, minimal, retryCount]);
+  }, [dropId, color, theme, background, minimal, retryCount, iframeKey]);
 
   const iframeSrc = buildLayloUrl();
 
@@ -95,16 +199,12 @@ const LayloIframeSimple = ({
   }
 
   // Show loading skeleton while SDK initializes AND iframe hasn't loaded yet
-  // BUT don't block rendering - the iframe might work even before SDK is "ready"
   const showLoadingSkeleton = !isLayloReady && !isIframeLoaded && !hasError;
 
   // Calculate default height based on style or use sensible default
   const defaultHeight = style.height || '160px';
 
-  // Exact attributes from user's request with React fixes
-  // allowtransparency -> allowTransparency
-  // frameborder -> frameBorder
-  // style width: 1px min-width: 100%
+  // Exact attributes from Laylo's official embed code with React fixes
   return (
     <div style={{ position: 'relative', ...style }}>
       {/* Loading skeleton overlay */}
@@ -131,18 +231,17 @@ const LayloIframeSimple = ({
               border: '2px solid rgba(255, 255, 255, 0.2)',
               borderTopColor: 'rgba(255, 255, 255, 0.8)',
               borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
+              animation: 'layloSpin 1s linear infinite',
             }}
           />
-          {/* Inline keyframe for spinner */}
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <style>{`@keyframes layloSpin { to { transform: rotate(360deg); } }`}</style>
         </div>
       )}
 
-      {/* Render iframe immediately - don't wait for SDK */}
+      {/* Render iframe - key change forces remount for Safari bfcache recovery */}
       <iframe
         ref={iframeRef}
-        key={`laylo-${dropId}-${retryCount}`}
+        key={`laylo-${dropId}-${iframeKey}-${retryCount}`}
         id={`laylo-drop-${dropId}`}
         title="Laylo Signup"
         frameBorder="0"
@@ -155,10 +254,10 @@ const LayloIframeSimple = ({
           width: '1px',
           minWidth: '100%',
           maxWidth: '1000px',
-          height: defaultHeight, // Explicit height
-          minHeight: '150px', // Ensure minimum height
+          height: defaultHeight,
+          minHeight: '150px',
           border: 'none',
-          opacity: isIframeLoaded ? 1 : 0.3, // Fade in when loaded
+          opacity: isIframeLoaded ? 1 : 0.3,
           transition: 'opacity 0.3s ease',
           ...style,
         }}
@@ -169,5 +268,6 @@ const LayloIframeSimple = ({
 };
 
 export default LayloIframeSimple;
+
 
 
