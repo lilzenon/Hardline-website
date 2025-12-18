@@ -1450,7 +1450,7 @@ const FigmaMobile = ({ onReady }) => {
           const webpLink = document.createElement('link');
           webpLink.rel = 'preload';
           webpLink.as = 'image';
-          webpLink.type = 'image/webp';
+          // Note: Don't specify type - images may be served as JPEG/PNG/WebP depending on source
           webpLink.href = getOptimizedImageUrl(event.coverImage, 300); // Use small variant (300x300)
           document.head.appendChild(webpLink);
 
