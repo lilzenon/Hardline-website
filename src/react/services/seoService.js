@@ -26,7 +26,19 @@ export const DEFAULT_SEO_SETTINGS = {
     faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
     faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more. Get answers to common questions about our live music experiences.',
     faq_page_keywords: 'faq, questions, help, bounce2bounce support, event information, ticket help',
-    faq_page_og_image: 'https://bounce2bounce.com/images/og-image.png'
+    faq_page_og_image: 'https://bounce2bounce.com/images/og-image.png',
+    // Tracking Pixels
+    google_ads_id: '',
+    google_ads_conversion_label: '',
+    google_ads_enabled: false,
+    meta_pixel_id: '',
+    meta_pixel_enabled: false,
+    tiktok_pixel_id: '',
+    tiktok_pixel_enabled: false,
+    snapchat_pixel_id: '',
+    snapchat_pixel_enabled: false,
+    pinterest_tag_id: '',
+    pinterest_tag_enabled: false
 };
 
 // PERFORMANCE OPTIMIZATION: Staggered cache to prevent cascade expiration

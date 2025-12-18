@@ -9,8 +9,12 @@
     <meta name="theme-color" content="#000000" />
     <title>BOUNCE2BOUNCE</title>
 
+    <!-- Preconnect to critical third-party origins for faster resource loading -->
+    <link rel="preconnect" href="https://admin.b2b.click" crossorigin>
+    <link rel="preconnect" href="https://embed.laylo.com" crossorigin>
+
     <!-- Preload only critical font weight for optimal performance -->
-    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
 
     <!-- Defer YouTube preconnect until after LCP to reduce contention -->
     <script>
@@ -40,14 +44,17 @@
             color: #fff;
             font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif
         }
-        
+
         #root {
             min-height: 100vh
         }
     </style>
 
-    <!-- Ensure Tailwind is loaded in SPA phase for style parity -->
-    <link rel="stylesheet" href="/css/tailwind.css" />
+    <!-- Tailwind CSS - Deferred loading to prevent render blocking -->
+    <link rel="stylesheet" href="/css/tailwind.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="/css/tailwind.css">
+    </noscript>
 
 </head>
 

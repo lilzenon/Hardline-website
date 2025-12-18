@@ -449,6 +449,7 @@ const MobileNavigation = ({
               src="/images/b2b-logo-updated.svg"
               alt="B2B Logo"
               className="mobile-navigation-logo"
+              fetchpriority="high"
               style={{
                 /* 🎯 CONSISTENT SIZE: Fixed size - scales naturally with container */
                 width: '200px',

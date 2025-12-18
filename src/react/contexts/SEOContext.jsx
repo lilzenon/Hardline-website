@@ -7,6 +7,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { Dither } from '../components/ui/DitherShadcn';
 import useLayloSDK from '../hooks/useLayloSDK';
+import { TrackingPixelLoader } from '../components/TrackingPixelLoader';
 import {
   fetchSEOSettings,
   fetchMaintenanceStatus,
@@ -38,7 +39,7 @@ export const SEOProvider = ({ children }) => {
   const loadSEOSettings = async (useCache = true) => {
     try {
       setIsLoading(true);
-      
+
       // Try cache first if enabled
       if (useCache) {
         const cached = getCachedSEOSettings();
@@ -53,7 +54,7 @@ export const SEOProvider = ({ children }) => {
 
       // Fetch fresh data
       await fetchFreshSEOSettings();
-      
+
     } catch (error) {
       console.error('❌ Failed to load SEO settings:', error);
       setSeoSettings(DEFAULT_SEO_SETTINGS);
@@ -68,7 +69,7 @@ export const SEOProvider = ({ children }) => {
   const fetchFreshSEOSettings = async () => {
     try {
       console.log('🔄 Fetching fresh SEO settings...');
-      
+
       // Fetch both SEO settings and maintenance status
       const [seoData, maintenanceData] = await Promise.all([
         fetchSEOSettings(),
@@ -84,7 +85,7 @@ export const SEOProvider = ({ children }) => {
       setCachedSEOSettings(seoData);
 
       console.log('✅ SEO settings updated successfully');
-      
+
     } catch (error) {
       console.error('❌ Failed to fetch fresh SEO settings:', error);
       // Keep existing settings on error
@@ -220,6 +221,8 @@ export const SEOProvider = ({ children }) => {
       {metaTags.link.map((link, index) => (
         <link key={`link-${index}`} {...link} />
       ))}
+      {/* Tracking Pixels - loaded after GDPR consent */}
+      <TrackingPixelLoader />
       {children}
     </SEOContext.Provider>
   );
@@ -299,35 +302,35 @@ export const SEODebug = () => {
             transition: 'all 0.3s ease'
           }}
         >
-      <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-        🔍 SEO Debug {isLoading && '(Loading...)'}
-      </div>
-      
-      <div style={{ marginBottom: '8px' }}>
-        <strong>Title:</strong> {seoSettings.default_title}
-      </div>
-      
-      <div style={{ marginBottom: '8px' }}>
-        <strong>Description:</strong> {seoSettings.default_description?.substring(0, 50)}...
-      </div>
-      
-      <div style={{ marginBottom: '8px' }}>
-        <strong>OG Image:</strong> {seoSettings.default_og_image}
-      </div>
-      
-      <div style={{ marginBottom: '8px' }}>
-        <strong>Twitter:</strong> {seoSettings.twitter_handle}
-      </div>
-      
-      <div style={{ marginBottom: '8px' }}>
-        <strong>Maintenance:</strong> {maintenanceStatus.maintenance_mode ? '🔴 ON' : '🟢 OFF'}
-      </div>
-      
-      {lastUpdated && (
-        <div style={{ fontSize: '10px', opacity: 0.7 }}>
-          Last updated: {lastUpdated.toLocaleTimeString()}
-        </div>
-      )}
+          <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+            🔍 SEO Debug {isLoading && '(Loading...)'}
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Title:</strong> {seoSettings.default_title}
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Description:</strong> {seoSettings.default_description?.substring(0, 50)}...
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <strong>OG Image:</strong> {seoSettings.default_og_image}
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Twitter:</strong> {seoSettings.twitter_handle}
+          </div>
+
+          <div style={{ marginBottom: '8px' }}>
+            <strong>Maintenance:</strong> {maintenanceStatus.maintenance_mode ? '🔴 ON' : '🟢 OFF'}
+          </div>
+
+          {lastUpdated && (
+            <div style={{ fontSize: '10px', opacity: 0.7 }}>
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </div>
+          )}
         </div>
       )}
     </>

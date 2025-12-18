@@ -10,18 +10,23 @@ export function useNavHeight() {
 
   React.useEffect(() => {
     const DEFAULT_HEIGHT = 97; // Fallback based on MobileNavigation header style
+    let rafId = null; // Track RAF for cleanup
 
     const measure = () => {
-      const el = document.querySelector('.mobile-navigation-header');
-      if (el) {
-        const h = Math.round(el.getBoundingClientRect().height || 0);
-        // If measurement returns 0 due to timing, use fallback
-        const next = h > 0 ? h : DEFAULT_HEIGHT;
-        setHeight((prev) => (prev !== next ? next : prev));
-      } else {
-        // If header not found (e.g., during route transitions), keep previous or apply safe fallback
-        setHeight((prev) => (prev && prev > 0 ? prev : DEFAULT_HEIGHT));
-      }
+      // Use requestAnimationFrame to batch DOM reads and reduce forced reflows
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const el = document.querySelector('.mobile-navigation-header');
+        if (el) {
+          const h = Math.round(el.getBoundingClientRect().height || 0);
+          // If measurement returns 0 due to timing, use fallback
+          const next = h > 0 ? h : DEFAULT_HEIGHT;
+          setHeight((prev) => (prev !== next ? next : prev));
+        } else {
+          // If header not found (e.g., during route transitions), keep previous or apply safe fallback
+          setHeight((prev) => (prev && prev > 0 ? prev : DEFAULT_HEIGHT));
+        }
+      });
     };
 
     // Initial measurements
@@ -67,6 +72,7 @@ export function useNavHeight() {
     }
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
