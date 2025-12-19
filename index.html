@@ -16,8 +16,10 @@
     <!-- Preload LCP Image for immediate discovery -->
     <link rel="preload" href="/images/b2b-logo-updated.svg" as="image" fetchpriority="high">
 
-    <!-- Preload only critical font weight for optimal performance -->
+    <!-- Preload critical fonts to avoid request chaining -->
     <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
+    <link rel="preload" href="/fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
+    <link rel="preload" href="/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
 
     <!-- Defer YouTube preconnect until after LCP to reduce contention -->
     <script>
@@ -55,7 +57,7 @@
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
 
-        /* Inter Bold (700) - Loaded on-demand */
+        /* Inter Bold (700) - Critical font preloaded */
         @font-face {
             font-family: 'Inter';
             font-style: normal;
@@ -65,7 +67,7 @@
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
 
-        /* Inter Extra Bold (800) - Loaded on-demand */
+        /* Inter Extra Bold (800) - Critical font preloaded */
         @font-face {
             font-family: 'Inter';
             font-style: normal;

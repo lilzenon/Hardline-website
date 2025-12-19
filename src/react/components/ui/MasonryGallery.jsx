@@ -821,13 +821,20 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           ref={imgRef}
           src={image.url || image.src || image.image_url || image.file_url}
           srcSet={(() => {
+            const thumbnail = image?.srcSet?.thumbnail || image?.urls?.thumbnail;
             const small = image?.srcSet?.small || image?.urls?.small;
             const medium = image?.srcSet?.medium || image?.urls?.medium;
             const large = image?.srcSet?.large || image?.urls?.large;
             const parts = [];
-            if (small) parts.push(`${small} 400w`);
-            if (medium) parts.push(`${medium} 600w`);
-            if (large) parts.push(`${large} 800w`);
+
+            // Add thumbnail for smaller screens/slots (assuming ~200px equivalent)
+            if (thumbnail) parts.push(`${thumbnail} 200w`);
+
+            // Corrected descriptors based on actual server output (small=600px)
+            if (small) parts.push(`${small} 600w`);
+            if (medium) parts.push(`${medium} 1200w`);
+            if (large) parts.push(`${large} 2000w`);
+
             return parts.length ? parts.join(', ') : undefined;
           })()}
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -856,6 +863,10 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
               } else if (currentSrc !== image.urls.small && image.urls.small) {
                 console.log('🔄 Fallback to small variant:', image.urls.small);
                 target.src = image.urls.small;
+                return;
+              } else if (currentSrc !== image.urls.thumbnail && image.urls.thumbnail) {
+                console.log('🔄 Fallback to thumbnail variant:', image.urls.thumbnail);
+                target.src = image.urls.thumbnail;
                 return;
               } else if (currentSrc !== image.urls.original && image.urls.original) {
                 console.log('🔄 Fallback to original:', image.urls.original);
