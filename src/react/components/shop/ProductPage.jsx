@@ -523,6 +523,8 @@ export default function ProductPage({ productId }) {
                             objectFit: 'cover',
                           }}
                           draggable="false"
+                          loading={idx === 0 ? "eager" : "lazy"}
+                          fetchpriority={idx === 0 ? "high" : undefined}
                         />
                       </div>
                     ))}

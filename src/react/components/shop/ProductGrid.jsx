@@ -169,11 +169,12 @@ export default function ProductGrid({ products = [], loading = false, onAddToCar
         ) : products.length === 0 ? (
           <EmptyState />
         ) : (
-          products.map((product) => (
+          products.map((product, index) => (
             <ProductCard
               key={product.id}
               product={product}
               onAddToCart={onAddToCart}
+              priority={index < 4}
             />
           ))
         )}

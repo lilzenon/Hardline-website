@@ -50,9 +50,6 @@ export function useNavHeight() {
       mo.observe(headerEl, { attributes: true, attributeFilter: ['style', 'class'] });
     }
 
-    // Resize listener
-    window.addEventListener('resize', measure, { passive: true });
-
     // Handle history navigation and BFCache restores
     const onPageShow = () => measure();
     const onPopState = () => measure();
@@ -76,7 +73,6 @@ export function useNavHeight() {
       clearTimeout(t0);
       clearTimeout(t1);
       clearTimeout(t2);
-      window.removeEventListener('resize', measure);
       window.removeEventListener('pageshow', onPageShow);
       window.removeEventListener('popstate', onPopState);
       window.removeEventListener('hashchange', onHashChange);

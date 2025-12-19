@@ -52,7 +52,7 @@ const sortSizes = (sizes) => {
   });
 };
 
-export default function ProductCard({ product, onAddToCart }) {
+export default function ProductCard({ product, onAddToCart, priority = false }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -249,7 +249,8 @@ export default function ProductCard({ product, onAddToCart }) {
                   transition: 'transform 300ms ease',
                   transform: isHovered ? 'scale(1.03)' : 'scale(1)',
                 }}
-                loading="lazy"
+                loading={priority && idx === 0 ? "eager" : "lazy"}
+                fetchpriority={priority && idx === 0 ? "high" : undefined}
                 draggable="false"
               />
             </div>

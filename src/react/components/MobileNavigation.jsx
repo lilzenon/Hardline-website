@@ -37,27 +37,7 @@ const MobileNavigation = ({
     loadShopSettings();
   }, []);
 
-  // Dynamic overlay height to handle iOS/Android dynamic viewports and notches
-  const [overlayHeight, setOverlayHeight] = useState('100vh');
-  useEffect(() => {
-    const update = () => {
-      try {
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        setOverlayHeight(`${vh}px`);
-      } catch (e) {
-        setOverlayHeight(`${window.innerHeight}px`);
-      }
-    };
-    update();
-    window.addEventListener('resize', update);
-    window.addEventListener('orientationchange', update);
-    if (window.visualViewport) window.visualViewport.addEventListener('resize', update);
-    return () => {
-      window.removeEventListener('resize', update);
-      window.removeEventListener('orientationchange', update);
-      if (window.visualViewport) window.visualViewport.removeEventListener('resize', update);
-    };
-  }, []);
+
 
   // Toggle mobile menu
   const toggleMenu = () => {

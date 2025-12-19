@@ -90,7 +90,7 @@ const MasonryGallery = ({
 
   // Check if device is mobile
   const isMobile = useCallback(() => {
-    return window.innerWidth < 768;
+    return typeof window !== 'undefined' && window.innerWidth < 768;
   }, []);
 
   // Intersection Observer for lazy loading
@@ -131,7 +131,9 @@ const MasonryGallery = ({
   // Safety fallback: if images arrive but observer didn't trigger, force visibility
   useEffect(() => {
     if (!isVisible && Array.isArray(images) && images.length > 0) {
-      const t = setTimeout(() => setIsVisible(true), 1000);
+      // If we have images, check if they are high priority (top of page likely)
+      // If so, make visible sooner
+      const t = setTimeout(() => setIsVisible(true), 500);
       return () => clearTimeout(t);
     }
   }, [images, isVisible]);
@@ -527,6 +529,7 @@ const MasonryGallery = ({
                 onLoad={() => handleImageLoad(image.originalIndex)}
                 onLoadStart={() => handleImageLoadStart(image.originalIndex)}
                 onClick={() => handleImageClick(image, image.originalIndex)}
+                priority={image.originalIndex < 4}
               />
             ))}
           </div>
@@ -696,7 +699,7 @@ const MasonryGallery = ({
 /**
  * Individual Masonry Image Component with Modern Loading States
  */
-const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onClick }) => {
+const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onClick, priority = false }) => {
   const [imageError, setImageError] = useState(false);
   const imgRef = useRef(null);
 
@@ -832,8 +835,9 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           title={image.title || image.alt || 'Gallery image'}
           crossOrigin="anonymous"
           referrerPolicy="no-referrer"
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
           decoding="async"
+          fetchpriority={priority ? "high" : undefined}
           width={image?.width}
           height={image?.height}
           onLoadStart={handleImageLoadStart}

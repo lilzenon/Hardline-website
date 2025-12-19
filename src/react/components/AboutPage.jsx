@@ -518,7 +518,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 referrerPolicy="no-referrer"
                 src="/images/figma-exact/b2b-logo-nav.svg"
                 alt="B2B Logo"
-                loading="lazy"
+                loading="eager"
                 decoding="async"
                 fetchpriority="high"
                 onClick={() => {
