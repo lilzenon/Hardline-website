@@ -18,7 +18,7 @@ const ProductPage = lazy(() => import('./components/shop/ProductPage'));
 const CheckoutSuccess = lazy(() => import('./components/shop/CheckoutSuccess'));
 
 // Import any additional CSS if needed
-import './styles.css';
+
 
 // Import the new branded loader
 import BrandedLoader from './components/BrandedLoader';

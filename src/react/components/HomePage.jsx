@@ -9,7 +9,7 @@ import BrandedLoader from './BrandedLoader';
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 
 // 🚀 PERFORMANCE: Optimized lazy loading with immediate desktop, lazy mobile
-import FigmaDesktop from './FigmaDesktop';
+const FigmaDesktop = lazy(() => import('./FigmaDesktop'));
 const FigmaMobile = lazy(() => import('./FigmaMobile'));
 
 /**

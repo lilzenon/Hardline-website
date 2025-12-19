@@ -49,7 +49,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       if (width) {
         if (width <= 150) variant = 'thumbnail';  // 150x150 for very small displays
         else if (width <= 300) variant = 'small'; // 300x300 for event cards
-        else if (width <= 600) variant = 'medium'; // 600x600 for larger cards
+        else if (width <= 800) variant = 'medium'; // 600x600 for larger cards
         else if (width <= 1200) variant = 'large'; // 1200x1200 for hero images
         else variant = 'large'; // Use large for anything bigger
       }

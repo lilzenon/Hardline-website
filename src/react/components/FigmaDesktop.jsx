@@ -63,7 +63,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       let variant = existingVariant;
       if (width) {
         if (width <= 150) variant = 'small';
-        else if (width <= 400) variant = 'medium';
+        else if (width <= 800) variant = 'medium';
         else variant = 'large';
       }
 

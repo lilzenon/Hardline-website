@@ -16,6 +16,9 @@
     <link rel="dns-prefetch" href="https://admin.b2b.click">
     <link rel="dns-prefetch" href="https://bounce2bounce.com">
     <link rel="dns-prefetch" href="https://api.b2b.click">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.webmanifest">
@@ -64,7 +67,7 @@
     <link rel="preload" href="/fonts/inter-variable-latin.woff2" as="font" type="font/woff2" crossorigin>
     <style>
         /* Critical font CSS inlined for instant rendering */
-        
+
         @font-face {
             font-family: 'Inter';
             font-style: normal;
@@ -73,8 +76,9 @@
             src: url('/fonts/inter-variable-latin.woff2') format('woff2-variations');
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
+
         /* Fallback for older browsers */
-        
+
         @font-face {
             font-family: 'Inter Fallback';
             font-style: normal;
@@ -102,7 +106,7 @@
             line-gap-override: 0.00%;
             size-adjust: 107.40%;
         }
-        
+
         @font-face {
             font-family: 'Inter-fallback';
             font-style: normal;
@@ -114,7 +118,7 @@
             line-gap-override: 0.00%;
             size-adjust: 107.40%;
         }
-        
+
         @font-face {
             font-family: 'Inter-fallback';
             font-style: normal;
@@ -126,8 +130,9 @@
             line-gap-override: 0.00%;
             size-adjust: 107.40%;
         }
+
         /* Apply fallback font with metrics matching Inter */
-        
+
         body,
         html {
             font-family: 'Inter', 'Inter-fallback', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -137,16 +142,22 @@
 
 
     <!-- Preload Critical CSS -->
-    <link rel="preload" href="/css/font-optimization.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/css/font-optimization.css"></noscript>
+    <link rel="preload" href="/css/fonts-optimized.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="/css/fonts-optimized.css">
+    </noscript>
 
     <link rel="preload" href="/css/tailwind.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="/css/tailwind.css"></noscript>
+    <noscript>
+        <link rel="stylesheet" href="/css/tailwind.css">
+    </noscript>
 
     <!-- Enhanced SEO Meta Tags -->
     <meta name="theme-color" content="#000000">
-    <meta name="description" content="Discover exclusive live music events and connect with your favorite artists. BOUNCE2BOUNCE brings you unforgettable music experiences, seamless ticket purchasing, and direct artist engagement in Asbury Park and beyond.">
-    <meta name="keywords" content="live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE, Asbury Park events, live concerts, music venue, artist booking, event tickets">
+    <meta name="description"
+        content="Discover exclusive live music events and connect with your favorite artists. BOUNCE2BOUNCE brings you unforgettable music experiences, seamless ticket purchasing, and direct artist engagement in Asbury Park and beyond.">
+    <meta name="keywords"
+        content="live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE, Asbury Park events, live concerts, music venue, artist booking, event tickets">
 
     <!-- Additional SEO Meta Tags -->
     <meta name="author" content="BOUNCE2BOUNCE">
@@ -184,7 +195,8 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://bounce2bounce.com/">
     <meta property="og:title" content="BOUNCE2BOUNCE - Exclusive Live Music Events & Artist Connections">
-    <meta property="og:description" content="Discover exclusive live music events and connect with your favorite artists. BOUNCE2BOUNCE brings you unforgettable music experiences, seamless ticket purchasing, and direct artist engagement in Asbury Park and beyond.">
+    <meta property="og:description"
+        content="Discover exclusive live music events and connect with your favorite artists. BOUNCE2BOUNCE brings you unforgettable music experiences, seamless ticket purchasing, and direct artist engagement in Asbury Park and beyond.">
     <meta property="og:image" content="https://bounce2bounce.com/images/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -199,7 +211,8 @@
     <meta name="twitter:creator" content="@bounce2bounce_">
     <meta name="twitter:url" content="https://bounce2bounce.com/">
     <meta name="twitter:title" content="BOUNCE2BOUNCE - Exclusive Live Music Events & Artist Connections">
-    <meta name="twitter:description" content="Discover exclusive live music events and connect with your favorite artists. Unforgettable music experiences await.">
+    <meta name="twitter:description"
+        content="Discover exclusive live music events and connect with your favorite artists. Unforgettable music experiences await.">
     <meta name="twitter:image" content="https://bounce2bounce.com/images/og-image.png">
     <meta name="twitter:image:alt" content="BOUNCE2BOUNCE - Exclusive Live Music Events Platform">
 
@@ -311,16 +324,24 @@
     <!-- Bundle.js is automatically preloaded by webpack HtmlWebpackPlugin -->
 
     <!-- LCP Hero Image - Optimized responsive variants for iOS Safari -->
-    <link rel="preload" href="/images/optimized/hero-left-image-375w.avif" as="image" type="image/avif" fetchpriority="high" media="(max-width: 414px)">
-    <link rel="preload" href="/images/optimized/hero-left-image-375w.webp" as="image" type="image/webp" fetchpriority="high" media="(max-width: 414px)">
-    <link rel="preload" href="/images/optimized/hero-left-image-768w.avif" as="image" type="image/avif" fetchpriority="high" media="(min-width: 415px) and (max-width: 1024px)">
-    <link rel="preload" href="/images/optimized/hero-left-image-768w.webp" as="image" type="image/webp" fetchpriority="high" media="(min-width: 415px) and (max-width: 1024px)">
-    <link rel="preload" href="/images/optimized/hero-left-image-1280w.avif" as="image" type="image/avif" fetchpriority="high" media="(min-width: 1025px)">
-    <link rel="preload" href="/images/optimized/hero-left-image-1280w.webp" as="image" type="image/webp" fetchpriority="high" media="(min-width: 1025px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-375w.avif" as="image" type="image/avif"
+        fetchpriority="high" media="(max-width: 414px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-375w.webp" as="image" type="image/webp"
+        fetchpriority="high" media="(max-width: 414px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-768w.avif" as="image" type="image/avif"
+        fetchpriority="high" media="(min-width: 415px) and (max-width: 1024px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-768w.webp" as="image" type="image/webp"
+        fetchpriority="high" media="(min-width: 415px) and (max-width: 1024px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-1280w.avif" as="image" type="image/avif"
+        fetchpriority="high" media="(min-width: 1025px)">
+    <link rel="preload" href="/images/optimized/hero-left-image-1280w.webp" as="image" type="image/webp"
+        fetchpriority="high" media="(min-width: 1025px)">
 
     <!-- Device-specific logo preloading -->
-    <link rel="preload" href="/images/mobile-figma/b2b-logo-mobile.svg" as="image" type="image/svg+xml" fetchpriority="high" media="(max-width: 768px)">
-    <link rel="preload" href="/images/figma-exact/b2b-logo-nav.svg" as="image" type="image/svg+xml" fetchpriority="high" media="(min-width: 769px)">
+    <link rel="preload" href="/images/mobile-figma/b2b-logo-mobile.svg" as="image" type="image/svg+xml"
+        fetchpriority="high" media="(max-width: 768px)">
+    <link rel="preload" href="/images/figma-exact/b2b-logo-nav.svg" as="image" type="image/svg+xml" fetchpriority="high"
+        media="(min-width: 769px)">
 
     <!-- Font optimization now handled by CSS only -->
 
@@ -344,7 +365,7 @@
     <style>
         /* Critical CSS optimized for iOS Safari performance */
 
-         :root {
+        :root {
             --font-inter: 'Inter', 'Inter Fallback', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             --color-primary: #319DFF;
             --color-success: #0AFF4B;
@@ -391,12 +412,15 @@
 
         /* PWA Standalone Mode - Apply safe area padding when launched from home screen */
         @media (display-mode: standalone) {
-            html, body {
+
+            html,
+            body {
                 /* In standalone mode, content should respect safe areas */
                 padding-top: env(safe-area-inset-top, 0px);
                 padding-bottom: env(safe-area-inset-bottom, 0px);
                 box-sizing: border-box;
             }
+
             #root {
                 /* Full viewport height with safe areas handled by padding */
                 min-height: 100dvh;
@@ -417,6 +441,7 @@
             font-family: var(--font-inter);
             font-size: 18px;
         }
+
         /* Optimize image loading */
 
         img {
@@ -424,16 +449,787 @@
             height: auto;
             display: block;
         }
+
         /* iOS Safari specific optimizations */
 
         @supports (-webkit-touch-callout: none) {
             body {
                 -webkit-overflow-scrolling: touch;
             }
+
             /* Fix iOS Safari viewport issues */
             .hero-container {
                 min-height: 100vh;
                 min-height: -webkit-fill-available;
+            }
+        }
+    </style>
+
+    <style>
+        /* React Homepage Styles - Figma-Exact Implementation */
+
+
+        /* ========================================
+   iOS SAFARI SAFE AREA HANDLING
+   ======================================== */
+
+        /* Global safe area CSS custom properties */
+        :root {
+            --safe-area-inset-top: env(safe-area-inset-top, 0px);
+            --safe-area-inset-right: env(safe-area-inset-right, 0px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-area-inset-left: env(safe-area-inset-left, 0px);
+        }
+
+        /* PWA Standalone Mode - Apply safe area padding */
+        @media (display-mode: standalone) {
+            html {
+                /* In standalone mode, ensure content respects notch/Dynamic Island */
+                padding-top: env(safe-area-inset-top, 0px);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+                box-sizing: border-box;
+            }
+
+            body {
+                /* Full viewport height with safe areas handled by html padding */
+                min-height: 100dvh;
+                box-sizing: border-box;
+            }
+        }
+
+        /* iOS Safari browser mode - transparent status bar area */
+        @supports (-webkit-touch-callout: none) {
+            html {
+                /* Ensure html extends to full viewport including safe areas */
+                min-height: 100%;
+                min-height: 100dvh;
+                min-height: -webkit-fill-available;
+            }
+        }
+
+
+        /* ========================================
+   MODERN PAGE TRANSITIONS 2024-2025
+   ======================================== */
+
+
+        /* View Transitions API Support (Chrome 111+, Safari 18+) */
+
+        @view-transition {
+            navigation: auto;
+        }
+
+
+        /* Customize the default view transition */
+
+        ::view-transition-old(root),
+        ::view-transition-new(root) {
+            animation-duration: 300ms;
+            animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+
+        /* Smooth fade transition for browsers with View Transitions API */
+
+        ::view-transition-old(root) {
+            animation-name: fade-out;
+        }
+
+        ::view-transition-new(root) {
+            animation-name: fade-in;
+        }
+
+
+        /* CSS Fallback Transitions for older browsers */
+
+        .app-container {
+            transition: opacity var(--transition-duration, 300ms) cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 1;
+        }
+
+        .app-container.transitioning {
+            opacity: 0.7;
+        }
+
+
+        /* Modern fade animations */
+
+        @keyframes fade-out {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+
+        /* Respect user motion preferences - 2024 accessibility standard */
+
+        @media (prefers-reduced-motion: reduce) {
+
+            ::view-transition-old(root),
+            ::view-transition-new(root) {
+                animation-duration: 1ms !important;
+            }
+
+            .app-container {
+                transition: none !important;
+            }
+
+            * {
+                animation-duration: 1ms !important;
+                animation-delay: 1ms !important;
+                transition-duration: 1ms !important;
+                transition-delay: 1ms !important;
+            }
+        }
+
+
+        /* Enhanced loading states for modern UX */
+
+        .page-loading {
+            animation: subtle-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes subtle-pulse {
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .scalable-homepage-wrapper {
+            width: 100%;
+            min-height: 100vh;
+            background: #000;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .scalable-homepage-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .desktop {
+            width: 100%;
+            max-width: 1456px;
+            margin: 0 auto;
+            position: relative;
+            background: #000;
+            min-height: 100vh;
+            padding: 0 16px;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+
+        /* 🔒 FIXED DIMENSIONS - Event cards should never scale */
+
+        .eventcardsmall {
+            width: 220px !important;
+            height: 85px !important;
+            flex-shrink: 0 !important;
+            transform: none !important;
+            min-width: 220px !important;
+            max-width: 250px !important;
+            min-height: 85px !important;
+            max-height: 85px !important;
+            /* Prevent any external scaling or resizing */
+        }
+
+
+        /* Prevent scaling on event card children */
+
+        .eventcardsmall * {
+            transform: none !important;
+        }
+
+
+        /* 🔒 FIXED GAP - Events and Text us section gap should never scale */
+
+        .events-text-container {
+            gap: 18px !important;
+            transform: none !important;
+            /* Prevent any external scaling on the container */
+        }
+
+
+        /* 🔒 FIXED DIMENSIONS - Event list container should maintain fixed width */
+
+        .events-text-container>div:first-child {
+            width: 507px !important;
+            flex-shrink: 0 !important;
+            transform: none !important;
+        }
+
+
+        /* Ensure scaled content doesn't overflow */
+
+        .scalable-homepage-wrapper {
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0;
+            /* Remove padding to prevent layout shifts */
+            background: #000;
+            width: 100%;
+            position: relative;
+            margin: 0 auto;
+            /* Ensure proper centering */
+        }
+
+
+        /* Ensure all child elements scale properly */
+
+        .scalable-homepage-container * {
+            box-sizing: border-box;
+        }
+
+
+        /* Bidirectional scaling system - No restrictive breakpoint overrides */
+
+
+        /* Only override scaling for extreme cases where accessibility is critical */
+
+        @media (max-width: 300px) {
+            .scalable-homepage-container {
+                --scale-factor: 0.35;
+                /* Absolute minimum scale for very small screens */
+            }
+        }
+
+
+        /* Prevent excessive scaling on ultra-wide screens */
+
+        @media (min-width: 1650px) {
+            .scalable-homepage-container {
+                --scale-factor: clamp(1.5, calc(100vw / var(--base-width)), 2.0);
+                /* Controlled scaling for ultra-wide displays */
+            }
+        }
+
+
+        /* Respect user motion preferences */
+
+        @media (prefers-reduced-motion: reduce) {
+            .scalable-homepage-container {
+                transition: none;
+            }
+        }
+
+
+        /* Small viewport handling */
+
+        @media (max-width: 480px) {
+
+            /* Transform handled by JavaScript */
+            .scalable-homepage-wrapper {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+        }
+
+
+        /* Extra small viewport handling */
+
+        @media (max-width: 360px) {
+
+            /* Transform handled by JavaScript */
+            .scalable-homepage-wrapper {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+        }
+
+
+        /* Ultra small viewport handling */
+
+        @media (max-width: 280px) {
+
+            /* Transform handled by JavaScript */
+            .scalable-homepage-wrapper {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+        }
+
+
+        /* Scaling behavior verification - shows current scale factor for debugging */
+
+        .scalable-homepage-container::before {
+            content: "Scale: " attr(data-scale);
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: monospace;
+            z-index: 9999;
+            pointer-events: none;
+            display: none;
+            /* Hidden by default, enable for debugging */
+        }
+
+
+        /* Global font family */
+
+        .font-inter {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .font-clash {
+            font-family: 'ClashGrotesk-Variable', 'Clash Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+
+        /* Loading spinner animation - Modern CSS with vendor prefixes */
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+            }
+        }
+
+        @-webkit-keyframes spin {
+            0% {
+                -webkit-transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @-moz-keyframes spin {
+            0% {
+                -moz-transform: rotate(0deg);
+            }
+
+            100% {
+                -moz-transform: rotate(360deg);
+            }
+        }
+
+
+        /* Button loading spinner class - High contrast version */
+
+        .button-spinner {
+            width: 16px !important;
+            height: 16px !important;
+            border: 3px solid #000000 !important;
+            border-top: 3px solid #FFFFFF !important;
+            border-right: 3px solid #FFFFFF !important;
+            border-radius: 50% !important;
+            animation: spin 0.6s linear infinite !important;
+            -webkit-animation: spin 0.6s linear infinite !important;
+            -moz-animation: spin 0.6s linear infinite !important;
+            display: inline-block !important;
+            box-sizing: border-box !important;
+            background-color: transparent !important;
+        }
+
+
+        /* Loading dots pulse animation */
+
+        @keyframes pulse {
+
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+
+        /* Shake animation for invalid input */
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-2px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(2px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+
+        /* Prevent horizontal overflow on body */
+
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        /* Ensure React root is properly centered */
+
+        #react-root {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0 auto;
+        }
+
+
+        /* Prevent layout shifts on load */
+
+        .desktop {
+            transform: none !important;
+            /* Prevent any unwanted transforms */
+            left: auto !important;
+            /* Override any fixed positioning */
+            right: auto !important;
+            margin: 0 auto !important;
+            /* Force centering */
+        }
+
+
+        /* Essential utilities for text overflow */
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+
+        /* Responsive adjustments for all screen sizes */
+
+
+        /* Base responsive container */
+
+        .desktop {
+            box-sizing: border-box;
+        }
+
+
+        /* Mobile First - 320px to 767px - Enhanced for proportional scaling */
+
+        @media (max-width: 767px) {
+            .desktop {
+                width: 100% !important;
+                max-width: 100vw;
+                padding: 0 8px !important;
+                overflow-x: hidden;
+            }
+
+            /* Stack hero sections vertically on mobile with proper spacing */
+            .desktop>div:nth-child(2)>div:nth-child(2) {
+                flex-direction: column !important;
+                gap: 16px !important;
+                height: auto !important;
+                min-height: 614px !important;
+                align-items: center !important;
+            }
+
+            /* Center hero sections on mobile */
+            .desktop>div:nth-child(2)>div:nth-child(2)>div {
+                margin: 8px auto !important;
+            }
+
+            /* Make event cards single column on mobile */
+            .desktop .eventcardsmall {
+                width: 100% !important;
+                max-width: 280px !important;
+            }
+
+            /* Ensure touch targets remain accessible with bidirectional scaling */
+            .scalable-homepage-container button,
+            .scalable-homepage-container input,
+            .scalable-homepage-container [role="button"] {
+                min-height: max(44px, calc(44px / var(--scale-factor))) !important;
+                min-width: max(44px, calc(44px / var(--scale-factor))) !important;
+            }
+
+            /* Maintain 8px grid system proportions when scaled */
+            .scalable-homepage-container * {
+                box-sizing: border-box;
+            }
+        }
+
+
+        /* Tablet - 768px to 1023px - Side-by-side hero sections */
+
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .desktop {
+                padding: 0 24px !important;
+            }
+
+            /* Keep hero sections side-by-side on tablet with proper spacing */
+            .desktop>div:nth-child(2)>div:nth-child(2) {
+                flex-direction: row !important;
+                gap: 24px !important;
+                justify-content: center !important;
+                align-items: center !important;
+                height: 299px !important;
+            }
+
+            /* Maintain proportional scaling for hero sections on tablet */
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:first-child {
+                width: 280px !important;
+                min-width: 280px !important;
+                height: 280px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child {
+                width: 420px !important;
+                min-width: 300px !important;
+                height: 280px !important;
+                flex-shrink: 1 !important;
+            }
+
+            /* Adjust video background to match container proportionally */
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child>div:first-child,
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child>div:nth-child(2) {
+                width: 100% !important;
+                height: 280px !important;
+            }
+        }
+
+
+        /* Desktop - 1024px to 1455px - Full side-by-side hero layout */
+
+        @media (min-width: 1024px) and (max-width: 1455px) {
+            .desktop {
+                padding: 0 32px !important;
+            }
+
+            /* Ensure hero sections remain side-by-side on desktop */
+            .desktop>div:nth-child(2)>div:nth-child(2) {
+                flex-direction: row !important;
+                gap: 32px !important;
+                justify-content: center !important;
+                align-items: center !important;
+                height: 299px !important;
+            }
+
+            /* Full-size hero sections on desktop */
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:first-child {
+                width: 299px !important;
+                height: 299px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child {
+                width: 498px !important;
+                height: 299px !important;
+                flex-shrink: 0 !important;
+            }
+        }
+
+
+        /* Large Desktop - 1456px+ - Optimal side-by-side hero layout */
+
+        @media (min-width: 1456px) {
+            .desktop {
+                padding: 0 !important;
+            }
+
+            /* Maintain side-by-side hero sections on large desktop */
+            .desktop>div:nth-child(2)>div:nth-child(2) {
+                flex-direction: row !important;
+                gap: 32px !important;
+                justify-content: center !important;
+                align-items: center !important;
+                height: 299px !important;
+            }
+
+            /* Full-size hero sections on large desktop */
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:first-child {
+                width: 299px !important;
+                height: 299px !important;
+                flex-shrink: 0 !important;
+            }
+
+            .desktop>div:nth-child(2)>div:nth-child(2)>div:last-child {
+                width: 498px !important;
+                height: 299px !important;
+                flex-shrink: 0 !important;
+            }
+        }
+
+        /* Rich text rendering defaults for public pages (About, FAQ, etc.) */
+        .rich-text-content {
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            color: rgba(255, 255, 255, 0.88);
+            line-height: 1.7;
+        }
+
+        .rich-text-content p {
+            margin: 0 0 1rem 0;
+        }
+
+        .rich-text-content ul {
+            list-style: disc;
+            padding-left: 1.5rem;
+            margin: 0.5rem 0 1rem;
+        }
+
+        .rich-text-content ol {
+            list-style: decimal;
+            padding-left: 1.5rem;
+            margin: 0.5rem 0 1rem;
+        }
+
+        .rich-text-content li {
+            margin: 0.25rem 0;
+        }
+
+        .rich-text-content b,
+        .rich-text-content strong {
+            font-weight: 700;
+        }
+
+        .rich-text-content i,
+        .rich-text-content em {
+            font-style: italic;
+        }
+
+        .rich-text-content u {
+            text-decoration: underline;
+        }
+
+        .rich-text-content h1,
+        .rich-text-content h2,
+        .rich-text-content h3,
+        .rich-text-content h4,
+        .rich-text-content h5,
+        .rich-text-content h6 {
+            margin: 1.25rem 0 0.75rem;
+            line-height: 1.3;
+        }
+
+        .rich-text-content h1 {
+            font-size: 2rem;
+        }
+
+        .rich-text-content h2 {
+            font-size: 1.5rem;
+        }
+
+        .rich-text-content h3 {
+            font-size: 1.25rem;
+        }
+
+
+        /* FAQ answer scroll container with styled scrollbar */
+        .faq-answer-scroll {
+            max-height: 300px;
+            /* Desktop default */
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+            padding-right: 6px;
+            /* room for scrollbar without shifting content */
+        }
+
+        /* Scrollbar styling (WebKit) */
+        .faq-answer-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .faq-answer-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .faq-answer-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 8px;
+        }
+
+        .faq-answer-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.32);
+        }
+
+        /* Scrollbar styling (Firefox) */
+        .faq-answer-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+        }
+
+        @media (max-width: 768px) {
+            .faq-answer-scroll {
+                max-height: 200px;
+                /* Mobile default */
             }
         }
     </style>

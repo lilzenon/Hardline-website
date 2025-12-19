@@ -119,7 +119,16 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false, // Disable sourcemaps in production for smaller files
-    minify: 'esbuild',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+      format: {
+        comments: false, // Remove comments
+      },
+    },
     target: 'es2020',
     chunkSizeWarningLimit: 250, // CRITICAL: Much smaller chunks for 512MB RAM limit
     reportCompressedSize: false, // Disable to save build memory

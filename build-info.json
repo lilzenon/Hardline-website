@@ -1,17 +1,17 @@
 {
-  "buildDate": "2025-12-18T22:29:34.432Z",
+  "buildDate": "2025-12-19T01:58:49.866Z",
   "nodeVersion": "v24.4.1",
   "platform": "win32",
   "arch": "x64",
-  "commitHash": "496dc543f3cd93b0923c939dc48c742f775f5e5d",
-  "commitHashShort": "496dc54",
+  "commitHash": "c4f3a95c7875a2f476bf8727b4bdba1e1e9df1ba",
+  "commitHashShort": "c4f3a95",
   "branch": "main",
-  "commitDate": "2025-12-18T22:07:01.000Z",
+  "commitDate": "2025-12-18T22:33:39.000Z",
   "commitMessage": "test fix",
   "isDirty": true,
   "repoUrl": "https://github.com/lilzenon/kutt.git",
   "githubUrl": "https://github.com/lilzenon/kutt",
-  "commitUrl": "https://github.com/lilzenon/kutt/commit/496dc543f3cd93b0923c939dc48c742f775f5e5d",
-  "displayText": "main@496dc54*",
+  "commitUrl": "https://github.com/lilzenon/kutt/commit/c4f3a95c7875a2f476bf8727b4bdba1e1e9df1ba",
+  "displayText": "main@c4f3a95*",
   "environment": "development"
 }
