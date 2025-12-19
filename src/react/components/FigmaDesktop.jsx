@@ -653,19 +653,21 @@ const FigmaDesktop = ({ onReady }) => {
   }), []);
 
   // Compute the maximum usable width for the right video column based on available space
-  useLayoutEffect(() => {
+  useEffect(() => {
     const recompute = () => {
-      const left = leftColumnRef.current;
-      if (left) {
-        const h = Math.round(left.getBoundingClientRect().height);
-        if (h && h > 0) {
-          setVideoTargetHeight(h);
+      // Wrap in RAF to avoid forced reflow
+      requestAnimationFrame(() => {
+        const left = leftColumnRef.current;
+        if (left) {
+          const h = Math.round(left.getBoundingClientRect().height);
+          if (h && h > 0) {
+            setVideoTargetHeight(h);
+          }
         }
-      }
+      });
     };
 
-    // Initial sync before first paint and again on next frame (covers hydration/layout shifts)
-    recompute();
+    // Initial sync - rely on RAF to wait for paint
     const raf = requestAnimationFrame(recompute);
 
     // Observe size changes on both containers and Laylo iframe to support bidirectional scaling
@@ -1425,18 +1427,24 @@ const FigmaDesktop = ({ onReady }) => {
   }, [mostRecentEvent, normalizeEvent, formattedDate]);
 
   // Desktop-only: measure featured hero title lines to adjust vertical spacing
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (scaledDimensions.containerWidth < 1024) return;
-    const el = heroTitleRef.current;
-    if (!el) return;
-    try {
-      const cs = window.getComputedStyle(el);
-      const lineHeight = parseFloat(cs.lineHeight) || 26;
-      const height = el.scrollHeight;
-      const lines = Math.max(1, Math.round(height / lineHeight));
-      // Adjusted: move title slightly lower and tighten spacing to date row
-      setHeroTitleBottom(lines <= 1 ? 52 : 70);
-    } catch (_) { }
+
+    // Batch measurement to next frame to avoid forced reflow
+    const rafId = requestAnimationFrame(() => {
+      const el = heroTitleRef.current;
+      if (!el) return;
+      try {
+        const cs = window.getComputedStyle(el);
+        const lineHeight = parseFloat(cs.lineHeight) || 26;
+        const height = el.scrollHeight;
+        const lines = Math.max(1, Math.round(height / lineHeight));
+        // Adjusted: move title slightly lower and tighten spacing to date row
+        setHeroTitleBottom(lines <= 1 ? 52 : 70);
+      } catch (_) { }
+    });
+
+    return () => cancelAnimationFrame(rafId);
   }, [mostRecentEvent, scaledDimensions.heroWidth, scaledDimensions.containerWidth, homeSettings?.event_title]);
 
   // Desktop-only: function to (re)calculate social buttons top margin so their bottom aligns to video bottom

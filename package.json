@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "concurrently \"vite\" \"node --watch-path=./server --watch-path=./custom server/server.js\"",
         "start": "node server/server.js",
-        "build": "npm run build:css && vite build && node scripts/generate-build-info.js",
+        "build": "npm run build:css && vite build && node scripts/generate-build-info.js && node scripts/inline-css.js",
         "preview": "vite preview",
         "build:analyze": "npm run build:css && vite build --mode analyze && npx vite-bundle-analyzer dist",
         "build:css": "npx tailwindcss -i ./src/tailwind.css -o ./static/css/tailwind.css --minify",

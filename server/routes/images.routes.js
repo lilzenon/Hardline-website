@@ -48,7 +48,9 @@ router.get('/serve/:uuid/:variant', (req, res) => {
     const redirectUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
 
     console.log(`🔄 Homepage: Redirecting image request with variant to dashboard: ${redirectUrl}`);
-    res.redirect(redirectUrl);
+    // Cache the redirect for 1 year since UUIDs/variants are immutable
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.redirect(301, redirectUrl);
 });
 
 // Redirect image serving requests to dashboard (without variant)
@@ -58,7 +60,9 @@ router.get('/serve/:uuid', (req, res) => {
     const redirectUrl = `${dashboardDomain}/api/images/serve/${uuid}`;
 
     console.log(`🔄 Homepage: Redirecting image request to dashboard: ${redirectUrl}`);
-    res.redirect(redirectUrl);
+    // Cache the redirect for 1 year since UUIDs are immutable
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.redirect(301, redirectUrl);
 });
 
 // Health check endpoint
