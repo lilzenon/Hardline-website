@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import viteCompression from 'vite-plugin-compression'
 import path from 'path'
 import { preloadOptimization } from './vite-plugins/preload-optimization'
+import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -36,6 +37,62 @@ export default defineConfig({
         level: 11, // Maximum brotli compression level
         mode: 0 // Generic mode for best compression
       }
+    }),
+    // 🖼️ NEW: Automated Image Optimization
+    ViteImageOptimizer({
+      test: /\.(jpe?g|png|gif|tiff|webp|svg|avif)$/i,
+      excludePublic: [],
+      includePublic: true,
+      include: [],
+      exclude: [],
+      logStats: true,
+      svg: {
+        multipass: true,
+        plugins: [
+          {
+            name: 'preset-default',
+            params: {
+              overrides: {
+                cleanupNumericValues: false,
+                removeViewBox: false, // Keep viewBox for resizing
+              },
+            },
+          },
+          'sortAttrs',
+          {
+            name: 'addAttributesToSVGElement',
+            params: {
+              attributes: [{ xmlns: 'http://www.w3.org/2000/svg' }],
+            },
+          },
+        ],
+      },
+      png: {
+        // https://sharp.pixelplumbing.com/api-output#png
+        quality: 80,
+      },
+      jpeg: {
+        // https://sharp.pixelplumbing.com/api-output#jpeg
+        quality: 80,
+      },
+      jpg: {
+        // https://sharp.pixelplumbing.com/api-output#jpeg
+        quality: 80,
+      },
+      tiff: {
+        // https://sharp.pixelplumbing.com/api-output#tiff
+        quality: 80,
+      },
+      // gif does not support lossless or quality in a way that is good to compress
+      // gif: {},
+      webp: {
+        // https://sharp.pixelplumbing.com/api-output#webp
+        lossless: true,
+      },
+      avif: {
+        // https://sharp.pixelplumbing.com/api-output#avif
+        lossless: true,
+      },
     }),
   ],
   publicDir: 'static',
@@ -137,29 +194,51 @@ export default defineConfig({
         format: 'es',
         // 🚀 OPTIMIZED: Strategic code splitting with proper React handling
         manualChunks: (id) => {
-          // Keep React and React Three Fiber in the main bundle to prevent loading order issues
-          if (id.includes('react') || id.includes('react-dom') || id.includes('@react-three/fiber') || id.includes('three')) {
-            return undefined; // Let React and Three.js stay in main bundle
+          // 1. Core React (Stable, essential)
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/') || id.includes('/node_modules/scheduler/')) {
+            return 'react-vendor';
           }
 
-          // Animation libraries (GSAP is large)
+          // 2. Three.js Ecosystem (Large 3D libraries)
+          if (id.includes('three') || id.includes('@react-three')) {
+            return 'three-vendor';
+          }
+
+          // 3. Animations (Framer Motion is very large)
+          if (id.includes('framer-motion')) {
+            return 'motion';
+          }
           if (id.includes('gsap')) {
             return 'animations';
           }
 
-          // Icon library (Lucide React is large)
+          // 4. Data Management
+          if (id.includes('@tanstack') || id.includes('react-query') || id.includes('zustand') || id.includes('axios')) {
+            return 'query';
+          }
+
+          // 5. UI Components & Icons
           if (id.includes('lucide-react')) {
             return 'icons';
           }
-
-          // Security libraries
-          if (id.includes('dompurify')) {
-            return 'security';
+          if (id.includes('@radix-ui') || id.includes('class-variance-authority') || id.includes('clsx') || id.includes('tailwind-merge')) {
+            return 'ui-vendor';
           }
 
-          // Other vendor dependencies
+          // 6. Parsing & Utils
+          if (id.includes('cheerio') || id.includes('htmlparser2') || id.includes('parse5')) {
+            return 'parser';
+          }
+          if (id.includes('dompurify') || id.includes('isbot')) {
+            return 'security';
+          }
+          if (id.includes('date-fns') || id.includes('moment') || id.includes('dayjs') || id.includes('luxon')) {
+            return 'dates';
+          }
+
+          // 7. Catch-all for remaining node_modules
           if (id.includes('node_modules')) {
-            return 'vendor';
+            return 'vendor'; // This should now be much smaller
           }
         },
         // Optimize asset naming for better caching

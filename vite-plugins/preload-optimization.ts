@@ -14,8 +14,8 @@ interface PreloadOptions {
 
 export function preloadOptimization(options: PreloadOptions = {}): Plugin {
   const {
-    criticalChunks = ['react-core', 'router', 'index'],
-    prefetchChunks = ['figma-mobile', 'figma-desktop', 'about-page'],
+    criticalChunks = ['index', 'react-vendor'],
+    prefetchChunks = ['FigmaMobile', 'FigmaDesktop', 'query', 'animations', 'icons', 'ui-vendor'],
     preloadFonts = true,
     preloadCriticalCSS = true
   } = options;
@@ -23,7 +23,9 @@ export function preloadOptimization(options: PreloadOptions = {}): Plugin {
   return {
     name: 'preload-optimization',
     apply: 'build',
+    enforce: 'post',
     generateBundle(options, bundle) {
+
       // Find the main HTML file
       const htmlFiles = Object.keys(bundle).filter(fileName => fileName.endsWith('.html'));
 
@@ -36,25 +38,20 @@ export function preloadOptimization(options: PreloadOptions = {}): Plugin {
           const preloadLinks: string[] = [];
           const prefetchLinks: string[] = [];
 
-          // Find critical JavaScript chunks
           Object.keys(bundle).forEach(fileName => {
-            const chunk = bundle[fileName];
-            if (chunk.type === 'chunk') {
-              const chunkName = chunk.name || fileName;
+            if (fileName.endsWith('.js')) {
+              const chunkName = fileName.split('/').pop()?.split('.')[0] || '';
 
-              // Preload critical chunks
               if (criticalChunks.some(critical => chunkName.includes(critical))) {
                 preloadLinks.push(`<link rel="preload" href="/${fileName}" as="script" crossorigin>`);
               }
 
-              // Prefetch non-critical chunks
               if (prefetchChunks.some(prefetch => chunkName.includes(prefetch))) {
                 prefetchLinks.push(`<link rel="prefetch" href="/${fileName}" as="script" crossorigin>`);
               }
             }
           });
 
-          // Add preload for critical CSS
           if (preloadCriticalCSS) {
             Object.keys(bundle).forEach(fileName => {
               if (fileName.endsWith('.css') && fileName.includes('index')) {
@@ -63,12 +60,10 @@ export function preloadOptimization(options: PreloadOptions = {}): Plugin {
             });
           }
 
-          // Add preload for fonts
           if (preloadFonts) {
             preloadLinks.push(`<link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>`);
           }
 
-          // Insert preload links in head
           const headCloseIndex = html.indexOf('</head>');
           if (headCloseIndex !== -1) {
             const allLinks = [
