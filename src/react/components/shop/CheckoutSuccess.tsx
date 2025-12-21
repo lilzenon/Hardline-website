@@ -1,0 +1,152 @@
+/**
+ * CheckoutSuccess - Order confirmation page at /shop/success
+ * Displays order details with product images and price breakdown
+ */
+
+import React, { useState, useEffect } from 'react';
+import { useCart } from '../../contexts/CartContext';
+import { verifyCheckoutSession } from '../../services/shopService';
+import { OrderConfirmationCard } from '../ui/order-confirmation-card';
+import { motion } from 'framer-motion';
+import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+
+interface OrderItem {
+    name: string;
+    image?: string | null;
+    size?: string | null;
+    quantity: number;
+    unitPrice: string;
+    totalPrice: string;
+}
+
+interface OrderData {
+    order_id: number;
+    status: string;
+    customer_email?: string;
+    customer_name?: string;
+    items: OrderItem[];
+    subtotal: string;
+    tax?: string;
+    shipping?: string;
+    total: string;
+    shipping_address?: object;
+    created_at: string;
+    success: boolean;
+}
+
+export default function CheckoutSuccess() {
+    const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+    const [orderData, setOrderData] = useState<OrderData | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const { clearCart } = useCart();
+
+    useEffect(() => {
+        const verifySession = async () => {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const sessionId = params.get('session_id');
+
+                if (!sessionId) {
+                    setStatus('error');
+                    setError('No session ID found. Please try your purchase again.');
+                    return;
+                }
+
+                console.log('🔍 Verifying checkout session:', sessionId);
+
+                const result = await verifyCheckoutSession(sessionId);
+
+                if (result.success) {
+                    setOrderData(result);
+                    setStatus('success');
+                    clearCart();
+                    console.log('✅ Order confirmed:', result.order_id);
+                } else {
+                    throw new Error(result.message || 'Failed to verify order');
+                }
+            } catch (err: any) {
+                console.error('❌ Verification error:', err);
+                setStatus('error');
+                setError(err.message || 'Failed to verify your order. Please contact support.');
+            }
+        };
+
+        verifySession();
+    }, [clearCart]);
+
+    // Format date for display
+    const formatDate = (dateStr: string) => {
+        return new Date(dateStr).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+        });
+    };
+
+    return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-4 sm:p-6">
+            {/* Loading State */}
+            {status === 'loading' && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center"
+                >
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl" />
+                        <div className="relative bg-zinc-900 rounded-full p-6 border border-zinc-800">
+                            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+                        </div>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">Processing Order</h1>
+                    <p className="text-zinc-400">Please wait while we confirm your purchase...</p>
+                </motion.div>
+            )}
+
+            {/* Success State */}
+            {status === 'success' && orderData && (
+                <OrderConfirmationCard
+                    orderId={orderData.order_id}
+                    customerEmail={orderData.customer_email}
+                    dateTime={formatDate(orderData.created_at)}
+                    items={orderData.items}
+                    subtotal={orderData.subtotal}
+                    tax={orderData.tax}
+                    shipping={orderData.shipping}
+                    total={orderData.total}
+                    onContinueShopping={() => window.location.href = '/shop'}
+                    onGoHome={() => window.location.href = '/'}
+                />
+            )}
+
+            {/* Error State */}
+            {status === 'error' && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-full max-w-md mx-auto text-center"
+                >
+                    <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
+                        <div className="relative mb-6 inline-block">
+                            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl" />
+                            <div className="relative bg-red-500/10 rounded-full p-4">
+                                <AlertCircle className="w-10 h-10 text-red-400" />
+                            </div>
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-3">Something Went Wrong</h1>
+                        <p className="text-zinc-400 mb-6">{error}</p>
+                        <a
+                            href="/shop"
+                            className="inline-flex items-center justify-center gap-2 w-full h-12 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Return to Shop
+                        </a>
+                    </div>
+                </motion.div>
+            )}
+        </div>
+    );
+}
