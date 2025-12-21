@@ -1,8 +1,8 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Package, ArrowRight, ShoppingBag } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { cn } from "../../../lib/utils";
+import { Button } from "./button";
 
 /**
  * Order item with product details
