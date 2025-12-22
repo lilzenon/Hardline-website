@@ -148,15 +148,37 @@ export default function CheckoutSuccess() {
                                 <AlertCircle className="w-10 h-10 text-red-400" />
                             </div>
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-3">Something Went Wrong</h1>
-                        <p className="text-zinc-400 mb-6">{error}</p>
-                        <a
-                            href="/shop"
-                            className="inline-flex items-center justify-center gap-2 w-full h-12 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-colors"
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Return to Shop
-                        </a>
+                        <h1 className="text-2xl font-bold text-white mb-3">Verification Failed</h1>
+                        <p className="text-zinc-400 mb-6">
+                            {error || 'We couldn\'t verify your order status.'}
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="inline-flex items-center justify-center gap-2 w-full h-12 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-colors"
+                            >
+                                Try Again
+                            </button>
+
+                            <a
+                                href="/shop"
+                                className="inline-flex items-center justify-center gap-2 w-full h-12 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-colors"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Return to Shop
+                            </a>
+                        </div>
+
+                        {/* Debug Info (Visible to help user report exact issue) */}
+                        <div className="mt-6 p-3 bg-black/50 rounded-lg text-left overflow-hidden">
+                            <p className="text-xs text-zinc-500 font-mono break-all">
+                                Session: {new URLSearchParams(window.location.search).get('session_id') || 'missing'}
+                            </p>
+                            <p className="text-xs text-zinc-500 font-mono mt-1">
+                                Timestamp: {new Date().toISOString()}
+                            </p>
+                        </div>
                     </div>
                 </motion.div>
             )}
