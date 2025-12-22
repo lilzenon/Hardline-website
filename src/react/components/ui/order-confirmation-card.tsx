@@ -61,12 +61,19 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
             )}
         >
             {/* Header with Logo */}
-            <div className="flex flex-col items-center pt-8 pb-8 px-6 text-center bg-gradient-to-b from-zinc-900 to-zinc-950 border-b border-zinc-800/50">
-                <img
-                    src="/static/logo-white.png"
-                    alt="Logo"
-                    className="h-8 mb-6 opacity-90"
-                />
+            <div className="flex flex-col items-center pt-8 pb-8 px-6 text-center bg-zinc-950 border-b border-zinc-900">
+                {/* Logo with Fallback */}
+                <div className="h-8 mb-6">
+                    <img
+                        src="/images/logo.png"
+                        alt="KUTT"
+                        className="h-full object-contain opacity-90"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement!.innerHTML = '<span class="text-white font-bold tracking-widest text-xl">KUTT</span>';
+                        }}
+                    />
+                </div>
 
                 <div className="relative mb-6">
                     <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
@@ -85,20 +92,20 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
             </div>
 
             {/* Order Details Header */}
-            <div className="px-6 py-4 bg-zinc-900/30 flex items-center justify-between border-b border-zinc-800/50">
+            <div className="px-6 py-4 bg-zinc-900/50 flex items-center justify-between border-b border-zinc-900">
                 <div className="flex flex-col items-start gap-1">
-                    <span className="text-zinc-500 text-xs uppercase tracking-wider font-semibold">Order Number</span>
+                    <span className="text-zinc-500 text-[10px] uppercase tracking-wider font-bold">Order Number</span>
                     <span className="text-white font-mono text-lg font-medium tracking-wide">#{orderId}</span>
                 </div>
                 <div className="text-right">
-                    <span className="text-zinc-500 text-xs uppercase tracking-wider font-semibold block mb-1">Date</span>
-                    <span className="text-zinc-400 text-sm block">{dateTime}</span>
+                    <span className="text-zinc-500 text-[10px] uppercase tracking-wider font-bold block mb-1">Date</span>
+                    <span className="text-zinc-400 text-sm block font-medium">{dateTime}</span>
                 </div>
             </div>
 
             {/* Order Items */}
-            <div className="px-6 py-6">
-                <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-4 flex items-center gap-2">
+            <div className="px-6 py-6 bg-zinc-950">
+                <h3 className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold mb-4 flex items-center gap-2">
                     <ShoppingBag className="w-3.5 h-3.5" />
                     Your Items
                 </h3>
@@ -106,15 +113,19 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                     {items.map((item, index) => (
                         <div
                             key={index}
-                            className="flex items-start gap-4 p-3 pr-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-900 transition-colors"
+                            className="flex items-start gap-4 p-3 pr-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50"
                         >
-                            {/* Product Image - Fixed Dimensions */}
-                            <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-700/50">
+                            {/* Product Image - STRICTLY CONSTRAINED */}
+                            <div
+                                className="rounded-xl bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-700/50"
+                                style={{ width: '80px', height: '80px', minWidth: '80px' }}
+                            >
                                 {item.image ? (
                                     <img
                                         src={item.image}
                                         alt={item.name}
                                         className="w-full h-full object-cover"
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                         loading="lazy"
                                     />
                                 ) : (
@@ -126,12 +137,12 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
 
                             {/* Product Info */}
                             <div className="flex-1 min-w-0 py-1">
-                                <p className="text-white text-base font-semibold leading-tight line-clamp-2 mb-1">
+                                <p className="text-white text-sm font-bold leading-tight line-clamp-2 mb-1">
                                     {item.name}
                                 </p>
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 font-medium">
                                     {item.size && (
-                                        <span className="px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                        <span className="text-zinc-300">
                                             Size: {item.size}
                                         </span>
                                     )}
@@ -140,8 +151,8 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                             </div>
 
                             {/* Price */}
-                            <div className="text-right py-1">
-                                <p className="text-white font-semibold">{item.totalPrice}</p>
+                            <div className="text-right py-1 flex-shrink-0">
+                                <p className="text-white font-bold text-sm">{item.totalPrice}</p>
                                 {item.quantity > 1 && (
                                     <p className="text-xs text-zinc-500 mt-0.5">{item.unitPrice} ea</p>
                                 )}
