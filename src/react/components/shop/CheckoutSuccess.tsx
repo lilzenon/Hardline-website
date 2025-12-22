@@ -40,8 +40,14 @@ export default function CheckoutSuccess() {
     const [error, setError] = useState<string | null>(null);
     const { clearCart } = useCart();
 
+    const hasVerified = React.useRef(false);
+
     useEffect(() => {
         const verifySession = async () => {
+            // Prevent double execution
+            if (hasVerified.current) return;
+            hasVerified.current = true;
+
             try {
                 const params = new URLSearchParams(window.location.search);
                 const sessionId = params.get('session_id');
@@ -78,7 +84,10 @@ export default function CheckoutSuccess() {
         };
 
         verifySession();
-    }, [clearCart]);
+        // clearCart is stable (useCallback) so we can theoretically omitting it, 
+        // but keeping the effect clean by only running on mount.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Format date for display
     // Format date for display with safety check
