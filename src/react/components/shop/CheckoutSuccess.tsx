@@ -8,6 +8,7 @@ import { useCart } from '../../contexts/CartContext';
 import { verifyCheckoutSession } from '../../services/shopService';
 import { OrderConfirmationCard } from '../ui/order-confirmation-card';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import MobileNavigation from '../MobileNavigation';
 
 interface OrderItem {
     name: string;
@@ -31,6 +32,11 @@ interface OrderData {
     shipping_address?: object;
     created_at: string;
     success: boolean;
+    // Receipt and tracking fields
+    receipt_url?: string;
+    tracking_number?: string;
+    tracking_carrier?: string;
+    tracking_url?: string;
 }
 
 // Internal Error Boundary to catch OrderConfirmationCard crashes
@@ -137,83 +143,187 @@ export default function CheckoutSuccess() {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-4 sm:p-6">
-            {/* Loading State */}
-            {status === 'loading' && (
-                <div className="text-center">
-                    <div className="relative mb-6">
-                        <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl" />
-                        <div className="relative bg-zinc-900 rounded-full p-6 border border-zinc-800 inline-block">
-                            <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
-                        </div>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">Processing Order</h1>
-                    <p className="text-zinc-400">Please wait while we confirm your purchase...</p>
-                </div>
-            )}
+        <div className="min-h-screen bg-black flex flex-col">
+            {/* Mobile Navigation Header */}
+            <MobileNavigation
+                currentPage="shop"
+                scrollY={0}
+                onNavigate={(path) => window.location.href = path}
+            />
 
-            {/* Success State */}
-            {status === 'success' && orderData && (
-                <ComponentErrorBoundary>
-                    <OrderConfirmationCard
-                        orderId={orderData.order_id || 'Unknown'}
-                        customerEmail={orderData.customer_email}
-                        dateTime={formatDate(orderData.created_at)}
-                        items={Array.isArray(orderData.items) ? orderData.items : []}
-                        subtotal={orderData.subtotal || '$0.00'}
-                        tax={orderData.tax || '$0.00'}
-                        shipping={orderData.shipping || '$0.00'}
-                        total={orderData.total || '$0.00'}
-                        onContinueShopping={() => window.location.href = '/shop'}
-                        onGoHome={() => window.location.href = '/'}
-                    />
-                </ComponentErrorBoundary>
-            )}
+            {/* Spacer for fixed header */}
+            <div style={{ height: '97px' }} />
 
-            {/* Error State */}
-            {status === 'error' && (
-                <div className="w-full max-w-md mx-auto text-center">
-                    <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-                        <div className="relative mb-6 inline-block">
-                            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl" />
-                            <div className="relative bg-red-500/10 rounded-full p-4">
-                                <AlertCircle className="w-10 h-10 text-red-400" />
+            {/* Main Content */}
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+                {/* Loading State */}
+                {status === 'loading' && (
+                    <div className="text-center">
+                        <div className="relative mb-8">
+                            {/* Animated glow background */}
+                            <div
+                                className="absolute inset-0 rounded-full"
+                                style={{
+                                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+                                    filter: 'blur(30px)',
+                                    animation: 'pulse 2s ease-in-out infinite',
+                                }}
+                            />
+                            <div
+                                className="relative rounded-full p-6 inline-block"
+                                style={{
+                                    background: 'rgba(10, 10, 10, 0.8)',
+                                    backdropFilter: 'blur(12px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 0 40px rgba(59, 130, 246, 0.2)',
+                                }}
+                            >
+                                <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
                             </div>
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-3">Verification Failed</h1>
-                        <p className="text-zinc-400 mb-6">
-                            {error || 'We couldn\'t verify your order status.'}
-                        </p>
+                        <h1
+                            className="text-2xl font-bold text-white mb-3"
+                            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+                        >
+                            Processing Order
+                        </h1>
+                        <p className="text-zinc-400">Please wait while we confirm your purchase...</p>
 
-                        <div className="flex flex-col gap-3">
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="inline-flex items-center justify-center gap-2 w-full h-12 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-500 transition-colors"
+                        <style>{`
+                        @keyframes pulse {
+                            0%, 100% { opacity: 0.5; transform: scale(1); }
+                            50% { opacity: 1; transform: scale(1.15); }
+                        }
+                    `}</style>
+                    </div>
+                )}
+
+                {/* Success State */}
+                {status === 'success' && orderData && (
+                    <ComponentErrorBoundary>
+                        <OrderConfirmationCard
+                            orderId={orderData.order_id || 'Unknown'}
+                            customerEmail={orderData.customer_email}
+                            dateTime={formatDate(orderData.created_at)}
+                            items={Array.isArray(orderData.items) ? orderData.items : []}
+                            subtotal={orderData.subtotal || '$0.00'}
+                            tax={orderData.tax || '$0.00'}
+                            shipping={orderData.shipping || '$0.00'}
+                            total={orderData.total || '$0.00'}
+                            orderStatus={orderData.status || 'confirmed'}
+                            receiptUrl={orderData.receipt_url}
+                            trackingNumber={orderData.tracking_number}
+                            trackingCarrier={orderData.tracking_carrier}
+                            trackingUrl={orderData.tracking_url}
+                            onContinueShopping={() => window.location.href = '/shop'}
+                        />
+                    </ComponentErrorBoundary>
+                )}
+
+                {/* Error State */}
+                {status === 'error' && (
+                    <div className="w-full max-w-md mx-auto text-center">
+                        <div
+                            className="p-8"
+                            style={{
+                                background: 'rgba(10, 10, 10, 0.85)',
+                                backdropFilter: 'blur(24px)',
+                                WebkitBackdropFilter: 'blur(24px)',
+                                borderRadius: '24px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                boxShadow: '0 32px 64px -12px rgba(0, 0, 0, 0.8)',
+                            }}
+                        >
+                            <div className="relative mb-6 inline-block">
+                                <div
+                                    className="absolute inset-0 rounded-full"
+                                    style={{
+                                        background: 'radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%)',
+                                        filter: 'blur(20px)',
+                                    }}
+                                />
+                                <div
+                                    className="relative rounded-full p-4"
+                                    style={{
+                                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%)',
+                                        border: '1px solid rgba(239, 68, 68, 0.25)',
+                                    }}
+                                >
+                                    <AlertCircle className="w-10 h-10 text-red-400" />
+                                </div>
+                            </div>
+                            <h1
+                                className="text-2xl font-bold text-white mb-3"
+                                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                             >
-                                Try Again
-                            </button>
+                                Verification Failed
+                            </h1>
+                            <p className="text-zinc-400 mb-6">
+                                {error || 'We couldn\'t verify your order status.'}
+                            </p>
 
-                            <a
-                                href="/shop"
-                                className="inline-flex items-center justify-center gap-2 w-full h-12 bg-white text-black font-semibold rounded-xl hover:bg-zinc-200 transition-colors"
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="inline-flex items-center justify-center gap-2 w-full h-12 font-semibold rounded-xl transition-all duration-300"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)',
+                                        color: 'white',
+                                        border: 'none',
+                                        boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1.02)';
+                                        e.currentTarget.style.boxShadow = '0 12px 32px rgba(59, 130, 246, 0.4)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.3)';
+                                    }}
+                                >
+                                    Try Again
+                                </button>
+
+                                <a
+                                    href="/shop"
+                                    className="inline-flex items-center justify-center gap-2 w-full h-12 font-semibold rounded-xl transition-all duration-300"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #FFFFFF 0%, #E5E5E5 100%)',
+                                        color: '#000000',
+                                        boxShadow: '0 8px 24px rgba(255, 255, 255, 0.1)',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1.02)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                >
+                                    <ArrowLeft className="w-4 h-4" />
+                                    Return to Shop
+                                </a>
+                            </div>
+
+                            {/* Debug Info */}
+                            <div
+                                className="mt-6 p-3 rounded-lg text-left overflow-hidden"
+                                style={{
+                                    background: 'rgba(0, 0, 0, 0.4)',
+                                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                                }}
                             >
-                                <ArrowLeft className="w-4 h-4" />
-                                Return to Shop
-                            </a>
-                        </div>
-
-                        {/* Debug Info */}
-                        <div className="mt-6 p-3 bg-black/50 rounded-lg text-left overflow-hidden">
-                            <p className="text-xs text-zinc-500 font-mono break-all">
-                                Session: {new URLSearchParams(window.location.search).get('session_id') || 'missing'}
-                            </p>
-                            <p className="text-xs text-zinc-500 font-mono mt-1">
-                                Timestamp: {new Date().toISOString()}
-                            </p>
+                                <p className="text-xs text-zinc-500 font-mono break-all">
+                                    Session: {new URLSearchParams(window.location.search).get('session_id') || 'missing'}
+                                </p>
+                                <p className="text-xs text-zinc-500 font-mono mt-1">
+                                    Timestamp: {new Date().toISOString()}
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
+
