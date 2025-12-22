@@ -44,6 +44,8 @@ async function fetchWithTimeout(endpoint, options = {}) {
       // 🔧 FIX: Add cache: 'no-store' to prevent browser caching of product data
       // This ensures fresh images and variants are always fetched
       cache: 'no-store',
+      // 🔧 FIX: Include credentials (cookies) to maintain session and prevent 'rapid_session_creation' alerts
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-cache',

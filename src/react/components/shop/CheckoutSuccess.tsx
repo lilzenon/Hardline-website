@@ -66,8 +66,13 @@ export default function CheckoutSuccess() {
                     throw new Error(result.message || 'Failed to verify order');
                 }
             } catch (err: any) {
-                console.error('❌ Verification error:', err);
+                console.error('❌ Verification error details:', {
+                    message: err.message,
+                    stack: err.stack,
+                    obj: err
+                });
                 setStatus('error');
+                // Display the actual error message to help with debugging
                 setError(err.message || 'Failed to verify your order. Please contact support.');
             }
         };
