@@ -57,11 +57,12 @@ export default function CheckoutSuccess() {
                 const result = await verifyCheckoutSession(sessionId);
 
                 if (result.success) {
+                    console.log('✅ Order verified successfully:', result);
                     setOrderData(result);
                     setStatus('success');
                     clearCart();
-                    console.log('✅ Order confirmed:', result.order_id);
                 } else {
+                    console.error('❌ Verification failed:', result);
                     throw new Error(result.message || 'Failed to verify order');
                 }
             } catch (err: any) {
@@ -75,14 +76,21 @@ export default function CheckoutSuccess() {
     }, [clearCart]);
 
     // Format date for display
+    // Format date for display with safety check
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-        });
+        try {
+            if (!dateStr) return 'Date unavailable';
+            return new Date(dateStr).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+            });
+        } catch (e) {
+            console.error('Error formatting date:', dateStr, e);
+            return 'Date unavailable';
+        }
     };
 
     return (
@@ -108,14 +116,14 @@ export default function CheckoutSuccess() {
             {/* Success State */}
             {status === 'success' && orderData && (
                 <OrderConfirmationCard
-                    orderId={orderData.order_id}
+                    orderId={orderData.order_id || 'Unknown'}
                     customerEmail={orderData.customer_email}
                     dateTime={formatDate(orderData.created_at)}
-                    items={orderData.items}
-                    subtotal={orderData.subtotal}
-                    tax={orderData.tax}
-                    shipping={orderData.shipping}
-                    total={orderData.total}
+                    items={Array.isArray(orderData.items) ? orderData.items : []}
+                    subtotal={orderData.subtotal || '$0.00'}
+                    tax={orderData.tax || '$0.00'}
+                    shipping={orderData.shipping || '$0.00'}
+                    total={orderData.total || '$0.00'}
                     onContinueShopping={() => window.location.href = '/shop'}
                     onGoHome={() => window.location.href = '/'}
                 />
