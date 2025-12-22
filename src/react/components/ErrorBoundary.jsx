@@ -18,7 +18,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log error details for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     this.setState({
       error: error,
       errorInfo: errorInfo
@@ -74,23 +74,31 @@ class ErrorBoundary extends React.Component {
           >
             Refresh Page
           </button>
-          {process.env.NODE_ENV === 'development' && (
-            <details style={{ marginTop: '20px', textAlign: 'left' }}>
-              <summary style={{ cursor: 'pointer', marginBottom: '10px' }}>
-                Error Details (Development)
+          {true && (
+            <details style={{ marginTop: '20px', textAlign: 'left', maxWidth: '800px' }}>
+              <summary style={{ cursor: 'pointer', marginBottom: '10px', color: '#888' }}>
+                Show Error Details (Click to copy)
               </summary>
-              <pre style={{ 
-                background: '#1a1a1a', 
-                padding: '10px', 
-                borderRadius: '4px',
+              <div style={{
+                background: '#1a1a1a',
+                padding: '16px',
+                borderRadius: '8px',
+                border: '1px solid #333',
                 fontSize: '12px',
                 overflow: 'auto',
-                maxHeight: '200px'
+                maxHeight: '400px',
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontFamily: 'monospace',
+                color: '#ff6b6b'
               }}>
-                {this.state.error && this.state.error.toString()}
-                <br />
-                {this.state.errorInfo && this.state.errorInfo.componentStack}
-              </pre>
+                <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                  {this.state.error && this.state.error.toString()}
+                </p>
+                <div style={{ color: '#888' }}>
+                  {this.state.errorInfo && this.state.errorInfo.componentStack}
+                </div>
+              </div>
             </details>
           )}
         </div>
