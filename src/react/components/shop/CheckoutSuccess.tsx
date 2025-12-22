@@ -102,6 +102,12 @@ export default function CheckoutSuccess() {
 
                 if (result.success) {
                     console.log('✅ Order verified successfully:', result);
+                    console.log('📦 TRACKING DEBUG:', {
+                        status: result.status,
+                        tracking_number: result.tracking_number,
+                        tracking_carrier: result.tracking_carrier,
+                        tracking_url: result.tracking_url
+                    });
                     setOrderData(result);
                     setStatus('success');
                     clearCart();
