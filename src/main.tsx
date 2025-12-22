@@ -14,7 +14,7 @@ const ReactMaintenancePage = lazy(() => import('./react/components/MaintenancePa
 // 🛍️ Shop pages - customer-facing product catalog and checkout
 const ShopPage = lazy(() => import('./react/components/shop/ShopPage'));
 const ProductPage = lazy(() => import('./react/components/shop/ProductPage'));
-const CheckoutSuccess = lazy(() => import('./react/components/shop/CheckoutSuccess'));
+const CheckoutSuccess = lazy(() => import('./react/components/shop/CheckoutSuccess.tsx'));
 
 import { SEOProvider, SEODebug, useSEO } from './react/contexts/SEOContext';
 import { CartProvider } from './react/contexts/CartContext';
