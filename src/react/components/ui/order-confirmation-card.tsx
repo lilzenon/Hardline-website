@@ -54,138 +54,149 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
     return (
         <div
             className={cn(
-                "w-full max-w-lg mx-auto rounded-2xl overflow-hidden",
-                "bg-zinc-900/80 backdrop-blur-xl border border-zinc-800",
-                "shadow-2xl shadow-black/40 animate-fade-in-up",
+                "w-full max-w-lg mx-auto rounded-3xl overflow-hidden",
+                "bg-zinc-950 border border-zinc-800",
+                "shadow-2xl shadow-black/60",
                 className
             )}
         >
-            {/* Success Header */}
-            <div
-                className="flex flex-col items-center pt-8 pb-6 px-6 text-center border-b border-zinc-800"
-            >
-                <div className="relative mb-4">
-                    <div className="absolute inset-0 bg-green-500/20 rounded-full blur-xl" />
-                    <div className="relative bg-green-500/10 rounded-full p-4">
-                        <CheckCircle2 className="w-10 h-10 text-green-400" />
+            {/* Header with Logo */}
+            <div className="flex flex-col items-center pt-8 pb-8 px-6 text-center bg-gradient-to-b from-zinc-900 to-zinc-950 border-b border-zinc-800/50">
+                <img
+                    src="/static/logo-white.png"
+                    alt="Logo"
+                    className="h-8 mb-6 opacity-90"
+                />
+
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl" />
+                    <div className="relative bg-zinc-900 ring-1 ring-zinc-800 rounded-full p-4">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-400" />
                     </div>
                 </div>
-                <h2 className="text-2xl font-bold text-white mb-2">{title}</h2>
-                <p className="text-zinc-400 text-sm">
+
+                <h2 className="text-3xl font-bold text-white tracking-tight mb-2">{title}</h2>
+                <p className="text-zinc-400 text-sm max-w-[280px] leading-relaxed">
                     A confirmation email has been sent to{" "}
                     {customerEmail && (
-                        <span className="text-zinc-300">{customerEmail}</span>
+                        <span className="text-white font-medium block mt-1">{customerEmail}</span>
                     )}
                 </p>
             </div>
 
-            {/* Order Info */}
-            <div
-                className="px-6 py-4 bg-zinc-800/30 flex items-center justify-between"
-            >
-                <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-zinc-500" />
-                    <span className="text-zinc-400 text-sm">Order</span>
-                    <span className="text-white font-mono font-medium">#{orderId}</span>
+            {/* Order Details Header */}
+            <div className="px-6 py-4 bg-zinc-900/30 flex items-center justify-between border-b border-zinc-800/50">
+                <div className="flex flex-col items-start gap-1">
+                    <span className="text-zinc-500 text-xs uppercase tracking-wider font-semibold">Order Number</span>
+                    <span className="text-white font-mono text-lg font-medium tracking-wide">#{orderId}</span>
                 </div>
-                <span className="text-zinc-500 text-sm">{dateTime}</span>
+                <div className="text-right">
+                    <span className="text-zinc-500 text-xs uppercase tracking-wider font-semibold block mb-1">Date</span>
+                    <span className="text-zinc-400 text-sm block">{dateTime}</span>
+                </div>
             </div>
 
             {/* Order Items */}
-            <div className="px-6 py-4">
-                <h3 className="text-xs uppercase tracking-wider text-zinc-500 mb-3 flex items-center gap-2">
+            <div className="px-6 py-6">
+                <h3 className="text-xs uppercase tracking-wider text-zinc-500 font-semibold mb-4 flex items-center gap-2">
                     <ShoppingBag className="w-3.5 h-3.5" />
-                    Items ({items.length})
+                    Your Items
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                     {items.map((item, index) => (
                         <div
                             key={index}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-zinc-800/50"
+                            className="flex items-start gap-4 p-3 pr-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50 hover:bg-zinc-900 transition-colors"
                         >
-                            {/* Product Image */}
-                            <div className="w-14 h-14 rounded-lg bg-zinc-800 overflow-hidden flex-shrink-0">
+                            {/* Product Image - Fixed Dimensions */}
+                            <div className="w-20 h-20 rounded-xl bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-700/50">
                                 {item.image ? (
                                     <img
                                         src={item.image}
                                         alt={item.name}
                                         className="w-full h-full object-cover"
+                                        loading="lazy"
                                     />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <Package className="w-6 h-6 text-zinc-600" />
+                                    <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                                        <Package className="w-8 h-8 text-zinc-600" />
                                     </div>
                                 )}
                             </div>
 
-                            {/* Product Details */}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-white text-sm font-medium truncate">
+                            {/* Product Info */}
+                            <div className="flex-1 min-w-0 py-1">
+                                <p className="text-white text-base font-semibold leading-tight line-clamp-2 mb-1">
                                     {item.name}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                                    {item.size && <span>Size: {item.size}</span>}
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400 font-medium">
+                                    {item.size && (
+                                        <span className="px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                            Size: {item.size}
+                                        </span>
+                                    )}
                                     <span>Qty: {item.quantity}</span>
-                                    <span>@ {item.unitPrice}</span>
                                 </div>
                             </div>
 
-                            {/* Item Total */}
-                            <div className="text-right flex-shrink-0">
-                                <p className="text-white font-medium">{item.totalPrice}</p>
+                            {/* Price */}
+                            <div className="text-right py-1">
+                                <p className="text-white font-semibold">{item.totalPrice}</p>
+                                {item.quantity > 1 && (
+                                    <p className="text-xs text-zinc-500 mt-0.5">{item.unitPrice} ea</p>
+                                )}
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Price Breakdown */}
-            <div
-                className="px-6 py-4 border-t border-zinc-800 space-y-2"
-            >
-                <div className="flex justify-between text-sm">
-                    <span className="text-zinc-400">Subtotal</span>
-                    <span className="text-zinc-300">{subtotal}</span>
+            {/* Financial Summary */}
+            <div className="px-8 py-6 bg-zinc-900/20 border-t border-zinc-800/50">
+                <div className="space-y-3 mb-6">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-zinc-400">Subtotal</span>
+                        <span className="text-zinc-200 font-medium">{subtotal}</span>
+                    </div>
+                    {shipping && (
+                        <div className="flex justify-between text-sm">
+                            <span className="text-zinc-400">Shipping</span>
+                            <span className="text-zinc-200 font-medium">{shipping === '$0.00' ? 'Free' : shipping}</span>
+                        </div>
+                    )}
+                    {tax && tax !== '$0.00' && (
+                        <div className="flex justify-between text-sm">
+                            <span className="text-zinc-400">Tax</span>
+                            <span className="text-zinc-200 font-medium">{tax}</span>
+                        </div>
+                    )}
                 </div>
-                {shipping && shipping !== "$0.00" && (
-                    <div className="flex justify-between text-sm">
-                        <span className="text-zinc-400">Shipping</span>
-                        <span className="text-zinc-300">{shipping}</span>
-                    </div>
-                )}
-                {tax && tax !== "$0.00" && (
-                    <div className="flex justify-between text-sm">
-                        <span className="text-zinc-400">Tax</span>
-                        <span className="text-zinc-300">{tax}</span>
-                    </div>
-                )}
-                <div className="flex justify-between text-lg font-bold pt-2 border-t border-zinc-700">
-                    <span className="text-white">Total</span>
-                    <span className="text-green-400">{total}</span>
+
+                <div className="flex justify-between items-center pt-4 border-t border-zinc-800">
+                    <span className="text-white font-bold text-lg">Total</span>
+                    <span className="text-emerald-400 font-bold text-2xl tracking-tight">{total}</span>
                 </div>
             </div>
 
             {/* Actions */}
-            <div
-                className="px-6 pb-6 pt-2 space-y-2"
-            >
+            <div className="p-6 bg-zinc-950 border-t border-zinc-800/50 space-y-3">
                 {onContinueShopping && (
                     <Button
                         onClick={onContinueShopping}
-                        className="w-full h-12 bg-white text-black hover:bg-zinc-200 font-semibold rounded-xl"
+                        className="w-full h-14 bg-white hover:bg-zinc-200 text-black font-bold text-base rounded-xl transition-all shadow-lg shadow-white/5 active:scale-[0.98]"
                         size="lg"
                     >
                         Continue Shopping
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                        <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                 )}
                 {onGoHome && (
                     <Button
                         onClick={onGoHome}
                         variant="ghost"
-                        className="w-full h-10 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl"
+                        className="w-full h-12 text-zinc-500 hover:text-white hover:bg-zinc-900 font-medium rounded-xl transition-colors"
                     >
-                        Back to Home
+                        Return Home
                     </Button>
                 )}
             </div>
