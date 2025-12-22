@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { Check, Package, ArrowRight, Sparkles, Receipt, Truck, ExternalLink } from "lucide-react";
+import { Check, Package, ArrowRight, Sparkles, Receipt, Truck, ExternalLink, User, MapPin, CreditCard } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
 /**
@@ -221,6 +221,18 @@ interface OrderConfirmationCardProps {
     trackingUrl?: string;
     title?: string;
     className?: string;
+    // New detailed props
+    customerName?: string;
+    shippingAddress?: {
+        line1: string;
+        line2?: string | null;
+        city: string;
+        state: string;
+        postal_code: string;
+        country: string;
+    };
+    cardBrand?: string;
+    cardLast4?: string;
 }
 
 /**
@@ -243,6 +255,10 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
     trackingUrl,
     title = "Order Confirmed!",
     className,
+    customerName,
+    shippingAddress,
+    cardBrand,
+    cardLast4,
 }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [itemsVisible, setItemsVisible] = useState(false);
@@ -409,6 +425,84 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                         <span style={{ color: 'white', fontFamily: 'monospace', fontSize: '16px', fontWeight: '600' }}>#{orderId}</span>
                     </div>
                     <span style={{ color: 'rgba(161, 161, 170, 0.7)', fontSize: '13px' }}>{dateTime}</span>
+                </div>
+
+                {/* Detailed Order Information */}
+                <div style={{
+                    padding: '24px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+                    display: 'grid',
+                    gap: '24px',
+                }}>
+                    {/* Grid Layout for details */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
+                        {/* Customer */}
+                        {customerName && (
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                <div style={{
+                                    width: '36px', height: '36px', borderRadius: '10px',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                    border: '1px solid rgba(255, 255, 255, 0.05)'
+                                }}>
+                                    <User style={{ width: '16px', height: '16px', color: 'rgba(161, 161, 170, 1)' }} />
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(161, 161, 170, 0.7)', marginBottom: '4px', fontWeight: '600' }}>Customer</p>
+                                    <p style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>{customerName}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Payment */}
+                        {(cardLast4 || cardBrand) && (
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                <div style={{
+                                    width: '36px', height: '36px', borderRadius: '10px',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                    border: '1px solid rgba(255, 255, 255, 0.05)'
+                                }}>
+                                    <CreditCard style={{ width: '16px', height: '16px', color: 'rgba(161, 161, 170, 1)' }} />
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(161, 161, 170, 0.7)', marginBottom: '4px', fontWeight: '600' }}>Payment</p>
+                                    <p style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
+                                        <span style={{ textTransform: 'capitalize' }}>{cardBrand || 'Card'}</span> •••• {cardLast4}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Shipping Address - Full Width */}
+                    {shippingAddress && (
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                            <div style={{
+                                width: '36px', height: '36px', borderRadius: '10px',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                                border: '1px solid rgba(255, 255, 255, 0.05)'
+                            }}>
+                                <MapPin style={{ width: '16px', height: '16px', color: 'rgba(161, 161, 170, 1)' }} />
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(161, 161, 170, 0.7)', marginBottom: '4px', fontWeight: '600' }}>Shipping To</p>
+                                <p style={{ fontSize: '14px', color: 'white', fontWeight: '500', lineHeight: '1.5', opacity: 0.9 }}>
+                                    {shippingAddress.line1}
+                                    {shippingAddress.line2 && <><br />{shippingAddress.line2}</>}
+                                    <br />
+                                    {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postal_code}
+                                    <br />
+                                    <span style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '13px' }}>{shippingAddress.country}</span>
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Order Items */}
@@ -610,43 +704,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                             <ArrowRight style={{ width: '20px', height: '20px' }} />
                         </button>
                     )}
-                    {/* Track Package Button - Shows when order is shipped */}
-                    {trackingUrl && trackingNumber && (
-                        <a
-                            href={trackingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                width: '100%',
-                                height: '52px',
-                                fontWeight: '600',
-                                fontSize: '16px',
-                                borderRadius: '16px',
-                                border: '1px solid rgba(16, 185, 129, 0.3)',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                background: 'rgba(16, 185, 129, 0.1)',
-                                color: '#34D399',
-                                transition: 'all 0.3s ease',
-                                textDecoration: 'none',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.2)';
-                                e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.5)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
-                                e.currentTarget.style.borderColor = 'rgba(16, 185, 129, 0.3)';
-                            }}
-                        >
-                            <Truck style={{ width: '20px', height: '20px' }} />
-                            Track Package
-                            <ExternalLink style={{ width: '16px', height: '16px', marginLeft: '4px' }} />
-                        </a>
-                    )}
+
                     {/* View Receipt Button - Always show, with fallback when URL not yet available */}
                     <a
                         href={receiptUrl || '#'}

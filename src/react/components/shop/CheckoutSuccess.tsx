@@ -29,7 +29,14 @@ interface OrderData {
     tax?: string;
     shipping?: string;
     total: string;
-    shipping_address?: object;
+    shipping_address?: {
+        line1: string;
+        line2?: string | null;
+        city: string;
+        state: string;
+        postal_code: string;
+        country: string;
+    };
     created_at: string;
     success: boolean;
     // Receipt and tracking fields
@@ -37,6 +44,9 @@ interface OrderData {
     tracking_number?: string;
     tracking_carrier?: string;
     tracking_url?: string;
+    // Payment details
+    card_brand?: string;
+    card_last4?: string;
 }
 
 // Internal Error Boundary to catch OrderConfirmationCard crashes
@@ -221,6 +231,13 @@ export default function CheckoutSuccess() {
                             trackingNumber={orderData.tracking_number}
                             trackingCarrier={orderData.tracking_carrier}
                             trackingUrl={orderData.tracking_url}
+
+                            // New Details
+                            customerName={orderData.customer_name}
+                            shippingAddress={orderData.shipping_address}
+                            cardBrand={orderData.card_brand}
+                            cardLast4={orderData.card_last4}
+
                             onContinueShopping={() => window.location.href = '/shop'}
                         />
                     </ComponentErrorBoundary>
