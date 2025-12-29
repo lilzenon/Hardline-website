@@ -262,7 +262,7 @@ export const useHomepageData = () => {
             // Use event updated_at timestamp for consistent cache-busting across devices
             const cacheKey = new Date(event.updated_at || event.created_at).getTime();
             coverImage = `${coverImage}${separator}_cb=${cacheKey}&_t=${Date.now()}`;
-            console.log(`🕐 Added enhanced cache-busting: ${event.title} (age: ${Math.round(imageAge/1000)}s, desktop: ${isDesktopBrowser}, viewport: ${isDesktopViewport})`);
+            console.log(`🕐 Added enhanced cache-busting: ${event.title} (age: ${Math.round(imageAge / 1000)}s, desktop: ${isDesktopBrowser}, viewport: ${isDesktopViewport})`);
           }
         } else if (coverImage.startsWith('/')) {
           // Other relative URLs - ensure they start with /
@@ -400,7 +400,7 @@ export const useHomepageData = () => {
                 const raw = vFeatured[0].event_date.trim();
                 const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
                 if (m) {
-                  const d = new Date(Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10), 12, 0, 0));
+                  const d = new Date(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10), 12, 0, 0));
                   const md = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(d);
                   let timeText = '';
                   const t = (vFeatured[0].event_time) || (raw.includes('T') ? raw.split('T')[1] : '');
@@ -457,7 +457,7 @@ export const useHomepageData = () => {
         const raw = validatedFeaturedEvents[0].event_date.trim();
         const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
         if (m) {
-          const d = new Date(Date.UTC(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10), 12, 0, 0));
+          const d = new Date(Date.UTC(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10), 12, 0, 0));
           const md = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' }).format(d);
           let timeText = '';
           const t = (validatedFeaturedEvents[0].event_time) || (raw.includes('T') ? raw.split('T')[1] : '');
@@ -534,8 +534,10 @@ export const useHomepageData = () => {
       })));
     }
 
+    // 🚨 CRITICAL FIX: Use includeTime=true for consistent date formatting across all displays
+    // This prevents duplicates appearing with different date formats (e.g., "Fri, Dec 26" vs "Fri, Dec 26 at 8:00 PM")
     const normalized = featuredEvents
-      .map(event => normalizeEvent(event, 'event', false))
+      .map(event => normalizeEvent(event, 'featured-event', true))
       .filter(Boolean);
     console.log('🔍 Normalized featured events:', normalized.length);
 
