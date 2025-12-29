@@ -2439,325 +2439,329 @@ const FigmaDesktop = ({ onReady }) => {
                               </div>
                             ) : (
                               /* Event Cards - Render all events; scroll container shows more below */
-                              [...filteredFeaturedEvents, ...filteredHomepageEvents]
-                                .map((card, index) => (
-                                  <article
-                                    key={`homepage-desktop-${card.id}`}
+                              /* 🚨 FIX: In Past mode, filteredHomepageEvents already includes featured events (via hook deduplication),
+                                 so we only combine in Next mode to avoid duplicates with different ID prefixes */
+                              (showAllEvents
+                                ? [...filteredFeaturedEvents, ...filteredHomepageEvents]
+                                : filteredHomepageEvents
+                              ).map((card, index) => (
+                                <article
+                                  key={`homepage-desktop-${card.id}`}
+                                  style={{
+                                    display: 'block',
+                                    width: '100%',
+                                    height: '100%',
+                                    minHeight: '90px',
+                                    borderRadius: '20px',
+                                    background: 'rgba(22, 22, 22, 0.50)',
+                                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                                    position: 'relative',
+                                    margin: '0 0 4px 0',
+                                    padding: '2px',
+                                    overflow: 'hidden',
+                                    boxSizing: 'border-box',
+                                    isolation: 'isolate',
+                                    transform: 'translateZ(0)',
+                                    willChange: 'transform',
+                                    backfaceVisibility: 'hidden',
+                                    WebkitBackfaceVisibility: 'hidden',
+                                    contain: 'layout style paint',
+                                    zIndex: 1,
+                                    clear: 'both'
+                                  }}
+                                >
+                                  {/* Desktop Event Card Content - Scaled to Fit Grid (Remove duplicate styling) */}
+                                  <div
                                     style={{
-                                      display: 'block',
                                       width: '100%',
-                                      height: '100%',
-                                      minHeight: '90px',
-                                      borderRadius: '20px',
-                                      background: 'rgba(22, 22, 22, 0.50)',
-                                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+                                      height: `${Math.max(87, Math.round(baseCardHeight * cardScaleFactor) - 6)}px`, // Scale card height based on available space, reduced by 6px total
                                       position: 'relative',
-                                      margin: '0 0 4px 0',
-                                      padding: '2px',
-                                      overflow: 'hidden',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
                                       boxSizing: 'border-box',
-                                      isolation: 'isolate',
-                                      transform: 'translateZ(0)',
-                                      willChange: 'transform',
-                                      backfaceVisibility: 'hidden',
-                                      WebkitBackfaceVisibility: 'hidden',
-                                      contain: 'layout style paint',
-                                      zIndex: 1,
-                                      clear: 'both'
+                                      padding: `${Math.max(6, Math.round(8 * cardScaleFactor))}px` // Scale padding with better minimum
                                     }}
                                   >
-                                    {/* Desktop Event Card Content - Scaled to Fit Grid (Remove duplicate styling) */}
+                                    {/* Image Section - Original Size with Fixed Rendering */}
                                     <div
                                       style={{
-                                        width: '100%',
-                                        height: `${Math.max(87, Math.round(baseCardHeight * cardScaleFactor) - 6)}px`, // Scale card height based on available space, reduced by 6px total
-                                        position: 'relative',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        boxSizing: 'border-box',
-                                        padding: `${Math.max(6, Math.round(8 * cardScaleFactor))}px` // Scale padding with better minimum
+                                        position: 'absolute',
+                                        left: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                                        top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                                        width: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
+                                        height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
+                                        flexShrink: 0,
+                                        borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Back to original scale
+                                        overflow: 'hidden',
+                                        cursor: 'pointer',
+                                        zIndex: 100,
+                                        transition: 'transform 0.1s ease',
+                                        boxSizing: 'border-box'
+                                      }}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        // Add image expand functionality if needed
                                       }}
                                     >
-                                      {/* Image Section - Original Size with Fixed Rendering */}
-                                      <div
+                                      {/* Event Background Image - Use optimized URL with cache-busting */}
+                                      <img
+                                        crossOrigin="anonymous"
+                                        referrerPolicy="no-referrer"
+                                        width={Math.max(79, Math.round(105 * cardScaleFactor))}
+                                        height={Math.max(79, Math.round(105 * cardScaleFactor))}
+                                        src={(() => {
+                                          const imageUrl = card.coverImage || card.image_url;
+                                          if (!imageUrl || imageUrl.startsWith('data:')) {
+                                            return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
+                                          }
+                                          const optimizedUrl = getOptimizedImageUrl(imageUrl, 111);
+                                          console.log(`🖼️ DESKTOP FEATURED: Loading featured event image for "${card.title}":`, {
+                                            original: imageUrl,
+                                            optimized: optimizedUrl,
+                                            isNewImageSystem: imageUrl?.includes('/api/images/serve/'),
+                                            hasExistingCacheBusting: imageUrl?.includes('_cb=') || imageUrl?.includes('_t=')
+                                          });
+                                          return optimizedUrl;
+                                        })()}
+                                        srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 111px"
+                                        alt={card.image_alt_text || `${card.title} event cover`}
+                                        title={card.image_title || card.title}
+                                        loading="lazy"
+                                        decoding="async"
+                                        onError={(e) => {
+                                          // Only log in development to reduce console spam
+                                          if (process.env.NODE_ENV === 'development') {
+                                            console.warn(`⚠️ Event image failed to load: "${card.title}"`);
+                                          }
+                                          // Prevent further error events by removing the src
+                                          e.target.style.backgroundColor = '#222222';
+                                          e.target.style.display = 'none';
+                                        }}
+                                        onLoad={(e) => {
+                                          // Only log in development
+                                          if (process.env.NODE_ENV === 'development') {
+                                            console.log('✅ Event image loaded:', card.title);
+                                          }
+                                          e.target.style.backgroundColor = 'transparent';
+                                          e.target.style.opacity = '1';
+                                        }}
                                         style={{
-                                          position: 'absolute',
-                                          left: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
-                                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
-                                          width: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
-                                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Back to original scale
-                                          flexShrink: 0,
-                                          borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Back to original scale
-                                          overflow: 'hidden',
-                                          cursor: 'pointer',
-                                          zIndex: 100,
-                                          transition: 'transform 0.1s ease',
-                                          boxSizing: 'border-box'
+                                          width: '100%', // Fill container
+                                          height: '100%', // Fill container
+                                          borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Match container border radius
+                                          objectFit: 'cover',
+                                          backgroundColor: '#2a2a2a',
+                                          opacity: '0',
+                                          transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                          transform: 'scale(1)',
+                                          boxShadow: 'none',
+                                          pointerEvents: 'none'
                                         }}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          // Add image expand functionality if needed
-                                        }}
-                                      >
-                                        {/* Event Background Image - Use optimized URL with cache-busting */}
-                                        <img
-                                          crossOrigin="anonymous"
-                                          referrerPolicy="no-referrer"
-                                          width={Math.max(79, Math.round(105 * cardScaleFactor))}
-                                          height={Math.max(79, Math.round(105 * cardScaleFactor))}
-                                          src={(() => {
-                                            const imageUrl = card.coverImage || card.image_url;
-                                            if (!imageUrl || imageUrl.startsWith('data:')) {
-                                              return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
-                                            }
-                                            const optimizedUrl = getOptimizedImageUrl(imageUrl, 111);
-                                            console.log(`🖼️ DESKTOP FEATURED: Loading featured event image for "${card.title}":`, {
-                                              original: imageUrl,
-                                              optimized: optimizedUrl,
-                                              isNewImageSystem: imageUrl?.includes('/api/images/serve/'),
-                                              hasExistingCacheBusting: imageUrl?.includes('_cb=') || imageUrl?.includes('_t=')
-                                            });
-                                            return optimizedUrl;
-                                          })()}
-                                          srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
-                                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 111px"
-                                          alt={card.image_alt_text || `${card.title} event cover`}
-                                          title={card.image_title || card.title}
-                                          loading="lazy"
-                                          decoding="async"
-                                          onError={(e) => {
-                                            // Only log in development to reduce console spam
-                                            if (process.env.NODE_ENV === 'development') {
-                                              console.warn(`⚠️ Event image failed to load: "${card.title}"`);
-                                            }
-                                            // Prevent further error events by removing the src
-                                            e.target.style.backgroundColor = '#222222';
-                                            e.target.style.display = 'none';
-                                          }}
-                                          onLoad={(e) => {
-                                            // Only log in development
-                                            if (process.env.NODE_ENV === 'development') {
-                                              console.log('✅ Event image loaded:', card.title);
-                                            }
-                                            e.target.style.backgroundColor = 'transparent';
-                                            e.target.style.opacity = '1';
-                                          }}
-                                          style={{
-                                            width: '100%', // Fill container
-                                            height: '100%', // Fill container
-                                            borderRadius: `${Math.max(13, Math.round(18 * cardScaleFactor))}px`, // Match container border radius
-                                            objectFit: 'cover',
-                                            backgroundColor: '#2a2a2a',
-                                            opacity: '0',
-                                            transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            transform: 'scale(1)',
-                                            boxShadow: 'none',
-                                            pointerEvents: 'none'
-                                          }}
-                                        />
-                                      </div>
+                                      />
+                                    </div>
 
-                                      {/* Text Content Section - Better Spacing from Image */}
+                                    {/* Text Content Section - Better Spacing from Image */}
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        width: `calc(100% - ${Math.max(99, Math.round(125 * cardScaleFactor))}px)`, // More space for image + gap
+                                        padding: `${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px ${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Better padding with 8px grid
+                                        flexDirection: 'column',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'flex-start',
+                                        position: 'absolute',
+                                        left: `${Math.max(99, Math.round(125 * cardScaleFactor))}px`, // More space from image (image width + container padding + 8px gap)
+                                        top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
+                                        height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Scale height to match image
+                                        boxSizing: 'border-box'
+                                      }}
+                                    >
+                                      {/* Event Information */}
                                       <div
                                         style={{
+                                          width: '100%',
+                                          minHeight: `${Math.max(50, Math.round(84 * cardScaleFactor))}px`, // Scale minHeight
+                                          height: 'auto',
                                           display: 'flex',
-                                          width: `calc(100% - ${Math.max(99, Math.round(125 * cardScaleFactor))}px)`, // More space for image + gap
-                                          padding: `${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px ${Math.max(1, Math.round(2 * cardScaleFactor))}px ${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Better padding with 8px grid
                                           flexDirection: 'column',
-                                          justifyContent: 'space-between',
-                                          alignItems: 'flex-start',
-                                          position: 'absolute',
-                                          left: `${Math.max(99, Math.round(125 * cardScaleFactor))}px`, // More space from image (image width + container padding + 8px gap)
-                                          top: `${Math.max(6, Math.round(8 * cardScaleFactor))}px`, // Match container padding
-                                          height: `${Math.max(79, Math.round(105 * cardScaleFactor))}px`, // Scale height to match image
-                                          boxSizing: 'border-box'
+                                          alignSelf: 'stretch',
+                                          flex: '1 1 auto'
                                         }}
                                       >
-                                        {/* Event Information */}
-                                        <div
+                                        {/* Event Title - Grid-Responsive Typography */}
+                                        <h3
                                           style={{
+                                            fontFamily: 'Inter',
+                                            fontWeight: '700',
+                                            fontSize: `${Math.max(10, Math.round(16 * cardScaleFactor))}px`, // Scale font size
+                                            lineHeight: '1.25',
+                                            textAlign: 'left',
+                                            color: '#FFFFFF',
                                             width: '100%',
-                                            minHeight: `${Math.max(50, Math.round(84 * cardScaleFactor))}px`, // Scale minHeight
+                                            minHeight: `${Math.max(12, Math.round(20 * cardScaleFactor))}px`, // Scale minHeight
                                             height: 'auto',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignSelf: 'stretch',
-                                            flex: '1 1 auto'
+                                            margin: `0 0 ${Math.max(2, Math.round(4 * cardScaleFactor))}px 0`, // Scale margin
+                                            padding: '0',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap'
                                           }}
                                         >
-                                          {/* Event Title - Grid-Responsive Typography */}
-                                          <h3
+                                          {card.title}
+                                        </h3>
+
+                                        {/* Event DateTime - Grid-Responsive with Icon */}
+                                        <div
+                                          style={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            alignSelf: 'stretch',
+                                            gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                                            padding: `0px 0px 0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
+                                          }}
+                                        >
+                                          <svg
+                                            width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
+                                            height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                          >
+                                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor" />
+                                          </svg>
+                                          <span
                                             style={{
                                               fontFamily: 'Inter',
-                                              fontWeight: '700',
-                                              fontSize: `${Math.max(10, Math.round(16 * cardScaleFactor))}px`, // Scale font size
-                                              lineHeight: '1.25',
+                                              fontWeight: '300',
+                                              fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
+                                              lineHeight: '1.4',
                                               textAlign: 'left',
-                                              color: '#FFFFFF',
+                                              color: 'rgba(255, 255, 255, 0.7)',
                                               width: '100%',
-                                              minHeight: `${Math.max(12, Math.round(20 * cardScaleFactor))}px`, // Scale minHeight
-                                              height: 'auto',
-                                              margin: `0 0 ${Math.max(2, Math.round(4 * cardScaleFactor))}px 0`, // Scale margin
-                                              padding: '0',
+                                              height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
+                                              margin: '0',
                                               overflow: 'hidden',
                                               textOverflow: 'ellipsis',
                                               whiteSpace: 'nowrap'
                                             }}
                                           >
-                                            {card.title}
-                                          </h3>
-
-                                          {/* Event DateTime - Grid-Responsive with Icon */}
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              flexDirection: 'row',
-                                              alignItems: 'center',
-                                              alignSelf: 'stretch',
-                                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
-                                              padding: `0px 0px 0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
-                                            }}
-                                          >
-                                            <svg
-                                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
-                                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                            >
-                                              <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 11h-3V7h2v4h3v2Z" fill="currentColor" />
-                                            </svg>
-                                            <span
-                                              style={{
-                                                fontFamily: 'Inter',
-                                                fontWeight: '300',
-                                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
-                                                lineHeight: '1.4',
-                                                textAlign: 'left',
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                width: '100%',
-                                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
-                                                margin: '0',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap'
-                                              }}
-                                            >
-                                              {card.date}
-                                            </span>
-                                          </div>
-
-                                          {/* Event Location - Grid-Responsive with Icon */}
-                                          <div
-                                            style={{
-                                              display: 'flex',
-                                              flexDirection: 'row',
-                                              alignItems: 'center',
-                                              alignSelf: 'stretch',
-                                              gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
-                                              padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
-                                            }}
-                                          >
-                                            <svg
-                                              width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
-                                              height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
-                                              viewBox="0 0 24 24"
-                                              fill="none"
-                                              style={{ color: 'rgba(255, 255, 255, 0.7)' }}
-                                            >
-                                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
-                                            </svg>
-                                            <span
-                                              style={{
-                                                fontFamily: 'Inter',
-                                                fontWeight: '300',
-                                                fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
-                                                lineHeight: '1.4',
-                                                textAlign: 'left',
-                                                color: 'rgba(255, 255, 255, 0.65)',
-                                                width: '100%',
-                                                height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
-                                                margin: '0',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap'
-                                              }}
-                                            >
-                                              {card.location}
-                                            </span>
-                                          </div>
+                                            {card.date}
+                                          </span>
                                         </div>
 
-                                        {/* Event Button - Grid-Responsive Aligned with Image Bottom Edge */}
+                                        {/* Event Location - Grid-Responsive with Icon */}
                                         <div
                                           style={{
-                                            width: '100%',
-                                            height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
                                             display: 'flex',
                                             flexDirection: 'row',
-                                            justifyContent: 'flex-start',
-                                            alignItems: 'flex-end',
+                                            alignItems: 'center',
+                                            alignSelf: 'stretch',
                                             gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
-                                            padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px 0px 0px`, // Scale padding
-                                            position: 'absolute',
-                                            bottom: `calc(100% - ${Math.max(80, Math.round(105 * cardScaleFactor))}px)`, // Adjust button position - middle ground
-                                            left: '0px'
+                                            padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px` // Scale padding
                                           }}
                                         >
-                                          {card.isRealEvent && card.hasTicketLink ? (
-                                            <button
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                                                window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
-                                              }}
-                                              style={{
-                                                background: 'rgba(22, 22, 22, 0.50)',
-                                                border: '1px solid rgba(255, 255, 255, 0.12)',
-                                                borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`,
-                                                display: 'flex',
-                                                flexDirection: 'row',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`,
-                                                padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`,
-                                                width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
-                                                height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`,
-                                                cursor: 'pointer',
-                                                fontFamily: 'Inter',
-                                                fontWeight: '500',
-                                                fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`,
-                                                lineHeight: '1.21',
-                                                textAlign: 'center',
-                                                color: '#FFFFFF',
-                                                transition: 'transform 0.2s ease, background 0.2s ease',
-                                                transform: 'translateZ(0) scale(1)',
-                                                willChange: 'transform',
-                                                backfaceVisibility: 'hidden',
-                                                WebkitBackfaceVisibility: 'hidden',
-                                                isolation: 'isolate',
-                                                boxSizing: 'border-box'
-                                              }}
-                                              onMouseEnter={(e) => {
-                                                e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
-                                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
-                                              }}
-                                              onMouseLeave={(e) => {
-                                                e.currentTarget.style.transform = 'translateZ(0) scale(1)';
-                                                e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
-                                              }}
-                                            >
-                                              {card.buttonText || 'View Event'}
-                                            </button>
-                                          ) : null}
+                                          <svg
+                                            width={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale width
+                                            height={Math.max(7, Math.round(12 * cardScaleFactor))} // Scale height
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                                          >
+                                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
+                                          </svg>
+                                          <span
+                                            style={{
+                                              fontFamily: 'Inter',
+                                              fontWeight: '300',
+                                              fontSize: `${Math.max(7, Math.round(12 * cardScaleFactor))}px`, // Scale font size
+                                              lineHeight: '1.4',
+                                              textAlign: 'left',
+                                              color: 'rgba(255, 255, 255, 0.65)',
+                                              width: '100%',
+                                              height: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`, // Scale height
+                                              margin: '0',
+                                              overflow: 'hidden',
+                                              textOverflow: 'ellipsis',
+                                              whiteSpace: 'nowrap'
+                                            }}
+                                          >
+                                            {card.location}
+                                          </span>
                                         </div>
                                       </div>
+
+                                      {/* Event Button - Grid-Responsive Aligned with Image Bottom Edge */}
+                                      <div
+                                        style={{
+                                          width: '100%',
+                                          height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`, // Scale height
+                                          display: 'flex',
+                                          flexDirection: 'row',
+                                          justifyContent: 'flex-start',
+                                          alignItems: 'flex-end',
+                                          gap: `${Math.max(3, Math.round(6 * cardScaleFactor))}px`, // Scale gap
+                                          padding: `0px ${Math.max(1, Math.round(2 * cardScaleFactor))}px 0px 0px`, // Scale padding
+                                          position: 'absolute',
+                                          bottom: `calc(100% - ${Math.max(80, Math.round(105 * cardScaleFactor))}px)`, // Adjust button position - middle ground
+                                          left: '0px'
+                                        }}
+                                      >
+                                        {card.isRealEvent && card.hasTicketLink ? (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
+                                              window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                            }}
+                                            style={{
+                                              background: 'rgba(22, 22, 22, 0.50)',
+                                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                                              borderRadius: `${Math.max(25, Math.round(46 * cardScaleFactor))}px`,
+                                              display: 'flex',
+                                              flexDirection: 'row',
+                                              justifyContent: 'center',
+                                              alignItems: 'center',
+                                              gap: `${Math.max(6, Math.round(12 * cardScaleFactor))}px`,
+                                              padding: `${Math.max(8, Math.round(16 * cardScaleFactor))}px ${Math.max(8, Math.round(15 * cardScaleFactor))}px`,
+                                              width: `calc(100% - ${Math.max(2, Math.round(4 * cardScaleFactor))}px)`,
+                                              height: `${Math.max(18, Math.round(32 * cardScaleFactor))}px`,
+                                              cursor: 'pointer',
+                                              fontFamily: 'Inter',
+                                              fontWeight: '500',
+                                              fontSize: `${Math.max(8, Math.round(14 * cardScaleFactor))}px`,
+                                              lineHeight: '1.21',
+                                              textAlign: 'center',
+                                              color: '#FFFFFF',
+                                              transition: 'transform 0.2s ease, background 0.2s ease',
+                                              transform: 'translateZ(0) scale(1)',
+                                              willChange: 'transform',
+                                              backfaceVisibility: 'hidden',
+                                              WebkitBackfaceVisibility: 'hidden',
+                                              isolation: 'isolate',
+                                              boxSizing: 'border-box'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                              e.currentTarget.style.transform = 'translateZ(0) scale(1.02)';
+                                              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.65)';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                              e.currentTarget.style.transform = 'translateZ(0) scale(1)';
+                                              e.currentTarget.style.background = 'rgba(22, 22, 22, 0.50)';
+                                            }}
+                                          >
+                                            {card.buttonText || 'View Event'}
+                                          </button>
+                                        ) : null}
+                                      </div>
                                     </div>
-                                  </article>
-                                ))
+                                  </div>
+                                </article>
+                              ))
                             )}
                           </>
                         );
@@ -3363,7 +3367,12 @@ const FigmaDesktop = ({ onReady }) => {
                     </div>
                   ) : (
                     /* All Event Cards - Mobile-style Cards (including previously featured events) */
-                    [...filteredFeaturedEvents, ...filteredHomepageEvents].map((card, index) => (
+                    /* 🚨 FIX: In Past mode, filteredHomepageEvents already includes featured events (via hook deduplication),
+                       so we only combine in Next mode to avoid duplicates with different ID prefixes */
+                    (showAllEvents
+                      ? [...filteredFeaturedEvents, ...filteredHomepageEvents]
+                      : filteredHomepageEvents
+                    ).map((card, index) => (
                       <article
                         key={`homepage-${card.id}`}
                         style={{
