@@ -334,24 +334,20 @@ const MasonryGallery = ({
     }
   }, [expandedImage, closeExpandedImage, isMobile]);
 
-  // Distribute images across columns
+  // Distribute images across columns using round-robin for strict order preservation
   const distributeImages = useCallback(() => {
     const cols = Array.from({ length: columnCount }, () => []);
-    const colHeights = Array(columnCount).fill(0);
 
     images.forEach((image, index) => {
-      // Find column with minimum height
-      const minHeightIndex = colHeights.indexOf(Math.min(...colHeights));
-      cols[minHeightIndex].push({ ...image, originalIndex: index });
-
-      // Estimate height based on aspect ratio (fallback if not provided)
-      const aspectRatio = image.aspectRatio || (image.height / image.width) || 1.2;
-      const estimatedHeight = 300 * aspectRatio; // Base width of 300px
-      colHeights[minHeightIndex] += estimatedHeight + gap;
+      // 🔄 STRICT ORDERING: Use simple round-robin distribution
+      // This ensures images appear in exactly the order defined in Admin (Row-major perception)
+      // Index 0 -> Col 0, Index 1 -> Col 1, Index 2 -> Col 2...
+      const columnIndex = index % columnCount;
+      cols[columnIndex].push({ ...image, originalIndex: index });
     });
 
     return cols;
-  }, [images, columnCount, gap]);
+  }, [images, columnCount]);
 
   const imageColumns = distributeImages();
 
