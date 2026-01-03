@@ -89,6 +89,31 @@ router.get("/seo", async (req, res) => {
     }
 });
 
+// GET /api/settings/seo/fast - Proxy to dashboard for FAST SEO settings
+router.get("/seo/fast", async (req, res) => {
+    try {
+        console.log('🔍 Homepage: Fetching FAST SEO settings from dashboard...');
+        const dashboardUrl = getDashboardUrl(req);
+
+        // Proxy to dashboard
+        const response = await fetch(`${dashboardUrl}/api/settings/seo/fast`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return res.json(data);
+        }
+
+        throw new Error(`Dashboard responded ${response.status}`);
+    } catch (error) {
+        console.error('❌ Homepage: Error fetching FAST SEO settings:', error.message);
+        // Fallback to regular SEO route handler logic if fast fails
+        return res.redirect('/api/settings/seo');
+    }
+});
+
 // GET /api/settings/maintenance-status
 router.get("/maintenance-status", async (req, res) => {
     try {
