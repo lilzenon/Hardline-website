@@ -572,12 +572,11 @@ const MasonryGallery = ({
           <div
             className="expanded-image"
             style={{
-              maxWidth: isMobile() ? '90vw' : '90vw',
-              maxHeight: isMobile() ? '80vh' : '90vh',
+              // 🚨 FIX: Remove fixed max dimensions from container, let image control size
               position: 'relative',
               margin: isMobile() ? '20px' : '20px',
               borderRadius: '16px',
-              overflow: 'hidden',
+              overflow: 'visible', // Allow close button to overflow
               boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7)',
               transition: 'transform 0.2s ease',
               transform: isClosingModal ? 'scale(0.95)' : 'scale(1)',
@@ -610,17 +609,18 @@ const MasonryGallery = ({
             }}
           >
             <img
-              src={expandedImage.urls?.large || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
+              src={expandedImage.urls?.large || expandedImage.urls?.original || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
               alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
               title={expandedImage.title || expandedImage.alt || 'Gallery image'}
               crossOrigin="anonymous"
               referrerPolicy="no-referrer"
               style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
+                // 🚨 FIX: Use explicit max dimensions to prevent cropping
+                maxWidth: isMobile() ? 'calc(100vw - 60px)' : 'calc(100vw - 80px)',
+                maxHeight: isMobile() ? 'calc(100vh - 120px)' : 'calc(100vh - 80px)',
                 width: 'auto',
                 height: 'auto',
-                objectFit: 'contain',
+                objectFit: 'contain', // Ensure entire image is visible
                 borderRadius: '12px',
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
                 display: 'block',
@@ -735,13 +735,15 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         position: 'relative',
         borderRadius: '12px',
         overflow: 'hidden',
-        background: 'transparent', // Always transparent to prevent artifacts
-        border: 'none', // Always no border to prevent artifacts
-        backdropFilter: 'none', // Remove backdrop filter to prevent artifacts
-        WebkitBackdropFilter: 'none', // Remove webkit backdrop filter to prevent artifacts
+        // 🚨 FIX: Use subtle dark background during loading to prevent flash-to-black
+        background: isLoaded ? 'transparent' : 'rgba(18, 18, 18, 0.3)',
+        border: 'none',
+        backdropFilter: 'none',
+        WebkitBackdropFilter: 'none',
         cursor: onClick ? 'pointer' : 'default',
-        opacity: isLoaded ? 1 : 0, // Completely invisible until loaded
-        animation: isLoaded ? 'fadeInScale 0.5s ease-out' : 'none',
+        // 🚨 FIX: Use CSS transition for smooth fade-in instead of abrupt visibility
+        opacity: isLoaded ? 1 : 0.01, // Near-invisible but not zero to prevent layout issues
+        transition: 'opacity 0.4s ease-out, background 0.3s ease',
         // Reserve space to ensure lazy-loading triggers correctly
         width: '100%',
         aspectRatio: (image?.width && image?.height) ? `${image.width} / ${image.height}` : undefined,
