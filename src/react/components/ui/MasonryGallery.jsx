@@ -608,18 +608,21 @@ const MasonryGallery = ({
               }
             }}
           >
-            {/* 🚀 PERFORMANCE: Progressive loading - show medium first, then large */}
+            {/* 🚀 PERFORMANCE: Progressive loading - show small/medium first, then large */}
             {(() => {
               // Determine best available URLs for progressive loading
-              const mediumSrc = expandedImage.urls?.medium || expandedImage.url || expandedImage.src;
-              const largeSrc = expandedImage.urls?.large || expandedImage.urls?.original || mediumSrc;
-              const shouldProgressiveLoad = largeSrc !== mediumSrc;
+              // 🚨 OPTIMIZATION: Use 'small' as placeholder because grid likely cached it (instant load)
+              // If we use 'medium', it might need a network request if grid used 'small'
+              const lowResSrc = expandedImage.urls?.small || expandedImage.urls?.medium || expandedImage.urls?.thumbnail || expandedImage.url || expandedImage.src;
+
+              const largeSrc = expandedImage.urls?.large || expandedImage.urls?.original || lowResSrc;
+              const shouldProgressiveLoad = largeSrc !== lowResSrc;
 
               return (
                 <>
-                  {/* Medium image - shows immediately */}
+                  {/* Low-res placeholder - shows immediately (cached) */}
                   <img
-                    src={mediumSrc}
+                    src={lowResSrc}
                     alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
                     title={expandedImage.title || expandedImage.alt || 'Gallery image'}
                     crossOrigin="anonymous"
