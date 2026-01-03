@@ -273,7 +273,7 @@ function validateRequest(req, res, next) {
 // - Redirects to external_ticket_url → posh_embed_url → homepage (in that priority order)
 router.get(
     "/:slug",
-    asyncHandler(async(req, res) => {
+    asyncHandler(async (req, res) => {
         const { slug } = req.params;
         const defaultDomain = process.env.DEFAULT_DOMAIN || 'bounce2bounce.com';
 
@@ -380,15 +380,20 @@ router.get(
         // 🎨 Generate SEO meta tags using existing seoUtils
         const metaTags = seoUtils.generateEventMetaTags(foundEvent);
 
+        // Fetch SEO settings for tracking pixels
+        const seoSettings = await query.seoSettings.getSEOSettings();
+
         // 🚀 Render React SSR Event Landing Page
         const html = renderReactPage(EventLandingPage, {
             event: foundEvent,
             metaTags,
             redirectUrl,
             isBot: isBotRequest,
-            defaultDomain
+            defaultDomain,
+            trackingPixels: seoSettings // Pass all SEO settings including pixel IDs
         }, {
-            fullDocument: true  // Component returns complete HTML document
+            fullDocument: true,  // Component returns complete HTML document
+            trackingPixels: seoSettings // Also pass to SSR utility for injection into <head>
         });
 
         // Send HTTP 200 response with complete HTML (NOT 301 redirect)
@@ -400,7 +405,7 @@ router.get(
 // GET /signup - Handle requests to signup without event slug
 router.get(
     "/signup",
-    asyncHandler(async(req, res) => {
+    asyncHandler(async (req, res) => {
         res.status(400).json({
             error: "Missing Event Slug",
             message: "Event signup requires a specific event slug. Please visit the event page to sign up.",
@@ -413,7 +418,7 @@ router.get(
 // GET /signup/:slug - Handle invalid GET requests to signup endpoint
 router.get(
     "/signup/:slug",
-    asyncHandler(async(req, res) => {
+    asyncHandler(async (req, res) => {
         const { slug } = req.params;
 
         // Check if the event exists to provide a helpful error message

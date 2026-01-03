@@ -123,6 +123,11 @@ function getDefaultSEOSettings() {
         twitter_handle: '@bounce2bounce',
         google_analytics_id: '',
         google_search_console_id: '',
+        google_ads_id: '',
+        meta_pixel_id: '',
+        tiktok_pixel_id: '',
+        snapchat_pixel_id: '',
+        pinterest_tag_id: '',
         maintenance_mode: false,
         maintenance_message: 'We are currently performing scheduled maintenance. Please check back soon.',
         maintenance_title: 'Site Under Maintenance',
@@ -173,7 +178,7 @@ async function updateSEOSettings(settingsData, userId = null) {
 
     try {
         // TIMEOUT FIX: Use optimized transaction with longer timeout
-        const result = await knex.transaction(async(trx) => {
+        const result = await knex.transaction(async (trx) => {
             // Set transaction-level timeout to prevent hanging
             await trx.raw('SET LOCAL statement_timeout = 12000'); // 12 seconds
 
