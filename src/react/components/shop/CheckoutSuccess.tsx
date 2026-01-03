@@ -7,7 +7,8 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { verifyCheckoutSession } from '../../services/shopService';
 import { OrderConfirmationCard } from '../ui/order-confirmation-card';
-import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Spinner } from '../ui/spinner';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import MobileNavigation from '../MobileNavigation';
 
 interface OrderItem {
@@ -30,6 +31,14 @@ interface OrderData {
     shipping?: string;
     total: string;
     shipping_address?: {
+        line1: string;
+        line2?: string | null;
+        city: string;
+        state: string;
+        postal_code: string;
+        country: string;
+    };
+    billing_address?: {
         line1: string;
         line2?: string | null;
         city: string;
@@ -173,44 +182,27 @@ export default function CheckoutSuccess() {
             {/* Main Content */}
             <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
                 {/* Loading State */}
-                {status === 'loading' && (
-                    <div className="text-center">
-                        <div className="relative mb-8">
-                            {/* Animated glow background */}
-                            <div
-                                className="absolute inset-0 rounded-full"
-                                style={{
-                                    background: 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
-                                    filter: 'blur(30px)',
-                                    animation: 'pulse 2s ease-in-out infinite',
-                                }}
-                            />
-                            <div
-                                className="relative rounded-full p-6 inline-block"
-                                style={{
-                                    background: 'rgba(10, 10, 10, 0.8)',
-                                    backdropFilter: 'blur(12px)',
-                                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                                    boxShadow: '0 0 40px rgba(59, 130, 246, 0.2)',
-                                }}
-                            >
-                                <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+                {status !== 'success' && status !== 'error' && (
+                    <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-50 transition-all duration-500">
+                        <div style={{
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                            padding: '48px',
+                            borderRadius: '32px',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '24px',
+                            boxShadow: '0 0 80px -20px rgba(0, 0, 0, 0.8), inset 0 0 0 1px rgba(255, 255, 255, 0.05)'
+                        }}>
+                            <Spinner state={status === 'loading' ? 'loading' : 'success'} className="w-12 h-12" />
+                            <div className="flex flex-col items-center gap-3 text-center">
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Processing your order</h2>
+                                <p className="text-zinc-400 text-sm font-medium tracking-wide">Please do not close this window...</p>
                             </div>
                         </div>
-                        <h1
-                            className="text-2xl font-bold text-white mb-3"
-                            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-                        >
-                            Processing Order
-                        </h1>
-                        <p className="text-zinc-400">Please wait while we confirm your purchase...</p>
-
-                        <style>{`
-                        @keyframes pulse {
-                            0%, 100% { opacity: 0.5; transform: scale(1); }
-                            50% { opacity: 1; transform: scale(1.15); }
-                        }
-                    `}</style>
                     </div>
                 )}
 
@@ -235,6 +227,7 @@ export default function CheckoutSuccess() {
                             // New Details
                             customerName={orderData.customer_name}
                             shippingAddress={orderData.shipping_address}
+                            billingAddress={orderData.billing_address}
                             cardBrand={orderData.card_brand}
                             cardLast4={orderData.card_last4}
 

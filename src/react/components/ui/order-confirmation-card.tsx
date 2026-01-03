@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { Check, Package, ArrowRight, Sparkles, Receipt, Truck, ExternalLink, User, MapPin, CreditCard } from "lucide-react";
+import { Check, Package, ArrowRight, Sparkles, Truck, ExternalLink, User, MapPin, CreditCard } from "lucide-react";
 import { cn } from "../../../lib/utils";
 
 /**
@@ -14,6 +14,72 @@ interface OrderItem {
     unitPrice: string;
     totalPrice: string;
 }
+
+const getCardIcon = (brand?: string) => {
+    const b = brand?.toLowerCase() || '';
+
+    if (b.includes('visa')) {
+        return (
+            <svg width="38" height="24" viewBox="0 0 780 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="780" height="500" rx="60" fill="white" />
+                <g clipPath="url(#clip0_visa)">
+                    <path d="M780 0H0V500H780V0Z" fill="white" fillOpacity="0.01" />
+                    <path d="M489.823 143.111C442.988 143.111 401.134 167.393 401.134 212.256C401.134 263.706 475.364 267.259 475.364 293.106C475.364 303.989 462.895 313.731 441.6 313.731C411.377 313.731 388.789 300.119 388.789 300.119L379.123 345.391C379.123 345.391 405.145 356.889 439.692 356.889C490.898 356.889 531.19 331.415 531.19 285.784C531.19 231.419 456.652 227.971 456.652 203.981C456.652 195.455 466.887 186.114 488.122 186.114C512.081 186.114 531.628 196.014 531.628 196.014L541.087 152.289C541.087 152.289 519.818 143.111 489.823 143.111ZM61.3294 146.411L60.1953 153.011C60.1953 153.011 79.8988 156.618 97.645 163.814C120.495 172.064 122.122 176.868 125.971 191.786L167.905 353.486H224.118L310.719 146.411H254.635L198.989 287.202L176.282 167.861C174.199 154.203 163.651 146.411 150.74 146.411H61.3294ZM333.271 146.411L289.275 353.486H342.756L386.598 146.411H333.271ZM631.554 146.411C618.658 146.411 611.825 153.318 606.811 165.386L528.458 353.486H584.542L595.393 322.136H663.72L670.318 353.486H719.805L676.633 146.411H631.554ZM638.848 202.356L655.473 280.061H610.935L638.848 202.356Z" fill="#1434CB" />
+                </g>
+                <defs>
+                    <clipPath id="clip0_visa">
+                        <rect width="780" height="500" fill="white" />
+                    </clipPath>
+                </defs>
+            </svg>
+        );
+    }
+
+    if (b.includes('mastercard')) {
+        return (
+            <svg width="38" height="24" viewBox="0 0 780 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="780" height="500" rx="60" fill="#253747" />
+                <g clipPath="url(#clip0_mastercard)">
+                    <path d="M780 0H0V500H780V0Z" fill="#253747" />
+                    <path d="M211.053 467.045V438.109C211.053 427.041 204.311 419.793 192.736 419.793C186.949 419.793 180.657 421.703 176.33 427.996C172.959 422.715 168.127 419.793 160.879 419.793C156.047 419.793 151.215 421.254 147.395 426.535V420.748H137.281V467.045H147.395V441.481C147.395 433.278 151.721 429.401 158.463 429.401C165.205 429.401 168.577 433.727 168.577 441.481V467.045H178.69V441.481C178.69 433.278 183.522 429.401 189.759 429.401C196.501 429.401 199.872 433.727 199.872 441.481V467.045H211.053ZM361.068 420.748H344.662V406.758H334.549V420.748H325.391V429.906H334.549V451.145C334.549 461.764 338.875 468 350.449 468C354.776 468 359.608 466.539 362.979 464.629L360.057 455.92C357.135 457.831 353.764 458.336 351.348 458.336C346.516 458.336 344.606 455.415 344.606 450.639V429.906H361.012V420.748H361.068ZM446.92 419.737C441.133 419.737 437.256 422.658 434.84 426.479V420.692H424.727V466.989H434.84V440.919C434.84 433.221 438.211 428.839 444.504 428.839C446.414 428.839 448.83 429.345 450.797 429.794L453.718 420.13C451.696 419.737 448.83 419.737 446.92 419.737ZM317.187 424.569C312.356 421.198 305.613 419.737 298.365 419.737C286.791 419.737 279.094 425.524 279.094 434.682C279.094 442.38 284.881 446.762 294.994 448.167L299.826 448.672C305.108 449.628 308.029 451.088 308.029 453.504C308.029 456.875 304.152 459.291 297.41 459.291C290.668 459.291 285.33 456.875 281.959 454.459L277.127 462.157C282.409 466.034 289.657 467.944 296.904 467.944C310.389 467.944 318.143 461.651 318.143 452.999C318.143 444.796 311.85 440.469 302.242 439.008L297.41 438.503C293.084 437.997 289.713 437.042 289.713 434.176C289.713 430.805 293.084 428.895 298.421 428.895C304.209 428.895 309.996 431.311 312.917 432.772L317.187 424.569ZM586.26 419.737C580.473 419.737 576.596 422.658 574.18 426.479V420.692H564.067V466.989H574.18V440.919C574.18 433.221 577.551 428.839 583.844 428.839C585.754 428.839 588.17 429.345 590.137 429.794L593.059 420.242C591.092 419.737 588.227 419.737 586.26 419.737ZM457.033 443.897C457.033 457.887 466.697 468 481.643 468C488.385 468 493.217 466.539 498.049 462.719L493.217 454.516C489.34 457.437 485.519 458.842 481.137 458.842C472.934 458.842 467.147 453.055 467.147 443.897C467.147 435.188 472.934 429.401 481.137 428.951C485.463 428.951 489.34 430.412 493.217 433.278L498.049 425.074C493.217 421.198 488.385 419.793 481.643 419.793C466.697 419.737 457.033 429.906 457.033 443.897ZM550.582 443.897V420.748H540.469V426.535C537.098 422.209 532.266 419.793 525.973 419.793C512.938 419.793 502.825 429.906 502.825 443.897C502.825 457.887 512.938 468 525.973 468C532.715 468 537.547 465.584 540.469 461.258V467.045H550.582V443.897ZM513.444 443.897C513.444 435.693 518.725 428.951 527.434 428.951C535.637 428.951 541.424 435.244 541.424 443.897C541.424 452.1 535.637 458.842 527.434 458.842C518.781 458.336 513.444 452.043 513.444 443.897ZM392.42 419.737C378.935 419.737 369.271 429.401 369.271 443.84C369.271 458.336 378.935 467.944 392.926 467.944C399.668 467.944 406.41 466.034 411.748 461.651L406.916 454.403C403.039 457.325 398.207 459.235 393.431 459.235C387.139 459.235 380.902 456.314 379.441 448.167H413.658C413.658 446.706 413.658 445.751 413.658 444.29C414.108 429.401 405.399 419.737 392.42 419.737ZM392.42 428.446C398.713 428.446 403.039 432.322 403.994 439.514H379.891C380.846 433.278 385.172 428.446 392.42 428.446ZM643.682 443.897V402.432H633.568V426.535C630.197 422.209 625.365 419.793 619.073 419.793C606.037 419.793 595.924 429.906 595.924 443.897C595.924 457.887 606.037 468 619.073 468C625.815 468 630.647 465.584 633.568 461.258V467.045H643.682V443.897ZM606.543 443.897C606.543 435.693 611.825 428.951 620.533 428.951C628.736 428.951 634.524 435.244 634.524 443.897C634.524 452.1 628.736 458.842 620.533 458.842C611.825 458.336 606.543 452.043 606.543 443.897ZM267.969 443.897V420.748H257.855V426.535C254.484 422.209 249.652 419.793 243.36 419.793C230.325 419.793 220.211 429.906 220.211 443.897C220.211 457.887 230.325 468 243.36 468C250.102 468 254.934 465.584 257.855 461.258V467.045H267.969V443.897ZM230.381 443.897C230.381 435.693 235.662 428.951 244.371 428.951C252.574 428.951 258.361 435.244 258.361 443.897C258.361 452.1 252.574 458.842 244.371 458.842C235.662 458.336 230.381 452.043 230.381 443.897Z" fill="white" />
+                    <path d="M482.355 250C482.355 197.697 457.063 150.966 418.423 120.916C397.666 104.773 371.868 95.1118 343.834 95.1118C258.307 95.1118 188.974 164.444 188.974 250C188.974 335.556 258.307 404.888 343.834 404.888C371.868 404.888 397.666 395.228 418.423 379.081C457.063 349.035 482.355 302.302 482.355 250Z" fill="#EB001B" />
+                    <path d="M591.026 250C591.026 335.556 521.693 404.888 436.166 404.888C429.982 404.888 423.905 404.481 417.935 403.684C456.883 373.911 482.354 326.495 482.354 250C482.354 173.505 456.883 126.091 417.935 96.3155C423.905 95.5199 429.982 95.1118 436.166 95.1118C521.693 95.1118 591.026 164.444 591.026 250Z" fill="#F79E1B" />
+                    <path d="M481.285 250C481.285 326.495 455.814 373.911 416.866 403.684C396.109 387.537 369.309 378.148 340.231 378.148C360.285 365.253 374.966 345.029 381.821 321.433C385.834 307.625 387.975 292.836 387.975 277.534L387.975 222.466C387.975 207.164 385.834 192.375 381.821 178.567C374.966 154.972 360.285 134.747 340.231 121.852C369.309 121.852 396.109 112.463 416.866 96.3155C455.814 126.091 481.285 173.505 481.285 250Z" fill="#FF5F00" />
+                </g>
+                <defs>
+                    <clipPath id="clip0_mastercard">
+                        <rect width="780" height="500" rx="45" fill="white" />
+                    </clipPath>
+                </defs>
+            </svg>
+        );
+    }
+
+    if (b.includes('amex')) {
+        return (
+            <svg width="38" height="24" viewBox="0 0 780 500" xmlns="http://www.w3.org/2000/svg">
+                <rect width="780" height="500" rx="60" fill="#2557D6" />
+                <path d="m0.253 235.69h37.441l8.442-19.51h18.9l8.42 19.51h73.668v-14.915l6.576 14.98h38.243l6.576-15.202v15.138h183.08l-0.085-32.026h3.542c2.479 0.083 3.204 0.302 3.204 4.226v27.8h94.689v-7.455c7.639 3.92 19.518 7.455 35.148 7.455h39.836l8.525-19.51h18.9l8.337 19.51h76.765v-18.532l11.626 18.532h61.515v-122.51h-60.88v14.468l-8.522-14.468h-62.471v14.468l-7.828-14.468h-84.38c-14.123 0-26.539 1.889-36.569 7.153v-7.153h-58.229v7.153c-6.383-5.426-15.079-7.153-24.75-7.153h-212.74l-14.274 31.641-14.659-31.641h-67.005v14.468l-7.362-14.468h-57.145l-26.539 58.246v64.261h3e-3zm236.34-17.67h-22.464l-0.083-68.794-31.775 68.793h-19.24l-31.858-68.854v68.854h-44.57l-8.42-19.592h-45.627l-8.505 19.592h-23.801l39.241-87.837h32.559l37.269 83.164v-83.164h35.766l28.678 59.587 26.344-59.587h36.485l1e-3 87.838zm-165.9-37.823l-14.998-35.017-14.915 35.017h29.913zm255.3 37.821h-73.203v-87.837h73.203v18.291h-51.289v15.833h50.06v18.005h-50.061v17.542h51.289l1e-3 18.166zm103.16-64.18c0 14.004-9.755 21.24-15.439 23.412 4.794 1.748 8.891 4.838 10.84 7.397 3.094 4.369 3.628 8.271 3.628 16.116v17.255h-22.104l-0.083-11.077c0-5.285 0.528-12.886-3.458-17.112-3.202-3.09-8.083-3.76-15.973-3.76h-23.523v31.95h-21.914v-87.838h50.401c11.199 0 19.451 0.283 26.535 4.207 6.933 3.924 11.09 9.652 11.09 19.45zm-27.699 13.042c-3.013 1.752-6.573 1.81-10.841 1.81h-26.62v-19.51h26.982c3.818 0 7.804 0.164 10.393 1.584 2.842 1.28 4.601 4.003 4.601 7.765 0 3.84-1.674 6.929-4.515 8.351zm62.844 51.138h-22.358v-87.837h22.358v87.837zm259.56 0h-31.053l-41.535-65.927v65.927h-44.628l-8.527-19.592h-45.521l-8.271 19.592h-25.648c-10.649 0-24.138-2.257-31.773-9.715-7.701-7.458-11.708-17.56-11.708-33.533 0-13.027 2.395-24.936 11.812-34.347 7.085-7.01 18.18-10.242 33.28-10.242h21.215v18.821h-20.771c-7.997 0-12.514 1.14-16.862 5.203-3.735 3.699-6.298 10.69-6.298 19.897 0 9.41 1.951 16.196 6.023 20.628 3.373 3.476 9.506 4.53 15.272 4.53h9.842l30.884-69.076h32.835l37.102 83.081v-83.08h33.366l38.519 61.174v-61.174h22.445v87.833zm-133.2-37.82l-15.165-35.017-15.081 35.017h30.246zm189.04 178.08c-5.322 7.457-15.694 11.238-29.736 11.238h-42.319v-18.84h42.147c4.181 0 7.106-0.527 8.868-2.175 1.665-1.474 2.605-3.554 2.591-5.729 0-2.561-1.064-4.593-2.677-5.811-1.59-1.342-3.904-1.95-7.722-1.95-20.574-0.67-46.244 0.608-46.244-27.194 0-12.742 8.443-26.156 31.439-26.156h43.649v-17.479h-40.557c-12.237 0-21.129 2.81-27.425 7.174v-7.175h-59.985c-9.595 0-20.854 2.279-26.179 7.175v-7.175h-107.12v7.175c-8.524-5.892-22.908-7.175-29.549-7.175h-70.656v7.175c-6.745-6.258-21.742-7.175-30.886-7.175h-79.077l-18.094 18.764-16.949-18.764h-118.13v122.59h115.9l18.646-19.062 17.565 19.062 71.442 0.061v-28.838h7.021c9.479 0.14 20.66-0.228 30.523-4.312v33.085h58.928v-31.952h2.842c3.628 0 3.985 0.144 3.985 3.615v28.333h179.01c11.364 0 23.244-2.786 29.824-7.845v7.845h56.78c11.815 0 23.354-1.587 32.134-5.649l2e-3 -22.84zm-354.94-47.155c0 24.406-19.005 29.445-38.159 29.445h-27.343v29.469h-42.591l-26.984-29.086-28.042 29.086h-86.802v-87.859h88.135l26.961 28.799 27.875-28.799h70.021c17.389 0 36.929 4.613 36.929 28.945zm-174.22 40.434h-53.878v-17.48h48.11v-17.926h-48.11v-15.974h54.939l23.969 25.604-25.03 25.776zm86.81 10.06l-33.644-35.789 33.644-34.65v70.439zm49.757-39.066h-28.318v-22.374h28.572c7.912 0 13.404 3.09 13.404 10.772 0 7.599-5.238 11.602-13.658 11.602zm148.36-40.373h73.138v18.17h-51.315v15.973h50.062v17.926h-50.062v17.48l51.314 0.08v18.23h-73.139l2e-3 -87.859zm-28.119 47.029c4.878 1.725 8.865 4.816 10.734 7.375 3.095 4.291 3.542 8.294 3.631 16.037v17.418h-22.002v-10.992c0-5.286 0.531-13.112-3.542-17.198-3.201-3.147-8.083-3.899-16.076-3.899h-23.42v32.09h-22.02v-87.859h50.594c11.093 0 19.173 0.47 26.366 4.146 6.915 4.004 11.266 9.487 11.266 19.511-1e-3 14.022-9.764 21.178-15.531 23.371zm-12.385-11.107c-2.932 1.667-6.556 1.811-10.818 1.811h-26.62v-19.732h26.982c3.902 0 7.807 0.08 10.458 1.587 2.84 1.423 4.538 4.146 4.538 7.903 0 3.758-1.699 6.786-4.538 8.431zm197.82 5.597c4.27 4.229 6.554 9.571 6.554 18.613 0 18.9-12.322 27.723-34.425 27.723h-42.68v-18.84h42.51c4.157 0 7.104-0.525 8.95-2.175 1.508-1.358 2.589-3.333 2.589-5.729 0-2.561-1.17-4.592-2.675-5.811-1.675-1.34-3.986-1.949-7.803-1.949-20.493-0.67-46.157 0.609-46.157-27.192 0-12.744 8.355-26.158 31.33-26.158h43.932v18.7h-40.198c-3.984 0-6.575 0.145-8.779 1.587-2.4 1.422-3.29 3.534-3.29 6.319 0 3.314 2.037 5.57 4.795 6.546 2.311 0.77 4.795 0.995 8.526 0.995l11.797 0.306c11.895 0.276 20.061 2.248 25.024 7.065zm86.955-23.52h-39.938c-3.986 0-6.638 0.144-8.867 1.587-2.312 1.423-3.202 3.534-3.202 6.322 0 3.314 1.951 5.568 4.791 6.544 2.312 0.771 4.795 0.996 8.444 0.996l11.878 0.304c11.983 0.284 19.982 2.258 24.86 7.072 0.891 0.67 1.422 1.422 2.033 2.175v-25h1e-3z" fill="#fff" />
+            </svg>
+        );
+    }
+
+    if (b.includes('discover')) {
+        return (
+            <svg width="38" height="24" viewBox="0 0 780 500" xmlns="http://www.w3.org/2000/svg">
+                <rect width="780" height="500" rx="60" fill="white" />
+                <g fillRule="evenodd">
+                    <path d="M54.992 0C0 0 0 0 0 0v0C0 0 0 0 0 501h670.016C755.373 501 780 476.37 780 445.996V0C0 0 755.381 0 725.008 0H54.992z" fill="#4D4D4D" />
+                    <path d="M327.152 161.893c8.837 0 16.248 1.784 25.268 6.09v22.751c-8.544-7.863-15.955-11.154-25.756-11.154-19.264 0-34.414 15.015-34.414 34.05 0 20.075 14.681 34.196 35.37 34.196 9.312 0 16.586-3.12 24.8-10.857v22.763c-9.341 4.14-16.911 5.776-25.756 5.776-31.278 0-55.582-22.596-55.582-51.737 0-28.826 24.951-51.878 56.07-51.878zm-97.113.627c11.546 0 22.11 3.72 30.943 10.994l-10.748 13.248c-5.35-5.646-10.41-8.028-16.564-8.028-8.853 0-15.3 4.745-15.3 10.989 0 5.354 3.619 8.188 15.944 12.482 23.365 8.044 30.29 15.176 30.29 30.926 0 19.193-14.976 32.553-36.32 32.553-15.63 0-26.994-5.795-36.458-18.872l13.268-12.03c4.73 8.61 12.622 13.222 22.42 13.222 9.163 0 15.947-5.952 15.947-13.984 0-4.164-2.055-7.734-6.158-10.258-2.066-1.195-6.158-2.977-14.2-5.647-19.291-6.538-25.91-13.527-25.91-27.185 0-16.225 14.214-28.41 32.846-28.41zm234.723 1.728h22.437l28.084 66.592 28.446-66.592h22.267l-45.494 101.686h-11.053l-44.687-101.686zm-397.348.152h30.15c33.312 0 56.534 20.382 56.534 49.641 0 14.59-7.104 28.696-19.118 38.057-10.108 7.901-21.626 11.445-37.574 11.445H67.414V164.4zm96.135 0h20.54v99.143h-20.54V164.4zm411.734 0h58.252v16.8H595.81v22.005h36.336v16.791h-36.336v26.762h37.726v16.785h-58.252V164.4zm71.858 0h30.455c23.69 0 37.265 10.71 37.265 29.272 0 15.18-8.514 25.14-23.986 28.105l33.148 41.766h-25.26l-28.429-39.828h-2.678v39.828h-20.515V164.4zm20.515 15.616v30.025h6.002c13.117 0 20.069-5.362 20.069-15.328 0-9.648-6.954-14.697-19.745-14.697h-6.326zM87.94 181.199v65.559h5.512c13.273 0 21.656-2.394 28.11-7.88 7.103-5.955 11.376-15.465 11.376-24.98 0-9.499-4.273-18.725-11.376-24.681-6.785-5.78-14.837-8.018-28.11-8.018H87.94z" fill="#FFF" />
+                    <path d="M415.13 161.213c30.941 0 56.022 23.58 56.022 52.709v.033c0 29.13-25.081 52.742-56.021 52.742s-56.022-23.613-56.022-52.742v-.033c0-29.13 25.082-52.71 56.022-52.71zM779.983 288.36c-26.05 18.33-221.077 149.34-558.754 212.623H724.99c30.365 0 54.992-0 54.992-0V0z" fill="#F47216" />
+                </g>
+            </svg>
+        );
+    }
+
+    // Generic
+    return <CreditCard style={{ width: '20px', height: '20px', color: 'rgba(255, 255, 255, 0.8)' }} />;
+};
 
 /**
  * Order tracking step
@@ -115,6 +181,8 @@ const HorizontalOrderTracking: React.FC<OrderTrackingProps> = ({ steps, isVisibl
                                 position: 'absolute',
                                 top: '12px',
                                 left: `calc(${leftPos}% + 14px)`,
+                                width: `calc(${segmentWidth}% - 28px)`,
+                                height: '3px',
                                 width: `calc(${segmentWidth}% - 28px)`,
                                 height: '3px',
                                 background: 'linear-gradient(90deg, #10B981, #34D399)',
@@ -231,6 +299,14 @@ interface OrderConfirmationCardProps {
         postal_code: string;
         country: string;
     };
+    billingAddress?: {
+        line1: string;
+        line2?: string | null;
+        city: string;
+        state: string;
+        postal_code: string;
+        country: string;
+    };
     cardBrand?: string;
     cardLast4?: string;
 }
@@ -257,6 +333,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
     className,
     customerName,
     shippingAddress,
+    billingAddress,
     cardBrand,
     cardLast4,
 }) => {
@@ -280,7 +357,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
     return (
         <div
             className={cn(
-                "w-full max-w-md mx-auto",
+                "w-full max-w-lg mx-auto",
                 "transition-all duration-700 ease-out",
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8",
                 className
@@ -298,12 +375,13 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                     overflow: 'hidden',
                 }}
             >
-                {/* Header - Title & Email */}
+                {/* Header - Title & Email & Info */}
                 <div
                     style={{
-                        padding: '32px 24px 24px 24px',
+                        padding: '32px 24px 28px 24px',
                         textAlign: 'center',
-                        background: 'linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%)',
+                        background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
                     }}
                 >
                     <h2
@@ -319,10 +397,25 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                         {title}
                     </h2>
                     {customerEmail && (
-                        <p style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '14px' }}>
+                        <p style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '14px', marginBottom: '16px' }}>
                             Confirmation sent to <span style={{ color: '#d4d4d8' }}>{customerEmail}</span>
                         </p>
                     )}
+
+                    {/* Integrated Order # and Date */}
+                    <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '6px 16px',
+                        borderRadius: '16px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                    }}>
+                        <span style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '13px' }}>Order <span style={{ color: 'white', fontFamily: 'monospace', fontWeight: '600', marginLeft: '4px' }}>#{orderId}</span></span>
+                        <span style={{ width: '1px', height: '12px', background: 'rgba(255, 255, 255, 0.1)' }}></span>
+                        <span style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '12px' }}>{dateTime}</span>
+                    </div>
                 </div>
 
                 {/* Order Tracking */}
@@ -345,14 +438,15 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                     <div
                         style={{
                             padding: '16px 24px',
-                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(52, 211, 153, 0.04) 100%)',
-                            borderTop: '1px solid rgba(16, 185, 129, 0.15)',
-                            borderBottom: '1px solid rgba(16, 185, 129, 0.15)',
+                            background: 'rgba(255, 255, 255, 0.03)',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: '16px',
                             flexWrap: 'wrap',
+                            backdropFilter: 'blur(10px)',
                         }}
                     >
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -360,7 +454,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                                 fontSize: '11px',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.1em',
-                                color: 'rgba(16, 185, 129, 0.8)',
+                                color: 'rgba(255, 255, 255, 0.6)',
                                 fontWeight: '600',
                             }}>
                                 {trackingCarrier ? `${trackingCarrier} Tracking` : 'Tracking Number'}
@@ -385,22 +479,22 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                                     alignItems: 'center',
                                     gap: '8px',
                                     padding: '10px 18px',
-                                    background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-                                    color: 'white',
+                                    background: 'white',
+                                    color: 'black',
                                     fontWeight: '600',
                                     fontSize: '14px',
                                     borderRadius: '10px',
                                     textDecoration: 'none',
-                                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.35)',
+                                    boxShadow: '0 4px 15px rgba(255, 255, 255, 0.1)',
                                     transition: 'all 0.2s ease',
                                 }}
                                 onMouseEnter={(e) => {
                                     e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(16, 185, 129, 0.45)';
+                                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(255, 255, 255, 0.2)';
                                 }}
                                 onMouseLeave={(e) => {
                                     e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(16, 185, 129, 0.35)';
+                                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.1)';
                                 }}
                             >
                                 <Truck style={{ width: '18px', height: '18px' }} />
@@ -410,111 +504,94 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                     </div>
                 )}
 
-                {/* Order Info Bar */}
-                <div
-                    style={{
-                        padding: '16px 24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: 'rgba(255, 255, 255, 0.02)',
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '14px' }}>Order</span>
-                        <span style={{ color: 'white', fontFamily: 'monospace', fontSize: '16px', fontWeight: '600' }}>#{orderId}</span>
-                    </div>
-                    <span style={{ color: 'rgba(161, 161, 170, 0.7)', fontSize: '13px' }}>{dateTime}</span>
-                </div>
+                {/* Order Info Bar REMOVED (Moved to header) */}
 
-                {/* Detailed Order Information */}
+                {/* Two Column Layout for Shipping & Payment (Desktop) or Stacked (Mobile) */}
                 <div style={{
-                    padding: '24px',
+                    padding: '16px 24px',
                     background: 'rgba(255, 255, 255, 0.02)',
                     borderTop: '1px solid rgba(255, 255, 255, 0.04)',
-                    display: 'grid',
-                    gap: '24px',
                 }}>
-                    {/* Grid Layout for details */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
-                        {/* Customer */}
-                        {customerName && (
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                <div style={{
-                                    width: '36px', height: '36px', borderRadius: '10px',
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0,
-                                    border: '1px solid rgba(255, 255, 255, 0.05)'
-                                }}>
-                                    <User style={{ width: '16px', height: '16px', color: 'rgba(161, 161, 170, 1)' }} />
-                                </div>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '24px',
+                    }}>
+                        {/* Shipping Address Section - Simplified / Text Only */}
+                        {shippingAddress && (
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                            }}>
+                                <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Shipping Address
+                                </h3>
+
                                 <div>
-                                    <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(161, 161, 170, 0.7)', marginBottom: '4px', fontWeight: '600' }}>Customer</p>
-                                    <p style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>{customerName}</p>
+                                    {/* Name included in shipping section */}
+                                    {customerName && (
+                                        <p style={{ fontSize: '15px', color: 'white', fontWeight: '600', marginBottom: '4px' }}>
+                                            {customerName}
+                                        </p>
+                                    )}
+                                    <p style={{ fontSize: '14px', color: 'rgba(161, 161, 170, 0.9)', lineHeight: '1.6' }}>
+                                        {shippingAddress.line1}
+                                        {shippingAddress.line2 && <><br />{shippingAddress.line2}</>}
+                                        <br />
+                                        {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postal_code}
+                                        <br />
+                                        <span style={{ color: 'rgba(161, 161, 170, 0.6)' }}>{shippingAddress.country}</span>
+                                    </p>
                                 </div>
                             </div>
                         )}
 
-                        {/* Payment */}
-                        {(cardLast4 || cardBrand) && (
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                                <div style={{
-                                    width: '36px', height: '36px', borderRadius: '10px',
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0,
-                                    border: '1px solid rgba(255, 255, 255, 0.05)'
-                                }}>
-                                    <CreditCard style={{ width: '16px', height: '16px', color: 'rgba(161, 161, 170, 1)' }} />
-                                </div>
+                        {/* Billing Address Section */}
+                        {billingAddress && (
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px',
+                            }}>
+                                <h3 style={{ fontSize: '13px', fontWeight: '700', color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Billing Address
+                                </h3>
+
                                 <div>
-                                    <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(161, 161, 170, 0.7)', marginBottom: '4px', fontWeight: '600' }}>Payment</p>
-                                    <p style={{ fontSize: '14px', color: 'white', fontWeight: '500' }}>
-                                        <span style={{ textTransform: 'capitalize' }}>{cardBrand || 'Card'}</span> •••• {cardLast4}
+                                    {customerName && (
+                                        <p style={{ fontSize: '15px', color: 'white', fontWeight: '600', marginBottom: '4px' }}>
+                                            {customerName}
+                                        </p>
+                                    )}
+                                    <p style={{ fontSize: '14px', color: 'rgba(161, 161, 170, 0.9)', lineHeight: '1.6' }}>
+                                        {billingAddress.line1}
+                                        {billingAddress.line2 && <><br />{billingAddress.line2}</>}
+                                        <br />
+                                        {billingAddress.city}, {billingAddress.state} {billingAddress.postal_code}
+                                        <br />
+                                        <span style={{ color: 'rgba(161, 161, 170, 0.6)' }}>{billingAddress.country}</span>
                                     </p>
                                 </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Shipping Address - Full Width */}
-                    {shippingAddress && (
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                            <div style={{
-                                width: '36px', height: '36px', borderRadius: '10px',
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                flexShrink: 0,
-                                border: '1px solid rgba(255, 255, 255, 0.05)'
-                            }}>
-                                <MapPin style={{ width: '16px', height: '16px', color: 'rgba(161, 161, 170, 1)' }} />
-                            </div>
-                            <div>
-                                <p style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'rgba(161, 161, 170, 0.7)', marginBottom: '4px', fontWeight: '600' }}>Shipping To</p>
-                                <p style={{ fontSize: '14px', color: 'white', fontWeight: '500', lineHeight: '1.5', opacity: 0.9 }}>
-                                    {shippingAddress.line1}
-                                    {shippingAddress.line2 && <><br />{shippingAddress.line2}</>}
-                                    <br />
-                                    {shippingAddress.city}, {shippingAddress.state} {shippingAddress.postal_code}
-                                    <br />
-                                    <span style={{ color: 'rgba(161, 161, 170, 0.8)', fontSize: '13px' }}>{shippingAddress.country}</span>
-                                </p>
-                            </div>
-                        </div>
-                    )}
                 </div>
 
                 {/* Order Items */}
-                <div style={{ padding: '20px 24px' }}>
+                <div style={{
+                    padding: '16px 24px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+                }}>
                     <h3
                         style={{
-                            fontSize: '11px',
+                            fontSize: '14px',
                             textTransform: 'uppercase',
-                            letterSpacing: '0.1em',
+                            letterSpacing: '0.05em',
                             fontWeight: '700',
-                            marginBottom: '16px',
-                            color: 'rgba(161, 161, 170, 0.7)',
+                            marginBottom: '12px',
+                            color: 'rgba(161, 161, 170, 0.9)',
                         }}
                     >
                         Items
@@ -536,13 +613,13 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                                     transitionDelay: `${index * 80}ms`,
                                 }}
                             >
-                                {/* Product Image */}
+                                {/* Product Image - Scaled Up */}
                                 <div
                                     style={{
-                                        width: '72px',
-                                        height: '72px',
-                                        minWidth: '72px',
-                                        borderRadius: '12px',
+                                        width: '100px',
+                                        height: '100px',
+                                        minWidth: '100px',
+                                        borderRadius: '16px',
                                         overflow: 'hidden',
                                         background: 'linear-gradient(135deg, rgba(39, 39, 42, 1) 0%, rgba(24, 24, 27, 1) 100%)',
                                         border: '1px solid rgba(255, 255, 255, 0.06)',
@@ -616,7 +693,7 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                         borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                     }}
                 >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '0' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px' }}>
                             <span style={{ color: 'rgba(161, 161, 170, 0.8)' }}>Subtotal</span>
                             <span style={{ color: '#d4d4d8', fontWeight: '500' }}>{subtotal}</span>
@@ -635,6 +712,27 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                                 <span style={{ color: '#d4d4d8', fontWeight: '500' }}>{tax}</span>
                             </div>
                         )}
+                        {/* Payment Method - Now part of the breakdown */}
+                        {(cardLast4 || cardBrand) && (
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                fontSize: '15px',
+                                paddingTop: '12px',
+                                borderTop: '1px dashed rgba(255, 255, 255, 0.1)'
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ color: 'rgba(161, 161, 170, 0.8)' }}>Payment Method</span>
+                                </div>
+                                <span style={{ color: '#d4d4d8', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ transform: 'scale(0.85)', transformOrigin: 'right center' }}>
+                                        {getCardIcon(cardBrand)}
+                                    </div>
+                                    <span style={{ fontSize: '15px', fontWeight: '600', letterSpacing: '0.02em', minWidth: '40px', textAlign: 'right' }}>{cardLast4}</span>
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Total */}
@@ -643,17 +741,17 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
-                            paddingTop: '16px',
+                            marginTop: '12px',
+                            paddingTop: '12px',
                             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                         }}
                     >
-                        <span style={{ color: 'white', fontWeight: '800', fontSize: '24px' }}>Total</span>
+                        <span style={{ color: 'white', fontWeight: '700', fontSize: '15px' }}>Total</span>
                         <span
                             style={{
-                                fontWeight: '800',
-                                fontSize: '24px',
+                                fontWeight: '700',
+                                fontSize: '15px',
                                 color: '#10B981',
-                                textShadow: '0 0 20px rgba(16, 185, 129, 0.35)',
                             }}
                         >
                             {total}
@@ -671,40 +769,6 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                         borderTop: '1px solid rgba(255, 255, 255, 0.06)',
                     }}
                 >
-                    {onContinueShopping && (
-                        <button
-                            onClick={onContinueShopping}
-                            style={{
-                                width: '100%',
-                                height: '56px',
-                                fontWeight: '700',
-                                fontSize: '16px',
-                                borderRadius: '16px',
-                                border: 'none',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%)',
-                                color: '#000000',
-                                boxShadow: '0 4px 20px rgba(255, 255, 255, 0.12)',
-                                transition: 'all 0.3s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                                e.currentTarget.style.boxShadow = '0 8px 28px rgba(255, 255, 255, 0.18)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 255, 255, 0.12)';
-                            }}
-                        >
-                            Continue Shopping
-                            <ArrowRight style={{ width: '20px', height: '20px' }} />
-                        </button>
-                    )}
-
                     {/* View Receipt Button - Always show, with fallback when URL not yet available */}
                     <a
                         href={receiptUrl || '#'}
@@ -747,8 +811,41 @@ export const OrderConfirmationCard: React.FC<OrderConfirmationCardProps> = ({
                         }}
                     >
                         View Receipt
-                        <Receipt style={{ width: '20px', height: '20px' }} />
                     </a>
+
+                    {onContinueShopping && (
+                        <button
+                            onClick={onContinueShopping}
+                            style={{
+                                width: '100%',
+                                height: '56px',
+                                fontWeight: '700',
+                                fontSize: '16px',
+                                borderRadius: '16px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%)',
+                                color: '#000000',
+                                boxShadow: '0 4px 20px rgba(255, 255, 255, 0.12)',
+                                transition: 'all 0.3s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 8px 28px rgba(255, 255, 255, 0.18)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 20px rgba(255, 255, 255, 0.12)';
+                            }}
+                        >
+                            Continue Shopping
+                            <ArrowRight style={{ width: '20px', height: '20px' }} />
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

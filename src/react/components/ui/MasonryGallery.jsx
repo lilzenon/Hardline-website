@@ -608,41 +608,83 @@ const MasonryGallery = ({
               }
             }}
           >
-            <img
-              src={expandedImage.urls?.large || expandedImage.urls?.original || expandedImage.url || expandedImage.src || expandedImage.image_url || expandedImage.file_url}
-              alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
-              title={expandedImage.title || expandedImage.alt || 'Gallery image'}
-              crossOrigin="anonymous"
-              referrerPolicy="no-referrer"
-              style={{
-                // 🚨 FIX: Use explicit max dimensions to prevent cropping
-                maxWidth: isMobile() ? 'calc(100vw - 60px)' : 'calc(100vw - 80px)',
-                maxHeight: isMobile() ? 'calc(100vh - 120px)' : 'calc(100vh - 80px)',
-                width: 'auto',
-                height: 'auto',
-                objectFit: 'contain', // Ensure entire image is visible
-                borderRadius: '12px',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
-                display: 'block',
-                margin: '0 auto'
-              }}
-              onError={(e) => {
-                const target = e.target;
-                const currentSrc = target.src;
+            {/* 🚀 PERFORMANCE: Progressive loading - show medium first, then large */}
+            {(() => {
+              // Determine best available URLs for progressive loading
+              const mediumSrc = expandedImage.urls?.medium || expandedImage.url || expandedImage.src;
+              const largeSrc = expandedImage.urls?.large || expandedImage.urls?.original || mediumSrc;
+              const shouldProgressiveLoad = largeSrc !== mediumSrc;
 
-                if (expandedImage.urls) {
-                  if (currentSrc !== expandedImage.urls.medium && expandedImage.urls.medium) {
-                    target.src = expandedImage.urls.medium;
-                    return;
-                  } else if (currentSrc !== expandedImage.urls.original && expandedImage.urls.original) {
-                    target.src = expandedImage.urls.original;
-                    return;
-                  }
-                }
-
-                target.style.display = 'none';
-              }}
-            />
+              return (
+                <>
+                  {/* Medium image - shows immediately */}
+                  <img
+                    src={mediumSrc}
+                    alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
+                    title={expandedImage.title || expandedImage.alt || 'Gallery image'}
+                    crossOrigin="anonymous"
+                    referrerPolicy="no-referrer"
+                    loading="eager"
+                    decoding="sync"
+                    style={{
+                      maxWidth: isMobile() ? 'calc(100vw - 60px)' : 'calc(100vw - 80px)',
+                      maxHeight: isMobile() ? 'calc(100vh - 120px)' : 'calc(100vh - 80px)',
+                      width: 'auto',
+                      height: 'auto',
+                      objectFit: 'contain',
+                      borderRadius: '12px',
+                      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+                      display: 'block',
+                      margin: '0 auto',
+                      // Hide if large is loaded (handled by sibling img)
+                      position: shouldProgressiveLoad ? 'absolute' : 'relative',
+                      zIndex: 1
+                    }}
+                    onError={(e) => {
+                      const target = e.target;
+                      if (expandedImage.urls?.thumbnail) {
+                        target.src = expandedImage.urls.thumbnail;
+                      }
+                    }}
+                  />
+                  {/* Large image - loads in background, replaces medium when ready */}
+                  {shouldProgressiveLoad && (
+                    <img
+                      src={largeSrc}
+                      alt={expandedImage.alt || expandedImage.title || 'Gallery image'}
+                      title={expandedImage.title || expandedImage.alt || 'Gallery image'}
+                      crossOrigin="anonymous"
+                      referrerPolicy="no-referrer"
+                      loading="eager"
+                      decoding="async"
+                      style={{
+                        maxWidth: isMobile() ? 'calc(100vw - 60px)' : 'calc(100vw - 80px)',
+                        maxHeight: isMobile() ? 'calc(100vh - 120px)' : 'calc(100vh - 80px)',
+                        width: 'auto',
+                        height: 'auto',
+                        objectFit: 'contain',
+                        borderRadius: '12px',
+                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+                        display: 'block',
+                        margin: '0 auto',
+                        position: 'relative',
+                        zIndex: 2,
+                        opacity: 0,
+                        transition: 'opacity 0.2s ease-out'
+                      }}
+                      onLoad={(e) => {
+                        // Fade in large image when loaded
+                        e.target.style.opacity = '1';
+                      }}
+                      onError={(e) => {
+                        // If large fails, hide it and keep medium visible
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  )}
+                </>
+              );
+            })()}
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -748,6 +790,14 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         minHeight: isLoaded ? 'auto' : ((typeof window !== 'undefined' && window.innerWidth < 768) ? '160px' : '220px')
       }}
       onClick={handleClick}
+      onMouseEnter={() => {
+        // 🚀 PRELOAD: Start loading large variant on hover for faster lightbox
+        const largeSrc = image.urls?.large || image.urls?.original;
+        if (largeSrc && typeof window !== 'undefined') {
+          const preloader = new Image();
+          preloader.src = largeSrc;
+        }
+      }}
       onTouchStart={(e) => {
         if (window.innerWidth < 768) {
           const t = e.touches && e.touches[0];
