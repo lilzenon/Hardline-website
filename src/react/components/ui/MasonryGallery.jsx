@@ -735,15 +735,13 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         position: 'relative',
         borderRadius: '12px',
         overflow: 'hidden',
-        // 🚨 FIX: Use subtle dark background during loading to prevent flash-to-black
-        background: isLoaded ? 'transparent' : 'rgba(18, 18, 18, 0.3)',
+        // Container is always visible - only image fades in
+        background: 'transparent',
         border: 'none',
         backdropFilter: 'none',
         WebkitBackdropFilter: 'none',
         cursor: onClick ? 'pointer' : 'default',
-        // 🚨 FIX: Use CSS transition for smooth fade-in instead of abrupt visibility
-        opacity: isLoaded ? 1 : 0.01, // Near-invisible but not zero to prevent layout issues
-        transition: 'opacity 0.4s ease-out, background 0.3s ease',
+        opacity: 1, // Container always visible
         // Reserve space to ensure lazy-loading triggers correctly
         width: '100%',
         aspectRatio: (image?.width && image?.height) ? `${image.width} / ${image.height}` : undefined,
@@ -890,9 +888,9 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
             width: '100%',
             height: 'auto',
             display: 'block',
-            transition: 'opacity 0.4s ease, transform 0.3s ease',
+            // Fast fade-in for quick image appearance
+            transition: 'opacity 0.15s ease-out',
             opacity: isLoaded ? 1 : 0
-            // Removed objectFit and aspectRatio to allow natural image sizing
           }}
         />
       ) : (
