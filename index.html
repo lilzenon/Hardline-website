@@ -21,6 +21,42 @@
     <link rel="preload" href="/fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
     <link rel="preload" href="/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
 
+    <!-- Google Analytics - Dynamic Loading from API -->
+    <script>
+        // 🚀 CRITICAL: Load Google Analytics immediately on page load
+        // Fetches GA ID from dashboard and injects gtag.js before React hydrates
+        (function () {
+            // Initialize dataLayer first (before gtag.js loads)
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            window.gtag = gtag;
+            gtag('js', new Date());
+
+            // Fetch GA ID from settings API
+            fetch('/api/settings/seo/fast')
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    var gaId = data.settings && data.settings.google_analytics_id;
+                    if (gaId && gaId.trim()) {
+                        console.log('📊 Google Analytics ID loaded:', gaId);
+
+                        // Load gtag.js script
+                        var script = document.createElement('script');
+                        script.async = true;
+                        script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+                        document.head.appendChild(script);
+
+                        // Configure GA4
+                        gtag('config', gaId, { send_page_view: true });
+                        console.log('✅ Google Analytics 4 initialized:', gaId);
+                    }
+                })
+                .catch(function (err) {
+                    console.warn('⚠️ Failed to load GA settings:', err);
+                });
+        })();
+    </script>
+
     <!-- Defer YouTube preconnect until after LCP to reduce contention -->
     <script>
         window.addEventListener('load', () => {

@@ -195,13 +195,11 @@ export const TrackingPixelLoader = () => {
 
     const initializePixels = useCallback(() => {
         if (initialized.current) return;
-        if (!hasGDPRConsent()) {
-            console.log('📊 Tracking pixels waiting for GDPR consent');
-            return;
-        }
+        // 🚀 REMOVED GDPR CONSENT CHECK - User confirmed consent is not required
+        // Tracking pixels now load immediately when settings are available
 
         initialized.current = true;
-        console.log('📊 Initializing tracking pixels...');
+        console.log('📊 Initializing tracking pixels (no consent gate)...');
 
         // Google Ads / GA4
         if (seoSettings?.google_ads_enabled && seoSettings?.google_ads_id) {
@@ -233,27 +231,13 @@ export const TrackingPixelLoader = () => {
     }, [seoSettings]);
 
     // Initialize on mount or when settings change
+    // 🚀 SIMPLIFIED: No consent listeners needed - pixels load immediately
     useEffect(() => {
-        initializePixels();
-
-        // Listen for consent changes
-        const handleConsentChange = () => {
-            if (hasGDPRConsent()) {
-                initializePixels();
-            }
-        };
-
-        window.addEventListener('gdpr_consent_granted', handleConsentChange);
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'gdpr_consent') {
-                handleConsentChange();
-            }
-        });
-
-        return () => {
-            window.removeEventListener('gdpr_consent_granted', handleConsentChange);
-        };
-    }, [initializePixels]);
+        // Initialize as soon as seoSettings are available
+        if (seoSettings) {
+            initializePixels();
+        }
+    }, [initializePixels, seoSettings]);
 
     // Track page views on route changes
     useEffect(() => {
