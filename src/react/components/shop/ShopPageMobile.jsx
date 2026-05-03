@@ -163,7 +163,7 @@ export default function ShopPageMobile({ products, loading, error, onRetry }) {
                 style={{
                   padding: '12px 24px',
                   minHeight: '44px',
-                  background: 'linear-gradient(135deg, #319DFF 0%, #1E7ACC 100%)',
+                  background: 'linear-gradient(135deg, #f90d0d 0%, #1E7ACC 100%)',
                   border: 'none',
                   borderRadius: '8px',
                   fontFamily: 'Inter, sans-serif',

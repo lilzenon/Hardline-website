@@ -48,11 +48,11 @@ module.exports = {
         extend: {
             colors: {
                 primary: {
-                    50: '#eff6ff',
-                    500: '#3b82f6',
-                    600: '#2563eb',
-                    700: '#1d4ed8',
-                    900: '#1e3a8a'
+                    50: '#fef2f2',
+                    500: '#f90d0d',
+                    600: '#c70a0a',
+                    700: '#9f0808',
+                    900: '#5c0505'
                 }
             },
             fontFamily: {

@@ -334,7 +334,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
                         marginBottom: '4px'
                       }}
                     >
-                      <Eye size={16} color="#319DFF" />
+                      <Eye size={16} color="#f90d0d" />
                       <span
                         style={{
                           fontSize: '14px',
@@ -409,7 +409,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
                         marginBottom: '4px'
                       }}
                     >
-                      <Database size={16} color="#319DFF" />
+                      <Database size={16} color="#f90d0d" />
                       <span
                         style={{
                           fontSize: '14px',
@@ -487,7 +487,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
                   style={{
                     width: '100%',
                     height: '48px',
-                    background: '#319DFF',
+                    background: '#f90d0d',
                     border: 'none',
                     borderRadius: '12px',
                     color: '#FFFFFF',
@@ -536,7 +536,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#319DFF',
+                    color: '#f90d0d',
                     fontSize: '14px',
                     fontWeight: '500',
                     fontFamily: 'Inter, sans-serif',
@@ -548,7 +548,7 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
                     e.target.style.color = '#2B8CE6';
                   }}
                   onMouseLeave={(e) => {
-                    e.target.style.color = '#319DFF';
+                    e.target.style.color = '#f90d0d';
                   }}
                 >
                   ← Back to simple view

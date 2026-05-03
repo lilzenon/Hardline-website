@@ -319,7 +319,7 @@ router.get(
                             padding: 0.875rem 2rem;
                             background: rgba(49, 157, 255, 0.2);
                             border: 1px solid rgba(49, 157, 255, 0.4);
-                            color: #319DFF;
+                            color: #f90d0d;
                             text-decoration: none;
                             border-radius: 12px;
                             font-weight: 600;
@@ -357,7 +357,7 @@ router.get(
                         body { margin: 0; padding: 2rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; text-align: center; }
                         h1 { font-size: 2rem; margin-bottom: 1rem; }
                         p { color: rgba(255, 255, 255, 0.7); }
-                        a { color: #319DFF; text-decoration: none; }
+                        a { color: #f90d0d; text-decoration: none; }
                     </style>
                 </head>
                 <body>

@@ -75,7 +75,7 @@ const Breadcrumb = ({ items = [], separator = '›' }) => {
                   display: 'inline-block'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.color = '#319DFF';
+                  e.target.style.color = '#f90d0d';
                 }}
                 onMouseLeave={(e) => {
                   e.target.style.color = 'rgba(255, 255, 255, 0.5)';

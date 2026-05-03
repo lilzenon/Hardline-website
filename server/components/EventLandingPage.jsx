@@ -161,7 +161,7 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
             height: 48px;
             margin: 0 auto 1.5rem;
             border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top-color: #319DFF;
+            border-top-color: #f90d0d;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -196,7 +196,7 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
             padding: 0.875rem 2rem;
             background: rgba(49, 157, 255, 0.2);
             border: 1px solid rgba(49, 157, 255, 0.4);
-            color: #319DFF;
+            color: #f90d0d;
             text-decoration: none;
             border-radius: 12px;
             font-weight: 600;

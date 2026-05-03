@@ -135,7 +135,7 @@ const drawerStyles = {
     fontFamily: 'Inter, sans-serif',
     fontWeight: 500,
     fontSize: '14px',
-    color: '#319DFF',
+    color: '#f90d0d',
   },
   quantityControls: {
     display: 'flex',

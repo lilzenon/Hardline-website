@@ -631,7 +631,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                         </p>
                     ` : ''}
                     ${event.external_ticket_url ? `
-                        <a href="${event.external_ticket_url}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #319DFF; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                        <a href="${event.external_ticket_url}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #f90d0d; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">
                             Get Tickets
                         </a>
                     ` : ''}
@@ -659,20 +659,20 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                     <p style="${descriptionStyles}">${metaTags.description || 'Get in touch with BOUNCE2BOUNCE.'}</p>
                     <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
                         <p style="margin-bottom: 1rem;">
-                            <strong>Email:</strong> <a href="mailto:info@bounce2bounce.com" style="color: #319DFF; text-decoration: none;">info@bounce2bounce.com</a>
+                            <strong>Email:</strong> <a href="mailto:info@bounce2bounce.com" style="color: #f90d0d; text-decoration: none;">info@bounce2bounce.com</a>
                         </p>
                         <p style="margin-bottom: 1rem;">
                             <strong>Follow us:</strong>
                         </p>
                         <ul style="list-style: none; padding: 0;">
                             <li style="margin-bottom: 0.5rem;">
-                                <a href="https://instagram.com/bounce2bounce_" target="_blank" style="color: #319DFF; text-decoration: none;">Instagram</a>
+                                <a href="https://instagram.com/bounce2bounce_" target="_blank" style="color: #f90d0d; text-decoration: none;">Instagram</a>
                             </li>
                             <li style="margin-bottom: 0.5rem;">
-                                <a href="https://twitter.com/bounce2bounce_" target="_blank" style="color: #319DFF; text-decoration: none;">Twitter</a>
+                                <a href="https://twitter.com/bounce2bounce_" target="_blank" style="color: #f90d0d; text-decoration: none;">Twitter</a>
                             </li>
                             <li style="margin-bottom: 0.5rem;">
-                                <a href="https://facebook.com/bounce2bounce_" target="_blank" style="color: #319DFF; text-decoration: none;">Facebook</a>
+                                <a href="https://facebook.com/bounce2bounce_" target="_blank" style="color: #f90d0d; text-decoration: none;">Facebook</a>
                             </li>
                         </ul>
                     </div>
@@ -1612,12 +1612,12 @@ async function reactHomepage(req, res) {
             .noscript-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
             .noscript-text { font-size: 16px; opacity: 0.8; line-height: 1.6; margin-bottom: 24px; }
             .noscript-btn { 
-                display: inline-block; background: #319DFF; color: #fff; 
+                display: inline-block; background: #f90d0d; color: #fff; 
                 padding: 14px 28px; border-radius: 12px; text-decoration: none; 
                 font-weight: 600; font-size: 16px; margin: 8px;
             }
             .noscript-social { margin-top: 32px; }
-            .noscript-social a { color: #319DFF; margin: 0 12px; text-decoration: none; }
+            .noscript-social a { color: #f90d0d; margin: 0 12px; text-decoration: none; }
         </style>
         <div class="noscript-container">
             <img src="/images/figma-exact/b2b-logo-nav.svg" alt="BOUNCE2BOUNCE" class="noscript-logo">
@@ -1709,7 +1709,7 @@ async function reactHomepage(req, res) {
         p { font-size: 16px; opacity: 0.8; margin-bottom: 24px; max-width: 400px; }
         .btn {
             display: inline-block;
-            background: #319DFF;
+            background: #f90d0d;
             color: #fff;
             padding: 14px 28px;
             border-radius: 12px;
