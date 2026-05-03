@@ -268,7 +268,7 @@ export default function MaintenancePage() {
             allow="web-share"
             allowtransparency="true"
             style={{ width: '1px', minWidth: '100%', maxWidth: '1000px', height: '160px', border: 'none', marginTop: '-6px' }}
-            src="https://embed.laylo.com?dropId=1nTsX&color=f60509&minimal=true&theme=dark&background=transparent"
+            src="https://embed.laylo.com?dropId=1nTsX&color=f90d0d&minimal=true&theme=dark&background=transparent"
             title="Stay updated with HARDLINE"
           />
         </div>
