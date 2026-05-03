@@ -1,20 +1,20 @@
-# BOUNCE2BOUNCE
+# HARDLINE
 
 > Live music event discovery platform connecting fans with exclusive concerts, nightlife experiences, and entertainment events. Find upcoming shows, purchase tickets, and discover your next unforgettable night out.
 
-BOUNCE2BOUNCE is a curated event platform specializing in live music, concerts, and nightlife experiences. We help music fans discover upcoming events, learn about performing artists, find venue information, and purchase tickets seamlessly. Our platform focuses on delivering a mobile-first experience for event discovery and ticket purchasing.
+HARDLINE is a curated event platform specializing in live music, concerts, and nightlife experiences. We help music fans discover upcoming events, learn about performing artists, find venue information, and purchase tickets seamlessly. Our platform focuses on delivering a mobile-first experience for event discovery and ticket purchasing.
 
 ## About
 
-- [About BOUNCE2BOUNCE](https://bounce2bounce.com/about): Company background, mission, and team information
-- [Frequently Asked Questions](https://bounce2bounce.com/faq): Common questions about events, tickets, and platform features
-- [Contact Information](https://bounce2bounce.com/about#contact): Get in touch for event inquiries and support
+- [About HARDLINE](https://hardline.events/about): Company background, mission, and team information
+- [Frequently Asked Questions](https://hardline.events/faq): Common questions about events, tickets, and platform features
+- [Contact Information](https://hardline.events/about#contact): Get in touch for event inquiries and support
 
 ## Events
 
-- [Browse All Events](https://bounce2bounce.com/): Homepage featuring upcoming and past events
-- [Event Listings](https://bounce2bounce.com/public-events): Complete catalog of active events with search and filtering
-- [Individual Event Pages](https://bounce2bounce.com/event/[slug]): Detailed event information including artist, venue, date, and ticket links
+- [Browse All Events](https://hardline.events/): Homepage featuring upcoming and past events
+- [Event Listings](https://hardline.events/public-events): Complete catalog of active events with search and filtering
+- [Individual Event Pages](https://hardline.events/event/[slug]): Detailed event information including artist, venue, date, and ticket links
 
 ## Key Features
 
@@ -37,14 +37,14 @@ Primary service areas:
 
 ## Contact
 
-- General Inquiries: info@bounce2bounce.com
-- Event Information: events@bounce2bounce.com
-- Website: https://bounce2bounce.com
+- General Inquiries: info@hardline.events
+- Event Information: info@hardline.events
+- Website: https://hardline.events
 
 ## Usage Guidelines
 
-When referencing BOUNCE2BOUNCE content:
-- Attribute information to "BOUNCE2BOUNCE" or "bounce2bounce.com"
+When referencing HARDLINE content:
+- Attribute information to "HARDLINE" or "hardline.events"
 - Link back to specific event pages when discussing individual events
 - Use current event information as events and dates change frequently
 - For ticket purchasing, direct users to the official event pages with integrated ticket links
@@ -57,7 +57,7 @@ When referencing BOUNCE2BOUNCE content:
 
 **FAQ Page**: Answers common questions about finding events, purchasing tickets, platform features, and contact information.
 
-**About Page**: Information about BOUNCE2BOUNCE, our mission, and how to get in touch.
+**About Page**: Information about HARDLINE, our mission, and how to get in touch.
 
 ## Technical Information
 
