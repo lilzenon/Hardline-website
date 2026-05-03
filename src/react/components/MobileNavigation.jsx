@@ -427,7 +427,7 @@ const MobileNavigation = ({
           >
             <img
               src="/images/b2b-logo-updated.svg"
-              alt="B2B Logo"
+              alt="Hardline Logo"
               className="mobile-navigation-logo"
               fetchpriority="high"
               style={{
@@ -570,7 +570,7 @@ const MobileNavigation = ({
           >
             <img
               src="/images/b2b-logo-updated.svg"
-              alt="B2B Logo"
+              alt="Hardline Logo"
               className="mobile-navigation-logo"
               style={{
                 width: '200px',

@@ -55,11 +55,11 @@ const AboutPageMobile = () => {
   // The SEOProvider automatically detects the /about page and applies dashboard settings
   // via the seoService.js detectPageType() and getPageSpecificSEO() functions
   useEffect(() => {
-    const siteUrl = 'https://bounce2bounce.com';
+    const siteUrl = 'https://hardline.events';
     const pageUrl = `${siteUrl}/about`;
 
     // Define SEO variables for JSON-LD structured data
-    const description = DEFAULT_SEO_SETTINGS?.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
+    const description = DEFAULT_SEO_SETTINGS?.about_page_description || 'Learn about HARDLINE - NJ\'s premiere EDM collective curating exclusive live music events.';
     const ogImage = DEFAULT_SEO_SETTINGS?.about_page_og_image || `${siteUrl}/images/og-image.png`;
 
     const ldId = 'ld-json-about';
@@ -71,8 +71,8 @@ const AboutPageMobile = () => {
     script.text = JSON.stringify({
       '@context': 'https://schema.org',
       '@graph': [
-        { '@type': 'Organization', 'name': 'BOUNCE2BOUNCE', 'url': siteUrl, 'logo': `${siteUrl}/images/og-image.png` },
-        { '@type': 'AboutPage', 'name': 'About BOUNCE2BOUNCE', 'url': pageUrl, 'description': description, 'isPartOf': { '@type': 'WebSite', 'name': 'BOUNCE2BOUNCE', 'url': siteUrl }, 'primaryImageOfPage': { '@type': 'ImageObject', 'url': ogImage } }
+        { '@type': 'Organization', 'name': 'HARDLINE', 'url': siteUrl, 'logo': `${siteUrl}/images/og-image.png` },
+        { '@type': 'AboutPage', 'name': 'About HARDLINE', 'url': pageUrl, 'description': description, 'isPartOf': { '@type': 'WebSite', 'name': 'HARDLINE', 'url': siteUrl }, 'primaryImageOfPage': { '@type': 'ImageObject', 'url': ogImage } }
       ]
     });
     document.head.appendChild(script);
@@ -190,7 +190,7 @@ const AboutPageMobile = () => {
 
       // 🔧 FIX: Only use fallback if we don't have cached content
       if (!aboutContent) {
-        const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
+        const staticContent = `HARDLINE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
 
 Our mission is to unite top talent, immersive production, and passionate fans to create the ultimate electronic music experiences in the tri-state area.`;
 

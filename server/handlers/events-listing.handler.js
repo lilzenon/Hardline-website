@@ -24,7 +24,7 @@ async function eventsListing(req, res) {
         
         // Generate SEO meta tags
         const metaTags = seoUtils.generateMetaTags({
-            title: 'Live Music Events - BOUNCE2BOUNCE',
+            title: 'Live Music Events - HARDLINE',
             description: 'Discover upcoming live music events, concerts, and exclusive experiences. Browse our curated selection of artists and venues. Get tickets and join the music community.',
             url: '/events',
             keywords: 'live music events, concerts, tickets, artists, venues, music experiences, event listings',
@@ -57,7 +57,7 @@ async function eventsListing(req, res) {
                 description_summary: aiUtils.generateContentSummary(event.description, 150)
             })),
             platform_info: {
-                name: 'BOUNCE2BOUNCE',
+                name: 'HARDLINE',
                 purpose: 'Live music event discovery and ticket sales',
                 features: ['Event browsing', 'Ticket purchasing', 'Artist discovery']
             }
@@ -66,7 +66,7 @@ async function eventsListing(req, res) {
         console.log(`📋 Events listing loaded: ${sortedEvents.length} active events`);
         
         res.render("events-listing", {
-            title: "Live Music Events - BOUNCE2BOUNCE",
+            title: "Live Music Events - HARDLINE",
             metaTags,
             events: sortedEvents,
             eventsListStructuredData: JSON.stringify(eventsListStructuredData),
@@ -80,7 +80,7 @@ async function eventsListing(req, res) {
         
         // Fallback response
         res.render("events-listing", {
-            title: "Live Music Events - BOUNCE2BOUNCE",
+            title: "Live Music Events - HARDLINE",
             events: [],
             totalEvents: 0,
             error: 'Unable to load events at this time. Please try again later.',
@@ -144,16 +144,16 @@ async function searchEvents(req, res) {
         // Generate search-specific meta tags
         const searchQuery = q || artist || location || 'events';
         const metaTags = seoUtils.generateMetaTags({
-            title: `${searchQuery} - Live Music Events | BOUNCE2BOUNCE`,
-            description: `Find ${searchQuery} events and concerts. Browse live music experiences, get tickets, and discover new artists on BOUNCE2BOUNCE.`,
+            title: `${searchQuery} - Live Music Events | HARDLINE`,
+            description: `Find ${searchQuery} events and concerts. Browse live music experiences, get tickets, and discover new artists on HARDLINE.`,
             url: `/events?${new URLSearchParams(req.query).toString()}`,
-            keywords: `${searchQuery}, live music, concerts, events, tickets, BOUNCE2BOUNCE`
+            keywords: `${searchQuery}, live music, concerts, events, tickets, HARDLINE`
         });
         
         console.log(`🎯 Search results: ${events.length} events found`);
         
         res.render("events-listing", {
-            title: `${searchQuery} - Live Music Events | BOUNCE2BOUNCE`,
+            title: `${searchQuery} - Live Music Events | HARDLINE`,
             metaTags,
             events,
             totalEvents: events.length,
@@ -165,7 +165,7 @@ async function searchEvents(req, res) {
     } catch (error) {
         console.error('❌ Error searching events:', error);
         res.status(500).render("events-listing", {
-            title: "Search Error - BOUNCE2BOUNCE",
+            title: "Search Error - HARDLINE",
             events: [],
             totalEvents: 0,
             error: 'Search temporarily unavailable. Please try again later.',

@@ -3,8 +3,8 @@
  * Centralized configuration for API endpoints across production and beta environments
  * 
  * Environment Configuration:
- * - Production: admin.b2b.click (serves bounce2bounce.com)
- * - Beta: beta.b2b.click (serves beta.bounce2bounce.com)
+ * - Production: admin.b2b.click (serves hardline.events)
+ * - Beta: beta.b2b.click (serves beta.hardline.events)
  * - Development: localhost:3002
  * 
  * Override with VITE_API_BASE_URL environment variable at build time.
@@ -30,11 +30,11 @@ export function getApiBaseUrl() {
   }
   
   // Beta environment: use beta API
-  if (hostname === 'beta.bounce2bounce.com' || hostname.startsWith('beta.')) {
+  if (hostname === 'beta.hardline.events' || hostname.startsWith('beta.')) {
     return 'https://beta.b2b.click';
   }
   
-  // Production: use admin.b2b.click (serves bounce2bounce.com)
+  // Production: use admin.b2b.click (serves hardline.events)
   return 'https://admin.b2b.click';
 }
 
@@ -53,7 +53,7 @@ export function isDevelopment() {
  */
 export function isBetaEnvironment() {
   const hostname = window.location.hostname;
-  return hostname === 'beta.bounce2bounce.com' || hostname.startsWith('beta.');
+  return hostname === 'beta.hardline.events' || hostname.startsWith('beta.');
 }
 
 /**

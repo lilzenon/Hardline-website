@@ -6,13 +6,13 @@
  * https://developers.google.com/search/docs/appearance/structured-data/breadcrumb
  * 
  * Key Requirements:
- * - Use canonical domain (bounce2bounce.com)
+ * - Use canonical domain (hardline.events)
  * - Homepage labeled as "Events" (not "Home")
  * - Position starts at 1
  * - Last item doesn't need "item" property
  */
 
-const CANONICAL_DOMAIN = 'bounce2bounce.com';
+const CANONICAL_DOMAIN = 'hardline.events';
 const CANONICAL_ORIGIN = `https://${CANONICAL_DOMAIN}`;
 
 /**

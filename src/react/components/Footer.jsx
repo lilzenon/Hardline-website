@@ -208,7 +208,7 @@ const Footer = ({ compact = false }) => {
             textAlign: 'center'
           }}
         >
-          © {new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.
+          © {new Date().getFullYear()} HARDLINE. All rights reserved.
         </p>
       </div>
     </footer>

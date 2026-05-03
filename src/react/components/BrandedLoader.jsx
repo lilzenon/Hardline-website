@@ -156,14 +156,14 @@ const BrandedLoader = ({
         {/* B2B Logo - New SMALL_B2BLOGO_WHITE.svg */}
         <img
           src="/images/SMALL_B2BLOGO_WHITE.svg"
-          alt="Bounce2Bounce Logo"
+          alt="HardLine Events Logo"
           style={{
             ...logoStyle,
             width: '120px',
             height: 'auto',
             maxWidth: '100%'
           }}
-          aria-label="Bounce2Bounce Logo"
+          aria-label="HardLine Events Logo"
         />
       </div>
 

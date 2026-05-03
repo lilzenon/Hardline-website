@@ -4,7 +4,7 @@ import { secureApiRequest } from '../utils/security';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
-    email: 'info@bounce2bounce.com',
+    email: 'info@hardline.events',
     password: '',
     totpCode: ''
   });
@@ -409,7 +409,7 @@ const AdminLogin = () => {
       <div style={styles.logoContainer}>
         <img 
           src="/images/b2b-logo.svg" 
-          alt="B2B Logo" 
+          alt="Hardline Logo" 
           style={styles.logo}
         />
       </div>

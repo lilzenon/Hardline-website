@@ -1,6 +1,6 @@
 /**
  * SEO Settings Handler
- * Handles SEO configuration management for BOUNCE2BOUNCE
+ * Handles SEO configuration management for HARDLINE
  */
 
 const query = require('../queries');
@@ -16,7 +16,7 @@ async function renderSEOSettings(req, res) {
         const seoSettings = await query.seoSettings.getSEOSettings();
         
         res.render("seo-settings", {
-            title: "SEO Settings - BOUNCE2BOUNCE",
+            title: "SEO Settings - HARDLINE",
             pageTitle: "SEO Settings",
             layout: "layouts/modern-dashboard",
             currentPage: "seo-settings",

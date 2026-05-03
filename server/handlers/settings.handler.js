@@ -1,6 +1,6 @@
 /**
  * Settings Handler
- * Handles comprehensive settings management for BOUNCE2BOUNCE
+ * Handles comprehensive settings management for HARDLINE
  */
 
 const query = require('../queries');
@@ -16,7 +16,7 @@ async function renderSettings(req, res) {
         const seoSettings = await query.seoSettings.getSEOSettings();
 
         res.render("settings", {
-            title: "Settings - BOUNCE2BOUNCE",
+            title: "Settings - HARDLINE",
             pageTitle: "Settings",
             layout: "layouts/modern-dashboard",
             currentPage: "settings",
@@ -161,12 +161,12 @@ async function resetSettings(req, res) {
         if (section === 'seo') {
             // Reset SEO settings to defaults
             const defaultSeoSettings = {
-                default_title: 'BOUNCE2BOUNCE - Event Management Platform',
-                default_description: 'Create, manage, and promote your events with BOUNCE2BOUNCE. The ultimate platform for event organizers.',
-                default_keywords: 'events, event management, tickets, promotion, BOUNCE2BOUNCE',
-                default_author: 'BOUNCE2BOUNCE',
+                default_title: 'HARDLINE - Event Management Platform',
+                default_description: 'Create, manage, and promote your events with HARDLINE. The ultimate platform for event organizers.',
+                default_keywords: 'events, event management, tickets, promotion, HARDLINE',
+                default_author: 'HARDLINE',
                 default_og_image: '/images/og-image.png',
-                twitter_handle: '@bounce2bounce',
+                twitter_handle: '@hardline events',
                 google_analytics_id: '',
                 google_search_console_id: '',
                 enable_compression: true,
@@ -212,7 +212,7 @@ async function exportSettings(req, res) {
         };
 
         res.setHeader('Content-Type', 'application/json');
-        res.setHeader('Content-Disposition', 'attachment; filename="bounce2bounce-settings.json"');
+        res.setHeader('Content-Disposition', 'attachment; filename="hardline events-settings.json"');
         res.json(settings);
 
     } catch (error) {

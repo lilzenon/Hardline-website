@@ -11,7 +11,7 @@ const Dither = lazy(() => import('./ui/DitherShadcn').then(m => ({ default: m.Di
  * - Full-screen dither effect background with React 19 compatibility
  * - CSS fallback for when Three.js fails
  * - Ultra-transparent glassmorphism card
- * - BOUNCE2BOUNCE logo positioning
+ * - HARDLINE logo positioning
  * - Laylo iframe for user engagement
  * - Responsive layout
  * - Accessibility compliant
@@ -197,7 +197,7 @@ export default function MaintenancePage() {
         width: '90%',
         marginTop: '100px'
       }}>
-        {/* BOUNCE2BOUNCE Logo */}
+        {/* HARDLINE Logo */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -207,7 +207,7 @@ export default function MaintenancePage() {
 
           <img
             src="/images/figma-exact/b2b-logo-nav.svg"
-            alt="BOUNCE2BOUNCE"
+            alt="HARDLINE"
             style={{
               height: '48px',
               width: 'auto',
@@ -233,7 +233,7 @@ export default function MaintenancePage() {
             fontWeight: '600',
             letterSpacing: '0.5px'
           }}>
-            BOUNCE2BOUNCE
+            HARDLINE
           </div>
         </div>
         {/* Title above Laylo iframe */}
@@ -269,7 +269,7 @@ export default function MaintenancePage() {
             allowtransparency="true"
             style={{ width: '1px', minWidth: '100%', maxWidth: '1000px', height: '160px', border: 'none', marginTop: '-6px' }}
             src="https://embed.laylo.com?dropId=1nTsX&color=f60509&minimal=true&theme=dark&background=transparent"
-            title="Stay updated with BOUNCE2BOUNCE"
+            title="Stay updated with HARDLINE"
           />
         </div>
       </div>

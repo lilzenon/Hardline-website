@@ -3,8 +3,8 @@
  * Connects to the appropriate API server for product and checkout operations
  *
  * Environment Configuration:
- * - Production: admin.b2b.click (serves bounce2bounce.com)
- * - Beta: beta.b2b.click (serves beta.bounce2bounce.com)
+ * - Production: admin.b2b.click (serves hardline.events)
+ * - Beta: beta.b2b.click (serves beta.hardline.events)
  * - Development: localhost:3002
  *
  * Uses centralized API configuration from ../utils/apiConfig.js

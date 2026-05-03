@@ -1,5 +1,5 @@
 /**
- * Consolidated Analytics System for BOUNCE2BOUNCE Homepage
+ * Consolidated Analytics System for HARDLINE Homepage
  * Primary analytics implementation using sendBeacon/fetch
  * Sends all data to admin.b2b.click/api/analytics/track
  */
@@ -49,7 +49,7 @@ class AnalyticsBeacon {
         // Determine API endpoint based on environment and domain
         const hostname = window.location.hostname;
         const isDevelopment = hostname === 'localhost' || hostname === '127.0.0.1';
-        const isBeta = hostname === 'beta.bounce2bounce.com' || hostname.startsWith('beta.');
+        const isBeta = hostname === 'beta.hardline.events' || hostname.startsWith('beta.');
 
         let apiEndpoint;
         if (userConfig.apiEndpoint) {
@@ -63,13 +63,13 @@ class AnalyticsBeacon {
             console.log('🔧 Development mode detected, using Vite proxy:', apiEndpoint);
             console.log('🔧 Current location:', window.location.href);
         } else if (isBeta) {
-            // Beta environment - beta.bounce2bounce.com sends to beta.b2b.click
+            // Beta environment - beta.hardline.events sends to beta.b2b.click
             apiEndpoint = 'https://beta.b2b.click/api';
         } else if (hostname === 'b2b.click' || hostname === 'www.b2b.click') {
             // Current temporary setup - b2b.click homepage sends to admin.b2b.click
             apiEndpoint = 'https://admin.b2b.click/api';
-        } else if (hostname === 'bounce2bounce.com' || hostname === 'www.bounce2bounce.com') {
-            // Production setup - bounce2bounce.com sends to admin.b2b.click
+        } else if (hostname === 'hardline.events' || hostname === 'www.hardline.events') {
+            // Production setup - hardline.events sends to admin.b2b.click
             apiEndpoint = 'https://admin.b2b.click/api';
         } else {
             // Fallback to same domain

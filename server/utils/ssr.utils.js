@@ -3,7 +3,7 @@ const ReactDOMServer = require('react-dom/server');
 const env = require('../env');
 
 /**
- * Server-Side Rendering Utilities for BOUNCE2BOUNCE Event Pages
+ * Server-Side Rendering Utilities for HARDLINE Event Pages
  * 
  * This module provides utilities for rendering React components server-side
  * while maintaining SEO performance and enabling client-side hydration.
@@ -30,7 +30,7 @@ function generateHTMLTemplate({ reactHtml, metaTags, initialData, pageTitle, def
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     
     <!-- Page Title -->
-    <title>${escapeHtml(pageTitle || metaTags.title || 'BOUNCE2BOUNCE')}</title>
+    <title>${escapeHtml(pageTitle || metaTags.title || 'HARDLINE')}</title>
     
     <!-- Theme Color for Mobile Browser UI -->
     <meta name="theme-color" content="${initialData.event?.overscroll_background_color || '#f2f2f7'}"/>
@@ -42,7 +42,7 @@ function generateHTMLTemplate({ reactHtml, metaTags, initialData, pageTitle, def
     <!-- Basic SEO Meta Tags -->
     <meta name="description" content="${escapeHtml(metaTags.description || '')}">
     <meta name="keywords" content="${escapeHtml(metaTags.keywords || '')}">
-    <meta name="author" content="BOUNCE2BOUNCE">
+    <meta name="author" content="HARDLINE">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow">
     <link rel="canonical" href="${metaTags['og:url'] || `https://${domain}`}">
@@ -52,7 +52,7 @@ function generateHTMLTemplate({ reactHtml, metaTags, initialData, pageTitle, def
     <meta property="og:description" content="${escapeHtml(metaTags['og:description'] || '')}">
     <meta property="og:type" content="${metaTags['og:type'] || 'website'}">
     <meta property="og:url" content="${metaTags['og:url'] || ''}">
-    <meta property="og:site_name" content="${metaTags['og:site_name'] || 'BOUNCE2BOUNCE'}">
+    <meta property="og:site_name" content="${metaTags['og:site_name'] || 'HARDLINE'}">
     <meta property="og:locale" content="${metaTags['og:locale'] || 'en_US'}">
     ${metaTags['og:image'] ? `
     <meta property="og:image" content="${metaTags['og:image']}">
@@ -64,8 +64,8 @@ function generateHTMLTemplate({ reactHtml, metaTags, initialData, pageTitle, def
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="${metaTags['twitter:card'] || 'summary_large_image'}">
-    <meta name="twitter:site" content="${metaTags['twitter:site'] || '@bounce2bounce'}">
-    <meta name="twitter:creator" content="${metaTags['twitter:creator'] || '@bounce2bounce'}">
+    <meta name="twitter:site" content="${metaTags['twitter:site'] || '@hardline events'}">
+    <meta name="twitter:creator" content="${metaTags['twitter:creator'] || '@hardline events'}">
     <meta name="twitter:title" content="${escapeHtml(metaTags['twitter:title'] || '')}">
     <meta name="twitter:description" content="${escapeHtml(metaTags['twitter:description'] || '')}">
     ${metaTags['twitter:image'] ? `

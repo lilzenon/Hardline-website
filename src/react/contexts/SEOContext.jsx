@@ -184,7 +184,7 @@ export const SEOProvider = ({ children }) => {
   // 🚀 CRITICAL FIX: Generate meta tags from current settings with device info AND pathname
   // This ensures meta tags update when navigating between pages (/, /about, /faq)
   const metaTags = useMemo(() => {
-    if (!seoSettings) return { title: 'BOUNCE2BOUNCE', meta: [], link: [] };
+    if (!seoSettings) return { title: 'HARDLINE', meta: [], link: [] };
 
     // Always generate full meta tags to ensure dynamic updates work
     // React Helmet will properly manage conflicts with server-side tags
@@ -441,7 +441,7 @@ export const MaintenanceMode = () => {
         maxWidth: '400px',
         width: '90%'
       }}>
-        {/* BOUNCE2BOUNCE Logo */}
+        {/* HARDLINE Logo */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -450,7 +450,7 @@ export const MaintenanceMode = () => {
         }}>
           <img
             src="/images/figma-exact/b2b-logo-nav.svg"
-            alt="BOUNCE2BOUNCE"
+            alt="HARDLINE"
             style={{
               height: '48px',
               width: 'auto',
@@ -473,7 +473,7 @@ export const MaintenanceMode = () => {
             fontWeight: '600',
             letterSpacing: '0.5px'
           }}>
-            BOUNCE2BOUNCE
+            HARDLINE
           </div>
         </div>
 
@@ -498,7 +498,7 @@ export const MaintenanceMode = () => {
                 border: 'none'
               }}
               src="https://embed.laylo.com?dropId=c9ee71a5-2d3a-4da6-a528-eead61246989&color=ff0000&minimal=true&theme=light&background=transparent&customTitle=Stay Updated"
-              title="Stay updated with BOUNCE2BOUNCE"
+              title="Stay updated with HARDLINE"
             />
           )}
         </div>

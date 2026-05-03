@@ -48,7 +48,7 @@ export default function LayloEmbed({
       allowTransparency="true"
       style={{ width: '1px', minWidth: '100%', maxWidth: '1000px', height: 'auto', border: 'none', ...style }}
       src={src}
-      title="Stay updated with BOUNCE2BOUNCE"
+      title="Stay updated with HARDLINE"
       onLoad={() => {
         setLoaded(true);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);

@@ -99,7 +99,7 @@ const FAQPage = () => {
   // The SEOProvider automatically detects the /faq page and applies dashboard settings
   // via the seoService.js detectPageType() and getPageSpecificSEO() functions
   useEffect(() => {
-    const siteUrl = 'https://bounce2bounce.com';
+    const siteUrl = 'https://hardline.events';
     const pageUrl = `${siteUrl}/faq`;
 
     // JSON-LD FAQPage
@@ -131,7 +131,7 @@ const FAQPage = () => {
 
   // Reset document.title on unmount so homepage title restores correctly
   useEffect(() => {
-    const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'BOUNCE2BOUNCE - Premium Event Platform';
+    const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'HARDLINE - Premium Event Platform';
     return () => {
       document.title = defaultTitle;
     };
@@ -184,8 +184,8 @@ const FAQPage = () => {
         // Fallback to default content if API is unavailable
         const defaultFaqItems = [
           {
-            q: "What is BOUNCE2BOUNCE?",
-            a: "BOUNCE2BOUNCE is a premium live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales."
+            q: "What is HARDLINE?",
+            a: "HARDLINE is a premium live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales."
           },
           {
             q: "How do I buy tickets?",
@@ -196,12 +196,12 @@ const FAQPage = () => {
             a: "We accept all major credit cards, PayPal, and Apple Pay for secure and convenient transactions."
           },
           {
-            q: "Is BOUNCE2BOUNCE mobile-friendly?",
-            a: "Yes, BOUNCE2BOUNCE features a mobile-first design optimized for iOS Safari and all browsers, providing a seamless mobile experience for event discovery and ticket purchasing."
+            q: "Is HARDLINE mobile-friendly?",
+            a: "Yes, HARDLINE features a mobile-first design optimized for iOS Safari and all browsers, providing a seamless mobile experience for event discovery and ticket purchasing."
           },
           {
-            q: "How do I contact BOUNCE2BOUNCE?",
-            a: "You can reach us at info@bounce2bounce.com for general inquiries or events@bounce2bounce.com for event-related questions and artist promotion opportunities."
+            q: "How do I contact HARDLINE?",
+            a: "You can reach us at info@hardline.events for general inquiries or info@hardline.events for event-related questions and artist promotion opportunities."
           }
         ];
 
@@ -288,7 +288,7 @@ const FAQPage = () => {
             crossOrigin="anonymous"
             referrerPolicy="no-referrer"
             src="/images/figma-exact/b2b-logo-nav.svg"
-            alt="B2B Logo"
+            alt="Hardline Logo"
             loading="lazy"
             decoding="async"
             fetchPriority="high"

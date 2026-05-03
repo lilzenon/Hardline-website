@@ -1,10 +1,10 @@
 {
-    "name": "BOUNCE2BOUNCE - Live Music Events",
-    "short_name": "BOUNCE2BOUNCE",
+    "name": "HARDLINE - Live Music Events",
+    "short_name": "HARDLINE",
     "theme_color": "#000000",
     "background_color": "#000000",
     "display": "standalone",
-    "description": "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. BOUNCE2BOUNCE brings you unforgettable music experiences.",
+    "description": "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. HARDLINE brings you unforgettable music experiences.",
     "scope": "/",
     "start_url": "/",
     "orientation": "portrait-primary",
@@ -72,6 +72,6 @@
         "sizes": "1280x720",
         "type": "image/svg+xml",
         "platform": "wide",
-        "label": "BOUNCE2BOUNCE Homepage"
+        "label": "HARDLINE Homepage"
     }]
 }

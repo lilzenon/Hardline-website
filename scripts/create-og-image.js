@@ -1,5 +1,5 @@
 /**
- * Create Open Graph Image for BOUNCE2BOUNCE
+ * Create Open Graph Image for HARDLINE
  * Generates a 1200x630 PNG image optimized for social media sharing
  */
 
@@ -32,7 +32,7 @@ function createOGImageSVG() {
   <rect width="1200" height="630" fill="url(#accent2)"/>
   
   <!-- Main Content -->
-  <text x="600" y="280" text-anchor="middle" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="-2px">BOUNCE2BOUNCE</text>
+  <text x="600" y="280" text-anchor="middle" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="-2px">HARDLINE</text>
   
   <!-- Tagline -->
   <text x="600" y="340" text-anchor="middle" fill="#319DFF" font-family="Inter, Arial, sans-serif" font-size="32" font-weight="600">Live Music Events &amp; Artist Connections</text>
@@ -117,7 +117,7 @@ function createHTMLGenerator() {
 </head>
 <body>
     <div class="og-image">
-        <div class="logo">BOUNCE2BOUNCE</div>
+        <div class="logo">HARDLINE</div>
         <div class="tagline">Live Music Events & Artist Connections</div>
         <div class="description">Discover exclusive live music events and connect with artists</div>
     </div>
@@ -133,7 +133,7 @@ function createHTMLGenerator() {
 
 // Main execution
 function main() {
-    console.log('🎨 Creating Open Graph image for BOUNCE2BOUNCE...');
+    console.log('🎨 Creating Open Graph image for HARDLINE...');
     
     try {
         // Create SVG version

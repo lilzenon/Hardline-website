@@ -115,12 +115,12 @@ async function getSEOSettings() {
  */
 function getDefaultSEOSettings() {
     return {
-        default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
-        default_description: 'Discover and book premium events worldwide with BOUNCE2BOUNCE',
+        default_title: 'HARDLINE - NJ\'S PREMIERE EDM COLLECTIVE',
+        default_description: 'Discover and book premium events worldwide with HARDLINE',
         default_keywords: 'events, tickets, entertainment, concerts, festivals',
-        default_author: 'BOUNCE2BOUNCE',
+        default_author: 'HARDLINE',
         default_og_image: '',
-        twitter_handle: '@bounce2bounce',
+        twitter_handle: '@hardline events',
         google_analytics_id: '',
         google_search_console_id: '',
         google_ads_id: '',

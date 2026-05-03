@@ -52,7 +52,7 @@ const ContactPageMobile = () => {
 
   // Handle contact actions
   const handleEmailClick = () => {
-    window.location.href = 'mailto:hello@bounce2bounce.com';
+    window.location.href = 'mailto:info@hardline.events';
   };
 
   const handlePhoneClick = () => {
@@ -61,9 +61,9 @@ const ContactPageMobile = () => {
 
   const handleSocialClick = (platform) => {
     const urls = {
-      instagram: 'https://instagram.com/bounce2bounce',
-      twitter: 'https://twitter.com/bounce2bounce',
-      facebook: 'https://facebook.com/bounce2bounce'
+      instagram: 'https://instagram.com/hardline events',
+      twitter: 'https://twitter.com/hardline events',
+      facebook: 'https://facebook.com/hardline events'
     };
     window.open(urls[platform], '_blank');
   };
@@ -235,7 +235,7 @@ const ContactPageMobile = () => {
                         fontSize: '14px'
                       }}
                     >
-                      hello@bounce2bounce.com
+                      info@hardline.events
                     </div>
                   </div>
                 </div>

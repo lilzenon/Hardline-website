@@ -74,6 +74,6 @@ export const defaultMaintenanceSettings: MaintenanceSettings = {
   maintenance_mode: false,
   maintenance_message: 'We are currently performing scheduled maintenance. Please check back soon.',
   estimated_downtime: '2 hours',
-  contact_information: 'support@bounce2bounce.com',
+  contact_information: 'info@hardline.events',
   allowed_ips: '127.0.0.1,::1'
 }

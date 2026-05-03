@@ -183,10 +183,10 @@ export function getDefaultFallback(endpoint) {
         return {
             success: true,
             settings: {
-                default_title: "BOUNCE2BOUNCE - NJ'S PREMIERE EDM COLLECTIVE",
-                default_description: "Bounce2Bounce is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+                default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
+                default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
                 default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
-                twitter_handle: '@bounce2bounce'
+                twitter_handle: '@hardline events'
             },
             fallback: true
         };

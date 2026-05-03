@@ -303,8 +303,8 @@ export function preventClickjacking() {
             window.location.origin,
             'https://b2b.click',
             'https://www.b2b.click',
-            'https://bounce2bounce.com',
-            'https://www.bounce2bounce.com'
+            'https://hardline.events',
+            'https://www.hardline.events'
         ];
 
         try {

@@ -1,6 +1,6 @@
 /**
  * ShopPage - Main shop page with header and product grid
- * Customer-facing shop at bounce2bounce.com/shop
+ * Customer-facing shop at hardline.events/shop
  * Uses same header/footer/navigation as other pages (HomePage, AboutPage)
  *
  * @example
@@ -37,8 +37,8 @@ export default function ShopPage({ openCart = false }) {
 
   // Set SEO tags
   useEffect(() => {
-    updateTitle('Shop | BOUNCE2BOUNCE');
-    updateDescription('Official BOUNCE2BOUNCE merchandise. Shop exclusive clothing, accessories, and more.');
+    updateTitle('Shop | HARDLINE');
+    updateDescription('Official HARDLINE merchandise. Shop exclusive clothing, accessories, and more.');
   }, []);
 
   // Open cart on mount if openCart prop is true
@@ -178,7 +178,7 @@ export default function ShopPage({ openCart = false }) {
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
                 src="/images/figma-exact/b2b-logo-nav.svg"
-                alt="B2B Logo"
+                alt="Hardline Logo"
                 loading="lazy"
                 decoding="async"
                 onClick={() => handleNavigation('/')}

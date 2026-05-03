@@ -82,7 +82,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
     let retryCount = 0;
     const maxRetries = 3;
     const retryDelay = 1000; // Start with 1 second
-    const CACHE_KEY = 'bounce2bounce_social_links';
+    const CACHE_KEY = 'hardline events_social_links';
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
     // Try to load from cache

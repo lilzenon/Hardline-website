@@ -1,11 +1,11 @@
 /**
- * Service Worker for BOUNCE2BOUNCE
+ * Service Worker for HARDLINE
  * Implements caching strategies for performance optimization
  */
 
-const CACHE_NAME = 'bounce2bounce-v7-react-fix-' + Date.now();
-const STATIC_CACHE = 'bounce2bounce-static-v7-react-fix-' + Date.now();
-const DYNAMIC_CACHE = 'bounce2bounce-dynamic-v7-react-fix-' + Date.now();
+const CACHE_NAME = 'hardline events-v7-react-fix-' + Date.now();
+const STATIC_CACHE = 'hardline events-static-v7-react-fix-' + Date.now();
+const DYNAMIC_CACHE = 'hardline events-dynamic-v7-react-fix-' + Date.now();
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
@@ -30,7 +30,7 @@ self.addEventListener('install', event => {
             caches.keys().then(cacheNames => {
                 return Promise.all(
                     cacheNames.map(cacheName => {
-                        if (cacheName.includes('bounce2bounce') && !cacheName.includes('v7-react-fix')) {
+                        if (cacheName.includes('hardline events') && !cacheName.includes('v7-react-fix')) {
                             console.log('Service Worker: Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
                         }

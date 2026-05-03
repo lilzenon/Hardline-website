@@ -200,7 +200,7 @@ async function generateImageManifest() {
 // Main execution
 async function main() {
     try {
-        console.log('🖼️ BOUNCE2BOUNCE Image Optimization');
+        console.log('🖼️ HARDLINE Image Optimization');
         console.log('=====================================\n');
 
         await optimizeHeroImage();

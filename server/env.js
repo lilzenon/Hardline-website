@@ -70,7 +70,7 @@ const spec = {
 
     // 📨 SMS SETTINGS
     SMS_ENABLED: bool({ default: false }),
-    SMS_FROM_NAME: str({ default: "BOUNCE2BOUNCE" }),
+    SMS_FROM_NAME: str({ default: "HARDLINE" }),
     SMS_OPT_OUT_KEYWORDS: str({ default: "STOP,UNSUBSCRIBE,QUIT,END,CANCEL" }),
 
     // 🌐 SITE CONFIGURATION
@@ -83,7 +83,7 @@ const spec = {
     DASHBOARD_PROXY_ENABLED: bool({ default: true }),
 
     // 🌐 DOMAIN CONFIGURATION
-    PRODUCTION_HOMEPAGE_URL: str({ example: "https://bounce2bounce.com", default: "" }),
+    PRODUCTION_HOMEPAGE_URL: str({ example: "https://hardline.events", default: "" }),
     PRODUCTION_SHORTLINK_DOMAIN: str({ example: "https://b2b.click", default: "" }),
     PRODUCTION_DASHBOARD_URL: str({ example: "https://admin.b2b.click", default: "" }),
     ALLOWED_ORIGINS: str({ example: "https://domain1.com,https://domain2.com", default: "" }),
@@ -91,7 +91,7 @@ const spec = {
     // 📊 ANALYTICS CONFIGURATION
     ANALYTICS_ENABLED: bool({ default: true }),
     ANALYTICS_DASHBOARD_URL: str({ example: "https://admin.b2b.click/api/analytics", default: "" }),
-    HOMEPAGE_API_URL: str({ example: "https://bounce2bounce.com/api", default: "" }),
+    HOMEPAGE_API_URL: str({ example: "https://hardline.events/api", default: "" }),
 
     DISALLOW_ANONYMOUS_LINKS: bool({ default: true }),
     DISALLOW_REGISTRATION: bool({ default: true }),

@@ -3,7 +3,7 @@ const path = require('path');
 
 
 /**
- * SEO Utilities for BOUNCE2BOUNCE Event Platform
+ * SEO Utilities for HARDLINE Event Platform
  * Generates optimized meta tags, structured data, and SEO content
  */
 
@@ -17,17 +17,17 @@ function generateMetaTags(options = {}) {
         image,
         url,
         type = 'website',
-        siteName = 'BOUNCE2BOUNCE',
+        siteName = 'HARDLINE',
         twitterCard = 'summary_large_image',
         keywords,
-        author = 'BOUNCE2BOUNCE',
+        author = 'HARDLINE',
         publishedTime,
         modifiedTime
     } = options;
 
-    // CRITICAL SEO FIX: Always use bounce2bounce.com as canonical domain
+    // CRITICAL SEO FIX: Always use hardline.events as canonical domain
     // This ensures Google Search Console sees consistent canonical URLs
-    const CANONICAL_DOMAIN = 'https://bounce2bounce.com';
+    const CANONICAL_DOMAIN = 'https://hardline.events';
     const baseUrl = CANONICAL_DOMAIN;
     const fullUrl = url ? `${baseUrl}${url}` : baseUrl;
     // Use the actual uploaded OG image from admin dashboard as default
@@ -91,13 +91,13 @@ function generateMetaTags(options = {}) {
 
     return {
         // Basic meta tags
-        title: title || 'BOUNCE2BOUNCE - Live Music Events & Exclusive Experiences',
-        description: description || 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
+        title: title || 'HARDLINE - Live Music Events & Exclusive Experiences',
+        description: description || 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join HARDLINE for unforgettable music experiences.',
         keywords: keywords || 'live music events, concert tickets, artist promotion, event discovery, Asbury Park events, exclusive music experiences',
         author,
 
         // Open Graph tags
-        ogTitle: title || 'BOUNCE2BOUNCE - Live Music Events',
+        ogTitle: title || 'HARDLINE - Live Music Events',
         ogDescription: description || 'Discover exclusive live music events and connect with artists',
         ogImage: metaImage,
         ogUrl: fullUrl,
@@ -106,7 +106,7 @@ function generateMetaTags(options = {}) {
 
         // Twitter Card tags
         twitterCard,
-        twitterTitle: title || 'BOUNCE2BOUNCE - Live Music Events',
+        twitterTitle: title || 'HARDLINE - Live Music Events',
         twitterDescription: description || 'Discover exclusive live music events and connect with artists',
         twitterImage: metaImage,
 
@@ -139,7 +139,7 @@ function generateEventMetaTags(event) {
     }) : '';
 
     // Default fallback values
-    const defaultTitle = `${event.title} - ${event.artist_name || 'BOUNCE2BOUNCE'}`;
+    const defaultTitle = `${event.title} - ${event.artist_name || 'HARDLINE'}`;
     const defaultDescription = event.description ||
         `Join ${event.artist_name || 'us'} for ${event.title}${formattedDate ? ` on ${formattedDate}` : ''}${event.event_address ? ` at ${event.event_address}` : ''}. Get notified when tickets go live!`;
 
@@ -194,14 +194,14 @@ function generateEventMetaTags(event) {
         'og:image:type': 'image/jpeg',
         'og:url': fullUrl,
         'og:type': 'website', // ✅ Changed from 'article' to 'website' (more appropriate for event pages)
-        'og:site_name': 'BOUNCE2BOUNCE',
+        'og:site_name': 'HARDLINE',
         'og:locale': 'en_US',
 
         // ✅ GOOGLE IMAGE SEO: Twitter Card (also used by Google for rich snippets)
         // Twitter's large image card format is ideal for event cover images
         'twitter:card': 'summary_large_image',
-        'twitter:site': '@bounce2bounce',
-        'twitter:creator': '@bounce2bounce',
+        'twitter:site': '@hardline events',
+        'twitter:creator': '@hardline events',
         'twitter:title': twitterTitle,
         'twitter:description': twitterDescription,
         'twitter:image': twitterImage,
@@ -215,7 +215,7 @@ function generateEventMetaTags(event) {
         // Additional meta for better compatibility
         'article:published_time': event.created_at,
         'article:modified_time': event.updated_at,
-        'article:author': event.artist_name || 'BOUNCE2BOUNCE',
+        'article:author': event.artist_name || 'HARDLINE',
         'article:section': 'Events',
         'article:tag': keywords
     };
@@ -237,7 +237,7 @@ function generateEventStructuredData(event) {
         "image": event.cover_image || `${baseUrl}/images/bounce-logo.svg`,
         "organizer": {
             "@type": "Organization",
-            "name": "BOUNCE2BOUNCE",
+            "name": "HARDLINE",
             "url": baseUrl
         },
         "eventStatus": "https://schema.org/EventScheduled",
@@ -314,7 +314,7 @@ function buildCarouselEventItem(event) {
         "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
         "organizer": {
             "@type": "Organization",
-            "name": "BOUNCE2BOUNCE",
+            "name": "HARDLINE",
             "url": baseUrl
         }
     };
@@ -379,7 +379,7 @@ function generateHomepageStructuredData(homeSettings, featuredEvents = []) {
     const organizationData = {
         "@context": "https://schema.org",
         "@type": "Organization",
-        "name": "BOUNCE2BOUNCE",
+        "name": "HARDLINE",
         "url": baseUrl,
         "logo": `${baseUrl}/images/bounce-logo.svg`,
         "description": "Live music events platform connecting artists with fans through exclusive experiences and seamless ticket sales",

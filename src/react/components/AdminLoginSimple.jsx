@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const AdminLogin = () => {
   const [formData, setFormData] = useState({
-    email: 'info@bounce2bounce.com', // Default admin email
+    email: 'info@hardline.events', // Default admin email
     password: '',
     totpCode: ''
   });
@@ -257,7 +257,7 @@ const AdminLogin = () => {
       <div style={styles.logoContainer}>
         <svg style={styles.logo} viewBox="0 0 138.406 43" fill="none">
           <rect width="138.406" height="43" fill="#000"/>
-          <text x="69.203" y="30" textAnchor="middle" fill="#FFF" fontSize="24" fontFamily="Hamon, Inter, sans-serif" fontWeight="700">B2B</text>
+          <text x="69.203" y="30" textAnchor="middle" fill="#FFF" fontSize="24" fontFamily="Hamon, Inter, sans-serif" fontWeight="700">H!</text>
         </svg>
       </div>
 

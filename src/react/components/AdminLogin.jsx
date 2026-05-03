@@ -274,8 +274,8 @@ const AdminLogin = () => {
     <div style={styles.loginFrame}>
       {/* B2B Logo */}
       <div style={styles.logoContainer}>
-        <div style={styles.logoText}>B2B</div>
-        <div style={styles.logoSubtext}>BOUNCE2BOUNCE</div>
+        <div style={styles.logoText}>H!</div>
+        <div style={styles.logoSubtext}>HARDLINE</div>
       </div>
 
       {/* Login Title */}

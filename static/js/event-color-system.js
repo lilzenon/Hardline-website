@@ -151,8 +151,8 @@ class EventColorSystem {
                     <header class="event-header">
                         <div class="event-brand">
                             <a href="/" class="brand-link">
-                                <img src="/images/logo.png" alt="BOUNCE2BOUNCE" class="brand-logo">
-                                <span class="brand-text">BOUNCE2BOUNCE</span>
+                                <img src="/images/logo.png" alt="HARDLINE" class="brand-logo">
+                                <span class="brand-text">HARDLINE</span>
                             </a>
                         </div>
                     </header>
@@ -190,7 +190,7 @@ class EventColorSystem {
                     </main>
                     
                     <footer class="event-footer">
-                        <p>Powered by <a href="/" class="footer-link">BOUNCE2BOUNCE</a></p>
+                        <p>Powered by <a href="/" class="footer-link">HARDLINE</a></p>
                     </footer>
                 </div>
             </div>

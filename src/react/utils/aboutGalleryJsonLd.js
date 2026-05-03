@@ -18,7 +18,7 @@ export function injectAboutGalleryJsonLd(galleryImages) {
       return;
     }
 
-    const siteUrl = 'https://bounce2bounce.com';
+    const siteUrl = 'https://hardline.events';
     const maxImages = 12; // Limit to keep JSON-LD compact
 
     const truncate = (value, maxLength) => {
@@ -45,7 +45,7 @@ export function injectAboutGalleryJsonLd(galleryImages) {
 
           if (candidate) {
             if (/^https?:\/\//i.test(candidate)) {
-              // Rewrite any admin or non-canonical host to bounce2bounce.com
+              // Rewrite any admin or non-canonical host to hardline.events
               canonicalUrl = candidate.replace(/^https?:\/\/[^/]+/i, siteUrl);
             } else if (candidate.startsWith('/')) {
               canonicalUrl = `${siteUrl}${candidate}`;

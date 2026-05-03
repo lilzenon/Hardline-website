@@ -2,7 +2,7 @@ const query = require("../queries");
 const env = require("../env");
 
 /**
- * SEO Monitoring and Testing Handler for BOUNCE2BOUNCE
+ * SEO Monitoring and Testing Handler for HARDLINE
  * Provides comprehensive SEO analysis and monitoring tools
  */
 

@@ -1533,7 +1533,7 @@ const FigmaDesktop = ({ onReady }) => {
       {/* SEO: Inject JSON-LD structured data for all events */}
       <EventStructuredData
         events={[...featuredEvents, ...homepageEvents]}
-        domain="bounce2bounce.com"
+        domain="hardline.events"
       />
 
       <div className="homepage-content">
@@ -1569,7 +1569,7 @@ const FigmaDesktop = ({ onReady }) => {
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
                 src="/images/figma-exact/b2b-logo-nav.svg"
-                alt="B2B Logo"
+                alt="Hardline Logo"
                 loading="lazy"
                 decoding="async"
                 fetchpriority="high"

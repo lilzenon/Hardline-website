@@ -12,12 +12,12 @@ router.get('/test-meta-tags', async(req, res) => {
     try {
         // Mock SEO settings for testing
         const mockSeoSettings = {
-            default_title: 'BOUNCE2BOUNCE - Live Music Events & Artist Connections',
-            default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
+            default_title: 'HARDLINE - Live Music Events & Artist Connections',
+            default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join HARDLINE for unforgettable music experiences.',
             default_keywords: 'live music events, concert tickets, artist promotion, event discovery, exclusive music experiences',
-            default_author: 'BOUNCE2BOUNCE',
-            default_og_image: 'https://bounce2bounce.com/images/og-image.png',
-            twitter_handle: '@bounce2bounce'
+            default_author: 'HARDLINE',
+            default_og_image: 'https://hardline.events/images/og-image.png',
+            twitter_handle: '@hardline events'
         };
 
         // Generate meta tags using SEO utils
@@ -89,7 +89,7 @@ router.get('/test-meta-tags', async(req, res) => {
         "image": "${metaTags.ogImage}",
         "publisher": {
             "@type": "Organization",
-            "name": "BOUNCE2BOUNCE",
+            "name": "HARDLINE",
             "logo": {
                 "@type": "ImageObject",
                 "url": "${metaTags.ogImage}"
@@ -144,12 +144,12 @@ router.get('/api/meta-tags', async(req, res) => {
         } catch (error) {
             console.warn('⚠️ Could not fetch SEO settings from dashboard, using defaults');
             seoSettings = {
-                default_title: 'BOUNCE2BOUNCE - Live Music Events',
+                default_title: 'HARDLINE - Live Music Events',
                 default_description: 'Discover exclusive live music events and connect with artists',
                 default_keywords: 'live music events, concert tickets, artist promotion',
-                default_author: 'BOUNCE2BOUNCE',
+                default_author: 'HARDLINE',
                 default_og_image: '/images/og-image.png',
-                twitter_handle: '@bounce2bounce'
+                twitter_handle: '@hardline events'
             };
         }
 

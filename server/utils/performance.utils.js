@@ -1,5 +1,5 @@
 /**
- * Performance Optimization Utilities for BOUNCE2BOUNCE
+ * Performance Optimization Utilities for HARDLINE
  * Implements Core Web Vitals improvements and mobile-first optimizations
  */
 
@@ -245,7 +245,7 @@ function generateWebVitalsOptimization() {
         // Optimize for PWA
         appleMobileWebAppCapable: 'yes',
         appleMobileWebAppStatusBarStyle: 'default',
-        appleMobileWebAppTitle: 'BOUNCE2BOUNCE',
+        appleMobileWebAppTitle: 'HARDLINE',
         
         // Theme colors for browser UI
         themeColor: '#000000',

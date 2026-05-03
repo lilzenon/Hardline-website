@@ -164,7 +164,7 @@ async function home(req, res) {
 
         res.render("home", {
             layout: "layouts/home",
-            title: "BOUNCE2BOUNCE - Home",
+            title: "HARDLINE - Home",
             homeSettings: homeSettings,
             featuredEvents: featuredEvents,
             formattedDate: formattedDate,
@@ -189,7 +189,7 @@ async function home(req, res) {
 
         res.render("home", {
             layout: "layouts/home",
-            title: "BOUNCE2BOUNCE - Home",
+            title: "HARDLINE - Home",
             homeSettings: defaultSettings,
             featuredEvents: [], // Empty array for fallback
             formattedDate: "March 29th, 9:00 P.M.",
@@ -531,7 +531,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
                     <h1 style="${titleStyles}">${metaTags.title || 'Frequently Asked Questions'}</h1>
-                    <p style="${descriptionStyles}">${metaTags.description || 'Find answers to common questions about BOUNCE2BOUNCE events.'}</p>
+                    <p style="${descriptionStyles}">${metaTags.description || 'Find answers to common questions about HARDLINE events.'}</p>
                     <div style="margin-top: 2rem;">${faqItemsHtml}</div>
                 </div>
             </div>
@@ -551,7 +551,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                 const absoluteImageUrl = imageUrl.startsWith('http') ? imageUrl : `${imageBaseUrl}${imageUrl}`;
 
                 // Get alt text with proper fallbacks
-                const altText = escapeHtml(image.alt || image.title || image.description || `BOUNCE2BOUNCE Gallery Image ${index + 1}`);
+                const altText = escapeHtml(image.alt || image.title || image.description || `HARDLINE Gallery Image ${index + 1}`);
                 const titleText = escapeHtml(image.title || image.alt || `Gallery Image ${index + 1}`);
 
                 // Build srcset for responsive images
@@ -598,7 +598,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         return `
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
-                    <h1 style="${titleStyles}">${metaTags.title || 'About BOUNCE2BOUNCE'}</h1>
+                    <h1 style="${titleStyles}">${metaTags.title || 'About HARDLINE'}</h1>
                     <p style="${descriptionStyles}">${metaTags.description || 'Learn about our mission and values.'}</p>
                     <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
                         ${pageData.content || ''}
@@ -642,7 +642,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         return `
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
-                    <h1 style="${titleStyles}">${metaTags.title || 'BOUNCE2BOUNCE - Events'}</h1>
+                    <h1 style="${titleStyles}">${metaTags.title || 'HARDLINE - Events'}</h1>
                     <p style="${descriptionStyles}">${metaTags.description || 'Discover exclusive live music events.'}</p>
                     <div style="margin-top: 2rem;">${eventsHtml}</div>
                 </div>
@@ -656,23 +656,23 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
                     <h1 style="${titleStyles}">${metaTags.title || 'Contact Us'}</h1>
-                    <p style="${descriptionStyles}">${metaTags.description || 'Get in touch with BOUNCE2BOUNCE.'}</p>
+                    <p style="${descriptionStyles}">${metaTags.description || 'Get in touch with HARDLINE.'}</p>
                     <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
                         <p style="margin-bottom: 1rem;">
-                            <strong>Email:</strong> <a href="mailto:info@bounce2bounce.com" style="color: #f90d0d; text-decoration: none;">info@bounce2bounce.com</a>
+                            <strong>Email:</strong> <a href="mailto:info@hardline.events" style="color: #f90d0d; text-decoration: none;">info@hardline.events</a>
                         </p>
                         <p style="margin-bottom: 1rem;">
                             <strong>Follow us:</strong>
                         </p>
                         <ul style="list-style: none; padding: 0;">
                             <li style="margin-bottom: 0.5rem;">
-                                <a href="https://instagram.com/bounce2bounce_" target="_blank" style="color: #f90d0d; text-decoration: none;">Instagram</a>
+                                <a href="https://instagram.com/hardlinevents" target="_blank" style="color: #f90d0d; text-decoration: none;">Instagram</a>
                             </li>
                             <li style="margin-bottom: 0.5rem;">
-                                <a href="https://twitter.com/bounce2bounce_" target="_blank" style="color: #f90d0d; text-decoration: none;">Twitter</a>
+                                <a href="https://twitter.com/hardlinevents" target="_blank" style="color: #f90d0d; text-decoration: none;">Twitter</a>
                             </li>
                             <li style="margin-bottom: 0.5rem;">
-                                <a href="https://facebook.com/bounce2bounce_" target="_blank" style="color: #f90d0d; text-decoration: none;">Facebook</a>
+                                <a href="https://facebook.com/hardlinevents" target="_blank" style="color: #f90d0d; text-decoration: none;">Facebook</a>
                             </li>
                         </ul>
                     </div>
@@ -696,7 +696,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
 
 // Helper function to generate structured data based on page type
 async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl) {
-    const baseUrl = 'https://bounce2bounce.com';
+    const baseUrl = 'https://hardline.events';
 
     // Build social media sameAs array
     const sameAs = [
@@ -713,7 +713,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
     const organizationSchema = {
         "@type": "Organization",
         "@id": `${baseUrl}/#organization`,
-        "name": escapeHtml(seoSettings.organization_name || "BOUNCE2BOUNCE"),
+        "name": escapeHtml(seoSettings.organization_name || "HARDLINE"),
         "alternateName": escapeHtml(seoSettings.organization_alternate_name || "B2B"),
         "url": baseUrl,
         "logo": {
@@ -726,7 +726,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
             "@type": "ContactPoint",
             "telephone": escapeHtml(seoSettings.organization_phone || ""),
             "contactType": "customer service",
-            "email": escapeHtml(seoSettings.organization_email || "info@bounce2bounce.com"),
+            "email": escapeHtml(seoSettings.organization_email || "info@hardline.events"),
             "availableLanguage": "English"
         },
         "address": {
@@ -747,7 +747,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
         const websiteSchema = {
             "@type": "WebSite",
             "@id": `${baseUrl}/#website`,
-            "name": "BOUNCE2BOUNCE",
+            "name": "HARDLINE",
             "url": baseUrl,
             "description": escapeHtml(metaTags.description),
             "publisher": {
@@ -765,7 +765,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                 {
                     "@type": "WebPage",
                     "@id": `${baseUrl}/about`,
-                    "name": "About BOUNCE2BOUNCE",
+                    "name": "About HARDLINE",
                     "description": escapeHtml(seoSettings.about_page_description || "Learn about our mission and values"),
                     "url": `${baseUrl}/about`
                 },
@@ -842,17 +842,17 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                             // Default to organization as creator
                             imageObject.creator = {
                                 "@type": "Organization",
-                                "name": "BOUNCE2BOUNCE"
+                                "name": "HARDLINE"
                             };
                         }
 
                         // Add credit text (fallback to default if not set)
-                        imageObject.creditText = escapeHtml(event.image_credit_text || "BOUNCE2BOUNCE");
+                        imageObject.creditText = escapeHtml(event.image_credit_text || "HARDLINE");
 
                         // Add copyright notice (fallback to default if not set)
                         imageObject.copyrightNotice = escapeHtml(
                             event.image_copyright_notice ||
-                            `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
+                            `© ${new Date().getFullYear()} HARDLINE. All rights reserved.`
                         );
 
                         // Add license URL (use Creative Commons Attribution-NonCommercial as default)
@@ -966,7 +966,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                         // ORGANIZER: Organization - RECOMMENDED
                         eventSchema.organizer = {
                             "@type": "Organization",
-                            "name": "BOUNCE2BOUNCE",
+                            "name": "HARDLINE",
                             "url": baseUrl
                         };
 
@@ -1086,16 +1086,16 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                         "@id": `${baseUrl}/about#gallery-image-${index + 1}`,
                         "contentUrl": absoluteImageUrl,
                         "url": `${baseUrl}/about`, // The page containing the image
-                        "name": escapeHtml(image.title || image.alt || `BOUNCE2BOUNCE Gallery Image ${index + 1}`),
-                        "description": escapeHtml(image.description || image.alt || `Gallery image from BOUNCE2BOUNCE About page`),
+                        "name": escapeHtml(image.title || image.alt || `HARDLINE Gallery Image ${index + 1}`),
+                        "description": escapeHtml(image.description || image.alt || `Gallery image from HARDLINE About page`),
                         "width": image.width || null,
                         "height": image.height || null
                     };
 
                     // 🚨 GOOGLE REQUIREMENT: At least one of creator, creditText, copyrightNotice, or license
                     // Add creator information (use organization as default if no specific creator)
-                    // If creator_name is 'BOUNCE2BOUNCE' (the default), use Organization type
-                    if (image.creator_name && image.creator_name !== 'BOUNCE2BOUNCE') {
+                    // If creator_name is 'HARDLINE' (the default), use Organization type
+                    if (image.creator_name && image.creator_name !== 'HARDLINE') {
                         imageObject.creator = {
                             "@type": "Person",
                             "name": escapeHtml(image.creator_name)
@@ -1104,17 +1104,17 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                         // Default to organization as creator
                         imageObject.creator = {
                             "@type": "Organization",
-                            "name": "BOUNCE2BOUNCE"
+                            "name": "HARDLINE"
                         };
                     }
 
                     // Add credit text (fallback to default if not set)
-                    imageObject.creditText = escapeHtml(image.credit_text || "BOUNCE2BOUNCE");
+                    imageObject.creditText = escapeHtml(image.credit_text || "HARDLINE");
 
                     // Add copyright notice (fallback to default if not set)
                     imageObject.copyrightNotice = escapeHtml(
                         image.copyright_notice ||
-                        `© ${new Date().getFullYear()} BOUNCE2BOUNCE. All rights reserved.`
+                        `© ${new Date().getFullYear()} HARDLINE. All rights reserved.`
                     );
 
                     // Add license URL (use Creative Commons Attribution-NonCommercial as default)
@@ -1241,39 +1241,39 @@ async function reactHomepage(req, res) {
             console.warn('⚠️ Failed to fetch SEO settings from dashboard API, using defaults:', error.message);
             seoSettings = {
                 // Default/Homepage SEO
-                default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
-                default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
-                default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
-                default_author: 'BOUNCE2BOUNCE',
+                default_title: 'HARDLINE - NJ\'S PREMIERE EDM COLLECTIVE',
+                default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join HARDLINE for unforgettable music experiences.',
+                default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, HARDLINE',
+                default_author: 'HARDLINE',
                 default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
-                twitter_handle: '@bounce2bounce',
+                twitter_handle: '@hardline events',
                 // About Page SEO
-                about_page_title: 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective',
-                about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.',
-                about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music',
+                about_page_title: 'About HARDLINE | NJ\'s Premiere EDM Collective',
+                about_page_description: 'Learn about HARDLINE - NJ\'s premiere EDM collective curating exclusive live music events.',
+                about_page_keywords: 'about hardline events, edm collective, live music events, nj music',
                 about_page_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
-                about_page_og_image_alt: 'About BOUNCE2BOUNCE - Preview Image',
+                about_page_og_image_alt: 'About HARDLINE - Preview Image',
                 // FAQ Page SEO
-                faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
-                faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.',
-                faq_page_keywords: 'faq, questions, help, bounce2bounce support',
+                faq_page_title: 'FAQ - HARDLINE | Frequently Asked Questions',
+                faq_page_description: 'Frequently asked questions about HARDLINE events, tickets, venues, and more.',
+                faq_page_keywords: 'faq, questions, help, hardline events support',
                 faq_page_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
-                faq_page_og_image_alt: 'FAQ - BOUNCE2BOUNCE - Preview Image',
+                faq_page_og_image_alt: 'FAQ - HARDLINE - Preview Image',
                 // Organization Schema (CRITICAL for structured data)
-                organization_name: 'BOUNCE2BOUNCE',
+                organization_name: 'HARDLINE',
                 organization_alternate_name: 'B2B',
                 organization_description: 'NJ\'s premiere EDM collective curating exclusive live music events and unforgettable experiences.',
                 organization_logo_url: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
                 organization_phone: '',
-                organization_email: 'info@bounce2bounce.com',
+                organization_email: 'info@hardline.events',
                 organization_address_city: 'Asbury Park',
                 organization_address_state: 'NJ',
                 organization_address_country: 'US',
                 organization_founded_year: 2020,
                 // Social Media URLs (CRITICAL for structured data)
                 social_facebook_url: '',
-                social_instagram_url: 'https://www.instagram.com/bounce2bounce',
-                social_twitter_url: 'https://twitter.com/bounce2bounce',
+                social_instagram_url: 'https://www.instagram.com/hardline events',
+                social_twitter_url: 'https://twitter.com/hardline events',
                 social_tiktok_url: '',
                 social_youtube_url: '',
                 social_linkedin_url: '',
@@ -1285,22 +1285,22 @@ async function reactHomepage(req, res) {
         let pageTitle, pageDescription, pageKeywords, pageOgImage, pageOgImageAlt, pageUrl;
 
         if (pageType === 'about') {
-            pageTitle = seoSettings.about_page_title || 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective';
-            pageDescription = seoSettings.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
-            pageKeywords = seoSettings.about_page_keywords || 'about bounce2bounce, edm collective, live music events, nj music';
+            pageTitle = seoSettings.about_page_title || 'About HARDLINE | NJ\'s Premiere EDM Collective';
+            pageDescription = seoSettings.about_page_description || 'Learn about HARDLINE - NJ\'s premiere EDM collective curating exclusive live music events.';
+            pageKeywords = seoSettings.about_page_keywords || 'about hardline events, edm collective, live music events, nj music';
             pageOgImage = seoSettings.about_page_og_image || seoSettings.default_og_image || 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
-            pageOgImageAlt = seoSettings.about_page_og_image_alt || 'About BOUNCE2BOUNCE - Preview Image';
+            pageOgImageAlt = seoSettings.about_page_og_image_alt || 'About HARDLINE - Preview Image';
             pageUrl = '/about';
         } else if (pageType === 'faq') {
-            pageTitle = seoSettings.faq_page_title || 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions';
-            pageDescription = seoSettings.faq_page_description || 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more.';
-            pageKeywords = seoSettings.faq_page_keywords || 'faq, questions, help, bounce2bounce support';
+            pageTitle = seoSettings.faq_page_title || 'FAQ - HARDLINE | Frequently Asked Questions';
+            pageDescription = seoSettings.faq_page_description || 'Frequently asked questions about HARDLINE events, tickets, venues, and more.';
+            pageKeywords = seoSettings.faq_page_keywords || 'faq, questions, help, hardline events support';
             pageOgImage = seoSettings.faq_page_og_image || seoSettings.default_og_image || 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
-            pageOgImageAlt = seoSettings.faq_page_og_image_alt || 'FAQ - BOUNCE2BOUNCE - Preview Image';
+            pageOgImageAlt = seoSettings.faq_page_og_image_alt || 'FAQ - HARDLINE - Preview Image';
             pageUrl = '/faq';
         } else {
             // Homepage
-            pageTitle = seoSettings.default_title || 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE';
+            pageTitle = seoSettings.default_title || 'HARDLINE - NJ\'S PREMIERE EDM COLLECTIVE';
             pageDescription = seoSettings.default_description || 'Discover exclusive live music events and connect with artists';
             pageKeywords = seoSettings.default_keywords || 'live music events, concert tickets, artist promotion';
             pageOgImage = seoSettings.default_og_image || 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png';
@@ -1315,7 +1315,7 @@ async function reactHomepage(req, res) {
             title: pageTitle,
             description: pageDescription,
             keywords: pageKeywords,
-            author: seoSettings.default_author || 'BOUNCE2BOUNCE',
+            author: seoSettings.default_author || 'HARDLINE',
             image: pageOgImage,
             url: pageUrl
         });
@@ -1466,7 +1466,7 @@ async function reactHomepage(req, res) {
         };
 
         // Helper function to ensure absolute URL (don't double-prepend baseUrl)
-        const ensureAbsoluteUrl = (url, base = 'https://bounce2bounce.com') => {
+        const ensureAbsoluteUrl = (url, base = 'https://hardline.events') => {
             if (!url) return '';
             // If already absolute (starts with http:// or https://), return as-is
             if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -1507,8 +1507,8 @@ async function reactHomepage(req, res) {
 
     <!-- Twitter -->
     <meta name="twitter:card" content="${escapeHtml(metaTags.twitterCard)}">
-    <meta name="twitter:site" content="${escapeHtml(seoSettings.twitter_handle || '@bounce2bounce')}">
-    <meta name="twitter:creator" content="${escapeHtml(seoSettings.twitter_handle || '@bounce2bounce')}">
+    <meta name="twitter:site" content="${escapeHtml(seoSettings.twitter_handle || '@hardline events')}">
+    <meta name="twitter:creator" content="${escapeHtml(seoSettings.twitter_handle || '@hardline events')}">
     <meta name="twitter:url" content="${escapeHtml(metaTags.ogUrl)}">
     <meta name="twitter:title" content="${escapeHtml(metaTags.twitterTitle)}">
     <meta name="twitter:description" content="${escapeHtml(metaTags.twitterDescription)}">
@@ -1576,7 +1576,7 @@ async function reactHomepage(req, res) {
         const isIOSWebView = /iPhone|iPad|iPod/i.test(userAgent) && /AppleWebKit/i.test(userAgent) && !/Safari|CriOS|FxiOS|OPiOS|mercury/i.test(userAgent);
 
         // Check if request has Instagram/Facebook tracking parameters (strong indicator of in-app browser)
-        const urlParams = new URL(req.url, `https://${req.headers.host || 'bounce2bounce.com'}`).searchParams;
+        const urlParams = new URL(req.url, `https://${req.headers.host || 'hardline.events'}`).searchParams;
         const hasInAppParams = urlParams.has('fbclid') || urlParams.get('utm_source') === 'ig' || urlParams.get('utm_medium') === 'social';
 
         // Inject SSR content for bots OR in-app browsers to prevent white pages
@@ -1620,14 +1620,14 @@ async function reactHomepage(req, res) {
             .noscript-social a { color: #f90d0d; margin: 0 12px; text-decoration: none; }
         </style>
         <div class="noscript-container">
-            <img src="/images/figma-exact/b2b-logo-nav.svg" alt="BOUNCE2BOUNCE" class="noscript-logo">
-            <h1 class="noscript-title">BOUNCE2BOUNCE</h1>
+            <img src="/images/figma-exact/b2b-logo-nav.svg" alt="HARDLINE" class="noscript-logo">
+            <h1 class="noscript-title">HARDLINE</h1>
             <p class="noscript-text">NJ's premiere EDM collective curating exclusive live music events and unforgettable experiences.</p>
             <p class="noscript-text">For the best experience, please enable JavaScript or open this link in your default browser.</p>
-            <a href="https://bounce2bounce.com" class="noscript-btn">Open in Browser</a>
+            <a href="https://hardline.events" class="noscript-btn">Open in Browser</a>
             <div class="noscript-social">
-                <a href="https://instagram.com/bounce2bounce_">Instagram</a>
-                <a href="mailto:info@bounce2bounce.com">Email</a>
+                <a href="https://instagram.com/hardlinevents">Instagram</a>
+                <a href="mailto:info@hardline.events">Email</a>
             </div>
         </div>
     </noscript>`;
@@ -1689,7 +1689,7 @@ async function reactHomepage(req, res) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>BOUNCE2BOUNCE - Page Loading</title>
+    <title>HARDLINE - Page Loading</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -1728,7 +1728,7 @@ async function reactHomepage(req, res) {
     </style>
 </head>
 <body>
-    <img src="/images/figma-exact/b2b-logo-nav.svg" alt="BOUNCE2BOUNCE" class="logo">
+    <img src="/images/figma-exact/b2b-logo-nav.svg" alt="HARDLINE" class="logo">
     <h1>Just a moment...</h1>
     <p>The page is loading. If it doesn't load automatically, tap the button below.</p>
     <div>

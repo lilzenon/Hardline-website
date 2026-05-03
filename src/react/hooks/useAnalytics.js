@@ -1,5 +1,5 @@
 /**
- * React Analytics Hook for BOUNCE2BOUNCE
+ * React Analytics Hook for HARDLINE
  * Uses consolidated analytics system
  */
 

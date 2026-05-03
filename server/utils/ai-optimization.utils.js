@@ -1,5 +1,5 @@
 /**
- * AI/LLM Optimization Utilities for BOUNCE2BOUNCE
+ * AI/LLM Optimization Utilities for HARDLINE
  * Enhances content structure and markup for better AI discoverability
  */
 
@@ -37,7 +37,7 @@ function generateAIFriendlyEventContent(event) {
         
         // Context for AI models
         context: {
-            platform: 'BOUNCE2BOUNCE',
+            platform: 'HARDLINE',
             industry: 'Live Music Events',
             audience: 'Music Fans',
             purpose: 'Event Discovery and Ticket Sales',
@@ -89,7 +89,7 @@ function generateEventDescription(event) {
         
         parts.push('Get notified when tickets become available and don\'t miss this unforgettable music experience.');
         
-        description = parts.join(' ') + ' BOUNCE2BOUNCE connects artists with fans through exclusive live music events and seamless ticket purchasing.';
+        description = parts.join(' ') + ' HARDLINE connects artists with fans through exclusive live music events and seamless ticket purchasing.';
     }
     
     return description;
@@ -108,7 +108,7 @@ function extractLocation(address) {
         venue: parts[0] || null,
         city: parts[1] || null,
         state: parts[2] || null,
-        country: 'United States' // Default for BOUNCE2BOUNCE events
+        country: 'United States' // Default for HARDLINE events
     };
 }
 
@@ -121,7 +121,7 @@ function generateEventKeywords(event) {
         'concert',
         'event',
         'tickets',
-        'BOUNCE2BOUNCE'
+        'HARDLINE'
     ]);
     
     if (event.title) {
@@ -187,8 +187,8 @@ function generateRelatedContentSuggestions(event) {
         },
         {
             type: 'platform_info',
-            description: 'About BOUNCE2BOUNCE platform',
-            query: 'BOUNCE2BOUNCE event platform features'
+            description: 'About HARDLINE platform',
+            query: 'HARDLINE event platform features'
         }
     );
     
@@ -246,8 +246,8 @@ function generateEventFAQ(event) {
     });
     
     faqs.push({
-        question: 'What is BOUNCE2BOUNCE?',
-        answer: 'BOUNCE2BOUNCE is a live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales. We specialize in curating unique music events and providing easy access to tickets.'
+        question: 'What is HARDLINE?',
+        answer: 'HARDLINE is a live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales. We specialize in curating unique music events and providing easy access to tickets.'
     });
     
     return {
@@ -272,7 +272,7 @@ function generateHomepageAIContent(homeSettings, featuredEvents = []) {
     
     return {
         platform: {
-            name: 'BOUNCE2BOUNCE',
+            name: 'HARDLINE',
             description: 'Live music events platform connecting artists with fans through exclusive experiences and seamless ticket sales',
             purpose: 'Event discovery, artist promotion, and ticket sales for live music experiences',
             target_audience: 'Music fans, event organizers, artists, and ticket buyers',

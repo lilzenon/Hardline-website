@@ -77,10 +77,10 @@ router.get("/seo", async (req, res) => {
         return res.json({
             success: true,
             settings: {
-                default_title: "BOUNCE2BOUNCE - NJ'S PREMIERE EDM COLLECTIVE",
-                default_description: "Bounce2Bounce is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
-                default_keywords: "edm events, electronic dance music, nj events, bounce2bounce, live music",
-                default_author: "BOUNCE2BOUNCE",
+                default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
+                default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+                default_keywords: "edm events, electronic dance music, nj events, hardline events, live music",
+                default_author: "HARDLINE",
                 maintenance_mode: false,
                 shop_enabled: false
             },
@@ -201,7 +201,7 @@ router.get('/about', async (req, res) => {
         res.json({
             success: true,
             data: {
-                content: "Welcome to BOUNCE2BOUNCE, your premier destination for exclusive live music events. We're passionate about connecting music lovers with unforgettable experiences that showcase the best in live entertainment.",
+                content: "Welcome to HARDLINE, your premier destination for exclusive live music events. We're passionate about connecting music lovers with unforgettable experiences that showcase the best in live entertainment.",
                 enabled: true
             }
         });

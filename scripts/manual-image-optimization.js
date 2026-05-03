@@ -9,7 +9,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 async function analyzeCurrentImages() {
-    console.log('🖼️ BOUNCE2BOUNCE Image Optimization Analysis');
+    console.log('🖼️ HARDLINE Image Optimization Analysis');
     console.log('==============================================\n');
     
     const originalDir = path.join(__dirname, '../static/images/figma-exact');

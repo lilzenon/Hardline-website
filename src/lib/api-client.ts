@@ -30,7 +30,7 @@ class APIClient {
   constructor() {
     // CRITICAL FIX: Always use local proxy endpoints to avoid CORS issues
     // The backend proxies all requests to admin.b2b.click, so we use /api for all environments
-    // This ensures beta.bounce2bounce.com and bounce2bounce.com both work correctly
+    // This ensures beta.hardline.events and hardline.events both work correctly
     const isDevelopment = window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1';
 
@@ -115,10 +115,10 @@ class APIClient {
         return {
           success: true,
           settings: {
-            default_title: "BOUNCE2BOUNCE - NJ'S PREMIERE EDM COLLECTIVE",
-            default_description: "Bounce2Bounce is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
-            default_keywords: 'edm events, electronic dance music, nj events, bounce2bounce, live music',
-            default_author: 'BOUNCE2BOUNCE',
+            default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
+            default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+            default_keywords: 'edm events, electronic dance music, nj events, hardline events, live music',
+            default_author: 'HARDLINE',
             maintenance_mode: false
           },
           fallback: true

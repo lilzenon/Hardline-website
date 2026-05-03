@@ -151,8 +151,8 @@ export default function ProductPageMobile({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product ? `${product.name} | BOUNCE2BOUNCE MERCH` : 'BOUNCE2BOUNCE MERCH',
-          text: product ? `${product.name} | BOUNCE2BOUNCE MERCH` : 'Check out this product from BOUNCE2BOUNCE',
+          title: product ? `${product.name} | HARDLINE MERCH` : 'HARDLINE MERCH',
+          text: product ? `${product.name} | HARDLINE MERCH` : 'Check out this product from HARDLINE',
           url: window.location.href,
         });
       } catch (err) {

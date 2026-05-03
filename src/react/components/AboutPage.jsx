@@ -57,11 +57,11 @@ const AboutPage = () => {
   // ... (SEO effect omitted for brevity as it is unchanged) ...
 
   useEffect(() => {
-    const siteUrl = 'https://bounce2bounce.com';
+    const siteUrl = 'https://hardline.events';
     const pageUrl = `${siteUrl}/about`;
 
     // Define SEO variables for JSON-LD structured data
-    const description = DEFAULT_SEO_SETTINGS?.about_page_description || 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events.';
+    const description = DEFAULT_SEO_SETTINGS?.about_page_description || 'Learn about HARDLINE - NJ\'s premiere EDM collective curating exclusive live music events.';
     const ogImage = DEFAULT_SEO_SETTINGS?.about_page_og_image || `${siteUrl}/images/og-image.png`;
 
     // JSON-LD Structured Data (AboutPage + Organization)
@@ -76,16 +76,16 @@ const AboutPage = () => {
       '@graph': [
         {
           '@type': 'Organization',
-          'name': 'BOUNCE2BOUNCE',
+          'name': 'HARDLINE',
           'url': siteUrl,
           'logo': `${siteUrl}/images/og-image.png`
         },
         {
           '@type': 'AboutPage',
-          'name': 'About BOUNCE2BOUNCE',
+          'name': 'About HARDLINE',
           'url': pageUrl,
           'description': description,
-          'isPartOf': { '@type': 'WebSite', 'name': 'BOUNCE2BOUNCE', 'url': siteUrl },
+          'isPartOf': { '@type': 'WebSite', 'name': 'HARDLINE', 'url': siteUrl },
           'primaryImageOfPage': { '@type': 'ImageObject', 'url': ogImage }
         }
       ]
@@ -95,13 +95,13 @@ const AboutPage = () => {
 
     // Add BreadcrumbList JSON-LD for clear site hierarchy
     // ✅ SEO FIX: Use "Events" instead of "Home" as position 1 (Google Search Console requirement)
-    // ✅ SEO FIX: Use canonical domain bounce2bounce.com instead of b2b.click
+    // ✅ SEO FIX: Use canonical domain hardline.events instead of b2b.click
     initializeBreadcrumbSchema('about');
   }, []);
 
   // Reset document.title on unmount so homepage title restores correctly
   useEffect(() => {
-    const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'BOUNCE2BOUNCE - Premium Event Platform';
+    const defaultTitle = DEFAULT_SEO_SETTINGS?.default_title || 'HARDLINE - Premium Event Platform';
     return () => {
       document.title = defaultTitle;
     };
@@ -216,7 +216,7 @@ const AboutPage = () => {
 
       // 🔧 FIX: Only use fallback if we don't have cached content
       if (!aboutContent) {
-        const staticContent = `BOUNCE2BOUNCE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
+        const staticContent = `HARDLINE is New Jersey's premiere electronic music collective, dedicated to curating exclusive live music events and creating unforgettable experiences for music lovers.
 
 Our mission is to unite top talent, immersive production, and passionate fans to create the ultimate electronic music experiences in the tri-state area.`;
 
@@ -517,7 +517,7 @@ Our mission is to unite top talent, immersive production, and passionate fans to
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
                 src="/images/figma-exact/b2b-logo-nav.svg"
-                alt="B2B Logo"
+                alt="Hardline Logo"
                 loading="eager"
                 decoding="async"
                 fetchpriority="high"

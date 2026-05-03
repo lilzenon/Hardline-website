@@ -122,7 +122,7 @@ export default function ProductPage({ productId }) {
         // Update SEO tags
         if (data) {
           updateTitle(`${data.name} | Shop`);
-          updateDescription(data.description || `Buy ${data.name} at BOUNCE2BOUNCE.`);
+          updateDescription(data.description || `Buy ${data.name} at HARDLINE.`);
           const ogImage = getPrimaryImageUrl(data);
           if (ogImage) {
             updateOGImage(ogImage);
@@ -213,8 +213,8 @@ export default function ProductPage({ productId }) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product ? `${product.name} | BOUNCE2BOUNCE MERCH` : 'BOUNCE2BOUNCE MERCH',
-          text: product ? `${product.name} | BOUNCE2BOUNCE MERCH` : 'Check out this product from BOUNCE2BOUNCE',
+          title: product ? `${product.name} | HARDLINE MERCH` : 'HARDLINE MERCH',
+          text: product ? `${product.name} | HARDLINE MERCH` : 'Check out this product from HARDLINE',
           url: window.location.href,
         });
       } catch (err) {
@@ -396,7 +396,7 @@ export default function ProductPage({ productId }) {
                 crossOrigin="anonymous"
                 referrerPolicy="no-referrer"
                 src="/images/figma-exact/b2b-logo-nav.svg"
-                alt="B2B Logo"
+                alt="Hardline Logo"
                 loading="lazy"
                 decoding="async"
                 onClick={() => handleNavigation('/')}

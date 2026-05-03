@@ -9,7 +9,7 @@ const Dither = lazy(() => import('./ui/DitherShadcn').then(m => ({ default: m.Di
  * - Full-screen dither effect background with React 19 compatibility
  * - CSS fallback for when Three.js fails
  * - Ultra-transparent glassmorphism card
- * - BOUNCE2BOUNCE logo positioning
+ * - HARDLINE logo positioning
  * - Minimalist design with subtle button
  * - Responsive layout
  * - Accessibility compliant
@@ -193,7 +193,7 @@ export default function NotFoundPage() {
         maxWidth: '400px',
         width: '90%'
       }}>
-        {/* BOUNCE2BOUNCE Logo */}
+        {/* HARDLINE Logo */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -202,7 +202,7 @@ export default function NotFoundPage() {
         }}>
           <img
             src="/images/figma-exact/b2b-logo-nav.svg"
-            alt="BOUNCE2BOUNCE"
+            alt="HARDLINE"
             style={{
               height: '48px',
               width: 'auto',
@@ -225,7 +225,7 @@ export default function NotFoundPage() {
             fontWeight: '600',
             letterSpacing: '0.5px'
           }}>
-            BOUNCE2BOUNCE
+            HARDLINE
           </div>
         </div>
 

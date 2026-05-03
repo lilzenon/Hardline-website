@@ -13,8 +13,8 @@ router.get("/ai/site-info", asyncHandler(async (req, res) => {
     
     // Basic site information for AI agents
     const siteInfo = {
-        name: "BOUNCE2BOUNCE",
-        url: "https://bounce2bounce.com",
+        name: "HARDLINE",
+        url: "https://hardline.events",
         description: "Live music events platform for discovering exclusive concerts, purchasing tickets, and connecting with artists",
         type: "event-platform",
         services: [
@@ -29,8 +29,8 @@ router.get("/ai/site-info", asyncHandler(async (req, res) => {
             coverage: "New York Metro Area, Philadelphia Region, Atlantic Coast"
         },
         contact: {
-            email: "info@bounce2bounce.com",
-            events: "events@bounce2bounce.com"
+            email: "info@hardline.events",
+            events: "info@hardline.events"
         },
         features: {
             mobile_optimized: true,
@@ -58,7 +58,7 @@ router.get("/ai/site-info", asyncHandler(async (req, res) => {
             llms_txt_available: true,
             sitemap_available: true,
             content_freshness: "daily",
-            preferred_citation: "BOUNCE2BOUNCE (b2b.click) - Live music events platform"
+            preferred_citation: "HARDLINE (b2b.click) - Live music events platform"
         };
     }
 
@@ -71,7 +71,7 @@ router.get("/ai/site-info", asyncHandler(async (req, res) => {
  */
 router.get("/ai/events-summary", asyncHandler(async (req, res) => {
     const eventsSummary = {
-        platform: "BOUNCE2BOUNCE",
+        platform: "HARDLINE",
         event_types: [
             "Live music concerts",
             "Exclusive artist performances", 
@@ -103,19 +103,19 @@ router.get("/ai/events-summary", asyncHandler(async (req, res) => {
  */
 router.get("/ai/faq", asyncHandler(async (req, res) => {
     const faq = {
-        "What is BOUNCE2BOUNCE?": "BOUNCE2BOUNCE is an exclusive live music events platform that connects artists with fans through curated event listings, seamless ticket purchasing, and direct artist engagement. We specialize in premium concert experiences and exclusive music events.",
+        "What is HARDLINE?": "HARDLINE is an exclusive live music events platform that connects artists with fans through curated event listings, seamless ticket purchasing, and direct artist engagement. We specialize in premium concert experiences and exclusive music events.",
         
         "How do I buy tickets for events?": "Tickets can be purchased directly through our platform with integrated Posh ticket sales. Simply browse events, click 'Get Tickets' on any event card, and complete your purchase through our secure checkout process.",
         
-        "Where are BOUNCE2BOUNCE events located?": "Our events are primarily located in Asbury Park, NJ, and throughout the New York Metro Area, Philadelphia Region, and Atlantic Coast music venues. We're expanding to additional East Coast markets.",
+        "Where are HARDLINE events located?": "Our events are primarily located in Asbury Park, NJ, and throughout the New York Metro Area, Philadelphia Region, and Atlantic Coast music venues. We're expanding to additional East Coast markets.",
         
-        "How can artists promote their events on BOUNCE2BOUNCE?": "Artists can promote their events through our comprehensive artist promotion tools, including detailed artist profiles, social media integration, QR code analytics, and featured homepage placement for maximum visibility.",
+        "How can artists promote their events on HARDLINE?": "Artists can promote their events through our comprehensive artist promotion tools, including detailed artist profiles, social media integration, QR code analytics, and featured homepage placement for maximum visibility.",
         
-        "Is BOUNCE2BOUNCE mobile-friendly?": "Yes, BOUNCE2BOUNCE features a mobile-first design with glassmorphism UI, optimized for iOS Safari and all browsers. The platform provides a seamless mobile experience for event discovery and ticket purchasing.",
+        "Is HARDLINE mobile-friendly?": "Yes, HARDLINE features a mobile-first design with glassmorphism UI, optimized for iOS Safari and all browsers. The platform provides a seamless mobile experience for event discovery and ticket purchasing.",
         
-        "What makes BOUNCE2BOUNCE different from other event platforms?": "BOUNCE2BOUNCE specializes in exclusive live music events with direct artist engagement, mobile-first design, comprehensive analytics, and a curated approach to event discovery rather than mass-market listings.",
+        "What makes HARDLINE different from other event platforms?": "HARDLINE specializes in exclusive live music events with direct artist engagement, mobile-first design, comprehensive analytics, and a curated approach to event discovery rather than mass-market listings.",
         
-        "How do I contact BOUNCE2BOUNCE?": "You can reach us at info@bounce2bounce.com for general inquiries or events@bounce2bounce.com for event-related questions and artist promotion opportunities."
+        "How do I contact HARDLINE?": "You can reach us at info@hardline.events for general inquiries or info@hardline.events for event-related questions and artist promotion opportunities."
     };
 
     res.json(faq);

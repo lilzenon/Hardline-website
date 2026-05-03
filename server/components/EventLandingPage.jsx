@@ -6,7 +6,7 @@ const React = require('react');
  * This component renders a complete HTML document with:
  * - SEO meta tags for social media crawlers (Open Graph, Twitter Cards)
  * - Event structured data (schema.org/Event) for Google
- * - Glassmorphism design matching BOUNCE2BOUNCE homepage
+ * - Glassmorphism design matching HARDLINE homepage
  * - Smart redirect logic (immediate for bots, 2s delay for humans)
  * - Event cover image, title, artist, date, location display
  * 
@@ -15,7 +15,7 @@ const React = require('react');
  * @param {Object} props.metaTags - SEO meta tags object
  * @param {string} props.redirectUrl - URL to redirect to (ticket platform)
  * @param {boolean} props.isBot - Whether request is from a bot/crawler
- * @param {string} props.defaultDomain - Default domain (e.g., 'bounce2bounce.com')
+ * @param {string} props.defaultDomain - Default domain (e.g., 'hardline.events')
  * @returns {React.Element} Complete HTML document
  */
 function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }) {
@@ -55,7 +55,7 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
         },
         "organizer": {
             "@type": "Organization",
-            "name": "BOUNCE2BOUNCE",
+            "name": "HARDLINE",
             "url": `https://${defaultDomain}`
         }
     };
@@ -77,10 +77,10 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
             "name": event.artist_name
         };
     } else {
-        // Fallback: use BOUNCE2BOUNCE as performer
+        // Fallback: use HARDLINE as performer
         structuredData.performer = {
             "@type": "Organization",
-            "name": "BOUNCE2BOUNCE"
+            "name": "HARDLINE"
         };
     }
 
@@ -226,7 +226,7 @@ function EventLandingPage({ event, metaTags, redirectUrl, isBot, defaultDomain }
         React.createElement('head', { key: 'head' }, [
             React.createElement('meta', { key: 'charset', charSet: 'UTF-8' }),
             React.createElement('meta', { key: 'viewport', name: 'viewport', content: 'width=device-width, initial-scale=1.0' }),
-            React.createElement('title', { key: 'title' }, `${event.title} - BOUNCE2BOUNCE`),
+            React.createElement('title', { key: 'title' }, `${event.title} - HARDLINE`),
 
             // CRITICAL: NO meta refresh for bots - Google treats meta refresh as redirect
             // Bots see full HTML content (HTTP 200), humans get JavaScript redirect

@@ -23,7 +23,7 @@ const FAQPageMobile = () => {
 
   // ✅ SEO FIX: Removed hardcoded meta tags - now using SEO service from SEOContext
   // The SEOProvider automatically detects the /faq page and applies dashboard settings
-  // This ensures consistency between desktop and mobile, and uses bounce2bounce.com domain
+  // This ensures consistency between desktop and mobile, and uses hardline.events domain
   // iOS Safari pull-to-refresh guard on the scroll container
   useEffect(() => {
     const el = contentRef.current;
@@ -115,8 +115,8 @@ const FAQPageMobile = () => {
         // Fallback to default content if API is unavailable
         const defaultFaqItems = [
           {
-            q: "What is BOUNCE2BOUNCE?",
-            a: "BOUNCE2BOUNCE is a premium live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales."
+            q: "What is HARDLINE?",
+            a: "HARDLINE is a premium live music events platform that connects artists with fans through exclusive experiences and seamless ticket sales."
           },
           {
             q: "How do I buy tickets?",
@@ -127,12 +127,12 @@ const FAQPageMobile = () => {
             a: "We accept all major credit cards, PayPal, and Apple Pay for secure and convenient transactions."
           },
           {
-            q: "Is BOUNCE2BOUNCE mobile-friendly?",
-            a: "Yes, BOUNCE2BOUNCE features a mobile-first design optimized for iOS Safari and all browsers, providing a seamless mobile experience for event discovery and ticket purchasing."
+            q: "Is HARDLINE mobile-friendly?",
+            a: "Yes, HARDLINE features a mobile-first design optimized for iOS Safari and all browsers, providing a seamless mobile experience for event discovery and ticket purchasing."
           },
           {
-            q: "How do I contact BOUNCE2BOUNCE?",
-            a: "You can reach us at info@bounce2bounce.com for general inquiries or events@bounce2bounce.com for event-related questions and artist promotion opportunities."
+            q: "How do I contact HARDLINE?",
+            a: "You can reach us at info@hardline.events for general inquiries or info@hardline.events for event-related questions and artist promotion opportunities."
           }
         ];
 

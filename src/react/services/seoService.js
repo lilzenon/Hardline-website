@@ -9,24 +9,24 @@ import { apiClient } from '../../lib/api-client';
 // NOTE: These should match the server-side defaults in server/queries/seo_settings.queries.js
 export const DEFAULT_SEO_SETTINGS = {
     // Default/Homepage SEO
-    default_title: 'BOUNCE2BOUNCE - NJ\'S PREMIERE EDM COLLECTIVE',
-    default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.',
-    default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE',
-    default_author: 'BOUNCE2BOUNCE',
+    default_title: 'HARDLINE - NJ\'S PREMIERE EDM COLLECTIVE',
+    default_description: 'Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join HARDLINE for unforgettable music experiences.',
+    default_keywords: 'live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, HARDLINE',
+    default_author: 'HARDLINE',
     default_og_image: 'https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png',
-    twitter_handle: '@bounce2bounce',
+    twitter_handle: '@hardline events',
     google_analytics_id: '',
     google_search_console_id: '',
     // About Page SEO
-    about_page_title: 'About BOUNCE2BOUNCE | NJ\'s Premiere EDM Collective',
-    about_page_description: 'Learn about BOUNCE2BOUNCE - NJ\'s premiere EDM collective curating exclusive live music events. Discover our mission, values, and commitment to unforgettable music experiences.',
-    about_page_keywords: 'about bounce2bounce, edm collective, live music events, nj music, event curation, music community',
-    about_page_og_image: 'https://bounce2bounce.com/images/og-image.png',
+    about_page_title: 'About HARDLINE | NJ\'s Premiere EDM Collective',
+    about_page_description: 'Learn about HARDLINE - NJ\'s premiere EDM collective curating exclusive live music events. Discover our mission, values, and commitment to unforgettable music experiences.',
+    about_page_keywords: 'about hardline events, edm collective, live music events, nj music, event curation, music community',
+    about_page_og_image: 'https://hardline.events/images/og-image.png',
     // FAQ Page SEO
-    faq_page_title: 'FAQ - BOUNCE2BOUNCE | Frequently Asked Questions',
-    faq_page_description: 'Frequently asked questions about BOUNCE2BOUNCE events, tickets, venues, and more. Get answers to common questions about our live music experiences.',
-    faq_page_keywords: 'faq, questions, help, bounce2bounce support, event information, ticket help',
-    faq_page_og_image: 'https://bounce2bounce.com/images/og-image.png',
+    faq_page_title: 'FAQ - HARDLINE | Frequently Asked Questions',
+    faq_page_description: 'Frequently asked questions about HARDLINE events, tickets, venues, and more. Get answers to common questions about our live music experiences.',
+    faq_page_keywords: 'faq, questions, help, hardline events support, event information, ticket help',
+    faq_page_og_image: 'https://hardline.events/images/og-image.png',
     // Tracking Pixels
     google_ads_id: '',
     google_ads_conversion_label: '',
@@ -181,7 +181,7 @@ export const fetchMaintenanceStatus = async () => {
                 maintenance_message: data.maintenance_message || 'We are currently performing scheduled maintenance.',
                 maintenance_title: data.maintenance_title || 'Site Under Maintenance',
                 estimated_downtime: data.estimated_downtime || '2 hours',
-                contact_information: data.contact_information || 'support@bounce2bounce.com'
+                contact_information: data.contact_information || 'info@hardline.events'
             };
         } else {
             console.warn('⚠️ Invalid maintenance API response format:', data);
@@ -275,7 +275,7 @@ const getPageSpecificSEO = (settings, pageType) => {
  */
 export const generateMetaTags = (seoSettings, options = {}) => {
     const settings = { ...DEFAULT_SEO_SETTINGS, ...seoSettings };
-    const CANONICAL_HOST = 'bounce2bounce.com';
+    const CANONICAL_HOST = 'hardline.events';
     const HOMEPAGE_ORIGIN = `https://${CANONICAL_HOST}`;
     const { isMobile = false, deviceType = 'unknown' } = options;
 
@@ -360,7 +360,7 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
         { property: 'og:image:alt', content: `${pageSEO.title} - Preview Image` },
-        { property: 'og:site_name', content: 'BOUNCE2BOUNCE' },
+        { property: 'og:site_name', content: 'HARDLINE' },
         { property: 'og:locale', content: 'en_US' },
 
         // Twitter Cards
@@ -377,8 +377,8 @@ export const generateMetaTags = (seoSettings, options = {}) => {
         { name: 'theme-color', content: '#000000' },
         { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
-        { name: 'apple-mobile-web-app-title', content: 'BOUNCE2BOUNCE' },
-        { name: 'application-name', content: 'BOUNCE2BOUNCE' }
+        { name: 'apple-mobile-web-app-title', content: 'HARDLINE' },
+        { name: 'application-name', content: 'HARDLINE' }
     ];
 
     // Add mobile-specific meta tags

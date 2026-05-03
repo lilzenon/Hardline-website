@@ -2031,7 +2031,7 @@ const FigmaMobile = ({ onReady }) => {
       {/* EventStructuredData expects raw events with fields like slug, event_date, artist_name, etc. */}
       <EventStructuredData
         events={[...featuredEvents, ...homepageEvents]}
-        domain="bounce2bounce.com"
+        domain="hardline.events"
       />
 
       {/* 📱 MOBILE SCROLL PERFORMANCE FIX */}
@@ -2924,7 +2924,7 @@ const FigmaMobile = ({ onReady }) => {
           fontFamily: 'Inter, sans-serif'
         }}
         role="main"
-        aria-label="BOUNCE2BOUNCE Mobile Experience"
+        aria-label="HARDLINE Mobile Experience"
       >
         {/* Main Mobile Container - Responsive Full Viewport */}
         <main

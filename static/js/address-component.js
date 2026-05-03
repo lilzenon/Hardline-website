@@ -195,7 +195,7 @@ class AddressComponent {
         });
 
         // Add UTM parameters for analytics (as recommended by Google)
-        params.set('utm_source', 'bounce2bounce');
+        params.set('utm_source', 'hardline events');
         params.set('utm_campaign', 'address_navigation');
 
         return `${baseUrl}?${params.toString()}`;
@@ -211,7 +211,7 @@ class AddressComponent {
         });
 
         // Add UTM parameters for analytics
-        params.set('utm_source', 'bounce2bounce');
+        params.set('utm_source', 'hardline events');
         params.set('utm_campaign', 'address_search');
 
         return `${baseUrl}?${params.toString()}`;

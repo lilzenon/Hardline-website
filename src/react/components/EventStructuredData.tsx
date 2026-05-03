@@ -200,7 +200,7 @@ function generateEventSchema(event: Event, domain: string) {
   // ORGANIZER: Organization - RECOMMENDED
   schema.organizer = {
     '@type': 'Organization',
-    name: 'BOUNCE2BOUNCE',
+    name: 'HARDLINE',
     url: `https://${domain}`
   }
 
@@ -236,7 +236,7 @@ function generateEventSchema(event: Event, domain: string) {
  * Injects JSON-LD structured data for all events into the page <head>
  * Uses ItemList schema to wrap multiple Event schemas for better SEO
  */
-export default function EventStructuredData({ events, domain = 'bounce2bounce.com' }: EventStructuredDataProps) {
+export default function EventStructuredData({ events, domain = 'hardline.events' }: EventStructuredDataProps) {
   // Track if this component instance created the script tag
   const createdScriptTag = useRef(false)
 
@@ -374,7 +374,7 @@ export default function EventStructuredData({ events, domain = 'bounce2bounce.co
       '@context': 'https://schema.org',
       '@type': 'ItemList',
       name: 'Upcoming Events',
-      description: 'Live music events and exclusive experiences by BOUNCE2BOUNCE',
+      description: 'Live music events and exclusive experiences by HARDLINE',
       itemListElement: eventSchemas.map((schema, index) => ({
         '@type': 'ListItem',
         position: index + 1,

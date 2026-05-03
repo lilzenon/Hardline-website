@@ -814,7 +814,7 @@ router.get(
         ];
 
         res.render("messages", {
-            title: "Messages - BOUNCE2BOUNCE",
+            title: "Messages - HARDLINE",
             layout: "layouts/modern-dashboard",
             currentPage: "messages",
             stats: {
@@ -868,7 +868,7 @@ router.get(
         ];
 
         res.render("fans", {
-            title: "Fans - BOUNCE2BOUNCE",
+            title: "Fans - HARDLINE",
             layout: "layouts/modern-dashboard",
             currentPage: "fans",
             stats: {

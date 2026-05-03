@@ -1,5 +1,5 @@
 /**
- * SEO Settings Database Model for BOUNCE2BOUNCE
+ * SEO Settings Database Model for HARDLINE
  * Manages all SEO-related configurations and settings
  */
 
@@ -10,12 +10,12 @@ async function createSEOSettingsTable(knex) {
             table.increments("id").primary();
 
             // Meta tag defaults
-            table.string("default_title", 255).defaultTo("BOUNCE2BOUNCE - Live Music Events");
-            table.text("default_description").defaultTo("Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.");
+            table.string("default_title", 255).defaultTo("HARDLINE - Live Music Events");
+            table.text("default_description").defaultTo("Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join HARDLINE for unforgettable music experiences.");
             table.string("default_keywords", 500).defaultTo("live music events, concert tickets, artist promotion, event discovery, music experiences");
-            table.string("default_author", 100).defaultTo("BOUNCE2BOUNCE");
+            table.string("default_author", 100).defaultTo("HARDLINE");
             table.string("default_og_image", 500).defaultTo("https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png");
-            table.string("twitter_handle", 50).defaultTo("@bounce2bounce");
+            table.string("twitter_handle", 50).defaultTo("@hardline events");
 
             // Sitemap settings
             table.boolean("sitemap_enabled").defaultTo(true);
@@ -88,12 +88,12 @@ async function createSEOSettingsTable(knex) {
 
         // Insert default settings
         await knex("seo_settings").insert({
-            default_title: "BOUNCE2BOUNCE - Live Music Events",
-            default_description: "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join BOUNCE2BOUNCE for unforgettable music experiences.",
-            default_keywords: "live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, BOUNCE2BOUNCE",
-            default_author: "BOUNCE2BOUNCE",
+            default_title: "HARDLINE - Live Music Events",
+            default_description: "Discover exclusive live music events, connect with artists, and purchase tickets seamlessly. Join HARDLINE for unforgettable music experiences.",
+            default_keywords: "live music events, concert tickets, artist promotion, event discovery, music experiences, exclusive events, HARDLINE",
+            default_author: "HARDLINE",
             default_og_image: "https://admin.b2b.click/static/uploads/og-images/og-image-1758068780796-967082198.png",
-            twitter_handle: "@bounce2bounce",
+            twitter_handle: "@hardline events",
             sitemap_enabled: true,
             sitemap_include_events: true,
             sitemap_include_homepage: true,

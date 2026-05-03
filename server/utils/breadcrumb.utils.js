@@ -1,5 +1,5 @@
 /**
- * Breadcrumb Utilities for BOUNCE2BOUNCE
+ * Breadcrumb Utilities for HARDLINE
  * Generates breadcrumb navigation for better SEO and user experience
  */
 

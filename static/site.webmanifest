@@ -1,6 +1,6 @@
 {
-  "name": "BOUNCE2BOUNCE - Exclusive Live Music Events",
-  "short_name": "BOUNCE2BOUNCE",
+  "name": "HARDLINE - Exclusive Live Music Events",
+  "short_name": "HARDLINE",
   "description": "Discover exclusive live music events and connect with your favorite artists. Premium concert experiences and artist engagement platform.",
   "start_url": "/",
   "display": "standalone",
@@ -17,14 +17,14 @@
       "sizes": "430x932",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Mobile view of BOUNCE2BOUNCE events"
+      "label": "Mobile view of HARDLINE events"
     },
     {
       "src": "/images/screenshot-desktop.png", 
       "sizes": "1920x1080",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Desktop view of BOUNCE2BOUNCE events"
+      "label": "Desktop view of HARDLINE events"
     }
   ],
   "icons": [
@@ -72,7 +72,7 @@
     {
       "name": "Contact Us",
       "short_name": "Contact",
-      "description": "Get in touch with BOUNCE2BOUNCE",
+      "description": "Get in touch with HARDLINE",
       "url": "/contact",
       "icons": [
         {

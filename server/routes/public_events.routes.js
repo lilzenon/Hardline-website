@@ -32,7 +32,7 @@ function isBot(req) {
  * according to Google's Event structured data guidelines.
  *
  * @param {Object} event - Event object from database
- * @param {string} defaultDomain - Default domain (e.g., 'bounce2bounce.com')
+ * @param {string} defaultDomain - Default domain (e.g., 'hardline.events')
  * @returns {Object} Event schema object ready for JSON-LD serialization
  *
  * @see https://developers.google.com/search/docs/appearance/structured-data/event
@@ -50,7 +50,7 @@ function generateEventSchema(event, defaultDomain) {
     };
 
     // IMAGE: Multiple aspect ratios (1x1, 4x3, 16x9) - RECOMMENDED by Google
-    // ✅ GOOGLE SEO FIX: Always provide image with fallback to BOUNCE2BOUNCE logo
+    // ✅ GOOGLE SEO FIX: Always provide image with fallback to HARDLINE logo
     const eventImage = event.cover_image || `https://${defaultDomain}/images/bounce-logo.svg`;
     schema.image = [
         eventImage, // Original
@@ -90,17 +90,17 @@ function generateEventSchema(event, defaultDomain) {
     schema.eventAttendanceMode = "https://schema.org/OfflineEventAttendanceMode";
 
     // PERFORMER: Person or PerformingGroup - RECOMMENDED
-    // ✅ GOOGLE SEO FIX: Always provide performer with fallback to BOUNCE2BOUNCE
+    // ✅ GOOGLE SEO FIX: Always provide performer with fallback to HARDLINE
     if (event.artist_name) {
         schema.performer = {
             "@type": event.performer_type || "Person",
             "name": event.artist_name
         };
     } else {
-        // Fallback to BOUNCE2BOUNCE as the performer/organizer
+        // Fallback to HARDLINE as the performer/organizer
         schema.performer = {
             "@type": "Organization",
-            "name": "BOUNCE2BOUNCE"
+            "name": "HARDLINE"
         };
     }
 
@@ -156,7 +156,7 @@ function generateEventSchema(event, defaultDomain) {
     // ORGANIZER: Organization - RECOMMENDED
     schema.organizer = {
         "@type": "Organization",
-        "name": "BOUNCE2BOUNCE",
+        "name": "HARDLINE",
         "url": `https://${defaultDomain}`
     };
 
@@ -275,7 +275,7 @@ router.get(
     "/:slug",
     asyncHandler(async (req, res) => {
         const { slug } = req.params;
-        const defaultDomain = process.env.DEFAULT_DOMAIN || 'bounce2bounce.com';
+        const defaultDomain = process.env.DEFAULT_DOMAIN || 'hardline.events';
 
         console.log(`🔍 Looking up event with slug: ${slug}`);
 
@@ -288,7 +288,7 @@ router.get(
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Event Not Found - BOUNCE2BOUNCE</title>
+                    <title>Event Not Found - HARDLINE</title>
                     <style>
                         * { margin: 0; padding: 0; box-sizing: border-box; }
                         body {
@@ -352,7 +352,7 @@ router.get(
                 <head>
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Event Inactive - BOUNCE2BOUNCE</title>
+                    <title>Event Inactive - HARDLINE</title>
                     <style>
                         body { margin: 0; padding: 2rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #000; color: #fff; text-align: center; }
                         h1 { font-size: 2rem; margin-bottom: 1rem; }

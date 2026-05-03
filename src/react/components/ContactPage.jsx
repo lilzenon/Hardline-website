@@ -210,7 +210,7 @@ const ContactPage = () => {
             crossOrigin="anonymous"
             referrerPolicy="no-referrer"
             src="/images/figma-exact/b2b-logo-nav.svg"
-            alt="B2B Logo"
+            alt="Hardline Logo"
             loading="lazy"
             decoding="async"
             fetchpriority="high"

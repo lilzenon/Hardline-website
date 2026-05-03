@@ -381,7 +381,7 @@ router.get(
             readinessReport.overall_status = '✅ READY FOR INSTAGRAM MESSAGING VIA MESSENGER PLATFORM';
             readinessReport.next_steps = [
                 '1. Update webhook URL in Meta App Dashboard to: /api/webhooks/messenger',
-                '2. Test DM sending to app testers (bounce2bounce_, zenon.mp3)',
+                '2. Test DM sending to app testers (hardline events_, zenon.mp3)',
                 '3. Verify webhook events are properly configured',
                 '4. Submit app review for Advanced Access if needed for production'
             ];
