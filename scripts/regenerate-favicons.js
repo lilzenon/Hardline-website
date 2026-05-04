@@ -1,35 +1,51 @@
 #!/usr/bin/env node
 /**
- * Regenerate favicons from the OFFICIAL Hardline favicon SVG, ensuring
- * the rendered raster files (ICO/PNG) have a full-bleed red background
- * instead of transparent corners.
+ * Regenerate favicons from the OFFICIAL Hardline favicon SVG using a
+ * dual-design strategy that keeps the brand's circular look on browser
+ * tabs while producing a clean appearance in Google search results.
  *
- * Why the change:
+ * Background:
  *   The brand SVG draws the red as an inscribed <circle> inside a square
- *   viewBox. When rasterized verbatim, the four corners of every PNG/ICO
- *   are transparent. Google search results render favicons inside a
- *   circular crop on a light-colored tile; transparent corners show the
- *   tile through, which looks like a white outline around the icon.
+ *   viewBox, leaving the four corners transparent. That looks beautiful
+ *   on a browser tab (the red disc reads as a circle) but breaks in
+ *   Google search, which applies this CSS to every favicon:
+ *       border: 1px solid #dadce0;
+ *       background-color: #f1f3f4;
+ *       border-radius: 50%;
+ *   Google's #f1f3f4 light-gray bleeds through the transparent corners
+ *   before the circular crop is applied — that's the "white background"
+ *   ring users see in search snippets. Documented at:
+ *     https://developers.google.com/search/docs/appearance/favicon-in-search
+ *     https://www.codeface.com/browser-tabs-different-favicons-from-search-results
  *
- *   Visually the brand mark is identical (Google's circular crop
- *   produces the same red disc with the bull glyph) — the only
- *   difference is that the corners outside the crop are now red instead
- *   of transparent, so on any UI background the icon reads as a clean
- *   solid mark.
+ * Strategy:
+ *   - Small sizes (16, 32) and the SVG: rendered from the inscribed-
+ *     circle source, transparent corners preserved. Browsers pick these
+ *     for tab/bookmark display, so the user-visible browser-tab look is
+ *     a red circle (the brand's intent).
+ *   - Large sizes (48 and up — Google search target, PWA install,
+ *     iOS home screen): rendered from a transformed full-bleed SVG so
+ *     the corners are opaque red. Google's circular crop then yields a
+ *     solid red disc with no gray bleed; iOS adds its own rounded mask
+ *     and the colored corners hide under it.
+ *   - The favicon.ico carries 16 (circle) + 32 (circle) + 48 (full-
+ *     bleed) entries so legacy /favicon.ico fetchers see both designs
+ *     and pick the right one for their display size.
  *
  * Source SVG (read-only):
  *   C:\Users\chris\Documents\KUTT-B2B\HARDLINE LOGOS\favicon\favicon.svg
  *
  * Outputs (overwritten in place):
- *   static/images/favicon.svg          (transformed full-bleed)
- *   static/images/favicon.ico          (multi-res 16/32/48 PNG-encoded)
- *   static/favicon.ico                 (same)
- *   static/images/favicon-{16,32,48,96,192,196,512}x*.png
- *   static/images/web-app-manifest-{192,512}x*.png
- *   static/favicon-{16,32}x*.png
- *   static/apple-touch-icon.png        (180x180)
- *   static/images/apple-touch-icon.png (180x180)
- *   static/images/apple-touch-icon-{57,60,72,76,114,120,144,152}x*.png
+ *   static/images/favicon.svg                 (inscribed-circle copy)
+ *   static/images/favicon.ico                 (16+32 circle, 48 full-bleed)
+ *   static/favicon.ico                        (same)
+ *   static/images/favicon-{16,32}x*.png       (inscribed circle)
+ *   static/favicon-{16,32}x*.png              (inscribed circle)
+ *   static/images/favicon-{48,96,192,196,512}x*.png   (full-bleed)
+ *   static/images/web-app-manifest-{192,512}x*.png    (full-bleed)
+ *   static/apple-touch-icon.png               (180, full-bleed)
+ *   static/images/apple-touch-icon.png        (same)
+ *   static/images/apple-touch-icon-{57..152}x*.png    (full-bleed)
  */
 
 const fs = require('fs');
@@ -41,17 +57,17 @@ const ROOT = path.resolve(__dirname, '..');
 const STATIC = path.join(ROOT, 'static');
 const IMG = path.join(STATIC, 'images');
 
-const officialSvg = fs.readFileSync(path.join(SRC, 'favicon.svg'), 'utf8');
+const circleSvg = fs.readFileSync(path.join(SRC, 'favicon.svg'), 'utf8');
 
-// Transform: replace the inscribed <circle> background with a full-bleed
-// <rect> so the raster corners are red instead of transparent. The bull
-// glyph paths are untouched.
+// Build the full-bleed variant by replacing the inscribed <circle> with a
+// <rect> covering the whole viewBox. The bull glyph paths are untouched
+// — only the background changes.
 const fullBleedSvg = (() => {
-    const replaced = officialSvg.replace(
+    const replaced = circleSvg.replace(
         /<circle\s+class="cls-1"[^>]*\/?>(\s*<\/circle>)?/i,
         '<rect class="cls-1" x="0" y="0" width="418.01" height="418.01"/>'
     );
-    if (replaced === officialSvg) {
+    if (replaced === circleSvg) {
         throw new Error(
             'Could not find the inscribed <circle class="cls-1"> in the source ' +
             'SVG. The source file changed shape — update this transform before re-running.'
@@ -60,34 +76,36 @@ const fullBleedSvg = (() => {
     return replaced;
 })();
 
-// Save the official source SVG into the source-traceability folder so the
-// repo carries an audit trail of what we started from.
+// Stash the official source SVG for traceability.
 const traceDir = path.join(IMG, 'hardline-source');
 fs.mkdirSync(traceDir, { recursive: true });
 fs.copyFileSync(path.join(SRC, 'favicon.svg'), path.join(traceDir, 'favicon.svg'));
 
-// Write the transformed (full-bleed) SVG into the project. This is the
-// canonical favicon SVG served at /images/favicon.svg.
-fs.writeFileSync(path.join(IMG, 'favicon.svg'), fullBleedSvg);
-console.log('  svg    -> static/images/favicon.svg (full-bleed)');
+// Browser tabs that read the SVG should see the inscribed circle, so the
+// shipped favicon.svg is the original (transparent-corner) design.
+fs.writeFileSync(path.join(IMG, 'favicon.svg'), circleSvg);
+console.log('  svg    -> static/images/favicon.svg (inscribed circle)');
 
 // ----- PNG rendering -----
 // density:384 keeps the rasterizer working at a high enough internal
 // resolution that small targets (16/32) keep crisp edges.
-async function renderPng(size) {
-    return sharp(Buffer.from(fullBleedSvg), { density: 384 })
+function renderPng(svgString, size) {
+    return sharp(Buffer.from(svgString), { density: 384 })
         .resize(size, size, { fit: 'fill' })
         .png({ compressionLevel: 9 })
         .toBuffer();
 }
 
+async function writePng(svgString, size, dest) {
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, await renderPng(svgString, size));
+}
+
 // ----- ICO encoding -----
 // Multi-image ICO with PNG-encoded entries. Modern browsers (and Google's
-// favicon fetcher) all support PNG-in-ICO; this is also what most online
-// favicon generators emit today. Layout:
-//   6-byte header (reserved=0, type=1, count=N)
-// + N x 16-byte directory entries
-// + N PNG blobs (referenced by absolute file offset in each entry)
+// favicon fetcher) all support PNG-in-ICO. Each entry can come from a
+// different SVG variant, so the same .ico file ships circle + full-bleed
+// designs side by side.
 function encodeIco(images) {
     const HEADER = 6;
     const ENTRY = 16;
@@ -95,14 +113,14 @@ function encodeIco(images) {
     const header = Buffer.alloc(HEADER);
     header.writeUInt16LE(0, 0); // reserved
     header.writeUInt16LE(1, 2); // image type: 1 = ICO
-    header.writeUInt16LE(images.length, 4); // image count
+    header.writeUInt16LE(images.length, 4);
 
     let dataOffset = HEADER + ENTRY * images.length;
     const entries = images.map(({ size, data }) => {
         const e = Buffer.alloc(ENTRY);
-        e.writeUInt8(size >= 256 ? 0 : size, 0); // width  (0 means 256)
-        e.writeUInt8(size >= 256 ? 0 : size, 1); // height (0 means 256)
-        e.writeUInt8(0, 2); // palette colors (0 for true-color)
+        e.writeUInt8(size >= 256 ? 0 : size, 0); // width  (0 = 256)
+        e.writeUInt8(size >= 256 ? 0 : size, 1); // height (0 = 256)
+        e.writeUInt8(0, 2); // palette colors
         e.writeUInt8(0, 3); // reserved
         e.writeUInt16LE(1, 4);  // color planes
         e.writeUInt16LE(32, 6); // bits per pixel
@@ -115,47 +133,70 @@ function encodeIco(images) {
     return Buffer.concat([header, ...entries, ...images.map((img) => img.data)]);
 }
 
-async function renderIco(sizes, dest) {
+async function renderIco(spec, dest) {
+    // spec is [{ size, svg }, ...] — each entry can use a different SVG.
     const images = [];
-    for (const size of sizes) {
-        images.push({ size, data: await renderPng(size) });
+    for (const { size, svg } of spec) {
+        images.push({ size, data: await renderPng(svg, size) });
     }
     fs.writeFileSync(dest, encodeIco(images));
-    console.log(`  ico    -> ${path.relative(ROOT, dest)} (${sizes.join('/')})`);
+    const summary = spec.map((s) => `${s.size}=${s.svg === circleSvg ? 'circle' : 'full-bleed'}`).join(', ');
+    console.log(`  ico    -> ${path.relative(ROOT, dest)} (${summary})`);
 }
 
-async function writePng(size, dest) {
-    fs.mkdirSync(path.dirname(dest), { recursive: true });
-    fs.writeFileSync(dest, await renderPng(size));
-    console.log(`  png    -> ${path.relative(ROOT, dest)} (${size}x${size})`);
-}
+// ----- Pixel verification -----
+// Every PNG we ship is sampled to make sure its corners match what the
+// design intent is. Browser-tab favicons (16/32/SVG) keep their corners
+// transparent; Google-search and home-screen favicons (48+) must have
+// opaque red corners or Google's gray tile bleeds through.
+async function expectCornerAlpha(buf, expected /* 'transparent' | 'opaque-red' */, label) {
+    const { data, info } = await sharp(buf).raw().ensureAlpha().toBuffer({ resolveWithObject: true });
+    const w = info.width, ch = info.channels;
+    const corners = [
+        [0, 0],
+        [w - 1, 0],
+        [0, w - 1],
+        [w - 1, w - 1],
+    ].map(([x, y]) => {
+        const i = (y * w + x) * ch;
+        return { r: data[i], g: data[i + 1], b: data[i + 2], a: data[i + 3] };
+    });
 
-// Sanity check: confirm a rendered raster's corner pixel is opaque red,
-// not transparent. If this fails the SVG transform broke and we'd ship
-// the same white-outline bug we're trying to fix.
-async function assertCornerIsRed(buf, label) {
-    const { data, info } = await sharp(buf)
-        .raw()
-        .ensureAlpha()
-        .toBuffer({ resolveWithObject: true });
-    const [r, g, b, a] = data; // pixel (0, 0)
-    const ok = a === 255 && r > 200 && g < 50 && b < 50;
+    const test = (c) => {
+        if (expected === 'transparent') return c.a === 0;
+        // opaque-red: alpha 255 + dominant red. Edge antialiasing can
+        // reduce saturation slightly for small icons, so we accept any
+        // strong red where r >> g and r >> b.
+        return c.a === 255 && c.r > 200 && c.g < 60 && c.b < 60;
+    };
+
+    const ok = corners.every(test);
     if (!ok) {
-        throw new Error(
-            `${label}: corner pixel rgba(${r},${g},${b},${a}) is not opaque red — ` +
-            `the favicon would still show a white outline in Google results.`
-        );
+        const detail = corners.map((c) => `(${c.r},${c.g},${c.b},${c.a})`).join(' ');
+        throw new Error(`${label}: expected ${expected} corners, got ${detail}`);
     }
-    console.log(`  ✓ ${label}: corner rgba(${r},${g},${b},${a})`);
+    console.log(`  ✓ ${label}: corners ${expected}`);
 }
 
 (async () => {
-    // PNG variants — every public-facing favicon size we reference.
-    const pngTargets = [
-        [16,  path.join(IMG, 'favicon-16x16.png')],
-        [16,  path.join(STATIC, 'favicon-16x16.png')],
-        [32,  path.join(IMG, 'favicon-32x32.png')],
-        [32,  path.join(STATIC, 'favicon-32x32.png')],
+    // ---- PNG variants ----
+    // Inscribed-circle (transparent corners) — what browsers pick for
+    // tab/bookmark display.
+    const circleTargets = [
+        [16, path.join(IMG, 'favicon-16x16.png')],
+        [16, path.join(STATIC, 'favicon-16x16.png')],
+        [32, path.join(IMG, 'favicon-32x32.png')],
+        [32, path.join(STATIC, 'favicon-32x32.png')],
+    ];
+    for (const [size, dest] of circleTargets) {
+        await writePng(circleSvg, size, dest);
+        console.log(`  png    -> ${path.relative(ROOT, dest)} (${size}x${size}, circle)`);
+    }
+
+    // Full-bleed (opaque red corners) — sizes Google fetches for search
+    // results, plus PWA install and iOS home-screen targets where the
+    // surface adds its own rounded mask.
+    const fullBleedTargets = [
         [48,  path.join(IMG, 'favicon-48x48.png')],
         [96,  path.join(IMG, 'favicon-96x96.png')],
         [192, path.join(IMG, 'favicon-192x192.png')],
@@ -174,23 +215,32 @@ async function assertCornerIsRed(buf, label) {
         [144, path.join(IMG, 'apple-touch-icon-144x144.png')],
         [152, path.join(IMG, 'apple-touch-icon-152x152.png')],
     ];
-    for (const [size, dest] of pngTargets) await writePng(size, dest);
+    for (const [size, dest] of fullBleedTargets) {
+        await writePng(fullBleedSvg, size, dest);
+        console.log(`  png    -> ${path.relative(ROOT, dest)} (${size}x${size}, full-bleed)`);
+    }
 
-    // ICO files — same content, two locations.
-    await renderIco([16, 32, 48], path.join(IMG, 'favicon.ico'));
-    await renderIco([16, 32, 48], path.join(STATIC, 'favicon.ico'));
+    // ---- ICO files ----
+    // Mixed: 16 + 32 keep the circle look (browsers picking from the .ico
+    // for small displays); 48 is full-bleed (Google search picks the
+    // largest entry it can).
+    const icoSpec = [
+        { size: 16, svg: circleSvg },
+        { size: 32, svg: circleSvg },
+        { size: 48, svg: fullBleedSvg },
+    ];
+    await renderIco(icoSpec, path.join(IMG, 'favicon.ico'));
+    await renderIco(icoSpec, path.join(STATIC, 'favicon.ico'));
 
-    // Verify the rasters actually have red corners (not transparent).
-    await assertCornerIsRed(
-        fs.readFileSync(path.join(IMG, 'favicon-32x32.png')),
-        'favicon-32x32.png'
-    );
-    await assertCornerIsRed(
-        fs.readFileSync(path.join(IMG, 'favicon-512x512.png')),
-        'favicon-512x512.png'
-    );
+    // ---- Verifications ----
+    await expectCornerAlpha(fs.readFileSync(path.join(IMG, 'favicon-16x16.png')),  'transparent', 'favicon-16x16.png');
+    await expectCornerAlpha(fs.readFileSync(path.join(IMG, 'favicon-32x32.png')),  'transparent', 'favicon-32x32.png');
+    await expectCornerAlpha(fs.readFileSync(path.join(IMG, 'favicon-48x48.png')),  'opaque-red',  'favicon-48x48.png');
+    await expectCornerAlpha(fs.readFileSync(path.join(IMG, 'favicon-192x192.png')),'opaque-red',  'favicon-192x192.png');
+    await expectCornerAlpha(fs.readFileSync(path.join(IMG, 'favicon-512x512.png')),'opaque-red',  'favicon-512x512.png');
+    await expectCornerAlpha(fs.readFileSync(path.join(STATIC, 'apple-touch-icon.png')), 'opaque-red', 'apple-touch-icon.png');
 
-    console.log('\nFavicon regen complete.');
+    console.log('\nFavicon regen complete (dual-design: circle for tabs, full-bleed for Google + iOS).');
 })().catch((err) => {
     console.error(err);
     process.exit(1);
