@@ -1213,9 +1213,17 @@ async function reactHomepage(req, res) {
         // Get SEO settings from dashboard API with timeout and fallback
         let seoSettings;
         try {
-            const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                'https://admin.b2b.click/api/settings/seo' :
-                'http://localhost:3002/api/settings/seo';
+            const dashboardBase = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click' :
+                'http://localhost:3002';
+
+            // Pass ?domain=<host> so admin's multi-tenant SEO returns the row
+            // for the requesting public domain (hardline.events vs
+            // bounce2bounce.com). Without this, server-to-server fetches lose
+            // the browser's Origin and admin returns the default Bounce2Bounce
+            // row — which is what makes the tab title show the wrong brand.
+            const host = req.get('host') || '';
+            const dashboardApiUrl = `${dashboardBase}/api/settings/seo${host ? `?domain=${encodeURIComponent(host)}` : ''}`;
 
             // Add timeout to prevent hanging (increased for large responses)
             const controller = new AbortController();
@@ -1225,7 +1233,8 @@ async function reactHomepage(req, res) {
                 signal: controller.signal,
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(host ? { 'Origin': `https://${host}` } : {})
                 }
             });
             clearTimeout(timeoutId);

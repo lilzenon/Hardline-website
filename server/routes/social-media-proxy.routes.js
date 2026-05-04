@@ -15,12 +15,23 @@ router.get("/", async (req, res) => {
 
         console.log(`📡 Proxying social-media request to dashboard: ${dashboardUrl}/api/social-media`);
 
-        const response = await fetch(`${dashboardUrl}/api/social-media`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        // Timeout to prevent hanging if the dashboard call stalls — without
+        // this, the upstream LB will return a 504 HTML page after ~100s.
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        let response;
+        try {
+            response = await fetch(`${dashboardUrl}/api/social-media`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeoutId);
+        }
 
         if (response.ok) {
             const data = await response.json();

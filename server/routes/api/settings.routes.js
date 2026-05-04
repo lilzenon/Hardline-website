@@ -36,28 +36,42 @@ function getDashboardUrl(req) {
     return 'https://admin.b2b.click';
 }
 
+// Append ?domain=<host> so admin's multi-tenant SEO returns the row for the
+// requesting public domain (hardline.events vs bounce2bounce.com). Server-to-
+// server fetches lose the browser's Origin, so without this admin returns the
+// default/NULL row and tabs show the wrong brand.
+function withDomainParam(url, req) {
+    const host = req?.get?.('host');
+    if (!host) return url;
+    const sep = url.includes('?') ? '&' : '?';
+    return `${url}${sep}domain=${encodeURIComponent(host)}`;
+}
+
+// Wrap fetch with an AbortController so a hung dashboard call falls through
+// to the route's catch + JSON fallback instead of stalling until the upstream
+// LB returns a 504 HTML page.
+async function dashFetch(url, { timeoutMs = 5000, req } = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const headers = { 'Content-Type': 'application/json' };
+    const host = req?.get?.('host');
+    if (host) headers['Origin'] = `https://${host}`;
+    try {
+        return await fetch(url, { method: 'GET', headers, signal: controller.signal });
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
 router.get("/seo", async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching SEO settings from dashboard...');
 
-        // Proxy to dashboard server for SEO settings
         const dashboardUrl = getDashboardUrl(req);
+        const target = withDomainParam(`${dashboardUrl}/api/settings/seo`, req);
+        console.log(`📡 Proxying SEO request to: ${target}`);
 
-        console.log(`📡 Proxying SEO request to: ${dashboardUrl}/api/settings/seo`);
-
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-
-        const response = await fetch(`${dashboardUrl}/api/settings/seo`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            signal: controller.signal
-        });
-
-        clearTimeout(timeoutId);
+        const response = await dashFetch(target, { timeoutMs: 8000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -94,12 +108,9 @@ router.get("/seo/fast", async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching FAST SEO settings from dashboard...');
         const dashboardUrl = getDashboardUrl(req);
+        const target = withDomainParam(`${dashboardUrl}/api/settings/seo/fast`, req);
 
-        // Proxy to dashboard
-        const response = await fetch(`${dashboardUrl}/api/settings/seo/fast`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const response = await dashFetch(target, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -109,8 +120,21 @@ router.get("/seo/fast", async (req, res) => {
         throw new Error(`Dashboard responded ${response.status}`);
     } catch (error) {
         console.error('❌ Homepage: Error fetching FAST SEO settings:', error.message);
-        // Fallback to regular SEO route handler logic if fast fails
-        return res.redirect('/api/settings/seo');
+        // Return JSON fallback directly. A redirect here would force the
+        // browser into another roundtrip and, if the dashboard is still
+        // hung, would 504 again.
+        return res.json({
+            success: true,
+            settings: {
+                default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
+                default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+                default_keywords: "edm events, electronic dance music, nj events, hardline events, live music",
+                default_author: "HARDLINE",
+                maintenance_mode: false,
+                shop_enabled: false
+            },
+            fallback: true
+        });
     }
 });
 
@@ -118,10 +142,7 @@ router.get("/seo/fast", async (req, res) => {
 router.get("/maintenance-status", async (req, res) => {
     try {
         const base = process.env.DASHBOARD_API_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
-        const resp = await fetch(`${base}/api/settings/maintenance-status`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const resp = await dashFetch(`${base}/api/settings/maintenance-status`, { timeoutMs: 4000, req });
         if (resp.ok) {
             const data = await resp.json();
             return res.json(data);
@@ -180,12 +201,7 @@ router.get('/about', async (req, res) => {
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/about`);
 
-        const response = await fetch(`${dashboardUrl}/api/settings/about`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        const response = await dashFetch(`${dashboardUrl}/api/settings/about`, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -218,12 +234,7 @@ router.get('/about/gallery/public', async (req, res) => {
 
         console.log(`📡 Proxying gallery request to: ${dashboardUrl}/api/settings/about/gallery/public`);
 
-        const response = await fetch(`${dashboardUrl}/api/settings/about/gallery/public`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        const response = await dashFetch(`${dashboardUrl}/api/settings/about/gallery/public`, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -253,12 +264,7 @@ router.get('/social-media', async (req, res) => {
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/social-media`);
 
-        const response = await fetch(`${dashboardUrl}/api/social-media`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        const response = await dashFetch(`${dashboardUrl}/api/social-media`, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -288,12 +294,7 @@ router.get('/faq', async (req, res) => {
 
         console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/faq`);
 
-        const response = await fetch(`${dashboardUrl}/api/settings/faq`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
+        const response = await dashFetch(`${dashboardUrl}/api/settings/faq`, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
