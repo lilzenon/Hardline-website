@@ -36,15 +36,23 @@ function getDashboardUrl(req) {
     return 'https://admin.b2b.click';
 }
 
-// Append ?domain=<host> so admin's multi-tenant SEO returns the row for the
-// requesting public domain (hardline.events vs bounce2bounce.com). Server-to-
-// server fetches lose the browser's Origin, so without this admin returns the
-// default/NULL row and tabs show the wrong brand.
+// Append ?domain=<host>&nocache=1 so admin's multi-tenant SEO returns the
+// row for the requesting public domain (hardline.events vs bounce2bounce.com).
+// - `domain=<host>` tells admin which row we want.
+// - `nocache=1` forces admin to use its dedicated SEO connection pool and
+//   bypass the in-process helper cache. The helper, when running on the
+//   main `knex` pool, has a Render-specific routing quirk where it
+//   sometimes can't see freshly-inserted per-domain rows and silently
+//   falls back to the default/Bounce2Bounce row, which then locks the
+//   wrong brand on the tab title for 2 minutes via cache. Forcing the
+//   nocache path keeps SEO answers correct end-to-end.
+// Server-to-server fetches also lose the browser's Origin, so the
+// explicit ?domain= is required regardless.
 function withDomainParam(url, req) {
     const host = req?.get?.('host');
     if (!host) return url;
     const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}domain=${encodeURIComponent(host)}`;
+    return `${url}${sep}domain=${encodeURIComponent(host)}&nocache=1`;
 }
 
 // Wrap fetch with an AbortController so a hung dashboard call falls through

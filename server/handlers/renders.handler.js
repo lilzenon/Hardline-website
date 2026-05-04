@@ -1219,13 +1219,22 @@ async function reactHomepage(req, res) {
                 'https://admin.b2b.click' :
                 'http://localhost:3002';
 
-            // Pass ?domain=<host> so admin's multi-tenant SEO returns the row
-            // for the requesting public domain (hardline.events vs
-            // bounce2bounce.com). Without this, server-to-server fetches lose
-            // the browser's Origin and admin returns the default Bounce2Bounce
-            // row — which is what makes the tab title show the wrong brand.
+            // Pass ?domain=<host>&nocache=1 so admin's multi-tenant SEO
+            // returns the row for the requesting public domain (hardline.events
+            // vs bounce2bounce.com).
+            //
+            // - `domain=<host>` is required because server-to-server fetches
+            //   lose the browser's Origin, so admin can't infer which row
+            //   we want from headers alone.
+            // - `nocache=1` forces admin to use its dedicated SEO connection
+            //   pool and bypass the in-process helper cache. Without nocache,
+            //   admin's helper queries the main knex pool, which on Render
+            //   sometimes can't see freshly-inserted per-domain rows, then
+            //   caches the default/Bounce2Bounce row under the host key for
+            //   2 minutes — locking the wrong brand on the tab title.
             const host = req.get('host') || '';
-            const dashboardApiUrl = `${dashboardBase}/api/settings/seo${host ? `?domain=${encodeURIComponent(host)}` : ''}`;
+            const qs = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
+            const dashboardApiUrl = `${dashboardBase}/api/settings/seo${qs}`;
 
             // Add timeout to prevent hanging (increased for large responses)
             const controller = new AbortController();
