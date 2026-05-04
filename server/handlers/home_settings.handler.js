@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const twilioService = require("../services/sms/twilio.service");
 const phoneUtils = require("../services/contact-book/phone-utils.service");
 const { body, validationResult } = require("express-validator");
+const { getSiteDomain } = require("../utils/site-domain.util");
 
 // Configure multer for image uploads
 let multer, upload;
@@ -181,12 +182,14 @@ async function getHomepageData(req, res) {
     try {
         console.log('🔄 Fetching complete homepage data for refresh...');
 
-        // Fetch all homepage data in parallel
+        // Fetch all homepage data in parallel, scoped to this site's
+        // domain so each public site only sees its own events.
+        const siteDomain = getSiteDomain(req);
         const [homeSettings, featuredEvents, homepageEvents] = await Promise.all([
             query.homeSettings.get(),
-            query.event.getFeaturedEvents({ limit: 20 }),
+            query.event.getFeaturedEvents({ limit: 20, domain: siteDomain }),
             // Return all events marked for homepage (active), no limit so Past can show everything
-            query.event.getHomepageEvents({})
+            query.event.getHomepageEvents({ domain: siteDomain })
         ]);
 
         // Format the date for display

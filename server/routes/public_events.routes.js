@@ -7,6 +7,7 @@ const { CustomError } = require("../utils");
 const query = require("../queries");
 const { renderReactPage } = require("../utils/ssr.utils");
 const seoUtils = require("../utils/seo.utils");
+const { getSiteDomain } = require("../utils/site-domain.util");
 const EventLandingPage = require("../components/EventLandingPage.jsx");
 
 const router = Router();
@@ -279,7 +280,10 @@ router.get(
 
         console.log(`🔍 Looking up event with slug: ${slug}`);
 
-        const foundEvent = await query.event.findBySlug(slug);
+        // Scope by current site domain so a hardline.events visitor
+        // can't reach a bounce2bounce.com event with a colliding slug
+        // (and vice versa). Returns null → 404 below.
+        const foundEvent = await query.event.findBySlug(slug, { domain: getSiteDomain(req) });
 
         if (!foundEvent) {
             return res.status(404).send(`
@@ -421,8 +425,9 @@ router.get(
     asyncHandler(async (req, res) => {
         const { slug } = req.params;
 
-        // Check if the event exists to provide a helpful error message
-        const foundEvent = await query.event.findBySlug(slug);
+        // Check if the event exists (scoped to this site) to provide a
+        // helpful error message.
+        const foundEvent = await query.event.findBySlug(slug, { domain: getSiteDomain(req) });
 
         if (!foundEvent) {
             return res.status(404).json({

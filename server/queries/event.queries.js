@@ -46,9 +46,15 @@ async function findOne(match) {
     return await knex("events").where(normalizeMatch(match)).first();
 }
 
-// Find event by slug
-async function findBySlug(slug) {
-    return await knex("events").where("slug", slug).first();
+// Find event by slug. Pass `options.domain` to scope the lookup to a
+// single public site — required so a hardline.events visitor can't
+// reach a bounce2bounce.com event that happens to share the slug.
+async function findBySlug(slug, options = {}) {
+    const query = knex("events").where("slug", slug);
+    if (options.domain) {
+        query.where("domain", options.domain);
+    }
+    return await query.first();
 }
 
 // Find events by user
@@ -548,9 +554,12 @@ function getAcquisitionChannel(referrer) {
     return 'Other';
 }
 
-// Get featured events for homepage display
+// Get featured events for homepage display. Pass `options.domain` to
+// restrict to events tagged for this public site — strict equality,
+// no fallback. Required in the SSR path so each domain shows only
+// its own featured events.
 async function getFeaturedEvents(options = {}) {
-    const { limit = 6 } = options;
+    const { limit = 6, domain } = options;
 
     try {
         console.log('🔍 getFeaturedEvents: Starting query with options:', options);
@@ -593,6 +602,7 @@ async function getFeaturedEvents(options = {}) {
             .leftJoin("images", "events.cover_image_uuid", "images.uuid")
             .where("events.show_on_homepage", true)
             .where("events.is_active", true)
+            .modify(qb => { if (domain) qb.where("events.domain", domain); })
             .groupBy([
                 "events.id",
                 "events.title",
@@ -655,9 +665,11 @@ async function getFeaturedEvents(options = {}) {
     }
 }
 
-// Get homepage events (all events marked to show on homepage and active)
+// Get homepage events (all events marked to show on homepage and
+// active). Pass `options.domain` to restrict to events tagged for
+// this public site.
 async function getHomepageEvents(options = {}) {
-    const { limit } = options;
+    const { limit, domain } = options;
 
     try {
         console.log('🔍 getHomepageEvents: Starting query with options:', options);
@@ -700,6 +712,7 @@ async function getHomepageEvents(options = {}) {
             .leftJoin("images", "events.cover_image_uuid", "images.uuid")
             .where("events.show_on_homepage", true)
             .where("events.is_active", true)
+            .modify(qb => { if (domain) qb.where("events.domain", domain); })
             .orderBy("events.event_date", "desc");
 
         if (limit) {

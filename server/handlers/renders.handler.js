@@ -1,6 +1,7 @@
 const query = require("../queries");
 const utils = require("../utils");
 const env = require("../env");
+const { getSiteDomain } = require("../utils/site-domain.util");
 
 /**
  *
@@ -110,8 +111,9 @@ async function home(req, res) {
         // Fetch home page settings from database
         const homeSettings = await query.homeSettings.get();
 
-        // Fetch featured drops for homepage display
-        const featuredEvents = await query.event.getFeaturedEvents({ limit: 6 });
+        // Fetch featured drops for homepage display, scoped to this
+        // public site so each domain only renders its own events.
+        const featuredEvents = await query.event.getFeaturedEvents({ limit: 6, domain: getSiteDomain(req) });
 
         // 🚀 DEBUG: Log detailed information about featured drops
         console.log(`🏠 Homepage loading...`);
