@@ -186,7 +186,7 @@ export default function NotFoundPage() {
         textAlign: 'center',
         padding: '40px 40px',
         borderRadius: '16px',
-        background: 'rgba(22, 22, 22, 0.12)',
+        background: 'rgba(22, 22, 22, 0.5)',
         backdropFilter: 'blur(4px)',
         border: '1px solid rgba(255, 255, 255, 0.06)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
@@ -201,15 +201,14 @@ export default function NotFoundPage() {
           marginBottom: '24px'
         }}>
           <img
-            src="/images/figma-exact/b2b-logo-nav.svg"
+            src="/images/figma-exact/hardline-logo-404.svg"
             alt="HARDLINE"
             style={{
               height: '48px',
               width: 'auto',
               cursor: 'pointer',
               transition: 'all 0.3s ease',
-              opacity: 0.95,
-              filter: 'brightness(0) invert(1)'
+              opacity: 0.95
             }}
             onClick={handleGoHome}
             onError={(e) => {

@@ -4662,8 +4662,8 @@ const FigmaMobile = ({ onReady }) => {
                   }}
                 >
                   <LayloIframeSimple
-                    dropId="1nTsX"
-                    color="ff0409"
+                    dropId="GMpip"
+                    color="ff0202"
                     theme="dark"
                     background="solid"
                     minimal={true}

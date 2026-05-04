@@ -681,7 +681,7 @@ const FigmaDesktop = ({ onReady }) => {
 
     const tryAttachLayloObserver = () => {
       if (roLaylo) return true;
-      const layloEl = document.getElementById('laylo-drop-1nTsX');
+      const layloEl = document.getElementById('laylo-drop-GMpip');
       if (layloEl && supportsRO) {
         roLaylo = new ResizeObserver(recompute);
         roLaylo.observe(layloEl);
