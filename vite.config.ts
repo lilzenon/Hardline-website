@@ -200,7 +200,10 @@ export default defineConfig({
           }
 
           // 2. Three.js Ecosystem (Large 3D libraries)
-          if (id.includes('three') || id.includes('@react-three')) {
+          // Include bare `postprocessing` here so it doesn't fall into the
+          // catch-all `vendor` chunk and create a circular dep with three-vendor
+          // (which would surface as "Cannot access 'B' before initialization").
+          if (id.includes('three') || id.includes('@react-three') || id.includes('/postprocessing/') || id.includes('\\postprocessing\\')) {
             return 'three-vendor';
           }
 
