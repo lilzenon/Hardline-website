@@ -276,12 +276,9 @@ router.get(
     asyncHandler(renders.verify)
 );
 
-router.get(
-    "/terms",
-    asyncHandler(auth.jwtLoosePage),
-    asyncHandler(locals.user),
-    asyncHandler(renders.terms)
-);
+router.get("/terms", (req, res) => {
+    res.redirect(302, "https://www.notion.so/Hardline-Events-LLC-Terms-35538c397f2280659644e6fe70113dac");
+});
 
 // partial renders
 router.get(
