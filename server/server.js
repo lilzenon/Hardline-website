@@ -479,18 +479,22 @@ app.use("/css", express.static("custom/css", {
 
 
 // CRITICAL FIX: Static middleware with root path exclusion for dynamic SEO meta tags
-// This middleware serves static files but excludes the root path to allow server-side rendering
+// The reactHomepage handler (in renders.routes.js) injects per-request SEO
+// meta tags pulled from the admin dashboard's multi-tenant seo_settings row
+// for the requesting public domain. If express.static serves dist/index.html
+// directly for "/" the SSR handler never runs and Google indexes a page with
+// no <meta name="description">, no canonical, and no OG tags. So skip static
+// for "/" and "/index.html" only — every other path still falls through to
+// the static layer (and `fallthrough: true` then lets unmatched paths reach
+// the SPA route handlers below). req.path strips the query string, so
+// Instagram-tagged URLs like "/?fbclid=..." are still caught here and routed
+// to reactHomepage, which has its own in-app browser detection.
 app.use((req, res, next) => {
-    // CRITICAL FIX: Temporarily allow static serving for root path to resolve Instagram 404s
-    // unique query parameters from Instagram (?fbclid=...) were causing routing issues
-    // This allows express.static to handle the root request robustly
-    // if (req.path === '/' || req.path === '/index.html') {
-    //    return next();
-    // }
-
-    // Use express.static for all other paths
+    if (req.path === '/' || req.path === '/index.html') {
+        return next();
+    }
     express.static("dist", {
-        index: 'index.html', // Re-enable index.html serving
+        index: 'index.html',
         dotfiles: 'ignore',
         etag: true,
         extensions: false,
