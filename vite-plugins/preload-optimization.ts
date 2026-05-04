@@ -55,7 +55,13 @@ export function preloadOptimization(options: PreloadOptions = {}): Plugin {
           if (preloadCriticalCSS) {
             Object.keys(bundle).forEach(fileName => {
               if (fileName.endsWith('.css') && fileName.includes('index')) {
-                preloadLinks.push(`<link rel="preload" href="/${fileName}" as="style">`);
+                // crossorigin must match the actual stylesheet fetch (Vite's
+                // module-injected CSS uses crossorigin to match its
+                // crossorigin script bundle). Without it, the browser logs
+                // "credentials mode does not match" and the preload is
+                // discarded — costing the LCP boost the preload was meant to
+                // give.
+                preloadLinks.push(`<link rel="preload" href="/${fileName}" as="style" crossorigin>`);
               }
             });
           }

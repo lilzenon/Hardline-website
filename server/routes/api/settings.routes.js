@@ -63,6 +63,30 @@ async function dashFetch(url, { timeoutMs = 5000, req } = {}) {
     }
 }
 
+// Read JSON with an upper byte cap. The dashboard's seo_settings.backup_data
+// column has historically grown to 30MB+ (recursive escape doubling on each
+// admin save). Forwarding that to the browser blows up V8's JSON parser
+// mid-page-load, which Googlebot interprets as a render error → soft 404.
+// Cap at 2MB: a healthy SEO settings response is <20KB.
+const SEO_RESPONSE_CAP_BYTES = 2 * 1024 * 1024;
+async function readJsonCapped(response, capBytes = SEO_RESPONSE_CAP_BYTES) {
+    const text = await response.text();
+    if (text.length > capBytes) {
+        throw new Error(`Upstream response too large (${text.length} bytes, cap ${capBytes})`);
+    }
+    return JSON.parse(text);
+}
+
+// Strip internal-only fields the public site never needs. backup_data is the
+// big offender — a 30MB+ JSON-stringified mirror of the row that grows
+// exponentially across saves. None of the public consumers read it.
+function stripInternalSeoFields(data) {
+    if (data && data.settings && typeof data.settings === 'object') {
+        delete data.settings.backup_data;
+    }
+    return data;
+}
+
 router.get("/seo", async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching SEO settings from dashboard...');
@@ -74,7 +98,7 @@ router.get("/seo", async (req, res) => {
         const response = await dashFetch(target, { timeoutMs: 8000, req });
 
         if (response.ok) {
-            const data = await response.json();
+            const data = stripInternalSeoFields(await readJsonCapped(response));
             console.log('✅ Homepage: SEO settings fetched from dashboard:', {
                 title: data.settings?.default_title?.substring(0, 40) + '...',
                 hasShopEnabled: data.settings?.shop_enabled !== undefined
@@ -113,7 +137,7 @@ router.get("/seo/fast", async (req, res) => {
         const response = await dashFetch(target, { timeoutMs: 5000, req });
 
         if (response.ok) {
-            const data = await response.json();
+            const data = stripInternalSeoFields(await readJsonCapped(response));
             return res.json(data);
         }
 

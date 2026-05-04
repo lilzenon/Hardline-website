@@ -299,9 +299,15 @@ function permissionsPolicyHeaders() {
             'encrypted-media=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")',
             'fullscreen=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")',
             // Picture-in-picture used by YouTube on Safari
-            'picture-in-picture=(self "https://www.youtube.com" "https://youtube.com")',
-            // Web Share for Laylo flows and YouTube
-            'web-share=(self "https://embed.laylo.com" "https://laylo.com" "https://www.youtube.com" "https://youtube.com")'
+            'picture-in-picture=(self "https://www.youtube.com" "https://youtube.com")'
+            // Note: web-share intentionally omitted. Some Chromium-based
+            // crawlers (incl. some Googlebot renderers) log
+            // "Unrecognized feature: 'web-share'" in Search Console, which
+            // shows up as a console warning during indexing. Same-origin
+            // navigator.share() in our own React code is unaffected (the
+            // default allow-list for web-share already covers self), and
+            // iframes that need it advertise it via their own `allow`
+            // attribute.
         ].join(', ');
         res.setHeader('Permissions-Policy', policy);
         next();
