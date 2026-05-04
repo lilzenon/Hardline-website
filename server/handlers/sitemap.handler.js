@@ -24,14 +24,18 @@ const env = require("../env");
  * - Events redirect to external ticket URLs after 150ms (allows Google to parse schema)
  * - Only active events with show_on_homepage=true are included
  *
- * Uses canonical domain: bounce2bounce.com
+ * Uses canonical domain: hardline.events
  */
 async function generateSitemap(req, res) {
     try {
-        console.log('🗺️ Generating XML sitemap for bounce2bounce.com...');
+        // SEO: in production always emit hardline.events as canonical, regardless of env.
+        // This prevents a misconfigured SITE_URL from publishing wrong canonical URLs to Google.
+        // In dev/test, respect SITE_URL so localhost sitemaps work for verification.
+        const baseUrl = env.NODE_ENV === 'production'
+            ? 'https://hardline.events'
+            : env.SITE_URL;
 
-        // ✅ Use canonical domain (bounce2bounce.com, not b2b.click)
-        const baseUrl = 'https://bounce2bounce.com';
+        console.log(`🗺️ Generating XML sitemap for ${baseUrl}...`);
         const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
         // Start building sitemap XML with proper namespaces (including image namespace)
@@ -49,9 +53,15 @@ async function generateSitemap(req, res) {
 
         // 🖼️ GOOGLE IMAGE SEO: Fetch and include event cover images in sitemap
         try {
+            // Sitemap fetches admin server-to-server (no Origin/Referer
+            // header) so we must pass ?domain= explicitly. Otherwise admin
+            // returns events for every domain and the sitemap lists
+            // bounce2bounce events under hardline.events URLs (or vice versa).
+            const { DEFAULT_DOMAIN } = require("../utils/site-domain.util");
+            const sitemapDomain = (process.env.SITE_DOMAIN || DEFAULT_DOMAIN).toLowerCase();
             const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                'https://admin.b2b.click/api/home-settings/homepage-data' :
-                'http://localhost:3002/api/home-settings/homepage-data';
+                `https://admin.b2b.click/api/home-settings/homepage-data?domain=${encodeURIComponent(sitemapDomain)}` :
+                `http://localhost:3002/api/home-settings/homepage-data?domain=${encodeURIComponent(sitemapDomain)}`;
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -203,9 +213,15 @@ async function generateSitemap(req, res) {
         // Only include active events with show_on_homepage=true
         let eventCount = 0;
         try {
+            // Sitemap fetches admin server-to-server (no Origin/Referer
+            // header) so we must pass ?domain= explicitly. Otherwise admin
+            // returns events for every domain and the sitemap lists
+            // bounce2bounce events under hardline.events URLs (or vice versa).
+            const { DEFAULT_DOMAIN } = require("../utils/site-domain.util");
+            const sitemapDomain = (process.env.SITE_DOMAIN || DEFAULT_DOMAIN).toLowerCase();
             const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                'https://admin.b2b.click/api/home-settings/homepage-data' :
-                'http://localhost:3002/api/home-settings/homepage-data';
+                `https://admin.b2b.click/api/home-settings/homepage-data?domain=${encodeURIComponent(sitemapDomain)}` :
+                `http://localhost:3002/api/home-settings/homepage-data?domain=${encodeURIComponent(sitemapDomain)}`;
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -301,15 +317,20 @@ function escapeXml(unsafe) {
 }
 
 /**
- * Generate robots.txt dynamically for bounce2bounce.com
+ * Generate robots.txt dynamically for hardline.events
  * ✅ Allows public pages and necessary API endpoints for JavaScript SEO
  * ❌ Blocks admin, dashboard, and private API endpoints
  */
 async function generateRobotsTxt(req, res) {
     try {
-        const baseUrl = 'https://bounce2bounce.com';
+        // SEO: keep canonical alignment with sitemap.xml — hardline.events in production,
+        // SITE_URL in dev/test. Sitemap directive must use the same host the file is served from.
+        const baseUrl = env.NODE_ENV === 'production'
+            ? 'https://hardline.events'
+            : env.SITE_URL;
+        const host = baseUrl.replace(/^https?:\/\//, '');
 
-        const robotsTxt = `# Robots.txt for bounce2bounce.com - Public Homepage
+        const robotsTxt = `# Robots.txt for ${host} - Public Homepage
 User-agent: *
 
 # Allow public pages and assets
@@ -360,7 +381,7 @@ Crawl-delay: 1`;
             'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
         });
 
-        console.log('✅ robots.txt generated for bounce2bounce.com');
+        console.log(`✅ robots.txt generated for ${host}`);
         console.log('✅ Allowed public API endpoints for JavaScript SEO');
         console.log('❌ Blocked admin, dashboard, and private API endpoints');
 
