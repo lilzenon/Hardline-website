@@ -6,6 +6,12 @@ const router = express.Router();
  * Proxy endpoint for social media links - proxies to dashboard server
  */
 router.get("/", async (req, res) => {
+    // Toggling enabled in admin must reflect on the public site
+    // immediately. Without these headers Cloudflare/the browser may
+    // serve the prior JSON for minutes after the admin save.
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     try {
         console.log('🔍 Homepage: Fetching social media links via proxy...');
 
@@ -26,6 +32,9 @@ router.get("/", async (req, res) => {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    // Defense in depth: ask the upstream not to serve a
+                    // cached body either.
+                    'Cache-Control': 'no-cache',
                 },
                 signal: controller.signal
             });

@@ -136,9 +136,15 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
 
         const response = await fetch(apiUrl, {
           signal: abortController.signal,
+          // Bypass the browser HTTP cache. The proxy/dashboard already
+          // send Cache-Control: no-store, but this guards against
+          // intermediate caches (Cloudflare, ServiceWorker) returning
+          // a stale list right after an admin toggle.
+          cache: 'no-store',
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
           }
         });
 
