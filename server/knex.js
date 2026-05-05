@@ -16,84 +16,42 @@ const db = knex({
         user: env.DB_USER,
         password: env.DB_PASSWORD,
         ssl: env.DB_SSL,
-        // Optimized connection settings for PostgreSQL (PERFORMANCE TUNED for dashboard)
+        // PostgreSQL client-level timeouts (forwarded by node-postgres)
         ...(isPostgres && {
-            // TIMEOUT FIX: Increased PostgreSQL timeouts to prevent 12-second frontend timeouts
-            statement_timeout: 15000, // 15 seconds - allows complex queries to complete
-            query_timeout: 12000, // 12 seconds - matches frontend timeout expectation
-            connectionTimeoutMillis: 8000, // 8 seconds - stable connection establishment
-            idleTimeoutMillis: 30000, // 30 seconds - keep connections alive longer
-            // Add lock timeout to prevent deadlocks
-            lock_timeout: 10000, // 10 seconds - prevent indefinite lock waits
+            statement_timeout: 15000,
+            query_timeout: 12000,
+            lock_timeout: 10000,
         }),
-        pool: {
-            // CRITICAL FIX: Increased pool to match worker concurrency + API calls
-            min: env.DB_POOL_MIN || 2, // Minimum 2 connections for stability
-            max: env.DB_POOL_MAX || 6, // Increased to 6 to handle 3 workers + 3 API calls
-            // TIMEOUT FIX: Optimized for 12-second frontend timeout resolution
-            acquireTimeoutMillis: 8000, // Increased to 8s to prevent pool exhaustion
-            createTimeoutMillis: 10000, // Increased to 10s for stable connections
-            destroyTimeoutMillis: 5000, // Increased to 5s for proper cleanup
-            idleTimeoutMillis: 30000, // Increased to 30s to keep connections alive longer
-            reapIntervalMillis: 1000, // Check every 1s for balanced performance
-            createRetryIntervalMillis: 200, // Retry every 200ms for stability
-            // Enhanced validation and error handling
-            propagateCreateError: false, // Don't crash on connection errors
-            // Add eviction policy to prevent stale connections
-            evictionRunIntervalMillis: 10000, // Run eviction every 10s
-            numTestsPerEvictionRun: 3, // Test 3 connections per eviction run
-            softIdleTimeoutMillis: 20000, // Soft idle timeout before eviction
-            afterCreate: function(conn, done) {
-                // TIMEOUT FIX: Set optimized PostgreSQL session parameters
-                if (isPostgres) {
-                    // Set multiple timeout parameters for comprehensive coverage
-                    const timeoutQueries = [
-                        'SET statement_timeout = 15000', // 15s for complex queries
-                        'SET lock_timeout = 10000', // 10s to prevent deadlocks
-                        'SET idle_in_transaction_session_timeout = 20000', // 20s for idle transactions
-                        'SET tcp_keepalives_idle = 300', // 5 minutes for TCP keepalive
-                        'SET tcp_keepalives_interval = 30', // 30s keepalive interval
-                        'SET tcp_keepalives_count = 3' // 3 keepalive probes
-                    ];
-
-                    let completed = 0;
-                    let hasError = false;
-
-                    timeoutQueries.forEach(query => {
-                        conn.query(query, function(err) {
-                            if (err && !hasError) {
-                                hasError = true;
-                                console.warn(`⚠️ Failed to set PostgreSQL parameter: ${query}`, err.message);
-                                return done(err, conn);
-                            }
-                            completed++;
-                            if (completed === timeoutQueries.length && !hasError) {
-                                console.log('✅ PostgreSQL connection optimized for timeout prevention');
-                                done(null, conn);
-                            }
-                        });
-                    });
-                } else {
-                    done(null, conn);
+    },
+    pool: {
+        min: env.DB_POOL_MIN || 2,
+        max: env.DB_POOL_MAX || 10,
+        acquireTimeoutMillis: 8000,
+        createTimeoutMillis: 10000,
+        destroyTimeoutMillis: 5000,
+        idleTimeoutMillis: 30000,
+        reapIntervalMillis: 1000,
+        createRetryIntervalMillis: 200,
+        propagateCreateError: false,
+        afterCreate: function (conn, done) {
+            if (!isPostgres) return done(null, conn);
+            // SET applies to this session only; needed because pool reuses connections
+            const setStatements = [
+                'SET statement_timeout = 15000',
+                'SET lock_timeout = 10000',
+                'SET idle_in_transaction_session_timeout = 20000',
+            ].join('; ');
+            conn.query(setStatements, function (err) {
+                if (err) {
+                    console.warn('⚠️ Failed to apply PostgreSQL session timeouts:', err.message);
+                    return done(err, conn);
                 }
-            },
-            // Add connection validation
-            validate: function(conn) {
-                return conn && !conn.destroyed;
-            },
-            // Log connection pool events for debugging
-            log: {
-                warn: function(message) {
-                    console.warn('🔶 DB Pool Warning:', message);
-                },
-                error: function(message) {
-                    console.error('🔴 DB Pool Error:', message);
-                },
-                deprecate: function(message) {
-                    console.warn('⚠️ DB Pool Deprecation:', message);
-                }
-            }
-        }
+                done(null, conn);
+            });
+        },
+        validate: function (conn) {
+            return conn && !conn.destroyed;
+        },
     },
     useNullAsDefault: true,
     // Global query timeout

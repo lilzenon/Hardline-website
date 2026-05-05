@@ -42,10 +42,10 @@ async function verifyDatabase() {
             user: env.DB_USER,
             password: env.DB_PASSWORD,
             ssl: env.DB_SSL,
-            pool: {
-                min: env.DB_POOL_MIN || 0,
-                max: env.DB_POOL_MAX || 10
-            }
+        },
+        pool: {
+            min: env.DB_POOL_MIN || 0,
+            max: env.DB_POOL_MAX || 10
         },
         useNullAsDefault: true
     };

@@ -11,6 +11,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes (increased to reduce DB load)
  * Get current SEO settings with caching and corruption recovery
  */
 async function getSEOSettings() {
+    const startTime = Date.now();
     try {
         // Check cache first to prevent slow database queries
         const now = Date.now();
@@ -20,7 +21,6 @@ async function getSEOSettings() {
         }
 
         console.log('🔍 Fetching SEO settings from database...');
-        const startTime = Date.now();
 
         // Add timeout to database query to prevent hanging with retry logic
         let settings;

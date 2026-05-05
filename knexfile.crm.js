@@ -22,10 +22,10 @@ module.exports = {
     user: env.CRM_DB_USER || env.DB_USER,
     password: env.CRM_DB_PASSWORD || env.DB_PASSWORD,
     ssl: env.CRM_DB_SSL || env.DB_SSL,
-    pool: {
-      min: env.CRM_DB_POOL_MIN || 2,
-      max: env.CRM_DB_POOL_MAX || 10
-    }
+  },
+  pool: {
+    min: env.CRM_DB_POOL_MIN || 2,
+    max: env.CRM_DB_POOL_MAX || 10
   },
   useNullAsDefault: true,
   migrations: {
