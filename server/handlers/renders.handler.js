@@ -4,6 +4,38 @@ const env = require("../env");
 const { getSiteDomain } = require("../utils/site-domain.util");
 
 /**
+ * Build a server-to-server admin API URL with the right multi-tenant
+ * context attached:
+ *   - `?domain=<canonical-host>` so admin's resolveRequestDomain returns
+ *     the per-domain row instead of falling through to default. Without
+ *     this, an SSR fetch from hardline.events with no Origin header
+ *     resolves to admin's own host, returns the NULL/default row, and
+ *     hardline's About page ends up rendering whatever-other-domain's
+ *     gallery is in the default fallback (which is what was bleeding
+ *     bounce2bounce.com images into hardline.events).
+ *   - `nocache=1` so admin uses its dedicated SEO connection pool and
+ *     skips the gallery_version cache key — fresh DB read every call.
+ *
+ * Returns `{ url, origin }` so the caller can spread `origin` into the
+ * fetch headers as `'Origin': origin`. Origin is set as a belt-and-
+ * suspenders fallback in case `?domain=` ever gets stripped by a proxy
+ * in the chain.
+ *
+ * @param {string} baseUrl admin base, e.g. https://admin.b2b.click
+ * @param {string} path    admin path, e.g. /api/settings/about/gallery/public
+ * @param {object} req     express request (used by getSiteDomain)
+ */
+function buildAdminFetch(baseUrl, path, req) {
+    const host = getSiteDomain(req);
+    const sep = path.includes('?') ? '&' : '?';
+    const qs = host ? `${sep}domain=${encodeURIComponent(host)}&nocache=1` : '';
+    return {
+        url: `${baseUrl}${path}${qs}`,
+        origin: host ? `https://${host}` : null,
+    };
+}
+
+/**
  *
  * PAGES
  *
@@ -697,7 +729,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
 }
 
 // Helper function to generate structured data based on page type
-async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl) {
+async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl, req) {
     const baseUrl = 'https://hardline.events';
 
     // Build social media sameAs array
@@ -786,9 +818,11 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
         let eventImageSchemas = [];
         let eventSchemas = [];
         try {
-            const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                'https://admin.b2b.click/api/home-settings/homepage-data' :
-                'http://localhost:3002/api/home-settings/homepage-data';
+            const dashboardBase = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click' :
+                'http://localhost:3002';
+            const { url: dashboardApiUrl, origin: hostOrigin } =
+                buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -797,7 +831,8 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                 signal: controller.signal,
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(hostOrigin ? { 'Origin': hostOrigin } : {})
                 }
             });
             clearTimeout(timeoutId);
@@ -1052,9 +1087,11 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
         // This enables Google Image Search indexing and Rich Results for gallery images
         let galleryImageSchemas = [];
         try {
-            const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                'https://admin.b2b.click/api/settings/about/gallery/public' :
-                'http://localhost:3002/api/settings/about/gallery/public';
+            const dashboardBase = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click' :
+                'http://localhost:3002';
+            const { url: dashboardApiUrl, origin: hostOrigin } =
+                buildAdminFetch(dashboardBase, '/api/settings/about/gallery/public', req);
 
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
@@ -1063,7 +1100,8 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                 signal: controller.signal,
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(hostOrigin ? { 'Origin': hostOrigin } : {})
                 }
             });
             clearTimeout(timeoutId);
@@ -1355,16 +1393,22 @@ async function reactHomepage(req, res) {
         if (pageType === 'faq') {
             // Fetch FAQ data
             try {
-                const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click/api/settings/faq' :
-                    'http://localhost:3002/api/settings/faq';
+                const dashboardBase = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click' :
+                    'http://localhost:3002';
+                const { url: dashboardApiUrl, origin: hostOrigin } =
+                    buildAdminFetch(dashboardBase, '/api/settings/faq', req);
 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
 
                 const response = await fetch(dashboardApiUrl, {
                     signal: controller.signal,
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(hostOrigin ? { 'Origin': hostOrigin } : {})
+                    }
                 });
                 clearTimeout(timeoutId);
 
@@ -1381,26 +1425,26 @@ async function reactHomepage(req, res) {
         } else if (pageType === 'about') {
             // Fetch About page content AND gallery images for SSR
             try {
-                const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click/api/settings/about' :
-                    'http://localhost:3002/api/settings/about';
-                const galleryApiUrl = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click/api/settings/about/gallery/public' :
-                    'http://localhost:3002/api/settings/about/gallery/public';
+                const dashboardBase = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click' :
+                    'http://localhost:3002';
+                const { url: dashboardApiUrl, origin: hostOrigin } =
+                    buildAdminFetch(dashboardBase, '/api/settings/about', req);
+                const { url: galleryApiUrl } =
+                    buildAdminFetch(dashboardBase, '/api/settings/about/gallery/public', req);
 
                 // Fetch both About content and gallery images in parallel
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+                const sharedHeaders = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    ...(hostOrigin ? { 'Origin': hostOrigin } : {})
+                };
                 const [aboutResponse, galleryResponse] = await Promise.all([
-                    fetch(dashboardApiUrl, {
-                        signal: controller.signal,
-                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-                    }),
-                    fetch(galleryApiUrl, {
-                        signal: controller.signal,
-                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-                    })
+                    fetch(dashboardApiUrl, { signal: controller.signal, headers: sharedHeaders }),
+                    fetch(galleryApiUrl, { signal: controller.signal, headers: sharedHeaders })
                 ]);
                 clearTimeout(timeoutId);
 
@@ -1430,16 +1474,22 @@ async function reactHomepage(req, res) {
         } else if (pageType === 'homepage') {
             // Fetch homepage events data
             try {
-                const dashboardApiUrl = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click/api/home-settings/homepage-data' :
-                    'http://localhost:3002/api/home-settings/homepage-data';
+                const dashboardBase = env.NODE_ENV === 'production' ?
+                    'https://admin.b2b.click' :
+                    'http://localhost:3002';
+                const { url: dashboardApiUrl, origin: hostOrigin } =
+                    buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
 
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 5000);
 
                 const response = await fetch(dashboardApiUrl, {
                     signal: controller.signal,
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(hostOrigin ? { 'Origin': hostOrigin } : {})
+                    }
                 });
                 clearTimeout(timeoutId);
 
@@ -1499,7 +1549,7 @@ async function reactHomepage(req, res) {
         // Generate structured data with error handling to prevent page failures
         let structuredDataJson = '{}';
         try {
-            structuredDataJson = await generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl);
+            structuredDataJson = await generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl, req);
         } catch (structuredDataError) {
             console.warn('⚠️ Failed to generate structured data, using empty object:', structuredDataError.message);
         }
