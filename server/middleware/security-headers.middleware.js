@@ -95,8 +95,13 @@ function getCSPDirectives() {
             "'self'",
             siteUrl,
             "https://api.twilio.com",
+            // GA4 collection (gtag.js, /g/collect, debug, region-prefixed endpoints)
             "https://www.google-analytics.com",
+            "https://*.google-analytics.com",
             "https://analytics.google.com",
+            "https://*.analytics.google.com",
+            "https://www.googletagmanager.com",
+            "https://stats.g.doubleclick.net",
             "https://fonts.googleapis.com", // Allow Google Fonts CSS loading
             "https://cdn.jsdelivr.net", // Allow jsDelivr CDN for react-simple-maps
             "https://laylo.com", // Allow Laylo main domain
