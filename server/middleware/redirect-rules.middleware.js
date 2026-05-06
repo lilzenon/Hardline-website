@@ -1,26 +1,42 @@
 // Dashboard-driven URL redirect middleware for slug paths
 // PERFORMANCE FIX: Direct database query instead of cross-domain API calls
 // This eliminates network timeouts and ensures 100% reliability
+//
+// Multi-tenant: redirects are scoped per public domain (see admin
+// migration 20260504000002_add_domain_to_redirects.js). This middleware
+// resolves the request's site domain via the same getSiteDomain helper
+// the rest of the public app uses, then looks up:
+//   1. (slug, domain = <site domain>) — per-domain row, takes priority.
+//   2. (slug, domain IS NULL)         — legacy/default row, fallback so
+//      pre-multi-tenant redirects keep working until promoted.
+// Without this scoping, hardline.events would resolve bounce2bounce.com
+// redirects (and vice versa), since the table is shared across both
+// public sites.
 
 const env = require("../env");
 const knex = require("../knex");
+const { getSiteDomain } = require("../utils/site-domain.util");
 
-const cache = new Map(); // slug -> { enabled, destinationUrl, expiresAt }
+// Cache key includes site domain so a single process serving multiple
+// hostnames can't leak rows across domains. In practice each public
+// site is its own deployment, but the composite key is cheap insurance.
+const cache = new Map(); // `${domain}|${slug}` -> { id, enabled, destinationUrl, expiresAt }
 
 /**
- * Track a redirect hit asynchronously (non-blocking)
- * @param {string} slug - The redirect slug
+ * Track a redirect hit asynchronously (non-blocking).
+ * Tracked by row id (not slug) so duplicate slugs across different
+ * domains can't inflate each other's counters.
  */
-function trackRedirectHit(slug) {
+function trackRedirectHit(redirectId) {
+  if (!redirectId) return;
   setImmediate(async () => {
     try {
       await knex("redirects")
-        .where("slug", slug.toLowerCase())
+        .where("id", redirectId)
         .increment("hits", 1)
         .update("last_accessed_at", knex.fn.now());
-      console.log(`📊 Redirect hit tracked: /${slug}`);
     } catch (error) {
-      console.error(`❌ Error tracking redirect hit for "${slug}":`, error.message);
+      console.error(`❌ Error tracking redirect hit for id=${redirectId}:`, error.message);
     }
   });
 }
@@ -40,33 +56,43 @@ function isValidSlug(s) {
 }
 
 /**
- * Query redirect rule directly from database
- * PERFORMANCE FIX: Eliminates network calls and timeouts
- * @param {string} slug - The redirect slug to look up
- * @returns {Promise<{found: boolean, enabled?: boolean, destinationUrl?: string, ttlMs?: number, error?: string}>}
+ * Query redirect rule directly from database, scoped to this site's
+ * domain with a NULL-domain fallback for legacy rows.
  */
-async function fetchRule(slug) {
+async function fetchRule(slug, siteDomain) {
   try {
-    const rule = await knex("redirects")
-      .where("slug", slug.toLowerCase())
-      .first();
+    const slugLower = slug.toLowerCase();
+
+    // 1. Per-domain row first.
+    let rule = null;
+    if (siteDomain) {
+      rule = await knex("redirects")
+        .whereRaw("lower(slug) = ?", [slugLower])
+        .where("domain", siteDomain)
+        .first();
+    }
+
+    // 2. Fall back to legacy/default (NULL domain) row so existing
+    //    redirects keep working until the owner promotes them per-domain.
+    if (!rule) {
+      rule = await knex("redirects")
+        .whereRaw("lower(slug) = ?", [slugLower])
+        .whereNull("domain")
+        .first();
+    }
 
     if (!rule) {
       return { found: false };
     }
 
-    const enabled = !!rule.enabled;
-    const destinationUrl = rule.destination_url;
-    const ttlMs = 60000; // Default 60 seconds cache TTL
-
     return {
       found: true,
-      enabled,
-      destinationUrl,
-      ttlMs,
+      id: rule.id,
+      enabled: !!rule.enabled,
+      destinationUrl: rule.destination_url,
+      ttlMs: 60000,
     };
   } catch (err) {
-    // Log error but don't block the request
     console.error(`❌ Redirect middleware database error for "${slug}":`, err.message);
     return { error: err?.message || "database error" };
   }
@@ -79,52 +105,44 @@ async function redirectRulesMiddleware(req, res, next) {
     const slug = extractSlug(req.path);
     if (!isValidSlug(slug)) return next();
 
-    // Cache lookup to avoid redundant database queries
+    const siteDomain = getSiteDomain(req) || "";
+    const cacheKey = `${siteDomain}|${slug.toLowerCase()}`;
+
     const now = Date.now();
-    const cached = cache.get(slug);
+    const cached = cache.get(cacheKey);
     if (cached && cached.expiresAt > now) {
       if (cached.enabled && cached.destinationUrl) {
-        // Track the hit even for cached redirects
-        trackRedirectHit(slug);
+        trackRedirectHit(cached.id);
         return res.redirect(302, cached.destinationUrl);
       }
       return next();
     }
 
-    // Fetch redirect rule from database
-    // PERFORMANCE FIX: Direct database query - no network timeouts
-    const result = await fetchRule(slug);
+    const result = await fetchRule(slug, siteDomain);
 
-    // Handle database errors gracefully - ALWAYS continue to short link handler
     if (result.error) {
       console.warn(`⚠️ Redirect middleware: Database error for "${slug}", continuing to short link handler`);
-      // Don't cache errors - allow retry on next request
       return next();
     }
 
     if (result.found) {
-      const { enabled, destinationUrl, ttlMs } = result;
-      cache.set(slug, { enabled, destinationUrl, expiresAt: now + (ttlMs || 60000) });
+      const { id, enabled, destinationUrl, ttlMs } = result;
+      cache.set(cacheKey, { id, enabled, destinationUrl, expiresAt: now + (ttlMs || 60000) });
 
-      // Only redirect if enabled and valid absolute URL
       if (enabled && typeof destinationUrl === "string" && /^https?:\/\//i.test(destinationUrl)) {
-        // Track the redirect hit asynchronously
-        trackRedirectHit(slug);
+        trackRedirectHit(id);
         return res.redirect(302, destinationUrl);
       }
 
       return next();
     }
 
-    // Not found: negative cache briefly to avoid repeated database queries
-    cache.set(slug, { enabled: false, destinationUrl: null, expiresAt: now + 60000 });
+    cache.set(cacheKey, { id: null, enabled: false, destinationUrl: null, expiresAt: now + 60000 });
     return next();
   } catch (e) {
-    // CRITICAL: Fail open - ALWAYS allow existing shortlink/404 logic to handle
     console.error(`❌ Redirect rules middleware EXCEPTION for ${req.path}:`, e.message);
     return next();
   }
 }
 
 module.exports = { redirectRulesMiddleware };
-
