@@ -49,7 +49,14 @@ function getDashboardUrl(req) {
 // Server-to-server fetches also lose the browser's Origin, so the
 // explicit ?domain= is required regardless.
 function withDomainParam(url, req) {
-    const host = req?.get?.('host');
+    const rawHost = req?.get?.('host');
+    if (!rawHost) return url;
+    // Canonicalize: strip port + leading "www." so all variants of a
+    // public domain hit the same admin row. The admin stores rows under
+    // canonical hostnames (e.g. "hardline.events"), and we don't want
+    // www.hardline.events traffic to fall through to the default just
+    // because we sent a raw Host header.
+    const host = rawHost.split(':')[0].toLowerCase().replace(/^www\./, '');
     if (!host) return url;
     const sep = url.includes('?') ? '&' : '?';
     return `${url}${sep}domain=${encodeURIComponent(host)}&nocache=1`;
@@ -228,12 +235,12 @@ router.get('/about', async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching About page content...');
 
-        // Proxy to dashboard server for about page content
         const dashboardUrl = getDashboardUrl(req);
+        const target = withDomainParam(`${dashboardUrl}/api/settings/about`, req);
 
-        console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/about`);
+        console.log(`📡 Proxying to dashboard: ${target}`);
 
-        const response = await dashFetch(`${dashboardUrl}/api/settings/about`, { timeoutMs: 5000, req });
+        const response = await dashFetch(target, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -261,12 +268,12 @@ router.get('/about/gallery/public', async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching About page gallery...');
 
-        // Proxy to dashboard server for gallery images
         const dashboardUrl = getDashboardUrl(req);
+        const target = withDomainParam(`${dashboardUrl}/api/settings/about/gallery/public`, req);
 
-        console.log(`📡 Proxying gallery request to: ${dashboardUrl}/api/settings/about/gallery/public`);
+        console.log(`📡 Proxying gallery request to: ${target}`);
 
-        const response = await dashFetch(`${dashboardUrl}/api/settings/about/gallery/public`, { timeoutMs: 5000, req });
+        const response = await dashFetch(target, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
@@ -321,12 +328,12 @@ router.get('/faq', async (req, res) => {
     try {
         console.log('🔍 Homepage: Fetching FAQ content...');
 
-        // Proxy to dashboard server for FAQ content
         const dashboardUrl = getDashboardUrl(req);
+        const target = withDomainParam(`${dashboardUrl}/api/settings/faq`, req);
 
-        console.log(`📡 Proxying to dashboard: ${dashboardUrl}/api/settings/faq`);
+        console.log(`📡 Proxying to dashboard: ${target}`);
 
-        const response = await dashFetch(`${dashboardUrl}/api/settings/faq`, { timeoutMs: 5000, req });
+        const response = await dashFetch(target, { timeoutMs: 5000, req });
 
         if (response.ok) {
             const data = await response.json();
