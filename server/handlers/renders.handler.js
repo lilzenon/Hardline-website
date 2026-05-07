@@ -1270,7 +1270,18 @@ async function reactHomepage(req, res) {
             //   sometimes can't see freshly-inserted per-domain rows, then
             //   caches the default/Bounce2Bounce row under the host key for
             //   2 minutes — locking the wrong brand on the tab title.
-            const host = req.get('host') || '';
+            //
+            // We send the canonical apex via getSiteDomain (which strips
+            // www./beta. and prefers the SITE_DOMAIN env). Sending the raw
+            // Host would forward `www.hardline.events`, miss the apex
+            // seo_settings row, and serve the default/NULL bounce2bounce
+            // row instead — exactly the regression that was leaking
+            // BOUNCE2BOUNCE Organization schema onto hardline.events in
+            // Google's Rich Results test. Admin's resolveRequestDomain
+            // also strips www now, but doing it here means the wire never
+            // carries the wrong tenant key, regardless of any proxy that
+            // rewrites Origin in between.
+            const host = getSiteDomain(req) || '';
             const qs = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
             const dashboardApiUrl = `${dashboardBase}/api/settings/seo${qs}`;
 
