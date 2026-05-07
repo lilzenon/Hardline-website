@@ -1518,6 +1518,49 @@ async function reactHomepage(req, res) {
             } catch (error) {
                 console.warn('⚠️ Failed to fetch homepage events for SSR:', error.message);
             }
+
+            // 🚀 LCP PRELOAD: pick the same hero the React tree will pick
+            // (mostRecentEvent in FigmaDesktop/FigmaMobile = soonest upcoming),
+            // build the medium-variant URL the <img src=...> fallback uses,
+            // and inject as a high-priority preload below. Wrapped in try
+            // because a hero failure must never block homepage HTML.
+            try {
+                const events = (pageData && pageData.events) || [];
+                const now = Date.now();
+                const upcoming = events
+                    .map(e => {
+                        if (!e || !e.event_date) return null;
+                        let s = e.event_date instanceof Date ? e.event_date.toISOString() : String(e.event_date).trim();
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
+                        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
+                        const t = new Date(s).getTime();
+                        return Number.isFinite(t) && t > now ? { event: e, t } : null;
+                    })
+                    .filter(Boolean)
+                    .sort((a, b) => a.t - b.t);
+                const hero = upcoming[0] && upcoming[0].event;
+                if (hero) {
+                    // Mirror getOptimizedImageUrl(coverImage, 375) → /medium variant.
+                    // Prefer the explicit cover_image_uuid column when present.
+                    let heroUrl = null;
+                    if (hero.cover_image_uuid) {
+                        heroUrl = `https://admin.b2b.click/api/images/serve/${hero.cover_image_uuid}/medium`;
+                    } else if (hero.cover_image) {
+                        const ci = String(hero.cover_image);
+                        const m = ci.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
+                        if (m) heroUrl = `https://admin.b2b.click/api/images/serve/${m[1]}/medium`;
+                        else if (ci.startsWith('http')) heroUrl = ci;
+                        else if (ci.startsWith('/')) heroUrl = `https://admin.b2b.click${ci}`;
+                    }
+                    if (heroUrl) {
+                        pageData = pageData || {};
+                        pageData.heroPreloadUrl = heroUrl;
+                        console.log('🎯 Hero preload URL computed:', heroUrl);
+                    }
+                }
+            } catch (heroError) {
+                console.warn('⚠️ Hero preload computation failed (non-fatal):', heroError.message);
+            }
         }
         // Contact page doesn't need API data - static content only
 
@@ -1565,8 +1608,18 @@ async function reactHomepage(req, res) {
             console.warn('⚠️ Failed to generate structured data, using empty object:', structuredDataError.message);
         }
 
+        // 🚀 LCP: high-priority preload of the hero event-cover image so the
+        // browser starts the fetch from the initial document, not after React
+        // mounts and reads `mostRecentEvent.cover_image`. crossorigin matches
+        // the <img crossOrigin="anonymous"> in FigmaDesktop/FigmaMobile so the
+        // preloaded response can be reused (otherwise it lands in a different
+        // CORS pool and the browser fetches twice).
+        const heroPreloadTag = (pageData && pageData.heroPreloadUrl)
+            ? `\n    <link rel="preload" as="image" href="${escapeHtml(pageData.heroPreloadUrl)}" fetchpriority="high" crossorigin="anonymous">`
+            : '';
+
         // Generate dynamic meta tags HTML
-        const dynamicMetaTags = `
+        const dynamicMetaTags = `${heroPreloadTag}
     <!-- Dynamic SEO Meta Tags -->
     <meta name="description" content="${escapeHtml(metaTags.description)}">
     <meta name="keywords" content="${escapeHtml(metaTags.keywords)}">

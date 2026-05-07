@@ -84,7 +84,13 @@
     </script>
 
     <!--
-        Defer YouTube preconnect until after LCP to reduce contention.
+        YouTube preconnects fire on first user interaction (scroll / touch / pointer).
+        Previous setTimeout-on-load approach added 4 preconnects unconditionally and
+        tripped Lighthouse's "more than 4 preconnect connections" audit even when
+        the user never reached the YouTube embed. With first-interaction-gating,
+        bots/crawlers (which never scroll) skip the preconnects entirely while real
+        users still get them well before the embed enters the viewport.
+
         NOTE: no `crossorigin` attribute — the YouTube iframe and i.ytimg / img.youtube
         thumbnail requests are no-CORS, so an `anonymous` preconnect would land in a
         different connection pool and stay unused (Lighthouse audit confirmed this).
@@ -92,16 +98,27 @@
         img.youtube.com hosts the autoplay-thumbnail (FigmaMobile.jsx), worth ~300ms per Lighthouse.
     -->
     <script>
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                ['https://www.youtube.com', 'https://i.ytimg.com', 'https://img.youtube.com', 'https://www.gstatic.com'].forEach((d) => {
-                    const l = document.createElement('link');
+        (function () {
+            var fired = false;
+            function fire() {
+                if (fired) return;
+                fired = true;
+                ['https://www.youtube.com', 'https://i.ytimg.com', 'https://img.youtube.com', 'https://www.gstatic.com'].forEach(function (d) {
+                    var l = document.createElement('link');
                     l.rel = 'preconnect';
                     l.href = d;
                     document.head.appendChild(l);
                 });
-            }, 400);
-        });
+                window.removeEventListener('scroll', fire);
+                window.removeEventListener('pointerdown', fire);
+                window.removeEventListener('touchstart', fire);
+                window.removeEventListener('keydown', fire);
+            }
+            window.addEventListener('scroll', fire, { passive: true, once: true });
+            window.addEventListener('pointerdown', fire, { passive: true, once: true });
+            window.addEventListener('touchstart', fire, { passive: true, once: true });
+            window.addEventListener('keydown', fire, { once: true });
+        })();
     </script>
 
     <!-- Optimized local fonts for performance -->

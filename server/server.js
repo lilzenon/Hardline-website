@@ -499,9 +499,10 @@ app.use((req, res, next) => {
         etag: true,
         extensions: false,
         fallthrough: true,
-        immutable: false,
+        // Per-file Cache-Control set in setHeaders so content-hashed assets
+        // can be immutable while sw.js / index.html stay revalidated.
+        // Leaving global maxAge/immutable off forces our setHeaders to win.
         lastModified: true,
-        maxAge: process.env.NODE_ENV === 'production' ? 86400000 : 0, // 1 day in production
         redirect: true,
         setHeaders: (res, filePath) => {
             // CRITICAL: Set proper MIME types to fix mobile browser issues
@@ -521,6 +522,20 @@ app.use((req, res, next) => {
                 res.setHeader('Content-Type', 'font/woff');
             } else if (filePath.endsWith('.woff2')) {
                 res.setHeader('Content-Type', 'font/woff2');
+            }
+
+            // Cache policy by file class. Vite content-hashes everything in
+            // /assets/ (`FigmaMobile-HkSPrLY-.js`), so those can be immutable;
+            // sw.js and index.html must stay revalidated to ship updates.
+            const fp = filePath.replace(/\\/g, '/');
+            if (fp.includes('/dist/assets/')) {
+                res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+            } else if (fp.endsWith('/sw.js')) {
+                res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            } else if (fp.endsWith('/index.html')) {
+                res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+            } else {
+                res.setHeader('Cache-Control', 'public, max-age=86400');
             }
 
             // Set security headers
