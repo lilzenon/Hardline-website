@@ -4,8 +4,11 @@
  * Uses React 19's native metadata support instead of react-helmet-async
  */
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Dither } from '../components/ui/DitherShadcn';
+import React, { createContext, useContext, useState, useEffect, useMemo, lazy, Suspense } from 'react';
+// Lazy: keeps the Three.js / @react-three / postprocessing chunk (~725 KB raw)
+// off the homepage critical path. Dither only renders inside the maintenance
+// overlay below, which is gated on maintenance_mode.
+const Dither = lazy(() => import('../components/ui/DitherShadcn').then(m => ({ default: m.Dither })));
 import useLayloSDK from '../hooks/useLayloSDK';
 import { TrackingPixelLoader } from '../components/TrackingPixelLoader';
 import {
@@ -401,7 +404,7 @@ export const MaintenanceMode = () => {
       zIndex: 10000,
       overflow: 'hidden'
     }}>
-      {/* Dither Background Effect */}
+      {/* Dither Background Effect — Suspense matches the lazy import above */}
       <div style={{
         position: 'absolute',
         top: 0,
@@ -410,17 +413,19 @@ export const MaintenanceMode = () => {
         height: '100%',
         zIndex: 1
       }}>
-        <Dither
-          waveSpeed={0.02}
-          waveFrequency={2.0}
-          waveAmplitude={0.25}
-          waveColor={[1.0, 1.0, 1.0]}
-          colorNum={2}
-          pixelSize={2}
-          enableMouseInteraction={false}
-          mouseRadius={1.0}
-          className="dither-background"
-        />
+        <Suspense fallback={null}>
+          <Dither
+            waveSpeed={0.02}
+            waveFrequency={2.0}
+            waveAmplitude={0.25}
+            waveColor={[1.0, 1.0, 1.0]}
+            colorNum={2}
+            pixelSize={2}
+            enableMouseInteraction={false}
+            mouseRadius={1.0}
+            className="dither-background"
+          />
+        </Suspense>
       </div>
 
       {/* Minimalist Maintenance Card */}
