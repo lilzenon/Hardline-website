@@ -1912,9 +1912,17 @@ const FigmaMobile = ({ onReady }) => {
     };
   }, []);
 
+  // Homepage video config — admin-editable per-domain via
+  // homepage_settings.video_*. NULL/empty -> hardcoded defaults below.
+  const videoId = (homeSettings && homeSettings.video_youtube_id) || 'm_kuWJ3Owco';
+  const videoCaption = (homeSettings && homeSettings.video_caption_text) || 'Henry Fong full set live';
+  const videoIframeTitle = (homeSettings && homeSettings.video_iframe_title) || 'Henry Fong YouTube Video - Adaptive Quality';
+  const videoCtaText = (homeSettings && homeSettings.video_cta_text) || 'Watch now';
+  const videoCtaUrl = (homeSettings && homeSettings.video_cta_url) || `https://youtu.be/${videoId}`;
+
   // Build YouTube URL with adaptive quality parameters
   const buildYouTubeURL = useMemo(() => {
-    const baseURL = 'https://www.youtube.com/embed/vEHTO3gf1jk';
+    const baseURL = `https://www.youtube.com/embed/${videoId}`;
     const baseParams = {
       autoplay: '1',
       mute: '1',
@@ -1922,7 +1930,7 @@ const FigmaMobile = ({ onReady }) => {
       showinfo: '0',
       rel: '0',
       loop: '1',
-      playlist: 'vEHTO3gf1jk',
+      playlist: videoId,
       modestbranding: '1',
       iv_load_policy: '3', // Hide video annotations
       fs: '0',
@@ -1951,7 +1959,7 @@ const FigmaMobile = ({ onReady }) => {
     console.log('🎥 YouTube URL built:', { videoQuality, connectionSpeed, finalURL });
 
     return finalURL;
-  }, [videoQuality, connectionSpeed]);
+  }, [videoQuality, connectionSpeed, videoId]);
 
   // Handle YouTube thumbnail click to load video immediately
   const handleYoutubeThumbnailClick = useCallback(() => {
@@ -1961,10 +1969,10 @@ const FigmaMobile = ({ onReady }) => {
     // Track user interaction with video
     trackEvent('video_interaction', {
       action: 'thumbnail_click',
-      video_id: 'vEHTO3gf1jk',
+      video_id: videoId,
       component: 'FigmaMobile'
     });
-  }, [trackEvent]);
+  }, [trackEvent, videoId]);
 
   // YouTube thumbnail component for preloading - FIXED: Simplified positioning
   const YouTubeThumbnail = useMemo(() => (
@@ -1977,7 +1985,7 @@ const FigmaMobile = ({ onReady }) => {
         width: '100%',
         height: '100%',
         cursor: 'pointer',
-        backgroundImage: 'url(https://img.youtube.com/vi/vEHTO3gf1jk/maxresdefault.jpg)',
+        backgroundImage: `url(https://img.youtube.com/vi/${videoId}/maxresdefault.jpg)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -2003,7 +2011,7 @@ const FigmaMobile = ({ onReady }) => {
         e.currentTarget.style.transform = 'translateZ(0) scale(1)';
       }}
     />
-  ), [handleYoutubeThumbnailClick]);
+  ), [handleYoutubeThumbnailClick, videoId]);
 
   // Signal parent when regular loading finishes
   useEffect(() => {
@@ -4375,7 +4383,7 @@ const FigmaMobile = ({ onReady }) => {
                       // Show actual YouTube iframe - FIXED: Simplified positioning
                       <iframe
                         src={buildYouTubeURL}
-                        title="Henry Fong YouTube Video - Adaptive Quality"
+                        title={videoIframeTitle}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
 
                         loading="lazy"
@@ -4489,7 +4497,7 @@ const FigmaMobile = ({ onReady }) => {
                         lineHeight: 'normal'
                       }}
                     >
-                      Henry Fong full set live
+                      {videoCaption}
                     </div>
                   </div>
 
@@ -4497,7 +4505,7 @@ const FigmaMobile = ({ onReady }) => {
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                      window.open(videoCtaUrl, '_blank', 'noopener,noreferrer');
                     }}
                     style={{
                       display: 'flex',
@@ -4533,7 +4541,7 @@ const FigmaMobile = ({ onReady }) => {
                         lineHeight: 'normal'
                       }}
                     >
-                      Watch now
+                      {videoCtaText}
                     </span>
                   </div>
                 </div>

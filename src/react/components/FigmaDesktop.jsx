@@ -529,6 +529,16 @@ const FigmaDesktop = ({ onReady }) => {
     homepageEvents,
     normalizeEvent
   } = useHomepageData();
+
+  // Homepage video config — admin-editable per-domain via
+  // homepage_settings.video_*. NULL/empty -> hardcoded defaults below.
+  const videoId = (homeSettings && homeSettings.video_youtube_id) || 'm_kuWJ3Owco';
+  const videoCaption = (homeSettings && homeSettings.video_caption_text) || 'Henry Fong full set live on YouTube';
+  const videoIframeTitle = (homeSettings && homeSettings.video_iframe_title) || 'Henry Fong YouTube Video';
+  const videoCtaText = (homeSettings && homeSettings.video_cta_text) || 'Watch now';
+  const videoCtaUrl = (homeSettings && homeSettings.video_cta_url) || `https://youtu.be/${videoId}`;
+  const videoEmbedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1`;
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
   const [phoneSubmitted, setPhoneSubmitted] = useState(false);
@@ -2874,7 +2884,7 @@ const FigmaDesktop = ({ onReady }) => {
                   {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
                   <div
                     ref={videoContainerRef}
-                    onClick={() => window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank')}
+                    onClick={() => window.open(videoCtaUrl, '_blank', 'noopener,noreferrer')}
                     style={{
                       // Scale video to fill the container completely
                       width: '100%',
@@ -2934,8 +2944,8 @@ const FigmaDesktop = ({ onReady }) => {
                       >
                         {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
                         <iframe
-                          src="https://www.youtube.com/embed/vEHTO3gf1jk?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=vEHTO3gf1jk&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1"
-                          title="Henry Fong YouTube Video"
+                          src={videoEmbedSrc}
+                          title={videoIframeTitle}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                           allowFullScreen
                           loading="eager"
@@ -3024,7 +3034,7 @@ const FigmaDesktop = ({ onReady }) => {
                             lineHeight: 'normal'
                           }}
                         >
-                          Henry Fong full set live on YouTube
+                          {videoCaption}
                         </div>
                       </div>
 
@@ -3033,16 +3043,16 @@ const FigmaDesktop = ({ onReady }) => {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                            window.open(videoCtaUrl, '_blank', 'noopener,noreferrer');
                           }}
                           role="button"
                           tabIndex={0}
-                          aria-label="Watch now on YouTube"
+                          aria-label={videoCtaText}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
                               e.stopPropagation();
-                              window.open('https://youtu.be/vEHTO3gf1jk?si=87b8o-daRyN2O6sx', '_blank');
+                              window.open(videoCtaUrl, '_blank', 'noopener,noreferrer');
                             }
                           }}
                           style={{
@@ -3089,7 +3099,7 @@ const FigmaDesktop = ({ onReady }) => {
                               pointerEvents: 'none'
                             }}
                           >
-                            Watch now
+                            {videoCtaText}
                           </span>
                         </div>
                       )}
