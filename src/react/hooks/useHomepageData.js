@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
 
-// Simple cache for API responses - shared across components
+// Simple cache for API responses - shared across components.
+// Kept short (30s) so admin event edits — title, image, address —
+// appear on the next soft navigation without forcing a full reload.
+// Background revalidation below also pulls fresh data on every mount,
+// so this is really just to deduplicate the very first burst of
+// near-simultaneous mounts (FigmaDesktop + FigmaMobile + others).
 const apiCache = new Map();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 30 * 1000; // 30 seconds
 
 // 🚨 CRITICAL FIX: Cache invalidation mechanism for image uploads
 // This allows external components to force cache refresh when images are uploaded
