@@ -4393,8 +4393,16 @@ const FigmaMobile = ({ onReady }) => {
                           left: '0',
                           width: '100%',
                           height: '100%',
-                          // FIXED: Remove problematic scale and complex transforms
-                          transform: 'translateZ(0)',
+                          // Crop YouTube's chrome (channel/title overlay,
+                          // "Watch on YouTube" badge, end-screen cards)
+                          // by oversizing the iframe so its edges fall
+                          // outside the wrapper's overflow:hidden box.
+                          // 1.25x = ~12.5% cropped per edge, enough to
+                          // hide overlays without losing meaningful
+                          // video content. Desktop achieves the same
+                          // via width/height: 150%.
+                          transform: 'translateZ(0) scale(1.25)',
+                          transformOrigin: 'center center',
                           pointerEvents: 'none',
                           border: 'none',
                           opacity: 1,
