@@ -2,6 +2,46 @@ const query = require("../queries");
 const utils = require("../utils");
 const env = require("../env");
 const { getSiteDomain } = require("../utils/site-domain.util");
+const { cachedAdminFetch } = require("../utils/admin-fetch-cache.util");
+
+// Cache TTLs for server-to-server admin fetches. Tuned per how often the
+// underlying data actually changes. Stale-while-revalidate means admin
+// updates are visible by the next refresh after TTL expires; the cold-fetch
+// path is what caps how long a freshly-deployed pod waits for first byte.
+const ADMIN_CACHE_TTL = {
+    seo:           60 * 1000,        // 1 min fresh, 5 min stale (default)
+    homepageData:  30 * 1000,        // 30 sec fresh — events flag changes
+    galleryPublic: 5 * 60 * 1000,    // 5 min fresh — images rarely added
+    aboutContent:  60 * 1000,        // 1 min fresh
+    faq:           60 * 1000,        // 1 min fresh
+};
+const ADMIN_FETCH_TIMEOUT_MS = 2000;
+
+/**
+ * Wrap fetch() with AbortController timeout + ok/json handling. Returns
+ * the parsed body on success, null on any failure (including timeout) so
+ * cachedAdminFetch never caches a bad result.
+ */
+async function fetchAdminJson(url, host) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), ADMIN_FETCH_TIMEOUT_MS);
+    try {
+        const res = await fetch(url, {
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                ...(host ? { 'Origin': `https://${host}` } : {})
+            }
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch (_) {
+        return null;
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
 
 /**
  * Build a server-to-server admin API URL with the right multi-tenant
@@ -815,30 +855,24 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
 
         // 🖼️ GOOGLE IMAGE SEO: Fetch event cover images and create ImageObject structured data
         // 🎯 GOOGLE EVENT SEO: Create Event structured data for all displayed events
+        // Per-host cached fetch — same response is reused below for pageType==='homepage'.
         let eventImageSchemas = [];
         let eventSchemas = [];
         try {
             const dashboardBase = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click' :
                 'http://localhost:3002';
-            const { url: dashboardApiUrl, origin: hostOrigin } =
+            const { url: dashboardApiUrl } =
                 buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
+            const schemaHost = getSiteDomain(req) || '';
 
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-            const eventsResponse = await fetch(dashboardApiUrl, {
-                signal: controller.signal,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    ...(hostOrigin ? { 'Origin': hostOrigin } : {})
-                }
+            const { data: eventsData } = await cachedAdminFetch({
+                key: `homepage-data::${schemaHost || '__default__'}`,
+                ttlMs: ADMIN_CACHE_TTL.homepageData,
+                fetcher: () => fetchAdminJson(dashboardApiUrl, schemaHost),
             });
-            clearTimeout(timeoutId);
 
-            if (eventsResponse.ok) {
-                const eventsData = await eventsResponse.json();
+            if (eventsData) {
                 const featuredEvents = eventsData.featuredEvents || [];
                 const homepageEvents = eventsData.homepageEvents || [];
                 const allEvents = [...featuredEvents, ...homepageEvents];
@@ -1025,8 +1059,6 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                     });
 
                 console.log(`✅ Created ${eventSchemas.length} Event schemas for homepage events`);
-            } else {
-                console.warn(`⚠️ Failed to fetch events for structured data: ${eventsResponse.status}`);
             }
         } catch (error) {
             console.warn('⚠️ Error fetching events for structured data:', error.message);
@@ -1084,30 +1116,24 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
         };
 
         // 🖼️ GOOGLE IMAGE SEO: Fetch gallery images and create ImageObject structured data
-        // This enables Google Image Search indexing and Rich Results for gallery images
+        // Per-host cached fetch — same response is reused below for the
+        // pageType==='about' SSR pageData branch.
         let galleryImageSchemas = [];
         try {
             const dashboardBase = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click' :
                 'http://localhost:3002';
-            const { url: dashboardApiUrl, origin: hostOrigin } =
+            const { url: dashboardApiUrl } =
                 buildAdminFetch(dashboardBase, '/api/settings/about/gallery/public', req);
+            const galleryHost = getSiteDomain(req) || '';
 
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
-            const galleryResponse = await fetch(dashboardApiUrl, {
-                signal: controller.signal,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    ...(hostOrigin ? { 'Origin': hostOrigin } : {})
-                }
+            const { data: galleryData } = await cachedAdminFetch({
+                key: `gallery::${galleryHost || '__default__'}`,
+                ttlMs: ADMIN_CACHE_TTL.galleryPublic,
+                fetcher: () => fetchAdminJson(dashboardApiUrl, galleryHost),
             });
-            clearTimeout(timeoutId);
 
-            if (galleryResponse.ok) {
-                const galleryData = await galleryResponse.json();
+            if (galleryData) {
                 const galleryImages = galleryData.data || [];
 
                 console.log(`🖼️ Fetched ${galleryImages.length} gallery images for ImageObject schema`);
@@ -1168,8 +1194,6 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                 }).filter(schema => schema.contentUrl); // Only include images with valid URLs
 
                 console.log(`✅ Created ${galleryImageSchemas.length} ImageObject schemas for About page gallery`);
-            } else {
-                console.warn(`⚠️ Failed to fetch gallery images for ImageObject schema: ${galleryResponse.status}`);
             }
         } catch (error) {
             console.warn('⚠️ Error fetching gallery images for ImageObject schema:', error.message);
@@ -1250,61 +1274,54 @@ async function reactHomepage(req, res) {
         }
         console.log('📄 Page type detected:', pageType);
 
-        // Get SEO settings from dashboard API with timeout and fallback
+        // Get SEO settings from dashboard API — cached per host with stale-
+        // while-revalidate so 95% of page renders are served from memory.
+        //
+        // We still pass `?domain=<host>&nocache=1`:
+        //   - `domain=<host>` is required because server-to-server fetches
+        //     lose the browser's Origin, so admin can't infer which row
+        //     we want from headers alone.
+        //   - `nocache=1` forces admin to use its dedicated SEO connection
+        //     pool and bypass admin's in-process helper cache. Without
+        //     nocache, admin's helper used to cache the default/Bounce2Bounce
+        //     row under the host key for 2 minutes — locking the wrong brand
+        //     on the tab title. (Admin has since per-domain-keyed that cache,
+        //     but we keep nocache=1 belt-and-suspenders to always get the
+        //     live DB row when we DO refresh.)
+        //
+        // We send the canonical apex via getSiteDomain (strips www./beta.,
+        // prefers SITE_DOMAIN env). Sending the raw Host would forward
+        // `www.hardline.events`, miss the apex seo_settings row, and serve
+        // the default/NULL bounce2bounce row — exactly the regression that
+        // leaked BOUNCE2BOUNCE Organization schema onto hardline.events in
+        // Google's Rich Results test.
+        //
+        // PER-TENANT ISOLATION: cache key includes `host`, the SAME value
+        // we send in `?domain=`. A cache hit on `seo::hardline.events` is
+        // by construction the response admin gave us when we asked for
+        // hardline.events. There is no shared key between tenants.
         let seoSettings;
+        const host = getSiteDomain(req) || '';
         try {
             const dashboardBase = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click' :
                 'http://localhost:3002';
-
-            // Pass ?domain=<host>&nocache=1 so admin's multi-tenant SEO
-            // returns the row for the requesting public domain (hardline.events
-            // vs bounce2bounce.com).
-            //
-            // - `domain=<host>` is required because server-to-server fetches
-            //   lose the browser's Origin, so admin can't infer which row
-            //   we want from headers alone.
-            // - `nocache=1` forces admin to use its dedicated SEO connection
-            //   pool and bypass the in-process helper cache. Without nocache,
-            //   admin's helper queries the main knex pool, which on Render
-            //   sometimes can't see freshly-inserted per-domain rows, then
-            //   caches the default/Bounce2Bounce row under the host key for
-            //   2 minutes — locking the wrong brand on the tab title.
-            //
-            // We send the canonical apex via getSiteDomain (which strips
-            // www./beta. and prefers the SITE_DOMAIN env). Sending the raw
-            // Host would forward `www.hardline.events`, miss the apex
-            // seo_settings row, and serve the default/NULL bounce2bounce
-            // row instead — exactly the regression that was leaking
-            // BOUNCE2BOUNCE Organization schema onto hardline.events in
-            // Google's Rich Results test. Admin's resolveRequestDomain
-            // also strips www now, but doing it here means the wire never
-            // carries the wrong tenant key, regardless of any proxy that
-            // rewrites Origin in between.
-            const host = getSiteDomain(req) || '';
             const qs = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
             const dashboardApiUrl = `${dashboardBase}/api/settings/seo${qs}`;
 
-            // Add timeout to prevent hanging (increased for large responses)
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-            const response = await fetch(dashboardApiUrl, {
-                signal: controller.signal,
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    ...(host ? { 'Origin': `https://${host}` } : {})
-                }
+            const { data, source } = await cachedAdminFetch({
+                key: `seo::${host || '__default__'}`,
+                ttlMs: ADMIN_CACHE_TTL.seo,
+                fetcher: () => fetchAdminJson(dashboardApiUrl, host),
             });
-            clearTimeout(timeoutId);
 
-            if (response.ok) {
-                const apiResponse = await response.json();
-                seoSettings = apiResponse.settings || apiResponse;
-                console.log('✅ SEO settings fetched from dashboard API:', seoSettings.default_title);
+            if (data) {
+                seoSettings = data.settings || data;
+                if (source === 'cold') {
+                    console.log('✅ SEO settings fetched from dashboard API:', seoSettings.default_title);
+                }
             } else {
-                throw new Error(`Dashboard API responded with ${response.status}`);
+                throw new Error('Dashboard SEO fetch failed');
             }
         } catch (error) {
             console.warn('⚠️ Failed to fetch SEO settings from dashboard API, using defaults:', error.message);
@@ -1398,122 +1415,80 @@ async function reactHomepage(req, res) {
             ogDescription: metaTags.ogDescription
         });
 
-        // 🤖 BOT FIX: Fetch page-specific data server-side for bot-friendly rendering
+        // 🤖 BOT FIX: Fetch page-specific data server-side for bot-friendly rendering.
+        // All admin fetches go through cachedAdminFetch — per-host keyed,
+        // stale-while-revalidate, no cross-tenant bleed.
         let pageData = null;
+        const pageDataHost = getSiteDomain(req) || '';
+        const dashboardBase = env.NODE_ENV === 'production' ?
+            'https://admin.b2b.click' :
+            'http://localhost:3002';
 
         if (pageType === 'faq') {
-            // Fetch FAQ data
             try {
-                const dashboardBase = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click' :
-                    'http://localhost:3002';
-                const { url: dashboardApiUrl, origin: hostOrigin } =
-                    buildAdminFetch(dashboardBase, '/api/settings/faq', req);
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-                const response = await fetch(dashboardApiUrl, {
-                    signal: controller.signal,
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        ...(hostOrigin ? { 'Origin': hostOrigin } : {})
-                    }
+                const { url: faqUrl } = buildAdminFetch(dashboardBase, '/api/settings/faq', req);
+                const { data } = await cachedAdminFetch({
+                    key: `faq::${pageDataHost || '__default__'}`,
+                    ttlMs: ADMIN_CACHE_TTL.faq,
+                    fetcher: () => fetchAdminJson(faqUrl, pageDataHost),
                 });
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    const apiResponse = await response.json();
-                    pageData = apiResponse.data || apiResponse;
+                if (data) {
+                    pageData = data.data || data;
                     console.log('✅ FAQ data fetched for SSR:', pageData.length, 'items');
-                } else {
-                    console.warn('⚠️ FAQ API responded with', response.status);
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch FAQ data for SSR:', error.message);
             }
         } else if (pageType === 'about') {
-            // Fetch About page content AND gallery images for SSR
             try {
-                const dashboardBase = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click' :
-                    'http://localhost:3002';
-                const { url: dashboardApiUrl, origin: hostOrigin } =
-                    buildAdminFetch(dashboardBase, '/api/settings/about', req);
-                const { url: galleryApiUrl } =
-                    buildAdminFetch(dashboardBase, '/api/settings/about/gallery/public', req);
+                const { url: aboutUrl } = buildAdminFetch(dashboardBase, '/api/settings/about', req);
+                const { url: galleryUrl } = buildAdminFetch(dashboardBase, '/api/settings/about/gallery/public', req);
 
-                // Fetch both About content and gallery images in parallel
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-                const sharedHeaders = {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    ...(hostOrigin ? { 'Origin': hostOrigin } : {})
-                };
-                const [aboutResponse, galleryResponse] = await Promise.all([
-                    fetch(dashboardApiUrl, { signal: controller.signal, headers: sharedHeaders }),
-                    fetch(galleryApiUrl, { signal: controller.signal, headers: sharedHeaders })
+                // Both fetches are cached; concurrent calls share inflight promises.
+                const [aboutResult, galleryResult] = await Promise.all([
+                    cachedAdminFetch({
+                        key: `about::${pageDataHost || '__default__'}`,
+                        ttlMs: ADMIN_CACHE_TTL.aboutContent,
+                        fetcher: () => fetchAdminJson(aboutUrl, pageDataHost),
+                    }),
+                    cachedAdminFetch({
+                        key: `gallery::${pageDataHost || '__default__'}`,
+                        ttlMs: ADMIN_CACHE_TTL.galleryPublic,
+                        fetcher: () => fetchAdminJson(galleryUrl, pageDataHost),
+                    }),
                 ]);
-                clearTimeout(timeoutId);
 
-                if (aboutResponse.ok) {
-                    const apiResponse = await aboutResponse.json();
-                    pageData = apiResponse.data || apiResponse;
+                if (aboutResult.data) {
+                    pageData = aboutResult.data.data || aboutResult.data;
                     console.log('✅ About page content fetched for SSR');
-                } else {
-                    console.warn('⚠️ About API responded with', aboutResponse.status);
                 }
 
                 // 🖼️ GOOGLE IMAGE SEO FIX: Include gallery images in SSR for bot indexing
-                if (galleryResponse.ok) {
-                    const galleryData = await galleryResponse.json();
-                    const galleryImages = galleryData.data || galleryData || [];
+                if (galleryResult.data) {
+                    const galleryImages = galleryResult.data.data || galleryResult.data || [];
                     if (Array.isArray(galleryImages) && galleryImages.length > 0) {
                         pageData = pageData || {};
                         pageData.galleryImages = galleryImages;
                         console.log(`✅ Gallery images fetched for SSR: ${galleryImages.length} images`);
                     }
-                } else {
-                    console.warn('⚠️ Gallery API responded with', galleryResponse.status);
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch About content for SSR:', error.message);
             }
         } else if (pageType === 'homepage') {
-            // Fetch homepage events data
             try {
-                const dashboardBase = env.NODE_ENV === 'production' ?
-                    'https://admin.b2b.click' :
-                    'http://localhost:3002';
-                const { url: dashboardApiUrl, origin: hostOrigin } =
-                    buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-                const response = await fetch(dashboardApiUrl, {
-                    signal: controller.signal,
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        ...(hostOrigin ? { 'Origin': hostOrigin } : {})
-                    }
+                const { url: homepageUrl } = buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
+                const { data } = await cachedAdminFetch({
+                    key: `homepage-data::${pageDataHost || '__default__'}`,
+                    ttlMs: ADMIN_CACHE_TTL.homepageData,
+                    fetcher: () => fetchAdminJson(homepageUrl, pageDataHost),
                 });
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    const apiResponse = await response.json();
-                    // Extract events from the response
-                    const homepageEvents = apiResponse.homepageEvents || [];
-                    const featuredEvents = apiResponse.featuredEvents || [];
+                if (data) {
+                    const homepageEvents = data.homepageEvents || [];
+                    const featuredEvents = data.featuredEvents || [];
                     const allEvents = [...featuredEvents, ...homepageEvents];
                     pageData = { events: allEvents };
                     console.log('✅ Homepage events fetched for SSR:', allEvents.length, 'events');
-                } else {
-                    console.warn('⚠️ Homepage API responded with', response.status);
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch homepage events for SSR:', error.message);

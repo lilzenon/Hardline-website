@@ -146,10 +146,18 @@ function rateLimit(params) {
 }
 
 // redirect to create admin page if the kutt instance is ran for the first time
+//
+// Once any user exists in the DB the result will never flip back to "no users",
+// so we cache the truthy result in module scope. This skips a DB round-trip on
+// every anonymous public-page request — a meaningful TTFB win on mobile.
+let _adminUserExists = false;
 async function adminSetup(req, res, next) {
     try {
-        const isThereAUser = req.user || (await query.user.findAny());
-        if (isThereAUser) {
+        if (_adminUserExists || req.user) {
+            return next();
+        }
+        if (await query.user.findAny()) {
+            _adminUserExists = true;
             return next();
         }
         return res.redirect("/create-admin");
