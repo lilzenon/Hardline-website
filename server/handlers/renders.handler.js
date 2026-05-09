@@ -1747,41 +1747,40 @@ async function reactHomepage(req, res) {
             `${noscriptFallback}\n</body>`
         );
 
-        // Set caching headers
+        // HTML caching: edge-cacheable, browser-revalidated.
+        //
+        //   s-maxage=60    Cloudflare/CDN caches for 60s — most repeat hits
+        //                  served edge-side in ~50ms. PageSpeed bots also
+        //                  hit this cache slot if probed twice within 60s.
+        //   max-age=0      Browser always revalidates. Cheap because the
+        //                  revalidation hits Cloudflare, not origin.
+        //   must-revalidate Strict — never serve expired content.
+        //   stale-while-revalidate=300  Cloudflare can serve stale up to 5min
+        //                  while refreshing in background — protects TTFB
+        //                  during deploy or origin slowness.
+        //
+        // Bundles are content-hashed (`/dist/assets/Foo-HASH.js`) and have
+        // their own immutable cache headers in server.js, so HTML caching
+        // does NOT risk shipping stale references to old bundles.
+        //
+        // Per-tenant isolation: Cloudflare keys cache by Host by default,
+        // so hardline.events/ and bounce2bounce.com/ live in separate slots.
+        // No bot-specific branching here, so no Vary: User-Agent needed.
         if (env.NODE_ENV === 'production') {
-            // 🚀 CRITICAL FIX: Reduce cache time to 1 minute for faster SEO updates
-            // This ensures page-specific SEO changes appear within 1 minute
-            const oneMinute = 1 * 60; // 1 minute in seconds
-            const expiresDate = new Date(Date.now() + oneMinute * 1000).toUTCString();
-
             res.set({
-                'Cache-Control': 'public, max-age=' + oneMinute + ', must-revalidate, stale-while-revalidate=60',
-                'Expires': expiresDate,
-                'Last-Modified': new Date().toUTCString(),
-                'ETag': '"homepage-seo-' + pageType + '-' + Date.now() + '"',
-                'Vary': 'Accept-Encoding'
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'public, s-maxage=60, max-age=0, must-revalidate, stale-while-revalidate=300',
+                'Vary': 'Accept-Encoding',
             });
         } else {
-            // Development: No cache for easier development
+            // Development: never cache, makes hot-reload behave.
             res.set({
+                'Content-Type': 'text/html; charset=utf-8',
                 'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
                 'Pragma': 'no-cache',
                 'Expires': '0',
-                'Last-Modified': new Date().toUTCString(),
-                'ETag': Date.now().toString()
             });
         }
-
-        // Set aggressive cache-busting headers to prevent old bundle loading
-        res.set({
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
-            'Pragma': 'no-cache',
-            'Expires': '0',
-            'Last-Modified': new Date().toUTCString(),
-            'ETag': `"${Date.now()}"`, // Force browser to check for updates
-            'Vary': 'Accept-Encoding'
-        });
         res.send(htmlContent);
 
     } catch (error) {

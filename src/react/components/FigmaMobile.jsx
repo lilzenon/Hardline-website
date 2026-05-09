@@ -3293,6 +3293,8 @@ const FigmaMobile = ({ onReady }) => {
                                 referrerPolicy="no-referrer"
                                 src={getOptimizedImageUrl(featuredEvent.coverImage, 375)}
                                 alt={`${featuredEvent.title} - Featured Event`}
+                                width={375}
+                                height={375}
                                 loading="eager"
                                 decoding="async"
                                 fetchpriority="high"
@@ -3339,6 +3341,8 @@ const FigmaMobile = ({ onReady }) => {
                                 referrerPolicy="no-referrer"
                                 src="/images/optimized/hero-left-image-375w.jpg"
                                 alt="Default Hero Background"
+                                width={375}
+                                height={375}
                                 loading="eager"
                                 decoding="async"
                                 fetchpriority="high"

@@ -963,5 +963,63 @@ app.listen(env.PORT, () => {
     console.log(`🔍 Optimized logging active | Level: ${process.env.LOG_LEVEL || 'NORMAL'}`);
     console.log(`🔍 Webhook requests will be logged with essential debugging info`);
     console.log(`🔍 Set LOG_LEVEL=VERBOSE for detailed logs, LOG_LEVEL=MINIMAL for webhook-only logs`);
-    // Force reload for analytics service fix
+
+    // Pre-warm the admin-fetch cache so PageSpeed and the first real
+    // visitor never see a cold-cache TTFB. We fire these AFTER listen()
+    // so the health check can succeed immediately; pre-warm runs in the
+    // background and updates the cache when it completes.
+    if (env.NODE_ENV === 'production') {
+        prewarmAdminFetchCache();
+    }
 });
+
+async function prewarmAdminFetchCache() {
+    try {
+        const { cachedAdminFetch } = require('./utils/admin-fetch-cache.util');
+        const { getSiteDomain } = require('./utils/site-domain.util');
+        // We have no req here; pass a stub so getSiteDomain falls back to
+        // SITE_DOMAIN env or DEFAULT_DOMAIN. The result keys the cache
+        // under the same canonical host the request handler will use.
+        const host = getSiteDomain({}) || '';
+        const dashboardBase = 'https://admin.b2b.click';
+        const qsBase = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
+
+        const fetchJson = async (url) => {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 4000);
+            try {
+                const res = await fetch(url, {
+                    signal: ctrl.signal,
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        ...(host ? { 'Origin': `https://${host}` } : {})
+                    }
+                });
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (_) {
+                return null;
+            } finally {
+                clearTimeout(t);
+            }
+        };
+
+        const targets = [
+            { key: `seo::${host || '__default__'}`, path: `/api/settings/seo`, ttlMs: 60_000 },
+            { key: `homepage-data::${host || '__default__'}`, path: `/api/home-settings/homepage-data`, ttlMs: 30_000 },
+            { key: `gallery::${host || '__default__'}`, path: `/api/settings/about/gallery/public`, ttlMs: 5 * 60_000 },
+        ];
+
+        await Promise.all(targets.map(t =>
+            cachedAdminFetch({
+                key: t.key,
+                ttlMs: t.ttlMs,
+                fetcher: () => fetchJson(`${dashboardBase}${t.path}${qsBase}`),
+            })
+        ));
+        console.log(`🔥 Pre-warmed admin-fetch cache for host: ${host}`);
+    } catch (e) {
+        console.warn('⚠️ Pre-warm failed (server still healthy):', e.message);
+    }
+}
