@@ -971,6 +971,19 @@ app.listen(env.PORT, () => {
     if (env.NODE_ENV === 'production') {
         prewarmAdminFetchCache();
     }
+
+    // Pre-warm the redirect rules cache so the first IG-bio click after
+    // a deploy doesn't block on a cold DB connection (which under
+    // parallel IG preview+click bursts can exceed DigitalOcean's edge
+    // timeout and surface as a 502 to the user).
+    try {
+        const { prewarmRedirectsCache } = require('./middleware/redirect-rules.middleware');
+        if (typeof prewarmRedirectsCache === 'function') {
+            prewarmRedirectsCache();
+        }
+    } catch (e) {
+        console.warn('⚠️ Could not prewarm redirects cache:', e.message);
+    }
 });
 
 async function prewarmAdminFetchCache() {
