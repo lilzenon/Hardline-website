@@ -50,10 +50,18 @@ function setEntry(key, data, ttlMs) {
  * @param {number}   opts.ttlMs     fresh window
  * @param {number}   [opts.staleMs] tolerated staleness past TTL during
  *                                   which we serve stale + refresh in
- *                                   background. Default: 5 minutes.
+ *                                   background. Default: 30 minutes. Large
+ *                                   on purpose: ttlMs already bounds how
+ *                                   fresh the data is (a stale hit kicks a
+ *                                   background refresh), so a long stale
+ *                                   window has NO correctness cost — it just
+ *                                   means a low-traffic page is served
+ *                                   instantly from cache instead of blocking
+ *                                   on a cold upstream fetch. Pairs with the
+ *                                   interval prewarm in server.js.
  * @returns {Promise<{data:any, source:'fresh'|'stale'|'cold'}>}
  */
-async function cachedAdminFetch({ key, fetcher, ttlMs, staleMs = 5 * 60 * 1000 }) {
+async function cachedAdminFetch({ key, fetcher, ttlMs, staleMs = 30 * 60 * 1000 }) {
     const now = Date.now();
     const entry = CACHE.get(key);
 

@@ -970,6 +970,16 @@ app.listen(env.PORT, () => {
     // background and updates the cache when it completes.
     if (env.NODE_ENV === 'production') {
         prewarmAdminFetchCache();
+        // Keep the in-process admin cache warm even with ZERO organic
+        // traffic, so a low-traffic page never decays into a cold, blocking
+        // upstream fetch (which is what made the first visit after an idle
+        // gap slow). cachedAdminFetch only actually re-fetches a key once it
+        // passes ttlMs, so most ticks are cheap no-ops. Interval is well
+        // under ttlMs + staleMs so entries never fall out of the stale window.
+        const warmTimer = setInterval(() => {
+            prewarmAdminFetchCache().catch(() => {});
+        }, 45_000);
+        if (typeof warmTimer.unref === 'function') warmTimer.unref();
     }
 
     // Pre-warm the redirect rules cache so the first IG-bio click after
@@ -995,7 +1005,8 @@ async function prewarmAdminFetchCache() {
         // under the same canonical host the request handler will use.
         const host = getSiteDomain({}) || '';
         const dashboardBase = 'https://admin.b2b.click';
-        const qsBase = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
+        const domQs = host ? `?domain=${encodeURIComponent(host)}` : '';
+        const domQsNoCache = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
 
         const fetchJson = async (url) => {
             const ctrl = new AbortController();
@@ -1019,16 +1030,21 @@ async function prewarmAdminFetchCache() {
         };
 
         const targets = [
-            { key: `seo::${host || '__default__'}`, path: `/api/settings/seo`, ttlMs: 60_000 },
-            { key: `homepage-data::${host || '__default__'}`, path: `/api/home-settings/homepage-data`, ttlMs: 30_000 },
-            { key: `gallery::${host || '__default__'}`, path: `/api/settings/about/gallery/public`, ttlMs: 5 * 60_000 },
+            // SEO: hit /seo/fast WITHOUT nocache so the prewarm populates the
+            // same key the request handler reads (admin's cached, dedicated-
+            // pool ~0.3s path). Must match renders.handler.js's SEO fetch.
+            { key: `seo::${host || '__default__'}`, url: `${dashboardBase}/api/settings/seo/fast${domQs}`, ttlMs: 60_000 },
+            // These still use nocache=1 to mirror buildAdminFetch in the
+            // request handler (per-domain correctness for gallery/homepage).
+            { key: `homepage-data::${host || '__default__'}`, url: `${dashboardBase}/api/home-settings/homepage-data${domQsNoCache}`, ttlMs: 30_000 },
+            { key: `gallery::${host || '__default__'}`, url: `${dashboardBase}/api/settings/about/gallery/public${domQsNoCache}`, ttlMs: 5 * 60_000 },
         ];
 
         await Promise.all(targets.map(t =>
             cachedAdminFetch({
                 key: t.key,
                 ttlMs: t.ttlMs,
-                fetcher: () => fetchJson(`${dashboardBase}${t.path}${qsBase}`),
+                fetcher: () => fetchJson(t.url),
             })
         ));
         console.log(`🔥 Pre-warmed admin-fetch cache for host: ${host}`);

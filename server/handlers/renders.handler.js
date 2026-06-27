@@ -15,7 +15,13 @@ const ADMIN_CACHE_TTL = {
     aboutContent:  60 * 1000,        // 1 min fresh
     faq:           60 * 1000,        // 1 min fresh
 };
-const ADMIN_FETCH_TIMEOUT_MS = 2000;
+// Must be comfortably ABOVE admin's real warm latency or the fetch aborts
+// before a response lands, fetchAdminJson returns null, and cachedAdminFetch
+// refuses to cache null — which silently disables the whole SWR cache and
+// forces the SSR to ship hardcoded fallback SEO on every render. 2000ms was
+// shorter than admin's ~2.6s, so the cache never warmed. 5000ms gives real
+// headroom over the now-cached (~0.3s) admin path.
+const ADMIN_FETCH_TIMEOUT_MS = 5000;
 
 /**
  * Wrap fetch() with AbortController timeout + ok/json handling. Returns
@@ -1306,8 +1312,16 @@ async function reactHomepage(req, res) {
             const dashboardBase = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click' :
                 'http://localhost:3002';
-            const qs = host ? `?domain=${encodeURIComponent(host)}&nocache=1` : '';
-            const dashboardApiUrl = `${dashboardBase}/api/settings/seo${qs}`;
+            // PERF: hit /seo/fast directly (skips the 307 redirect from
+            // /api/settings/seo) and DO NOT send nocache=1. The admin's
+            // getSEOSettingsForDomain() helper now reads the per-domain row
+            // via the dedicated SEO pool (parity with the old nocache path,
+            // see seo_settings.queries.js), so we still get the correct
+            // hardline.events row — but cached at ~0.3s instead of the
+            // ~2.6s uncached read that used to blow past the fetch timeout
+            // and force the hardcoded fallback SEO below.
+            const qs = host ? `?domain=${encodeURIComponent(host)}` : '';
+            const dashboardApiUrl = `${dashboardBase}/api/settings/seo/fast${qs}`;
 
             const { data, source } = await cachedAdminFetch({
                 key: `seo::${host || '__default__'}`,
@@ -1691,24 +1705,37 @@ async function reactHomepage(req, res) {
         // Inject SSR content for bots OR in-app browsers to prevent white pages
         const needsSSRContent = isBot || isInAppBrowser || isWebView || isIOSWebView || hasInAppParams;
 
-        if (needsSSRContent) {
-            const browserType = isBot ? 'Bot' : isInAppBrowser ? 'In-App Browser' : isWebView ? 'WebView' : isIOSWebView ? 'iOS WebView' : 'In-App Params';
-            console.log(`🤖 ${browserType} detected, injecting SSR content:`, userAgent.substring(0, 80));
+        // CACHE-SAFETY + PERF: inject the SSR content for EVERY user-agent,
+        // always using the auto-hiding `.ssr-fallback` variant.
+        //
+        // Why UA-agnostic: this HTML is edge-cached by Cloudflare, which keys
+        // by Host+path and does NOT vary the cache by User-Agent. If the body
+        // branched on UA (bot vs human), a crawler could populate the cache
+        // slot with bot-only HTML that a human then receives — and vice-versa.
+        // That latent cache-poisoning bug only gets worse the longer we cache,
+        // and we now cache much longer (see s-maxage below). Emitting the SAME
+        // body for all UAs makes the response safe to cache.
+        //
+        // Why it's safe for humans: src/react/index.jsx hides #ssr-content the
+        // instant React boots (and adds `app-loaded`), and re-shows it if React
+        // fails to mount. So JS users get a content-first paint instead of a
+        // blank screen while the bundle loads, bots / no-JS clients keep the
+        // static content for SEO, and in-app browsers keep their white-page
+        // fallback. (needsSSRContent / isBot are kept only for logging now.)
+        {
+            const browserType = isBot ? 'Bot' : isInAppBrowser ? 'In-App Browser' : isWebView ? 'WebView' : isIOSWebView ? 'iOS WebView' : hasInAppParams ? 'In-App Params' : 'Regular';
+            console.log(`🧩 Injecting UA-agnostic SSR content (edge-cache safe) for: ${browserType}`);
             const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
 
-            // Create noscript fallback AND visible SSR content for in-app browsers
-            // The SSR content will be hidden by React once it loads, but remains visible if React fails
-            const ssrWrapper = isBot
-                ? `<div id="ssr-content" style="display: block;">${staticContent}</div>`
-                : `<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
+            // Visible static content that React hides on successful mount and
+            // restores on mount failure (see src/react/index.jsx).
+            const ssrWrapper = `<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
                    <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>`;
 
             htmlContent = htmlContent.replace(
                 /<div id="root"><\/div>/i,
                 `${ssrWrapper}<div id="root"></div>`
             );
-        } else {
-            console.log('👤 Regular user detected, skipping SSR content injection');
         }
 
         // 🔧 ALWAYS add noscript fallback for users with JavaScript disabled
@@ -1749,15 +1776,17 @@ async function reactHomepage(req, res) {
 
         // HTML caching: edge-cacheable, browser-revalidated.
         //
-        //   s-maxage=60    Cloudflare/CDN caches for 60s — most repeat hits
-        //                  served edge-side in ~50ms. PageSpeed bots also
-        //                  hit this cache slot if probed twice within 60s.
+        //   s-maxage=300   Cloudflare/CDN caches for 5min. The old 60s was
+        //                  too short for a low-traffic site: pages fell out
+        //                  of the edge within a minute, so most real visitors
+        //                  hit the origin instead of the ~50ms edge copy.
         //   max-age=0      Browser always revalidates. Cheap because the
         //                  revalidation hits Cloudflare, not origin.
         //   must-revalidate Strict — never serve expired content.
-        //   stale-while-revalidate=300  Cloudflare can serve stale up to 5min
-        //                  while refreshing in background — protects TTFB
-        //                  during deploy or origin slowness.
+        //   stale-while-revalidate=86400  Cloudflare can serve stale up to a
+        //                  day while refreshing in background — so a visitor
+        //                  effectively never waits on the origin once a page
+        //                  has been fetched at least once.
         //
         // Bundles are content-hashed (`/dist/assets/Foo-HASH.js`) and have
         // their own immutable cache headers in server.js, so HTML caching
@@ -1765,11 +1794,13 @@ async function reactHomepage(req, res) {
         //
         // Per-tenant isolation: Cloudflare keys cache by Host by default,
         // so hardline.events/ and bounce2bounce.com/ live in separate slots.
-        // No bot-specific branching here, so no Vary: User-Agent needed.
+        // The body is now UA-agnostic (we inject the SAME SSR content for all
+        // user-agents above), so it is safe to cache across bots and humans —
+        // no Vary: User-Agent needed (Cloudflare ignores it for caching anyway).
         if (env.NODE_ENV === 'production') {
             res.set({
                 'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'public, s-maxage=60, max-age=0, must-revalidate, stale-while-revalidate=300',
+                'Cache-Control': 'public, s-maxage=300, max-age=0, must-revalidate, stale-while-revalidate=86400',
                 'Vary': 'Accept-Encoding',
             });
         } else {
