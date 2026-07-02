@@ -82,6 +82,26 @@ function buildAdminFetch(baseUrl, path, req) {
 }
 
 /**
+ * Detect admin's "fallback row" SEO responses so they are never cached
+ * under a specific host's key. During an admin/DB outage the admin helper
+ * serves the default/NULL row (bounce2bounce branding) marked with
+ * `_meta.is_fallback`. Caching that under `seo::hardline.events` once made
+ * the live site render BOUNCE2BOUNCE titles for the whole stale window.
+ * Returning null instead makes cachedAdminFetch skip caching, the render
+ * falls back to the hardcoded HARDLINE defaults, and the next render
+ * retries the fetch. Fails open when _meta is absent (older admin builds).
+ */
+function isWrongDomainSeoRow(data, host) {
+    if (!data || !host) return false;
+    const row = data.settings || data;
+    const meta = data._meta || row._meta;
+    if (!meta) return false;
+    if (meta.is_fallback === true) return true;
+    const src = String(meta.source_domain || '').toLowerCase();
+    return !!src && src !== String(host).toLowerCase();
+}
+
+/**
  *
  * PAGES
  *
@@ -1326,7 +1346,12 @@ async function reactHomepage(req, res) {
             const { data, source } = await cachedAdminFetch({
                 key: `seo::${host || '__default__'}`,
                 ttlMs: ADMIN_CACHE_TTL.seo,
-                fetcher: () => fetchAdminJson(dashboardApiUrl, host),
+                fetcher: async () => {
+                    const d = await fetchAdminJson(dashboardApiUrl, host);
+                    // Outage guard: never cache admin's default-row fallback
+                    // (wrong brand) under this host's key.
+                    return isWrongDomainSeoRow(d, host) ? null : d;
+                },
             });
 
             if (data) {
@@ -1728,13 +1753,26 @@ async function reactHomepage(req, res) {
             const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
 
             // Visible static content that React hides on successful mount and
-            // restores on mount failure (see src/react/index.jsx).
+            // restores on mount failure (see src/react/index.jsx). The inline
+            // failsafe script also hides the #initial-splash overlay (the
+            // fullscreen logo inlined inside #root by the build) if React has
+            // not mounted within 4s — otherwise a hung/failed bundle leaves
+            // users staring at the splash forever with the fallback content
+            // invisible underneath it. CSP allows 'unsafe-inline' scripts.
             const ssrWrapper = `<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
-                   <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>`;
+                   <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>
+                   <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';}}}catch(e){}},4000);</script>`;
 
+            // dist/index.html inlines the first-paint splash INSIDE #root, so
+            // the old literal match on `<div id="root"></div>` stopped
+            // matching and NO page (bot, in-app, or human) was getting SSR
+            // content injected. Match only the OPENING tag and insert before
+            // it, preserving whatever the build put inside root. The replacer
+            // is a function so `$`-sequences in event/SEO text can't be
+            // interpreted as replacement patterns.
             htmlContent = htmlContent.replace(
-                /<div id="root"><\/div>/i,
-                `${ssrWrapper}<div id="root"></div>`
+                /<div id="root">/i,
+                () => `${ssrWrapper}<div id="root">`
             );
         }
 

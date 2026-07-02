@@ -1029,11 +1029,26 @@ async function prewarmAdminFetchCache() {
             }
         };
 
+        // Outage guard for the SEO entry: if admin is degraded it serves the
+        // default/NULL row (wrong brand) marked _meta.is_fallback — caching
+        // that under this host's key once left BOUNCE2BOUNCE titles on
+        // hardline.events for the whole stale window. Returning null skips
+        // caching; the next tick retries. Mirrors isWrongDomainSeoRow in
+        // renders.handler.js (same shared cache, same key).
+        const seoRowOk = (d) => {
+            if (!d || !host) return true;
+            const meta = d._meta || (d.settings && d.settings._meta);
+            if (!meta) return true;
+            if (meta.is_fallback === true) return false;
+            const src = String(meta.source_domain || '').toLowerCase();
+            return !src || src === host.toLowerCase();
+        };
+
         const targets = [
             // SEO: hit /seo/fast WITHOUT nocache so the prewarm populates the
             // same key the request handler reads (admin's cached, dedicated-
             // pool ~0.3s path). Must match renders.handler.js's SEO fetch.
-            { key: `seo::${host || '__default__'}`, url: `${dashboardBase}/api/settings/seo/fast${domQs}`, ttlMs: 60_000 },
+            { key: `seo::${host || '__default__'}`, url: `${dashboardBase}/api/settings/seo/fast${domQs}`, ttlMs: 60_000, validate: seoRowOk },
             // These still use nocache=1 to mirror buildAdminFetch in the
             // request handler (per-domain correctness for gallery/homepage).
             { key: `homepage-data::${host || '__default__'}`, url: `${dashboardBase}/api/home-settings/homepage-data${domQsNoCache}`, ttlMs: 30_000 },
@@ -1044,7 +1059,7 @@ async function prewarmAdminFetchCache() {
             cachedAdminFetch({
                 key: t.key,
                 ttlMs: t.ttlMs,
-                fetcher: () => fetchJson(t.url),
+                fetcher: () => fetchJson(t.url).then(d => (t.validate && !t.validate(d)) ? null : d),
             })
         ));
         console.log(`🔥 Pre-warmed admin-fetch cache for host: ${host}`);
