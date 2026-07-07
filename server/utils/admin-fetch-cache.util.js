@@ -61,6 +61,26 @@ function setEntry(key, data, ttlMs) {
  *                                   interval prewarm in server.js.
  * @returns {Promise<{data:any, source:'fresh'|'stale'|'cold'}>}
  */
+// Hard wall-clock ceiling for ANY fetcher, independent of whatever internal
+// timeout (AbortController) the fetcher already uses. If the admin sends
+// response headers and then stalls mid-body, the `res.json()` inside the
+// fetcher can hang PAST its own abort in some runtimes. Because
+// cachedAdminFetch dedupes concurrent callers onto a single INFLIGHT promise,
+// one wedged fetch makes EVERY subsequent cold SSR render await a promise
+// that never settles — the origin "endless loading" outage on 2026-07-07
+// (container up 5 days, DB + admin healthy, yet every page request hung).
+// Racing the fetcher against this timer guarantees it always resolves, so the
+// INFLIGHT entry always clears and no caller can hang. Must exceed every
+// fetcher's own timeout (renders.handler 5s, server.js prewarm 4s).
+const FETCHER_HARD_CEILING_MS = 8000;
+
+function boundedFetch(fetcher) {
+    return Promise.race([
+        (async () => { try { return await fetcher(); } catch (_) { return null; } })(),
+        new Promise((resolve) => setTimeout(() => resolve(null), FETCHER_HARD_CEILING_MS)),
+    ]);
+}
+
 async function cachedAdminFetch({ key, fetcher, ttlMs, staleMs = 30 * 60 * 1000 }) {
     const now = Date.now();
     const entry = CACHE.get(key);
@@ -73,7 +93,7 @@ async function cachedAdminFetch({ key, fetcher, ttlMs, staleMs = 30 * 60 * 1000 
         if (!INFLIGHT.has(key)) {
             const p = (async () => {
                 try {
-                    const fresh = await fetcher();
+                    const fresh = await boundedFetch(fetcher);
                     if (fresh !== null && fresh !== undefined) {
                         setEntry(key, fresh, ttlMs);
                     }
@@ -93,7 +113,7 @@ async function cachedAdminFetch({ key, fetcher, ttlMs, staleMs = 30 * 60 * 1000 
     if (!inflight) {
         inflight = (async () => {
             try {
-                return await fetcher();
+                return await boundedFetch(fetcher);
             } catch (_) {
                 return null;
             } finally {
