@@ -9,6 +9,7 @@ const router = express.Router();
 
 // GET /api/settings/seo - Proxy to dashboard for SEO settings
 const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
+const { cachedAdminFetch } = require('../../utils/admin-fetch-cache.util');
 
 // Helper function to determine the correct dashboard URL
 function getDashboardUrl(req) {
@@ -143,20 +144,46 @@ router.get("/seo", async (req, res) => {
 });
 
 // GET /api/settings/seo/fast - Proxy to dashboard for FAST SEO settings
+//
+// PERF: this endpoint is fetched by the React app on EVERY page mount
+// (SEOContext), and the raw pass-through used to pay a live admin round
+// trip each time — with `nocache=1` forcing admin's slowest uncached DB
+// path (measured 3.5-5.1s per call). That latency showed up as "every
+// page loads slow / About page takes forever". Now:
+//   - target drops nocache=1 (admin's per-domain cache is correct and
+//     ~0.2s; nocache is reserved for the admin Settings UI),
+//   - the response is cached in-process per-host via cachedAdminFetch
+//     (60s fresh + stale-while-revalidate), so warm page views get their
+//     SEO JSON from memory in ~0ms,
+//   - admin fallback rows (_meta.is_fallback, wrong brand) are served to
+//     the current caller at most but NEVER cached under this host's key.
 router.get("/seo/fast", async (req, res) => {
     try {
-        console.log('🔍 Homepage: Fetching FAST SEO settings from dashboard...');
         const dashboardUrl = getDashboardUrl(req);
-        const target = withDomainParam(`${dashboardUrl}/api/settings/seo/fast`, req);
+        const rawHost = req?.get?.('host') || '';
+        const host = rawHost.split(':')[0].toLowerCase().replace(/^www\./, '');
+        const target = `${dashboardUrl}/api/settings/seo/fast${host ? `?domain=${encodeURIComponent(host)}` : ''}`;
 
-        const response = await dashFetch(target, { timeoutMs: 5000, req });
+        const { data } = await cachedAdminFetch({
+            key: `seo-fast-proxy::${host || '__default__'}`,
+            ttlMs: 60 * 1000,
+            fetcher: async () => {
+                const response = await dashFetch(target, { timeoutMs: 5000, req });
+                if (!response.ok) return null;
+                const body = stripInternalSeoFields(await readJsonCapped(response));
+                // Never cache admin's default-row fallback (wrong brand)
+                // under this host's key — see the 2026-07-07 outage where a
+                // cached bounce2bounce row branded hardline.events for the
+                // whole stale window. Serving null here drops us to the
+                // HARDLINE-branded fallback below instead.
+                const meta = body && (body._meta || (body.settings && body.settings._meta));
+                if (host && meta && meta.is_fallback === true) return null;
+                return body;
+            },
+        });
 
-        if (response.ok) {
-            const data = stripInternalSeoFields(await readJsonCapped(response));
-            return res.json(data);
-        }
-
-        throw new Error(`Dashboard responded ${response.status}`);
+        if (data) return res.json(data);
+        throw new Error('Dashboard SEO fast fetch failed or returned fallback row');
     } catch (error) {
         console.error('❌ Homepage: Error fetching FAST SEO settings:', error.message);
         // Return JSON fallback directly. A redirect here would force the

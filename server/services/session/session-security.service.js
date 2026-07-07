@@ -109,7 +109,14 @@ class SessionSecurityService {
 
         if (now - ipActivity.firstSeen < 60000) { // 1 minute window
             ipActivity.count++;
-            if (ipActivity.count > 10) { // More than 10 sessions per minute
+            // NOTE: despite the name, this counts REQUESTS (this middleware
+            // runs on every request), not session creations. A single SPA
+            // page view fires the HTML + several /api/settings + gallery +
+            // image requests, so the old ">10/min" flagged every real user
+            // browsing normally — one stripped header away from a 15-min IP
+            // block (the 2026-07-07 "site blocks me / 429" incident). 120/min
+            // still catches hammering bots but not humans.
+            if (ipActivity.count > 120) {
                 suspiciousIndicators.push('rapid_session_creation');
             }
         } else {
@@ -199,7 +206,15 @@ class SessionSecurityService {
                     suspiciousIndicators = [];
                 }
 
-                if (suspiciousIndicators.length >= 2) {
+                // Require ALL THREE indicators (rapid hammering + missing/short
+                // user-agent + missing accept headers) before auto-blocking an
+                // IP — i.e. only headless scripted flooding. At >=2, any real
+                // browser that hit the rapid counter plus ONE quirk (privacy
+                // extensions strip Accept-Language, some in-app webviews trim
+                // headers) got a hard 15-min block on the whole site — which
+                // users experienced as "the website blocks my IP" (2026-07-07).
+                // Cloudflare in front remains the real DDoS layer.
+                if (suspiciousIndicators.length >= 3) {
                     // Block IP for 15 minutes
                     const requestIP = req.ip || 'unknown';
                     this.blockedIPs.set(requestIP, {
