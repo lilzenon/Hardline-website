@@ -186,7 +186,12 @@ export default defineConfig({
         comments: false, // Remove comments
       },
     },
-    target: 'es2020',
+    // IAB FIX: es2019 + explicit browser floors make esbuild down-level
+    // optional chaining (?.) / nullish coalescing (??). At 'es2020' those
+    // shipped raw and threw SyntaxError at PARSE time on old WebKit (<13.4)
+    // and Android WebView (<80) — React never mounted, no ErrorBoundary
+    // could fire. Cost: a few KB; the SSR fallback carries those devices.
+    target: ['es2019', 'safari13.1', 'chrome80'],
     chunkSizeWarningLimit: 250, // CRITICAL: Much smaller chunks for 512MB RAM limit
     reportCompressedSize: false, // Disable to save build memory
     rollupOptions: {

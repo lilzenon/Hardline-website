@@ -1,4 +1,5 @@
 import React from 'react';
+import { isChunkLoadError, reloadOnceForChunkError } from '../utils/iab';
 
 /**
  * Error Boundary Component for graceful error handling
@@ -18,6 +19,16 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log error details for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+
+    // 🔧 IAB FIX: a FAILED lazy chunk (stale post-deploy HTML → 404) is
+    // recoverable — reload once with a cache-busting param instead of
+    // stranding the user on the error card. Chunk TIMEOUTS are excluded:
+    // on a genuinely slow link a forced reload re-downloads everything and
+    // makes things worse — show the card with its manual Refresh instead.
+    const isTimeout = String((error && error.message) || '').indexOf('chunk-load-timeout') !== -1;
+    if (isChunkLoadError(error) && !isTimeout && reloadOnceForChunkError()) {
+      return; // reload initiated; skip analytics/state churn
+    }
 
     this.setState({
       error: error,

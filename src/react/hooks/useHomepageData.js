@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
+import { fetchWithTimeout } from '../utils/iab';
 
 // Simple cache for API responses - shared across components.
 // Kept short (30s) so admin event edits — title, image, address —
@@ -67,6 +68,11 @@ export const useHomepageData = () => {
   // Filter state - Default depends on viewport: Mobile defaults to "Next", Desktop to "Past"
   const isMobileViewport = typeof window !== 'undefined' && window.innerWidth <= 767;
   const [showAllEvents, setShowAllEvents] = useState(isMobileViewport ? true : false); // true = "Next" (upcoming), false = "Past"
+
+  // One-shot guard for the silent post-timeout retry (admin cold starts take
+  // ~16s; the 8s abort unblocks the loader with placeholder content, then a
+  // single quiet retry swaps in real data once admin is warm).
+  const timedOutRetryRef = useRef(false);
 
   /**
    * Validates event data structure
@@ -366,9 +372,12 @@ export const useHomepageData = () => {
   /**
    * Fetches homepage data from API with caching
    */
-  const fetchHomepageData = useCallback(async () => {
+  const fetchHomepageData = useCallback(async (options = {}) => {
+    // silent = background refresh: no loader, longer timeout (covers the
+    // known ~16s admin recycle), and no further retry scheduling.
+    const silent = options.silent === true;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
 
       // Check cache first
@@ -387,7 +396,7 @@ export const useHomepageData = () => {
           try {
             const apiBaseUrl = isDevelopment() ? '' : getApiBaseUrl();
             const url = `${apiBaseUrl}/api/home-settings/homepage-data`;
-            const response = await fetch(url, { cache: 'no-store' });
+            const response = await fetchWithTimeout(url, { cache: 'no-store' }, 8000);
             if (!response.ok) return;
             const fresh = await response.json();
 
@@ -435,7 +444,13 @@ export const useHomepageData = () => {
 
       console.log('🔍 Fetching homepage data from:', `${apiBaseUrl}/api/home-settings/homepage-data`);
 
-      const response = await fetch(`${apiBaseUrl}/api/home-settings/homepage-data`, { cache: 'no-store' });
+      // 🔧 IAB FIX: this is a cross-origin fetch to admin.b2b.click, so the
+      // server's 5s admin-fetch guard does NOT protect it. Without a client
+      // timeout, an admin cold-start or a stalled IAB connection pins
+      // `loading` true forever and the fullscreen black BrandedLoader never
+      // lifts. Abort at 8s → catch below sets fallback content, finally
+      // clears loading, and the page renders.
+      const response = await fetchWithTimeout(`${apiBaseUrl}/api/home-settings/homepage-data`, { cache: 'no-store' }, silent ? 20000 : 8000);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
@@ -486,6 +501,12 @@ export const useHomepageData = () => {
 
     } catch (err) {
       console.error('❌ Error fetching homepage data:', err);
+
+      if (silent) {
+        // Background retry failed — leave whatever is on screen untouched.
+        return;
+      }
+
       setError(err.message);
 
       // Fallback to default values to maintain design
@@ -503,8 +524,20 @@ export const useHomepageData = () => {
       setFeaturedEvents([]);
       setHomepageEvents([]);
       setFormattedDate("March 29th, 9:00 P.M.");
+
+      // 🔧 IAB FIX: if the 8s abort fired while admin was cold-starting
+      // (~16s recycle), the placeholder above is showing wrong content.
+      // Schedule ONE silent retry with a 20s budget to swap in real data —
+      // no loader, no loop (one-shot ref guard).
+      const wasTimeout = String((err && err.message) || '').indexOf('fetch-timeout') !== -1;
+      if (wasTimeout && !timedOutRetryRef.current) {
+        timedOutRetryRef.current = true;
+        setTimeout(() => {
+          fetchHomepageData({ silent: true });
+        }, 12000);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [validateEvents]);
 

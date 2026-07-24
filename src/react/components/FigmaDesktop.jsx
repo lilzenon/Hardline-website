@@ -3,6 +3,7 @@ import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
+import { openExternal } from '../utils/iab';
 import { loadImageWithCircuitBreaker } from '../../lib/circuit-breaker';
 import TextUsSection from './TextUsSection';
 import SocialMediaButtons from './SocialMediaButtons';
@@ -380,14 +381,14 @@ const EventCard = memo(({ card, scaledDimensions }) => {
     e.stopPropagation();
     if (card.isRealEvent && card.hasTicketLink) {
       console.log(`🎫 Desktop: Opening ticket link for ${card.title}:`, card.ticketsUrl);
-      window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+      openExternal(card.ticketsUrl);
     }
   }, [card.isRealEvent, card.hasTicketLink, card.ticketsUrl, card.title]);
 
   const handleTicketClick = useCallback(() => {
     if (card.isRealEvent && card.hasTicketLink) {
       console.log(`🎫 Desktop: Opening ticket link for ${card.title}:`, card.ticketsUrl);
-      window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+      openExternal(card.ticketsUrl);
     }
   }, [card.isRealEvent, card.hasTicketLink, card.ticketsUrl, card.title]);
 
@@ -1685,12 +1686,12 @@ const FigmaDesktop = ({ onReady }) => {
                       // If showing fallback, use fallback CTA URL
                       if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
                         console.log('🎫 Desktop Fallback: Opening CTA link:', homeSettings.desktop_fallback_cta_url);
-                        window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
+                        openExternal(homeSettings.desktop_fallback_cta_url);
                       }
                       // Otherwise use event ticket URL
                       else if (mostRecentEvent?.external_ticket_url) {
                         console.log(`🎫 Desktop Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                        window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                        openExternal(mostRecentEvent.external_ticket_url); // Open in new tab for better UX
                       } else {
                         console.log('🎫 Desktop Featured Event: No ticket link available for', mostRecentEvent?.title);
                         console.log('🔍 Desktop Featured Event data:', mostRecentEvent);
@@ -2045,10 +2046,10 @@ const FigmaDesktop = ({ onReady }) => {
                             // Handle fallback CTA or event ticket URL
                             if (!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_cta_url) {
                               console.log('🎫 Opening fallback CTA link:', homeSettings.desktop_fallback_cta_url);
-                              window.open(homeSettings.desktop_fallback_cta_url, '_blank', 'noopener,noreferrer');
+                              openExternal(homeSettings.desktop_fallback_cta_url);
                             } else if (mostRecentEvent?.external_ticket_url) {
                               console.log(`🎫 Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                              window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer');
+                              openExternal(mostRecentEvent.external_ticket_url);
                             }
                           }}
                         >
@@ -2124,7 +2125,7 @@ const FigmaDesktop = ({ onReady }) => {
                     // Navigate directly to ticket purchase page in new tab
                     if (mostRecentEvent?.external_ticket_url) {
                       console.log(`🎫 Mobile Featured Event: Opening ticket link for ${mostRecentEvent.title}:`, mostRecentEvent.external_ticket_url);
-                      window.open(mostRecentEvent.external_ticket_url, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                      openExternal(mostRecentEvent.external_ticket_url); // Open in new tab for better UX
                     } else {
                       console.log('🎫 Mobile Featured Event: No ticket link available for', mostRecentEvent?.title);
                     }
@@ -2726,7 +2727,7 @@ const FigmaDesktop = ({ onReady }) => {
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                                              window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                              openExternal(card.ticketsUrl);
                                             }}
                                             style={{
                                               background: 'rgba(22, 22, 22, 0.50)',
@@ -2884,7 +2885,7 @@ const FigmaDesktop = ({ onReady }) => {
                   {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
                   <div
                     ref={videoContainerRef}
-                    onClick={() => window.open(videoCtaUrl, '_blank', 'noopener,noreferrer')}
+                    onClick={() => openExternal(videoCtaUrl)}
                     style={{
                       // Scale video to fill the container completely
                       width: '100%',
@@ -3043,7 +3044,7 @@ const FigmaDesktop = ({ onReady }) => {
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
-                            window.open(videoCtaUrl, '_blank', 'noopener,noreferrer');
+                            openExternal(videoCtaUrl);
                           }}
                           role="button"
                           tabIndex={0}
@@ -3052,7 +3053,7 @@ const FigmaDesktop = ({ onReady }) => {
                             if (e.key === 'Enter' || e.key === ' ') {
                               e.preventDefault();
                               e.stopPropagation();
-                              window.open(videoCtaUrl, '_blank', 'noopener,noreferrer');
+                              openExternal(videoCtaUrl);
                             }
                           }}
                           style={{
@@ -3665,7 +3666,7 @@ const FigmaDesktop = ({ onReady }) => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                                    window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                    openExternal(card.ticketsUrl);
                                   }}
                                   style={{
                                     background: 'rgba(23, 23, 23, 0.8)',

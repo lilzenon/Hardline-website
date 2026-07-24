@@ -1,298 +1,46 @@
 /**
- * Service Worker for HARDLINE
- * Implements caching strategies for performance optimization
+ * TOMBSTONE service worker — the site intentionally does NOT use a
+ * service worker anymore.
+ *
+ * The legacy SW (v7, registered by the long-archived Handlebars layout)
+ * cached '/' HTML with a networkFirst strategy. On a flaky network that
+ * could serve stale HTML referencing dead hashed bundles from a previous
+ * deploy — a permanent white screen until the cache was cleared.
+ *
+ * Any browser still holding that registration will fetch this file on its
+ * next SW update check (sw.js is served with revalidation headers), install
+ * it, and self-destruct: clear all caches, unregister, and reload open
+ * clients so they load fresh from the network.
+ *
+ * Do NOT add caching logic back here without per-deploy cache versioning
+ * and an HTML-bypass — see project history (stale-bundle white screens).
  */
 
-const CACHE_NAME = 'hardline events-v7-react-fix-' + Date.now();
-const STATIC_CACHE = 'hardline events-static-v7-react-fix-' + Date.now();
-const DYNAMIC_CACHE = 'hardline events-dynamic-v7-react-fix-' + Date.now();
-
-// Assets to cache immediately
-const STATIC_ASSETS = [
-    '/',
-    '/home',
-    '/css/figma-home.css',
-    '/css/compact-event-cards.css',
-    '/css/tailwind.css',
-    '/js/navigation.js',
-    '/images/bounce-logo.svg',
-    '/images/favicon.svg',
-    '/manifest.webmanifest'
-];
-
-// Install event - cache static assets and force immediate activation
-self.addEventListener('install', event => {
-    console.log('Service Worker: Installing v7 - Force clearing old caches...');
-
-    event.waitUntil(
-        Promise.all([
-            // Clear ALL old caches first
-            caches.keys().then(cacheNames => {
-                return Promise.all(
-                    cacheNames.map(cacheName => {
-                        if (cacheName.includes('hardline events') && !cacheName.includes('v7-react-fix')) {
-                            console.log('Service Worker: Deleting old cache:', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            }),
-            // Then cache new static assets
-            caches.open(STATIC_CACHE)
-            .then(cache => {
-                console.log('Service Worker: Caching static assets');
-                return cache.addAll(STATIC_ASSETS);
-            })
-        ]).then(() => {
-            console.log('Service Worker: Force taking control immediately');
-            return self.skipWaiting();
-        }).catch(error => {
-            console.error('Service Worker: Error during install', error);
-        })
-    );
+self.addEventListener('install', function () {
+    self.skipWaiting();
 });
 
-// Activate event - aggressively clean up old caches and take control
-self.addEventListener('activate', event => {
-    console.log('Service Worker: Activating v7 - Aggressive cache cleanup...');
-
-    event.waitUntil(
-        caches.keys()
-        .then(cacheNames => {
-            console.log('Service Worker: Found caches:', cacheNames);
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-                        console.log('Service Worker: Deleting old cache', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-        .then(() => {
-            console.log('Service Worker: v7 Activated - Taking control of all clients');
-            // Force immediate control of all clients (including existing ones)
-            return self.clients.claim();
-        })
-        .then(() => {
-            // Force reload all clients to get fresh content
-            return self.clients.matchAll().then(clients => {
-                clients.forEach(client => {
-                    console.log('Service Worker: Sending reload message to client');
-                    client.postMessage({ type: 'CACHE_UPDATED', version: 'v7' });
-                });
-            });
-        })
-    );
-});
-
-// Fetch event - implement caching strategies
-self.addEventListener('fetch', event => {
-    const { request } = event;
-    const url = new URL(request.url);
-
-    // Skip non-GET requests
-    if (request.method !== 'GET') {
-        return;
-    }
-
-    // CRITICAL: Only handle same-origin requests to prevent CSP violations
-    // Let external requests (Google Fonts, YouTube, etc.) bypass Service Worker entirely
-    if (url.origin !== self.location.origin) {
-        console.log('Service Worker: Bypassing external request:', url.href);
-        return;
-    }
-
-    // Skip admin, API, dashboard, and Vite assets for fresh content
-    if (url.pathname.startsWith('/admin') ||
-        url.pathname.startsWith('/api') ||
-        url.pathname.startsWith('/dashboard') ||
-        url.pathname.startsWith('/assets/') ||
-        /\.(js|css|map)$/.test(url.pathname)) {
-        return;
-    }
-
-    event.respondWith(
-        handleRequest(request)
-    );
-});
-
-async function handleRequest(request) {
-    const url = new URL(request.url);
-
-    try {
-        // Strategy 1: Cache First for static assets
-        if (isStaticAsset(url.pathname)) {
-            return await cacheFirst(request);
-        }
-
-        // Strategy 2: Network First for event pages
-        if (url.pathname.startsWith('/event/')) {
-            return await networkFirst(request);
-        }
-
-        // Strategy 3: Network First for homepage during development
-        if (url.pathname === '/' || url.pathname === '/home') {
-            return await networkFirst(request);
-        }
-
-        // Default: Network First
-        return await networkFirst(request);
-
-    } catch (error) {
-        // Graceful error handling - don't spam console with CSP violations
-        if (error.message && error.message.includes('Content Security Policy')) {
-            console.warn('Service Worker: CSP blocked request (expected):', request.url);
-        } else {
-            console.error('Service Worker: Error handling request', error);
-        }
-        // Always try to return the original request as fallback
+self.addEventListener('activate', function (event) {
+    event.waitUntil((async function () {
+        // 1. Drop every cache this origin ever created
         try {
-            return await fetch(request);
-        } catch (fallbackError) {
-            console.error('Service Worker: Fallback fetch also failed', fallbackError);
-            throw fallbackError;
-        }
-    }
-}
+            const keys = await caches.keys();
+            await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        } catch (e) { /* best effort */ }
 
-// Cache First strategy - for static assets
-async function cacheFirst(request) {
-    const cachedResponse = await caches.match(request);
+        // 2. Remove this registration entirely
+        try {
+            await self.registration.unregister();
+        } catch (e) { /* best effort */ }
 
-    if (cachedResponse) {
-        return cachedResponse;
-    }
-
-    try {
-        const networkResponse = await fetch(request);
-
-        if (networkResponse.ok) {
-            const cache = await caches.open(STATIC_CACHE);
-            cache.put(request, networkResponse.clone());
-        }
-
-        return networkResponse;
-    } catch (error) {
-        // Graceful error handling - don't spam console with CSP violations
-        if (error.message && error.message.includes('Content Security Policy')) {
-            console.warn('Service Worker: CSP blocked external request (expected):', request.url);
-        } else {
-            console.error('Service Worker: Network error in cacheFirst', error);
-        }
-        throw error;
-    }
-}
-
-// Network First strategy - for dynamic content
-async function networkFirst(request) {
-    try {
-        const networkResponse = await fetch(request);
-
-        if (networkResponse.ok) {
-            const cache = await caches.open(DYNAMIC_CACHE);
-            cache.put(request, networkResponse.clone());
-        }
-
-        return networkResponse;
-    } catch (error) {
-        console.log('Service Worker: Network failed, trying cache');
-        const cachedResponse = await caches.match(request);
-
-        if (cachedResponse) {
-            return cachedResponse;
-        }
-
-        throw error;
-    }
-}
-
-// Stale While Revalidate strategy - for frequently updated content
-async function staleWhileRevalidate(request) {
-    const cachedResponse = await caches.match(request);
-
-    const networkResponsePromise = fetch(request)
-        .then(response => {
-            if (response.ok) {
-                const cache = caches.open(DYNAMIC_CACHE);
-                cache.then(c => c.put(request, response.clone()));
-            }
-            return response;
-        })
-        .catch(error => {
-            console.error('Service Worker: Network error in staleWhileRevalidate', error);
-        });
-
-    return cachedResponse || networkResponsePromise;
-}
-
-// Helper function to identify static assets
-function isStaticAsset(pathname) {
-    return pathname.startsWith('/css/') ||
-        pathname.startsWith('/js/') ||
-        pathname.startsWith('/images/') ||
-        pathname.startsWith('/fonts/') ||
-        pathname.endsWith('.css') ||
-        pathname.endsWith('.js') ||
-        pathname.endsWith('.png') ||
-        pathname.endsWith('.jpg') ||
-        pathname.endsWith('.jpeg') ||
-        pathname.endsWith('.svg') ||
-        pathname.endsWith('.webp') ||
-        pathname.endsWith('.woff') ||
-        pathname.endsWith('.woff2');
-}
-
-// Background sync for offline form submissions
-self.addEventListener('sync', event => {
-    if (event.tag === 'event-signup') {
-        event.waitUntil(syncEventSignups());
-    }
+        // 3. Reload any open pages so they re-fetch without SW interception
+        try {
+            const clientList = await self.clients.matchAll({ type: 'window' });
+            clientList.forEach(function (client) {
+                try { client.navigate(client.url); } catch (e) { /* best effort */ }
+            });
+        } catch (e) { /* best effort */ }
+    })());
 });
 
-async function syncEventSignups() {
-    // Handle offline event signups when connection is restored
-    console.log('Service Worker: Syncing offline event signups');
-
-    // This would integrate with your existing signup system
-    // Implementation depends on your offline storage strategy
-}
-
-// Push notifications (for future implementation)
-self.addEventListener('push', event => {
-    if (event.data) {
-        const data = event.data.json();
-
-        const options = {
-            body: data.body,
-            icon: '/images/favicon-192x192.png',
-            badge: '/images/favicon-192x192.png',
-            tag: 'event-notification',
-            requireInteraction: true,
-            actions: [{
-                    action: 'view',
-                    title: 'View Event'
-                },
-                {
-                    action: 'dismiss',
-                    title: 'Dismiss'
-                }
-            ]
-        };
-
-        event.waitUntil(
-            self.registration.showNotification(data.title, options)
-        );
-    }
-});
-
-// Handle notification clicks
-self.addEventListener('notificationclick', event => {
-    event.notification.close();
-
-    if (event.action === 'view') {
-        event.waitUntil(
-            clients.openWindow('/events')
-        );
-    }
-});
+// No fetch handler: nothing is intercepted; all requests hit the network.

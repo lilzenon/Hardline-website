@@ -9,6 +9,26 @@ import React, { createContext, useContext, useState, useEffect, useMemo, lazy, S
 // off the homepage critical path. Dither only renders inside the maintenance
 // overlay below, which is gated on maintenance_mode.
 const Dither = lazy(() => import('../components/ui/DitherShadcn').then(m => ({ default: m.Dither })));
+
+// IAB FIX: WebGL can throw on GPU-blocklisted / software-rendering WebViews.
+// The dither background is decorative — swallow the error (plain black
+// overlay remains) instead of letting it bubble to the top-level
+// ErrorBoundary and replace the whole maintenance overlay with an error card.
+class DitherSafeBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    console.warn('🎮 Maintenance-overlay Dither failed (non-fatal):', error && error.message);
+  }
+  render() {
+    return this.state.hasError ? null : this.props.children;
+  }
+}
 import useLayloSDK from '../hooks/useLayloSDK';
 import { TrackingPixelLoader } from '../components/TrackingPixelLoader';
 import {
@@ -413,19 +433,21 @@ export const MaintenanceMode = () => {
         height: '100%',
         zIndex: 1
       }}>
-        <Suspense fallback={null}>
-          <Dither
-            waveSpeed={0.02}
-            waveFrequency={2.0}
-            waveAmplitude={0.25}
-            waveColor={[1.0, 1.0, 1.0]}
-            colorNum={2}
-            pixelSize={2}
-            enableMouseInteraction={false}
-            mouseRadius={1.0}
-            className="dither-background"
-          />
-        </Suspense>
+        <DitherSafeBoundary>
+          <Suspense fallback={null}>
+            <Dither
+              waveSpeed={0.02}
+              waveFrequency={2.0}
+              waveAmplitude={0.25}
+              waveColor={[1.0, 1.0, 1.0]}
+              colorNum={2}
+              pixelSize={2}
+              enableMouseInteraction={false}
+              mouseRadius={1.0}
+              className="dither-background"
+            />
+          </Suspense>
+        </DitherSafeBoundary>
       </div>
 
       {/* Minimalist Maintenance Card */}

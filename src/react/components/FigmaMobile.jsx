@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from '
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
+import { openExternal } from '../utils/iab';
 import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
@@ -2938,9 +2939,13 @@ const FigmaMobile = ({ onReady }) => {
         <main
           style={{
             width: '100vw',
-            height: '100vh',
+            // IAB FIX: raw 100vh measures the LARGEST viewport in IG/TikTok
+            // WebViews, hiding the bottom ~60-100px behind IAB chrome.
+            // --vh is kept in sync with window.innerHeight (see effect above);
+            // the 1vh fallback preserves old behavior until it's set.
+            height: 'calc(var(--vh, 1vh) * 100)',
             maxWidth: '100vw',
-            maxHeight: '100vh',
+            maxHeight: 'calc(var(--vh, 1vh) * 100)',
             margin: '0',
             position: 'relative',
             background: '#000000',
@@ -2948,7 +2953,7 @@ const FigmaMobile = ({ onReady }) => {
             flexDirection: 'column',
             overflow: 'hidden', // FIXED: Prevent hidden elements from becoming visible
             // Mobile-specific viewport fixes
-            minHeight: '100vh',
+            minHeight: 'calc(var(--vh, 1vh) * 100)',
             minWidth: '100vw',
             isolation: 'isolate', // Create new stacking context
             transform: 'none', // Remove forced hardware acceleration
@@ -3235,7 +3240,7 @@ const FigmaMobile = ({ onReady }) => {
                           // Navigate directly to ticket purchase page in new tab
                           if (featuredEvent?.ticketsUrl && featuredEvent.ticketsUrl !== '#') {
                             console.log(`🎫 Mobile Featured Event: Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
-                            window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer'); // Open in new tab for better UX
+                            openExternal(featuredEvent.ticketsUrl); // Open in new tab for better UX
                           } else {
                             console.log('🎫 Mobile Featured Event: No ticket link available for', featuredEvent?.title);
                             console.log('🔍 Mobile Featured Event data:', featuredEvent);
@@ -3543,7 +3548,7 @@ const FigmaMobile = ({ onReady }) => {
                                 e.stopPropagation();
                                 if (featuredEvent.isRealEvent && featuredEvent.hasTicketLink) {
                                   console.log(`🎫 Opening ticket link for ${featuredEvent.title}:`, featuredEvent.ticketsUrl);
-                                  window.open(featuredEvent.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                  openExternal(featuredEvent.ticketsUrl);
                                 }
                               }}
                             >
@@ -4091,7 +4096,7 @@ const FigmaMobile = ({ onReady }) => {
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         console.log(`🎫 Opening ticket link for ${card.title}:`, card.ticketsUrl);
-                                        window.open(card.ticketsUrl, '_blank', 'noopener,noreferrer');
+                                        openExternal(card.ticketsUrl);
                                       }}
                                       style={{
                                         background: 'rgba(23, 23, 23, 0.8)',
@@ -4165,7 +4170,7 @@ const FigmaMobile = ({ onReady }) => {
                             type="button"
                             aria-label={homeSettings?.fallback_cta_button_text || 'Join Waitlist'}
                             onClick={() => {
-                              window.open(homeSettings.mobile_laylo_cta_url, '_blank', 'noopener,noreferrer');
+                              openExternal(homeSettings.mobile_laylo_cta_url);
                             }}
                             style={{
                               display: 'inline-flex',
@@ -4517,7 +4522,7 @@ const FigmaMobile = ({ onReady }) => {
                   <div
                     onClick={(e) => {
                       e.stopPropagation();
-                      window.open(videoCtaUrl, '_blank', 'noopener,noreferrer');
+                      openExternal(videoCtaUrl);
                     }}
                     style={{
                       display: 'flex',
@@ -4736,7 +4741,7 @@ const FigmaMobile = ({ onReady }) => {
             top: 0,
             left: 0,
             width: '100vw',
-            height: '100vh',
+            height: 'calc(var(--vh, 1vh) * 100)', // IAB FIX: track real viewport, not largest
             backgroundColor: 'rgba(0, 0, 0, 0.7)', // Opaque enough to fully hide underlying content
             backdropFilter: 'blur(30px)', // Strong blur for glassmorphism while reducing GPU cost
             WebkitBackdropFilter: 'blur(30px)',
@@ -4798,15 +4803,23 @@ const FigmaMobile = ({ onReady }) => {
             {/* Share Button - Solid background to match desktop styling */}
             <button
               onClick={() => {
+                // IAB-safe share: share() rejects when the host app dismisses
+                // the sheet; clipboard is undefined/throws in restricted
+                // WebViews — neither may surface an unhandled rejection.
                 if (navigator.share) {
                   navigator.share({
                     title: expandedImage.title,
                     text: `Check out this event: ${expandedImage.title}`,
                     url: window.location.href
-                  });
+                  }).catch(() => {});
                 } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert('Link copied to clipboard!');
+                  try {
+                    navigator.clipboard.writeText(window.location.href)
+                      .then(() => alert('Link copied to clipboard!'))
+                      .catch(() => prompt('Copy this link:', window.location.href));
+                  } catch (_) {
+                    prompt('Copy this link:', window.location.href);
+                  }
                 }
               }}
               style={{
@@ -4855,7 +4868,7 @@ const FigmaMobile = ({ onReady }) => {
               <button
                 onClick={() => {
                   console.log(`🎫 Opening ticket link from modal for ${expandedImage.title}:`, expandedImage.ticketsUrl);
-                  window.open(expandedImage.ticketsUrl, '_blank', 'noopener,noreferrer');
+                  openExternal(expandedImage.ticketsUrl);
                   handleImageCollapse();
                 }}
                 style={{

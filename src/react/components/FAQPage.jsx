@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/sanitizer';
+import { fetchWithTimeout } from '../utils/iab';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
@@ -145,12 +146,15 @@ const FAQPage = () => {
 
         // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
         // The backend at /api/settings/faq proxies to the dashboard server
-        const response = await fetch(`/api/settings/faq?ts=${Date.now()}` , {
+        // 🔧 IAB FIX: hard 8s timeout so a stalled in-app-browser connection
+        // can't pin the fullscreen loader forever; catch below falls back
+        // to default FAQ content.
+        const response = await fetchWithTimeout(`/api/settings/faq?ts=${Date.now()}` , {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           }
-        });
+        }, 8000);
 
         if (response.ok) {
           const result = await response.json();

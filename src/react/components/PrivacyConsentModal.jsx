@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { fetchWithTimeout } from '../utils/iab';
 // 🚀 OPTIMIZED: Use centralized icon imports for better tree shaking
 import { X, Check, Shield, Eye, Database, Globe } from '../utils/icons';
 
@@ -80,31 +81,41 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
     setIsAnimating(true);
 
     try {
-      // Set localStorage consent
-      localStorage.setItem('analytics_gdpr_consent', 'granted');
-      localStorage.setItem('analytics_consent_timestamp', Date.now().toString());
-      localStorage.setItem('analytics_consent_preferences', JSON.stringify({
-        analytics: true,
-        functional: true,
-        marketing: false
-      }));
+      // Set localStorage consent — guarded: iOS "Block All Cookies" / IAB
+      // private modes throw on setItem, which must never keep the modal up.
+      try {
+        localStorage.setItem('analytics_gdpr_consent', 'granted');
+        localStorage.setItem('analytics_consent_timestamp', Date.now().toString());
+        localStorage.setItem('analytics_consent_preferences', JSON.stringify({
+          analytics: true,
+          functional: true,
+          marketing: false
+        }));
+      } catch (storageError) {
+        console.warn('Consent localStorage unavailable (private mode?):', storageError);
+      }
 
-      // Send consent to backend API
-      await fetch('/api/privacy/consent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          consent: 'accepted',
-          preferences: {
-            analytics: true,
-            functional: true,
-            marketing: false
+      // Send consent to backend API — 5s timeout; a hung IAB connection
+      // must not block dismissal. Best-effort: failure is non-fatal.
+      try {
+        await fetchWithTimeout('/api/privacy/consent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          timestamp: Date.now()
-        })
-      });
+          body: JSON.stringify({
+            consent: 'accepted',
+            preferences: {
+              analytics: true,
+              functional: true,
+              marketing: false
+            },
+            timestamp: Date.now()
+          })
+        }, 5000);
+      } catch (apiError) {
+        console.warn('Consent API call failed (non-fatal):', apiError);
+      }
 
       // Initialize analytics if available
       if (window.getAnalyticsTracker) {
@@ -116,16 +127,14 @@ const PrivacyConsentModal = ({ onConsentChange }) => {
 
       // Notify parent component
       onConsentChange?.(true);
-
-      // Close modal with animation
+    } catch (error) {
+      console.error('Error setting consent:', error);
+    } finally {
+      // Close modal with animation — ALWAYS, regardless of storage/network
       setTimeout(() => {
         setShowModal(false);
         setIsAnimating(false);
       }, 300);
-
-    } catch (error) {
-      console.error('Error setting consent:', error);
-      setIsAnimating(false);
     }
   }, [onConsentChange]);
 

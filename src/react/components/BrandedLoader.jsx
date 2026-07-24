@@ -20,10 +20,15 @@ const BrandedLoader = ({
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // Check for reduced motion preference
+  // Check for reduced motion preference (guarded — some WebViews lack matchMedia)
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setShouldAnimate(!prefersReducedMotion);
+    try {
+      const prefersReducedMotion = typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setShouldAnimate(!prefersReducedMotion);
+    } catch (_) {
+      setShouldAnimate(true);
+    }
   }, []);
 
   const containerStyle = {

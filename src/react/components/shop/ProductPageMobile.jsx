@@ -159,8 +159,14 @@ export default function ProductPageMobile({
         console.log('Share cancelled or failed:', err);
       }
     } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard!');
+      // IAB-safe: clipboard is undefined/throws in restricted WebViews;
+      // only claim "copied" when the write actually succeeded.
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      } catch (_) {
+        prompt('Copy this link:', window.location.href);
+      }
     }
   };
 

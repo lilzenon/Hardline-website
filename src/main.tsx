@@ -3,18 +3,31 @@
 
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
+import { importWithRetry, reloadOnceForChunkError } from './react/utils/iab';
 
-// 🚀 OPTIMIZED: Lazy load ALL page components for better code splitting
-const HomePage = lazy(() => import('./react/components/HomePage'));
-const AdminLogin = lazy(() => import('./react/components/AdminLoginFigma'));
+// 🔧 IAB FIX: Post-deploy stale HTML references dead hashed chunks (edge cache
+// holds HTML up to s-maxage). When a chunk preload 404s, do ONE reload with a
+// cache-busting query param (bypasses the stale edge slot); if that already
+// happened, let the error propagate to the ErrorBoundary instead of looping.
+window.addEventListener('vite:preloadError', (event: Event) => {
+  if (reloadOnceForChunkError()) {
+    event.preventDefault();
+  }
+});
+
+// 🚀 OPTIMIZED: Lazy load ALL page components for better code splitting.
+// importWithRetry bounds every chunk request (stalled IAB networks never
+// settle) and retries once before rejecting into the ErrorBoundary.
+const HomePage = lazy(() => importWithRetry(() => import('./react/components/HomePage')));
+const AdminLogin = lazy(() => importWithRetry(() => import('./react/components/AdminLoginFigma')));
 import { initializeFrontendSecurity } from './react/utils/security';
 // Maintenance page (React) for /maintenance route
-const ReactMaintenancePage = lazy(() => import('./react/components/MaintenancePage'));
+const ReactMaintenancePage = lazy(() => importWithRetry(() => import('./react/components/MaintenancePage')));
 
 // 🛍️ Shop pages - customer-facing product catalog and checkout
-const ShopPage = lazy(() => import('./react/components/shop/ShopPage'));
-const ProductPage = lazy(() => import('./react/components/shop/ProductPage'));
-const CheckoutSuccess = lazy(() => import('./react/components/shop/CheckoutSuccess.tsx'));
+const ShopPage = lazy(() => importWithRetry(() => import('./react/components/shop/ShopPage')));
+const ProductPage = lazy(() => importWithRetry(() => import('./react/components/shop/ProductPage')));
+const CheckoutSuccess = lazy(() => importWithRetry(() => import('./react/components/shop/CheckoutSuccess.tsx')));
 
 import { SEOProvider, SEODebug, useSEO } from './react/contexts/SEOContext';
 import { CartProvider } from './react/contexts/CartContext';
@@ -57,9 +70,9 @@ const initializeUtilities = async () => {
 initializeUtilities();
 
 // Lazy load About and FAQ pages for better performance
-const AboutPage = lazy(() => import('./react/components/AboutPage'));
-const FAQPage = lazy(() => import('./react/components/FAQPage'));
-const NotFoundPage = lazy(() => import('./react/components/NotFoundPage'));
+const AboutPage = lazy(() => importWithRetry(() => import('./react/components/AboutPage')));
+const FAQPage = lazy(() => importWithRetry(() => import('./react/components/FAQPage')));
+const NotFoundPage = lazy(() => importWithRetry(() => import('./react/components/NotFoundPage')));
 
 // Import Error Boundary for graceful error handling
 import ErrorBoundary from './react/components/ErrorBoundary';
@@ -190,6 +203,16 @@ const App = () => {
             <CheckoutSuccess />
           </Suspense>
         );
+      case '/shop/cart':
+      case '/shop/checkout':
+        // 🛍️ Cart/checkout deep links - the cart modal handles checkout,
+        // so show the shop with the cart open (was falling through to a
+        // bogus ProductPage productId="cart"/"checkout").
+        return (
+          <Suspense fallback={<PageLoader />}>
+            <ShopPage openCart={true} />
+          </Suspense>
+        );
       default:
         // 🛍️ Check for product detail page pattern: /shop/:productId
         const shopProductMatch = currentPath.match(/^\/shop\/([^/]+)$/);
@@ -226,10 +249,10 @@ const App = () => {
 const container = document.getElementById('root');
 
 if (container) {
+  // 🔧 CRITICAL FIX: Hide server-side rendered content when React loads
+  // This prevents hydration mismatch while preserving SEO content for bots
+  const ssrContent = document.getElementById('ssr-content');
   try {
-    // 🔧 CRITICAL FIX: Hide server-side rendered content when React loads
-    // This prevents hydration mismatch while preserving SEO content for bots
-    const ssrContent = document.getElementById('ssr-content');
     if (ssrContent) {
       console.log('🧹 Hiding server-side content...');
       ssrContent.style.display = 'none';
@@ -241,8 +264,30 @@ if (container) {
         <App />
       </ErrorBoundary>
     );
+
+    // 🔧 IAB FIX: signal successful mount. The server-injected 4s splash
+    // failsafe and the .app-loaded #ssr-content fade CSS both key off this
+    // class (it previously lived only in dead src/react/index.jsx).
+    // NOTE: recovery params (hl_cr/hl_retry) are cleared inside
+    // importWithRetry on a chunk's SUCCESSFUL resolution — clearing here at
+    // eval time would defeat the reload-loop guard for dead chunks.
+    document.body.classList.add('app-loaded');
   } catch (error) {
     console.error('React mounting error:', error);
+
+    // 🔧 IAB FIX: if mounting throws (old WebView, createRoot failure),
+    // restore the server-rendered fallback and drop the splash so the
+    // Instagram/TikTok visitor sees content instead of a black screen.
+    try {
+      if (ssrContent) {
+        ssrContent.style.display = 'block';
+        ssrContent.style.opacity = '1';
+      }
+      const splash = document.getElementById('initial-splash');
+      if (splash) splash.style.display = 'none';
+    } catch (_) {
+      // last resort: leave the server-side 4s failsafe to clean up
+    }
   }
 }
 

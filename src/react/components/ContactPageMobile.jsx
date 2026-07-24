@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
+import { openExternal } from '../utils/iab';
 import MobileNavigation from './MobileNavigation';
 import MobileDrawer from './MobileDrawer';
 
@@ -65,7 +66,7 @@ const ContactPageMobile = () => {
       twitter: 'https://twitter.com/hardline events',
       facebook: 'https://facebook.com/hardline events'
     };
-    window.open(urls[platform], '_blank');
+    openExternal(urls[platform]);
   };
 
   return (

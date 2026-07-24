@@ -639,11 +639,14 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
     }
 
     // About Page: Render about content AND gallery images for Google Image SEO
-    if (pageType === 'about' && pageData) {
+    // ALWAYS renders (mirrors homepage/FAQ) — a failed admin fetch used to
+    // fall through to the noscript-only block, leaving in-app browsers with
+    // an empty #ssr-content when React also failed.
+    if (pageType === 'about') {
         // 🖼️ GOOGLE IMAGE SEO FIX: Render gallery images as actual <img> tags for bot indexing
         // This is CRITICAL - Google Images indexes images from <img> tags, not just structured data
         let galleryHtml = '';
-        if (pageData.galleryImages && Array.isArray(pageData.galleryImages) && pageData.galleryImages.length > 0) {
+        if (pageData && pageData.galleryImages && Array.isArray(pageData.galleryImages) && pageData.galleryImages.length > 0) {
             const imageBaseUrl = 'https://admin.b2b.click';
             const galleryImagesHtml = pageData.galleryImages.map((image, index) => {
                 // Get the best available image URL
@@ -698,10 +701,10 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         return `
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
-                    <h1 style="${titleStyles}">${metaTags.title || 'About HARDLINE'}</h1>
-                    <p style="${descriptionStyles}">${metaTags.description || 'Learn about our mission and values.'}</p>
+                    <h1 style="${titleStyles}">${escapeHtml(metaTags.title || 'About HARDLINE')}</h1>
+                    <p style="${descriptionStyles}">${escapeHtml(metaTags.description || 'Learn about our mission and values.')}</p>
                     <div style="margin-top: 2rem; line-height: 1.75; color: #e5e5e5;">
-                        ${pageData.content || ''}
+                        ${(pageData && pageData.content) || ''}
                     </div>
                     ${galleryHtml}
                 </div>
@@ -709,41 +712,74 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         `;
     }
 
-    // Homepage: Render event listings
-    if (pageType === 'homepage' && pageData && pageData.events && pageData.events.length > 0) {
-        const eventsHtml = pageData.events.slice(0, 6).map((event) => `
+    // Homepage: ALWAYS render visible static content — even with zero events
+    // or a failed admin fetch. This block is the last line of defense for
+    // Instagram/TikTok WebViews when the JS bundle fails: before this fix it
+    // fell through to the <noscript>-only return below, which is inert with
+    // JS enabled, leaving a black screen. Mirrors the FAQ always-render rule.
+    if (pageType === 'homepage') {
+        const homepageEvents = (pageData && Array.isArray(pageData.events)) ? pageData.events : [];
+        // Only URLs that are clearly http(s) or site-relative may land in
+        // href/src attributes of edge-cached HTML.
+        const safeUrl = (u) => {
+            const s = String(u || '');
+            return (/^https?:\/\//i.test(s) || s.startsWith('/')) ? s : '';
+        };
+
+        // Honest empty-state: "new events on the way" is only claimed when the
+        // admin fetch SUCCEEDED with zero events. When the fetch failed
+        // (pageData null) we show neutral copy — and the caller marks the
+        // response short-cache so the edge never pins the degraded page.
+        const emptyStateHtml = `
+            <div style="text-align: center; padding: 2rem 1rem;">
+                <p style="font-size: 1rem; color: #e5e5e5; margin-bottom: 1.5rem;">
+                    ${pageData ? 'New events are on the way. Follow us for announcements.' : 'Browse the site or follow us for the latest events.'}
+                </p>
+                <div>
+                    <a href="/about" style="display: inline-block; margin: 0.5rem; padding: 0.75rem 1.5rem; background: #f90d0d; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">About HARDLINE</a>
+                    <a href="/faq" style="display: inline-block; margin: 0.5rem; padding: 0.75rem 1.5rem; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">FAQ</a>
+                </div>
+                <p style="margin-top: 1.5rem;">
+                    <a href="https://instagram.com/hardlinevents" style="color: #f90d0d; text-decoration: none;">Instagram</a>
+                    <span style="color: rgba(255,255,255,0.4); margin: 0 0.5rem;">·</span>
+                    <a href="mailto:info@hardline.events" style="color: #f90d0d; text-decoration: none;">info@hardline.events</a>
+                </p>
+            </div>
+        `;
+
+        const eventsHtml = homepageEvents.length > 0 ? homepageEvents.slice(0, 6).map((event) => `
             <div style="margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; background: rgba(22,22,22,0.8);">
-                ${event.cover_image_url ? `
-                    <img src="${event.cover_image_url}" alt="${event.title || 'Event'}" style="width: 100%; height: 200px; object-fit: cover;">
+                ${safeUrl(event.cover_image_url) ? `
+                    <img src="${safeUrl(event.cover_image_url)}" alt="${escapeHtml(event.title || 'Event')}" style="width: 100%; height: 200px; object-fit: cover;">
                 ` : ''}
                 <div style="padding: 1.5rem;">
                     <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600; color: #ffffff;">
-                        ${event.title || 'Untitled Event'}
+                        ${escapeHtml(event.title || 'Untitled Event')}
                     </h3>
                     ${event.event_date_local ? `
                         <p style="margin: 0.25rem 0; color: #e5e5e5; font-size: 0.875rem;">
-                            📅 ${event.event_date_local}
+                            📅 ${escapeHtml(event.event_date_local)}
                         </p>
                     ` : ''}
                     ${event.venue_name ? `
                         <p style="margin: 0.25rem 0; color: #e5e5e5; font-size: 0.875rem;">
-                            📍 ${event.venue_name}${event.venue_city ? `, ${event.venue_city}` : ''}
+                            📍 ${escapeHtml(event.venue_name)}${event.venue_city ? `, ${escapeHtml(event.venue_city)}` : ''}
                         </p>
                     ` : ''}
-                    ${event.external_ticket_url ? `
-                        <a href="${event.external_ticket_url}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #f90d0d; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                    ${safeUrl(event.external_ticket_url) ? `
+                        <a href="${safeUrl(event.external_ticket_url)}" style="display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #f90d0d; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">
                             Get Tickets
                         </a>
                     ` : ''}
                 </div>
             </div>
-        `).join('');
+        `).join('') : emptyStateHtml;
 
         return `
             <div style="${baseStyles}">
                 <div style="${containerStyles}">
-                    <h1 style="${titleStyles}">${metaTags.title || 'HARDLINE - Events'}</h1>
-                    <p style="${descriptionStyles}">${metaTags.description || 'Discover exclusive live music events.'}</p>
+                    <h1 style="${titleStyles}">${escapeHtml(metaTags.title || 'HARDLINE - Events')}</h1>
+                    <p style="${descriptionStyles}">${escapeHtml(metaTags.description || 'Discover exclusive live music events.')}</p>
                     <div style="margin-top: 2rem;">${eventsHtml}</div>
                 </div>
             </div>
@@ -1741,9 +1777,9 @@ async function reactHomepage(req, res) {
         // and we now cache much longer (see s-maxage below). Emitting the SAME
         // body for all UAs makes the response safe to cache.
         //
-        // Why it's safe for humans: src/react/index.jsx hides #ssr-content the
-        // instant React boots (and adds `app-loaded`), and re-shows it if React
-        // fails to mount. So JS users get a content-first paint instead of a
+        // Why it's safe for humans: src/main.tsx (the live Vite entry) hides
+        // #ssr-content the instant React boots (and adds `app-loaded`), and
+        // re-shows it if React fails to mount. So JS users get a content-first paint instead of a
         // blank screen while the bundle loads, bots / no-JS clients keep the
         // static content for SEO, and in-app browsers keep their white-page
         // fallback. (needsSSRContent / isBot are kept only for logging now.)
@@ -1753,15 +1789,19 @@ async function reactHomepage(req, res) {
             const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
 
             // Visible static content that React hides on successful mount and
-            // restores on mount failure (see src/react/index.jsx). The inline
-            // failsafe script also hides the #initial-splash overlay (the
-            // fullscreen logo inlined inside #root by the build) if React has
-            // not mounted within 4s — otherwise a hung/failed bundle leaves
-            // users staring at the splash forever with the fallback content
-            // invisible underneath it. CSP allows 'unsafe-inline' scripts.
+            // restores on mount failure (see src/main.tsx — the LIVE Vite
+            // entry; src/react/index.jsx is gone). The inline failsafe script
+            // fires at 4s when React has not signaled 'app-loaded':
+            //   - if #initial-splash still exists, React never replaced #root,
+            //     so hide the splash AND re-show #ssr-content (main.tsx hides
+            //     it early, before mounting — a bundle that dies in between
+            //     would otherwise leave BOTH hidden = black screen);
+            //   - if the splash is gone, React DID mount (possibly an older
+            //     cached bundle that predates the app-loaded signal) — touch
+            //     nothing. CSP allows 'unsafe-inline' scripts.
             const ssrWrapper = `<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
                    <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>
-                   <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';}}}catch(e){}},4000);</script>`;
+                   <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';var c=document.getElementById('ssr-content');if(c){c.style.display='block';c.style.opacity='1';}}}}catch(e){}},4000);</script>`;
 
             // dist/index.html inlines the first-paint splash INSIDE #root, so
             // the old literal match on `<div id="root"></div>` stopped
@@ -1836,9 +1876,17 @@ async function reactHomepage(req, res) {
         // user-agents above), so it is safe to cache across bots and humans —
         // no Vary: User-Agent needed (Cloudflare ignores it for caching anyway).
         if (env.NODE_ENV === 'production') {
+            // DEGRADED-FETCH GUARD: when the admin data fetch failed
+            // (pageData null), this HTML carries fallback/neutral content.
+            // Caching THAT for s-maxage=300 + SWR=86400 would pin a wrong
+            // homepage/about/faq at the edge long after admin recovers —
+            // serve it with a short, SWR-free TTL so the edge self-heals.
+            const adminDataMissing = !pageData;
             res.set({
                 'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'public, s-maxage=300, max-age=0, must-revalidate, stale-while-revalidate=86400',
+                'Cache-Control': adminDataMissing
+                    ? 'public, s-maxage=30, max-age=0, must-revalidate'
+                    : 'public, s-maxage=300, max-age=0, must-revalidate, stale-while-revalidate=86400',
                 'Vary': 'Accept-Encoding',
             });
         } else {
@@ -1913,10 +1961,26 @@ async function reactHomepage(req, res) {
         <a href="javascript:location.reload()" class="btn retry-btn">Retry</a>
     </div>
     <script>
-        // Auto-retry after 2 seconds
-        setTimeout(function() {
-            window.location.reload();
-        }, 2000);
+        // Auto-retry after 2 seconds — capped at 2 attempts via a URL param
+        // (not storage: IAB private modes block sessionStorage). Uncapped,
+        // a persistent origin fault trapped in-app-browser users in an
+        // infinite 2s reload loop. After the cap, the manual buttons remain.
+        (function() {
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var attempts = parseInt(params.get('hl_retry') || '0', 10) || 0;
+                if (attempts < 2) {
+                    setTimeout(function() {
+                        params.set('hl_retry', String(attempts + 1));
+                        window.location.replace(
+                            window.location.pathname + '?' + params.toString() + window.location.hash
+                        );
+                    }, 2000);
+                }
+            } catch (e) {
+                // No URLSearchParams (ancient WebView): skip auto-retry, keep buttons
+            }
+        })();
     </script>
 </body>
 </html>`;

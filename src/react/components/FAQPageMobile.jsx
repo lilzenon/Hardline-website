@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/sanitizer';
+import { fetchWithTimeout } from '../utils/iab';
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
@@ -76,12 +77,14 @@ const FAQPageMobile = () => {
 
         // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
         // The backend at /api/settings/faq proxies to the dashboard server
-        const response = await fetch(`/api/settings/faq?ts=${Date.now()}`, {
+        // 🔧 IAB FIX: hard 8s timeout so a stalled in-app-browser connection
+        // can't pin the loader forever; catch below falls back to defaults.
+        const response = await fetchWithTimeout(`/api/settings/faq?ts=${Date.now()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           }
-        });
+        }, 8000);
 
         if (response.ok) {
           const result = await response.json();

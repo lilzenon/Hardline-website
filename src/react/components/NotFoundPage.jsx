@@ -97,20 +97,13 @@ class DitherErrorBoundary extends React.Component {
   }
 
   render() {
-    // Only use fallback for truly critical WebGL errors
-    if (this.state.hasError && this.state.error) {
-      const isCriticalWebGLError = this.state.error.message.includes('WebGL context lost') ||
-                                  this.state.error.message.includes('WebGL not supported') ||
-                                  this.state.error.message.includes('CONTEXT_LOST_WEBGL');
-
-      if (isCriticalWebGLError) {
-        console.warn('🎮 Critical WebGL error - using CSS fallback');
-        return <CSSFallbackBackground />;
-      } else {
-        // For all other errors, let React Three Fiber handle them internally
-        console.log('🎮 Non-critical error, letting React Three Fiber handle internally');
-        return this.props.children;
-      }
+    // IAB FIX: on ANY caught error, swap to the CSS fallback. Re-rendering
+    // the children here (the old "non-critical" path) just re-threw the same
+    // error, escaped to the top-level ErrorBoundary, and replaced the whole
+    // page with the generic error card. The background is decorative — a
+    // gradient fallback is always the right degradation.
+    if (this.state.hasError) {
+      return <CSSFallbackBackground />;
     }
     return this.props.children;
   }
@@ -158,19 +151,21 @@ export default function NotFoundPage() {
         height: '100%',
         zIndex: 1
       }}>
-        <Suspense fallback={<CSSFallbackBackground />}>
-          <Dither
-            waveSpeed={0.02}
-            waveFrequency={2.0}
-            waveAmplitude={0.25}
-            waveColor={[1.0, 1.0, 1.0]}
-            colorNum={2}
-            pixelSize={2}
-            enableMouseInteraction={false}
-            mouseRadius={1.0}
-            className="dither-background"
-          />
-        </Suspense>
+        <DitherErrorBoundary>
+          <Suspense fallback={<CSSFallbackBackground />}>
+            <Dither
+              waveSpeed={0.02}
+              waveFrequency={2.0}
+              waveAmplitude={0.25}
+              waveColor={[1.0, 1.0, 1.0]}
+              colorNum={2}
+              pixelSize={2}
+              enableMouseInteraction={false}
+              mouseRadius={1.0}
+              className="dither-background"
+            />
+          </Suspense>
+        </DitherErrorBoundary>
       </div>
 
 
