@@ -1,0 +1,1 @@
+function o(o,i={}){const{scrollToTopIfSame:n=!0}=i;try{if(!o)return;if(n&&o===window.location.pathname)return void window.scrollTo({top:0,behavior:"smooth"});if("function"==typeof window.navigateWithTransition)return void window.navigateWithTransition(o)}catch(t){}try{window.location.href=o}catch(t){}}export{o as n};
