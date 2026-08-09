@@ -69,8 +69,12 @@ const SOCIAL_PLATFORMS = {
  * @param {boolean} responsive - Whether to use responsive sizing that scales with container
  * @param {number|null} maxButtonSizePx - Optional hard ceiling for button size to avoid overflow
  * @param {boolean} iconOnly - When true, displays only icons without button backgrounds/borders (for mobile nav overlay)
+ * @param {boolean} circular - Render perfect circles instead of the 20px-radius
+ *   squircle. At the sizes the desktop Follow Us column uses, a fixed 20px radius
+ *   reads as neither square nor round; circles are also the convention for social
+ *   glyphs. Opt-in so existing call sites keep their shape.
  */
-const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsive = false, maxButtonSizePx = null, iconOnly = false }) => {
+const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsive = false, maxButtonSizePx = null, iconOnly = false, circular = false }) => {
   const [socialLinks, setSocialLinks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -254,7 +258,13 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
     return size;
   })();
 
-  const computedIconSize = isDesktop ? Math.round(computedButtonSize * 0.66) : 40;
+  // 0.66 of a squircle is fine, but inside a circle that puts the glyph's
+  // corners right on the edge — a circle's usable box is its inscribed square.
+  const iconRatio = circular ? 0.54 : 0.66;
+  const computedIconSize = isDesktop ? Math.round(computedButtonSize * iconRatio) : 40;
+  // Kept in one place so the loading skeleton and the "coming soon" placeholders
+  // cannot drift from the real buttons' shape.
+  const buttonRadius = circular ? '50%' : '20px';
 
   // Show skeleton during loading to maintain layout and timing
   if (loading) {
@@ -296,7 +306,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                 maxWidth: `${computedButtonSize}px`,
                 minHeight: `${computedButtonSize}px`,
                 maxHeight: `${computedButtonSize}px`,
-                borderRadius: '20px',
+                borderRadius: buttonRadius,
                 background: 'rgba(22, 22, 22, 0.50)',
                 border: '1px solid rgba(255, 255, 255, 0.12)',
                 display: 'flex',
@@ -348,7 +358,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                     maxWidth: `${computedButtonSize}px`,
                     minHeight: `${computedButtonSize}px`,
                     maxHeight: `${computedButtonSize}px`,
-                    borderRadius: '20px',
+                    borderRadius: buttonRadius,
                     background: 'rgba(22, 22, 22, 0.50)',
                     border: '1px solid rgba(255, 255, 255, 0.12)',
                     display: 'flex',
@@ -447,7 +457,7 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
                 maxWidth: `${computedButtonSize}px`,
                 minHeight: `${computedButtonSize}px`,
                 maxHeight: `${computedButtonSize}px`,
-                borderRadius: '20px',
+                borderRadius: buttonRadius,
                 // Solid background instead of blur to prevent visual artifacts during animations
                 background: isDesktop ? 'rgba(22, 22, 22, 0.50)' : 'rgba(22, 22, 22, 0.7)',
                 border: isDesktop ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid rgba(255, 255, 255, 0.15)',

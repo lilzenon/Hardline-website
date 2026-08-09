@@ -538,7 +538,15 @@ const FigmaDesktop = ({ onReady }) => {
   const videoIframeTitle = (homeSettings && homeSettings.video_iframe_title) || 'Henry Fong YouTube Video';
   const videoCtaText = (homeSettings && homeSettings.video_cta_text) || 'Watch now';
   const videoCtaUrl = (homeSettings && homeSettings.video_cta_url) || `https://youtu.be/${videoId}`;
-  const videoEmbedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1&iv_load_policy=3&fs=0&disablekb=1&quality=hd720&start=0&enablejsapi=1`;
+  // Params chosen to strip the player down to bare picture: no control strip
+  // (controls=0), no related-video grid on pause (rel=0), no annotations
+  // (iv_load_policy=3), no captions (cc_load_policy=0), no fullscreen or
+  // keyboard affordances, and playsinline so mobile browsers do not hand it to
+  // the native player. Muted autoplay is what keeps the big centre play button
+  // from ever rendering — a paused player is the only state that shows it.
+  // Dropped from the old string: showinfo (removed by YouTube in 2018) and
+  // quality/start, which the IFrame API has never honoured as URL params.
+  const videoEmbedSrc = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&rel=0&loop=1&playlist=${videoId}&modestbranding=1&iv_load_policy=3&cc_load_policy=0&fs=0&disablekb=1&playsinline=1&enablejsapi=1`;
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneSubmitting, setPhoneSubmitting] = useState(false);
@@ -1416,10 +1424,14 @@ const FigmaDesktop = ({ onReady }) => {
   // column is a flex column whose first child is the section title and whose
   // remaining child(ren) fill rowContentHeight.
   //
-  // rowContentHeight is the hero SQUARE: the row is exactly heroWidth tall, so
-  // column 1 stays a true square. Column 3 fits inside it — the Laylo card and
-  // the social row take their fixed heights and the video absorbs whatever is
-  // left, which is why the video reads as a wide banner rather than 16:9.
+  // rowContentHeight is the hero SQUARE: the row is exactly heroColumnWidth
+  // tall, so column 1 stays a true square. Column 3 fits inside it — the Laylo
+  // card and the social row take their fixed heights and the video absorbs
+  // whatever is left. That makes the hero column's WIDTH the lever on the
+  // video's height: a wider hero is a taller square is a taller video, which is
+  // why heroColumnWidth below is a share of the row rather than the old
+  // scaledDimensions.heroWidth (hard-capped at 379px by the legacy scale
+  // formula, which left the video stuck around 130px on wide screens).
   // VIDEO_FLOOR below is only a safety valve for the narrow end.
   const colGap = Math.max(12, Math.round(scaledDimensions.scale * 16));
   const stackGap = Math.max(6, Math.round(scaledDimensions.scale * 8));
@@ -1436,7 +1448,10 @@ const FigmaDesktop = ({ onReady }) => {
   // phone input behind the RSVP button, so that floor wins over this one.
   const EVENTS_COLUMN_MIN = 300;
   const FOLLOW_COLUMN_MIN = 300;
-  const columnsRemainder = rowAvailableWidth - scaledDimensions.heroWidth - (colGap * 2);
+  // 38% of the row, capped at 480. The cap keeps the hero from swallowing a very
+  // wide screen; the floor keeps it a credible poster on a small one.
+  const heroColumnWidth = Math.max(300, Math.min(480, Math.round(rowAvailableWidth * 0.38)));
+  const columnsRemainder = rowAvailableWidth - heroColumnWidth - (colGap * 2);
   const followColumnWidth = Math.max(FOLLOW_COLUMN_MIN, Math.min(
     420,
     Math.round(scaledDimensions.scale * 300),
@@ -1455,12 +1470,12 @@ const FigmaDesktop = ({ onReady }) => {
   // full row while the social row and Laylo stay readable rather than stretching.
   const videoRenderWidth = useThreeColumns ? followColumnWidth : rowAvailableWidth;
   const followBlockWidth = useThreeColumns ? followColumnWidth : Math.min(520, rowAvailableWidth);
-  // Capped at 56 rather than the old desktop 96: every pixel here comes straight
-  // out of the video, which shares the hero square with the Laylo card. Never
-  // wider than their share of the block either, so the reserved height is exact.
-  const socialButtonSize = Math.max(44, Math.min(
-    56,
-    Math.round(scaledDimensions.scale * 44),
+  // Circular buttons, sized to their share of the block width so four of them
+  // fill the row properly instead of floating as small tiles. Every pixel here
+  // comes out of the video, which shares the hero square with the Laylo card,
+  // so it is capped — but never below 56, where the glyphs stop reading.
+  const socialButtonSize = Math.max(56, Math.min(
+    76,
     Math.floor((followBlockWidth - 48) / 4)
   ));
   // Laylo card as it settles once the SDK sizes its iframe (~167px + 1px border
@@ -1479,10 +1494,38 @@ const FigmaDesktop = ({ onReady }) => {
   const videoMinHeight = useThreeColumns
     ? VIDEO_FLOOR
     : Math.round(rowAvailableWidth * 0.3);
-  // Video caption overlay. In three-column mode the video is a ~130px banner, so
-  // the overlay is tightened to leave usable picture above it; wrapped, the video
-  // is full-width and tall, so it keeps the original proportions.
-  const videoOverlay = useThreeColumns
+  const followStackHeight = videoMinHeight + socialButtonSize + LAYLO_BLOCK_HEIGHT + (stackGap * 2);
+  // Wrapped, the Follow Us column no longer shares the row, so the hero and the
+  // events list are sized by the hero square alone.
+  const rowContentHeight = useThreeColumns
+    ? Math.max(heroColumnWidth, followStackHeight)
+    : heroColumnWidth;
+  const rowHeight = sectionTitleHeight + stackGap + rowContentHeight;
+
+  // What the video element actually gets: the square minus the two fixed blocks
+  // beneath it. Drives both the caption overlay's density and the iframe zoom.
+  const videoBoxHeight = useThreeColumns
+    ? Math.max(VIDEO_FLOOR, rowContentHeight - socialButtonSize - LAYLO_BLOCK_HEIGHT - (stackGap * 2))
+    : videoMinHeight;
+
+  // ── YouTube iframe zoom ────────────────────────────────────────────────────
+  // The player letterboxes its 16:9 picture inside whatever box you give it, so
+  // a banner-shaped box gets black pillars. Instead the iframe is sized 16:9
+  // itself — no bars inside it — and then scaled up until it covers the box, and
+  // centred so the crop is even. OVERSCAN takes it past cover deliberately: the
+  // player's own chrome (title/channel strip at the top, control strip at the
+  // bottom) lives at the frame edges, so pushing those edges outside the visible
+  // box is what hides them. 1.4 crops ~14% off each edge.
+  const VIDEO_OVERSCAN = 1.4;
+  const videoFrameWidth = Math.round(
+    Math.max(videoRenderWidth, videoBoxHeight * (16 / 9)) * VIDEO_OVERSCAN
+  );
+  const videoFrameHeight = Math.round(videoFrameWidth * 9 / 16);
+
+  // Video caption overlay. On a short banner the overlay is tightened so it does
+  // not cover the whole picture; once the video has real height it goes back to
+  // full size. Keyed off the measured box, not the layout mode.
+  const videoOverlay = videoBoxHeight < 170
     ? { titleSize: 18, ctaHeight: 36, ctaWidth: 100, minHeight: 40, bottom: 8, padding: '8px 14px 10px' }
     : { titleSize: 24, ctaHeight: 44, ctaWidth: 112, minHeight: 52, bottom: 12, padding: '10px 16px 12px' };
   // Pill + flex gap (16) + overlay padding (32) must still leave the title room;
@@ -1490,13 +1533,6 @@ const FigmaDesktop = ({ onReady }) => {
   // 300px column drops the pill instead of truncating to "Watch on YouT…".
   // Losing the pill costs nothing — the whole video is clickable.
   const showVideoCta = videoRenderWidth >= videoOverlay.ctaWidth + 16 + 32 + 170;
-  const followStackHeight = videoMinHeight + socialButtonSize + LAYLO_BLOCK_HEIGHT + (stackGap * 2);
-  // Wrapped, the Follow Us column no longer shares the row, so the hero and the
-  // events list are sized by the hero square alone.
-  const rowContentHeight = useThreeColumns
-    ? Math.max(scaledDimensions.heroWidth, followStackHeight)
-    : scaledDimensions.heroWidth;
-  const rowHeight = sectionTitleHeight + stackGap + rowContentHeight;
 
   // Shared style for the three column headings so they sit on one baseline.
   const sectionTitleStyle = {
@@ -1619,7 +1655,7 @@ const FigmaDesktop = ({ onReady }) => {
                     flexDirection: 'column',
                     alignItems: 'stretch',
                     gap: `${stackGap}px`, // Same gap as the other two columns
-                    width: `${scaledDimensions.heroWidth}px`,
+                    width: `${heroColumnWidth}px`,
                     // Anchors the flex line's height. Needed once the row can
                     // wrap: the hero itself is flex:1 with no basis, so without
                     // this the line would collapse to the section title.
@@ -1669,7 +1705,7 @@ const FigmaDesktop = ({ onReady }) => {
                       }
                     }}
                     style={{
-                      width: '100%', // Column is heroWidth wide
+                      width: '100%', // Column is heroColumnWidth wide
                       // Fills the shared row height so all three columns bottom-align.
                       // Equals heroWidth (square) whenever the hero is the tallest
                       // column; taller than it when column 3's minimums win.
@@ -2082,7 +2118,7 @@ const FigmaDesktop = ({ onReady }) => {
                           display: '-webkit-box',
                           WebkitLineClamp: 2,
                           WebkitBoxOrient: 'vertical',
-                          maxWidth: `${scaledDimensions.heroWidth - 24}px`
+                          maxWidth: `${heroColumnWidth - 24}px`
                         }}
                       >
                         {!mostRecentEvent && homeSettings?.desktop_fallback_enabled && homeSettings?.desktop_fallback_title
@@ -2833,7 +2869,11 @@ const FigmaDesktop = ({ onReady }) => {
                           overflow: 'hidden'
                         }}
                       >
-                        {/* YouTube Video - Autoplay on load (muted for policy compliance) */}
+                        {/* YouTube Video - Autoplay on load (muted for policy compliance).
+                            Sized 16:9 in px and centred: see VIDEO_OVERSCAN above.
+                            The old 150%/150% was a percentage of a banner-shaped
+                            box, so the player letterboxed inside it and the black
+                            pillars landed in view. */}
                         <iframe
                           src={videoEmbedSrc}
                           title={videoIframeTitle}
@@ -2846,9 +2886,10 @@ const FigmaDesktop = ({ onReady }) => {
                             left: '50%',
                             right: 'auto',
                             bottom: 'auto',
-                            width: '150%', // Increased zoom to ensure full coverage
-                            height: '150%',
+                            width: `${videoFrameWidth}px`,
+                            height: `${videoFrameHeight}px`,
                             border: 'none',
+                            // Also keeps the player's hover chrome from ever firing.
                             pointerEvents: 'none',
                             opacity: 1,
                             transform: 'translate(-50%, -50%)', // Robust centering
@@ -2922,10 +2963,10 @@ const FigmaDesktop = ({ onReady }) => {
                             fontSize: '10px',
                             fontWeight: '200',
                             lineHeight: 'normal',
-                            // One line in three-column mode: the video is only
-                            // ~130px tall there, so a wrapped caption would push
-                            // the overlay over the whole picture.
-                            ...(useThreeColumns ? {
+                            // One line whenever the overlay is in its compact
+                            // form: on a short banner a wrapped caption would
+                            // push the overlay across the whole picture.
+                            ...(videoBoxHeight < 170 ? {
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -3005,7 +3046,25 @@ const FigmaDesktop = ({ onReady }) => {
                     </div>
                   </div>
 
-                  {/* Social Media Buttons - middle of the column */}
+                  {/* Text Us: Laylo embed - middle of the column.
+                      SENSITIVE: height is deliberately unconstrained. The Laylo
+                      SDK resizes its own iframe once loaded (~167px), and any
+                      clamp here crops the consent copy and the Laylo footer.
+                      LAYLO_BLOCK_HEIGHT above only reserves space in the row. */}
+                  <div
+                    style={{
+                      width: `${followBlockWidth}px`,
+                      maxWidth: '100%',
+                      flexShrink: 0,
+                      display: 'flex',
+                      justifyContent: 'flex-start',
+                      margin: '0'
+                    }}
+                  >
+                    <TextUsSection scaledDimensions={scaledDimensions} />
+                  </div>
+
+                  {/* Social Media Buttons - bottom of the column */}
                   <div
                     style={{
                       width: `${followBlockWidth}px`,
@@ -3026,26 +3085,9 @@ const FigmaDesktop = ({ onReady }) => {
                       // Hard ceiling so the row height stays exactly
                       // socialButtonSize, which the column height reserves for it.
                       maxButtonSizePx={socialButtonSize}
+                      circular={true}
                       responsive={true}
                     />
-                  </div>
-
-                  {/* Text Us: Laylo embed - bottom of the column.
-                      SENSITIVE: height is deliberately unconstrained. The Laylo
-                      SDK resizes its own iframe once loaded (~167px), and any
-                      clamp here crops the consent copy and the Laylo footer.
-                      LAYLO_BLOCK_HEIGHT above only reserves space in the row. */}
-                  <div
-                    style={{
-                      width: `${followBlockWidth}px`,
-                      maxWidth: '100%',
-                      flexShrink: 0,
-                      display: 'flex',
-                      justifyContent: 'flex-start',
-                      margin: '0'
-                    }}
-                  >
-                    <TextUsSection scaledDimensions={scaledDimensions} />
                   </div>
                 </div>
               )}
