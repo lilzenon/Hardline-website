@@ -3,6 +3,7 @@ const utils = require("../utils");
 const env = require("../env");
 const { getSiteDomain } = require("../utils/site-domain.util");
 const { cachedAdminFetch } = require("../utils/admin-fetch-cache.util");
+const { internalProxyHeaders } = require("../utils/internal-proxy.util");
 
 // Cache TTLs for server-to-server admin fetches. Tuned per how often the
 // underlying data actually changes. Stale-while-revalidate means admin
@@ -37,6 +38,12 @@ async function fetchAdminJson(url, host) {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
+                // Marks this as trusted server-to-server traffic so admin's
+                // rate limiter doesn't lump SSR renders in with anonymous
+                // internet clients on this pod's egress IP. No forwarded client
+                // IP here: SSR fetches are genuinely server-initiated and their
+                // volume is already bounded by the per-host cache around them.
+                ...internalProxyHeaders(null),
                 ...(host ? { 'Origin': `https://${host}` } : {})
             }
         });
@@ -70,11 +77,53 @@ async function fetchAdminJson(url, host) {
  * @param {string} baseUrl admin base, e.g. https://admin.b2b.click
  * @param {string} path    admin path, e.g. /api/settings/about/gallery/public
  * @param {object} req     express request (used by getSiteDomain)
+ * @param {object} [options]
+ * @param {boolean} [options.nocache=true] send `nocache=1`. Defaults to true
+ *   because the gallery/about/faq routes rely on it to skip admin's
+ *   gallery_version cache key. Pass false for endpoints whose admin-side cache
+ *   is correct and per-domain — notably /api/home-settings/homepage-data, where
+ *   nocache makes admin re-run three live DB queries on every SSR render and
+ *   defeats the short-TTL cache added on the admin side.
  */
-function buildAdminFetch(baseUrl, path, req) {
+/**
+ * Serialize a value for embedding inside an inline <script> block.
+ *
+ * Bare JSON.stringify is NOT safe here: the payload contains admin-authored
+ * free text (event titles, descriptions), so a literal `</script>` in any of it
+ * would terminate the element early and inject markup. U+2028/U+2029 are also
+ * escaped — they are valid in JSON but were line terminators in JS before ES2019,
+ * and this site deliberately supports old in-app-browser WebViews where an
+ * unescaped one is a parse error that kills the whole bundle.
+ *
+ * Returns null if the value can't be serialized or exceeds the size cap, so the
+ * caller can simply skip injection rather than ship a broken document.
+ */
+const INITIAL_DATA_MAX_BYTES = 256 * 1024;
+function serializeForInlineScript(value) {
+    try {
+        const json = JSON.stringify(value);
+        if (!json) return null;
+        if (Buffer.byteLength(json, 'utf8') > INITIAL_DATA_MAX_BYTES) {
+            console.warn('⚠️ __INITIAL_DATA__ payload exceeds cap, skipping SSR seed');
+            return null;
+        }
+        return json
+            .replace(/</g, '\\u003C')
+            .replace(/\u2028/g, '\\u2028')
+            .replace(/\u2029/g, '\\u2029');
+    } catch (err) {
+        console.warn('⚠️ Failed to serialize __INITIAL_DATA__:', err.message);
+        return null;
+    }
+}
+
+function buildAdminFetch(baseUrl, path, req, options = {}) {
+    const { nocache = true } = options;
     const host = getSiteDomain(req);
     const sep = path.includes('?') ? '&' : '?';
-    const qs = host ? `${sep}domain=${encodeURIComponent(host)}&nocache=1` : '';
+    const qs = host
+        ? `${sep}domain=${encodeURIComponent(host)}${nocache ? '&nocache=1' : ''}`
+        : '';
     return {
         url: `${baseUrl}${path}${qs}`,
         origin: host ? `https://${host}` : null,
@@ -831,7 +880,12 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
 }
 
 // Helper function to generate structured data based on page type
-async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl, req) {
+//
+// @param {object|null} [prefetchedHomepageData] the raw /api/home-settings/
+//   homepage-data body if the caller already fetched it this request. Supplying
+//   it avoids a second admin round trip — see the note at the event-schema
+//   block below. Omit and it falls back to fetching for itself.
+async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl, req, prefetchedHomepageData = null) {
     const baseUrl = 'https://hardline.events';
 
     // Build social media sameAs array
@@ -917,22 +971,34 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
 
         // 🖼️ GOOGLE IMAGE SEO: Fetch event cover images and create ImageObject structured data
         // 🎯 GOOGLE EVENT SEO: Create Event structured data for all displayed events
-        // Per-host cached fetch — same response is reused below for pageType==='homepage'.
+        //
+        // PERF: the homepage render has already fetched this exact payload and
+        // now hands it in via `prefetchedHomepageData`. Previously this made its
+        // own cachedAdminFetch call with the same key — a fresh cache hit on the
+        // happy path, but cachedAdminFetch never caches FAILURES, so whenever
+        // admin was slow or erroring the cache was still empty here and this
+        // re-entered the cold path: a second real admin request plus another
+        // full fetch timeout added to TTFB. Exactly when admin was struggling,
+        // GET / doubled its load. The fetch below is now only a fallback for
+        // callers that did not prefetch.
         let eventImageSchemas = [];
         let eventSchemas = [];
         try {
             const dashboardBase = env.NODE_ENV === 'production' ?
                 'https://admin.b2b.click' :
                 'http://localhost:3002';
-            const { url: dashboardApiUrl } =
-                buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
             const schemaHost = getSiteDomain(req) || '';
 
-            const { data: eventsData } = await cachedAdminFetch({
-                key: `homepage-data::${schemaHost || '__default__'}`,
-                ttlMs: ADMIN_CACHE_TTL.homepageData,
-                fetcher: () => fetchAdminJson(dashboardApiUrl, schemaHost),
-            });
+            let eventsData = prefetchedHomepageData;
+            if (!eventsData) {
+                const { url: dashboardApiUrl } =
+                    buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req, { nocache: false });
+                ({ data: eventsData } = await cachedAdminFetch({
+                    key: `homepage-data::${schemaHost || '__default__'}`,
+                    ttlMs: ADMIN_CACHE_TTL.homepageData,
+                    fetcher: () => fetchAdminJson(dashboardApiUrl, schemaHost),
+                }));
+            }
 
             if (eventsData) {
                 const featuredEvents = eventsData.featuredEvents || [];
@@ -1336,6 +1402,36 @@ async function reactHomepage(req, res) {
         }
         console.log('📄 Page type detected:', pageType);
 
+        // 🚀 TTFB: start the homepage-data fetch NOW, concurrently with the SEO
+        // fetch below, instead of after it. These two admin round trips are
+        // independent — metaTags depends only on seoSettings, the hero-preload
+        // block only on homepage data — but they used to run strictly in
+        // series, so a degraded admin added both timeouts to TTFB before the
+        // first byte. Kicking it off here overlaps them.
+        //
+        // Not awaited here: we only hold the promise. The `.catch` keeps a
+        // rejection from surfacing as an unhandled rejection during the window
+        // before it is awaited; the awaiting site does its own error handling.
+        // cachedAdminFetch dedupes by key, so this cannot double up with the
+        // structured-data path.
+        let homepageDataPromise = null;
+        if (pageType === 'homepage') {
+            const prefetchBase = env.NODE_ENV === 'production' ?
+                'https://admin.b2b.click' :
+                'http://localhost:3002';
+            const prefetchHost = getSiteDomain(req) || '';
+            const { url: prefetchUrl } =
+                buildAdminFetch(prefetchBase, '/api/home-settings/homepage-data', req, { nocache: false });
+            homepageDataPromise = cachedAdminFetch({
+                key: `homepage-data::${prefetchHost || '__default__'}`,
+                ttlMs: ADMIN_CACHE_TTL.homepageData,
+                fetcher: () => fetchAdminJson(prefetchUrl, prefetchHost),
+            }).catch((err) => {
+                console.warn('⚠️ Homepage data prefetch failed:', err.message);
+                return { data: null };
+            });
+        }
+
         // Get SEO settings from dashboard API — cached per host with stale-
         // while-revalidate so 95% of page renders are served from memory.
         //
@@ -1494,6 +1590,10 @@ async function reactHomepage(req, res) {
         // All admin fetches go through cachedAdminFetch — per-host keyed,
         // stale-while-revalidate, no cross-tenant bleed.
         let pageData = null;
+        // Raw /api/home-settings/homepage-data body, kept separately from
+        // pageData (which is reshaped for the SSR markup) so generateStructuredData
+        // can reuse it instead of issuing its own admin request.
+        let homepageRawData = null;
         const pageDataHost = getSiteDomain(req) || '';
         const dashboardBase = env.NODE_ENV === 'production' ?
             'https://admin.b2b.click' :
@@ -1552,12 +1652,23 @@ async function reactHomepage(req, res) {
             }
         } else if (pageType === 'homepage') {
             try {
-                const { url: homepageUrl } = buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req);
-                const { data } = await cachedAdminFetch({
-                    key: `homepage-data::${pageDataHost || '__default__'}`,
-                    ttlMs: ADMIN_CACHE_TTL.homepageData,
-                    fetcher: () => fetchAdminJson(homepageUrl, pageDataHost),
-                });
+                // Await the fetch started before the SEO round trip, so the two
+                // overlapped rather than running back to back. Falls back to
+                // fetching here if the prefetch was somehow not started.
+                const { data } = homepageDataPromise
+                    ? await homepageDataPromise
+                    : await cachedAdminFetch({
+                        key: `homepage-data::${pageDataHost || '__default__'}`,
+                        ttlMs: ADMIN_CACHE_TTL.homepageData,
+                        fetcher: () => fetchAdminJson(
+                            buildAdminFetch(dashboardBase, '/api/home-settings/homepage-data', req, { nocache: false }).url,
+                            pageDataHost
+                        ),
+                    });
+                // Keep the RAW admin body so the structured-data pass can reuse
+                // it. pageData below flattens featured+homepage into one array,
+                // which loses the split that Event schema generation needs.
+                homepageRawData = data || null;
                 if (data) {
                     const homepageEvents = data.homepageEvents || [];
                     const featuredEvents = data.featuredEvents || [];
@@ -1653,7 +1764,7 @@ async function reactHomepage(req, res) {
         // Generate structured data with error handling to prevent page failures
         let structuredDataJson = '{}';
         try {
-            structuredDataJson = await generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl, req);
+            structuredDataJson = await generateStructuredData(pageType, seoSettings, metaTags, escapeHtml, ensureAbsoluteUrl, req, homepageRawData);
         } catch (structuredDataError) {
             console.warn('⚠️ Failed to generate structured data, using empty object:', structuredDataError.message);
         }
@@ -1799,7 +1910,33 @@ async function reactHomepage(req, res) {
             //   - if the splash is gone, React DID mount (possibly an older
             //     cached bundle that predates the app-loaded signal) — touch
             //     nothing. CSP allows 'unsafe-inline' scripts.
-            const ssrWrapper = `<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
+            // 🚀 HYDRATION SEED: hand the homepage payload we already fetched to
+            // the client so useHomepageData can render real content on first
+            // paint instead of opening its OWN cross-origin request to admin
+            // and holding the branded loader until it settles. Before this, the
+            // server could fetch everything correctly and the loader would
+            // still hang on a second, independent round trip — and every
+            // homepage view cost admin two homepage-data requests instead of one.
+            //
+            // We inject the RAW admin body (homeSettings / featuredEvents /
+            // homepageEvents / formattedDate / refreshTimestamp), not the
+            // reshaped `pageData`, because pageData concatenates featured and
+            // homepage events into one array and the hook needs them separate.
+            //
+            // Deliberately NOT age-gated. This HTML is edge-cached
+            // (s-maxage=300), so a "seed only if fresh" check would fail on most
+            // hits and fall straight back to the blocking fetch this exists to
+            // remove. The client seeds immediately and always background-
+            // revalidates, so stale-by-minutes is corrected within one tick.
+            let initialDataScript = '';
+            if (pageType === 'homepage' && homepageRawData) {
+                const serialized = serializeForInlineScript(homepageRawData);
+                if (serialized) {
+                    initialDataScript = `<script>window.__INITIAL_DATA__=${serialized};</script>`;
+                }
+            }
+
+            const ssrWrapper = `${initialDataScript}<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
                    <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>
                    <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';var c=document.getElementById('ssr-content');if(c){c.style.display='block';c.style.opacity='1';}}}}catch(e){}},4000);</script>`;
 

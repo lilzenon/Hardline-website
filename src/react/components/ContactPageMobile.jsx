@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { navigateTo } from '../utils/navigate';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { openExternal } from '../utils/iab';
 import MobileNavigation from './MobileNavigation';
@@ -47,8 +48,9 @@ const ContactPageMobile = () => {
       return;
     }
 
-    // INSTANT navigation - no loading states, no delays
-    window.location.href = path;
+    // Client-side navigation — see src/react/utils/navigate.js. This was a
+    // full document load, which wiped every client cache on each nav.
+    navigateTo(path);
   };
 
   // Handle contact actions

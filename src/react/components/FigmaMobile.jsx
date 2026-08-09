@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
+import { navigateTo } from '../utils/navigate';
+import DataErrorBanner from './DataErrorBanner';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
@@ -635,7 +637,8 @@ const FigmaMobile = ({ onReady }) => {
     filteredHomepageEvents,
     featuredEvents,
     homepageEvents,
-    normalizeEvent
+    normalizeEvent,
+    refetch
   } = useHomepageData();
 
   // Event Filter Toggle State - now managed by useHomepageData hook
@@ -1540,16 +1543,11 @@ const FigmaMobile = ({ onReady }) => {
     };
   }, []);
 
-  // 🚀 INSTANT: Direct navigation without any delays or loading states
+  // Client-side navigation. This used to be `window.location.href = path`, a
+  // full document load that destroyed every client cache and the circuit
+  // breaker on each hamburger tap — see src/react/utils/navigate.js.
   const handleNavigation = (path) => {
-    if (path === '/') {
-      // Already on homepage, just scroll to top
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // INSTANT navigation - no transitions, no loading states, no delays
-    window.location.href = path;
+    navigateTo(path);
   };
 
   // Handle phone input focus - expand drawer and show disclaimer
@@ -2035,6 +2033,11 @@ const FigmaMobile = ({ onReady }) => {
 
   return (
     <>
+      {/* Non-blocking notice when the admin fetch failed and the page is
+          showing placeholder content. Retry is silent by design — see
+          DataErrorBanner for why a foreground refetch would blank the page. */}
+      {error && <DataErrorBanner onRetry={refetch} />}
+
       {/* SEO: Inject JSON-LD structured data for all events */}
       {/* 🚨 FIX: Pass raw event data (featuredEvents, homepageEvents) instead of processed data */}
       {/* EventStructuredData expects raw events with fields like slug, event_date, artist_name, etc. */}

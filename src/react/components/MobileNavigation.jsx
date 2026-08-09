@@ -46,11 +46,18 @@ const MobileNavigation = ({
     onMenuToggle(newMenuState); // Notify parent of menu state change
   };
 
-  // Handle navigation with menu close
+  // Handle navigation with menu close.
+  //
+  // Close FIRST, navigate second. Navigation is now client-side, so onNavigate
+  // triggers a re-render that can unmount this component; closing first lets
+  // the scroll-lock effect below run its restore branch normally instead of
+  // relying on the unmount cleanup. Both orders release the lock — the unmount
+  // cleanup is still there as a backstop — but this way the body styles are
+  // torn down through the same path as any other close.
   const handleNavigation = (path) => {
-    onNavigate(path);
     setShowMenu(false);
     onMenuToggle(false); // Notify parent that menu is closed
+    onNavigate(path);
   };
 
   // 📱 ENHANCED: Body scroll lock when menu is expanded (iOS Safari support)
@@ -620,7 +627,9 @@ const MobileNavigation = ({
           onClick={(e) => e.stopPropagation()}
         >
           <div
-            onClick={() => handleNavigation('/')}
+            /* no onClick here: the inner <a> handles activation. Having both
+               fired handleNavigation twice per tap (bubbling), which pushes two
+               history entries once navigation is client-side. */
             className={`mobile-nav-item ${currentPage === 'events' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
@@ -649,7 +658,9 @@ const MobileNavigation = ({
             </a>
           </div>
           <div
-            onClick={() => handleNavigation('/about')}
+            /* no onClick here: the inner <a> handles activation. Having both
+               fired handleNavigation twice per tap (bubbling), which pushes two
+               history entries once navigation is client-side. */
             className={`mobile-nav-item ${currentPage === 'about' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
@@ -678,7 +689,9 @@ const MobileNavigation = ({
             </a>
           </div>
           <div
-            onClick={() => handleNavigation('/faq')}
+            /* no onClick here: the inner <a> handles activation. Having both
+               fired handleNavigation twice per tap (bubbling), which pushes two
+               history entries once navigation is client-side. */
             className={`mobile-nav-item ${currentPage === 'faq' ? 'active' : ''}`}
             style={{
               fontFamily: 'Inter',
@@ -709,7 +722,9 @@ const MobileNavigation = ({
           {/* Shop - Conditionally Rendered */}
           {shopEnabled && (
             <div
-              onClick={() => handleNavigation('/shop')}
+              /* no onClick here: the inner <a> handles activation. Having both
+                 fired handleNavigation twice per tap (bubbling), which pushes two
+                 history entries once navigation is client-side. */
               className={`mobile-nav-item ${currentPage === 'shop' ? 'active' : ''}`}
               style={{
                 fontFamily: 'Inter',

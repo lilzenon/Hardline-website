@@ -253,7 +253,14 @@ class APIClient {
    * Get SEO settings with enhanced error handling
    */
   async getSEOSettings(): Promise<APIResponse> {
-    return this.get('/settings/seo');
+    // '/seo/fast', not '/seo': the fast route is cached in-process per host
+    // (60s + stale-while-revalidate) and carries the is_fallback guard, while
+    // '/seo' was a raw pass-through that forced admin's uncached DB path —
+    // measured at 3.5-5.1s — on EVERY page mount, multiplied by this client's
+    // 3 retries. Both routes return the identical { success, settings } shape.
+    // NOTE: the circuit-breaker/fallback checks elsewhere in this file match on
+    // endpoint.includes('/settings/seo'), which still matches this path.
+    return this.get('/settings/seo/fast');
   }
 
   /**

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, Suspense } from 'react';
 import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/sanitizer';
-import { fetchWithTimeout } from '../utils/iab';
+import { fetchWithTimeout, importWithRetry } from '../utils/iab';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
 import DesktopNavigationPills from './DesktopNavigationPills';
@@ -9,6 +9,11 @@ import Breadcrumb from './Breadcrumb';
 
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
+
+// Hoisted to module scope: React.lazy() called inside the render body creates a
+// NEW component identity every render, remounting the whole mobile page and
+// re-running its effects on each parent re-render.
+const FAQPageMobile = React.lazy(() => importWithRetry(() => import('./FAQPageMobile'), 8000));
 
 const FAQPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -243,7 +248,7 @@ const FAQPage = () => {
   }
 
   if (isMobile) {
-    const FAQPageMobile = React.lazy(() => import('./FAQPageMobile'));
+    // FAQPageMobile is defined at module scope — see note there.
     return (
       <Suspense fallback={
         <BrandedLoader

@@ -5,10 +5,11 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { importWithRetry } from '../utils/iab';
 // Lazy: keeps the Three.js / @react-three / postprocessing chunk (~725 KB raw)
 // off the homepage critical path. Dither only renders inside the maintenance
 // overlay below, which is gated on maintenance_mode.
-const Dither = lazy(() => import('../components/ui/DitherShadcn').then(m => ({ default: m.Dither })));
+const Dither = lazy(() => importWithRetry(() => import('../components/ui/DitherShadcn').then(m => ({ default: m.Dither })), 8000));
 
 // IAB FIX: WebGL can throw on GPU-blocklisted / software-rendering WebViews.
 // The dither background is decorative — swallow the error (plain black
@@ -48,7 +49,13 @@ const SEOContext = createContext();
  * SEO Provider Component
  * Wraps the app and provides SEO functionality
  */
-export const SEOProvider = ({ children }) => {
+/**
+ * @param {object} props
+ * @param {string} [props.pathname] current route path, supplied by the router in
+ *   src/main.tsx. When provided, the provider tracks route changes from this
+ *   prop instead of polling window.location — see the effect below.
+ */
+export const SEOProvider = ({ children, pathname }) => {
   const [seoSettings, setSeoSettings] = useState(DEFAULT_SEO_SETTINGS);
   const [maintenanceStatus, setMaintenanceStatus] = useState({ maintenance_mode: false });
   const [isLoading, setIsLoading] = useState(true);
@@ -156,8 +163,17 @@ export const SEOProvider = ({ children }) => {
         deviceType = width <= 480 ? 'mobile' : 'tablet';
       }
 
-      setDeviceInfo({ isMobile, deviceType });
-      console.log('📱 SEO Device Detection:', { width, isMobile, deviceType });
+      // Only publish a NEW object when the values actually changed. `resize`
+      // fires continuously during an orientation change or a desktop drag, and
+      // a fresh object identity each time re-rendered every consumer of this
+      // context and re-ran the metaTags useMemo (deviceInfo is one of its
+      // dependencies) — for a value that changes at most a couple of times per
+      // session.
+      setDeviceInfo((prev) =>
+        (prev.isMobile === isMobile && prev.deviceType === deviceType)
+          ? prev
+          : { isMobile, deviceType }
+      );
     };
 
     detectDevice();
@@ -180,27 +196,33 @@ export const SEOProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // 🚀 CRITICAL FIX: Track pathname changes to regenerate meta tags for page-specific SEO
+  // 🚀 Track pathname changes to regenerate meta tags for page-specific SEO.
+  //
+  // This used to poll `window.location.pathname` on a 100ms setInterval — 10
+  // wake-ups a second for the entire life of the page, and because the effect
+  // depended on `currentPathname` the interval was also torn down and recreated
+  // on every route change. The poll existed because client-side navigation
+  // (pushState) fires no event.
+  //
+  // The router in src/main.tsx already holds the current path in state, so it
+  // now passes it down as a prop and there is nothing to poll. The popstate
+  // listener stays as a fallback for the case where the provider is rendered
+  // without the prop (e.g. mounted outside App).
   useEffect(() => {
+    if (typeof pathname === 'string') {
+      setCurrentPathname((prev) => (prev === pathname ? prev : pathname));
+      return undefined;
+    }
+
     const handlePathnameChange = () => {
       const newPathname = window.location.pathname;
-      if (newPathname !== currentPathname) {
-        console.log(`🔄 Pathname changed: ${currentPathname} → ${newPathname}`);
-        setCurrentPathname(newPathname);
-      }
+      setCurrentPathname((prev) => (prev === newPathname ? prev : newPathname));
     };
 
-    // Check for pathname changes on popstate (browser back/forward)
+    handlePathnameChange();
     window.addEventListener('popstate', handlePathnameChange);
-
-    // Also check periodically in case of client-side navigation
-    const interval = setInterval(handlePathnameChange, 100);
-
-    return () => {
-      window.removeEventListener('popstate', handlePathnameChange);
-      clearInterval(interval);
-    };
-  }, [currentPathname]);
+    return () => window.removeEventListener('popstate', handlePathnameChange);
+  }, [pathname]);
 
   // Note: React Helmet will automatically manage conflicts with server-side meta tags
 

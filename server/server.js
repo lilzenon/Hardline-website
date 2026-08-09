@@ -763,6 +763,25 @@ try {
     if (env.DASHBOARD_PROXY_ENABLED) {
         console.log(`📡 Proxy ENABLED: forwarding API calls to dashboard server: ${dashboardApiUrl}`);
 
+        // Stamp trusted-proxy identity on every request we forward to admin.
+        // These are BROWSER requests we're relaying, so they all leave on this
+        // pod's single egress IP. Without the forwarded client IP, admin's rate
+        // limiter would treat every visitor of this site as one client and a
+        // handful of users would lock out everyone. Admin only trusts the
+        // forwarded IP when the shared secret validates.
+        const { internalProxyHeaders } = require('./utils/internal-proxy.util');
+        const attachInternalProxyHeaders = (proxyReq, req) => {
+            try {
+                const headers = internalProxyHeaders(req);
+                for (const name of Object.keys(headers)) {
+                    proxyReq.setHeader(name, headers[name]);
+                }
+            } catch (err) {
+                // Never let header stamping break a proxied request.
+                console.warn('WARN failed to attach internal proxy headers:', err.message);
+            }
+        };
+
         // Proxy settings endpoints to dashboard API
         app.use('/api/settings', createProxyMiddleware({
             target: dashboardApiUrl,
@@ -779,6 +798,7 @@ try {
                 });
             },
             onProxyReq: (proxyReq, req, res) => {
+                attachInternalProxyHeaders(proxyReq, req);
                 console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
             },
             onProxyRes: (proxyRes, req, res) => {
@@ -793,6 +813,7 @@ try {
             secure: env.NODE_ENV === 'production',
             timeout: 10000,
             proxyTimeout: 10000,
+            onProxyReq: attachInternalProxyHeaders,
             onError: (err, req, res) => {
                 console.error('🚨 Proxy error for /api/analytics/track:', err.message);
                 res.status(500).json({
@@ -810,6 +831,7 @@ try {
             secure: env.NODE_ENV === 'production',
             timeout: 10000,
             proxyTimeout: 10000,
+            onProxyReq: attachInternalProxyHeaders,
             onError: (err, req, res) => {
                 console.error('🚨 Proxy error for /api/home-settings:', err.message);
                 res.status(500).json({
@@ -836,6 +858,7 @@ try {
                 });
             },
             onProxyReq: (proxyReq, req, res) => {
+                attachInternalProxyHeaders(proxyReq, req);
                 console.log(`🛍️ Proxying shop: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
             },
             onProxyRes: (proxyRes, req, res) => {

@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import BrandedLoader from './BrandedLoader';
+import { importWithRetry } from '../utils/iab';
+
+// Hoisted to module scope: React.lazy() called inside the render body creates a
+// NEW component identity every render, remounting the whole mobile page and
+// re-running its effects on each parent re-render.
+const ContactPageMobile = React.lazy(() => importWithRetry(() => import('./ContactPageMobile'), 8000));
 
 const ContactPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -161,8 +167,8 @@ const ContactPage = () => {
 
   // 🚀 FIXED: Render mobile component directly instead of redirecting
   if (isMobile) {
-    // Import and render mobile component directly to avoid infinite redirects
-    const ContactPageMobile = React.lazy(() => import('./ContactPageMobile'));
+    // Render the mobile component directly to avoid infinite redirects.
+    // ContactPageMobile is defined at module scope — see note there.
     return (
       <React.Suspense fallback={
         <BrandedLoader

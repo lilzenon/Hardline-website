@@ -8,6 +8,13 @@ import Breadcrumb from './Breadcrumb';
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 import { injectAboutGalleryJsonLd, removeAboutGalleryJsonLd } from '../utils/aboutGalleryJsonLd';
+import { importWithRetry } from '../utils/iab';
+
+// Hoisted to module scope: React.lazy() called inside the render body creates a
+// NEW component identity every render, so React unmounted and remounted the
+// whole mobile page — re-suspending to the fallback and re-running its effects
+// (and their admin fetches) on each parent re-render.
+const AboutPageMobile = React.lazy(() => importWithRetry(() => import('./AboutPageMobile'), 8000));
 
 const AboutPage = () => {
   // 🚨 HOMEPAGE CONSISTENCY: Use same responsive system as homepage
@@ -389,8 +396,8 @@ Our mission is to unite top talent, immersive production, and passionate fans to
 
   // 🚀 FIXED: Render mobile component directly instead of redirecting
   if (isMobile) {
-    // Import and render mobile component directly to avoid infinite redirects
-    const AboutPageMobile = React.lazy(() => import('./AboutPageMobile'));
+    // Render the mobile component directly to avoid infinite redirects.
+    // AboutPageMobile is defined at module scope — see note there.
     return (
       <React.Suspense fallback={
         <BrandedLoader

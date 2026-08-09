@@ -5,12 +5,21 @@ import { useSEO } from '../hooks/useSEO';
 import useMobileLifecycle from '../hooks/useMobileLifecycle';
 import { initializeMobileOptimizations, isMobileDevice } from '../../utils/mobileOptimization';
 import BrandedLoader from './BrandedLoader';
+import { importWithRetry } from '../utils/iab';
 
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 
 // 🚀 PERFORMANCE: Optimized lazy loading with immediate desktop, lazy mobile
-const FigmaDesktop = lazy(() => import('./FigmaDesktop'));
-const FigmaMobile = lazy(() => import('./FigmaMobile'));
+//
+// These are the SECOND chunk tier (main.tsx → HomePage → here). They were the
+// only lazy imports in the app not bounded by importWithRetry, so a stalled
+// FigmaMobile request pinned Suspense — and therefore the branded loader,
+// which waits on this child's onReady — with no timeout anywhere in the chain.
+// 8s rather than the 12s default: both chunks gate first paint, so failing
+// through to the ErrorBoundary beats a longer black screen.
+const CHUNK_TIMEOUT_MS = 8000;
+const FigmaDesktop = lazy(() => importWithRetry(() => import('./FigmaDesktop'), CHUNK_TIMEOUT_MS));
+const FigmaMobile = lazy(() => importWithRetry(() => import('./FigmaMobile'), CHUNK_TIMEOUT_MS));
 
 /**
  * Homepage component with optimized performance and fast loading
@@ -68,10 +77,17 @@ const HomePage = () => {
       }));
 
       // 2. Preload Task
+      // Bounded like the lazy() above, so a never-settling chunk request can't
+      // leave minTimeElapsed false forever. The ESM module registry dedupes the
+      // underlying request with the Suspense import — this only races a timeout
+      // against it. Rejections stay swallowed: this task exists to gate the
+      // loader, and the lazy() above is what surfaces a real failure.
       if (initialIsMobile) {
-        tasks.push(import('./FigmaMobile').catch(err => console.error('Failed to preload mobile:', err)));
+        tasks.push(importWithRetry(() => import('./FigmaMobile'), CHUNK_TIMEOUT_MS)
+          .catch(err => console.error('Failed to preload mobile:', err)));
       } else {
-        tasks.push(import('./FigmaDesktop').catch(() => { }));
+        tasks.push(importWithRetry(() => import('./FigmaDesktop'), CHUNK_TIMEOUT_MS)
+          .catch(() => { }));
       }
 
       await Promise.all(tasks);

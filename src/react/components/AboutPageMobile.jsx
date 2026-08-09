@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { navigateTo } from '../utils/navigate';
 import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
@@ -309,8 +310,9 @@ Our mission is to unite top talent, immersive production, and passionate fans to
       return;
     }
 
-    // INSTANT navigation - no loading states, no delays
-    window.location.href = path;
+    // Client-side navigation — see src/react/utils/navigate.js. This was a
+    // full document load, which wiped every client cache on each nav.
+    navigateTo(path);
   };
 
   return (

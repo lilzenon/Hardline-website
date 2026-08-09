@@ -10,6 +10,7 @@ const router = express.Router();
 // GET /api/settings/seo - Proxy to dashboard for SEO settings
 const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
 const { cachedAdminFetch } = require('../../utils/admin-fetch-cache.util');
+const { internalProxyHeaders } = require('../../utils/internal-proxy.util');
 
 // Helper function to determine the correct dashboard URL
 function getDashboardUrl(req) {
@@ -69,7 +70,9 @@ function withDomainParam(url, req) {
 async function dashFetch(url, { timeoutMs = 5000, req } = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    const headers = { 'Content-Type': 'application/json' };
+    // Internal-proxy identity so admin can rate-limit per visitor instead of
+    // lumping this whole site under one egress IP — see internal-proxy.util.js.
+    const headers = { 'Content-Type': 'application/json', ...internalProxyHeaders(req) };
     const host = req?.get?.('host');
     if (host) headers['Origin'] = `https://${host}`;
     try {
@@ -103,61 +106,43 @@ function stripInternalSeoFields(data) {
     return data;
 }
 
-router.get("/seo", async (req, res) => {
-    try {
-        console.log('🔍 Homepage: Fetching SEO settings from dashboard...');
-
-        const dashboardUrl = getDashboardUrl(req);
-        const target = withDomainParam(`${dashboardUrl}/api/settings/seo`, req);
-        console.log(`📡 Proxying SEO request to: ${target}`);
-
-        const response = await dashFetch(target, { timeoutMs: 8000, req });
-
-        if (response.ok) {
-            const data = stripInternalSeoFields(await readJsonCapped(response));
-            console.log('✅ Homepage: SEO settings fetched from dashboard:', {
-                title: data.settings?.default_title?.substring(0, 40) + '...',
-                hasShopEnabled: data.settings?.shop_enabled !== undefined
-            });
-            return res.json(data);
-        } else {
-            throw new Error(`Dashboard responded with ${response.status}`);
-        }
-    } catch (error) {
-        console.error('❌ Homepage: Error fetching SEO settings from dashboard:', error.message);
-
-        // Fallback to hardcoded defaults only if dashboard is completely unavailable
-        console.warn('⚠️ Using fallback SEO settings (dashboard unreachable)');
-        return res.json({
-            success: true,
-            settings: {
-                default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
-                default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
-                default_keywords: "edm events, electronic dance music, nj events, hardline events, live music",
-                default_author: "HARDLINE",
-                maintenance_mode: false,
-                shop_enabled: false
-            },
-            fallback: true
-        });
-    }
+// Brand-correct SEO defaults, served whenever admin is unreachable OR returned
+// its cross-brand default row. Shared by both SEO routes so they can never
+// drift apart.
+const SEO_FALLBACK_RESPONSE = Object.freeze({
+    success: true,
+    settings: Object.freeze({
+        default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
+        default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
+        default_keywords: "edm events, electronic dance music, nj events, hardline events, live music",
+        default_author: "HARDLINE",
+        maintenance_mode: false,
+        shop_enabled: false
+    }),
+    fallback: true
 });
 
-// GET /api/settings/seo/fast - Proxy to dashboard for FAST SEO settings
-//
-// PERF: this endpoint is fetched by the React app on EVERY page mount
-// (SEOContext), and the raw pass-through used to pay a live admin round
-// trip each time — with `nocache=1` forcing admin's slowest uncached DB
-// path (measured 3.5-5.1s per call). That latency showed up as "every
-// page loads slow / About page takes forever". Now:
-//   - target drops nocache=1 (admin's per-domain cache is correct and
-//     ~0.2s; nocache is reserved for the admin Settings UI),
-//   - the response is cached in-process per-host via cachedAdminFetch
-//     (60s fresh + stale-while-revalidate), so warm page views get their
-//     SEO JSON from memory in ~0ms,
-//   - admin fallback rows (_meta.is_fallback, wrong brand) are served to
-//     the current caller at most but NEVER cached under this host's key.
-router.get("/seo/fast", async (req, res) => {
+/**
+ * Cached, per-host SEO settings fetch — the single implementation behind both
+ * GET /seo and GET /seo/fast.
+ *
+ * PERF: this data is requested by the React app on EVERY page mount
+ * (SEOContext). The old /seo route was a raw pass-through that additionally
+ * forced `nocache=1`, which drove admin's slowest uncached DB path (measured
+ * 3.5-5.1s) and — because admin treats nocache as "clear the cache" — wiped the
+ * shared per-domain SEO cache that the SSR renderer depends on. Every public
+ * page mount was therefore sabotaging server-side rendering for everyone else.
+ *
+ * This path instead:
+ *   - targets admin's /seo/fast directly, skipping admin's 307 redirect
+ *     (which doubled the admin request count per logical call),
+ *   - omits nocache=1 — admin's per-domain cache is correct here; nocache is
+ *     reserved for the admin Settings UI,
+ *   - caches per host in-process (60s fresh + stale-while-revalidate), so warm
+ *     page views resolve from memory,
+ *   - NEVER caches admin's default-row fallback under a real host key.
+ */
+async function serveCachedSeoSettings(req, res) {
     try {
         const dashboardUrl = getDashboardUrl(req);
         const rawHost = req?.get?.('host') || '';
@@ -171,11 +156,10 @@ router.get("/seo/fast", async (req, res) => {
                 const response = await dashFetch(target, { timeoutMs: 5000, req });
                 if (!response.ok) return null;
                 const body = stripInternalSeoFields(await readJsonCapped(response));
-                // Never cache admin's default-row fallback (wrong brand)
-                // under this host's key — see the 2026-07-07 outage where a
-                // cached bounce2bounce row branded hardline.events for the
-                // whole stale window. Serving null here drops us to the
-                // HARDLINE-branded fallback below instead.
+                // Never cache admin's default-row fallback (wrong brand) under
+                // this host's key — see the 2026-07-07 outage where a cached
+                // bounce2bounce row branded hardline.events for the whole stale
+                // window. Returning null drops us to the HARDLINE fallback.
                 const meta = body && (body._meta || (body.settings && body.settings._meta));
                 if (host && meta && meta.is_fallback === true) return null;
                 return body;
@@ -183,26 +167,25 @@ router.get("/seo/fast", async (req, res) => {
         });
 
         if (data) return res.json(data);
-        throw new Error('Dashboard SEO fast fetch failed or returned fallback row');
+        throw new Error('Dashboard SEO fetch failed or returned fallback row');
     } catch (error) {
-        console.error('❌ Homepage: Error fetching FAST SEO settings:', error.message);
-        // Return JSON fallback directly. A redirect here would force the
-        // browser into another roundtrip and, if the dashboard is still
-        // hung, would 504 again.
-        return res.json({
-            success: true,
-            settings: {
-                default_title: "HARDLINE - NJ'S PREMIERE EDM COLLECTIVE",
-                default_description: "HardLine Events is New Jersey's leading EDM event brand, producing curated electronic music events across NJ, NY, and the tri-state area.",
-                default_keywords: "edm events, electronic dance music, nj events, hardline events, live music",
-                default_author: "HARDLINE",
-                maintenance_mode: false,
-                shop_enabled: false
-            },
-            fallback: true
-        });
+        console.error('❌ Homepage: Error fetching SEO settings:', error.message);
+        // Return JSON directly rather than redirecting: a redirect would force
+        // another browser roundtrip and, if admin is still hung, 504 again.
+        return res.json(SEO_FALLBACK_RESPONSE);
     }
-});
+}
+
+// GET /api/settings/seo
+// Kept as an alias of the cached implementation. The browser now requests
+// /seo/fast (src/lib/api-client.ts), but this route stays so any cached client
+// bundle, bookmark or external caller gets the fast path too instead of
+// re-opening the uncached one.
+router.get("/seo", serveCachedSeoSettings);
+
+// GET /api/settings/seo/fast — the path the browser actually requests.
+// Same cached implementation as /seo above; see serveCachedSeoSettings.
+router.get("/seo/fast", serveCachedSeoSettings);
 
 // GET /api/settings/maintenance-status
 router.get("/maintenance-status", async (req, res) => {

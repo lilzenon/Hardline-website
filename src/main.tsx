@@ -3,7 +3,7 @@
 
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
-import { importWithRetry, reloadOnceForChunkError } from './react/utils/iab';
+import { importWithRetry, reloadOnceForChunkError, scheduleRecoveryParamCleanup } from './react/utils/iab';
 
 // 🔧 IAB FIX: Post-deploy stale HTML references dead hashed chunks (edge cache
 // holds HTML up to s-maxage). When a chunk preload 404s, do ONE reload with a
@@ -130,6 +130,17 @@ const App = () => {
       window.history.pushState({}, '', path);
       setCurrentPath(path);
       setIsTransitioning(false);
+
+      // Reset scroll on forward navigation. A full document load did this for
+      // free; now that the mobile menu routes client-side, landing halfway down
+      // the new page would be a regression. Deliberately NOT done in the
+      // popstate handler — going back should keep the browser's own restored
+      // position rather than jumping to the top.
+      try {
+        window.scrollTo(0, 0);
+      } catch (_) {
+        /* non-fatal */
+      }
     }, 150);
   }, []);
 
@@ -234,8 +245,10 @@ const App = () => {
     }
   };
 
+  // `pathname` is passed down so SEOContext can react to client-side navigation
+  // without polling window.location on a 100ms interval.
   return (
-    <SEOProvider>
+    <SEOProvider pathname={currentPath}>
       <CartProvider>
         <MaintenanceRedirect />
         {renderCurrentPage()}
@@ -268,10 +281,14 @@ if (container) {
     // 🔧 IAB FIX: signal successful mount. The server-injected 4s splash
     // failsafe and the .app-loaded #ssr-content fade CSS both key off this
     // class (it previously lived only in dead src/react/index.jsx).
-    // NOTE: recovery params (hl_cr/hl_retry) are cleared inside
-    // importWithRetry on a chunk's SUCCESSFUL resolution — clearing here at
-    // eval time would defeat the reload-loop guard for dead chunks.
     document.body.classList.add('app-loaded');
+
+    // 🔧 RELOAD-LOOP FIX: restore the chunk-recovery budget only after this
+    // document has stayed alive long enough to prove it is not looping.
+    // Clearing on a chunk's successful resolution (the previous behaviour)
+    // handed a fresh budget to every iteration of a FigmaMobile failure loop.
+    // A loop re-navigates within seconds, so this timer never fires in one.
+    scheduleRecoveryParamCleanup();
   } catch (error) {
     console.error('React mounting error:', error);
 

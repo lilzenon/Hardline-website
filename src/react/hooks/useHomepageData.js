@@ -11,6 +11,38 @@ import { fetchWithTimeout } from '../utils/iab';
 const apiCache = new Map();
 const CACHE_DURATION = 30 * 1000; // 30 seconds
 
+// 🚀 SSR HYDRATION SEED
+// The server already fetched this exact payload while rendering the document
+// and inlined it as window.__INITIAL_DATA__ (see server/handlers/renders.handler.js).
+// Priming the cache with it here — at module evaluation, before any component
+// mounts — means the very first fetchHomepageData() call takes the existing
+// cache-HIT branch: it seeds state, clears `loading`, and kicks off background
+// revalidation. So the branded loader lifts with real events on first paint
+// instead of waiting on a fresh cross-origin round trip to admin, and admin
+// serves one homepage-data request per page view instead of two.
+//
+// Reusing the cache path rather than adding a parallel seeding path is
+// deliberate: there is exactly one place that maps a payload onto state, so the
+// two can't drift.
+//
+// The timestamp is stamped at CLIENT load, not at SSR time, on purpose — the
+// HTML is edge-cached for up to 5 minutes, and an age check against the render
+// time would miss on most hits and fall back to the blocking fetch this exists
+// to avoid. Background revalidation corrects anything stale on the next tick.
+(function seedFromSSR() {
+  try {
+    const seed = typeof window !== 'undefined' && window.__INITIAL_DATA__;
+    // Shape check: only accept something that actually looks like homepage data,
+    // so an unrelated or truncated payload can't poison the cache.
+    if (!seed || typeof seed !== 'object') return;
+    if (!Array.isArray(seed.featuredEvents) && !Array.isArray(seed.homepageEvents)) return;
+
+    apiCache.set('homepage-data-v2', { data: seed, timestamp: Date.now() });
+  } catch (_) {
+    // Never let seeding break boot — the normal fetch path still works.
+  }
+})();
+
 // 🚨 CRITICAL FIX: Cache invalidation mechanism for image uploads
 // This allows external components to force cache refresh when images are uploaded
 window.invalidateHomepageCache = () => {
@@ -24,6 +56,69 @@ window.invalidateHomepageCache = () => {
     }
   }
 };
+
+// 🚦 SINGLE-FLIGHT for the homepage-data request.
+//
+// apiCache only ever stores COMPLETED results, so two components calling
+// useHomepageData() in the same tick both missed the cache and both issued
+// their own cross-origin request to admin. That is not hypothetical:
+// FigmaDesktop and FigmaMobile each call the hook, and HomePage renders one of
+// them while the other's chunk may already have mounted — so a single page view
+// could cost admin two homepage-data requests on top of the SSR one.
+//
+// This shares the in-flight PROMISE. Critically it returns raw JSON and applies
+// no state: each hook instance still runs its own validation and setState, so
+// every caller ends up with a correct, independent state machine. (An earlier
+// sketch had callers await a shared function that applied state internally —
+// that would leave the second caller's `loading` true forever, which is the
+// exact bug being chased.)
+let inflightHomepageRequest = null;
+
+/**
+ * Fetch the homepage payload, joining an in-flight request if one exists.
+ * @param {number} timeoutMs abort budget for a NEW request. A caller that joins
+ *   an existing request inherits that request's budget — acceptable here
+ *   because the only long-budget caller (the silent retry) is scheduled 12s
+ *   after a timeout, by which point no foreground request is still open.
+ * @returns {Promise<object>} the raw admin response body
+ */
+function fetchHomepageJson(timeoutMs) {
+  if (inflightHomepageRequest) return inflightHomepageRequest;
+
+  const apiBaseUrl = isDevelopment()
+    ? '' // Development: use Vite proxy
+    : getApiBaseUrl(); // Production/Beta: use appropriate dashboard server
+
+  const request = (async () => {
+    // 🔧 IAB FIX: this is a cross-origin fetch to admin, so the server's admin-
+    // fetch guard does NOT protect it. Without a client timeout, an admin
+    // cold-start or a stalled in-app-browser connection pins `loading` true
+    // forever and the fullscreen BrandedLoader never lifts.
+    const response = await fetchWithTimeout(
+      `${apiBaseUrl}/api/home-settings/homepage-data`,
+      { cache: 'no-store' },
+      timeoutMs
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
+    }
+    const data = await response.json();
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid API response format');
+    }
+    return data;
+  })();
+
+  inflightHomepageRequest = request;
+  // Two-arg .then rather than .finally: Promise.prototype.finally is absent on
+  // Android WebView Chrome <63, and es2019 transpiles syntax, not APIs.
+  request.then(
+    () => { inflightHomepageRequest = null; },
+    () => { inflightHomepageRequest = null; }
+  );
+
+  return request;
+}
 
 // Cache for formatted dates to avoid repeated calculations
 const dateFormatCache = new Map();
@@ -378,27 +473,35 @@ export const useHomepageData = () => {
     const silent = options.silent === true;
     try {
       if (!silent) setLoading(true);
-      setError(null);
+      // Only the foreground path optimistically clears the error. A SILENT
+      // retry must not: its catch returns early without re-setting `error`, so
+      // clearing here would make a failed background retry look like a success
+      // — the error UI would vanish and never come back. Silent success clears
+      // it explicitly at the end of the try block instead.
+      if (!silent) setError(null);
 
       // Check cache first
       const cacheKey = 'homepage-data-v2';
       const cached = apiCache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
         console.log('📦 Using cached homepage data');
+        // Validate here as well as on the network path. This branch used to be
+        // a rare optimisation (a second mount within 30s), but since the SSR
+        // hydration seed primes this cache it is now the FIRST-PAINT path for
+        // most visitors — so malformed events must be filtered here too, or a
+        // record missing id/title renders as a broken card.
         setHomeSettings(cached.data.homeSettings);
-        setFeaturedEvents(cached.data.featuredEvents || []);
-        setHomepageEvents(cached.data.homepageEvents || []);
+        setFeaturedEvents(validateEvents(cached.data.featuredEvents || [], 'Featured'));
+        setHomepageEvents(validateEvents(cached.data.homepageEvents || [], 'Homepage'));
         setFormattedDate(cached.data.formattedDate || "March 29th, 9:00 P.M.");
         setLoading(false);
 
-        // 🔄 Background revalidation to pick up admin changes immediately
+        // 🔄 Background revalidation to pick up admin changes immediately.
+        // Routed through the same single-flight, so a cache-hit mount and a
+        // concurrent cold mount share one request instead of issuing two.
         (async () => {
           try {
-            const apiBaseUrl = isDevelopment() ? '' : getApiBaseUrl();
-            const url = `${apiBaseUrl}/api/home-settings/homepage-data`;
-            const response = await fetchWithTimeout(url, { cache: 'no-store' }, 8000);
-            if (!response.ok) return;
-            const fresh = await response.json();
+            const fresh = await fetchHomepageJson(8000);
 
             // Update if server indicates new data via refreshTimestamp or if payload differs
             if (!cached.data || fresh.refreshTimestamp !== cached.data.refreshTimestamp) {
@@ -437,30 +540,10 @@ export const useHomepageData = () => {
         return;
       }
 
-      // Environment-aware API URL construction (supports production, beta, and development)
-      const apiBaseUrl = isDevelopment()
-        ? '' // Development: use Vite proxy
-        : getApiBaseUrl(); // Production/Beta: use appropriate dashboard server
-
-      console.log('🔍 Fetching homepage data from:', `${apiBaseUrl}/api/home-settings/homepage-data`);
-
-      // 🔧 IAB FIX: this is a cross-origin fetch to admin.b2b.click, so the
-      // server's 5s admin-fetch guard does NOT protect it. Without a client
-      // timeout, an admin cold-start or a stalled IAB connection pins
-      // `loading` true forever and the fullscreen black BrandedLoader never
-      // lifts. Abort at 8s → catch below sets fallback content, finally
-      // clears loading, and the page renders.
-      const response = await fetchWithTimeout(`${apiBaseUrl}/api/home-settings/homepage-data`, { cache: 'no-store' }, silent ? 20000 : 8000);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: Failed to fetch homepage data`);
-      }
-
-      const data = await response.json();
-
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid API response format');
-      }
+      // Shared with any concurrent caller — see fetchHomepageJson. A failure
+      // still lands in this function's catch below, which sets fallback content
+      // and clears `loading`, so the page always renders.
+      const data = await fetchHomepageJson(silent ? 20000 : 8000);
 
       // Validate and process data
 
@@ -498,6 +581,9 @@ export const useHomepageData = () => {
       setFeaturedEvents(validatedFeaturedEvents);
       setHomepageEvents(validatedHomepageEvents);
       setFormattedDate(heroFormattedDate);
+      // Real data is on screen — clear any error banner, including one raised
+      // before a successful silent retry.
+      setError(null);
 
     } catch (err) {
       console.error('❌ Error fetching homepage data:', err);

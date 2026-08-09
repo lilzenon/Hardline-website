@@ -19,9 +19,10 @@ import DesktopNavigationPills from '../DesktopNavigationPills';
 import Footer from '../Footer';
 import Breadcrumb from '../Breadcrumb';
 import BrandedLoader from '../BrandedLoader';
+import { importWithRetry } from '../../utils/iab';
 
-// Lazy load mobile version
-const ShopPageMobile = lazy(() => import('./ShopPageMobile'));
+// Lazy load mobile version — bounded so a stalled chunk can't pin Suspense.
+const ShopPageMobile = lazy(() => importWithRetry(() => import('./ShopPageMobile'), 8000));
 
 export default function ShopPage({ openCart = false }) {
   const [products, setProducts] = useState([]);

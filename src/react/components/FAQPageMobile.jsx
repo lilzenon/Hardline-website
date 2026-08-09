@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { navigateTo } from '../utils/navigate';
 import { sanitizeRichText, toPlainText, preloadSanitizer } from '../utils/sanitizer';
 import { fetchWithTimeout } from '../utils/iab';
 import MobileNavigation from './MobileNavigation';
@@ -157,7 +158,10 @@ const FAQPageMobile = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    window.location.href = path;
+
+    // Client-side navigation — see src/react/utils/navigate.js. This was a
+    // full document load, which wiped every client cache on each nav.
+    navigateTo(path);
   };
 
   // ✅ SEO FIX: Removed duplicate schema injection

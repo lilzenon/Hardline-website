@@ -1,6 +1,9 @@
 import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
-const Dither = lazy(() => import('./ui/DitherShadcn').then(m => ({ default: m.Dither })));
+import { importWithRetry } from '../utils/iab';
+// Bounded: DitherErrorBoundary below already contains chunk ERRORS, but a
+// stalled request is not an error — without a timeout it hangs Suspense.
+const Dither = lazy(() => importWithRetry(() => import('./ui/DitherShadcn').then(m => ({ default: m.Dither })), 8000));
 
 /**
  * Minimalist 404 Not Found Page with Dither Effect Background

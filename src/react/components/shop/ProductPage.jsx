@@ -23,6 +23,7 @@ import Breadcrumb from '../Breadcrumb';
 import BrandedLoader from '../BrandedLoader';
 import CartModal from './CartModal';
 import CartIcon from './CartIcon';
+import { importWithRetry } from '../../utils/iab';
 import { Heart, Share2, ShoppingCart, Camera, Tag, ChevronRight, Loader2 } from 'lucide-react';
 
 const SIZE_ORDER = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL'];
@@ -43,8 +44,8 @@ const sortSizes = (sizes) => {
   });
 };
 
-// Lazy load mobile version
-const ProductPageMobile = lazy(() => import('./ProductPageMobile'));
+// Lazy load mobile version — bounded so a stalled chunk can't pin Suspense.
+const ProductPageMobile = lazy(() => importWithRetry(() => import('./ProductPageMobile'), 8000));
 
 export default function ProductPage({ productId }) {
   const [product, setProduct] = useState(null);

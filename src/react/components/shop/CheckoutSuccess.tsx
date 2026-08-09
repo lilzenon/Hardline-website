@@ -10,6 +10,7 @@ import { OrderConfirmationCard } from '../ui/order-confirmation-card';
 import { Spinner } from '../ui/spinner';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import MobileNavigation from '../MobileNavigation';
+import { navigateTo } from '../../utils/navigate';
 
 interface OrderItem {
     name: string;
@@ -173,7 +174,7 @@ export default function CheckoutSuccess() {
             <MobileNavigation
                 currentPage="shop"
                 scrollY={0}
-                onNavigate={(path) => window.location.href = path}
+                onNavigate={(path) => navigateTo(path)}
             />
 
             {/* Spacer for fixed header */}

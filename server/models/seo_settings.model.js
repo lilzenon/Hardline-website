@@ -64,7 +64,10 @@ async function createSEOSettingsTable(knex) {
             table.string("google_search_console_id", 100).nullable();
 
             // Backup and versioning
-            table.text("backup_data").nullable(); // JSON string of previous settings
+            // NOTE: backup_data was dropped in migration
+            // 20260808000000_drop_seo_settings_backup_data.js. It was an unused
+            // JSON mirror that had grown to ~31 MB/row uncompressed and was
+            // pulled into the heap by every SELECT * SEO read. Do not re-add.
             table.integer("version").defaultTo(1);
             table.timestamp("last_backup_at").nullable();
 
