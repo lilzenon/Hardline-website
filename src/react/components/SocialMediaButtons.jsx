@@ -231,18 +231,27 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
 
   // Calculate dynamic button size based on container width if responsive
   const computedButtonSize = (() => {
+    let size;
     if (isDesktop && responsive && containerWidth && containerWidth > 0) {
       // Calculate max possible size that fits in container
       const totalGap = gapPx * (buttonsCount - 1);
       const availableSpace = containerWidth - totalGap;
       const sizePerButton = Math.floor(availableSpace / buttonsCount);
 
-      // Return size capped at fixed desktop size (96px), but strictly constrained by container
-      return Math.min(FIXED_DESKTOP_BUTTON_SIZE, Math.max(48, sizePerButton));
+      // Size capped at fixed desktop size (96px), but strictly constrained by container
+      size = Math.min(FIXED_DESKTOP_BUTTON_SIZE, Math.max(48, sizePerButton));
+    } else {
+      // Fallback to fixed sizes
+      size = isDesktop ? FIXED_DESKTOP_BUTTON_SIZE : FIXED_MOBILE_BUTTON_SIZE;
     }
 
-    // Fallback to fixed sizes
-    return isDesktop ? FIXED_DESKTOP_BUTTON_SIZE : FIXED_MOBILE_BUTTON_SIZE;
+    // Hard ceiling, applied last so it also overrides the 48px floor above.
+    // Lets a caller reserve an exact row height for this component (the desktop
+    // Follow Us column does this so its three blocks add up to the row height).
+    if (maxButtonSizePx && maxButtonSizePx > 0) {
+      size = Math.min(size, Math.round(maxButtonSizePx));
+    }
+    return size;
   })();
 
   const computedIconSize = isDesktop ? Math.round(computedButtonSize * 0.66) : 40;

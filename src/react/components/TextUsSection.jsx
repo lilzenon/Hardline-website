@@ -7,14 +7,14 @@ import LayloIframeSimple from './LayloIframeSimple';
  * Glassmorphism styling matches desktop event cards
  */
 const TextUsSection = ({ scaledDimensions }) => {
-  // Calculate width to match Events section exactly for proper alignment
-  const calculatedWidth = Math.round(scaledDimensions.eventsWidth);
-
+  // Width is owned by the parent column (the Follow Us column on desktop), so
+  // this just fills it. It used to hard-code scaledDimensions.eventsWidth, which
+  // no longer matches the column it lives in.
   return (
     <div
       style={{
         display: 'flex',
-        width: `${calculatedWidth}px`,
+        width: '100%',
         flexDirection: 'column',
         justifyContent: 'flex-start',
         alignItems: 'stretch',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useCallback, useMemo, memo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import { usePerformantResize } from '../hooks/usePerformantResize';
 import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery } from '../utils/sanitizer';
 import { useAnalytics } from '../hooks/useAnalytics';
@@ -567,15 +567,9 @@ const FigmaDesktop = ({ onReady }) => {
   const [isMobile, setIsMobile] = useState(false);
 
 
-  const leftColumnRef = useRef(null);
-  const [videoTargetHeight, setVideoTargetHeight] = useState(null);
-
-  const videoContainerRef = useRef(null);
-
-  const layloContainerRef = useRef(null);
-  const socialContainerRef = useRef(null);
-  const [socialMarginTop, setSocialMarginTop] = useState(null);
-  // Note: maxSocialButtonSize was removed - buttons now use fixed sizes to prevent resize shrinking bug
+  // The three homepage columns are sized by flexbox now, so the old JS
+  // height-syncing (videoTargetHeight / socialMarginTop) and the refs it
+  // measured are gone.
 
 
   // Featured hero title spacing control (desktop only)
@@ -663,85 +657,9 @@ const FigmaDesktop = ({ onReady }) => {
     // opacity: 0, animation: `fadeInUp 0.8s ease-out ${delayMs}ms forwards` 
   }), []);
 
-  // Compute the maximum usable width for the right video column based on available space
-  useEffect(() => {
-    const recompute = () => {
-      // Wrap in RAF to avoid forced reflow
-      requestAnimationFrame(() => {
-        const left = leftColumnRef.current;
-        if (left) {
-          const h = Math.round(left.getBoundingClientRect().height);
-          if (h && h > 0) {
-            setVideoTargetHeight(h);
-          }
-        }
-      });
-    };
-
-    // Initial sync - rely on RAF to wait for paint
-    const raf = requestAnimationFrame(recompute);
-
-    // Observe size changes on both containers and Laylo iframe to support bidirectional scaling
-    const desktop = document.querySelector('.desktop-container');
-    const left = leftColumnRef.current;
-    const supportsRO = typeof ResizeObserver !== 'undefined';
-    let roDesktop = null;
-    let roLeft = null;
-    let roLaylo = null;
-    let layloAttachInterval = null;
-
-    const tryAttachLayloObserver = () => {
-      if (roLaylo) return true;
-      const layloEl = document.getElementById('laylo-drop-GMpip');
-      if (layloEl && supportsRO) {
-        roLaylo = new ResizeObserver(recompute);
-        roLaylo.observe(layloEl);
-        return true;
-      }
-      return false;
-    };
-
-    if (supportsRO) {
-      if (desktop) {
-        roDesktop = new ResizeObserver(recompute);
-        roDesktop.observe(desktop);
-      }
-      if (left) {
-        roLeft = new ResizeObserver(recompute);
-        roLeft.observe(left);
-      }
-      // Attach now or keep trying for a short period until Laylo iframe is mounted
-      if (!tryAttachLayloObserver()) {
-        layloAttachInterval = setInterval(() => {
-          if (tryAttachLayloObserver()) {
-            clearInterval(layloAttachInterval);
-            layloAttachInterval = null;
-          }
-        }, 300);
-        // Safety timeout to stop polling after 5s
-        setTimeout(() => {
-          if (layloAttachInterval) {
-            clearInterval(layloAttachInterval);
-            layloAttachInterval = null;
-          }
-        }, 5000);
-      }
-    }
-
-    // Always listen to window resize as an additional signal
-    window.addEventListener('resize', recompute);
-    window.addEventListener('load', recompute);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      if (roDesktop) roDesktop.disconnect();
-      if (roLeft) roLeft.disconnect();
-      if (roLaylo) roLaylo.disconnect();
-      if (layloAttachInterval) clearInterval(layloAttachInterval);
-      window.removeEventListener('resize', recompute);
-      window.removeEventListener('load', recompute);
-    };
-  }, []);
+  // NOTE: the old ResizeObserver block that measured the left column and fed
+  // its height into the video element is gone — the three columns are now one
+  // flex row, so the browser keeps their heights in sync natively.
 
   // NOTE: Laylo SDK is now loaded by the useLayloSDK hook used by LayloIframeSimple component
   // The hook uses a global singleton pattern to prevent race conditions
@@ -1458,59 +1376,9 @@ const FigmaDesktop = ({ onReady }) => {
     return () => cancelAnimationFrame(rafId);
   }, [mostRecentEvent, scaledDimensions.heroWidth, scaledDimensions.containerWidth, homeSettings?.event_title]);
 
-  // Desktop-only: function to (re)calculate social buttons top margin so their bottom aligns to video bottom
-  const recalcSocialAlignment = useCallback(() => {
-    try {
-      if (!scaledDimensions || (scaledDimensions.containerWidth ?? 0) < 1024) return;
-      const videoRect = videoContainerRef?.current?.getBoundingClientRect?.();
-      const layloRect = layloContainerRef?.current?.getBoundingClientRect?.();
-      const socialRect = socialContainerRef?.current?.getBoundingClientRect?.();
-      if (!videoRect || !layloRect || !socialRect) return;
-
-      // Align bottoms by adjusting top margin
-      const desiredBottom = videoRect.top + videoRect.height;
-      const currentBottom = layloRect.top + layloRect.height + socialRect.height;
-      const bias = Math.round(Math.max(8, (scaledDimensions.scale || 1) * 12));
-      const mt = Math.max(0, Math.round(desiredBottom + bias - currentBottom));
-      setSocialMarginTop(mt);
-
-      // Note: maxSocialButtonSize calculation was removed to fix resize shrinking bug
-      // Buttons now use fixed 96px size regardless of available space
-    } catch (_) { }
-  }, [scaledDimensions?.containerWidth, scaledDimensions?.scale]);
-
-  // Run on layout changes driven by our scaling calculations
-  useLayoutEffect(() => {
-    // Allow layout to settle across two frames then measure
-    const id = requestAnimationFrame(() => {
-      const id2 = requestAnimationFrame(() => recalcSocialAlignment());
-      return () => cancelAnimationFrame(id2);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [recalcSocialAlignment, scaledDimensions?.textUsWidth, scaledDimensions?.eventsWidth]);
-
-  // Also respond to viewport resizes (desktop only) using performant window listener
-  useEffect(() => {
-    recalcSocialAlignment();
-  }, [recalcSocialAlignment, viewportWidth]);
-
-  // Observe element size changes (Laylo and Video) for real-time responsiveness
-  useEffect(() => {
-    if (typeof ResizeObserver === 'undefined') return;
-    const observers = [];
-    const cb = () => {
-      // Batch via RAF to avoid layout thrash
-      requestAnimationFrame(() => recalcSocialAlignment());
-    };
-    [videoContainerRef.current, layloContainerRef.current, socialContainerRef.current]
-      .filter(Boolean)
-      .forEach((el) => {
-        const ro = new ResizeObserver(cb);
-        ro.observe(el);
-        observers.push(ro);
-      });
-    return () => observers.forEach((ro) => ro.disconnect());
-  }, [recalcSocialAlignment]);
+  // NOTE: the social-button bottom-alignment measuring pass (recalcSocialAlignment)
+  // was removed with the three-column redesign. The video, social row and Laylo
+  // embed are siblings in one flex column now, so alignment is structural.
 
   // Signal parent when regular loading finishes
   useEffect(() => {
@@ -1538,6 +1406,111 @@ const FigmaDesktop = ({ onReady }) => {
     console.warn('🚨 Critical error, using fallback UI');
     // Continue with fallback data that was set in catch block
   }
+
+  // ── Desktop three-column layout metrics ────────────────────────────────────
+  // Col 1 = "Up Next" hero, Col 2 = "Events" (single-column scrolling list),
+  // Col 3 = "Follow Us" (video → social icons → Laylo embed).
+  //
+  // All three columns share ONE row height so their bottom edges line up. The
+  // row is built as: sectionTitleHeight + stackGap + rowContentHeight, and each
+  // column is a flex column whose first child is the section title and whose
+  // remaining child(ren) fill rowContentHeight.
+  //
+  // rowContentHeight is the hero SQUARE: the row is exactly heroWidth tall, so
+  // column 1 stays a true square. Column 3 fits inside it — the Laylo card and
+  // the social row take their fixed heights and the video absorbs whatever is
+  // left, which is why the video reads as a wide banner rather than 16:9.
+  // VIDEO_FLOOR below is only a safety valve for the narrow end.
+  const colGap = Math.max(12, Math.round(scaledDimensions.scale * 16));
+  const stackGap = Math.max(6, Math.round(scaledDimensions.scale * 8));
+  const sectionTitleHeight = Math.max(22, Math.round(scaledDimensions.scale * 28));
+  const sectionTitleFontSize = Math.max(20, Math.round(scaledDimensions.scale * 23));
+
+  // Width actually available to the row: .desktop-container is capped at 1400px
+  // with 40px of padding a side. A scrollbar's worth is subtracted so the
+  // estimate is never optimistic.
+  const rowAvailableWidth = Math.max(600, Math.min(1400, viewportWidth || 1400) - 80 - 16);
+  // Narrowest width at which a single-column event card (105px thumbnail + text
+  // + View button) still reads properly. The Follow Us column yields first,
+  // down to FOLLOW_COLUMN_MIN — below ~300px the Laylo embed clips its own
+  // phone input behind the RSVP button, so that floor wins over this one.
+  const EVENTS_COLUMN_MIN = 300;
+  const FOLLOW_COLUMN_MIN = 300;
+  const columnsRemainder = rowAvailableWidth - scaledDimensions.heroWidth - (colGap * 2);
+  const followColumnWidth = Math.max(FOLLOW_COLUMN_MIN, Math.min(
+    420,
+    Math.round(scaledDimensions.scale * 300),
+    // Never wider than the events column: it splits the leftover at most evenly.
+    Math.floor(columnsRemainder / 2),
+    columnsRemainder - EVENTS_COLUMN_MIN
+  ));
+  // Below roughly a 985px viewport there is no honest way to fit three columns:
+  // the events column drops under ~240px, where the card loses its text and the
+  // Next/Past toggle collides with the heading. There, the Follow Us column
+  // wraps to its own full-width line beneath the other two. This is a pure style
+  // switch — the DOM stays identical in both modes, so crossing the breakpoint
+  // never remounts the Laylo iframe.
+  const useThreeColumns = (columnsRemainder - FOLLOW_COLUMN_MIN) >= 240;
+  // Widths the Follow Us blocks actually render at. Wrapped, the video spans the
+  // full row while the social row and Laylo stay readable rather than stretching.
+  const videoRenderWidth = useThreeColumns ? followColumnWidth : rowAvailableWidth;
+  const followBlockWidth = useThreeColumns ? followColumnWidth : Math.min(520, rowAvailableWidth);
+  // Capped at 56 rather than the old desktop 96: every pixel here comes straight
+  // out of the video, which shares the hero square with the Laylo card. Never
+  // wider than their share of the block either, so the reserved height is exact.
+  const socialButtonSize = Math.max(44, Math.min(
+    56,
+    Math.round(scaledDimensions.scale * 44),
+    Math.floor((followBlockWidth - 48) / 4)
+  ));
+  // Laylo card as it settles once the SDK sizes its iframe (~167px + 1px border
+  // a side). This is only the reserve used to pick the row height — the block
+  // itself is left unconstrained, so if the embed renders taller the video
+  // absorbs it and, past videoMinHeight, the whole row grows. Never clamp the
+  // Laylo block's height: it clips the consent copy and the Laylo footer.
+  const LAYLO_BLOCK_HEIGHT = 170;
+  // Three-column: a safety valve only. Kept deliberately low so it does NOT bind
+  // at normal desktop widths — the moment it binds, the row grows past the hero
+  // square and column 1 stops being square. It exists for ~1024px, where the
+  // Laylo card wraps to ~187px and genuinely will not fit inside the square.
+  // Wrapped: the video is full-width, so its height comes from that width
+  // instead of from a column that no longer constrains it.
+  const VIDEO_FLOOR = 90;
+  const videoMinHeight = useThreeColumns
+    ? VIDEO_FLOOR
+    : Math.round(rowAvailableWidth * 0.3);
+  // Video caption overlay. In three-column mode the video is a ~130px banner, so
+  // the overlay is tightened to leave usable picture above it; wrapped, the video
+  // is full-width and tall, so it keeps the original proportions.
+  const videoOverlay = useThreeColumns
+    ? { titleSize: 18, ctaHeight: 36, ctaWidth: 100, minHeight: 40, bottom: 8, padding: '8px 14px 10px' }
+    : { titleSize: 24, ctaHeight: 44, ctaWidth: 112, minHeight: 52, bottom: 12, padding: '10px 16px 12px' };
+  // Pill + flex gap (16) + overlay padding (32) must still leave the title room;
+  // "Watch on YouTube" needs ~150px at 18px, and 170 here keeps a margin so a
+  // 300px column drops the pill instead of truncating to "Watch on YouT…".
+  // Losing the pill costs nothing — the whole video is clickable.
+  const showVideoCta = videoRenderWidth >= videoOverlay.ctaWidth + 16 + 32 + 170;
+  const followStackHeight = videoMinHeight + socialButtonSize + LAYLO_BLOCK_HEIGHT + (stackGap * 2);
+  // Wrapped, the Follow Us column no longer shares the row, so the hero and the
+  // events list are sized by the hero square alone.
+  const rowContentHeight = useThreeColumns
+    ? Math.max(scaledDimensions.heroWidth, followStackHeight)
+    : scaledDimensions.heroWidth;
+  const rowHeight = sectionTitleHeight + stackGap + rowContentHeight;
+
+  // Shared style for the three column headings so they sit on one baseline.
+  const sectionTitleStyle = {
+    color: '#FFF',
+    fontFamily: 'Inter',
+    fontSize: `${sectionTitleFontSize}px`,
+    fontWeight: '800',
+    lineHeight: 'normal',
+    margin: '0',
+    padding: '0',
+    height: `${sectionTitleFontSize}px`,
+    display: 'flex',
+    alignItems: 'center'
+  };
 
   return (
     <div className="homepage-root">
@@ -1618,7 +1591,7 @@ const FigmaDesktop = ({ onReady }) => {
               <DesktopNavigationPills currentPage="Events" />
             </div>
 
-            {/* Desktop Layout: Hero Left + Events Right (1024px+) */}
+            {/* Desktop Layout: Up Next | Events | Follow Us (three columns, 1024px+) */}
             <div
               style={{
                 position: 'relative',
@@ -1627,19 +1600,30 @@ const FigmaDesktop = ({ onReady }) => {
                 margin: '24px 0 0 0', // Reduced from 32px to 24px for better visual flow
                 padding: '0',
                 flexDirection: scaledDimensions.containerWidth >= 1024 ? 'row' : 'column',
-                gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px` : '20px', // Scale gap for desktop
-                alignItems: 'flex-start'
+                // Wrapping is what lets the Follow Us column drop to its own
+                // line on narrow desktops without any change to the DOM.
+                flexWrap: useThreeColumns ? 'nowrap' : 'wrap',
+                gap: scaledDimensions.containerWidth >= 1024 ? `${colGap}px` : '20px', // Scale gap for desktop
+                // minHeight, not height: if the Laylo embed renders taller than
+                // reserved, the row grows and all three columns grow with it
+                // rather than the third one overflowing.
+                minHeight: scaledDimensions.containerWidth >= 1024 && useThreeColumns ? `${rowHeight}px` : 'auto',
+                alignItems: scaledDimensions.containerWidth >= 1024 ? 'stretch' : 'flex-start'
               }}
             >
-              {/* Left Side - Up Next Section (Desktop Only) */}
+              {/* Column 1 - Up Next Section (Desktop Only) */}
               {scaledDimensions.containerWidth >= 1024 ? (
                 <div
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'stretch',
-                    gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as events section
+                    gap: `${stackGap}px`, // Same gap as the other two columns
                     width: `${scaledDimensions.heroWidth}px`,
+                    // Anchors the flex line's height. Needed once the row can
+                    // wrap: the hero itself is flex:1 with no basis, so without
+                    // this the line would collapse to the section title.
+                    minHeight: `${rowHeight}px`,
                     flexShrink: 0,
                     contain: 'paint',
                     isolation: 'isolate'
@@ -1651,27 +1635,14 @@ const FigmaDesktop = ({ onReady }) => {
                       display: 'flex',
                       alignItems: 'center',
                       // Use toggle height to match events section alignment to fix vertical misalignment
-                      height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`,
+                      height: `${sectionTitleHeight}px`,
+                      flexShrink: 0,
                       margin: '0',
                       padding: '0'
                     }}
                   >
                     {/* Up Next Title - Scaled down for better proportion */}
-                    <div
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Reduced scaling base to match ~32px target
-                        fontWeight: '800',
-                        lineHeight: 'normal',
-                        margin: '0',
-                        padding: '0',
-                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Explicit height to match font size
-                        display: 'flex',
-                        alignItems: 'center', // Center text vertically within the height
-                        // Removed fadeIn(200) to prevent double-fade/black screen relative to loader reveal
-                      }}
-                    >
+                    <div style={sectionTitleStyle}>
                       Up Next
                     </div>
                   </div>
@@ -1698,10 +1669,13 @@ const FigmaDesktop = ({ onReady }) => {
                       }
                     }}
                     style={{
-                      width: `${scaledDimensions.heroWidth}px`, // Use heroWidth for perfect square
-                      height: `${scaledDimensions.heroWidth}px`, // Same as width for perfect square
+                      width: '100%', // Column is heroWidth wide
+                      // Fills the shared row height so all three columns bottom-align.
+                      // Equals heroWidth (square) whenever the hero is the tallest
+                      // column; taller than it when column 3's minimums win.
+                      flex: '1 1 0',
+                      minHeight: 0,
                       position: 'relative',
-                      flexShrink: 0,
                       margin: '0',
                       cursor: 'pointer',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -2158,53 +2132,37 @@ const FigmaDesktop = ({ onReady }) => {
                 </div>
               )}
 
-              {/* Right Side - Events Section (Desktop 1024px+) */}
+              {/* Column 2 - Events Section (Desktop 1024px+) */}
               {scaledDimensions.containerWidth >= 1024 && (
                 <div
                   style={{
                     display: 'flex',
-                    flex: '1',
+                    // Takes whatever the hero and Follow Us columns leave behind.
+                    flex: '1 1 0',
+                    minWidth: 0,
                     flexDirection: 'column',
                     justifyContent: 'flex-start',
                     alignItems: 'stretch',
-                    gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Responsive gap
-                    minWidth: `${Math.max(450, Math.round(scaledDimensions.eventsWidth))}px`, // Scale with eventsWidth
-
-                    height: (() => {
-                      // Calculate total height to match Up Next title + gap + square hero image
-                      const titleHeight = Math.max(22, Math.round(scaledDimensions.scale * 28)); // Up Next title height (updated to match toggle wrapper)
-                      const sectionGap = Math.max(6, Math.round(scaledDimensions.scale * 8)); // Gap between title and hero
-                      const squareHeroHeight = scaledDimensions.heroWidth; // Square hero uses heroWidth for height
-                      const totalLeftSideHeight = titleHeight + sectionGap + squareHeroHeight;
-                      return `${totalLeftSideHeight}px`; // Match total left side height
-                    })(),
+                    gap: `${stackGap}px`, // Responsive gap
                     overflow: 'hidden' // Prevent any overflow
                   }}
                 >
-                  {/* Events Title and Toggle - Aligned with Hero Top */}
+                  {/* Events Title and Toggle - toggle pins to the right edge of THIS column */}
                   <div
                     style={{
                       display: 'flex',
+                      width: '100%',
                       justifyContent: 'space-between',
                       alignItems: 'center',
+                      height: `${sectionTitleHeight}px`,
+                      flexShrink: 0,
                       margin: '0', // Remove margin to align with hero top
                       padding: '0',
                       ...fadeIn(600)
                     }}
                   >
                     {/* Event Title - Scaled down to match Up Next Title */}
-                    <div
-                      style={{
-                        color: '#FFF',
-                        fontFamily: 'Inter',
-                        fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Reduced scaling base to match ~32px target
-                        fontWeight: '800',
-                        lineHeight: 'normal',
-                        height: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`, // Explicit height to match Up Next title
-                        display: 'flex',
-                        alignItems: 'center' // Center text vertically within the height
-                      }}
-                    >
+                    <div style={sectionTitleStyle}>
                       Events
                     </div>
                     {/* Event Filter Toggle - Responsive (Glass container, sliding mechanism preserved) */}
@@ -2212,7 +2170,7 @@ const FigmaDesktop = ({ onReady }) => {
                       style={{
                         display: 'flex',
                         width: `${Math.max(75, Math.round(scaledDimensions.scale * 95))}px`,
-                        height: `${Math.max(22, Math.round(scaledDimensions.scale * 28))}px`,
+                        height: `${sectionTitleHeight}px`,
                         padding: `${Math.max(1, Math.round(scaledDimensions.scale * 1.5))}px`,
                         justifyContent: 'center',
                         alignItems: 'center',
@@ -2339,12 +2297,10 @@ const FigmaDesktop = ({ onReady }) => {
                     style={{
                       position: 'relative',
                       width: '100%',
-                      height: (() => {
-                        // Simple calculation: match the hero image height exactly
-                        // The hero image height is scaledDimensions.heroWidth (since it's square and already scaled)
-                        const heroImageHeight = scaledDimensions.heroWidth;
-                        return `${heroImageHeight}px`; // Match hero height exactly for perfect alignment
-                      })(),
+                      // Fills the shared row height, so the list bottom lines up
+                      // with the hero and the Laylo embed.
+                      flex: '1 1 0',
+                      minHeight: 0,
                       contain: 'paint',
                       isolation: 'isolate',
                       WebkitTransform: 'translateZ(0)'
@@ -2359,10 +2315,9 @@ const FigmaDesktop = ({ onReady }) => {
                         ...(fadeIn(800)),
                         position: 'relative',
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)', // 2 columns
+                        gridTemplateColumns: '1fr', // Single column of events
                         gridAutoRows: 'min-content', // Allow natural content height instead of fixed 3 rows
                         rowGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive row gap
-                        columnGap: `${Math.max(4, Math.round(scaledDimensions.scale * 8))}px`, // Responsive column gap
                         width: '100%',
                         height: '100%',
                         alignItems: 'stretch',
@@ -2378,10 +2333,10 @@ const FigmaDesktop = ({ onReady }) => {
                       }}
                     >
                       {(() => {
-                        // Calculate available height per grid cell for responsive card scaling
-                        const heroImageHeight = scaledDimensions.heroWidth; // Hero image height (square, already scaled)
+                        // Calculate available height per grid cell for responsive card scaling.
+                        // The list is one column tall enough for 3 cards before scrolling.
                         const gridGap = Math.max(4, Math.round(scaledDimensions.scale * 8));
-                        const availableHeightPerCell = (heroImageHeight - (2 * gridGap)) / 3; // 3 rows with 2 gaps
+                        const availableHeightPerCell = (rowContentHeight - (2 * gridGap)) / 3; // 3 rows with 2 gaps
                         const baseCardHeight = 124; // Base card height for scaling reference
                         const cardScaleFactor = Math.min(1, availableHeightPerCell / baseCardHeight); // Never scale up, only down
 
@@ -2783,115 +2738,50 @@ const FigmaDesktop = ({ onReady }) => {
                   </div>
                 </div>
               )}
-            </div>
 
-
-
-
-
-
-
-
-
-            {/* YouTube Video and Text Us Section - Side by Side Layout (Desktop 1024px+) */}
-            {scaledDimensions.containerWidth >= 1024 && (
-              <div
-                style={{
-                  ...(fadeIn(1000)),
-                  position: 'relative',
-                  display: 'flex',
-                  width: '100%',
-                  margin: '24px 0 0 0', // Standardized vertical gap between top and bottom rows (desktop-only)
-                  padding: '0',
-                  alignItems: 'flex-start',
-                  gap: scaledDimensions.containerWidth >= 1024 ? `${Math.max(12, Math.round(scaledDimensions.scale * 16))}px` : '20px' // Match exact gap from Row 1
-                }}
-              >
-                {/* Left Side - Follow Us (Social Media) above Text Us (Laylo) */}
+              {/* Column 3 - Follow Us: video, then social icons, then Laylo embed */}
+              {scaledDimensions.containerWidth >= 1024 && (
                 <div
-                  ref={leftColumnRef}
                   style={{
+                    ...(fadeIn(1000)),
+                    position: 'relative',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: `${Math.max(6, Math.round(scaledDimensions.scale * 8))}px`, // Same gap as other sections
-                    alignItems: 'flex-start',
-                    flexShrink: 0,
-                    // Use scale-based width instead of forced min-width to ensure proper scaling on tight viewports
-                    width: `${scaledDimensions.eventsWidth}px`
+                    ...(useThreeColumns
+                      ? { width: `${followColumnWidth}px`, flexShrink: 0 }
+                      // Wrapped: own full-width line under the other two columns.
+                      : { width: '100%', flexBasis: '100%', marginTop: `${colGap}px` }),
+                    padding: '0',
+                    gap: `${stackGap}px` // Same gap as the other two columns
                   }}
                 >
-                  {/* Follow Us Title - Standardized Typography - Moved to Top */}
+                  {/* Follow Us Title - shares the baseline with Up Next / Events */}
                   <div
                     style={{
-                      color: '#FFF',
-                      fontFamily: 'Inter',
-                      fontSize: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`,
-                      fontWeight: '800',
-                      lineHeight: 'normal',
-                      letterSpacing: '-0.02em',
-                      margin: '0',
-                      padding: '0',
-                      height: `${Math.max(20, Math.round(scaledDimensions.scale * 23))}px`,
                       display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    Follow Us
-                  </div>
-
-                  {/* Text Us: Laylo section (Middle) */}
-                  <div ref={layloContainerRef} style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'flex-start',
-                    marginTop: '0'
-                  }}>
-                    <TextUsSection scaledDimensions={scaledDimensions} />
-                  </div>
-
-                  {/* Social Media Buttons (Bottom) */}
-                  <div
-                    ref={socialContainerRef}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      justifyContent: 'flex-start',
                       alignItems: 'center',
-                      padding: '0',
-                      marginTop: '0',
-                      zIndex: 0
+                      height: `${sectionTitleHeight}px`,
+                      flexShrink: 0,
+                      margin: '0',
+                      padding: '0'
                     }}
                   >
-                    <SocialMediaButtons
-                      isDesktop={true}
-                      containerWidth={scaledDimensions.eventsWidth} // Allow buttons to scale down naturally
-                      responsive={true}
-                    />
+                    <div style={sectionTitleStyle}>
+                      Follow Us
+                    </div>
                   </div>
-                </div>
 
-                {/* Right Side - Video Section */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 1, // Fill remaining space
-                    alignItems: 'flex-start',
-                    width: 'auto',
-                    minWidth: 0, // Allow flex item to shrink below content size if needed
-                    maxWidth: '100%'
-                  }}
-                >
-                  {/* YouTube Video - Right Side (16:9 aspect ratio, no title) */}
+                  {/* YouTube Video - top of the column, absorbs the leftover height */}
                   <div
-                    ref={videoContainerRef}
                     onClick={() => openExternal(videoCtaUrl)}
                     style={{
-                      // Scale video to fill the container completely
+                      // Takes whatever height the social row and Laylo embed leave.
+                      // The iframe below is scaled to 150% and cropped, so any
+                      // aspect ratio renders correctly.
                       width: '100%',
-                      height: videoTargetHeight ? `${videoTargetHeight}px` : 'auto',
+                      flex: '1 1 0',
+                      minHeight: `${videoMinHeight}px`,
                       position: 'relative',
-                      flexShrink: 0,
                       cursor: 'pointer',
                       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                       transformOrigin: 'right top',
@@ -2987,11 +2877,11 @@ const FigmaDesktop = ({ onReady }) => {
                       style={{
                         position: 'absolute',
                         left: '0px',
-                        bottom: '12px',
+                        bottom: `${videoOverlay.bottom}px`,
                         display: 'flex',
                         width: '100%',
-                        minHeight: '52px',
-                        padding: '10px 16px 12px',
+                        minHeight: `${videoOverlay.minHeight}px`,
+                        padding: videoOverlay.padding,
                         justifyContent: 'space-between',
                         alignItems: 'flex-end',
                         gap: '16px',
@@ -3012,16 +2902,15 @@ const FigmaDesktop = ({ onReady }) => {
                           style={{
                             color: '#FFF',
                             fontFamily: 'Inter',
-                            fontSize: '24px',
+                            fontSize: `${videoOverlay.titleSize}px`,
                             fontWeight: '800',
                             lineHeight: '1.1',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
-                            maxWidth: `${(() => {
-                              const responsiveWidth = Math.min(Math.round(scaledDimensions.rightHeroWidth), Math.round(scaledDimensions.containerWidth * 0.4));
-                              return responsiveWidth >= 300 ? responsiveWidth - 150 : responsiveWidth - 60;
-                            })()}px`
+                            // Video width minus the overlay's horizontal padding
+                            // and, when the CTA is shown, the flex gap plus pill.
+                            maxWidth: `${Math.max(120, videoRenderWidth - (showVideoCta ? videoOverlay.ctaWidth + 48 : 44))}px`
                           }}
                         >
                           Watch on YouTube
@@ -3032,15 +2921,24 @@ const FigmaDesktop = ({ onReady }) => {
                             fontFamily: 'Inter',
                             fontSize: '10px',
                             fontWeight: '200',
-                            lineHeight: 'normal'
+                            lineHeight: 'normal',
+                            // One line in three-column mode: the video is only
+                            // ~130px tall there, so a wrapped caption would push
+                            // the overlay over the whole picture.
+                            ...(useThreeColumns ? {
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: `${Math.max(120, videoRenderWidth - (showVideoCta ? videoOverlay.ctaWidth + 48 : 44))}px`
+                            } : {})
                           }}
                         >
                           {videoCaption}
                         </div>
                       </div>
 
-                      {/* Right - CTA */}
-                      {Math.min(Math.round(scaledDimensions.rightHeroWidth * 1.25), Math.round(scaledDimensions.containerWidth * 0.5)) >= 300 && (
+                      {/* Right - CTA (dropped when the column is too narrow to hold it) */}
+                      {showVideoCta && (
                         <div
                           onClick={(e) => {
                             e.stopPropagation();
@@ -3058,11 +2956,11 @@ const FigmaDesktop = ({ onReady }) => {
                           }}
                           style={{
                             display: 'flex',
-                            minWidth: '112px',
-                            height: '44px',
+                            minWidth: `${videoOverlay.ctaWidth}px`,
+                            height: `${videoOverlay.ctaHeight}px`,
                             justifyContent: 'center',
                             alignItems: 'center',
-                            borderRadius: '22px',
+                            borderRadius: `${videoOverlay.ctaHeight / 2}px`,
                             background: 'rgba(22, 22, 22, 0.50)',
                             border: '1px solid rgba(255, 255, 255, 0.12)',
                             boxShadow: '0px 4px 8px rgba(0,0,0,0.20)',
@@ -3107,11 +3005,51 @@ const FigmaDesktop = ({ onReady }) => {
                     </div>
                   </div>
 
+                  {/* Social Media Buttons - middle of the column */}
+                  <div
+                    style={{
+                      width: `${followBlockWidth}px`,
+                      maxWidth: '100%',
+                      height: `${socialButtonSize}px`,
+                      flexShrink: 0,
+                      display: 'flex',
+                      justifyContent: 'flex-start',
+                      alignItems: 'center',
+                      padding: '0',
+                      margin: '0',
+                      zIndex: 0
+                    }}
+                  >
+                    <SocialMediaButtons
+                      isDesktop={true}
+                      containerWidth={followBlockWidth}
+                      // Hard ceiling so the row height stays exactly
+                      // socialButtonSize, which the column height reserves for it.
+                      maxButtonSizePx={socialButtonSize}
+                      responsive={true}
+                    />
+                  </div>
 
-
+                  {/* Text Us: Laylo embed - bottom of the column.
+                      SENSITIVE: height is deliberately unconstrained. The Laylo
+                      SDK resizes its own iframe once loaded (~167px), and any
+                      clamp here crops the consent copy and the Laylo footer.
+                      LAYLO_BLOCK_HEIGHT above only reserves space in the row. */}
+                  <div
+                    style={{
+                      width: `${followBlockWidth}px`,
+                      maxWidth: '100%',
+                      flexShrink: 0,
+                      display: 'flex',
+                      justifyContent: 'flex-start',
+                      margin: '0'
+                    }}
+                  >
+                    <TextUsSection scaledDimensions={scaledDimensions} />
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Events and Text Us Section - Hidden on Desktop 1024px+, Visible on Mobile/Tablet */}
             <div
