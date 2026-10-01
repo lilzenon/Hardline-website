@@ -9,6 +9,7 @@ import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 import { injectAboutGalleryJsonLd, removeAboutGalleryJsonLd } from '../utils/aboutGalleryJsonLd';
 import { importWithRetry } from '../utils/iab';
+import { readAboutSeed, normalizeGalleryImages, galleryFingerprint, runWhenIdle } from '../utils/aboutSeed';
 
 // Hoisted to module scope: React.lazy() called inside the render body creates a
 // NEW component identity every render, so React unmounted and remounted the
@@ -22,8 +23,10 @@ const AboutPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeNavTab, setActiveNavTab] = useState('About');
 
-  // 🚀 OPTIMIZATION: Initialize from storage for instant load
+  // Server-inlined seed first (see utils/aboutSeed.js), storage second.
+  const [seed] = useState(readAboutSeed);
   const [aboutContent, setAboutContent] = useState(() => {
+    if (seed && seed.aboutContent) return seed.aboutContent;
     try {
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem('b2b_about_content');
@@ -35,12 +38,13 @@ const AboutPage = () => {
 
   const [contentError, setContentError] = useState(null);
 
-  // 🚀 OPTIMIZATION: Initialize gallery from storage
+  // Gallery: seed first, then storage (re-normalised so stale cache-busters drop out)
   const [galleryImages, setGalleryImages] = useState(() => {
+    if (seed && seed.galleryImages.length > 0) return seed.galleryImages;
     try {
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem('b2b_gallery_images');
-        return cached ? JSON.parse(cached) : [];
+        return cached ? normalizeGalleryImages(JSON.parse(cached)) : [];
       }
     } catch (e) { }
     return [];
@@ -180,8 +184,18 @@ const AboutPage = () => {
 
   // Fetch About page content and gallery from API
   useEffect(() => {
-    fetchAboutContent();
-    fetchGalleryImages();
+    if (!seed) {
+      // No server seed (older cached HTML, admin outage, dev server): fetch now.
+      fetchAboutContent();
+      fetchGalleryImages();
+      return undefined;
+    }
+    // Seeded: content on screen is current as of the server render. Revalidate
+    // after load + idle and only touch state if something changed.
+    return runWhenIdle(() => {
+      fetchAboutContent();
+      fetchGalleryImages();
+    });
   }, []);
 
   const fetchAboutContent = async () => {
@@ -207,13 +221,13 @@ const AboutPage = () => {
 
       const data = await response.json();
 
-      if (data.success && data.data) {
-        setAboutContent(data.data.content);
+      if (data.success && data.data && typeof data.data.content === 'string') {
+        // Same text as already rendered -> no state change, no re-render.
+        setAboutContent((prev) => (prev === data.data.content ? prev : data.data.content));
         // 💾 Persist to storage for instant load
         try {
           localStorage.setItem('b2b_about_content', data.data.content);
         } catch (e) { }
-        console.log('✅ About page content loaded successfully');
       } else {
         throw new Error('Invalid response format');
       }
@@ -289,44 +303,20 @@ Our mission is to unite top talent, immersive production, and passionate fans to
     try {
       // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
       // The backend at /api/settings/about/gallery/public proxies to the dashboard server
-      const cacheBuster = `cb=${Date.now()}`;
-      const galleryUrl = `/api/settings/about/gallery/public?${cacheBuster}`;
-      console.log('🔍 Fetching gallery from local proxy:', galleryUrl);
-
-      const response = await fetch(galleryUrl, {
+      // Plain GET through the local proxy (same cached list the server used).
+      // No `cb=Date.now()`: it was also stamped onto every image URL, which made
+      // the browser re-download the entire gallery on every visit.
+      const response = await fetch('/api/settings/about/gallery/public', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // 🚨 FIX: Disable caching to ensure fresh data
-        cache: 'no-cache'
+        headers: { 'Accept': 'application/json' }
       });
 
       if (response.ok) {
         const data = await response.json();
         console.log('🔍 Gallery API Response:', JSON.stringify(data, null, 2));
         if (data.success && Array.isArray(data.data)) {
-          console.log('🖼️ First image structure:', data.data[0]);
-          const normalized = data.data.map((img, idx) => {
-            const n = normalizeGalleryImage(img);
-            // Ensure all variant URLs are absolute to the dashboard domain so the homepage can load them
-            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-            const makeAbs = (u) => {
-              if (!u) return u;
-              const abs = /^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`;
-              const sep = abs.includes('?') ? '&' : '?';
-              return `${abs}${sep}${cacheBuster}`;
-            };
-            const urls = (n && (n.urls || n.srcSet)) || {};
-            const absUrls = {
-              thumbnail: makeAbs(urls.thumbnail),
-              small: makeAbs(urls.small),
-              medium: makeAbs(urls.medium || n?.url),
-              large: makeAbs(urls.large),
-              original: makeAbs(urls.original || n?.url)
-            };
-            const withVariants = { ...n, urls: absUrls, srcSet: absUrls };
-            if (idx < 5) console.log('🧭 Normalized gallery image', idx, withVariants?.url || withVariants, withVariants.urls);
+          const normalized = normalizeGalleryImages(data.data).map((img) => {
+            const withVariants = img;
             return withVariants;
           });
           setGalleryImages(normalized);

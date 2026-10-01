@@ -21,12 +21,10 @@ const MasonryGallery = ({
     if (w < 1024) return columns.tablet;
     return columns.desktop;
   });
-  const [isVisible, setIsVisible] = useState(false);
   const [expandedImage, setExpandedImage] = useState(null);
   const [imageLoadingStates, setImageLoadingStates] = useState(new Map());
   const [isClosingModal, setIsClosingModal] = useState(false);
   const galleryRef = useRef(null);
-  const observerRef = useRef(null);
   const modalRef = useRef(null);
   const lastCloseTimeRef = useRef(0);
 
@@ -93,34 +91,11 @@ const MasonryGallery = ({
     return typeof window !== 'undefined' && window.innerWidth < 768;
   }, []);
 
-  // Intersection Observer for lazy loading
-  useEffect(() => {
-    // Fallback for browsers without IntersectionObserver
-    if (typeof window !== 'undefined' && !('IntersectionObserver' in window)) {
-      setIsVisible(true);
-      return;
-    }
-
-    observerRef.current = new IntersectionObserver(
-      ([entry]) => {
-        if (entry && entry.isIntersecting) {
-          setIsVisible(true);
-          observerRef.current?.disconnect();
-        }
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    );
-
-    if (galleryRef.current) {
-      observerRef.current.observe(galleryRef.current);
-    } else {
-      // If ref not ready yet, ensure visibility after a short delay
-      const t = setTimeout(() => setIsVisible(true), 800);
-      return () => clearTimeout(t);
-    }
-
-    return () => observerRef.current?.disconnect();
-  }, []);
+  // NOTE: there is deliberately no "render a placeholder until the gallery is in
+  // view" gate any more. It swapped a 240px placeholder for the real grid once
+  // visible, which moved the footer and everything below. The grid renders at
+  // its final size immediately (each tile reserves its height from the image's
+  // known dimensions); non-priority <img loading="lazy"> still defers the bytes.
 
   // Responsive listener
   useEffect(() => {
@@ -128,30 +103,8 @@ const MasonryGallery = ({
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, [updateColumns]);
-  // Safety fallback: if images arrive but observer didn't trigger, force visibility
-  useEffect(() => {
-    if (!isVisible && Array.isArray(images) && images.length > 0) {
-      // If we have images, check if they are high priority (top of page likely)
-      // If so, make visible sooner
-      const t = setTimeout(() => setIsVisible(true), 500);
-      return () => clearTimeout(t);
-    }
-  }, [images, isVisible]);
 
 
-  // Recalculate columns when gallery becomes visible (after IO) and on tab restore
-  useEffect(() => {
-    if (!isVisible) return;
-    // Next frame to ensure DOM/layout has settled
-    if (typeof requestAnimationFrame === 'function') {
-      requestAnimationFrame(() => updateColumns());
-    } else {
-      updateColumns();
-    }
-    // Nudge again shortly after for browsers that adjust after paint
-    const t = setTimeout(updateColumns, 150);
-    return () => clearTimeout(t);
-  }, [isVisible, updateColumns]);
 
   // Handle visibility/tab restore events which can affect viewport measurements
   useEffect(() => {
@@ -396,7 +349,9 @@ const MasonryGallery = ({
     }
 
     .masonry-image {
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      /* transform/box-shadow only: "all" also animated width/height, so any
+         reflow (e.g. an image decoding) visibly slid the tiles around. */
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       border-radius: 12px;
       overflow: hidden;
@@ -442,51 +397,6 @@ const MasonryGallery = ({
     }
   `;
 
-  if (!isVisible) {
-    return (
-      <>
-        <style>{galleryStyles}</style>
-        <div
-          ref={galleryRef}
-          className={`masonry-gallery-placeholder ${className}`}
-          style={{
-            minHeight: (typeof window !== 'undefined' && window.innerWidth < 768) ? '240px' : '360px',
-            background: 'transparent', // Transparent to prevent artifacts
-            backdropFilter: 'none', // Remove blur to prevent artifacts
-            WebkitBackdropFilter: 'none', // Remove webkit blur to prevent artifacts
-            borderRadius: '16px',
-            border: 'none', // Remove border to prevent artifacts
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'transparent', // Invisible text to prevent artifacts
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '16px',
-            fontWeight: '500',
-            transition: 'all 0.3s ease' // Smooth transition when loading
-          }}
-        >
-          <div style={{
-            display: 'none', // Hide content to prevent artifacts
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-              borderTop: '2px solid rgba(255, 255, 255, 0.8)',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-            <span>Loading Gallery...</span>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <style>{galleryStyles}</style>
@@ -510,7 +420,12 @@ const MasonryGallery = ({
             key={colIndex}
             className="masonry-column"
             style={{
-              flex: 1,
+              // Equal columns that can NEVER be widened by their content. A flex
+              // item's default min-width is its min-content size, so a column
+              // holding a wide bitmap grew (and its neighbour shrank) the moment
+              // each image decoded — the two largest shifts in the mobile trace.
+              flex: '1 1 0%',
+              minWidth: 0,
               display: 'flex',
               flexDirection: 'column',
               gap: `${gap}px`
@@ -790,7 +705,12 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
         // Reserve space to ensure lazy-loading triggers correctly
         width: '100%',
         aspectRatio: (image?.width && image?.height) ? `${image.width} / ${image.height}` : undefined,
-        minHeight: isLoaded ? 'auto' : ((typeof window !== 'undefined' && window.innerWidth < 768) ? '160px' : '220px')
+        // With known dimensions the aspect-ratio box IS the final size, so no
+        // minHeight (toggling 160px -> auto on load re-sized landscape tiles).
+        // The minHeight only guards records that carry no dimensions.
+        minHeight: (image?.width && image?.height)
+          ? undefined
+          : (isLoaded ? 'auto' : ((typeof window !== 'undefined' && window.innerWidth < 768) ? '160px' : '220px'))
       }}
       onClick={handleClick}
       onMouseEnter={() => {
@@ -939,7 +859,11 @@ const MasonryImage = ({ image, isLoaded, loadingState, onLoad, onLoadStart, onCl
           }}
           style={{
             width: '100%',
-            height: 'auto',
+            // Fill the reserved aspect-ratio box exactly; object-fit absorbs any
+            // rounding difference between the stored dimensions and the bitmap so
+            // the tile height never changes when the image arrives.
+            height: (image?.width && image?.height) ? '100%' : 'auto',
+            objectFit: 'cover',
             display: 'block',
             // Fast fade-in for quick image appearance
             transition: 'opacity 0.15s ease-out',

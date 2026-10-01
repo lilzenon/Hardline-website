@@ -647,7 +647,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         min-height: 100vh;
         background: #000000;
         color: #ffffff;
-        font-family: Inter, system-ui, sans-serif;
+        font-family: Inter, 'Inter-fallback', system-ui, sans-serif;
         padding: 2rem 1rem;
     `;
 
@@ -720,8 +720,12 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
         if (pageData && pageData.galleryImages && Array.isArray(pageData.galleryImages) && pageData.galleryImages.length > 0) {
             const imageBaseUrl = 'https://admin.b2b.click';
             const galleryImagesHtml = pageData.galleryImages.map((image, index) => {
-                // Get the best available image URL
-                const imageUrl = image.urls?.large || image.urls?.medium || image.url || image.src || '';
+                // src/srcset/sizes are kept IDENTICAL to what MasonryGallery renders
+                // (medium src; thumbnail 200w / small 600w / medium 1200w / large 2000w;
+                // same sizes). This block is covered by the splash and hidden as soon
+                // as React boots, so any image the browser does fetch for it must be
+                // the exact URL the real gallery tile will ask for, or it is pure waste.
+                const imageUrl = image.urls?.medium || image.url || image.src || image.urls?.large || '';
                 const absoluteImageUrl = imageUrl.startsWith('http') ? imageUrl : `${imageBaseUrl}${imageUrl}`;
 
                 // Get alt text with proper fallbacks
@@ -736,9 +740,9 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
 
                 let srcset = '';
                 if (thumbnailUrl) srcset += `${thumbnailUrl} 200w, `;
-                if (smallUrl) srcset += `${smallUrl} 400w, `;
-                if (mediumUrl) srcset += `${mediumUrl} 800w, `;
-                if (largeUrl) srcset += `${largeUrl} 1200w`;
+                if (smallUrl) srcset += `${smallUrl} 600w, `;
+                if (mediumUrl) srcset += `${mediumUrl} 1200w, `;
+                if (largeUrl) srcset += `${largeUrl} 2000w`;
                 srcset = srcset.replace(/, $/, ''); // Remove trailing comma
 
                 return `
@@ -750,7 +754,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                             ${srcset ? `srcset="${srcset}"` : ''}
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             style="width: 100%; height: auto; border-radius: 8px; display: block;"
-                            loading="eager"
+                            loading="lazy"
                             decoding="async"
                         >
                         ${image.title ? `<figcaption style="font-size: 0.875rem; color: #a0a0a0; margin-top: 0.5rem; text-align: center;">${escapeHtml(image.title)}</figcaption>` : ''}
@@ -891,7 +895,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
     // Fallback for all other pages: Return minimal noscript content
     return `
             <noscript>
-                <div style="max-width: 800px; margin: 100px auto; padding: 40px 20px; font-family: Inter, system-ui, sans-serif; color: #ffffff; text-align: center;">
+                <div style="max-width: 800px; margin: 100px auto; padding: 40px 20px; font-family: Inter, 'Inter-fallback', system-ui, sans-serif; color: #ffffff; text-align: center;">
                     <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 1.5rem;">JavaScript Required</h1>
                     <p style="font-size: 1.125rem; line-height: 1.75; color: #e5e5e5;">
                         This page requires JavaScript to display the full interactive experience. Please enable JavaScript in your browser.
@@ -1617,6 +1621,9 @@ async function reactHomepage(req, res) {
         // pageData (which is reshaped for the SSR markup) so generateStructuredData
         // can reuse it instead of issuing its own admin request.
         let homepageRawData = null;
+        // About page: the about text + gallery list this render used, inlined as
+        // window.__INITIAL_DATA__ so the client paints the final layout first frame.
+        let aboutRawData = null;
         const pageDataHost = getSiteDomain(req) || '';
         const dashboardBase = env.NODE_ENV === 'production' ?
             'https://admin.b2b.click' :
@@ -1669,6 +1676,21 @@ async function reactHomepage(req, res) {
                         pageData.galleryImages = galleryImages;
                         verboseLog(`✅ Gallery images fetched for SSR: ${galleryImages.length} images`);
                     }
+                }
+                // Client seed. AboutPage/AboutPageMobile used to paint skeletons, fetch
+                // the same two payloads again (with cache-busters on every image URL)
+                // and swap content in as each landed — on mobile the page visibly
+                // shifted until everything arrived. Inlining the exact data this
+                // render used lets the first React frame reserve every gallery tile.
+                const aboutBody = aboutResult.data ? (aboutResult.data.data || aboutResult.data) : null;
+                const galleryList = galleryResult.data ? (galleryResult.data.data || galleryResult.data) : null;
+                const aboutText = aboutBody && typeof aboutBody.content === 'string' ? aboutBody.content : null;
+                if (aboutText || (Array.isArray(galleryList) && galleryList.length > 0)) {
+                    aboutRawData = {
+                        page: 'about',
+                        aboutContent: aboutText,
+                        galleryImages: Array.isArray(galleryList) ? galleryList : []
+                    };
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch About content for SSR:', error.message);
@@ -1927,8 +1949,9 @@ async function reactHomepage(req, res) {
             // remove. The client seeds immediately and always background-
             // revalidates, so stale-by-minutes is corrected within one tick.
             let initialDataScript = '';
-            if (pageType === 'homepage' && homepageRawData) {
-                const serialized = serializeForInlineScript(homepageRawData);
+            const inlineSeed = pageType === 'homepage' ? homepageRawData : (pageType === 'about' ? aboutRawData : null);
+            if (inlineSeed) {
+                const serialized = serializeForInlineScript(inlineSeed);
                 if (serialized) {
                     initialDataScript = `<script>window.__INITIAL_DATA__=${serialized};</script>`;
                 }
@@ -1961,7 +1984,7 @@ async function reactHomepage(req, res) {
             // flow it still renders for crawlers and the no-JS / failed-boot
             // fallback, but #root starts at the top and never moves.
             const ssrWrapper = `${seoSettingsScript}${initialDataScript}<div id="ssr-content" class="ssr-fallback" style="display: block; position: absolute; top: 0; left: 0; right: 0;">${staticContent}</div>
-                   <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>
+                   <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; } /* Pre-apply the Tailwind preflight resets that /css/tailwind.css (loaded async) applies ~300ms later. Without this the fallback block re-laid out when the sheet arrived (default h1/p margins collapsing to 0 moved it 27px) and that counted as a layout shift on every page view. Inline margins on the elements still win. */ #ssr-content :where(h1,h2,h3,h4,h5,h6,p,ul,ol,li,figure,blockquote,hr){margin:0;padding:0} #ssr-content :where(ul,ol){list-style:none} #ssr-content :where(img,video){display:block;max-width:100%;height:auto}</style>
                    <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';var c=document.getElementById('ssr-content');if(c){c.style.display='block';c.style.opacity='1';}}}}catch(e){}},4000);</script>`;
 
             // dist/index.html inlines the first-paint splash INSIDE #root, so
@@ -1981,7 +2004,7 @@ async function reactHomepage(req, res) {
         const noscriptFallback = `
     <noscript>
         <style>
-            body { background: #000; color: #fff; font-family: Inter, system-ui, sans-serif; margin: 0; padding: 0; }
+            body { background: #000; color: #fff; font-family: Inter, 'Inter-fallback', system-ui, sans-serif; margin: 0; padding: 0; }
             .noscript-container { max-width: 600px; margin: 80px auto; padding: 20px; text-align: center; }
             .noscript-logo { width: 200px; margin-bottom: 32px; }
             .noscript-title { font-size: 24px; font-weight: 700; margin-bottom: 16px; }

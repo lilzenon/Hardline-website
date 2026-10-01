@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { navigateTo } from '../utils/navigate';
-import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import MobileNavigation from './MobileNavigation';
 import { useNavHeight } from '../hooks/useNavHeight';
 import MasonryGallery from './ui/MasonryGallery';
@@ -8,13 +7,19 @@ import Footer from './Footer';
 import Breadcrumb from './Breadcrumb';
 import { DEFAULT_SEO_SETTINGS } from '../services/seoService';
 import { injectAboutGalleryJsonLd, removeAboutGalleryJsonLd } from '../utils/aboutGalleryJsonLd';
+import { readAboutSeed, normalizeGalleryImages, galleryFingerprint, runWhenIdle } from '../utils/aboutSeed';
 
 /**
  * Mobile-only About page component with shared navigation
  * Serves mobile users (viewport width <= 768px) with mobile-optimized design
  */
 const AboutPageMobile = () => {
+  // Server-inlined seed (see utils/aboutSeed.js). When present the first React
+  // frame already holds the real text and the full gallery list, so every tile
+  // reserves its height immediately and nothing shifts as data arrives.
+  const [seed] = useState(readAboutSeed);
   const [aboutContent, setAboutContent] = useState(() => {
+    if (seed && seed.aboutContent) return seed.aboutContent;
     try {
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem('b2b_about_content');
@@ -23,13 +28,16 @@ const AboutPageMobile = () => {
     } catch (e) { }
     return '';
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !(seed && seed.aboutContent));
   const [error, setError] = useState(null);
   const [galleryImages, setGalleryImages] = useState(() => {
+    if (seed && seed.galleryImages.length > 0) return seed.galleryImages;
     try {
       if (typeof window !== 'undefined') {
         const cached = localStorage.getItem('b2b_gallery_images');
-        return cached ? JSON.parse(cached) : [];
+        // Stored lists may predate the no-cache-buster change; re-normalise so
+        // stale `cb=` suffixes are dropped and URLs stay absolute.
+        return cached ? normalizeGalleryImages(JSON.parse(cached)) : [];
       }
     } catch (e) { }
     return [];
@@ -45,12 +53,9 @@ const AboutPageMobile = () => {
   // Viewport context state for dynamic spacing (matching FigmaMobile.jsx)
   const [viewportContext, setViewportContext] = useState(0);
 
-  // 📱 SCROLL SENSITIVITY FIX: Reduced sensitivity to prevent accidental page reloads
-  const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
-    threshold: 50, // Increased threshold to reduce sensitivity
-    throttleMs: 200, // Increased throttling to reduce interference with native scrolling
-    passive: true // Ensure completely passive event handling
-  });
+  // No scroll-position state here on purpose: the old useOptimizedScroll call
+  // re-rendered this whole page while scrolling to feed a `scrollY` prop that
+  // MobileNavigation never read — pure jank.
 
   // 🚀 SEO FIX: Removed hardcoded meta tags - now using SEO service from SEOContext
   // The SEOProvider automatically detects the /about page and applies dashboard settings
@@ -142,8 +147,19 @@ const AboutPageMobile = () => {
 
 
   useEffect(() => {
-    fetchAboutContent();
-    fetchGalleryImages();
+    if (!seed) {
+      // No server seed (older cached HTML, admin outage, dev server): fetch now.
+      fetchAboutContent();
+      fetchGalleryImages();
+      return undefined;
+    }
+    // Seeded: the content on screen is already current as of the server render.
+    // Revalidate off the critical path (after load + idle) and only touch state
+    // if something actually changed, so images never remount for nothing.
+    return runWhenIdle(() => {
+      fetchAboutContent();
+      fetchGalleryImages();
+    });
   }, []);
 
   // Inject ImageObject JSON-LD for About gallery images on mobile
@@ -156,7 +172,8 @@ const AboutPageMobile = () => {
 
   const fetchAboutContent = async () => {
     try {
-      setLoading(true);
+      // Only show the skeleton when there is nothing to show yet.
+      if (!aboutContent) setLoading(true);
       setError(null);
 
       // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
@@ -178,10 +195,10 @@ const AboutPageMobile = () => {
 
       const data = await response.json();
 
-      if (data.success && data.data) {
-        setAboutContent(data.data.content);
+      if (data.success && data.data && typeof data.data.content === 'string') {
+        // Same text as already rendered -> no state change, no re-render.
+        setAboutContent((prev) => (prev === data.data.content ? prev : data.data.content));
         try { localStorage.setItem('b2b_about_content', data.data.content); } catch (e) { }
-        console.log('✅ About page content loaded successfully');
       } else {
         throw new Error('Invalid response format');
       }
@@ -204,87 +221,32 @@ Our mission is to unite top talent, immersive production, and passionate fans to
       setLoading(false);
     }
   };
-  // Normalize gallery image to ensure absolute, publicly accessible URLs from dashboard API (mobile)
-  const normalizeGalleryImage = (img) => {
-    const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-    const candidate = img?.url || img?.src || img?.image_url || img?.file_url || img?.path || img?.imagePath || '';
-    const orig = typeof candidate === 'string' ? candidate : (candidate?.url || '');
-
-    // Absolute HTTP URL
-    if (orig && /^https?:\/\//i.test(orig)) {
-      return { ...img, url: orig };
-    }
-
-    // New image service route: /api/images/serve/:uuid
-    if (orig && /^\/?api\/images\/serve\//i.test(orig)) {
-      return { ...img, url: `${dashboardDomain}/${orig.replace(/^\//, '')}` };
-    }
-
-    // Legacy uploads path handling
-    if (orig && /^\/?(uploads|static\/uploads|data\/static\/uploads)\//i.test(orig)) {
-      let pub = orig.replace(/^\/?data\/static\/uploads\//, '/static/uploads/');
-      if (!pub.startsWith('/')) pub = `/${pub}`;
-      return { ...img, url: `${dashboardDomain}${pub}` };
-    }
-
-    // Fallback - return as-is
-    return { ...img, url: orig };
-  };
-
-
   const fetchGalleryImages = async () => {
     try {
-      // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
-      // The backend at /api/settings/about/gallery/public proxies to the dashboard server
-      const cacheBuster = `cb=${Date.now()}`;
-      const galleryUrl = `/api/settings/about/gallery/public?${cacheBuster}`;
-      console.log('🔍 Mobile: Fetching gallery from local proxy:', galleryUrl);
-
-      const response = await fetch(galleryUrl, {
+      // Plain GET through the local proxy, which serves the same cached list the
+      // server used. No `cb=Date.now()` and no `cache: 'no-cache'`: the old
+      // cache-buster was also stamped onto every image URL, so the browser
+      // re-downloaded the whole gallery on every visit.
+      const response = await fetch('/api/settings/about/gallery/public', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Public endpoint; disable cache to avoid stale responses
-        cache: 'no-cache'
+        headers: { 'Accept': 'application/json' }
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && Array.isArray(data.data)) {
-          const normalized = data.data.map((img) => {
-            const n = normalizeGalleryImage(img);
-            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-            const makeAbs = (u) => {
-              if (!u) return u;
-              const abs = /^https?:\/\//i.test(u) ? u : `${dashboardDomain}${u}`;
-              const sep = abs.includes('?') ? '&' : '?';
-              return `${abs}${sep}${cacheBuster}`;
-            };
-            const urls = (n && (n.urls || n.srcSet)) || {};
-            const absUrls = {
-              thumbnail: makeAbs(urls.thumbnail),
-              small: makeAbs(urls.small),
-              medium: makeAbs(urls.medium || n?.url),
-              large: makeAbs(urls.large),
-              original: makeAbs(urls.original || n?.url)
-            };
-            return { ...n, urls: absUrls, srcSet: absUrls };
-          });
-          setGalleryImages(normalized);
-          try { localStorage.setItem('b2b_gallery_images', JSON.stringify(normalized)); } catch (e) { }
-        } else {
-          console.warn('Invalid gallery response format:', data);
-          setGalleryImages([]);
-        }
-      } else {
+      if (!response.ok) {
         console.warn('Failed to fetch gallery images:', response.status);
-        setGalleryImages([]);
+        return; // keep whatever is on screen
       }
-
+      const data = await response.json();
+      if (!data.success || !Array.isArray(data.data)) {
+        console.warn('Invalid gallery response format:', data);
+        return;
+      }
+      const normalized = normalizeGalleryImages(data.data);
+      // Only re-render (and remount images) when the rendered set changed.
+      setGalleryImages((prev) => (galleryFingerprint(prev) === galleryFingerprint(normalized) ? prev : normalized));
+      try { localStorage.setItem('b2b_gallery_images', JSON.stringify(normalized)); } catch (e) { }
     } catch (error) {
       console.error('❌ Error fetching gallery images:', error);
-      setGalleryImages([]);
+      // Keep whatever is on screen (seed / cached list) rather than blanking the gallery.
     }
   };
 
@@ -417,7 +379,6 @@ Our mission is to unite top talent, immersive production, and passionate fans to
           {/* REFACTORED: Using Shared Mobile Navigation Component */}
           <MobileNavigation
             currentPage="about"
-            scrollY={scrollY}
             onNavigate={handleNavigation}
           />
 

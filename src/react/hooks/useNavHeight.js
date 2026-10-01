@@ -6,11 +6,25 @@ import React from 'react';
  * Dynamically updates on resize and when the header resizes.
  */
 export function useNavHeight() {
-  const [height, setHeight] = React.useState(0);
+  // MobileNavigation renders its header at a fixed 97px, so start there instead
+  // of 0: with 0 the content under the fixed header was laid out one frame at the
+  // top and then pushed down when the first measurement landed (a visible jump).
+  const DEFAULT_HEIGHT = 97;
+  const [height, setHeight] = React.useState(DEFAULT_HEIGHT);
 
-  React.useEffect(() => {
-    const DEFAULT_HEIGHT = 97; // Fallback based on MobileNavigation header style
+  // useLayoutEffect: the header is committed in the same pass, so it can be
+  // measured synchronously BEFORE the browser paints. The rAF-based measure()
+  // below keeps tracking later changes (fonts, rotation, menu state).
+  React.useLayoutEffect(() => {
     let rafId = null; // Track RAF for cleanup
+
+    try {
+      const first = document.querySelector('.mobile-navigation-header');
+      if (first) {
+        const h = Math.round(first.getBoundingClientRect().height || 0);
+        if (h > 0) setHeight((prev) => (prev !== h ? h : prev));
+      }
+    } catch (_) { /* fall through to the async measurements */ }
 
     const measure = () => {
       // Use requestAnimationFrame to batch DOM reads and reduce forced reflows

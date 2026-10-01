@@ -11,6 +11,7 @@ const router = express.Router();
 const { getAllowedOrigins } = require('../../middleware/origin-validation.middleware');
 const { cachedAdminFetch } = require('../../utils/admin-fetch-cache.util');
 const { internalProxyHeaders } = require('../../utils/internal-proxy.util');
+const { getSiteDomain } = require('../../utils/site-domain.util');
 
 // Helper function to determine the correct dashboard URL
 function getDashboardUrl(req) {
@@ -241,66 +242,69 @@ router.post('/analytics/track', (req, res) => {
 });
 
 // GET /api/settings/about - About page content endpoint
-router.get('/about', async (req, res) => {
+// About text + gallery list are served from the SAME per-host SWR cache
+// entries the SSR render and prewarm keep warm (`about::<host>`,
+// `gallery::<host>`), so a browser revalidation is a memory read that is
+// byte-identical to what the page inlined as window.__INITIAL_DATA__. Before,
+// every visitor's revalidation was a live admin round trip with nocache=1.
+// TTLs mirror ADMIN_CACHE_TTL in renders.handler.js.
+const ABOUT_TTL_MS = 60 * 1000;
+const GALLERY_TTL_MS = 5 * 60 * 1000;
+
+async function fetchDashboardJsonOrNull(target, req) {
     try {
-        console.log('🔍 Homepage: Fetching About page content...');
-
-        const dashboardUrl = getDashboardUrl(req);
-        const target = withDomainParam(`${dashboardUrl}/api/settings/about`, req);
-
-        console.log(`📡 Proxying to dashboard: ${target}`);
-
         const response = await dashFetch(target, { timeoutMs: 5000, req });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Homepage: About page content fetched from dashboard');
-            res.json(data);
-        } else {
-            throw new Error(`Dashboard responded with ${response.status}`);
-        }
-    } catch (error) {
-        console.error('❌ Homepage: Error fetching About page content:', error);
-
-        // Fallback content if dashboard is unavailable
-        res.json({
-            success: true,
-            data: {
-                content: "Welcome to HARDLINE, your premier destination for exclusive live music events. We're passionate about connecting music lovers with unforgettable experiences that showcase the best in live entertainment.",
-                enabled: true
-            }
-        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (_) {
+        return null; // cachedAdminFetch never caches null
     }
+}
+
+// GET /api/settings/about - About page content (public)
+router.get('/about', async (req, res) => {
+    const host = getSiteDomain(req) || '';
+    const target = withDomainParam(`${getDashboardUrl(req)}/api/settings/about`, req);
+    const { data } = await cachedAdminFetch({
+        key: `about::${host || '__default__'}`,
+        ttlMs: ABOUT_TTL_MS,
+        fetcher: () => fetchDashboardJsonOrNull(target, req)
+    }).catch(() => ({ data: null }));
+
+    if (data) {
+        res.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');
+        return res.json(data);
+    }
+
+    console.error('❌ Homepage: About content unavailable from dashboard, serving fallback copy');
+    res.set('Cache-Control', 'no-store');
+    return res.json({
+        success: true,
+        data: {
+            content: "Welcome to HARDLINE, your premier destination for exclusive live music events. We're passionate about connecting music lovers with unforgettable experiences that showcase the best in live entertainment.",
+            enabled: true
+        }
+    });
 });
 
 // GET /api/settings/about/gallery/public - About page gallery images endpoint
 router.get('/about/gallery/public', async (req, res) => {
-    try {
-        console.log('🔍 Homepage: Fetching About page gallery...');
+    const host = getSiteDomain(req) || '';
+    const target = withDomainParam(`${getDashboardUrl(req)}/api/settings/about/gallery/public`, req);
+    const { data } = await cachedAdminFetch({
+        key: `gallery::${host || '__default__'}`,
+        ttlMs: GALLERY_TTL_MS,
+        fetcher: () => fetchDashboardJsonOrNull(target, req)
+    }).catch(() => ({ data: null }));
 
-        const dashboardUrl = getDashboardUrl(req);
-        const target = withDomainParam(`${dashboardUrl}/api/settings/about/gallery/public`, req);
-
-        console.log(`📡 Proxying gallery request to: ${target}`);
-
-        const response = await dashFetch(target, { timeoutMs: 5000, req });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Homepage: Gallery images fetched from dashboard');
-            res.json(data);
-        } else {
-            throw new Error(`Dashboard responded with ${response.status}`);
-        }
-    } catch (error) {
-        console.error('❌ Homepage: Error fetching gallery images:', error);
-
-        // Return empty gallery if dashboard is unavailable
-        res.json({
-            success: true,
-            data: []
-        });
+    if (data) {
+        res.set('Cache-Control', 'private, max-age=60, stale-while-revalidate=300');
+        return res.json(data);
     }
+
+    console.error('❌ Homepage: Gallery unavailable from dashboard, serving empty list');
+    res.set('Cache-Control', 'no-store');
+    return res.json({ success: true, data: [] });
 });
 
 // GET /api/social-media - Social media links endpoint
