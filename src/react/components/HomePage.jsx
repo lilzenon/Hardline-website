@@ -3,7 +3,7 @@ import { useViewportDimensions } from '../hooks/usePerformantResize';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useSEO } from '../hooks/useSEO';
 import useMobileLifecycle from '../hooks/useMobileLifecycle';
-import { initializeMobileOptimizations, isMobileDevice } from '../../utils/mobileOptimization';
+import { isMobileDevice } from '../../utils/mobileOptimization';
 import BrandedLoader from './BrandedLoader';
 import { importWithRetry } from '../utils/iab';
 
@@ -21,12 +21,32 @@ const CHUNK_TIMEOUT_MS = 8000;
 const FigmaDesktop = lazy(() => importWithRetry(() => import('./FigmaDesktop'), CHUNK_TIMEOUT_MS));
 const FigmaMobile = lazy(() => importWithRetry(() => import('./FigmaMobile'), CHUNK_TIMEOUT_MS));
 
+// Single source of truth for the mobile/desktop split, shared by the lazy
+// initializer and both effects below. 768 is the breakpoint used by
+// useViewportDimensions and by the build-time chunk-preload script in
+// vite-plugins/preload-optimization.ts — keep them in sync or the preloaded
+// Figma chunk will not be the one that renders.
+const MOBILE_BREAKPOINT = 768;
+const detectIsMobile = () => {
+  try {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 1200;
+    return isMobileDevice() || width <= MOBILE_BREAKPOINT;
+  } catch (_) {
+    return false;
+  }
+};
+
 /**
  * Homepage component with optimized performance and fast loading
  * Provides immediate desktop rendering and optimized mobile loading
  */
 const HomePage = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  // Lazy initializer, NOT useState(false): with a constant `false` the first
+  // commit rendered <FigmaDesktop/> on every device, which fired the desktop
+  // lazy import — so phones downloaded (and parsed) the desktop chunk before
+  // the FigmaMobile chunk they actually display. Deciding at first render means
+  // the only chunk requested is the one that will be shown.
+  const [isMobile, setIsMobile] = useState(detectIsMobile);
   const [isLoading, setIsLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true); // Control opacity
   const [mountLoader, setMountLoader] = useState(true); // Control DOM presence
@@ -52,16 +72,16 @@ const HomePage = () => {
     const runInitialChecks = async () => {
       const startTime = performance.now();
 
-      // Determine initial device type
-      const uaMobile = isMobileDevice();
-      const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const initialIsMobile = uaMobile || screenWidth <= 768;
+      // Determine initial device type (same check as the lazy initializer, so
+      // this is a no-op re-set on the first run and React bails out).
+      const initialIsMobile = detectIsMobile();
 
       if (isMounted) setIsMobile(initialIsMobile);
 
-      // Initialize mobile optimizations
+      // Mobile optimisations (viewport meta, --vh, memory monitor) are
+      // initialised once from src/main.tsx for every route; calling the util
+      // here as well double-registered its resize listeners and 30 s interval.
       if (initialIsMobile) {
-        initializeMobileOptimizations();
         mobileLifecycle.registerCleanup(() => { });
       }
 
@@ -122,8 +142,11 @@ const HomePage = () => {
 
   // Handle Responsive Updates (Separate from Load Logic)
   useEffect(() => {
-    // Only update isMobile if the viewport width significantly changes after load
-    const deviceIsMobile = isMobileDevice() || isMobileByWidth;
+    // Only update isMobile if the viewport width significantly changes after load.
+    // `viewportWidth` is included in the check because useViewportDimensions
+    // starts with isMobile:false until its own effect measures — without it, a
+    // narrow non-touch window would flip mobile → desktop → mobile on mount.
+    const deviceIsMobile = isMobileDevice() || isMobileByWidth || viewportWidth <= MOBILE_BREAKPOINT;
     setIsMobile(deviceIsMobile);
   }, [viewportWidth, isMobileByWidth]);
 

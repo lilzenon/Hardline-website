@@ -46,6 +46,34 @@ import {
 const SEOContext = createContext();
 
 /**
+ * 🚀 SSR SEED — read the SEO settings the server inlined as
+ * window.__SEO_SETTINGS__ (the exact object /api/settings/seo/fast returns under
+ * `.settings`). When present, the provider starts with REAL settings and skips
+ * its blocking mount-time fetch; the inline GA bootstrap in index.html reads
+ * the same object, so a page view costs zero /seo/fast requests up front
+ * instead of two. It may be absent (edge-cached older HTML, admin outage,
+ * non-SSR dev server) — every caller must keep the fetch path as the fallback.
+ *
+ * @returns {object|null} merged settings, or null when nothing usable is inlined
+ */
+const readInlineSEOSettings = () => {
+  try {
+    const inline = typeof window !== 'undefined' ? window.__SEO_SETTINGS__ : null;
+    if (!inline || typeof inline !== 'object' || Array.isArray(inline)) return null;
+    // Shape check so an unrelated/truncated payload can't masquerade as settings.
+    if (typeof inline.default_title !== 'string') return null;
+    // Same merge fetchSEOSettings() applies, so consumers see identical keys
+    // whether the data arrived inline or over the network.
+    return { ...DEFAULT_SEO_SETTINGS, ...inline };
+  } catch (_) {
+    return null;
+  }
+};
+
+/** Postgres booleans arrive as true/false, but be defensive about 'true'/1. */
+const isTruthyFlag = (v) => v === true || v === 'true' || v === 1;
+
+/**
  * SEO Provider Component
  * Wraps the app and provides SEO functionality
  */
@@ -56,9 +84,22 @@ const SEOContext = createContext();
  *   prop instead of polling window.location — see the effect below.
  */
 export const SEOProvider = ({ children, pathname }) => {
-  const [seoSettings, setSeoSettings] = useState(DEFAULT_SEO_SETTINGS);
-  const [maintenanceStatus, setMaintenanceStatus] = useState({ maintenance_mode: false });
-  const [isLoading, setIsLoading] = useState(true);
+  // Read once per provider instance (lazy initializer — never re-read on render).
+  const [inlineSeed] = useState(readInlineSEOSettings);
+  const [seoSettings, setSeoSettings] = useState(() => inlineSeed || DEFAULT_SEO_SETTINGS);
+  // The settings row carries maintenance_mode too, so MaintenanceRedirect can
+  // act on the first render; the background revalidation below replaces this
+  // with the dedicated /maintenance-status payload.
+  const [maintenanceStatus, setMaintenanceStatus] = useState(() => (
+    inlineSeed
+      ? {
+        maintenance_mode: isTruthyFlag(inlineSeed.maintenance_mode),
+        maintenance_message: inlineSeed.maintenance_message || 'We are currently performing scheduled maintenance.',
+        maintenance_title: inlineSeed.maintenance_title || 'Site Under Maintenance'
+      }
+      : { maintenance_mode: false }
+  ));
+  const [isLoading, setIsLoading] = useState(() => !inlineSeed);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [deviceInfo, setDeviceInfo] = useState({ isMobile: false, deviceType: 'unknown' });
   const [currentPathname, setCurrentPathname] = useState(typeof window !== 'undefined' ? window.location.pathname : '/');
@@ -181,9 +222,36 @@ export const SEOProvider = ({ children, pathname }) => {
     return () => window.removeEventListener('resize', detectDevice);
   }, []);
 
-  // Load settings on mount
+  // Load settings on mount.
   useEffect(() => {
-    loadSEOSettings();
+    if (!inlineSeed) {
+      // No SSR seed (older cached HTML, admin outage, dev server) — the
+      // original blocking path.
+      loadSEOSettings();
+      return undefined;
+    }
+
+    // Seeded from SSR: real settings are already on screen, so the fetch is a
+    // pure revalidation. Keep it OFF the critical path — after `load`, then idle
+    // — so it never competes with the hero image, fonts and route chunks.
+    let cancelled = false;
+    const idle = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback
+      : (cb) => setTimeout(cb, 1500);
+    const revalidate = () => {
+      idle(() => {
+        if (!cancelled) fetchFreshSEOSettings();
+      });
+    };
+    if (document.readyState === 'complete') {
+      revalidate();
+    } else {
+      window.addEventListener('load', revalidate, { once: true });
+    }
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', revalidate);
+    };
   }, []);
 
   // Set up periodic refresh (every 5 minutes)

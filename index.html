@@ -36,13 +36,23 @@
     <link rel="preconnect" href="https://admin.b2b.click">
     <link rel="preconnect" href="https://admin.b2b.click" crossorigin>
 
-    <!-- Preload LCP Image for immediate discovery -->
-    <link rel="preload" href="/images/b2b-logo-updated.svg" as="image" fetchpriority="high">
+    <!--
+        Nav logo preload. Only MobileNavigation renders this file; it is NOT the
+        LCP element (the hero event image is — the server preloads that one).
+        No fetchpriority="high": the hero image must win the bandwidth race.
+    -->
+    <link rel="preload" href="/images/b2b-logo-updated.svg" as="image">
 
-    <!-- Preload critical fonts to avoid request chaining -->
-    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
-    <link rel="preload" href="/fonts/inter-700.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
-    <link rel="preload" href="/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin fetchpriority="high">
+    <!--
+        Fonts: preload only the weights painted above the fold. The mobile hero
+        uses 200/500 (both resolve to the 400 file) and 800; the nav uses 800.
+        700 is first used by the events list below the fold, so it loads on
+        demand via @font-face. No fetchpriority="high" — at high priority the
+        three woff2 files (~341 KB) were fetched ahead of the LCP hero image.
+        `crossorigin` stays: font preloads without it are discarded.
+    -->
+    <link rel="preload" href="/fonts/inter-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/fonts/inter-800.woff2" as="font" type="font/woff2" crossorigin>
 
     <!-- Google Analytics - Dynamic Loading from API (deferred off LCP critical path) -->
     <script>
@@ -53,23 +63,42 @@
         window.gtag = gtag;
         gtag('js', new Date());
 
-        // Defer the /seo/fast fetch + gtag.js load until AFTER load + idle.
+        // Defer the gtag.js load until AFTER load + idle.
         // Was previously synchronous in HEAD which put /seo/fast on the LCP
         // critical chain (Lighthouse network-dependency-tree audit, ~667ms).
+        //
+        // GA4 page views are owned HERE. TrackingPixelLoader.jsx deliberately
+        // does not `gtag('config', <GA4 id>)` — doing it in both places sent
+        // two page_view hits per load.
         (function () {
             var idle = window.requestIdleCallback || function (cb) { return setTimeout(cb, 1); };
+            function initGA(gaId) {
+                if (typeof gaId !== 'string' || !gaId.trim()) return;
+                var script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
+                document.head.appendChild(script);
+                gtag('config', gaId, { send_page_view: true });
+            }
             function loadGA() {
+                // The SSR HTML inlines the per-host SEO settings as
+                // window.__SEO_SETTINGS__ (the same object /api/settings/seo/fast
+                // returns under `.settings`). Reading it here removes one of the
+                // two /seo/fast requests every page view used to make (this
+                // script + SEOProvider). It can be absent — edge-cached older
+                // HTML, admin outage — so the fetch below stays as the fallback.
+                // Keyed on hasOwnProperty, not truthiness: an inlined settings
+                // object with an EMPTY id means "no GA configured", not "unknown".
+                var inline = window.__SEO_SETTINGS__;
+                if (inline && typeof inline === 'object' &&
+                    Object.prototype.hasOwnProperty.call(inline, 'google_analytics_id')) {
+                    initGA(inline.google_analytics_id);
+                    return;
+                }
                 fetch('/api/settings/seo/fast')
                     .then(function (res) { return res.json(); })
                     .then(function (data) {
-                        var gaId = data.settings && data.settings.google_analytics_id;
-                        if (gaId && gaId.trim()) {
-                            var script = document.createElement('script');
-                            script.async = true;
-                            script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaId;
-                            document.head.appendChild(script);
-                            gtag('config', gaId, { send_page_view: true });
-                        }
+                        initGA(data && data.settings && data.settings.google_analytics_id);
                     })
                     .catch(function (err) {
                         console.warn('Failed to load GA settings:', err);
@@ -142,7 +171,7 @@
             unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
 
-        /* Inter Bold (700) - Critical font preloaded */
+        /* Inter Bold (700) - below-the-fold weight, loaded on demand (not preloaded) */
         @font-face {
             font-family: 'Inter';
             font-style: normal;

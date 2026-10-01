@@ -37,7 +37,11 @@ class APIClient {
     this.config = {
       baseURL: '/api', // ALWAYS use local proxy - backend handles cross-domain proxying
       timeout: 10000, // 10 seconds
-      retries: 3,
+      // Max retries for idempotent GETs. Was 3: with the 10 s timeout that is up
+      // to 40 s + 6 s of backoff pinning a request (and multiplying load on a
+      // cold admin) for data every caller already has a fallback for. Non-GET
+      // requests are never retried — see fetchWithRetry.
+      retries: 1,
       retryDelay: 1000, // 1 second
       enableFallbacks: true,
       enableCircuitBreaker: true
@@ -91,9 +95,13 @@ class APIClient {
         console.warn(`❌ API Request error (attempt ${attempt}): ${error.message}`);
       }
 
-      // Retry logic
-      if (attempt < this.config.retries) {
-        const delay = this.config.retryDelay * attempt; // Exponential backoff
+      // Retry budget: at most `retries` (1) extra attempt for GETs, which are
+      // idempotent; NONE for POST/PUT/DELETE — a retried write that actually
+      // reached the server (timeout after send) would be applied twice.
+      const method = String(options.method || 'GET').toUpperCase();
+      const maxRetries = method === 'GET' ? this.config.retries : 0;
+      if (attempt <= maxRetries) {
+        const delay = this.config.retryDelay * attempt; // Linear backoff
         console.log(`🔄 Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, options, attempt + 1);

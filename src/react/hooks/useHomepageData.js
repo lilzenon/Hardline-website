@@ -3,13 +3,55 @@ import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
 import { fetchWithTimeout } from '../utils/iab';
 
 // Simple cache for API responses - shared across components.
-// Kept short (30s) so admin event edits — title, image, address —
-// appear on the next soft navigation without forcing a full reload.
-// Background revalidation below also pulls fresh data on every mount,
-// so this is really just to deduplicate the very first burst of
-// near-simultaneous mounts (FigmaDesktop + FigmaMobile + others).
+//
+// Stale-while-revalidate, with NO age cutoff on the read side: any cached
+// payload is rendered immediately and a background request corrects it. The
+// previous 30 s cutoff meant a visitor who navigated away and came back to the
+// homepage 31 s later fell through to the cache-MISS branch, which flips
+// `loading` on and shows the full-screen black BrandedLoader over content we
+// already had — for a page whose data changes a few times a week. Admin edits
+// still land on the very next tick via the background revalidation below.
 const apiCache = new Map();
-const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+/**
+ * Stable content fingerprint used by background revalidation to decide whether
+ * anything the page RENDERS actually changed.
+ *
+ * It deliberately ignores `refreshTimestamp`: admin stamps that per response,
+ * so comparing on it (the previous behaviour) reported "changed" on EVERY
+ * revalidation — a full homepage re-render and a hero <img> remount (visible
+ * flicker, plus a re-request of the LCP image) on every single page view with
+ * byte-identical content. `updated_at` IS included so that any admin edit, even
+ * to a field not listed here, still propagates.
+ *
+ * @param {object} data raw homepage-data payload
+ * @returns {string} opaque fingerprint; '' for an unusable payload
+ */
+function homepageFingerprint(data) {
+  if (!data || typeof data !== 'object') return '';
+  const pickEvent = (e) => (e && typeof e === 'object') ? [
+    e.id, e.title, e.artist_name, e.event_date, e.event_time, e.cover_image,
+    e.event_address, e.venue_name, e.external_ticket_url, e.posh_embed_url,
+    e.display_tickets, e.buy_button_text, e.show_on_homepage, e.updated_at
+  ] : null;
+  // Key-sorted so two responses with the same settings in a different
+  // serialisation order don't register as a change.
+  const stableSettings = (s) => (s && typeof s === 'object')
+    ? Object.keys(s).sort().map((k) => [k, s[k]])
+    : null;
+  try {
+    return JSON.stringify({
+      f: Array.isArray(data.featuredEvents) ? data.featuredEvents.map(pickEvent) : null,
+      h: Array.isArray(data.homepageEvents) ? data.homepageEvents.map(pickEvent) : null,
+      s: stableSettings(data.homeSettings),
+      d: data.formattedDate || null
+    });
+  } catch (_) {
+    // Unserialisable payload (cyclic, BigInt...) — fall back to "changed" so
+    // we never silently withhold an update.
+    return `unstable-${Date.now()}`;
+  }
+}
 
 // 🚀 SSR HYDRATION SEED
 // The server already fetched this exact payload while rendering the document
@@ -347,29 +389,21 @@ export const useHomepageData = () => {
         if (coverImage.startsWith('http://') || coverImage.startsWith('https://')) {
           // Already absolute, use as-is
         } else if (coverImage.startsWith('/api/images/serve/')) {
-          // 🚨 CRITICAL FIX: Convert relative API URLs to absolute URLs
+          // Convert relative admin image URLs to absolute URLs — and NOTHING
+          // else. Do not reintroduce client-side cache-busting here.
+          //
+          // Admin serves /api/images/serve/<uuid>/<variant> with
+          // `Cache-Control: max-age=31536000, immutable`, and a re-upload mints
+          // a NEW uuid, so the URL itself is already the cache key. The old
+          // `?_cb=<updated_at>&_t=Date.now()` suffix (a) defeated the browser
+          // cache on every page view, and (b) made the hero <img> URL differ
+          // from the `<link rel="preload">` the SSR HTML had already issued, so
+          // the LCP image was downloaded TWICE and the second request only
+          // started once React had rendered — ~10 s LCP on mobile.
           const dashboardDomain = window.location.hostname === 'localhost'
             ? 'http://localhost:3002'
             : 'https://admin.b2b.click';
           coverImage = `${dashboardDomain}${coverImage}`;
-
-          // 🚨 CRITICAL FIX: Enhanced cache-busting for cross-device consistency
-          // Desktop browsers cache more aggressively than mobile Safari
-          const imageAge = Date.now() - new Date(event.updated_at || event.created_at).getTime();
-          const isRecentUpload = imageAge < 3600000; // 1 hour (increased from 5 minutes)
-
-          // Detect if we're on desktop browser (more aggressive caching)
-          const isDesktopBrowser = !(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-          const isDesktopViewport = window.innerWidth >= 1024;
-
-          // Apply cache-busting more liberally for desktop browsers and recent uploads
-          if (isRecentUpload || isDesktopBrowser || isDesktopViewport) {
-            const separator = coverImage.includes('?') ? '&' : '?';
-            // Use event updated_at timestamp for consistent cache-busting across devices
-            const cacheKey = new Date(event.updated_at || event.created_at).getTime();
-            coverImage = `${coverImage}${separator}_cb=${cacheKey}&_t=${Date.now()}`;
-            console.log(`🕐 Added enhanced cache-busting: ${event.title} (age: ${Math.round(imageAge / 1000)}s, desktop: ${isDesktopBrowser}, viewport: ${isDesktopViewport})`);
-          }
         } else if (coverImage.startsWith('/')) {
           // Other relative URLs - ensure they start with /
           // These will be handled by the image optimization system
@@ -480,11 +514,15 @@ export const useHomepageData = () => {
       // it explicitly at the end of the try block instead.
       if (!silent) setError(null);
 
-      // Check cache first
+      // Check cache first. Any cached payload is served, however old (see the
+      // apiCache comment at the top of the file): stale data behind a background
+      // revalidation beats the full-screen loader every time admin is reachable.
+      // Only `window.refreshHomepageData` (explicit admin-triggered refresh)
+      // deletes the entry and forces the blocking path.
       const cacheKey = 'homepage-data-v2';
       const cached = apiCache.get(cacheKey);
-      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log('📦 Using cached homepage data');
+      if (cached && cached.data) {
+        console.log(`📦 Using cached homepage data (age ${Math.round((Date.now() - cached.timestamp) / 1000)}s), revalidating in background`);
         // Validate here as well as on the network path. This branch used to be
         // a rare optimisation (a second mount within 30s), but since the SSR
         // hydration seed primes this cache it is now the FIRST-PAINT path for
@@ -503,10 +541,15 @@ export const useHomepageData = () => {
           try {
             const fresh = await fetchHomepageJson(8000);
 
-            // Update if server indicates new data via refreshTimestamp or if payload differs
-            if (!cached.data || fresh.refreshTimestamp !== cached.data.refreshTimestamp) {
+            // Always refresh the cache entry (keeps the age honest for the next
+            // mount) but only touch React state when rendered content differs.
+            // Comparing `refreshTimestamp` here used to re-render + flicker the
+            // hero on every page view — see homepageFingerprint().
+            const changed = homepageFingerprint(fresh) !== homepageFingerprint(cached.data);
+            apiCache.set('homepage-data-v2', { data: fresh, timestamp: Date.now() });
+
+            if (changed) {
               console.log('🆕 Homepage data changed on server. Updating state from background revalidation.');
-              apiCache.set('homepage-data-v2', { data: fresh, timestamp: Date.now() });
 
               const vFeatured = validateEvents(fresh.featuredEvents || [], 'Featured');
               const vHomepage = validateEvents(fresh.homepageEvents || [], 'Homepage');
@@ -532,6 +575,8 @@ export const useHomepageData = () => {
               setFeaturedEvents(vFeatured);
               setHomepageEvents(vHomepage);
               setFormattedDate(heroFormattedDate);
+            } else {
+              console.log('✅ Homepage data unchanged on server (background revalidation, no re-render).');
             }
           } catch (reErr) {
             console.log('⚠️ Background revalidation failed (non-blocking):', reErr);

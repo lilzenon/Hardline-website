@@ -60,6 +60,127 @@ const SOCIAL_PLATFORMS = {
   }
 };
 
+// 🚦 Module-level single-flight + short memo for /api/social-media.
+//
+// The nav and the footer both mount <SocialMediaButtons/> on the same page, and
+// each instance used to open its own request — with its own retry chain — so
+// every page view hit the proxy twice for an identical list. The in-flight
+// PROMISE is shared here; the 60 s memo covers the nav/footer remounts that
+// client-side route changes cause. The shared function returns raw links and
+// applies no state: each instance still runs its own setState, so neither can
+// leave the other stuck in `loading`.
+const SOCIAL_API_URL = '/api/social-media';
+const SOCIAL_STORAGE_KEY = 'hardline events_social_links';
+const SOCIAL_STORAGE_TTL_MS = 5 * 60 * 1000; // 5 minutes (localStorage, survives reloads)
+const SOCIAL_MEMO_TTL_MS = 60 * 1000;        // 60 s (in-memory, this document only)
+const SOCIAL_MAX_RETRIES = 3;
+const SOCIAL_RETRY_BASE_MS = 1000;
+const SOCIAL_TIMEOUT_MS = 10000;
+
+let socialLinksInflight = null;
+let socialLinksMemo = null; // { links, timestamp }
+
+/** Read the persisted list; null when absent, expired or unreadable. */
+function readSocialLinksFromStorage() {
+  try {
+    const cached = localStorage.getItem(SOCIAL_STORAGE_KEY);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    const age = Date.now() - timestamp;
+    if (Array.isArray(data) && age < SOCIAL_STORAGE_TTL_MS) {
+      console.log(`📦 Loaded ${data.length} social media links from cache (age: ${Math.round(age / 1000)}s)`);
+      return data;
+    }
+    console.log('🗑️ Cache expired, fetching fresh data');
+    localStorage.removeItem(SOCIAL_STORAGE_KEY);
+  } catch (err) {
+    console.warn('⚠️ Failed to load from cache:', err && err.message);
+  }
+  return null;
+}
+
+function writeSocialLinksToStorage(links) {
+  try {
+    localStorage.setItem(SOCIAL_STORAGE_KEY, JSON.stringify({ data: links, timestamp: Date.now() }));
+    console.log('💾 Saved social media links to cache');
+  } catch (err) {
+    console.warn('⚠️ Failed to save to cache:', err && err.message);
+  }
+}
+
+/** One network attempt. Resolves to the links array or throws. */
+async function requestSocialLinksOnce() {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = setTimeout(() => { if (controller) controller.abort(); }, SOCIAL_TIMEOUT_MS);
+  try {
+    // Same-origin proxy (no CORS). cache: 'no-store' bypasses the browser HTTP
+    // cache — the proxy/dashboard already send no-store, but this guards
+    // against intermediate caches returning a stale list after an admin toggle.
+    const response = await fetch(SOCIAL_API_URL, {
+      signal: controller ? controller.signal : undefined,
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache'
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    if (data.success && Array.isArray(data.links)) {
+      return data.links;
+    }
+    throw new Error(data.error || 'Invalid response format');
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+/**
+ * Fetch the social links, joining an in-flight request or a fresh memo if one
+ * exists. Retries with exponential backoff (1s, 2s, 4s) exactly as the
+ * per-instance code did — but once per page, not once per instance.
+ * @returns {Promise<Array>} links
+ */
+function fetchSocialLinksShared() {
+  if (socialLinksMemo && Date.now() - socialLinksMemo.timestamp < SOCIAL_MEMO_TTL_MS) {
+    return Promise.resolve(socialLinksMemo.links);
+  }
+  if (socialLinksInflight) return socialLinksInflight;
+
+  const request = (async () => {
+    let attempt = 0;
+    for (;;) {
+      try {
+        console.log(`🔍 Fetching social media links (attempt ${attempt + 1}/${SOCIAL_MAX_RETRIES + 1}) from ${SOCIAL_API_URL}`);
+        const links = await requestSocialLinksOnce();
+        console.log(`✅ Loaded ${links.length} social media links from API`);
+        socialLinksMemo = { links, timestamp: Date.now() };
+        writeSocialLinksToStorage(links);
+        return links;
+      } catch (err) {
+        console.error(`❌ Error fetching social media links (attempt ${attempt + 1}):`, err);
+        if (attempt >= SOCIAL_MAX_RETRIES) throw err;
+        const delay = SOCIAL_RETRY_BASE_MS * Math.pow(2, attempt);
+        attempt += 1;
+        console.log(`🔄 Retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  })();
+
+  socialLinksInflight = request;
+  // Two-arg .then rather than .finally: Promise.prototype.finally is absent on
+  // Android WebView Chrome <63 (see src/react/utils/iab.js).
+  request.then(
+    () => { socialLinksInflight = null; },
+    () => { socialLinksInflight = null; }
+  );
+  return request;
+}
+
 /**
  * Social Media Buttons Component
  * Displays social media buttons with authentic brand styling and animations
@@ -80,146 +201,52 @@ const SocialMediaButtons = ({ isDesktop = false, containerWidth = null, responsi
   const [error, setError] = useState(null);
   const [buttonsAnimated, setButtonsAnimated] = useState(false);
 
-  // Enhanced fetch with retry mechanism, timeout handling, and localStorage caching
+  // Fetch via the module-level single-flight (see fetchSocialLinksShared), with
+  // localStorage for instant first paint and as the last-resort fallback.
   useEffect(() => {
-    let abortController = new AbortController();
-    let retryCount = 0;
-    const maxRetries = 3;
-    const retryDelay = 1000; // Start with 1 second
-    const CACHE_KEY = 'hardline events_social_links';
-    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    // The shared request is NOT aborted on unmount — the other instance (nav or
+    // footer) may still be waiting on it. A flag keeps setState off unmounted
+    // components instead.
+    let cancelled = false;
 
-    // Try to load from cache
-    const loadFromCache = () => {
-      try {
-        const cached = localStorage.getItem(CACHE_KEY);
-        if (cached) {
-          const { data, timestamp } = JSON.parse(cached);
-          const age = Date.now() - timestamp;
+    // Load from cache immediately for instant display
+    const persisted = readSocialLinksFromStorage();
+    if (persisted) setSocialLinks(persisted);
 
-          if (age < CACHE_DURATION) {
-            console.log(`📦 Loaded ${data.length} social media links from cache (age: ${Math.round(age / 1000)}s)`);
-            setSocialLinks(data);
-            return true;
-          } else {
-            console.log('🗑️ Cache expired, fetching fresh data');
-            localStorage.removeItem(CACHE_KEY);
-          }
-        }
-      } catch (err) {
-        console.warn('⚠️ Failed to load from cache:', err.message);
-      }
-      return false;
-    };
-
-    // Save to cache
-    const saveToCache = (data) => {
-      try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          data,
-          timestamp: Date.now()
-        }));
-        console.log('💾 Saved social media links to cache');
-      } catch (err) {
-        console.warn('⚠️ Failed to save to cache:', err.message);
-      }
-    };
-
-    const fetchSocialLinksWithRetry = async () => {
-      try {
-        console.log(`🔍 Fetching social media links (attempt ${retryCount + 1}/${maxRetries + 1})`);
-
-        // CRITICAL FIX: Use local proxy endpoint instead of direct cross-origin request
-        // The backend at /api/social-media proxies to the dashboard server
-        const apiUrl = '/api/social-media';
-
-        console.log('🔍 Fetching social media links from local proxy:', apiUrl);
-
-        // Enhanced fetch with timeout and abort signal
-        const timeoutId = setTimeout(() => abortController.abort(), 10000); // 10 second timeout
-
-        const response = await fetch(apiUrl, {
-          signal: abortController.signal,
-          // Bypass the browser HTTP cache. The proxy/dashboard already
-          // send Cache-Control: no-store, but this guards against
-          // intermediate caches (Cloudflare, ServiceWorker) returning
-          // a stale list right after an admin toggle.
-          cache: 'no-store',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (data.success && Array.isArray(data.links)) {
-          console.log(`✅ Loaded ${data.links.length} social media links from API`);
-          setSocialLinks(data.links);
-          saveToCache(data.links); // Cache successful response
-          setError(null); // Clear any previous errors
-        } else {
-          throw new Error(data.error || 'Invalid response format');
-        }
-      } catch (err) {
-        console.error(`❌ Error fetching social media links (attempt ${retryCount + 1}):`, err);
-
-        // Don't retry if aborted (component unmounted)
-        if (err.name === 'AbortError') {
-          console.log('🛑 Fetch aborted (component unmounted)');
-          return;
-        }
-
-        // Retry logic with exponential backoff
-        if (retryCount < maxRetries) {
-          retryCount++;
-          const delay = retryDelay * Math.pow(2, retryCount - 1); // Exponential backoff
-          console.log(`🔄 Retrying in ${delay}ms...`);
-
-          setTimeout(() => {
-            if (!abortController.signal.aborted) {
-              fetchSocialLinksWithRetry();
-            }
-          }, delay);
-          return;
-        }
-
+    // Then fetch fresh data in background (shared across instances)
+    fetchSocialLinksShared()
+      .then((links) => {
+        if (cancelled) return;
+        setSocialLinks(links);
+        setError(null); // Clear any previous errors
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.warn('⚠️ All retry attempts failed', err && err.message);
         // All retries failed - try to use cache as last resort
-        console.warn('⚠️ All retry attempts failed');
-        const cachedDataLoaded = loadFromCache();
-
-        if (!cachedDataLoaded) {
+        const fallback = readSocialLinksFromStorage();
+        if (!fallback) {
           console.error('❌ No cached data available - social media buttons will not be displayed');
           setError('Failed to load social media links');
           setSocialLinks([]); // Empty array - no buttons will be shown
         } else {
           console.log('✅ Using cached data as fallback');
+          setSocialLinks(fallback);
           setError('Using cached data');
         }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Load from cache immediately for instant display
-    const hasCachedData = loadFromCache();
-
-    // Then fetch fresh data in background
-    fetchSocialLinksWithRetry();
+      })
+      // .then in place of .finally (absent on Android WebView Chrome <63)
+      .then(() => {
+        if (!cancelled) setLoading(false);
+      });
 
     // Trigger animation immediately for better loading sequence
-    setTimeout(() => setButtonsAnimated(true), 200);
+    const animTimer = setTimeout(() => setButtonsAnimated(true), 200);
 
     // Cleanup function
     return () => {
-      abortController.abort();
+      cancelled = true;
+      clearTimeout(animTimer);
     };
   }, []);
 

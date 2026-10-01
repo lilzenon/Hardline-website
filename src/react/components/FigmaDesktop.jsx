@@ -4,6 +4,7 @@ import { sanitizeUserInput, sanitizeFormData, sanitizeUrl, sanitizeSearchQuery }
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
 import { openExternal } from '../utils/iab';
+import { getAdminImageUrl, getHeroImageUrl, isAdminImageUrl } from '../utils/imageUrl';
 import { loadImageWithCircuitBreaker } from '../../lib/circuit-breaker';
 import TextUsSection from './TextUsSection';
 import SocialMediaButtons from './SocialMediaButtons';
@@ -12,7 +13,7 @@ import DesktopNavigationPills from './DesktopNavigationPills';
 import Footer from './Footer';
 import { initializeBreadcrumbSchema } from '../utils/breadcrumbSchema';
 import EventStructuredData from './EventStructuredData';
-import { getApiBaseUrl, isDevelopment } from '../utils/apiConfig';
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 
 // CSS for custom scrollbar styling
@@ -44,50 +45,13 @@ const scrollbarStyles = `
 const getOptimizedImageUrl = (originalUrl, width = null) => {
   if (!originalUrl) return originalUrl;
 
-  // Handle new image system URLs (/api/images/serve/{uuid}) - PRESERVE EXISTING CACHE-BUSTING
-  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
-    console.log('🔄 Processing new image system URL for desktop:', originalUrl);
-
-    // 🚨 CRITICAL FIX: Preserve existing cache-busting parameters from useHomepageData
-    // Extract existing query parameters to preserve cache-busting
-    const urlParts = originalUrl.split('?');
-    const baseUrl = urlParts[0];
-    const existingParams = urlParts[1] || '';
-
-    // Extract UUID and variant from the base URL
-    const match = baseUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})(?:\/(\w+))?/);
-    if (match) {
-      const uuid = match[1];
-      const existingVariant = match[2] || 'medium'; // Default to medium if no variant specified
-
-      // Determine the best variant based on width request
-      let variant = existingVariant;
-      if (width) {
-        if (width <= 150) variant = 'small';
-        else if (width <= 800) variant = 'medium';
-        else variant = 'large';
-      }
-
-      // Environment-aware: use appropriate API domain for production/beta
-      const dashboardDomain = isDevelopment() ? 'http://localhost:3002' : 'https://admin.b2b.click';
-
-      // 🚨 CRITICAL FIX: Build URL preserving existing cache-busting parameters
-      let optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
-
-      // Preserve existing cache-busting parameters from useHomepageData
-      if (existingParams) {
-        optimizedUrl = `${optimizedUrl}?${existingParams}`;
-        console.log('✅ Preserved existing cache-busting parameters:', existingParams);
-      } else {
-        // Only add new cache-busting if none exists
-        optimizedUrl = `${optimizedUrl}?_desktop=1&_t=${Date.now()}`;
-        console.log('🖥️ Added new desktop cache-busting parameters');
-      }
-
-      console.log('✅ Generated desktop URL with preserved cache-busting:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
-      return optimizedUrl;
-    }
-  }
+  // Admin image system (/api/images/serve/<uuid>/<variant>). Shared helper so
+  // the URL shape (variant-by-width, admin query preserved, NO cache-busting
+  // params) is identical on mobile and desktop - see utils/imageUrl.js for why.
+  // The old `?_desktop=1&_t=${Date.now()}` suffix defeated both the SSR hero
+  // preload and the admin's immutable cache on every page view.
+  const adminUrl = getAdminImageUrl(originalUrl, width);
+  if (adminUrl) return adminUrl;
 
   if (typeof originalUrl === 'string' && originalUrl.includes('/images/figma-exact/')) {
     const filename = originalUrl.split('/').pop();
@@ -105,8 +69,6 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   // FIXED: Also handle /api/images/serve/ URLs specifically by checking for them OR excluding regular /images/ paths
   if (typeof originalUrl === 'string' && originalUrl.startsWith('/') &&
     (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
-    console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
-
     // If it looks like a UUID-based path, treat it as new system
     const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
     if (uuidMatch) {
@@ -114,10 +76,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       // Use medium variant for event cards
-      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
-
-      console.log('✅ Generated URL for UUID-based relative path:', optimizedUrl);
-      return optimizedUrl;
+      return `${dashboardDomain}/api/images/serve/${uuid}/medium`;
     }
   }
 
@@ -135,7 +94,6 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     }
   }
 
-  console.log('⚠️ No optimization applied to URL:', originalUrl);
   return originalUrl;
 };
 
@@ -168,7 +126,6 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     originalUrl.includes('/api/settings/serve/') ||
     originalUrl.startsWith('/api/')
   )) {
-    console.log('🚫 Skipping AVIF for internal API URL to prevent loop:', originalUrl);
     return ''; // Skip AVIF for internal API images to avoid request loops
   }
 
@@ -186,6 +143,57 @@ const getImageLoadingStrategy = (index, isMobile = true) => {
     return { loading: 'eager', decoding: 'async', fetchpriority: 'high' };
   }
   return { loading: 'lazy', decoding: 'async', fetchpriority: 'low' };
+};
+
+/**
+ * Calls `onNear` once, the first time `el` comes within `rootMargin` of the
+ * viewport. Used to defer the YouTube embed, which otherwise competes with the
+ * hero image for bandwidth during LCP. (Same helper as in FigmaMobile.)
+ *
+ * `interaction: true` additionally fires on the first user gesture. Without
+ * IntersectionObserver proximity cannot be measured, so the fallback is first
+ * gesture or a 4 s idle timer. Returns a cleanup that disconnects the observer
+ * and removes every listener; callers MUST run it on unmount.
+ */
+const whenNearViewport = (el, onNear, { rootMargin = '200px', interaction = false } = {}) => {
+  let fired = false;
+  const cleanups = [];
+  const cleanup = () => {
+    while (cleanups.length) cleanups.pop()();
+  };
+  const fire = () => {
+    if (fired) return;
+    fired = true;
+    cleanup();
+    onNear();
+  };
+
+  const hasIO = typeof window !== 'undefined' && typeof window.IntersectionObserver === 'function';
+  if (hasIO && el) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) fire();
+    }, { rootMargin });
+    io.observe(el);
+    cleanups.push(() => io.disconnect());
+  }
+
+  if (!hasIO || interaction) {
+    const gestures = ['pointerdown', 'touchstart', 'keydown', 'wheel'];
+    gestures.forEach((type) => window.addEventListener(type, fire, { passive: true }));
+    // `scroll` does not bubble; capture catches nested scroll containers too.
+    window.addEventListener('scroll', fire, { passive: true, capture: true });
+    cleanups.push(() => {
+      gestures.forEach((type) => window.removeEventListener(type, fire));
+      window.removeEventListener('scroll', fire, { capture: true });
+    });
+  }
+
+  if (!hasIO) {
+    const idleTimer = setTimeout(fire, 4000);
+    cleanups.push(() => clearTimeout(idleTimer));
+  }
+
+  return cleanup;
 };
 
 // Add CSS animation for spinning wheel
@@ -484,12 +492,14 @@ const FigmaDesktop = ({ onReady }) => {
     };
   }, [applyScrollMask]);
 
-  // Autoplay YouTube on load per requirements (keep muted for autoplay policy)
-  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(true);
+  // YouTube still autoplays muted as before, but the iframe is only mounted
+  // once its container is within ~200px of the viewport (whenNearViewport
+  // effect after useHomepageData). Mounting it eagerly made the player's JS,
+  // poster and first media segments compete with the hero image during LCP.
+  const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
+  const videoContainerRef = useRef(null);
 
   useEffect(() => {
-    setShouldLoadYoutube(true);
-
     // Track desktop component load - IMPORTANT for understanding user experience
     trackEvent('component_load', {
       component: 'FigmaDesktop',
@@ -530,6 +540,23 @@ const FigmaDesktop = ({ onReady }) => {
     homepageEvents,
     normalizeEvent
   } = useHomepageData();
+
+  // Stable identity for EventStructuredData: spreading a fresh array in JSX
+  // re-ran its JSON-LD injection effect on every render of this component.
+  const structuredDataEvents = useMemo(
+    () => [...featuredEvents, ...homepageEvents],
+    [featuredEvents, homepageEvents]
+  );
+
+  // Arm the YouTube gate once the video container exists in the DOM (it only
+  // renders after `loading` clears, hence the dependency). Disconnected on
+  // unmount or as soon as it fires.
+  useEffect(() => {
+    if (loading || shouldLoadYoutube) return undefined;
+    const el = videoContainerRef.current;
+    if (!el) return undefined;
+    return whenNearViewport(el, () => setShouldLoadYoutube(true));
+  }, [loading, shouldLoadYoutube]);
 
   // Homepage video config — admin-editable per-domain via
   // homepage_settings.video_*. NULL/empty -> hardcoded defaults below.
@@ -1243,56 +1270,12 @@ const FigmaDesktop = ({ onReady }) => {
 
 
 
-  // Preload critical desktop event images for instant display
-  useEffect(() => {
-    if (filteredFeaturedEvents && filteredFeaturedEvents.length > 0) {
-      console.log('🚀 Preloading critical desktop featured event images for instant display...');
-
-      // Preload featured event images first
-      filteredFeaturedEvents.forEach((card, index) => {
-        if (card.coverImage) {
-          // Skip AVIF preload for internal API images to avoid CORS issues
-          if (!card.coverImage.includes('/api/images/serve/')) {
-            // Preload AVIF version for modern browsers (external images only)
-            const avifLink = document.createElement('link');
-            avifLink.rel = 'preload';
-            avifLink.as = 'image';
-            avifLink.type = 'image/avif';
-            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-            avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(card.coverImage)}&w=111&format=avif`;
-            document.head.appendChild(avifLink);
-          }
-
-          // Preload WebP fallback (skip internal /api images to avoid any desktop-only interference)
-          if (!card.coverImage.includes('/api/images/serve/')) {
-            const webpLink = document.createElement('link');
-            webpLink.rel = 'preload';
-            webpLink.as = 'image';
-            webpLink.type = 'image/webp';
-            webpLink.href = getOptimizedImageUrl(card.coverImage, 111);
-            document.head.appendChild(webpLink);
-          }
-
-          console.log(`✅ Preloaded desktop featured event image ${index + 1}: ${card.title}`);
-        }
-      });
-
-      // Also preload first 4 regular event images (above-the-fold on desktop)
-      if (filteredHomepageEvents && filteredHomepageEvents.length > 0) {
-        filteredHomepageEvents.slice(0, 4).forEach((card, index) => {
-          if (card.coverImage) {
-            const img = new Image();
-            img.src = getOptimizedImageUrl(card.coverImage, 400);
-            // Only log preloading in development
-            if (process.env.NODE_ENV === 'development') {
-              img.onload = () => console.log(`✅ Preloaded event image: ${card.title}`);
-              img.onerror = () => console.warn(`⚠️ Failed to preload: ${card.title}`);
-            }
-          }
-        });
-      }
-    }
-  }, [filteredFeaturedEvents, filteredHomepageEvents]);
+  // NOTE: deliberately no client-side image preloading here. The old effect
+  // injected <link rel=preload> tags and `new Image()` warmers for the featured
+  // and first four homepage cards at widths (111 / 400) that did not match what
+  // the cards actually render, so every warmed variant was an extra download
+  // competing with the hero (LCP) for bandwidth. The cards mount in the same
+  // commit anyway; the browser schedules them itself.
 
   // Get the most recent upcoming event for hero sections (independent of toggle state)
   const mostRecentEvent = useMemo(() => {
@@ -1552,7 +1535,7 @@ const FigmaDesktop = ({ onReady }) => {
     <div className="homepage-root">
       {/* SEO: Inject JSON-LD structured data for all events */}
       <EventStructuredData
-        events={[...featuredEvents, ...homepageEvents]}
+        events={structuredDataEvents}
         domain="hardline.events"
       />
 
@@ -1759,21 +1742,33 @@ const FigmaDesktop = ({ onReady }) => {
                       {mostRecentEvent?.cover_image ? (
                         /* Event Cover Image */
                         <picture>
-                          <source
-                            srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
-                            sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                            type="image/avif"
-                          />
-                          <source
-                            srcSet={getResponsiveSrcSet(mostRecentEvent.cover_image, 'hero')}
-                            sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                            type="image/webp"
-                          />
+                          {/* LCP: for admin images the hero must request exactly the URL
+                              the SSR <link rel="preload"> fetched (`medium`, same query,
+                              crossorigin=anonymous). A <source srcSet> would let the
+                              browser pick `large` on retina displays and waste the
+                              preload, so responsive sources are kept only for non-admin
+                              URLs. Do not add a srcset/sizes to the hero <img>. */}
+                          {!isAdminImageUrl(mostRecentEvent.cover_image) && (
+                            <>
+                              <source
+                                srcSet={getAVIFSrcSet(mostRecentEvent.cover_image, 'hero')}
+                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                type="image/avif"
+                              />
+                              <source
+                                srcSet={getResponsiveSrcSet(mostRecentEvent.cover_image, 'hero')}
+                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                type="image/webp"
+                              />
+                            </>
+                          )}
                           <img
                             crossOrigin="anonymous"
                             referrerPolicy="no-referrer"
-                            src={getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
+                            src={getHeroImageUrl(mostRecentEvent.cover_image) || getOptimizedImageUrl(mostRecentEvent.cover_image, 375)}
                             alt={`${mostRecentEvent.artist_name || mostRecentEvent.title} - Featured Event`}
+                            width={600}
+                            height={600}
                             loading="eager"
                             decoding="async"
                             fetchpriority="high"
@@ -2519,14 +2514,7 @@ const FigmaDesktop = ({ onReady }) => {
                                           if (!imageUrl || imageUrl.startsWith('data:')) {
                                             return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTEyIiBoZWlnaHQ9IjExMiIgdmlld0JveD0iMCAwIDExMiAxMTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMTIiIGhlaWdodD0iMTEyIiBmaWxsPSIjMjIyMjIyIiByeD0iMTciLz4KPHN2ZyB4PSIzNiIgeT0iMzYiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIj4KPHA+PHBhdGggZD0iTTIxIDMuNWMwLS44LS43LTEuNS0xLjUtMS41SDQuNWMtLjggMC0xLjUuNy0xLjUgMS41djE3YzAgLjguNyAxLjUgMS41IDEuNWgxNWMuOCAwIDEuNS0uNyAxLjUtMS41di0xN3ptLTEuNSAxNkg0LjVWNC41aDE1djE1eiIgZmlsbD0iIzU2NTY1NiIvPjwvc3ZnPgo8L3N2Zz4K';
                                           }
-                                          const optimizedUrl = getOptimizedImageUrl(imageUrl, 111);
-                                          console.log(`🖼️ DESKTOP FEATURED: Loading featured event image for "${card.title}":`, {
-                                            original: imageUrl,
-                                            optimized: optimizedUrl,
-                                            isNewImageSystem: imageUrl?.includes('/api/images/serve/'),
-                                            hasExistingCacheBusting: imageUrl?.includes('_cb=') || imageUrl?.includes('_t=')
-                                          });
-                                          return optimizedUrl;
+                                          return getOptimizedImageUrl(imageUrl, 111);
                                         })()}
                                         srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
                                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 111px"
@@ -2809,6 +2797,7 @@ const FigmaDesktop = ({ onReady }) => {
 
                   {/* YouTube Video - top of the column, absorbs the leftover height */}
                   <div
+                    ref={videoContainerRef}
                     onClick={() => openExternal(videoCtaUrl)}
                     style={{
                       // Takes whatever height the social row and Laylo embed leave.
@@ -2869,33 +2858,36 @@ const FigmaDesktop = ({ onReady }) => {
                           overflow: 'hidden'
                         }}
                       >
-                        {/* YouTube Video - Autoplay on load (muted for policy compliance).
+                        {/* YouTube Video - muted autoplay, mounted only once the
+                            container is near the viewport (shouldLoadYoutube).
                             Sized 16:9 in px and centred: see VIDEO_OVERSCAN above.
                             The old 150%/150% was a percentage of a banner-shaped
                             box, so the player letterboxed inside it and the black
                             pillars landed in view. */}
-                        <iframe
-                          src={videoEmbedSrc}
-                          title={videoIframeTitle}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                          loading="eager"
-                          style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            right: 'auto',
-                            bottom: 'auto',
-                            width: `${videoFrameWidth}px`,
-                            height: `${videoFrameHeight}px`,
-                            border: 'none',
-                            // Also keeps the player's hover chrome from ever firing.
-                            pointerEvents: 'none',
-                            opacity: 1,
-                            transform: 'translate(-50%, -50%)', // Robust centering
-                            transformOrigin: 'center center'
-                          }}
-                        />
+                        {shouldLoadYoutube && (
+                          <iframe
+                            src={videoEmbedSrc}
+                            title={videoIframeTitle}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            loading="lazy"
+                            style={{
+                              position: 'absolute',
+                              top: '50%',
+                              left: '50%',
+                              right: 'auto',
+                              bottom: 'auto',
+                              width: `${videoFrameWidth}px`,
+                              height: `${videoFrameHeight}px`,
+                              border: 'none',
+                              // Also keeps the player's hover chrome from ever firing.
+                              pointerEvents: 'none',
+                              opacity: 1,
+                              transform: 'translate(-50%, -50%)', // Robust centering
+                              transformOrigin: 'center center'
+                            }}
+                          />
+                        )}
                       </div>
 
                       {/* Gradient overlay */}
@@ -3431,18 +3423,7 @@ const FigmaDesktop = ({ onReady }) => {
                               referrerPolicy="no-referrer"
                               width="120"
                               height="120"
-                              src={(() => {
-                                const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
-                                console.log(`🖼️ DESKTOP: Loading homepage image for "${card.title}":`, {
-                                  original: card.coverImage,
-                                  optimized: optimizedUrl,
-                                  isDataUrl: card.coverImage?.startsWith('data:'),
-                                  isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
-                                  hasExistingCacheBusting: card.coverImage?.includes('_cb=') || card.coverImage?.includes('_t='),
-                                  hostname: window.location.hostname
-                                });
-                                return optimizedUrl;
-                              })()}
+                              src={getOptimizedImageUrl(card.coverImage, 120)}
                               srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
                               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
                               alt={card.image_alt_text || `${card.title} event cover`}

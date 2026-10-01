@@ -48,7 +48,10 @@ const initializeUtilities = async () => {
   // Initialize cleanup utilities to remove old blob URLs
   initializeCleanup();
 
-  // Initialize mobile optimizations for better mobile performance
+  // Initialize mobile optimizations for better mobile performance.
+  // This is the ONLY call site (HomePage.jsx used to call it too, which
+  // double-registered resize listeners and the 30 s memory-monitor interval).
+  // The util is also idempotent now, so an accidental second call is harmless.
   initializeMobileOptimizations();
 
   // Initialize analytics with proper configuration
@@ -111,6 +114,23 @@ const MaintenanceRedirect: React.FC = () => {
 const App = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  // 🔧 IAB FIX: signal a successful first COMMIT. The server-injected 4 s
+  // splash failsafe and the `.app-loaded #ssr-content` fade CSS both key off
+  // this class. It must be added from an effect (after React has committed),
+  // not synchronously after root.render(): createRoot renders asynchronously,
+  // so a sync classList.add ran before anything was painted and the failsafe
+  // stood down even when the first render then threw — leaving BOTH the splash
+  // and #ssr-content hidden (black screen). If App throws during its first
+  // render this effect never runs, the class stays absent, and the failsafe
+  // restores the server-rendered content at 4 s as designed.
+  useEffect(() => {
+    try {
+      document.body.classList.add('app-loaded');
+    } catch (_) {
+      /* non-fatal */
+    }
+  }, []);
 
   // Analytics tracking is initialized at the bottom of this file to prevent duplicates
 
@@ -278,10 +298,10 @@ if (container) {
       </ErrorBoundary>
     );
 
-    // 🔧 IAB FIX: signal successful mount. The server-injected 4s splash
-    // failsafe and the .app-loaded #ssr-content fade CSS both key off this
-    // class (it previously lived only in dead src/react/index.jsx).
-    document.body.classList.add('app-loaded');
+    // NOTE: `app-loaded` is deliberately NOT added here. root.render() only
+    // schedules work; adding the class synchronously made the 4 s failsafe
+    // believe React had mounted before a single frame was committed. The
+    // class is added from a useEffect inside <App/> (see above) instead.
 
     // 🔧 RELOAD-LOOP FIX: restore the chunk-recovery budget only after this
     // document has stayed alive long enough to prove it is not looping.

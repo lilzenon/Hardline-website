@@ -8,6 +8,19 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useSEO } from '../contexts/SEOContext';
 
+/**
+ * True when the settings object contains at least one ENABLED pixel with an id —
+ * i.e. there is actually something to initialise. DEFAULT_SEO_SETTINGS (the
+ * provider's pre-fetch state) and admin's fallback row both return false.
+ */
+const hasConfiguredPixels = (s) => !!s && (
+    (s.google_ads_enabled && s.google_ads_id) ||
+    (s.meta_pixel_enabled && s.meta_pixel_id) ||
+    (s.tiktok_pixel_enabled && s.tiktok_pixel_id) ||
+    (s.snapchat_pixel_enabled && s.snapchat_pixel_id) ||
+    (s.pinterest_tag_enabled && s.pinterest_tag_id)
+);
+
 // Check if user has given GDPR consent
 const hasGDPRConsent = () => {
     try {
@@ -45,43 +58,41 @@ const loadScript = (src, id, callback) => {
 };
 
 /**
- * Initialize Google Ads / gtag.js
+ * Initialize Google Ads via gtag.js.
+ *
+ * GA4 is deliberately NOT configured here. The inline bootstrap in index.html
+ * owns GA4 (`gtag('config', <GA4 id>, { send_page_view: true })` after
+ * load+idle); configuring it here as well sent two page_view hits per load.
+ *
+ * gtag.js is ONE library for every Google destination and queues commands in
+ * dataLayer until it arrives, so `config` may be pushed before the script loads
+ * (that is what Google's own snippet does). When a GA4 id exists the bootstrap
+ * will load the library; only load it from here when it would otherwise never
+ * be requested (Ads-only site), and never request a second copy.
  */
 const initializeGoogleAds = (googleAdsId, googleAnalyticsId) => {
-    if (!googleAdsId && !googleAnalyticsId) return;
+    if (!googleAdsId) return;
+    if (loadedScripts.has('google-ads')) return;
+    loadedScripts.add('google-ads');
 
-    const primaryId = googleAdsId || googleAnalyticsId;
-
-    // Initialize dataLayer
     window.dataLayer = window.dataLayer || [];
-    window.gtag = function () {
-        window.dataLayer.push(arguments);
-    };
+    if (typeof window.gtag !== 'function') {
+        // Only when the index.html stub is missing (non-standard embed).
+        window.gtag = function () {
+            window.dataLayer.push(arguments);
+        };
+        window.gtag('js', new Date());
+    }
 
-    // Load gtag.js
-    loadScript(
-        `https://www.googletagmanager.com/gtag/js?id=${primaryId}`,
-        'google-gtag',
-        () => {
-            window.gtag('js', new Date());
+    const gtagRequested = !!document.querySelector('script[src*="googletagmanager.com/gtag/js"]');
+    if (!googleAnalyticsId && !gtagRequested) {
+        loadScript(`https://www.googletagmanager.com/gtag/js?id=${googleAdsId}`, 'google-gtag');
+    }
 
-            // Configure Google Ads if present
-            if (googleAdsId) {
-                window.gtag('config', googleAdsId, {
-                    'allow_enhanced_conversions': true
-                });
-                console.log(`📊 Google Ads initialized: ${googleAdsId}`);
-            }
-
-            // Configure GA4 if present
-            if (googleAnalyticsId) {
-                window.gtag('config', googleAnalyticsId, {
-                    'send_page_view': true
-                });
-                console.log(`📊 Google Analytics 4 initialized: ${googleAnalyticsId}`);
-            }
-        }
-    );
+    window.gtag('config', googleAdsId, {
+        'allow_enhanced_conversions': true
+    });
+    console.log(`📊 Google Ads initialized: ${googleAdsId}`);
 };
 
 /**
@@ -89,6 +100,7 @@ const initializeGoogleAds = (googleAdsId, googleAnalyticsId) => {
  */
 const initializeMetaPixel = (pixelId) => {
     if (!pixelId) return;
+    if (loadedScripts.has('meta-pixel')) return; // idempotent: a second init() duplicates events
 
     // Initialize Meta Pixel
     !function (f, b, e, v, n, t, s) {
@@ -115,6 +127,7 @@ const initializeMetaPixel = (pixelId) => {
  */
 const initializeTikTokPixel = (pixelId) => {
     if (!pixelId) return;
+    if (loadedScripts.has('tiktok-pixel')) return;
 
     !function (w, d, t) {
         w.TiktokAnalyticsObject = t;
@@ -142,6 +155,7 @@ const initializeTikTokPixel = (pixelId) => {
  */
 const initializeSnapchatPixel = (pixelId) => {
     if (!pixelId) return;
+    if (loadedScripts.has('snapchat-pixel')) return;
 
     (function (e, t, n) {
         if (e.snaptr) return;
@@ -166,6 +180,7 @@ const initializeSnapchatPixel = (pixelId) => {
  */
 const initializePinterestTag = (tagId) => {
     if (!tagId) return;
+    if (loadedScripts.has('pinterest-tag')) return;
 
     !function (e) {
         if (!window.pintrk) {
@@ -198,15 +213,23 @@ export const TrackingPixelLoader = () => {
         // 🚀 REMOVED GDPR CONSENT CHECK - User confirmed consent is not required
         // Tracking pixels now load immediately when settings are available
 
+        // 🔧 LATCH FIX: only latch once there is something to initialise.
+        // Child effects run before the provider's fetch resolves, so the first
+        // call here sees DEFAULT_SEO_SETTINGS (every id empty). Latching on
+        // that — the previous behaviour — meant the real settings arriving a
+        // moment later were ignored and Meta/TikTok/Snap/Pinterest never
+        // loaded. Returning WITHOUT latching lets the next settings update
+        // (fetch, SSR seed, or the 5-minute refresh) take the one-shot slot.
+        // Each initializer is itself idempotent, so this can never double-fire.
+        if (!hasConfiguredPixels(seoSettings)) return;
+
         initialized.current = true;
         console.log('📊 Initializing tracking pixels (no consent gate)...');
 
-        // Google Ads / GA4
+        // Google Ads (GA4 page views are owned by the index.html bootstrap —
+        // see initializeGoogleAds).
         if (seoSettings?.google_ads_enabled && seoSettings?.google_ads_id) {
             initializeGoogleAds(seoSettings.google_ads_id, seoSettings.google_analytics_id);
-        } else if (seoSettings?.google_analytics_id) {
-            // Fall back to GA4 only if no Google Ads
-            initializeGoogleAds(null, seoSettings.google_analytics_id);
         }
 
         // Meta Pixel

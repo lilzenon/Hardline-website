@@ -29,28 +29,34 @@ const getApiBase = () => getApiBaseUrl();
  * @returns {Promise<Object>} Response data
  */
 async function fetchWithTimeout(endpoint, options = {}) {
-  const API_BASE = getApiBase();
-  const url = `${API_BASE}${endpoint}`;
+  // `sameOrigin`: hit this site's own /api proxy instead of the admin origin.
+  // `simple`: send a CORS-"simple" request — no credentials, no custom headers
+  // — so the browser issues NO preflight. Both are opt-in so product/checkout
+  // calls keep their session cookie behaviour unchanged.
+  const { sameOrigin = false, simple = false, ...fetchOptions } = options;
+  const url = sameOrigin ? endpoint : `${getApiBase()}${endpoint}`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
   try {
-    console.log(`🛍️ Shop API: ${options.method || 'GET'} ${endpoint}`);
+    console.log(`🛍️ Shop API: ${fetchOptions.method || 'GET'} ${endpoint}`);
 
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       signal: controller.signal,
       // 🔧 FIX: Add cache: 'no-store' to prevent browser caching of product data
       // This ensures fresh images and variants are always fetched
       cache: 'no-store',
-      // 🔧 FIX: Include credentials (cookies) to maintain session and prevent 'rapid_session_creation' alerts
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        ...options.headers,
-      },
+      ...(simple ? {} : {
+        // 🔧 FIX: Include credentials (cookies) to maintain session and prevent 'rapid_session_creation' alerts
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          ...fetchOptions.headers,
+        },
+      }),
     });
 
     clearTimeout(timeoutId);
@@ -141,7 +147,27 @@ export async function verifyCheckoutSession(sessionId) {
  * @returns {Promise<Object>} Shop configuration
  */
 export async function fetchConfig() {
-  const data = await fetchWithTimeout('/api/shop/config');
+  // The SSR HTML inlines the per-host SEO settings (window.__SEO_SETTINGS__),
+  // which carry `shop_enabled`. When they say the shop is OFF there is nothing
+  // the nav can learn from /api/shop/config, so skip the request entirely. The
+  // synthetic object mirrors the real payload's `shopEnabled`/`shop_enabled`
+  // keys so callers' handling is unchanged. Absent or truthy → fall through to
+  // the network as before (the real response remains authoritative).
+  try {
+    const inline = typeof window !== 'undefined' ? window.__SEO_SETTINGS__ : null;
+    if (inline && typeof inline === 'object' &&
+      (inline.shop_enabled === false || inline.shop_enabled === 'false')) {
+      return { success: true, shopEnabled: false, shop_enabled: false, source: 'inline-seo-settings' };
+    }
+  } catch (_) {
+    // fall through to the network
+  }
+
+  // Same-origin, preflight-free GET. This endpoint is read by the nav on
+  // every page, and the cross-origin + credentials + Content-Type variant cost
+  // an OPTIONS round trip before every call. /api/shop on this origin proxies
+  // to admin (server/utils/admin-proxy.util.js); the dev server proxies /api.
+  const data = await fetchWithTimeout('/api/shop/config', { sameOrigin: true, simple: true });
   return data;
 }
 

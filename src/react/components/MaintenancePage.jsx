@@ -2,6 +2,7 @@ import React, { useEffect, useState, Suspense, lazy } from 'react';
 import { logEnvironmentInfo, isProductionEnvironment } from '../utils/productionDebug';
 import { useSEO } from '../contexts/SEOContext';
 import { importWithRetry } from '../utils/iab';
+import { shouldRenderDecorativeWebGL } from '../utils/deviceCapability';
 // Bounded: DitherErrorBoundary below already contains chunk ERRORS, but a
 // stalled request is not an error — without a timeout it hangs Suspense.
 const Dither = lazy(() => importWithRetry(() => import('./ui/DitherShadcn').then(m => ({ default: m.Dither })), 8000));
@@ -77,6 +78,11 @@ class DitherErrorBoundary extends React.Component {
 
 export default function MaintenancePage() {
   const [ditherFailed, setDitherFailed] = useState(false);
+  // Decided once per page load: the dither is a decorative fullscreen WebGL
+  // loop (three.js, ~770 KB) that burns CPU for as long as the tab is open.
+  // Phones, in-app browsers, reduced-motion and low-core devices get the CSS
+  // background instead (see utils/deviceCapability.js for the measurements).
+  const [webglOk] = useState(() => shouldRenderDecorativeWebGL());
   const [sdkLoaded, setSdkLoaded] = useState(false);
   const { maintenanceStatus } = useSEO();
   const maintenanceTitle = (maintenanceStatus && maintenanceStatus.maintenance_title) || '⚠️Under Construction⚠️';
@@ -158,21 +164,25 @@ export default function MaintenancePage() {
         zIndex: 1,
         pointerEvents: 'none'
       }}>
-        <DitherErrorBoundary>
-          <Suspense fallback={null}>
-            <Dither
-              waveSpeed={0.02}
-              waveFrequency={2.0}
-              waveAmplitude={0.25}
-              waveColor={[1.0, 1.0, 1.0]}
-              colorNum={2}
-              pixelSize={2}
-              enableMouseInteraction={false}
-              mouseRadius={1.0}
-              className="dither-background"
-            />
-          </Suspense>
-        </DitherErrorBoundary>
+        {webglOk ? (
+          <DitherErrorBoundary>
+            <Suspense fallback={null}>
+              <Dither
+                waveSpeed={0.02}
+                waveFrequency={2.0}
+                waveAmplitude={0.25}
+                waveColor={[1.0, 1.0, 1.0]}
+                colorNum={2}
+                pixelSize={2}
+                enableMouseInteraction={false}
+                mouseRadius={1.0}
+                className="dither-background"
+              />
+            </Suspense>
+          </DitherErrorBoundary>
+        ) : (
+          <CSSFallbackBackground />
+        )}
       </div>
 
       {/* Minimalist Maintenance Card */}

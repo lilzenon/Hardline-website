@@ -3,6 +3,13 @@
  * Handles mobile-specific performance optimizations and memory management
  */
 
+// Module-level guards. initializeMobileOptimizations() is called from
+// src/main.tsx and MUST be idempotent: it was also called from HomePage.jsx,
+// and each call stacked another resize listener pair and another 30 s interval.
+let mobileOptimizationsInitialized = false;
+let viewportListenersBound = false;
+let memoryMonitorInterval = null;
+
 // Mobile device detection with enhanced accuracy
 export const isMobileDevice = () => {
   const userAgent = navigator.userAgent || '';
@@ -196,10 +203,16 @@ export const viewportManager = {
         const vh = window.innerHeight * 0.01;
         document.documentElement.style.setProperty('--vh', `${vh}px`);
       };
-      
+
       setVH();
-      window.addEventListener('resize', mobileDebounce(setVH, 100), { passive: true });
-      window.addEventListener('orientationchange', mobileDebounce(setVH, 100), { passive: true });
+      // Bind the listeners ONCE per document. Each call used to add a fresh
+      // (anonymous, un-removable) debounced listener pair, so every extra
+      // initialisation stacked another --vh writer on resize/orientationchange.
+      if (viewportListenersBound) return;
+      viewportListenersBound = true;
+      const onViewportChange = mobileDebounce(setVH, 100);
+      window.addEventListener('resize', onViewportChange, { passive: true });
+      window.addEventListener('orientationchange', onViewportChange, { passive: true });
     }
   },
   
@@ -240,22 +253,33 @@ export const performanceMonitor = {
   // Monitor for performance issues
   startMonitoring() {
     if (isMobileDevice()) {
-      // Check performance every 30 seconds
-      setInterval(() => {
+      // One 30 s interval per document — not one per call. Cleared on
+      // pagehide so a bfcache'd / backgrounded tab is not kept ticking.
+      if (memoryMonitorInterval !== null) return;
+      memoryMonitorInterval = setInterval(() => {
         if (memoryManager.isMemoryPressure()) {
           console.warn('⚠️ High memory usage detected on mobile device');
           memoryManager.forceGC();
         }
       }, 30000);
+      window.addEventListener('pagehide', () => {
+        if (memoryMonitorInterval !== null) {
+          clearInterval(memoryMonitorInterval);
+          memoryMonitorInterval = null;
+        }
+      }, { once: true });
     }
   }
 };
 
-// Initialize mobile optimizations
+// Initialize mobile optimizations (idempotent — safe to call more than once)
 export const initializeMobileOptimizations = () => {
+  if (mobileOptimizationsInitialized) return;
+  mobileOptimizationsInitialized = true;
+
   if (isMobileDevice()) {
     console.log('📱 Initializing mobile optimizations');
-    
+
     viewportManager.setMobileViewport();
     viewportManager.fixIOSViewport();
     performanceMonitor.startMonitoring();

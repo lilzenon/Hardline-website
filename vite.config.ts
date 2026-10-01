@@ -9,12 +9,14 @@ import { ViteImageOptimizer } from 'vite-plugin-image-optimizer';
 export default defineConfig({
   plugins: [
     react(),
-    // ENHANCED: Advanced preload optimization for critical resources
+    // Route/device chunk preloads for the homepage waterfall
+    // (main.tsx → HomePage → FigmaMobile | FigmaDesktop). Names are rollup
+    // chunk names — case-sensitive and exact (`FigmaMobile`, not
+    // `figma-mobile`). See vite-plugins/preload-optimization.ts.
     preloadOptimization({
-      criticalChunks: ['react-core', 'router', 'index'],
-      prefetchChunks: ['figma-mobile', 'figma-desktop', 'about-page', 'contact-page'],
-      preloadFonts: true,
-      preloadCriticalCSS: true
+      criticalChunks: ['HomePage'],
+      deviceChunks: { mobile: 'FigmaMobile', desktop: 'FigmaDesktop' },
+      prefetchChunks: []
     }),
     // Aggressive Gzip compression for production builds
     viteCompression({

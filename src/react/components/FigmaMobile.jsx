@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react';
 import { navigateTo } from '../utils/navigate';
 import DataErrorBanner from './DataErrorBanner';
-import { useOptimizedScroll } from '../hooks/useOptimizedScroll';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useHomepageData } from '../hooks/useHomepageData';
 import { openExternal } from '../utils/iab';
+import { getAdminImageUrl, getHeroImageUrl, isAdminImageUrl } from '../utils/imageUrl';
 import SocialMediaButtons from './SocialMediaButtons';
 import PrivacyConsentModal from './PrivacyConsentModal';
 import MobileNavigation from './MobileNavigation';
@@ -28,41 +28,17 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
 
   // Handle data URLs (base64 encoded images) - return as-is
   if (typeof originalUrl === 'string' && originalUrl.startsWith('data:')) {
-    console.log('⚠️ Data URL detected, returning as-is:', originalUrl.substring(0, 50) + '...');
     return originalUrl;
   }
 
   // Check if we're on iOS Safari for compatibility decisions
   const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
-  // Handle new image system URLs (/api/images/serve/{uuid})
-  if (typeof originalUrl === 'string' && originalUrl.includes('/api/images/serve/')) {
-    console.log('🔄 Processing new image system URL:', originalUrl);
-
-    // Extract the UUID from the URL
-    const uuidMatch = originalUrl.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
-    if (uuidMatch) {
-      const uuid = uuidMatch[1];
-
-      // Build optimized URL using the dashboard domain - FIXED: use proper localhost URL
-      const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-
-      // Use appropriate variant based on width with optimized size selection
-      let variant = 'small'; // Default to small for event cards (111px display) - OPTIMIZED
-      if (width) {
-        if (width <= 150) variant = 'thumbnail';  // 150x150 for very small displays
-        else if (width <= 300) variant = 'small'; // 300x300 for event cards
-        else if (width <= 800) variant = 'medium'; // 600x600 for larger cards
-        else if (width <= 1200) variant = 'large'; // 1200x1200 for hero images
-        else variant = 'large'; // Use large for anything bigger
-      }
-
-      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/${variant}`;
-
-      console.log('✅ Generated optimized URL for new image system:', optimizedUrl, `(variant: ${variant}, width: ${width})`);
-      return optimizedUrl;
-    }
-  }
+  // Admin image system (/api/images/serve/<uuid>/<variant>). Shared helper so
+  // the URL shape (variant-by-width, admin query preserved, NO cache-busting
+  // params) is identical on mobile and desktop - see utils/imageUrl.js for why.
+  const adminUrl = getAdminImageUrl(originalUrl, width);
+  if (adminUrl) return adminUrl;
 
   // Handle old image system URLs (/images/figma-exact/)
   if (typeof originalUrl === 'string' && originalUrl.includes('/images/figma-exact/')) {
@@ -95,8 +71,6 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
   // FIXED: Also handle /api/images/serve/ URLs specifically by checking for them OR excluding regular /images/ paths
   if (typeof originalUrl === 'string' && originalUrl.startsWith('/') &&
     (originalUrl.includes('/api/images/serve/') || !originalUrl.includes('/images/'))) {
-    console.log('🔄 Processing relative URL, assuming new image system:', originalUrl);
-
     // If it looks like a UUID-based path, treat it as new system
     const uuidMatch = originalUrl.match(/([a-f0-9-]{36})/);
     if (uuidMatch) {
@@ -104,10 +78,7 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
       const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
 
       // Use medium variant for event cards
-      const optimizedUrl = `${dashboardDomain}/api/images/serve/${uuid}/medium`;
-
-      console.log('✅ Generated URL for UUID-based relative path:', optimizedUrl);
-      return optimizedUrl;
+      return `${dashboardDomain}/api/images/serve/${uuid}/medium`;
     }
   }
 
@@ -125,7 +96,6 @@ const getOptimizedImageUrl = (originalUrl, width = null) => {
     }
   }
 
-  console.log('⚠️ No optimization applied to URL:', originalUrl);
   return originalUrl;
 };
 
@@ -159,7 +129,6 @@ const getAVIFSrcSet = (originalUrl, context = 'event') => {
     originalUrl.includes('/api/settings/serve/') ||
     originalUrl.startsWith('/api/')
   )) {
-    console.log('🚫 Skipping AVIF for internal API URL to prevent loop:', originalUrl);
     return ''; // Skip AVIF for internal API images to avoid request loops
   }
 
@@ -177,6 +146,61 @@ const getImageLoadingStrategy = (index, isMobile = true) => {
     return { loading: 'eager', decoding: 'async', fetchpriority: 'high' };
   }
   return { loading: 'lazy', decoding: 'async', fetchpriority: 'low' };
+};
+
+/**
+ * Calls `onNear` once, the first time `el` comes within `rootMargin` of the
+ * viewport. Used to defer third-party embeds (YouTube, Laylo) that otherwise
+ * compete with the hero image for bandwidth during LCP.
+ *
+ * `interaction: true` additionally fires on the first user gesture (pointer,
+ * touch, key, wheel, any scroll). Without IntersectionObserver proximity cannot
+ * be measured, so the fallback is first gesture or a 4 s idle timer.
+ *
+ * The root is the top-level viewport (root: null), which is correct even
+ * though the page scrolls inside `.mobile-content-container`: IO clips through
+ * every ancestor. Returns a cleanup that disconnects the observer and removes
+ * every listener; callers MUST run it on unmount.
+ */
+const whenNearViewport = (el, onNear, { rootMargin = '200px', interaction = false } = {}) => {
+  let fired = false;
+  const cleanups = [];
+  const cleanup = () => {
+    while (cleanups.length) cleanups.pop()();
+  };
+  const fire = () => {
+    if (fired) return;
+    fired = true;
+    cleanup();
+    onNear();
+  };
+
+  const hasIO = typeof window !== 'undefined' && typeof window.IntersectionObserver === 'function';
+  if (hasIO && el) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) fire();
+    }, { rootMargin });
+    io.observe(el);
+    cleanups.push(() => io.disconnect());
+  }
+
+  if (!hasIO || interaction) {
+    const gestures = ['pointerdown', 'touchstart', 'keydown', 'wheel'];
+    gestures.forEach((type) => window.addEventListener(type, fire, { passive: true }));
+    // `scroll` does not bubble; capture catches the inner scroll container too.
+    window.addEventListener('scroll', fire, { passive: true, capture: true });
+    cleanups.push(() => {
+      gestures.forEach((type) => window.removeEventListener(type, fire));
+      window.removeEventListener('scroll', fire, { capture: true });
+    });
+  }
+
+  if (!hasIO) {
+    const idleTimer = setTimeout(fire, 4000);
+    cleanups.push(() => clearTimeout(idleTimer));
+  }
+
+  return cleanup;
 };
 
 // Enhanced iOS Safari image fallback handler
@@ -563,17 +587,22 @@ const FigmaMobile = ({ onReady }) => {
     }
   }, [trackEvent]);
 
-  // YouTube thumbnail preloader state for better performance
+  // YouTube: nothing is requested (no iframe, no maxresdefault.jpg poster)
+  // until the video box is within ~200px of the viewport - see the
+  // whenNearViewport effects below YouTubeThumbnail. Once near, behaviour is
+  // unchanged: poster first, autoplay iframe 2 s later (or on tap).
+  const [videoNearViewport, setVideoNearViewport] = useState(false);
   const [showYoutubeThumbnail, setShowYoutubeThumbnail] = useState(true);
   const [shouldLoadYoutube, setShouldLoadYoutube] = useState(false);
+  const videoContainerRef = useRef(null);
+
+  // Laylo: the embed (and its SDK, loaded inside LayloIframeSimple) mounts
+  // when its box is near the viewport or on the first user gesture, whichever
+  // is first. The 180px box is reserved either way, so no layout shift.
+  const [layloNearViewport, setLayloNearViewport] = useState(false);
+  const layloContainerRef = useRef(null);
 
   useEffect(() => {
-    // Start with thumbnail for faster loading, then auto-load video after delay
-    setTimeout(() => {
-      setShowYoutubeThumbnail(false);
-      setShouldLoadYoutube(true);
-    }, 2000); // Load actual video after 2 seconds for better perceived performance
-
     // Track mobile component load - IMPORTANT for understanding user experience
     trackEvent('component_load', {
       component: 'FigmaMobile',
@@ -640,6 +669,13 @@ const FigmaMobile = ({ onReady }) => {
     normalizeEvent,
     refetch
   } = useHomepageData();
+
+  // Stable identity for EventStructuredData: spreading a fresh array in JSX
+  // re-ran its JSON-LD injection effect on every render of this component.
+  const structuredDataEvents = useMemo(
+    () => [...featuredEvents, ...homepageEvents],
+    [featuredEvents, homepageEvents]
+  );
 
   // Event Filter Toggle State - now managed by useHomepageData hook
 
@@ -782,8 +818,6 @@ const FigmaMobile = ({ onReady }) => {
     unlockModalBodyScroll();
   }, [expandedImage, lockModalBodyScroll, unlockModalBodyScroll]);
 
-  // Optimized scroll state for dynamic navigation (contentRef defined below)
-
   // Video quality state for adaptive streaming
   const [videoQuality, setVideoQuality] = useState('hd720'); // Start with HD
   const [connectionSpeed, setConnectionSpeed] = useState('fast'); // fast, medium, slow
@@ -823,12 +857,10 @@ const FigmaMobile = ({ onReady }) => {
   const navHeight = useNavHeight();
   const topSpacer = Math.max(navHeight || 0, 0);
 
-  // 🚀 JITTER FIX: Optimized scroll state to prevent navigation jitter
-  const { scrollY, isScrolled } = useOptimizedScroll(contentRef.current, {
-    threshold: 20,
-    throttleMs: 32, // 🚀 JITTER FIX: Increased throttling to 30fps to reduce navigation jitter
-    passive: true // Ensure completely passive event handling
-  });
+  // No scroll-position state lives here on purpose. The old useOptimizedScroll
+  // call set state every 32 ms while scrolling and re-rendered this whole
+  // component; its only consumer was a `scrollY` prop MobileNavigation never
+  // read. Do not reintroduce it - use a ref or a CSS-only effect instead.
 
   // 📱 ENHANCED: Proper mobile drawer scroll lock with position preservation
   useEffect(() => {
@@ -1429,51 +1461,11 @@ const FigmaMobile = ({ onReady }) => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Preload critical above-the-fold images for instant loading
-  useEffect(() => {
-    if (filteredFeaturedEvents && filteredFeaturedEvents.length > 0) {
-      console.log('🚀 Preloading critical event images for instant display...');
-
-      // Preload first 2 event images (above-the-fold on mobile)
-      const isSafariMobile = /iPhone|iPad|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-
-      filteredFeaturedEvents.slice(0, 2).forEach((event, index) => {
-        if (event.coverImage) {
-          // Skip AVIF preloading for Safari mobile and internal API images, go straight to WebP
-          if (!isSafariMobile && !event.coverImage.includes('/api/images/serve/')) {
-            const avifLink = document.createElement('link');
-            avifLink.rel = 'preload';
-            avifLink.as = 'image';
-            avifLink.type = 'image/avif';
-            const dashboardDomain = window.location.hostname === 'localhost' ? 'http://localhost:3002' : 'https://admin.b2b.click';
-            avifLink.href = `${dashboardDomain}/images/proxy-optimized?url=${encodeURIComponent(event.coverImage)}&w=120&format=avif`;
-            document.head.appendChild(avifLink);
-          }
-
-          // Preload optimized version for mobile (use small variant for better performance)
-          const webpLink = document.createElement('link');
-          webpLink.rel = 'preload';
-          webpLink.as = 'image';
-          // Note: Don't specify type - images may be served as JPEG/PNG/WebP depending on source
-          webpLink.href = getOptimizedImageUrl(event.coverImage, 300); // Use small variant (300x300)
-          document.head.appendChild(webpLink);
-
-          // Safari mobile: also preload original as fallback
-          if (isSafariMobile) {
-            const originalLink = document.createElement('link');
-            originalLink.rel = 'preload';
-            originalLink.as = 'image';
-            originalLink.href = event.coverImage;
-            document.head.appendChild(originalLink);
-          }
-
-          console.log(`✅ Preloaded mobile event image ${index + 1}: ${event.title} ${isSafariMobile ? '(Safari mobile optimized)' : ''}`);
-        }
-      });
-    }
-  }, [filteredFeaturedEvents]);
-
-  // Scroll handling now optimized with useOptimizedScroll hook
+  // NOTE: deliberately no client-side <link rel="preload"> for event images.
+  // The old effect here preloaded 120px/300px variants that nothing on the
+  // page ever requested (hero = `medium` via the SSR preload, cards =
+  // `thumbnail`), so every one of them was a wasted download competing with
+  // the LCP image.
 
   // Featured events processing now handled by useHomepageData hook
   // Using filteredFeaturedEvents directly
@@ -1628,14 +1620,22 @@ const FigmaMobile = ({ onReady }) => {
 
   // Handle viewport changes for dynamic spacing
   useEffect(() => {
+    // Coalesce to at most one state update per frame: iOS Safari fires a burst
+    // of resize events while its toolbar collapses/expands during scroll, and
+    // every setState here re-renders the entire component.
+    let rafId = null;
     const handleViewportChange = () => {
-      // Force re-calculation of dynamic spacing when viewport changes
-      setViewportContext(prev => prev + 1);
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        // Force re-calculation of dynamic spacing when viewport changes
+        setViewportContext(prev => prev + 1);
+      });
     };
 
     // Listen for resize events that might indicate viewport context changes
-    window.addEventListener('resize', handleViewportChange);
-    window.addEventListener('orientationchange', handleViewportChange);
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    window.addEventListener('orientationchange', handleViewportChange, { passive: true });
 
     // Initial calculation
     handleViewportChange();
@@ -1643,6 +1643,7 @@ const FigmaMobile = ({ onReady }) => {
     return () => {
       window.removeEventListener('resize', handleViewportChange);
       window.removeEventListener('orientationchange', handleViewportChange);
+      if (rafId !== null) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -1843,18 +1844,10 @@ const FigmaMobile = ({ onReady }) => {
 
   // Set comprehensive iOS Safari optimizations
   useEffect(() => {
-    // Store original viewport
-    const originalViewport = document.querySelector('meta[name="viewport"]');
-    const originalContent = originalViewport ? originalViewport.getAttribute('content') : '';
-
-    // Set mobile-optimized viewport for iOS Safari
-    let viewportMeta = document.querySelector('meta[name="viewport"]');
-    if (!viewportMeta) {
-      viewportMeta = document.createElement('meta');
-      viewportMeta.name = 'viewport';
-      document.head.appendChild(viewportMeta);
-    }
-    viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, shrink-to-fit=no';
+    // The viewport meta is owned by utils/mobileOptimization (app-level), which
+    // sets a *scalable* viewport. Do not rewrite it here: the old
+    // `user-scalable=no, maximum-scale=1.0` override here was an accessibility
+    // failure, and iOS 10+ ignores it anyway.
 
     // Add iOS-specific meta tags
     const addMetaTag = (name, content) => {
@@ -1878,7 +1871,11 @@ const FigmaMobile = ({ onReady }) => {
     document.documentElement.style.webkitTextSizeAdjust = '100%';
     document.documentElement.style.textSizeAdjust = '100%';
 
-    // Fix iOS Safari height issues with optimized viewport handling
+    // Keep --vh in sync with the real viewport height. Intentionally NOT
+    // removed as a duplicate of mobileOptimization.fixIOSViewport(): that util
+    // only runs on iOS, while the Instagram/TikTok in-app browsers on Android
+    // also need `calc(var(--vh) * 100)` to track the visible area rather than
+    // 100vh (the "largest" viewport). Debounced + rAF, so it is cheap.
     let rafId = null;
     let timeoutId = null;
 
@@ -1901,9 +1898,6 @@ const FigmaMobile = ({ onReady }) => {
 
     // Cleanup on unmount
     return () => {
-      if (originalViewport && originalContent) {
-        originalViewport.setAttribute('content', originalContent);
-      }
       window.removeEventListener('resize', setVH);
       window.removeEventListener('orientationchange', setVH);
       if (rafId) cancelAnimationFrame(rafId);
@@ -2012,6 +2006,36 @@ const FigmaMobile = ({ onReady }) => {
     />
   ), [handleYoutubeThumbnailClick, videoId]);
 
+  // Arm the YouTube gate once the video box exists in the DOM (it only renders
+  // after `loading` clears, hence the dependency). Disconnected on unmount or
+  // as soon as it fires.
+  useEffect(() => {
+    if (loading || videoNearViewport) return undefined;
+    const el = videoContainerRef.current;
+    if (!el) return undefined;
+    return whenNearViewport(el, () => setVideoNearViewport(true));
+  }, [loading, videoNearViewport]);
+
+  // Poster -> autoplay iframe hand-off: the same 2 s as before, but the clock
+  // only starts once the box is near the viewport, so the poster is what the
+  // user sees first instead of a blank box while the player boots.
+  useEffect(() => {
+    if (!videoNearViewport || shouldLoadYoutube) return undefined;
+    const timer = setTimeout(() => {
+      setShowYoutubeThumbnail(false);
+      setShouldLoadYoutube(true);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [videoNearViewport, shouldLoadYoutube]);
+
+  // Laylo gate: near the viewport OR first user gesture, whichever comes first.
+  useEffect(() => {
+    if (loading || layloNearViewport) return undefined;
+    const el = layloContainerRef.current;
+    if (!el) return undefined;
+    return whenNearViewport(el, () => setLayloNearViewport(true), { interaction: true });
+  }, [loading, layloNearViewport]);
+
   // Signal parent when regular loading finishes
   useEffect(() => {
     if (!loading && onReady) {
@@ -2042,7 +2066,7 @@ const FigmaMobile = ({ onReady }) => {
       {/* 🚨 FIX: Pass raw event data (featuredEvents, homepageEvents) instead of processed data */}
       {/* EventStructuredData expects raw events with fields like slug, event_date, artist_name, etc. */}
       <EventStructuredData
-        events={[...featuredEvents, ...homepageEvents]}
+        events={structuredDataEvents}
         domain="hardline.events"
       />
 
@@ -2972,7 +2996,6 @@ const FigmaMobile = ({ onReady }) => {
           {/* REFACTORED: Using Shared Mobile Navigation Component */}
           <MobileNavigation
             currentPage={currentPage}
-            scrollY={scrollY}
             onNavigate={handleNavigation}
             onMenuToggle={setNavigationMenuOpen}
           />
@@ -3286,20 +3309,30 @@ const FigmaMobile = ({ onReady }) => {
                           {/* Dynamic Event Image or Fallback */}
                           {featuredEvent.coverImage ? (
                             <picture>
-                              <source
-                                srcSet={getAVIFSrcSet(featuredEvent.coverImage, 'hero')}
-                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                                type="image/avif"
-                              />
-                              <source
-                                srcSet={getResponsiveSrcSet(featuredEvent.coverImage, 'hero')}
-                                sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
-                                type="image/webp"
-                              />
+                              {/* LCP: for admin images the hero must request exactly the
+                                  URL the SSR <link rel="preload"> fetched (`medium`, same
+                                  query, crossorigin=anonymous). A <source srcSet> would let
+                                  the browser pick `large` on high-DPR phones and waste the
+                                  preload, so responsive sources are kept only for non-admin
+                                  URLs. Do not add a srcset/sizes to the hero <img>. */}
+                              {!isAdminImageUrl(featuredEvent.coverImage) && (
+                                <>
+                                  <source
+                                    srcSet={getAVIFSrcSet(featuredEvent.coverImage, 'hero')}
+                                    sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                    type="image/avif"
+                                  />
+                                  <source
+                                    srcSet={getResponsiveSrcSet(featuredEvent.coverImage, 'hero')}
+                                    sizes="(max-width: 320px) 320px, (max-width: 375px) 375px, (max-width: 414px) 414px, 640px"
+                                    type="image/webp"
+                                  />
+                                </>
+                              )}
                               <img
                                 crossOrigin="anonymous"
                                 referrerPolicy="no-referrer"
-                                src={getOptimizedImageUrl(featuredEvent.coverImage, 375)}
+                                src={getHeroImageUrl(featuredEvent.coverImage) || getOptimizedImageUrl(featuredEvent.coverImage, 375)}
                                 alt={`${featuredEvent.title} - Featured Event`}
                                 width={375}
                                 height={375}
@@ -3841,17 +3874,7 @@ const FigmaMobile = ({ onReady }) => {
                                   referrerPolicy="no-referrer"
                                   width="120"
                                   height="120"
-                                  src={(() => {
-                                    const optimizedUrl = getOptimizedImageUrl(card.coverImage, 120);
-                                    console.log(`🖼️ Loading homepage image for "${card.title}":`, {
-                                      original: card.coverImage,
-                                      optimized: optimizedUrl,
-                                      isDataUrl: card.coverImage?.startsWith('data:'),
-                                      isNewImageSystem: card.coverImage?.includes('/api/images/serve/'),
-                                      hostname: window.location.hostname
-                                    });
-                                    return optimizedUrl;
-                                  })()}
+                                  src={getOptimizedImageUrl(card.coverImage, 120)}
                                   srcSet={card.image_srcset ? Object.entries(card.image_srcset).map(([width, url]) => `${url} ${width}`).join(', ') : undefined}
                                   sizes="(max-width: 768px) 100vw, 400px"
                                   alt={card.image_alt_text || `${card.title} event cover`}
@@ -4347,6 +4370,7 @@ const FigmaMobile = ({ onReady }) => {
 
 
               <article
+                ref={videoContainerRef}
                 style={{
                   width: 'min(382px, calc(100% - 48px))', // Matched to About/FAQ page width
                   height: 'auto', // Allow height to adjust based on aspect ratio
@@ -4388,8 +4412,8 @@ const FigmaMobile = ({ onReady }) => {
                     }}
                   >
 
-                    {showYoutubeThumbnail ? (
-                      // Show thumbnail preloader for faster loading
+                    {videoNearViewport && showYoutubeThumbnail ? (
+                      // Poster (maxresdefault.jpg) - only requested once the box is near the viewport
                       YouTubeThumbnail
                     ) : shouldLoadYoutube ? (
                       // Show actual YouTube iframe - FIXED: Simplified positioning
@@ -4424,7 +4448,7 @@ const FigmaMobile = ({ onReady }) => {
                         }}
                       />
                     ) : (
-                      // Loading state (rarely shown) - FIXED: Simplified positioning
+                      // Dark placeholder until the box is near the viewport (zero network requests)
                       <div
                         style={{
                           position: 'absolute',
@@ -4603,8 +4627,9 @@ const FigmaMobile = ({ onReady }) => {
               TEXT US INLINE SECTION - Laylo Integration
               Moved from MobileDrawer to inline for better UX
               Position: After Social Media Buttons (last content section)
-              NOTE: Using opacity: 0.01 (not 0) to ensure iframe loads immediately
-              (browsers defer loading iframes in opacity:0 containers)
+              NOTE: The Laylo iframe is mounted lazily (layloNearViewport), so the
+              old `opacity: 0.01` trick to force an eager iframe load is gone on
+              purpose - it made the third-party embed load during LCP.
               ============================================ */}
             <section
               aria-labelledby="text-us-section-title"
@@ -4616,9 +4641,7 @@ const FigmaMobile = ({ onReady }) => {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                // 🎬 FIX: Use 0.01 opacity instead of 0 so iframe loads immediately
-                // Browsers optimize by not loading iframes with opacity: 0
-                opacity: sectionsAnimated ? 1 : 0.01,
+                opacity: sectionsAnimated ? 1 : 0,
                 transform: sectionsAnimated ? 'translateY(0)' : 'translateY(16px)',
                 transition: 'opacity var(--animation-duration-normal) var(--animation-easing-decelerate), transform var(--animation-duration-normal) var(--animation-easing-decelerate)',
                 transitionDelay: '320ms' // After social buttons in cascade
@@ -4675,8 +4698,12 @@ const FigmaMobile = ({ onReady }) => {
                   </p>
                 </div>
 
-                {/* Laylo Integration - CRITICAL: Keep iframe unchanged */}
+                {/* Laylo Integration - CRITICAL: Keep iframe unchanged.
+                    Mounted only once this box is near the viewport or the user
+                    has interacted (see layloNearViewport); LayloIframeSimple's
+                    own retry / bfcache recovery is untouched. */}
                 <div
+                  ref={layloContainerRef}
                   style={{
                     // Extend iframe to full card width using negative margins
                     width: 'calc(100% + 40px)',
@@ -4689,22 +4716,24 @@ const FigmaMobile = ({ onReady }) => {
                     background: 'transparent'
                   }}
                 >
-                  <LayloIframeSimple
-                    dropId="GMpip"
-                    color="ff0202"
-                    theme="dark"
-                    background="solid"
-                    minimal={true}
-                    visible={true}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                      borderRadius: '0 0 20px 20px',
-                      background: 'transparent',
-                      display: 'block'
-                    }}
-                  />
+                  {layloNearViewport && (
+                    <LayloIframeSimple
+                      dropId="GMpip"
+                      color="ff0202"
+                      theme="dark"
+                      background="solid"
+                      minimal={true}
+                      visible={true}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        borderRadius: '0 0 20px 20px',
+                        background: 'transparent',
+                        display: 'block'
+                      }}
+                    />
+                  )}
                 </div>
               </article>
             </section>

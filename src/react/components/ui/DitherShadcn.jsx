@@ -284,6 +284,19 @@ export const Dither = forwardRef((props, ref) => {
     ...domProps
   } = props;
 
+  // A background tab must not keep a WebGL loop alive: pause the frameloop
+  // while hidden and resume on return. 'never' stops useFrame entirely; R3F
+  // still renders once on resume so the canvas never shows a stale frame.
+  const [frameloop, setFrameloop] = useState(() =>
+    (typeof document !== 'undefined' && document.hidden) ? 'never' : 'always'
+  );
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+    const onVisibility = () => setFrameloop(document.hidden ? 'never' : 'always');
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
   return (
     <div
       ref={ref}
@@ -292,6 +305,7 @@ export const Dither = forwardRef((props, ref) => {
     >
       <Canvas
         className="w-full h-full relative"
+        frameloop={frameloop}
         camera={{ position: [0, 0, 6] }}
         dpr={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1}
         gl={{ antialias: true, preserveDrawingBuffer: false }}

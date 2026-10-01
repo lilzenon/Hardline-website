@@ -1,4 +1,78 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+
+// Keyframes for the loader. Injected ONCE at module evaluation (below) — i.e.
+// before React's first render — rather than from a useEffect. The old effect
+// ran AFTER the first paint and, together with a `brandedLoaderFadeIn`
+// animation (opacity 0 → 1), made the logo blink: the inline #initial-splash in
+// index.html is already showing this exact logo at full opacity, React swaps it
+// for this component, and the component then faded itself in from 0. There is
+// deliberately no entrance animation any more — the loader must be visually
+// identical to the splash it replaces on its very first frame.
+const LOADER_STYLE_ID = 'b2b-branded-loader-animations';
+const LOADER_STYLES = `
+  @keyframes brandedLoaderPulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.03);
+    }
+  }
+
+  @keyframes brandedLoaderDots {
+    0%, 20% {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    80%, 100% {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+`;
+
+function ensureLoaderStyles() {
+  try {
+    if (typeof document === 'undefined' || !document.head) return;
+    if (document.getElementById(LOADER_STYLE_ID)) return; // already present
+    const styleSheet = document.createElement('style');
+    styleSheet.id = LOADER_STYLE_ID;
+    styleSheet.textContent = LOADER_STYLES;
+    document.head.appendChild(styleSheet);
+    // Intentionally never removed: the sheet is shared by every loader
+    // instance across route transitions.
+  } catch (_) {
+    // Styling is cosmetic; never let it break boot.
+  }
+}
+
+// Module-level: runs when main.tsx imports this file, before createRoot().
+ensureLoaderStyles();
+
+// Read once, synchronously, so the first render already knows whether to
+// animate — a post-mount effect would render one animated frame and then
+// re-render. Guarded: some WebViews lack matchMedia.
+const prefersReducedMotion = () => {
+  try {
+    return typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (_) {
+    return false;
+  }
+};
 
 /**
  * Branded loading screen with animated B2B logo
@@ -17,19 +91,8 @@ const BrandedLoader = ({
   // The loader visibility is now fully controlled by the parent HomePage component.
 
   const [isVisible, setIsVisible] = useState(true);
-  const [shouldAnimate, setShouldAnimate] = useState(true);
+  const [shouldAnimate] = useState(() => !prefersReducedMotion());
   const [fadeOut, setFadeOut] = useState(false);
-
-  // Check for reduced motion preference (guarded — some WebViews lack matchMedia)
-  useEffect(() => {
-    try {
-      const prefersReducedMotion = typeof window.matchMedia === 'function' &&
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      setShouldAnimate(!prefersReducedMotion);
-    } catch (_) {
-      setShouldAnimate(true);
-    }
-  }, []);
 
   const containerStyle = {
     position: fullScreen ? 'fixed' : 'absolute',
@@ -82,69 +145,6 @@ const BrandedLoader = ({
     animation: shouldAnimate ? 'brandedLoaderDots 1.5s ease-in-out infinite' : 'none'
   };
 
-  useEffect(() => {
-    if (!shouldAnimate) return;
-
-    let styleSheet = document.getElementById('b2b-branded-loader-animations');
-    if (styleSheet) {
-      // Already present; avoid duplicate insertion
-      return;
-    }
-    styleSheet = document.createElement('style');
-    styleSheet.id = 'b2b-branded-loader-animations';
-    styleSheet.textContent = `
-      @keyframes brandedLoaderPulse {
-        0%, 100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.03);
-        }
-      }
-
-      @keyframes brandedLoaderDots {
-        0%, 20% {
-          opacity: 0;
-          transform: translateY(2px);
-        }
-        50% {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        80%, 100% {
-          opacity: 0;
-          transform: translateY(-2px);
-        }
-      }
-
-      @keyframes brandedLoaderFadeIn {
-        0% {
-          opacity: 0;
-          transform: scale(0.9) translateY(10px);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
-      }
-
-      .branded-loader-container {
-        animation: brandedLoaderFadeIn 0.4s ease-out;
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        * {
-          animation-duration: 0.01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.01ms !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(styleSheet);
-    // Note: we intentionally do not remove this global style on unmount to prevent flicker across transitions
-  }, [shouldAnimate]);
-
   if (!isVisible) {
     return null;
   }
@@ -152,7 +152,7 @@ const BrandedLoader = ({
   return (
     <div
       style={containerStyle}
-      className={`${shouldAnimate ? 'branded-loader-container' : ''} ${className}`}
+      className={`branded-loader-container ${className}`}
       role="status"
       aria-live="polite"
       aria-busy={!fadeOut}
