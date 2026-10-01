@@ -745,15 +745,24 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                 if (largeUrl) srcset += `${largeUrl} 2000w`;
                 srcset = srcset.replace(/, $/, ''); // Remove trailing comma
 
+                // Reserve the box from the stored dimensions: this block is visible under
+                // the splash, and a figure that grew when its lazy image decoded showed up
+                // as a layout shift in the mobile trace.
+                const w = Number(image.width) || null;
+                const h = Number(image.height) || null;
+                const dimAttrs = (w && h) ? `width="${w}" height="${h}"` : '';
+                const aspect = (w && h) ? ` aspect-ratio: ${w} / ${h};` : '';
+
                 return `
                     <figure style="margin: 0 0 1rem 0; break-inside: avoid;">
                         <img
                             src="${absoluteImageUrl}"
                             alt="${altText}"
                             title="${titleText}"
+                            ${dimAttrs}
                             ${srcset ? `srcset="${srcset}"` : ''}
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            style="width: 100%; height: auto; border-radius: 8px; display: block;"
+                            style="width: 100%; height: auto;${aspect} border-radius: 8px; display: block;"
                             loading="lazy"
                             decoding="async"
                         >
@@ -765,7 +774,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
             galleryHtml = `
                 <section style="margin-top: 3rem;">
                     <h2 style="font-size: 2rem; font-weight: 600; margin-bottom: 1.5rem; text-align: center; color: #ffffff;">Gallery</h2>
-                    <div style="column-count: 2; column-gap: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start;">
                         ${galleryImagesHtml}
                     </div>
                 </section>
@@ -1692,6 +1701,26 @@ async function reactHomepage(req, res) {
                         galleryImages: Array.isArray(galleryList) ? galleryList : []
                     };
                 }
+
+                // LCP: the first gallery tiles are the largest paint on /about, but the
+                // browser only discovered them once React had rendered the grid
+                // (Lighthouse mobile: ~6 s "load delay"). Preload the first two with
+                // the EXACT srcset/sizes MasonryGallery renders so the browser picks
+                // the same candidate and reuses the bytes.
+                if (Array.isArray(galleryList) && galleryList.length > 0) {
+                    const abs = (u) => (!u ? '' : (/^https?:\/\//i.test(u) ? u : `https://admin.b2b.click${u.startsWith('/') ? '' : '/'}${u}`));
+                    pageData = pageData || {};
+                    pageData.galleryPreloads = galleryList.slice(0, 2).map((image) => {
+                        const u = image.urls || {};
+                        const parts = [];
+                        if (u.thumbnail) parts.push(`${abs(u.thumbnail)} 200w`);
+                        if (u.small) parts.push(`${abs(u.small)} 600w`);
+                        if (u.medium) parts.push(`${abs(u.medium)} 1200w`);
+                        if (u.large) parts.push(`${abs(u.large)} 2000w`);
+                        const href = abs(u.medium || image.url || image.src || '');
+                        return href ? { href, srcset: parts.join(', ') } : null;
+                    }).filter(Boolean);
+                }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch About content for SSR:', error.message);
             }
@@ -1798,9 +1827,14 @@ async function reactHomepage(req, res) {
         const heroPreloadTag = (pageData && pageData.heroPreloadUrl)
             ? `\n    <link rel="preload" as="image" href="${escapeHtml(pageData.heroPreloadUrl)}" fetchpriority="high" crossorigin="anonymous">`
             : '';
+        // About page: first gallery tiles. imagesrcset/imagesizes mirror the <img>
+        // exactly so the preloaded response is the one the tile asks for.
+        const galleryPreloadTags = (pageData && Array.isArray(pageData.galleryPreloads))
+            ? pageData.galleryPreloads.map((p, i) => `\n    <link rel="preload" as="image" href="${escapeHtml(p.href)}"${p.srcset ? ` imagesrcset="${escapeHtml(p.srcset)}" imagesizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"` : ''}${i === 0 ? ' fetchpriority="high"' : ''} crossorigin="anonymous">`).join('')
+            : '';
 
         // Generate dynamic meta tags HTML
-        const dynamicMetaTags = `${heroPreloadTag}
+        const dynamicMetaTags = `${heroPreloadTag}${galleryPreloadTags}
     <!-- Dynamic SEO Meta Tags -->
     <meta name="description" content="${escapeHtml(metaTags.description)}">
     <meta name="keywords" content="${escapeHtml(metaTags.keywords)}">

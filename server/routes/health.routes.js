@@ -12,11 +12,20 @@ const router = Router();
 // different builds for a while (seen 2026-10-01: one instance stayed on the
 // previous release for 30+ minutes); with the SHA in the response that is a
 // one-line curl to diagnose instead of header archaeology.
-let BUILD = { commit: null, date: null };
+let BUILD = { commit: null, date: null, entry: null };
 try {
     const info = require("../../build-info.json");
-    BUILD = { commit: info.commitHashShort || null, date: info.buildDate || null };
-} catch (_) { /* no build-info in this checkout */ }
+    BUILD.commit = info.commitHashShort || null;
+    BUILD.date = info.buildDate || null;
+} catch (_) { /* build-info.json is gitignored and not copied into the image */ }
+try {
+    // Always available: the hashed entry chunk name in dist/index.html is unique
+    // per build, so it identifies the artifact even without build-info.json.
+    const { getIndexHtml } = require("../utils/index-html-cache.util");
+    const html = getIndexHtml() || "";
+    const m = html.match(/\/assets\/index-([A-Za-z0-9_-]+)\.js/);
+    BUILD.entry = m ? m[1] : null;
+} catch (_) { /* dist not built in this checkout */ }
 
 /**
  * Public health check endpoint
@@ -28,7 +37,7 @@ router.get("/", asyncHandler(async(req, res) => {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         version: process.env.npm_package_version || "unknown",
-        build: BUILD.commit,
+        build: BUILD.commit || BUILD.entry,
         buildDate: BUILD.date,
         instance: process.env.HOSTNAME || null
     };
