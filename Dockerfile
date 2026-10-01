@@ -111,6 +111,10 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application
-# Run migrations first, then start the server
-CMD ["sh", "-c", "npm run migrate && npm start"]
+# Start the server directly. Migrations now run INSIDE the process after the
+# port is bound (server.js -> server/utils/boot-migrations.util.js) with 3
+# attempts 5 s apart and never exit on failure. `npm run migrate && npm start`
+# meant a DB blip at boot = crash loop, and every cold start paid a migration
+# round trip before a single request could be served. `node` directly (not
+# `npm start`) so SIGTERM reaches the server process for a clean shutdown.
+CMD ["node", "server/server.js"]

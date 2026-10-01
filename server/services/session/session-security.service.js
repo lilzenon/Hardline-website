@@ -11,8 +11,38 @@ class SessionSecurityService {
         };
 
         this.blockedIPs = new Map();
-        this.sessionFingerprints = new Map();
-        this.rateLimiters = new Map();
+        this.sessionFingerprints = new Map(); // sid -> { fingerprint, lastSeen }
+        this.rateLimiters = new Map();        // ip  -> { count, firstSeen }
+
+        // Hard caps. Both maps used to grow without bound: fingerprints got
+        // an entry for EVERY cookieless request (express-session mints a fresh
+        // id each time) and nothing ever pruned either map — a slow memory
+        // leak on a long-lived container. Maps iterate in insertion order, so
+        // evicting the first key is "evict oldest".
+        this.maxFingerprints = 10000;
+        this.maxRateLimiters = 10000;
+        this.cleanupTimer = null;
+    }
+
+    /** Insert with evict-oldest once the cap is reached. */
+    _setBounded(map, key, value, max) {
+        if (!map.has(key) && map.size >= max) {
+            const oldest = map.keys().next().value;
+            if (oldest !== undefined) map.delete(oldest);
+        }
+        map.set(key, value);
+    }
+
+    /**
+     * True only when the client actually sent our session cookie. Without a
+     * cookie `req.session.id` is a throwaway id for this one request, so there
+     * is nothing meaningful to fingerprint (and storing it leaks memory).
+     */
+    hasSessionCookie(req) {
+        const name = env.SESSION_NAME || 'kutt.sid';
+        if (req.cookies && Object.prototype.hasOwnProperty.call(req.cookies, name)) return true;
+        const raw = req.headers && req.headers.cookie;
+        return typeof raw === 'string' && raw.includes(`${name}=`);
     }
 
     /**
@@ -44,25 +74,28 @@ class SessionSecurityService {
      * Validate session fingerprint
      */
     validateSessionFingerprint(req) {
-        if (!req.session || !req.session.id) {
-            return true; // No session to validate
+        if (!req.session || !req.session.id || !this.hasSessionCookie(req)) {
+            return true; // No (persisted) session to validate
         }
 
+        const now = Date.now();
         const currentFingerprint = this.createSessionFingerprint(req);
-        const storedFingerprint = this.sessionFingerprints.get(req.session.id);
+        const stored = this.sessionFingerprints.get(req.session.id);
 
-        if (!storedFingerprint) {
+        if (!stored) {
             // First time seeing this session, store fingerprint
-            this.sessionFingerprints.set(req.session.id, currentFingerprint);
+            this._setBounded(this.sessionFingerprints, req.session.id,
+                { fingerprint: currentFingerprint, lastSeen: now }, this.maxFingerprints);
             return true;
         }
 
-        if (currentFingerprint !== storedFingerprint) {
+        if (currentFingerprint !== stored.fingerprint) {
             console.warn(`🚨 Session fingerprint mismatch for session ${req.session.id}`);
             this.securityMetrics.sessionHijackingAttempts++;
             return false;
         }
 
+        stored.lastSeen = now;
         return true;
     }
 
@@ -125,7 +158,7 @@ class SessionSecurityService {
             ipActivity.firstSeen = now;
         }
 
-        this.rateLimiters.set(ip, ipActivity);
+        this._setBounded(this.rateLimiters, ip, ipActivity, this.maxRateLimiters);
 
         // Check for unusual user agent patterns (but allow AI agents)
         const userAgent = req.headers['user-agent'] || '';
@@ -249,9 +282,11 @@ class SessionSecurityService {
 
                 res.set(securityHeaders);
 
-                // Store session fingerprint for new sessions
-                if (req.session && req.session.id && !this.sessionFingerprints.has(req.session.id)) {
-                    this.sessionFingerprints.set(req.session.id, this.createSessionFingerprint(req));
+                // Store session fingerprint for new sessions — only when the
+                // request carries our cookie (see hasSessionCookie).
+                if (req.session && req.session.id && this.hasSessionCookie(req) && !this.sessionFingerprints.has(req.session.id)) {
+                    this._setBounded(this.sessionFingerprints, req.session.id,
+                        { fingerprint: this.createSessionFingerprint(req), lastSeen: Date.now() }, this.maxFingerprints);
                 }
 
                 next();
@@ -406,9 +441,17 @@ class SessionSecurityService {
      * Periodic cleanup of old data
      */
     startCleanupScheduler() {
-        setInterval(() => {
-            this.cleanupOldData();
+        // Idempotent and unref'd: server.js calls this once at boot (it was
+        // never called before, so cleanupOldData never ran). unref so the
+        // timer cannot keep a shutting-down process alive.
+        if (this.cleanupTimer) return this.cleanupTimer;
+        this.cleanupTimer = setInterval(() => {
+            try { this.cleanupOldData(); } catch (err) {
+                console.error('🚨 Session security cleanup failed:', err && err.message);
+            }
         }, 60 * 60 * 1000); // Every hour
+        if (typeof this.cleanupTimer.unref === 'function') this.cleanupTimer.unref();
+        return this.cleanupTimer;
     }
 
     /**
@@ -417,11 +460,20 @@ class SessionSecurityService {
     cleanupOldData() {
         const now = Date.now();
         const oneHourAgo = now - 60 * 60 * 1000;
+        // A fingerprint older than the session TTL belongs to an expired session.
+        const fingerprintTtlMs = (Number(env.SESSION_TTL) || 24 * 60 * 60) * 1000;
 
         // Clean up old rate limiters
         for (const [ip, activity] of this.rateLimiters.entries()) {
             if (activity.firstSeen < oneHourAgo) {
                 this.rateLimiters.delete(ip);
+            }
+        }
+
+        // Clean up fingerprints of expired sessions
+        for (const [sid, entry] of this.sessionFingerprints.entries()) {
+            if (!entry || typeof entry !== 'object' || (now - (entry.lastSeen || 0)) > fingerprintTtlMs) {
+                this.sessionFingerprints.delete(sid);
             }
         }
 
@@ -432,7 +484,7 @@ class SessionSecurityService {
             }
         }
 
-        console.log(`🧹 Session security cleanup: ${this.rateLimiters.size} rate limiters, ${this.blockedIPs.size} blocked IPs`);
+        console.log(`🧹 Session security cleanup: ${this.rateLimiters.size} rate limiters, ${this.sessionFingerprints.size} fingerprints, ${this.blockedIPs.size} blocked IPs`);
     }
 }
 

@@ -12,8 +12,12 @@ function performanceHeaders() {
     return (req, res, next) => {
         // Add performance-related headers
         res.set({
-            // Enable browser caching
-            'Vary': 'Accept-Encoding, User-Agent',
+            // Accept-Encoding ONLY. `User-Agent` used to be listed too, which
+            // told Cloudflare every HTML response differed per UA and made
+            // /events, /events/<slug> and every client-routed URL bypass the
+            // edge cache. The SSR body is UA-agnostic (renders.handler.js
+            // injects the same content for bots and humans), so never add it back.
+            'Vary': 'Accept-Encoding',
 
             // React handles all preloads - no server-side preloads to avoid conflicts
 
@@ -23,10 +27,10 @@ function performanceHeaders() {
             'X-XSS-Protection': '1; mode=block',
 
             // Enable HTTP/2 Server Push hints
-            'Accept-CH': 'DPR, Viewport-Width, Width',
+            'Accept-CH': 'DPR, Viewport-Width, Width'
 
-            // Performance timing
-            'Server-Timing': 'total;dur=' + (Date.now() - req.startTime || 0)
+            // Server-Timing was removed: it was computed here, BEFORE the request
+            // logger in server.js sets req.startTime, so it always reported dur=0.
         });
 
         next();

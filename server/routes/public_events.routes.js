@@ -9,6 +9,7 @@ const { renderReactPage } = require("../utils/ssr.utils");
 const seoUtils = require("../utils/seo.utils");
 const { getSiteDomain } = require("../utils/site-domain.util");
 const { fetchSeoSettingsForRequest } = require("../utils/admin-seo.util");
+const { verboseLog } = require("../utils/log-level");
 const EventLandingPage = require("../components/EventLandingPage.jsx");
 
 const router = Router();
@@ -279,7 +280,14 @@ router.get(
         const { slug } = req.params;
         const defaultDomain = process.env.DEFAULT_DOMAIN || 'hardline.events';
 
-        console.log(`🔍 Looking up event with slug: ${slug}`);
+        // Explicit, uncacheable policy for EVERY branch below. This HTML varies
+        // by bot detection (crawlers get the landing page, humans a JS redirect
+        // to the ticket platform), so it must never be shared from an edge or
+        // proxy cache; without an explicit header an intermediary may apply
+        // heuristic caching.
+        res.set('Cache-Control', 'private, no-cache');
+
+        verboseLog(`🔍 Looking up event with slug: ${slug}`);
 
         // Scope by current site domain so a hardline.events visitor
         // can't reach a bounce2bounce.com event with a colliding slug
@@ -380,7 +388,7 @@ router.get(
         // 🎯 Determine redirect URL (priority: external_ticket_url → posh_embed_url → homepage)
         const redirectUrl = foundEvent.external_ticket_url || foundEvent.posh_embed_url || `https://${defaultDomain}`;
 
-        console.log(`✅ Event found: ${foundEvent.title}, redirecting to: ${redirectUrl}, isBot: ${isBotRequest}`);
+        verboseLog(`✅ Event found: ${foundEvent.title}, redirecting to: ${redirectUrl}, isBot: ${isBotRequest}`);
 
         // 🎨 Generate SEO meta tags using existing seoUtils
         const metaTags = seoUtils.generateEventMetaTags(foundEvent);

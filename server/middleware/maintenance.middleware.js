@@ -1,5 +1,6 @@
 const http = require('http');
 const https = require('https');
+const { cachedAdminFetch, invalidate } = require('../utils/admin-fetch-cache.util');
 
 /**
  * Make HTTP request using native Node.js modules
@@ -66,58 +67,51 @@ function makeHttpRequest(url) {
  * - Allowed IP addresses (if configured)
  */
 
-// Cache maintenance status to avoid hitting the API on every request
-let maintenanceCache = {
-  status: null,
-  lastChecked: 0,
-  cacheDuration: 30000 // 30 seconds
-};
+// Single global key: admin's maintenance flag is not per-domain.
+const MAINTENANCE_CACHE_KEY = 'maintenance-status::global';
+const MAINTENANCE_FRESH_MS = 30000; // 30 s fresh; stale window = cache default (30 min)
 
 /**
- * Fetch maintenance status from the dashboard API with database fallback
+ * Fetch maintenance status (dashboard API, local DB fallback).
+ *
+ * Goes through cachedAdminFetch — stale-while-revalidate with in-flight
+ * dedupe — so a visitor is never parked behind the 5 s API timeout when the
+ * 30 s window expires: the stale flag is served immediately and ONE
+ * background refresh runs. The previous module-level cache had no stale
+ * window and no dedupe, so every expiry made a burst of concurrent homepage
+ * requests each wait on admin before any HTML could be sent.
+ *
+ * The fetcher always resolves to an object (never null) so an outage result
+ * is cached for the fresh window as well; otherwise every request during an
+ * admin+DB outage would retry and block for the full timeout.
  */
 async function fetchMaintenanceStatus() {
   try {
-    // Check cache first
-    const now = Date.now();
-    if (maintenanceCache.status && (now - maintenanceCache.lastChecked) < maintenanceCache.cacheDuration) {
-      return maintenanceCache.status;
-    }
-
-    // Determine the dashboard API URL - use localhost for development
-    const dashboardApiUrl = process.env.DASHBOARD_API_URL ||
-                           (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
-    const maintenanceUrl = `${dashboardApiUrl}/api/settings/maintenance-status`;
-
-    console.log(`🔍 Checking maintenance status from: ${maintenanceUrl}`);
-
-    try {
-      const data = await makeHttpRequest(maintenanceUrl);
-
-      // Update cache
-      maintenanceCache.status = data;
-      maintenanceCache.lastChecked = now;
-
-      console.log(`✅ Maintenance status from API: ${data.maintenance_mode ? 'ENABLED' : 'DISABLED'}`);
-      return data;
-    } catch (apiError) {
-      console.warn('⚠️ Dashboard API request failed, checking local database fallback:', apiError.message);
-
-      // Fallback to local database check
-      const localStatus = await fetchMaintenanceStatusFromDatabase();
-
-      // Update cache with local status
-      maintenanceCache.status = localStatus;
-      maintenanceCache.lastChecked = now;
-
-      console.log(`✅ Maintenance status from local DB: ${localStatus.maintenance_mode ? 'ENABLED' : 'DISABLED'}`);
-      return localStatus;
-    }
-
+    const { data } = await cachedAdminFetch({
+      key: MAINTENANCE_CACHE_KEY,
+      ttlMs: MAINTENANCE_FRESH_MS,
+      fetcher: fetchMaintenanceStatusUncached,
+    });
+    return data || { maintenance_mode: false };
   } catch (error) {
     console.error('❌ Failed to fetch maintenance status from both API and database:', error.message);
     // Final fallback - assume not in maintenance mode to avoid breaking the site
     return { maintenance_mode: false };
+  }
+}
+
+async function fetchMaintenanceStatusUncached() {
+  // Determine the dashboard API URL - use localhost for development
+  const dashboardApiUrl = process.env.DASHBOARD_API_URL ||
+                         (process.env.NODE_ENV === 'development' ? 'http://localhost:3002' : 'https://admin.b2b.click');
+  const maintenanceUrl = `${dashboardApiUrl}/api/settings/maintenance-status`;
+
+  try {
+    return await makeHttpRequest(maintenanceUrl);
+  } catch (apiError) {
+    console.warn('⚠️ Dashboard API request failed, checking local database fallback:', apiError.message);
+    // Never throws: returns a safe default on DB failure.
+    return fetchMaintenanceStatusFromDatabase();
   }
 }
 
@@ -243,11 +237,11 @@ function isExemptRoute(path) {
 async function maintenanceMiddleware(req, res, next) {
   try {
     const path = req.path || req.url;
-    console.log(`🔍 Maintenance middleware checking path: ${path}`);
 
     // Skip maintenance check for exempt routes
+    // (no per-request logging here: this runs on EVERY request and stdout is
+    // synchronous on the platform)
     if (isExemptRoute(path)) {
-      console.log(`⏭️ Skipping maintenance check for exempt route: ${path}`);
       return next();
     }
 
@@ -301,11 +295,7 @@ async function maintenanceMiddleware(req, res, next) {
  * Clear maintenance cache (useful for testing and immediate updates)
  */
 function clearMaintenanceCache() {
-  maintenanceCache = {
-    status: null,
-    lastChecked: 0,
-    cacheDuration: 30000
-  };
+  invalidate(MAINTENANCE_CACHE_KEY);
   console.log('🗑️ Maintenance cache cleared');
 }
 

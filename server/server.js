@@ -123,19 +123,15 @@ const renders = require("./handlers/renders.handler");
 const asyncHandler = require("./utils/asyncHandler");
 const locals = require("./handlers/locals.handler");
 const links = require("./handlers/links.handler");
+// Logging configuration lives in utils/log-level.js so handlers/middleware can
+// share the same LOG_LEVEL gate (per-request / per-render lines are VERBOSE-only).
+const { LOG_LEVELS, CURRENT_LOG_LEVEL, verboseLog } = require("./utils/log-level");
+const { isPlausibleShortLinkId } = require("./utils/short-link-path.util");
 console.log('✅ Handlers and utilities loaded successfully');
 
 console.log('✅ Step 6: Loading routes and utilities...');
-// Force clear all route-related module cache
-console.log('🔄 Clearing route module cache...');
-Object.keys(require.cache).forEach(key => {
-    if (key.includes('routes') || key.includes('analytics')) {
-        delete require.cache[key];
-        console.log('🗑️ Cleared cache for:', key);
-    }
-});
-
-console.log('🔥🔥🔥 ABOUT TO LOAD ROUTES FROM SERVER.JS!');
+// (A require.cache purge used to live here. It ran BEFORE ./routes was first
+// required, so it never evicted anything — pure startup noise. Removed.)
 
 // CRITICAL FIX: Add comprehensive error handling for route loading
 try {
@@ -175,6 +171,7 @@ try {
     process.exit(1);
 }
 const utils = require("./utils");
+const { CustomError } = utils;
 const { initializePrivacySystem } = require("./middleware/privacy.middleware");
 const performance = require("./middleware/performance.middleware");
 const imageOptimization = require("./middleware/image-optimization.middleware");
@@ -235,8 +232,32 @@ app.use(compression({
     memLevel: 8
 }));
 
-// CRITICAL FIX: Pre-compressed file serving middleware with route safety
-// This middleware was causing path-to-regexp errors by modifying req.url
+// Pre-compressed (.br/.gz) variants that exist under dist/, indexed ONCE at
+// boot. The old middleware ran fs.existsSync on every asset request —
+// synchronous disk I/O on the hot path. The build output only changes on
+// deploy (a new container), so a one-time walk is exact; anything not in the
+// set falls back to the uncompressed file (express.static serves it and the
+// compression middleware gzips on the fly). Keys are URL paths relative to
+// dist/, e.g. "/assets/index-HASH.js.br".
+const DIST_ROOT = path.join(__dirname, '../dist');
+const PRECOMPRESSED_PATHS = (() => {
+    const found = new Set();
+    const walk = (dir, prefix) => {
+        let entries = [];
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (_) { return; }
+        for (const entry of entries) {
+            const rel = `${prefix}/${entry.name}`;
+            if (entry.isDirectory()) walk(path.join(dir, entry.name), rel);
+            else if (entry.name.endsWith('.br') || entry.name.endsWith('.gz')) found.add(rel);
+        }
+    };
+    walk(DIST_ROOT, '');
+    return found;
+})();
+console.log(`🗜️ Indexed ${PRECOMPRESSED_PATHS.size} pre-compressed assets under dist/`);
+
+// Pre-compressed file serving middleware with route safety (rewrites req.url
+// to the .br/.gz sibling so express.static("dist") below serves it).
 app.use((req, res, next) => {
     const acceptEncoding = req.headers['accept-encoding'] || '';
 
@@ -246,48 +267,25 @@ app.use((req, res, next) => {
 
         // Store original URL to prevent route parsing issues
         const originalUrl = req.url;
-
-        // Check for Brotli support first (better compression)
-        if (acceptEncoding.includes('br')) {
-            const brPath = originalUrl + '.br';
-            const fs = require('fs');
-            const path = require('path');
-            const fullBrPath = path.join(__dirname, '../dist', brPath.substring(1));
-
-            if (fs.existsSync(fullBrPath)) {
-                req.url = brPath;
-                res.set('Content-Encoding', 'br');
-                res.set('Vary', 'Accept-Encoding');
-
-                // CRITICAL: Set proper MIME type for pre-compressed files
-                if (originalUrl.endsWith('.css')) {
-                    res.set('Content-Type', 'text/css; charset=utf-8');
-                } else if (originalUrl.endsWith('.js')) {
-                    res.set('Content-Type', 'application/javascript; charset=utf-8');
-                }
-                console.log(`🗜️ Serving Brotli: ${originalUrl} -> ${brPath}`);
+        const serveVariant = (variantPath, encoding) => {
+            req.url = variantPath;
+            res.set('Content-Encoding', encoding);
+            res.set('Vary', 'Accept-Encoding');
+            // Proper MIME type for pre-compressed files (the .br/.gz extension
+            // would otherwise drive content-type sniffing on mobile browsers)
+            if (originalUrl.endsWith('.css')) {
+                res.set('Content-Type', 'text/css; charset=utf-8');
+            } else if (originalUrl.endsWith('.js')) {
+                res.set('Content-Type', 'application/javascript; charset=utf-8');
             }
-        }
-        // Fallback to Gzip if Brotli not supported or file doesn't exist
-        else if (acceptEncoding.includes('gzip')) {
-            const gzPath = originalUrl + '.gz';
-            const fs = require('fs');
-            const path = require('path');
-            const fullGzPath = path.join(__dirname, '../dist', gzPath.substring(1));
+            verboseLog(`🗜️ Serving ${encoding}: ${originalUrl} -> ${variantPath}`);
+        };
 
-            if (fs.existsSync(fullGzPath)) {
-                req.url = gzPath;
-                res.set('Content-Encoding', 'gzip');
-                res.set('Vary', 'Accept-Encoding');
-
-                // CRITICAL: Set proper MIME type for pre-compressed files
-                if (originalUrl.endsWith('.css')) {
-                    res.set('Content-Type', 'text/css; charset=utf-8');
-                } else if (originalUrl.endsWith('.js')) {
-                    res.set('Content-Type', 'application/javascript; charset=utf-8');
-                }
-                console.log(`🗜️ Serving Gzip: ${originalUrl} -> ${gzPath}`);
-            }
+        // Brotli first (better compression), then gzip, else uncompressed.
+        if (acceptEncoding.includes('br') && PRECOMPRESSED_PATHS.has(originalUrl + '.br')) {
+            serveVariant(originalUrl + '.br', 'br');
+        } else if (acceptEncoding.includes('gzip') && PRECOMPRESSED_PATHS.has(originalUrl + '.gz')) {
+            serveVariant(originalUrl + '.gz', 'gzip');
         }
     }
 
@@ -312,17 +310,7 @@ app.use(session(sessionStore.getSessionConfig()));
 // Request counter for tracking
 let requestCounter = 0;
 
-// Logging configuration
-const LOG_LEVELS = {
-    MINIMAL: 1, // Only webhook requests and errors
-    NORMAL: 2, // Standard logging (default)
-    VERBOSE: 3, // Detailed debugging
-    DEBUG: 4 // Full debugging with all headers
-};
-
-const CURRENT_LOG_LEVEL = process.env.LOG_LEVEL ?
-    LOG_LEVELS[process.env.LOG_LEVEL.toUpperCase()] || LOG_LEVELS.NORMAL :
-    LOG_LEVELS.NORMAL;
+// LOG_LEVELS / CURRENT_LOG_LEVEL come from ./utils/log-level (required above).
 
 // Optimized request logging middleware
 app.use((req, res, next) => {
@@ -353,7 +341,9 @@ app.use((req, res, next) => {
         if (Object.keys(req.query).length > 0) {
             console.log(`🚨 Query: ${JSON.stringify(req.query)}`);
         }
-    } else if (CURRENT_LOG_LEVEL >= LOG_LEVELS.NORMAL && !isWebhookRequest) {
+    } else if (CURRENT_LOG_LEVEL >= LOG_LEVELS.VERBOSE && !isWebhookRequest) {
+        // One line per request is VERBOSE-only: stdout is synchronous on the
+        // platform, so at NORMAL this was measurable event-loop time per hit.
         console.log(`🌐 #${requestNumber}: ${req.method} ${req.url} (${req.ip})`);
     }
 
@@ -378,19 +368,31 @@ app.use((req, res, next) => {
     next();
 });
 
+// Body parsers are built ONCE here; they used to be constructed per request.
+//
+// Limits: 1 MB default. No local JSON/urlencoded route carries more — file
+// uploads (home-settings images, event cover/social images) are multipart via
+// multer, which these parsers never touch. The old blanket 100 MB let any
+// anonymous POST make the process buffer 100 MB of JSON. The admin-proxied
+// prefixes keep 100 MB because this server only relays them and admin
+// enforces its own limits; changing that here would alter proxy behaviour
+// that was verified separately (see utils/admin-proxy.util.js).
+const BODY_LIMIT_DEFAULT = '1mb';
+const BODY_LIMIT_LARGE = '100mb';
+const LARGE_BODY_PREFIXES = ['/api/settings', '/api/home-settings', '/api/shop', '/api/analytics/track'];
+const jsonParserDefault = express.json({ limit: BODY_LIMIT_DEFAULT, parameterLimit: 50000 });
+const jsonParserLarge = express.json({ limit: BODY_LIMIT_LARGE, parameterLimit: 50000 });
+const urlencodedParserDefault = express.urlencoded({ extended: true, limit: BODY_LIMIT_DEFAULT, parameterLimit: 50000 });
+const urlencodedParserLarge = express.urlencoded({ extended: true, limit: BODY_LIMIT_LARGE, parameterLimit: 50000 });
+const needsLargeBody = (req) => LARGE_BODY_PREFIXES.some((prefix) => req.path.startsWith(prefix));
+
 // Body parsing middleware - exclude webhook routes to allow raw body capture
 app.use((req, res, next) => {
     // Skip body parsing for webhook routes that need raw body access
     if (req.url.includes('/api/webhooks/')) {
-        console.log('🔍 Skipping body parsing for webhook route:', req.url);
         return next();
     }
-
-    // Apply normal body parsing for all other routes with increased limit for image uploads and large payloads
-    express.json({
-        limit: '100mb',
-        parameterLimit: 50000 // Increased parameter limit for JSON payloads
-    })(req, res, next);
+    return (needsLargeBody(req) ? jsonParserLarge : jsonParserDefault)(req, res, next);
 });
 
 app.use((req, res, next) => {
@@ -398,12 +400,7 @@ app.use((req, res, next) => {
     if (req.url.includes('/api/webhooks/')) {
         return next();
     }
-
-    express.urlencoded({
-        extended: true,
-        limit: '100mb',
-        parameterLimit: 50000 // Increased parameter limit for large form data
-    })(req, res, next);
+    return (needsLargeBody(req) ? urlencodedParserLarge : urlencodedParserDefault)(req, res, next);
 });
 
 // Payload size error handling middleware
@@ -413,13 +410,14 @@ app.use((error, req, res, next) => {
         console.warn(`⚠️ Payload too large for ${req.method} ${req.url}:`, {
             contentLength: req.headers['content-length'],
             contentType: req.headers['content-type'],
-            limit: '100MB'
+            limit: error.limit // body-parser attaches the effective limit in bytes
         });
 
+        if (res.headersSent) return next(error);
         return res.status(413).json({
             error: 'Request payload too large',
-            message: 'The request payload exceeds the maximum allowed size of 100MB.',
-            maxSize: '100MB',
+            message: 'The request payload exceeds the maximum allowed size for this route.',
+            maxSize: error.limit ? `${Math.round(error.limit / 1024 / 1024)}MB` : undefined,
             receivedSize: req.headers['content-length'] ?
                 `${Math.round(req.headers['content-length'] / 1024 / 1024)}MB` : 'unknown'
         });
@@ -522,11 +520,10 @@ app.use("/css", express.static("custom/css", {
 // the SPA route handlers below). req.path strips the query string, so
 // Instagram-tagged URLs like "/?fbclid=..." are still caught here and routed
 // to reactHomepage, which has its own in-app browser detection.
-app.use((req, res, next) => {
-    if (req.path === '/' || req.path === '/index.html') {
-        return next();
-    }
-    express.static("dist", {
+//
+// Built once at module scope: `express.static(...)` used to be constructed
+// inside the middleware, i.e. a new serve-static instance per request.
+const distStatic = express.static("dist", {
         index: 'index.html',
         dotfiles: 'ignore',
         etag: true,
@@ -574,7 +571,12 @@ app.use((req, res, next) => {
             // Set security headers
             res.setHeader('X-Content-Type-Options', 'nosniff');
         }
-    })(req, res, next);
+});
+app.use((req, res, next) => {
+    if (req.path === '/' || req.path === '/index.html') {
+        return next();
+    }
+    distStatic(req, res, next);
 });
 
 // Legacy /react static removed: Vite-only serving
@@ -636,7 +638,6 @@ app.use(express.static("static", {
 
 // Direct SVG serving for specific logo files
 app.get('/B2B_MINI_LOGO.svg', (req, res) => {
-    const path = require('path');
     const svgPath = path.join(__dirname, '../static/B2B_MINI_LOGO.svg');
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=31536000');
@@ -645,7 +646,6 @@ app.get('/B2B_MINI_LOGO.svg', (req, res) => {
 });
 
 app.get('/b2b_logo.svg', (req, res) => {
-    const path = require('path');
     const svgPath = path.join(__dirname, '../static/b2b_logo.svg');
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=31536000');
@@ -656,6 +656,9 @@ app.get('/b2b_logo.svg', (req, res) => {
 // Session security middleware - disabled in development to prevent blocking during testing
 if (env.NODE_ENV === 'production') {
     app.use(sessionSecurity.securityMiddleware());
+    // Hourly prune of the fingerprint / rate-limiter maps (unref'd timer).
+    // This was never called before, so those maps only ever grew.
+    sessionSecurity.startCleanupScheduler();
 }
 
 app.use(passport.initialize());
@@ -862,18 +865,21 @@ try {
     app.get("/:id", (req, res, next) => {
         // Skip asset requests and API requests - let them be handled by other middleware
         if (req.path.startsWith('/assets/') || req.path.startsWith('/js/') || req.path.startsWith('/css/') || req.path.startsWith('/api/')) {
-            console.log(`🔍 DEBUG: Skipping /:id route for: ${req.path}`);
             return next();
         }
 
-        // Validate the ID parameter to prevent path-to-regexp errors
-        const id = req.params.id;
-        if (!id || id.length === 0 || id.length > 100) {
-            console.log(`🚨 Invalid ID parameter: ${id}`);
-            return next(); // Let 404 handler deal with it
+        // Cheap pre-filter BEFORE the DB. Bot probes (/wp-admin, /.env,
+        // /favicon.png, ...) can never be short links — the address alphabet
+        // is [A-Za-z0-9_-] (+ optional trailing "+" for link info) — so they go
+        // straight to the 404 handling (HTML or JSON per Accept, real 404
+        // status) instead of a LOWER(address) scan plus a 302 to /404.
+        // See utils/short-link-path.util.js.
+        if (!isPlausibleShortLinkId(req.params.id)) {
+            const notFound = new CustomError('Not found', 404);
+            notFound.severity = 'low';
+            return next(notFound);
         }
 
-        console.log(`🔍 DEBUG: /:id route called with path=${req.path}, id=${id}`);
         return asyncHandler(links.redirect)(req, res, next);
     });
 
@@ -926,6 +932,15 @@ httpServer = app.listen(env.PORT, () => {
     console.log(`🔍 Webhook requests will be logged with essential debugging info`);
     console.log(`🔍 Set LOG_LEVEL=VERBOSE for detailed logs, LOG_LEVEL=MINIMAL for webhook-only logs`);
 
+    // Migrations run AFTER the port is bound, with retries, and never exit
+    // the process (see utils/boot-migrations.util.js for the why). The
+    // Dockerfile used to run `npm run migrate && npm start`, so a DB blip at
+    // boot crash-looped the container. MIGRATE_ON_BOOT=false opts out when a
+    // separate job owns migrations.
+    if (process.env.MIGRATE_ON_BOOT !== 'false') {
+        runBootMigrations();
+    }
+
     // Pre-warm the admin-fetch cache so PageSpeed and the first real
     // visitor never see a cold-cache TTFB. We fire these AFTER listen()
     // so the health check can succeed immediately; pre-warm runs in the
@@ -957,6 +972,28 @@ httpServer = app.listen(env.PORT, () => {
         console.warn('⚠️ Could not prewarm redirects cache:', e.message);
     }
 });
+
+async function runBootMigrations() {
+    try {
+        const knex = require('./knex');
+        const { runMigrationsWithRetry } = require('./utils/boot-migrations.util');
+        await runMigrationsWithRetry({
+            knex,
+            // Same settings as knexfile.js so `npm run migrate` and boot agree
+            // on the table and the migration list.
+            config: {
+                directory: path.join(__dirname, 'migrations'),
+                tableName: 'knex_migrations',
+                disableMigrationsListValidation: true,
+            },
+            attempts: 3,
+            delayMs: 5000,
+        });
+    } catch (e) {
+        // runMigrationsWithRetry never throws; this only guards the require()s.
+        console.error('🚨 Boot migrations could not start (server keeps running):', e.message);
+    }
+}
 
 async function prewarmAdminFetchCache() {
     try {
@@ -1024,7 +1061,14 @@ async function prewarmAdminFetchCache() {
                 fetcher: () => fetchJson(t.url).then(d => (t.validate && !t.validate(d)) ? null : d),
             })
         ));
-        console.log(`🔥 Pre-warmed admin-fetch cache for host: ${host}`);
+        // Keep the maintenance flag warm too (same SWR cache, see
+        // middleware/maintenance.middleware.js) so it never goes cold and
+        // blocks a visitor behind the 5 s admin timeout.
+        try {
+            await require('./middleware/maintenance.middleware').fetchMaintenanceStatus();
+        } catch (_) { /* fetchMaintenanceStatus never throws; belt and braces */ }
+        // Fires every 45 s in production: VERBOSE-only.
+        verboseLog(`🔥 Pre-warmed admin-fetch cache for host: ${host}`);
     } catch (e) {
         console.warn('⚠️ Pre-warm failed (server still healthy):', e.message);
     }

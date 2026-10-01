@@ -13,6 +13,7 @@ const query = require("../queries");
 const queue = require("../queues");
 const utils = require("../utils");
 const env = require("../env");
+const { sendSpaShell } = require("../utils/index-html-cache.util");
 
 const CustomError = utils.CustomError;
 const dnsLookup = promisify(dns.lookup);
@@ -519,10 +520,21 @@ async function redirect(req, res, next) {
         domain_id: domain ? domain.id : null
     });
 
-    // 3. When no link, if has domain redirect to domain's homepage
-    // otherwise redirect to 404
+    // 3. When no link, if has domain redirect to domain's homepage.
+    // Otherwise answer the 404 directly: browsers get the SPA shell (React
+    // renders NotFoundPage for any unknown path) with a REAL 404 status
+    // instead of the old `302 -> /404`, which cost a second request and
+    // returned a 200 that search engines treat as a soft-404. `no-store`
+    // because a short link with this address can be created at any time.
+    // Non-HTML clients keep the redirect so script behaviour is unchanged,
+    // and /404 itself still works through notFoundHandler.
     if (!link) {
-        return res.redirect((domain && domain.homepage) || "/404");
+        if (domain && domain.homepage) return res.redirect(domain.homepage);
+        if (req.isHTML) {
+            sendSpaShell(res, { status: 404, cacheControl: 'no-store' });
+            return;
+        }
+        return res.redirect("/404");
     }
 
     // 4. If link is banned, redirect to banned page.

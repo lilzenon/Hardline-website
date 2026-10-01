@@ -7,6 +7,9 @@ const { internalProxyHeaders } = require("../utils/internal-proxy.util");
 // Brand-bleed guard for admin SEO responses. Shared with the event landing page
 // route so every render path applies the same rule to the same cache key.
 const { isWrongDomainSeoRow } = require("../utils/admin-seo.util");
+const { verboseLog } = require("../utils/log-level");
+const { getIndexHtml } = require("../utils/index-html-cache.util");
+const { renderErrorPage } = require("../utils/error-page.util");
 
 // Cache TTLs for server-to-server admin fetches. Tuned per how often the
 // underlying data actually changes. Stale-while-revalidate means admin
@@ -111,13 +114,47 @@ function serializeForInlineScript(value) {
             return null;
         }
         return json
-            .replace(/</g, '\\u003C')
+            .replace(/</g, '\\u003c')
             .replace(/\u2028/g, '\\u2028')
             .replace(/\u2029/g, '\\u2029');
     } catch (err) {
         console.warn('⚠️ Failed to serialize __INITIAL_DATA__:', err.message);
         return null;
     }
+}
+
+/**
+ * Hero <link rel="preload"> URL — server-side mirror of
+ * src/react/utils/imageUrl.js getHeroImageUrl().
+ *
+ * Admin cover URLs look like
+ *   https://admin.b2b.click/api/images/serve/<uuid>/<variant>[?query]
+ * The React hero always renders the `medium` variant with the admin query
+ * string kept verbatim and NOTHING appended. A preload only helps when its
+ * URL is byte-identical to the <img src> (otherwise the browser downloads
+ * the image twice and LCP gets worse, not better), so this must stay in
+ * lockstep with the client helper: same variant, same query handling, same
+ * origin rule. The client strips only its own legacy cache-buster keys; we
+ * strip the same set so both sides agree even if one is ever re-added.
+ * Returns null for anything that is not an admin image.
+ */
+const ADMIN_SERVE_RE = /\/api\/images\/serve\/([a-f0-9-]{36})(?:\/([A-Za-z0-9_-]+))?/;
+const HERO_PRELOAD_VARIANT = 'medium';
+const INTERNAL_CACHE_BUSTERS = new Set(['_cb', '_t', '_desktop', '_mobile']);
+function buildHeroPreloadUrl(coverImage, coverImageUuid) {
+    const origin = env.NODE_ENV === 'production' ? 'https://admin.b2b.click' : 'http://localhost:3002';
+    const raw = typeof coverImage === 'string' ? coverImage : '';
+    const qIndex = raw.indexOf('?');
+    const pathPart = qIndex === -1 ? raw : raw.slice(0, qIndex);
+    const m = pathPart.match(ADMIN_SERVE_RE);
+    const uuid = (m && m[1]) ||
+        (typeof coverImageUuid === 'string' && /^[a-f0-9-]{36}$/.test(coverImageUuid) ? coverImageUuid : null);
+    if (!uuid) return null;
+    const query = qIndex === -1 ? '' : raw.slice(qIndex + 1)
+        .split('&')
+        .filter((pair) => pair && !INTERNAL_CACHE_BUSTERS.has(pair.split('=')[0]))
+        .join('&');
+    return `${origin}/api/images/serve/${uuid}/${HERO_PRELOAD_VARIANT}${query ? `?${query}` : ''}`;
 }
 
 function buildAdminFetch(baseUrl, path, req, options = {}) {
@@ -729,7 +766,7 @@ function generateStaticContent(pageType, metaTags, seoSettings, pageData = null)
                     </div>
                 </section>
             `;
-            console.log(`✅ SSR: Rendered ${pageData.galleryImages.length} gallery images as <img> tags for Google indexing`);
+            verboseLog(`✅ SSR: Rendered ${pageData.galleryImages.length} gallery images as <img> tags for Google indexing`);
         }
 
         return `
@@ -990,8 +1027,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                 const homepageEvents = eventsData.homepageEvents || [];
                 const allEvents = [...featuredEvents, ...homepageEvents];
 
-                console.log(`🖼️ Creating ImageObject schemas for ${allEvents.length} event cover images`);
-                console.log(`🎯 Creating Event schemas for ${allEvents.length} events`);
+                verboseLog(`🖼️ Creating ImageObject + Event schemas for ${allEvents.length} events`);
 
                 // Create ImageObject schema for each event cover image
                 eventImageSchemas = allEvents
@@ -1050,7 +1086,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                     })
                     .filter(schema => schema.contentUrl); // Only include images with valid URLs
 
-                console.log(`✅ Created ${eventImageSchemas.length} ImageObject schemas for event cover images`);
+                verboseLog(`✅ Created ${eventImageSchemas.length} ImageObject schemas for event cover images`);
 
                 // 🎯 GOOGLE EVENT SEO: Create Event structured data for each event
                 // This allows Google to discover events directly from the homepage
@@ -1171,7 +1207,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                         return eventSchema;
                     });
 
-                console.log(`✅ Created ${eventSchemas.length} Event schemas for homepage events`);
+                verboseLog(`✅ Created ${eventSchemas.length} Event schemas for homepage events`);
             }
         } catch (error) {
             console.warn('⚠️ Error fetching events for structured data:', error.message);
@@ -1249,7 +1285,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
             if (galleryData) {
                 const galleryImages = galleryData.data || [];
 
-                console.log(`🖼️ Fetched ${galleryImages.length} gallery images for ImageObject schema`);
+                verboseLog(`🖼️ Fetched ${galleryImages.length} gallery images for ImageObject schema`);
 
                 // Create ImageObject schema for each gallery image
                 galleryImageSchemas = galleryImages.map((image, index) => {
@@ -1306,7 +1342,7 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
                     return imageObject;
                 }).filter(schema => schema.contentUrl); // Only include images with valid URLs
 
-                console.log(`✅ Created ${galleryImageSchemas.length} ImageObject schemas for About page gallery`);
+                verboseLog(`✅ Created ${galleryImageSchemas.length} ImageObject schemas for About page gallery`);
             }
         } catch (error) {
             console.warn('⚠️ Error fetching gallery images for ImageObject schema:', error.message);
@@ -1366,15 +1402,12 @@ async function generateStructuredData(pageType, seoSettings, metaTags, escapeHtm
 
 // 🚀 REACT HOMEPAGE - Serve React app with dynamic SEO meta tags
 async function reactHomepage(req, res) {
-    console.log('🚀🚀🚀 REACT HOMEPAGE FUNCTION CALLED - Dynamic SEO meta tags processing started');
-    console.log('📍 Request path:', req.path);
-    console.log('📍 Request URL:', req.url);
-    console.log('📍 NODE_ENV:', process.env.NODE_ENV);
+    // Per-render logging is VERBOSE-only: stdout is synchronous on the
+    // platform and this handler used to emit ~15 lines per homepage render.
+    verboseLog('🚀 reactHomepage:', req.method, req.url);
 
     try {
         const env = require('../env');
-        const path = require('path');
-        const fs = require('fs');
         const seoUtils = require('../utils/seo.utils');
 
         // Determine page type based on request path
@@ -1385,7 +1418,7 @@ async function reactHomepage(req, res) {
         } else if (requestPath === '/faq' || requestPath === '/faq/') {
             pageType = 'faq';
         }
-        console.log('📄 Page type detected:', pageType);
+        verboseLog('📄 Page type detected:', pageType);
 
         // 🚀 TTFB: start the homepage-data fetch NOW, concurrently with the SEO
         // fetch below, instead of after it. These two admin round trips are
@@ -1444,6 +1477,10 @@ async function reactHomepage(req, res) {
         // by construction the response admin gave us when we asked for
         // hardline.events. There is no shared key between tenants.
         let seoSettings;
+        // True only when seoSettings came from admin. The hardcoded fallback
+        // below must NOT be handed to the client as window.__SEO_SETTINGS__:
+        // the client would then skip its own fetch and lock in the wrong brand.
+        let seoFromAdmin = false;
         const host = getSiteDomain(req) || '';
         try {
             const dashboardBase = env.NODE_ENV === 'production' ?
@@ -1473,8 +1510,9 @@ async function reactHomepage(req, res) {
 
             if (data) {
                 seoSettings = data.settings || data;
+                seoFromAdmin = true;
                 if (source === 'cold') {
-                    console.log('✅ SEO settings fetched from dashboard API:', seoSettings.default_title);
+                    verboseLog('✅ SEO settings fetched from dashboard API:', seoSettings.default_title);
                 }
             } else {
                 throw new Error('Dashboard SEO fetch failed');
@@ -1550,7 +1588,7 @@ async function reactHomepage(req, res) {
             pageUrl = '/';
         }
 
-        console.log('🏷️ Page-specific SEO:', { pageType, pageTitle, pageUrl });
+        verboseLog('🏷️ Page-specific SEO:', { pageType, pageTitle, pageUrl });
 
         // Generate meta tags using SEO utils with proper image handling
         const metaTags = seoUtils.generateMetaTags({
@@ -1562,7 +1600,7 @@ async function reactHomepage(req, res) {
             url: pageUrl
         });
 
-        console.log('🏷️ Generated meta tags:', {
+        verboseLog('🏷️ Generated meta tags:', {
             title: metaTags.title,
             canonical: metaTags.canonical,
             ogUrl: metaTags.ogUrl,
@@ -1594,7 +1632,7 @@ async function reactHomepage(req, res) {
                 });
                 if (data) {
                     pageData = data.data || data;
-                    console.log('✅ FAQ data fetched for SSR:', pageData.length, 'items');
+                    verboseLog('✅ FAQ data fetched for SSR:', pageData.length, 'items');
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch FAQ data for SSR:', error.message);
@@ -1620,7 +1658,7 @@ async function reactHomepage(req, res) {
 
                 if (aboutResult.data) {
                     pageData = aboutResult.data.data || aboutResult.data;
-                    console.log('✅ About page content fetched for SSR');
+                    verboseLog('✅ About page content fetched for SSR');
                 }
 
                 // 🖼️ GOOGLE IMAGE SEO FIX: Include gallery images in SSR for bot indexing
@@ -1629,7 +1667,7 @@ async function reactHomepage(req, res) {
                     if (Array.isArray(galleryImages) && galleryImages.length > 0) {
                         pageData = pageData || {};
                         pageData.galleryImages = galleryImages;
-                        console.log(`✅ Gallery images fetched for SSR: ${galleryImages.length} images`);
+                        verboseLog(`✅ Gallery images fetched for SSR: ${galleryImages.length} images`);
                     }
                 }
             } catch (error) {
@@ -1659,50 +1697,29 @@ async function reactHomepage(req, res) {
                     const featuredEvents = data.featuredEvents || [];
                     const allEvents = [...featuredEvents, ...homepageEvents];
                     pageData = { events: allEvents };
-                    console.log('✅ Homepage events fetched for SSR:', allEvents.length, 'events');
+                    verboseLog('✅ Homepage events fetched for SSR:', allEvents.length, 'events');
                 }
             } catch (error) {
                 console.warn('⚠️ Failed to fetch homepage events for SSR:', error.message);
             }
 
-            // 🚀 LCP PRELOAD: pick the same hero the React tree will pick
-            // (mostRecentEvent in FigmaDesktop/FigmaMobile = soonest upcoming),
-            // build the medium-variant URL the <img src=...> fallback uses,
-            // and inject as a high-priority preload below. Wrapped in try
+            // 🚀 LCP PRELOAD: the hero React renders is the FIRST FEATURED
+            // event (src/react/utils/imageUrl.js getHeroImageUrl: always the
+            // `medium` variant, admin query string kept verbatim, nothing
+            // appended). A preload only helps when its href is byte-identical
+            // to that <img src>, so the URL is built by buildHeroPreloadUrl
+            // with the same rule — never add params here. Wrapped in try
             // because a hero failure must never block homepage HTML.
             try {
-                const events = (pageData && pageData.events) || [];
-                const now = Date.now();
-                const upcoming = events
-                    .map(e => {
-                        if (!e || !e.event_date) return null;
-                        let s = e.event_date instanceof Date ? e.event_date.toISOString() : String(e.event_date).trim();
-                        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) s = `${s}T00:00:00Z`;
-                        else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s) && !/[Zz]|[+-]\d{2}:\d{2}$/.test(s)) s = `${s}Z`;
-                        const t = new Date(s).getTime();
-                        return Number.isFinite(t) && t > now ? { event: e, t } : null;
-                    })
-                    .filter(Boolean)
-                    .sort((a, b) => a.t - b.t);
-                const hero = upcoming[0] && upcoming[0].event;
-                if (hero) {
-                    // Mirror getOptimizedImageUrl(coverImage, 375) → /medium variant.
-                    // Prefer the explicit cover_image_uuid column when present.
-                    let heroUrl = null;
-                    if (hero.cover_image_uuid) {
-                        heroUrl = `https://admin.b2b.click/api/images/serve/${hero.cover_image_uuid}/medium`;
-                    } else if (hero.cover_image) {
-                        const ci = String(hero.cover_image);
-                        const m = ci.match(/\/api\/images\/serve\/([a-f0-9-]{36})/);
-                        if (m) heroUrl = `https://admin.b2b.click/api/images/serve/${m[1]}/medium`;
-                        else if (ci.startsWith('http')) heroUrl = ci;
-                        else if (ci.startsWith('/')) heroUrl = `https://admin.b2b.click${ci}`;
-                    }
-                    if (heroUrl) {
-                        pageData = pageData || {};
-                        pageData.heroPreloadUrl = heroUrl;
-                        console.log('🎯 Hero preload URL computed:', heroUrl);
-                    }
+                const featured = (homepageRawData && Array.isArray(homepageRawData.featuredEvents))
+                    ? homepageRawData.featuredEvents
+                    : [];
+                const hero = featured[0];
+                const heroUrl = hero ? buildHeroPreloadUrl(hero.cover_image, hero.cover_image_uuid) : null;
+                if (heroUrl) {
+                    pageData = pageData || {};
+                    pageData.heroPreloadUrl = heroUrl;
+                    verboseLog('🎯 Hero preload URL computed:', heroUrl);
                 }
             } catch (heroError) {
                 console.warn('⚠️ Hero preload computation failed (non-fatal):', heroError.message);
@@ -1710,19 +1727,15 @@ async function reactHomepage(req, res) {
         }
         // Contact page doesn't need API data - static content only
 
-        // FIXED: Only use Vite-built React homepage to prevent bundle conflicts
-        const reactIndexPath = path.join(__dirname, '../../dist/index.html');
-
-        if (!fs.existsSync(reactIndexPath)) {
-            console.error('🚨 CRITICAL: Vite-built React homepage not found at dist/index.html');
-            console.error('🔧 Run "npm run build" to generate the Vite build');
-            return res.status(500).send('Homepage build not found. Please run npm run build.');
+        // SPA shell template from memory (utils/index-html-cache.util.js):
+        // read once at boot and refreshed in the background when the file's
+        // mtime changes. This used to be existsSync + readFileSync on every
+        // render — synchronous disk I/O on the hottest path in the app.
+        let htmlContent = getIndexHtml();
+        if (htmlContent === null) {
+            console.error('🚨 CRITICAL: Vite-built React homepage not found at dist/index.html — run "npm run build"');
+            return res.status(500).set('Cache-Control', 'no-store').send('Homepage build not found. Please run npm run build.');
         }
-
-        console.log('📱 Serving React homepage from dist/index.html (Vite build only) with dynamic SEO');
-
-        // Read the React HTML template
-        let htmlContent = fs.readFileSync(reactIndexPath, 'utf8');
 
         // Escape HTML content for safe injection
         const escapeHtml = (text) => {
@@ -1881,7 +1894,7 @@ async function reactHomepage(req, res) {
         // fallback. (needsSSRContent / isBot are kept only for logging now.)
         {
             const browserType = isBot ? 'Bot' : isInAppBrowser ? 'In-App Browser' : isWebView ? 'WebView' : isIOSWebView ? 'iOS WebView' : hasInAppParams ? 'In-App Params' : 'Regular';
-            console.log(`🧩 Injecting UA-agnostic SSR content (edge-cache safe) for: ${browserType}`);
+            verboseLog(`🧩 Injecting UA-agnostic SSR content (edge-cache safe) for: ${browserType}`);
             const staticContent = generateStaticContent(pageType, metaTags, seoSettings, pageData);
 
             // Visible static content that React hides on successful mount and
@@ -1921,7 +1934,25 @@ async function reactHomepage(req, res) {
                 }
             }
 
-            const ssrWrapper = `${initialDataScript}<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
+            // 🚀 SEO SEED (client contract): the flat settings object admin
+            // returned for THIS host — the same `seoSettings` the meta tags
+            // above were built from — so the client's SEOProvider can skip its
+            // own blocking /api/settings/seo round trip on first paint. It must
+            // sit immediately BEFORE the __INITIAL_DATA__ script. Injected on
+            // every reactHomepage page (not just the homepage) and ONLY when
+            // the data came from admin: seeding the hardcoded fallback would
+            // stop the client from recovering the real brand. The client treats
+            // the global as optional. serializeForInlineScript escapes `<` as
+            // < so a `</script>` inside any admin value cannot break out.
+            let seoSettingsScript = '';
+            if (seoFromAdmin && seoSettings) {
+                const serializedSeo = serializeForInlineScript(seoSettings);
+                if (serializedSeo) {
+                    seoSettingsScript = `<script>window.__SEO_SETTINGS__=${serializedSeo};</script>`;
+                }
+            }
+
+            const ssrWrapper = `${seoSettingsScript}${initialDataScript}<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
                    <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>
                    <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';var c=document.getElementById('ssr-content');if(c){c.style.display='block';c.style.opacity='1';}}}}catch(e){}},4000);</script>`;
 
@@ -2028,86 +2059,16 @@ async function reactHomepage(req, res) {
         console.error('📍 Request path:', req.path);
         console.error('📍 User-Agent:', req.headers['user-agent']);
 
-        // 🔧 FIX: Return a proper HTML error page instead of JSON
-        // This ensures Instagram's in-app browser and other WebViews display a user-friendly error
-        const errorHtml = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>HARDLINE - Page Loading</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            min-height: 100vh;
-            background: #000;
-            color: #fff;
-            font-family: Inter, system-ui, -apple-system, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            text-align: center;
-        }
-        .logo { width: 180px; margin-bottom: 32px; }
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
-        p { font-size: 16px; opacity: 0.8; margin-bottom: 24px; max-width: 400px; }
-        .btn {
-            display: inline-block;
-            background: #f90d0d;
-            color: #fff;
-            padding: 14px 28px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: background 0.2s;
-        }
-        .btn:hover { background: #2080DD; }
-        .retry-btn {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.3);
-            margin-left: 12px;
-        }
-        .retry-btn:hover { background: rgba(255,255,255,0.1); }
-    </style>
-</head>
-<body>
-    <img src="/images/figma-exact/b2b-logo-nav.svg" alt="HARDLINE" class="logo">
-    <h1>Just a moment...</h1>
-    <p>The page is loading. If it doesn't load automatically, tap the button below.</p>
-    <div>
-        <a href="/" class="btn">Go to Homepage</a>
-        <a href="javascript:location.reload()" class="btn retry-btn">Retry</a>
-    </div>
-    <script>
-        // Auto-retry after 2 seconds — capped at 2 attempts via a URL param
-        // (not storage: IAB private modes block sessionStorage). Uncapped,
-        // a persistent origin fault trapped in-app-browser users in an
-        // infinite 2s reload loop. After the cap, the manual buttons remain.
-        (function() {
-            try {
-                var params = new URLSearchParams(window.location.search);
-                var attempts = parseInt(params.get('hl_retry') || '0', 10) || 0;
-                if (attempts < 2) {
-                    setTimeout(function() {
-                        params.set('hl_retry', String(attempts + 1));
-                        window.location.replace(
-                            window.location.pathname + '?' + params.toString() + window.location.hash
-                        );
-                    }, 2000);
-                }
-            } catch (e) {
-                // No URLSearchParams (ancient WebView): skip auto-retry, keep buttons
-            }
-        })();
-    </script>
-</body>
-</html>`;
-
-        res.status(500).send(errorHtml);
+        // HTML (never JSON) so Instagram / TikTok in-app WebViews show a usable
+        // page. Shared template in utils/error-page.util.js (also used by the
+        // global error handler); autoRetry reloads at most twice because a
+        // homepage SSR failure is usually a transient origin fault.
+        if (res.headersSent) return;
+        res.status(500).set('Cache-Control', 'no-store').type('html').send(renderErrorPage({
+            title: 'Just a moment...',
+            message: "The page is loading. If it doesn't load automatically, tap the button below.",
+            autoRetry: true,
+        }));
     }
 }
 

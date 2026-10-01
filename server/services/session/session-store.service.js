@@ -6,35 +6,152 @@ let RedisStore, FileStore, redisClient;
 
 // Try to load Redis store if available
 try {
-    // Import connect-redis with correct v7.x syntax
-    const ConnectRedis = require('connect-redis').default;
+    // connect-redis v9 ships ESM + CJS; the CJS build exposes the class on
+    // `.default` and as a named export depending on bundler. Accept any.
+    const connectRedisModule = require('connect-redis');
+    const ConnectRedis = connectRedisModule.default || connectRedisModule.RedisStore || connectRedisModule;
 
     // Import Redis client (using ioredis)
     const Redis = require('ioredis');
 
     // Create Redis client if Redis is enabled
     if (env.REDIS_ENABLED) {
-        redisClient = new Redis({
-            host: env.REDIS_HOST || 'localhost',
-            port: env.REDIS_PORT || 6379,
-            password: env.REDIS_PASSWORD || undefined,
-            db: env.REDIS_DB || 0,
+        // Deliberately tighter than the shared ./redis.js client: that one
+        // runs maxRetriesPerRequest=null (a BullMQ requirement), which would
+        // make a session GET hang for its full 15 s commandTimeout during an
+        // outage. Sessions must fail fast so the resilient wrapper below can
+        // degrade instead of stalling the request.
+        const clientOptions = {
             retryDelayOnFailover: 100,
             maxRetriesPerRequest: 3,
-            lazyConnect: true, // Don't connect immediately
+            lazyConnect: true, // we call connect() explicitly below
             connectTimeout: 5000,
-            commandTimeout: 5000
+            commandTimeout: 5000,
+            enableOfflineQueue: true,
+            connectionName: 'kutt-sessions'
+        };
+        // REDIS_URL first (DigitalOcean -> managed Redis), mirroring ./redis.js.
+        // The old code read only REDIS_HOST/PORT, so on a URL-only deploy the
+        // session client pointed at localhost and silently fell back to memory.
+        redisClient = env.REDIS_URL && env.REDIS_URL.trim() !== ''
+            ? new Redis(env.REDIS_URL, clientOptions)
+            : new Redis({
+                host: env.REDIS_HOST || 'localhost',
+                port: env.REDIS_PORT || 6379,
+                password: env.REDIS_PASSWORD || undefined,
+                db: env.REDIS_DB || 0,
+                ...(env.REDIS_TLS ? { tls: {} } : {}),
+                ...clientOptions
+            });
+        // ioredis emits 'error' events; without a listener each one is logged
+        // as an unhandled event. Store-level failures are logged by the wrapper.
+        redisClient.on('error', (err) => {
+            console.error('🚨 Redis session client error:', err && err.message);
         });
 
-        // Initialize RedisStore with the client
         RedisStore = ConnectRedis;
-
-        console.log('✅ Redis session store initialized');
     } else {
         console.log('ℹ️ Redis disabled via REDIS_ENABLED=false');
     }
 } catch (error) {
     console.warn('⚠️ connect-redis not available, Redis session store disabled:', error.message);
+}
+
+/**
+ * node-redis-v5-shaped facade over an ioredis client, covering exactly the
+ * calls connect-redis v9 makes.
+ *
+ * WHY: connect-redis 9 targets node-redis 5 — `set(key, val, { expiration:
+ * { type: 'EX', value } })`, `mGet(keys)`, `scanIterator({ MATCH, COUNT })`
+ * yielding key batches — while this app standardises on ioredis. Handed the
+ * raw ioredis client, every session save fails with "ERR syntax error"
+ * (ioredis stringifies the options object as a third SET argument) and the
+ * admin listing helpers throw on the missing camelCase methods. No new
+ * dependency: translating six calls is all that is needed.
+ */
+function nodeRedisFacade(client) {
+    return {
+        get: (key) => client.get(key),
+        set: (key, val, opts) => {
+            let ttl = null;
+            if (opts && opts.expiration && opts.expiration.type === 'EX') ttl = opts.expiration.value;
+            else if (opts && typeof opts.EX === 'number') ttl = opts.EX;
+            return ttl != null ? client.set(key, val, 'EX', ttl) : client.set(key, val);
+        },
+        expire: (key, ttl) => client.expire(key, ttl),
+        del: (keys) => client.del(...(Array.isArray(keys) ? keys : [keys])),
+        mGet: (keys) => client.mget(...keys),
+        scanIterator: async function* ({ MATCH, COUNT }) {
+            let cursor = '0';
+            do {
+                const [next, keys] = await client.scan(cursor, 'MATCH', MATCH, 'COUNT', COUNT);
+                cursor = String(next);
+                if (keys.length) yield keys;
+            } while (cursor !== '0');
+        },
+    };
+}
+
+/**
+ * Thin delegate around connect-redis that turns a Redis outage into "no
+ * session" instead of a failed request.
+ *
+ * express-session calls next(err) when store.get fails (every cookie-bearing
+ * request would 500 while Redis is down), and when store.set fails on
+ * response end it calls next(err) AFTER headers were sent, which then trips
+ * the error handler on a finished response. Public visitors do not depend on
+ * sessions, so degrading is strictly better than failing. Errors are counted
+ * in metrics and logged at most once per 10 s.
+ */
+class ResilientSessionStore extends session.Store {
+    constructor(inner, metrics) {
+        super();
+        this.inner = inner;
+        this.metrics = metrics;
+        this.lastErrorLogAt = 0;
+    }
+
+    _degrade(op, err) {
+        this.metrics.errors++;
+        const now = Date.now();
+        if (now - this.lastErrorLogAt > 10000) {
+            this.lastErrorLogAt = now;
+            console.error(`🚨 Redis session store ${op} failed (degrading to no session, request continues):`, err && err.message);
+        }
+    }
+
+    get(sid, cb) {
+        this.inner.get(sid, (err, sess) => {
+            if (err) { this._degrade('get', err); return cb(null, null); }
+            cb(null, sess);
+        });
+    }
+
+    set(sid, sess, cb) {
+        this.inner.set(sid, sess, (err) => {
+            if (err) this._degrade('set', err);
+            if (cb) cb(null);
+        });
+    }
+
+    touch(sid, sess, cb) {
+        this.inner.touch(sid, sess, (err) => {
+            if (err) this._degrade('touch', err);
+            if (cb) cb(null);
+        });
+    }
+
+    destroy(sid, cb) {
+        this.inner.destroy(sid, (err) => {
+            if (err) this._degrade('destroy', err);
+            if (cb) cb(null);
+        });
+    }
+
+    // Admin/metrics helpers: errors surface to the caller here on purpose.
+    all(cb) { return this.inner.all(cb); }
+    length(cb) { return this.inner.length(cb); }
+    clear(cb) { return this.inner.clear(cb); }
 }
 
 // Try to load File store as fallback
@@ -55,7 +172,7 @@ class SessionStoreService {
             cleanupRuns: 0
         };
 
-        // Initialize store (async for Redis, sync for fallbacks)
+        // Initialize store SYNCHRONOUSLY (see initializeRedisStore for why)
         this.initializeStore();
         this.startCleanupScheduler();
     }
@@ -64,55 +181,51 @@ class SessionStoreService {
      * Initialize the appropriate session store
      */
     initializeStore() {
-        // Try Redis store first (preferred for production)
+        // Redis when configured; MemoryStore/file only when it is NOT.
         if (env.REDIS_ENABLED && redisClient && RedisStore) {
-            // Initialize Redis asynchronously
             this.initializeRedisStore();
-            return; // Don't initialize fallback immediately
+            return;
         }
 
         // Initialize fallback store synchronously
         this.initializeFallbackStore();
     }
 
-    async initializeRedisStore() {
-        try {
-            console.log('🔄 Attempting Redis connection...');
+    /**
+     * Build the Redis store synchronously.
+     *
+     * WHY: this used to `await redisClient.connect()` first, but server.js
+     * calls getSessionConfig() synchronously at boot — the store was still
+     * null at that moment, so express-session silently used MemoryStore for
+     * the WHOLE process lifetime (unbounded growth, sessions lost on deploy)
+     * even though Redis was configured and healthy. connect-redis only issues
+     * commands on first use and ioredis queues them until connected, so the
+     * store can exist before the socket does.
+     */
+    initializeRedisStore() {
+        const inner = new RedisStore({
+            client: nodeRedisFacade(redisClient),
+            prefix: 'sess:',
+            ttl: this.getSessionTTL(),
+            disableTouch: false,
+            disableTTL: false
+        });
+        this.store = new ResilientSessionStore(inner, this.metrics);
+        this.storeType = 'redis';
+        console.log('✅ Session store active: Redis (connect-redis, prefix "sess:")');
 
-            // Test Redis connection
-            await redisClient.connect();
-            await redisClient.ping();
-
-            this.store = new RedisStore({
-                client: redisClient,
-                prefix: 'sess:',
-                ttl: this.getSessionTTL(),
-                disableTouch: false,
-                disableTTL: false,
-                logErrors: (error) => {
-                    console.error('🚨 Redis session store error:', error);
-                    this.metrics.errors++;
-                }
+        // Connect eagerly in the background so the first real request does not
+        // pay the handshake. Failure is logged, never fatal: the resilient
+        // wrapper degrades reads to "no session" until Redis is reachable.
+        redisClient.connect()
+            .then(() => redisClient.ping())
+            .then(() => console.log('✅ Redis session store connected'))
+            .catch((error) => {
+                // ioredis throws if connect() races an auto-connect; harmless.
+                if (error && /already/i.test(String(error.message))) return;
+                this.metrics.errors++;
+                console.error('🚨 Redis session store not reachable yet (sessions degrade until it is):', error && error.message);
             });
-            this.storeType = 'redis';
-            console.log('✅ Redis session store initialized and connected');
-        } catch (error) {
-            console.error('🚨 Failed to initialize Redis session store:', error.message);
-            console.log('🔄 Falling back to file store...');
-            this.metrics.errors++;
-
-            // Disconnect failed Redis client
-            if (redisClient) {
-                try {
-                    await redisClient.disconnect();
-                } catch (disconnectError) {
-                    // Ignore disconnect errors
-                }
-            }
-
-            // Initialize fallback store
-            this.initializeFallbackStore();
-        }
     }
 
     initializeFallbackStore() {
@@ -120,7 +233,7 @@ class SessionStoreService {
         const isLocalDevelopment = !env.NODE_ENV || env.NODE_ENV !== 'production' || process.env.NODE_ENV !== 'production';
 
         if (isLocalDevelopment) {
-            console.log('✅ Using memory session store for development (avoiding file permission issues)');
+            console.log('✅ Session store active: MemoryStore (development, Redis not configured)');
             this.storeType = 'memory';
             this.store = null; // Express will use default MemoryStore
             return;
@@ -163,7 +276,7 @@ class SessionStoreService {
         }
 
         // Final fallback to memory store
-        console.warn('⚠️ Using memory session store - NOT suitable for production');
+        console.warn('⚠️ Session store active: MemoryStore - NOT suitable for production (set REDIS_ENABLED=true + REDIS_URL)');
         this.storeType = 'memory';
         this.store = null; // Express will use default MemoryStore
     }

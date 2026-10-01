@@ -1,5 +1,8 @@
 const env = require('../env');
 const { CustomError } = require('../utils');
+const { sendSpaShell } = require('../utils/index-html-cache.util');
+const { renderErrorPage } = require('../utils/error-page.util');
+const { verboseLog } = require('../utils/log-level');
 
 /**
  * Secure Error Handling Middleware
@@ -11,6 +14,14 @@ const { CustomError } = require('../utils');
  * Logs detailed errors internally without exposing sensitive data
  */
 function logSecurityError(error, req, additionalInfo = {}) {
+    // 404s (missing static assets, bot probes like /wp-admin) are noise, not
+    // incidents: one line, no stack, and only at LOG_LEVEL=VERBOSE. The full
+    // JSON-with-stack record below is for real errors.
+    if ((Number(error.statusCode || error.status) || 0) === 404) {
+        verboseLog(`ℹ️ 404 ${req.method} ${req.originalUrl || req.url}`);
+        return;
+    }
+
     const errorLog = {
         timestamp: new Date().toISOString(),
         error: {
@@ -154,8 +165,9 @@ function secureErrorHandler(error, req, res, next) {
             contentType: req.headers['content-type']
         });
 
-        // Override error with more helpful message
-        error = new CustomError('Request payload too large. Maximum allowed size is 100MB.', 413);
+        // Override error with more helpful message (limit is per-route now:
+        // 1 MB default, 100 MB on admin-proxied prefixes — see server.js)
+        error = new CustomError('Request payload too large.', 413);
         error.severity = 'low';
     }
 
@@ -199,13 +211,45 @@ function secureErrorHandler(error, req, res, next) {
         };
     }
 
+    // Never respond twice. If a handler already started streaming, there is
+    // nothing safe left to send; hand off so Express closes the connection.
+    if (res.headersSent) {
+        return next(error);
+    }
+
     // Set security headers for error responses
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
+    // Browsers navigating to a PAGE url get the branded HTML page (raw JSON
+    // on a page URL was a blank screen in Instagram/TikTok WebViews). Anything
+    // under /api/ and any client that prefers JSON keeps the JSON contract.
+    if (wantsHtml(req)) {
+        const isNotFound = status === 404;
+        return res.status(status).type('html').send(renderErrorPage({
+            title: isNotFound ? 'Page not found' : 'Something went wrong',
+            message: isNotFound
+                ? "The page you're looking for doesn't exist or has moved."
+                : message,
+        }));
+    }
+
     // Send error response
     res.status(status).json(errorResponse);
+}
+
+/**
+ * HTML vs JSON negotiation for error responses: API paths are always JSON;
+ * elsewhere follow the Accept header (`*\/*` and a missing header count as
+ * HTML, which is what browsers and link previews want).
+ */
+function wantsHtml(req) {
+    if (!req || typeof req.accepts !== 'function') return false;
+    // originalUrl: req.path is relative to the router mount when an error is
+    // raised inside a mounted router, so "/api/..." could read as "/...".
+    if (String(req.originalUrl || req.url || req.path || '').startsWith('/api/')) return false;
+    return req.accepts(['html', 'json']) === 'html';
 }
 
 /**
@@ -228,16 +272,21 @@ function notFoundHandler(req, res, next) {
         req.path.startsWith('/js/') ||
         req.path.startsWith('/css/') ||
         req.path.match(/\.(js|css|woff|woff2|ttf|eot|svg|png|jpg|jpeg|gif|ico|map|webmanifest)$/i)) {
-        console.log(`⚠️ API/Static asset not found: ${req.path}`);
+        verboseLog(`⚠️ API/Static asset not found: ${req.path}`);
         const error = new CustomError('Resource not found', 404);
         error.severity = 'low';
         return next(error);
     }
 
-    // For all other routes, serve React SPA (including 404 pages)
-    console.log(`📱 Serving React SPA for 404/unknown route: ${req.path}`);
-    const path = require('path');
-    res.sendFile(path.join(__dirname, '../../dist/index.html'));
+    // Every other path is a client-routed URL (/events, /events/<slug>, /404,
+    // ...): serve the SPA shell from memory with the SAME edge-cache policy as
+    // the SSR homepage. `res.sendFile` here used to go out as
+    // `Cache-Control: public, max-age=0` plus the global `Vary: User-Agent`,
+    // so none of these URLs were ever held by Cloudflare and every visit paid
+    // origin latency (and cold starts). The shell carries no per-request data,
+    // so caching it is safe.
+    verboseLog(`📱 Serving React SPA shell for client route: ${req.path}`);
+    sendSpaShell(res);
 }
 
 /**
@@ -284,7 +333,7 @@ function handlePayloadError(error, req, res, next) {
         });
 
         const sanitizedError = new CustomError(
-            'Request payload too large. Maximum allowed size is 100MB.',
+            'Request payload too large.',
             413
         );
 
