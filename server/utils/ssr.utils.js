@@ -271,9 +271,21 @@ function renderReactPage(Component, props, options = {}) {
             React.createElement(Component, props)
         );
 
-        // If component returns full HTML document, return it directly
+        // Full-document components (the event landing page) return their own
+        // <html>, so they never pass through generateHTMLTemplate below and the
+        // tracking pixels used to be dropped on the floor: QR-code scans and shared
+        // event links were invisible to GA/Meta/TikTok. Inject them into <head>
+        // here; a document without a <head> is returned untouched.
         if (options.fullDocument) {
-            return '<!DOCTYPE html>\n' + reactHtml;
+            let doc = reactHtml;
+            if (options.trackingPixels) {
+                const pixels = generatePixelScripts(options.trackingPixels);
+                const headClose = doc.indexOf('</head>');
+                if (pixels && headClose !== -1) {
+                    doc = doc.slice(0, headClose) + pixels + '\n' + doc.slice(headClose);
+                }
+            }
+            return '<!DOCTYPE html>\n' + doc;
         }
 
         // Otherwise, wrap in HTML template

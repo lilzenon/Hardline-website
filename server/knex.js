@@ -24,7 +24,10 @@ const db = knex({
         }),
     },
     pool: {
-        min: env.DB_POOL_MIN || 2,
+        // Shared Postgres with a tiny connection cap: NEVER pin idle connections
+        // (post-mortem 2026-07-02). The env default is 0 and `0 || 2` silently
+        // became 2, so the July revert never took effect. `??` keeps an explicit 0.
+        min: env.DB_POOL_MIN ?? 0,
         max: env.DB_POOL_MAX || 10,
         acquireTimeoutMillis: 8000,
         createTimeoutMillis: 10000,

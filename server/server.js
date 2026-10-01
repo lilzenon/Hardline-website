@@ -32,11 +32,42 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 });
 
+// Exception-storm breaker. One uncaught exception is logged and the process
+// keeps serving: a platform restart means a 15s+ cold start for every visitor.
+// A process that keeps throwing is wedged, though. After EXCEPTION_STORM.max
+// exceptions inside the window we stop accepting connections and exit so the
+// platform replaces the instance. (A second handler pair in
+// secure-error-handler.middleware.js used to process.exit(1) on the FIRST
+// stray rejection in production; it is now a no-op.)
+let httpServer = null;
+const EXCEPTION_STORM = { windowMs: 60_000, max: 10, timestamps: [] };
+function recordUncaughtException() {
+    const now = Date.now();
+    EXCEPTION_STORM.timestamps = EXCEPTION_STORM.timestamps.filter(t => now - t < EXCEPTION_STORM.windowMs);
+    EXCEPTION_STORM.timestamps.push(now);
+    return EXCEPTION_STORM.timestamps.length;
+}
+function shutdownAfterExceptionStorm(count) {
+    console.error(`💥 ${count} uncaught exceptions within ${EXCEPTION_STORM.windowMs / 1000}s: closing server and exiting so the platform can replace this instance`);
+    const forceExit = setTimeout(() => process.exit(1), 5000);
+    try {
+        if (httpServer && typeof httpServer.close === 'function') {
+            httpServer.close(() => { clearTimeout(forceExit); process.exit(1); });
+            if (typeof httpServer.closeIdleConnections === 'function') httpServer.closeIdleConnections();
+        } else {
+            clearTimeout(forceExit);
+            process.exit(1);
+        }
+    } catch (_) {
+        process.exit(1);
+    }
+}
+
 process.on('uncaughtException', (error) => {
     console.error('🚨 Uncaught Exception:', error);
 
     // Don't crash for Redis-related errors
-    if (error.message && (
+    if (error && error.message && (
         error.message.includes('Redis') ||
         error.message.includes('Stream isn\'t writeable') ||
         error.message.includes('ECONNREFUSED') ||
@@ -45,9 +76,13 @@ process.on('uncaughtException', (error) => {
         return;
     }
 
-    // For other critical errors in production, log and continue
     if (process.env.NODE_ENV === 'production') {
-        console.warn('⚠️ Production uncaught exception handled, continuing...');
+        const count = recordUncaughtException();
+        if (count >= EXCEPTION_STORM.max) {
+            shutdownAfterExceptionStorm(count);
+            return;
+        }
+        console.warn(`⚠️ Production uncaught exception handled, continuing... (${count}/${EXCEPTION_STORM.max} in window)`);
         return;
     }
 
@@ -68,8 +103,6 @@ const fs = require("node:fs");
 const mime = require("mime-types");
 const hbs = require("hbs");
 
-// CROSS-DOMAIN API INTEGRATION: Proxy middleware for dashboard API
-const { createProxyMiddleware } = require('http-proxy-middleware');
 console.log('✅ Core dependencies loaded successfully');
 
 console.log('✅ Step 4: Loading services and middleware...');
@@ -763,110 +796,16 @@ try {
     if (env.DASHBOARD_PROXY_ENABLED) {
         console.log(`📡 Proxy ENABLED: forwarding API calls to dashboard server: ${dashboardApiUrl}`);
 
-        // Stamp trusted-proxy identity on every request we forward to admin.
-        // These are BROWSER requests we're relaying, so they all leave on this
-        // pod's single egress IP. Without the forwarded client IP, admin's rate
-        // limiter would treat every visitor of this site as one client and a
-        // handful of users would lock out everyone. Admin only trusts the
-        // forwarded IP when the shared secret validates.
-        const { internalProxyHeaders } = require('./utils/internal-proxy.util');
-        const attachInternalProxyHeaders = (proxyReq, req) => {
-            try {
-                const headers = internalProxyHeaders(req);
-                for (const name of Object.keys(headers)) {
-                    proxyReq.setHeader(name, headers[name]);
-                }
-            } catch (err) {
-                // Never let header stamping break a proxied request.
-                console.warn('WARN failed to attach internal proxy headers:', err.message);
-            }
-        };
-
-        // Proxy settings endpoints to dashboard API
-        app.use('/api/settings', createProxyMiddleware({
+        // One root-mounted proxy for every admin-backed prefix. See
+        // utils/admin-proxy.util.js for why this is not four app.use(path, ...)
+        // mounts any more (http-proxy-middleware v3 semantics).
+        const { mountAdminProxies } = require('./utils/admin-proxy.util');
+        const proxied = mountAdminProxies(app, {
             target: dashboardApiUrl,
-            changeOrigin: true,
             secure: env.NODE_ENV === 'production',
-            timeout: 10000,
-            proxyTimeout: 10000,
-            onError: (err, req, res) => {
-                console.error('🚨 Proxy error for /api/settings:', err.message);
-                res.status(500).json({
-                    error: 'Dashboard API unavailable',
-                    message: 'Unable to connect to dashboard server',
-                    timestamp: new Date().toISOString()
-                });
-            },
-            onProxyReq: (proxyReq, req, res) => {
-                attachInternalProxyHeaders(proxyReq, req);
-                console.log(`🔄 Proxying: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
-            },
-            onProxyRes: (proxyRes, req, res) => {
-                console.log(`✅ Proxy response: ${proxyRes.statusCode} for ${req.url}`);
-            }
-        }));
-
-        // Proxy analytics endpoints to dashboard API (only track endpoint)
-        app.use('/api/analytics/track', createProxyMiddleware({
-            target: dashboardApiUrl,
-            changeOrigin: true,
-            secure: env.NODE_ENV === 'production',
-            timeout: 10000,
-            proxyTimeout: 10000,
-            onProxyReq: attachInternalProxyHeaders,
-            onError: (err, req, res) => {
-                console.error('🚨 Proxy error for /api/analytics/track:', err.message);
-                res.status(500).json({
-                    error: 'Dashboard API unavailable',
-                    message: 'Unable to connect to dashboard server',
-                    timestamp: new Date().toISOString()
-                });
-            }
-        }));
-
-        // Proxy home-settings endpoints to dashboard API
-        app.use('/api/home-settings', createProxyMiddleware({
-            target: dashboardApiUrl,
-            changeOrigin: true,
-            secure: env.NODE_ENV === 'production',
-            timeout: 10000,
-            proxyTimeout: 10000,
-            onProxyReq: attachInternalProxyHeaders,
-            onError: (err, req, res) => {
-                console.error('🚨 Proxy error for /api/home-settings:', err.message);
-                res.status(500).json({
-                    error: 'Dashboard API unavailable',
-                    message: 'Unable to connect to dashboard server',
-                    timestamp: new Date().toISOString()
-                });
-            }
-        }));
-
-        // 🛍️ Proxy shop API endpoints to dashboard API (products, checkout, orders)
-        app.use('/api/shop', createProxyMiddleware({
-            target: dashboardApiUrl,
-            changeOrigin: true,
-            secure: env.NODE_ENV === 'production',
-            timeout: 15000,  // Longer timeout for checkout operations
-            proxyTimeout: 15000,
-            onError: (err, req, res) => {
-                console.error('🚨 Proxy error for /api/shop:', err.message);
-                res.status(500).json({
-                    error: 'Shop API unavailable',
-                    message: 'Unable to connect to shop server',
-                    timestamp: new Date().toISOString()
-                });
-            },
-            onProxyReq: (proxyReq, req, res) => {
-                attachInternalProxyHeaders(proxyReq, req);
-                console.log(`🛍️ Proxying shop: ${req.method} ${req.url} → ${dashboardApiUrl}${req.url}`);
-            },
-            onProxyRes: (proxyRes, req, res) => {
-                console.log(`✅ Shop proxy response: ${proxyRes.statusCode} for ${req.url}`);
-            }
-        }));
-
-        console.log('✅ Cross-domain API proxy configured successfully (including shop API)');
+            verbose: CURRENT_LOG_LEVEL >= LOG_LEVELS.VERBOSE
+        });
+        console.log(`✅ Cross-domain API proxy configured for: ${proxied.join(', ')}`);
     } else {
         console.log('🛑 Proxy DISABLED via DASHBOARD_PROXY_ENABLED=false. Using local /api routes for settings and analytics.');
     }
@@ -981,7 +920,7 @@ databaseSecurity.initializeDatabaseSecurity();
 
 console.log('🎯 Step 8: Starting server on port:', env.PORT);
 console.log('🔌 About to bind to PORT environment variable...');
-app.listen(env.PORT, () => {
+httpServer = app.listen(env.PORT, () => {
     console.log(`> Ready on http://localhost:${env.PORT}`);
     console.log(`🔍 Optimized logging active | Level: ${process.env.LOG_LEVEL || 'NORMAL'}`);
     console.log(`🔍 Webhook requests will be logged with essential debugging info`);

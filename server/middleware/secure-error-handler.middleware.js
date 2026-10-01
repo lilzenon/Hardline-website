@@ -241,44 +241,6 @@ function notFoundHandler(req, res, next) {
 }
 
 /**
- * Handle uncaught exceptions securely
- */
-function handleUncaughtException() {
-    process.on('uncaughtException', (error) => {
-        console.error('🚨 UNCAUGHT EXCEPTION:', {
-            error: error.message,
-            stack: error.stack,
-            timestamp: new Date().toISOString()
-        });
-
-        // In production, gracefully shutdown
-        if (env.NODE_ENV === 'production') {
-            console.error('🚨 Shutting down due to uncaught exception...');
-            process.exit(1);
-        }
-    });
-}
-
-/**
- * Handle unhandled promise rejections securely
- */
-function handleUnhandledRejection() {
-    process.on('unhandledRejection', (reason, promise) => {
-        console.error('🚨 UNHANDLED PROMISE REJECTION:', {
-            reason: reason,
-            promise: promise,
-            timestamp: new Date().toISOString()
-        });
-
-        // In production, gracefully shutdown
-        if (env.NODE_ENV === 'production') {
-            console.error('🚨 Shutting down due to unhandled promise rejection...');
-            process.exit(1);
-        }
-    });
-}
-
-/**
  * Database error handler
  */
 function handleDatabaseError(error, req, res, next) {
@@ -356,9 +318,18 @@ function handleRateLimitError(error, req, res, next) {
 /**
  * Initialize secure error handling
  */
+/**
+ * Process-level error handlers.
+ *
+ * Intentionally registers nothing. server/server.js owns the single pair of
+ * `uncaughtException` / `unhandledRejection` listeners (log-and-continue with
+ * an exception-storm breaker). A second pair used to live here and called
+ * process.exit(1) in production, so one stray rejection anywhere in the app
+ * killed the container and gave every visitor a cold start. Kept as a no-op so
+ * existing call sites stay valid.
+ */
 function initializeSecureErrorHandling() {
-    handleUncaughtException();
-    handleUnhandledRejection();
+    // no-op by design, see above
 }
 
 module.exports = {

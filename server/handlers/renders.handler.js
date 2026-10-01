@@ -4,6 +4,9 @@ const env = require("../env");
 const { getSiteDomain } = require("../utils/site-domain.util");
 const { cachedAdminFetch } = require("../utils/admin-fetch-cache.util");
 const { internalProxyHeaders } = require("../utils/internal-proxy.util");
+// Brand-bleed guard for admin SEO responses. Shared with the event landing page
+// route so every render path applies the same rule to the same cache key.
+const { isWrongDomainSeoRow } = require("../utils/admin-seo.util");
 
 // Cache TTLs for server-to-server admin fetches. Tuned per how often the
 // underlying data actually changes. Stale-while-revalidate means admin
@@ -130,25 +133,7 @@ function buildAdminFetch(baseUrl, path, req, options = {}) {
     };
 }
 
-/**
- * Detect admin's "fallback row" SEO responses so they are never cached
- * under a specific host's key. During an admin/DB outage the admin helper
- * serves the default/NULL row (bounce2bounce branding) marked with
- * `_meta.is_fallback`. Caching that under `seo::hardline.events` once made
- * the live site render BOUNCE2BOUNCE titles for the whole stale window.
- * Returning null instead makes cachedAdminFetch skip caching, the render
- * falls back to the hardcoded HARDLINE defaults, and the next render
- * retries the fetch. Fails open when _meta is absent (older admin builds).
- */
-function isWrongDomainSeoRow(data, host) {
-    if (!data || !host) return false;
-    const row = data.settings || data;
-    const meta = data._meta || row._meta;
-    if (!meta) return false;
-    if (meta.is_fallback === true) return true;
-    const src = String(meta.source_domain || '').toLowerCase();
-    return !!src && src !== String(host).toLowerCase();
-}
+// isWrongDomainSeoRow() moved to ../utils/admin-seo.util (see require above).
 
 /**
  *

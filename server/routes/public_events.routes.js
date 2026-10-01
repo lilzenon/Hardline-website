@@ -8,6 +8,7 @@ const query = require("../queries");
 const { renderReactPage } = require("../utils/ssr.utils");
 const seoUtils = require("../utils/seo.utils");
 const { getSiteDomain } = require("../utils/site-domain.util");
+const { fetchSeoSettingsForRequest } = require("../utils/admin-seo.util");
 const EventLandingPage = require("../components/EventLandingPage.jsx");
 
 const router = Router();
@@ -384,8 +385,12 @@ router.get(
         // 🎨 Generate SEO meta tags using existing seoUtils
         const metaTags = seoUtils.generateEventMetaTags(foundEvent);
 
-        // Fetch SEO settings for tracking pixels
-        const seoSettings = await query.seoSettings.getSEOSettings();
+        // Tracking pixels come from the admin API's per-domain SEO row (cached and
+        // shared with the homepage SSR). Null when admin is unreachable: the page
+        // still renders, just without pixel scripts. The old direct-DB helper was
+        // removed from ./queries in 2025-08 and this call threw a TypeError, which
+        // turned every event landing page (QR codes, sitemap, shares) into a 500.
+        const seoSettings = await fetchSeoSettingsForRequest(req);
 
         // 🚀 Render React SSR Event Landing Page
         const html = renderReactPage(EventLandingPage, {
