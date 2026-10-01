@@ -5,6 +5,8 @@ const twilioService = require("../services/sms/twilio.service");
 const phoneUtils = require("../services/contact-book/phone-utils.service");
 const { body, validationResult } = require("express-validator");
 const { getSiteDomain } = require("../utils/site-domain.util");
+const { cachedAdminFetch } = require("../utils/admin-fetch-cache.util");
+const { fetchHomepageDataForRequest } = require("./renders.handler");
 
 // Configure multer for image uploads
 let multer, upload;
@@ -178,13 +180,20 @@ async function get(req, res) {
 }
 
 // 🚀 GET COMPLETE HOMEPAGE DATA FOR REFRESH
-async function getHomepageData(req, res) {
-    try {
-        console.log('🔄 Fetching complete homepage data for refresh...');
+// How long a homepage-data payload is considered fresh before the next
+// request triggers a background re-read. Admin edits land on the public
+// site within this window (plus one request); the client only re-renders
+// when the content fingerprint actually changes, so a few seconds of
+// staleness is invisible to visitors.
+const HOMEPAGE_DATA_TTL_MS = 15 * 1000;
 
-        // Fetch all homepage data in parallel, scoped to this site's
-        // domain so each public site only sees its own events.
-        const siteDomain = getSiteDomain(req);
+/**
+ * Build the homepage payload from the shared database, scoped to one site
+ * domain. Resolves to null on any failure so the SWR cache never stores a
+ * bad result (cachedAdminFetch skips null).
+ */
+async function loadHomepageDataForDomain(siteDomain) {
+    try {
         const [homeSettings, featuredEvents, homepageEvents] = await Promise.all([
             query.homeSettings.get(),
             query.event.getFeaturedEvents({ limit: 20, domain: siteDomain }),
@@ -207,19 +216,63 @@ async function getHomepageData(req, res) {
                 .replace(',', 'th,'); // Add 'th' suffix
         }
 
-        console.log(`✅ Homepage data refreshed: ${featuredEvents.length} featured, ${homepageEvents.length} homepage events`);
-
-        return res.status(200).send({
+        return {
             homeSettings,
             featuredEvents,
             homepageEvents,
             formattedDate,
             totalCards: 1 + (featuredEvents?.length || 0) // kept for backward compatibility
-        });
+        };
     } catch (error) {
         console.error("Error fetching homepage data:", error);
+        return null;
+    }
+}
+
+/**
+ * GET /api/home-settings/homepage-data
+ *
+ * Every browser revalidates homepage data once per page view, and this used
+ * to run three queries against the shared Postgres pool per request. Twenty
+ * simultaneous visitors meant sixty queries queued on a ten-connection pool
+ * (measured p90 2.8 s). The payload is identical for every visitor of a
+ * domain, so it is served through the same stale-while-revalidate cache the
+ * SSR uses: one DB round trip per domain per TTL, concurrent misses collapsed
+ * onto a single in-flight read, stale data served instantly while refreshing.
+ */
+async function getHomepageData(req, res) {
+    const siteDomain = getSiteDomain(req);
+
+    // 1) The admin API payload, from the cache the SSR render keeps warm. This is
+    //    the exact object inlined as window.__INITIAL_DATA__, so the client's
+    //    revalidation only ever sees a change when admin content changed.
+    let { data, source } = await fetchHomepageDataForRequest(req)
+        .catch(() => ({ data: null, source: 'error' }));
+
+    // 2) Admin unreachable and nothing cached: fall back to a direct read of the
+    //    shared database (its own SWR cache so a cold admin never turns into a
+    //    query storm on the public pool).
+    if (!data) {
+        ({ data, source } = await cachedAdminFetch({
+            key: `homepage-data-db::${siteDomain || '__default__'}`,
+            ttlMs: HOMEPAGE_DATA_TTL_MS,
+            fetcher: () => loadHomepageDataForDomain(siteDomain)
+        }));
+        source = data ? `db-${source}` : source;
+    }
+
+    if (!data) {
+        res.set('Cache-Control', 'no-store');
         return res.status(500).send({ error: "Failed to load homepage data" });
     }
+
+    // Browser may reuse for 15 s (back/forward, quick return) and keep showing
+    // it for a minute while it refreshes; shared caches never store it.
+    res.set({
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=60',
+        'X-Homepage-Data-Source': source
+    });
+    return res.status(200).send(data);
 }
 
 /**

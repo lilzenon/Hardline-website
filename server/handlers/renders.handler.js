@@ -1952,7 +1952,15 @@ async function reactHomepage(req, res) {
                 }
             }
 
-            const ssrWrapper = `${seoSettingsScript}${initialDataScript}<div id="ssr-content" class="ssr-fallback" style="display: block;">${staticContent}</div>
+            // #ssr-content is positioned absolutely from its very first frame. In
+            // normal flow (display:block, min-height:100vh, and it precedes #root in
+            // the document) it pushed #root one viewport down until main.tsx hid it,
+            // so #root jumped to the top the moment React mounted: a layout shift of
+            // 1.0 on every page view, i.e. the whole viewport moving by a whole
+            // viewport (CLS 1.05 mobile / 0.83 desktop, measured 2026-10-01). Out of
+            // flow it still renders for crawlers and the no-JS / failed-boot
+            // fallback, but #root starts at the top and never moves.
+            const ssrWrapper = `${seoSettingsScript}${initialDataScript}<div id="ssr-content" class="ssr-fallback" style="display: block; position: absolute; top: 0; left: 0; right: 0;">${staticContent}</div>
                    <style>#ssr-content.ssr-fallback { transition: opacity 0.3s; } .app-loaded #ssr-content.ssr-fallback { opacity: 0; pointer-events: none; position: absolute; }</style>
                    <script>setTimeout(function(){try{if(!document.body.classList.contains('app-loaded')){var s=document.getElementById('initial-splash');if(s){s.style.display='none';var c=document.getElementById('ssr-content');if(c){c.style.display='block';c.style.opacity='1';}}}}catch(e){}},4000);</script>`;
 
@@ -2072,6 +2080,32 @@ async function reactHomepage(req, res) {
     }
 }
 
+/**
+ * Homepage data for a request, via the SAME cache entry the SSR render and the
+ * 45 s prewarm keep warm (key `homepage-data::<host>`, admin API payload).
+ *
+ * Exported for /api/home-settings/homepage-data. That route used to run its
+ * own three queries against the shared Postgres pool on every browser
+ * revalidation and, worse, classified the same events differently from the
+ * admin API (featured vs homepage lists swapped), so the client saw a
+ * "changed" payload on every single page view and re-rendered the hero.
+ * Serving the admin payload from this cache makes the browser revalidation a
+ * memory read that is byte-for-byte consistent with the SSR seed.
+ *
+ * Resolves to { data, source } where data is null when admin is unreachable
+ * and nothing is cached; callers decide the fallback.
+ */
+async function fetchHomepageDataForRequest(req) {
+    const host = getSiteDomain(req) || '';
+    const base = env.NODE_ENV === 'production' ? 'https://admin.b2b.click' : 'http://localhost:3002';
+    const { url } = buildAdminFetch(base, '/api/home-settings/homepage-data', req, { nocache: false });
+    return cachedAdminFetch({
+        key: `homepage-data::${host || '__default__'}`,
+        ttlMs: ADMIN_CACHE_TTL.homepageData,
+        fetcher: () => fetchAdminJson(url, host),
+    });
+}
+
 module.exports = {
     addDomainAdmin,
     addDomainForm,
@@ -2096,6 +2130,7 @@ module.exports = {
     logout,
     // REMOVED: notFound - 404 pages now handled by React SPA routing
     reactHomepage,
+    fetchHomepageDataForRequest,
     resetPassword,
     resetPasswordSetNewPassword,
     settings,
