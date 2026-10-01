@@ -3,42 +3,105 @@ const { CustomError } = require('../utils');
 
 /**
  * Database Security Middleware
- * Provides additional security layers for database operations
+ * Provides additional security layers for database operations.
+ *
+ * HOW THE SQL-INJECTION SCANNER WORKS (read before changing it):
+ *
+ * Every database query in this codebase goes through Knex with bound parameters,
+ * so request input is never spliced into SQL text. The scanner below is
+ * defence-in-depth *monitoring*, not the primary defence, and it must never
+ * break legitimate traffic:
+ *
+ *  - Read requests (GET / HEAD / OPTIONS) are NEVER blocked. A navigation whose
+ *    query string merely looks suspicious is logged as a security event and
+ *    then served normally. Blocking reads used to turn every Instagram and
+ *    Facebook click into a 500, because `fbclid` click IDs are base64url tokens
+ *    that routinely contain `--`, which matched the old "SQL comment" pattern.
+ *    Hashtags (`#`) in search terms and `--` in UTM campaign names failed the
+ *    same way.
+ *
+ *  - Write requests (POST / PUT / PATCH / DELETE) are rejected with a 400 only
+ *    when a parameter matches a HIGH-CONFIDENCE SQL pattern such as
+ *    `UNION SELECT`, `; DROP TABLE`, `OR 1=1` or `pg_sleep(`. Plain `--`, `#`,
+ *    `/* ... *\/` or English words such as "system", "shell", "exec", "eval",
+ *    "update" or "delete" are not evidence of an attack and are not matched;
+ *    event copy like "doors at 9; drop by the box office #party" must save.
+ *
+ *  - Well-known third-party tracking parameters (fbclid, gclid, utm_*, ...) are
+ *    never inspected at all. They are opaque tokens minted by other platforms,
+ *    they are never used in a query, and inspecting them only produces noise.
+ *
+ *  - Express 5 exposes `req.query` as a getter: assigning `req.query = ...`
+ *    is a silent no-op. The scanner therefore never tries to rewrite the
+ *    request; it only inspects it.
  */
 
 /**
- * SQL Injection Detection Patterns
- * Common SQL injection attack patterns to detect and block
+ * High-confidence SQL injection patterns.
+ * Each pattern requires real SQL *structure*, not just a keyword, so ordinary
+ * prose, hashtags, dashes and base64 tokens do not match.
  */
 const SQL_INJECTION_PATTERNS = [
-    // Union-based attacks
-    /(\bunion\b.*\bselect\b)|(\bselect\b.*\bunion\b)/i,
+    // Union-based: UNION [ALL|DISTINCT] SELECT
+    /\bunion\b\s+(?:all\s+|distinct\s+)?select\b/i,
 
-    // Boolean-based blind attacks
-    /(\band\b.*\b1\s*=\s*1)|(\bor\b.*\b1\s*=\s*1)/i,
-    /(\band\b.*\b1\s*=\s*2)|(\bor\b.*\b1\s*=\s*2)/i,
+    // Tautology-based: OR 1=1, AND 'a'='a', OR "x" LIKE "x"
+    /\b(?:or|and)\b\s*(?:'[^']*'|"[^"]*"|\d+)\s*(?:=|<>|!=|\blike\b)\s*(?:'[^']*'|"[^"]*"|\d+)/i,
 
-    // Time-based blind attacks
-    /(\bwaitfor\b.*\bdelay\b)|(\bsleep\b\s*\()|(\bbenchmark\b\s*\()/i,
+    // Time-based blind: WAITFOR DELAY, SLEEP(, BENCHMARK(, PG_SLEEP(
+    /\bwaitfor\s+delay\b|\b(?:sleep|benchmark|pg_sleep)\s*\(/i,
 
-    // Error-based attacks
-    /(\bextractvalue\b)|(\bupdatexml\b)|(\bexp\b\s*\()/i,
+    // Error-based (MySQL XML functions)
+    /\b(?:extractvalue|updatexml)\s*\(/i,
 
-    // Stacked queries
-    /;\s*(drop|delete|insert|update|create|alter|exec|execute)\b/i,
+    // Stacked queries: ; DROP TABLE, ; TRUNCATE TABLE, ; ALTER TABLE ...
+    /;\s*(?:drop|alter|truncate)\s+(?:table|database|schema|index|view|user|role)\b/i,
 
-    // Comment-based attacks
-    /(\/\*.*\*\/)|(-{2,})|(\#)/,
+    // Stacked queries: ; DELETE FROM, ; INSERT INTO, ; UPDATE x SET, ; CREATE TABLE, ; EXEC(
+    /;\s*(?:delete\s+from|insert\s+into|update\s+[\w."`]+\s+set|create\s+(?:table|database|schema|index|view|user|role)|exec(?:ute)?\s*\(|shutdown\b)/i,
 
-    // Information schema attacks
-    /\binformation_schema\b/i,
-
-    // System function attacks
-    /(\bsystem\b)|(\bshell\b)|(\bexec\b)|(\beval\b)/i,
-
-    // Database-specific attacks
-    /(\bpg_sleep\b)|(\bpg_read_file\b)|(\bload_file\b)/i
+    // Schema / file-system probing
+    /\binformation_schema\s*\./i,
+    /\b(?:pg_read_file|pg_ls_dir|load_file)\s*\(/i
 ];
+
+/**
+ * Third-party click / campaign identifiers that are appended to inbound links by
+ * Instagram, Facebook, Google, TikTok, Microsoft, Mailchimp, HubSpot and others.
+ * They are opaque, never reach a query, and are skipped by the scanner entirely.
+ */
+const TRACKING_PARAM_NAMES = new Set([
+    // Meta (Facebook / Instagram / Threads)
+    'fbclid', 'igshid', 'igsh', 'img_index', 'fb_action_ids', 'fb_action_types', 'fb_source', 'fb_ref',
+    // Google (Ads, Analytics, Search)
+    'gclid', 'gclsrc', 'dclid', 'gbraid', 'wbraid', 'srsltid', '_ga', '_gl', '_gid', 'gad_source', 'gad_campaignid',
+    // Microsoft / Bing, TikTok, X, LinkedIn, Snapchat, Reddit, Pinterest, Yandex
+    'msclkid', 'ttclid', 'twclid', 'li_fat_id', 'sccid', 'rdt_cid', 'epik', 'yclid',
+    // Email / marketing automation
+    'mc_cid', 'mc_eid', '_hsenc', '_hsmi', 'hsctatracking', 'mkt_tok', 'vero_id', 'vero_conv',
+    'oly_anon_id', 'oly_enc_id', 'wickedid', 'ef_id', 's_kwcid', 'ncid', 'cmpid',
+    // Generic referral markers
+    'ref', 'ref_src', 'ref_url', 'si'
+]);
+const TRACKING_PARAM_PREFIXES = ['utm_', 'hsa_', 'pk_', 'piwik_', 'mtm_', 'matomo_', 'at_', 'sc_', 'ig_', 'fb_'];
+
+const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const MAX_SCAN_DEPTH = 6;
+const MAX_SCAN_LENGTH = 10000; // only the first 10k chars of any single value are examined
+const LOG_SAMPLE_LENGTH = 200;
+
+/**
+ * Is this query-string key a well-known third-party tracking parameter?
+ * @param {string} key
+ * @returns {boolean}
+ */
+function isTrackingParam(key) {
+    const normalized = String(key).toLowerCase();
+    if (TRACKING_PARAM_NAMES.has(normalized)) {
+        return true;
+    }
+    return TRACKING_PARAM_PREFIXES.some(prefix => normalized.startsWith(prefix));
+}
 
 /**
  * Detect potential SQL injection attempts
@@ -50,11 +113,50 @@ function detectSQLInjection(input) {
         return false;
     }
 
-    // Normalize input for detection
-    const normalizedInput = input.toLowerCase().trim();
+    const value = input.length > MAX_SCAN_LENGTH ? input.slice(0, MAX_SCAN_LENGTH) : input;
+    return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(value));
+}
 
-    // Check against known patterns
-    return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(normalizedInput));
+/**
+ * Walk one request section (query / body / params) and collect every key whose
+ * value looks like SQL. Nested objects and arrays are inspected too.
+ * @param {any} section
+ * @param {{ skipTracking?: boolean }} [options] - skipTracking ignores top-level tracking params
+ * @returns {Array<{ key: string, sample: string }>}
+ */
+function findSuspiciousInputs(section, options = {}) {
+    const findings = [];
+    const skipTracking = options.skipTracking === true;
+
+    const visit = (value, keyPath, depth) => {
+        if (value == null || depth > MAX_SCAN_DEPTH) {
+            return;
+        }
+
+        if (typeof value === 'string') {
+            if (detectSQLInjection(value)) {
+                findings.push({ key: keyPath, sample: value.slice(0, LOG_SAMPLE_LENGTH) });
+            }
+            return;
+        }
+
+        if (Array.isArray(value)) {
+            value.forEach((item, index) => visit(item, `${keyPath}[${index}]`, depth + 1));
+            return;
+        }
+
+        if (typeof value === 'object') {
+            Object.keys(value).forEach(key => {
+                if (depth === 0 && skipTracking && isTrackingParam(key)) {
+                    return;
+                }
+                visit(value[key], keyPath ? `${keyPath}.${key}` : key, depth + 1);
+            });
+        }
+    };
+
+    visit(section, '', 0);
+    return findings;
 }
 
 /**
@@ -91,11 +193,11 @@ function sanitizeDatabaseInput(input) {
 function validateQueryParams(params) {
     const validated = {};
 
-    Object.keys(params).forEach(key => {
+    Object.keys(params || {}).forEach(key => {
         const value = params[key];
 
-        // Check for SQL injection
-        if (typeof value === 'string' && detectSQLInjection(value)) {
+        // Check for SQL injection (tracking params are never inspected)
+        if (typeof value === 'string' && !isTrackingParam(key) && detectSQLInjection(value)) {
             throw new CustomError(`Potential SQL injection detected in parameter: ${key}`, 400);
         }
 
@@ -147,41 +249,72 @@ function secureQuery(queryFn) {
 }
 
 /**
- * Middleware to validate request data for SQL injection
+ * Best-effort hand-off to the security monitor so repeated probes from one IP
+ * still raise an alert. Never throws and never delays the request.
+ */
+function recordSecurityEvent(req, details) {
+    try {
+        const { securityMonitor } = require('./security-monitoring.middleware');
+        if (securityMonitor && typeof securityMonitor.logSecurityEvent === 'function') {
+            Promise.resolve(securityMonitor.logSecurityEvent('sql_injection_attempt', {
+                message: `Suspicious SQL-like input (${details.action})`,
+                parameters: details.parameters.map(finding => finding.key),
+                action: details.action
+            }, req)).catch(() => {});
+        }
+    } catch (_) {
+        // monitoring is optional
+    }
+}
+
+/**
+ * Middleware to detect SQL-like request input.
+ * Reads are logged and served; writes with high-confidence SQL are rejected (400).
  */
 function sqlInjectionProtection() {
     return (req, res, next) => {
+        let findings = [];
+
         try {
-            // Check body parameters
-            if (req.body) {
-                req.body = validateQueryParams(req.body);
-            }
-
-            // Check query parameters
-            if (req.query) {
-                req.query = validateQueryParams(req.query);
-            }
-
-            // Check route parameters
-            if (req.params) {
-                req.params = validateQueryParams(req.params);
-            }
-
-            next();
-        } catch (error) {
-            console.warn('🚨 SQL injection attempt detected:', {
-                ip: req.ip,
-                userAgent: req.headers['user-agent'],
-                url: req.url,
-                method: req.method,
-                body: req.body,
-                query: req.query,
-                params: req.params,
-                timestamp: new Date().toISOString()
-            });
-
-            next(error);
+            // Mounted at app level, req.params is always {} and req.body is not parsed
+            // yet; both are still inspected so the middleware also works inside a router.
+            findings = [
+                ...findSuspiciousInputs(req.query, { skipTracking: true }),
+                ...findSuspiciousInputs(req.body),
+                ...findSuspiciousInputs(req.params)
+            ];
+        } catch (scanError) {
+            // The scanner must never be the reason a request fails.
+            console.error('🚨 SQL injection scanner error:', scanError.message);
+            return next();
         }
+
+        if (findings.length === 0) {
+            return next();
+        }
+
+        const isRead = READ_METHODS.has(req.method);
+        const details = {
+            ip: req.ip,
+            method: req.method,
+            url: req.originalUrl || req.url,
+            userAgent: req.headers['user-agent'],
+            referer: req.headers.referer,
+            parameters: findings,
+            action: isRead ? 'logged' : 'blocked',
+            timestamp: new Date().toISOString()
+        };
+
+        console.warn('🚨 Suspicious SQL-like input detected:', details);
+        recordSecurityEvent(req, details);
+
+        if (isRead) {
+            // Reads never splice input into SQL (every query is parameterised through
+            // Knex), so the request is served normally after being logged.
+            return next();
+        }
+
+        return next(new CustomError(`Potential SQL injection detected in parameter: ${findings[0].key}`, 400));
     };
 }
 
@@ -303,6 +436,8 @@ function initializeDatabaseSecurity() {
 
 module.exports = {
     detectSQLInjection,
+    isTrackingParam,
+    findSuspiciousInputs,
     sanitizeDatabaseInput,
     validateQueryParams,
     secureQuery,

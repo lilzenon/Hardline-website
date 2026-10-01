@@ -60,6 +60,8 @@ function determineSeverity(error) {
         return error.severity;
     }
 
+    const status = Number(error.statusCode || error.status) || 0;
+
     // Critical errors - immediate attention required
     if ((error.message && error.message.includes('ECONNREFUSED')) ||
         (error.message && error.message.includes('database')) ||
@@ -73,20 +75,20 @@ function determineSeverity(error) {
         (error.message && error.message.includes('authorization')) ||
         (error.message && error.message.includes('token')) ||
         (error.message && error.message.includes('session')) ||
-        error.status === 401 ||
-        error.status === 403) {
+        status === 401 ||
+        status === 403) {
         return 'high';
     }
 
     // Medium severity - validation and business logic
-    if (error.status === 400 ||
-        error.status === 422 ||
+    if (status === 400 ||
+        status === 422 ||
         (error.message && error.message.includes('validation'))) {
         return 'medium';
     }
 
     // Low severity - client errors
-    if (error.status >= 400 && error.status < 500) {
+    if (status >= 400 && status < 500) {
         return 'low';
     }
 
@@ -160,12 +162,12 @@ function secureErrorHandler(error, req, res, next) {
     // Log the error securely
     logSecurityError(error, req);
 
-    // Determine response status
-    let status = 500;
-    if (error instanceof CustomError) {
-        status = error.status || 500;
-    } else if (error.status || error.statusCode) {
-        status = error.status || error.statusCode;
+    // Determine response status. CustomError stores the code on `statusCode`;
+    // http-errors / body-parser / proxy errors use `status`. Reading only
+    // `status` here used to turn every CustomError (including 404s) into a 500.
+    let status = Number(error.statusCode || error.status) || 500;
+    if (!Number.isInteger(status) || status < 400 || status > 599) {
+        status = 500;
     }
 
     // Sanitize error message
